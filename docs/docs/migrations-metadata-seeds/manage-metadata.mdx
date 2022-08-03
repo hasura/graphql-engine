@@ -7,62 +7,64 @@ keywords:
   - Metadata
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Managing Metadata
 
 ## Introduction
-We call the Hasura Server configuration the Metadata. All changes made to the Hasura instance via the Console or via
-the API such as tracking tables / views / functions, creating relationships, configuring permissions, creating event
+
+We call the Hasura Server configuration the Metadata. All changes made to the Hasura instance via the Console or via the
+API such as tracking tables / views / functions, creating relationships, configuring permissions, creating event
 triggers and remote schemas, etc. are tracked by Hasura using the Metadata Catalogue and their state can be exported as
 YAML or JSON Metadata files.
 
 The Metadata can be version controlled to keep the Server configuration in-sync with your codebase, and applied to
-another Hasura instance to get the same configuration. You can also manually edit the Metadata and then use it to
-update the instance.
+another Hasura instance to get the same configuration. You can also manually edit the Metadata and then use it to update
+the instance.
 
-If you have [already initialized](/hasura-cli/commands/hasura_init.mdx) your project via the Hasura CLI you
-should see the Metadata directory structure in your project directory. If you are only using the Hasura Console from
-the Hasura CLI then it will be kept fully updated as you make changes. However, you can always create a manual
-export if you need to make sure that it is up-to-date.
+If you have [already initialized](/hasura-cli/commands/hasura_init.mdx) your project via the Hasura CLI you should see
+the Metadata directory structure in your project directory. If you are only using the Hasura Console from the Hasura CLI
+then it will be kept fully updated as you make changes. However, you can always create a manual export if you need to
+make sure that it is up-to-date.
 
 Example Metadata directory:
-  ```text
-  📂 metadata
-  ├─ 📂 databases
-  │  ├─ 📂 default
-  │  │  └─ 📂 tables
-  │  │     ├─ 📄 public_author.yaml
-  │  │     ├─ 📄 public_article.yaml
-  │  │     └─ 📄 tables.yaml
-  │  └── 📄 databases.yaml
-  ├─ 📄 actions.graphql
-  ├─ 📄 actions.yaml
-  ├─ 📄 allow_list.yaml
-  ├─ 📄 api_limits.yaml
-  ├─ 📄 cron_triggers.yaml
-  ├─ 📄 graphql_schema_introspection.yaml
-  ├─ 📄 inherited_roles.yaml
-  ├─ 📄 network.yaml
-  ├─ 📄 query_collections.yaml
-  ├─ 📄 remote_schemas.yaml
-  ├─ 📄 rest_endpoints.yaml
-  └─ 📄 version.yaml
-  ```
+
+```text
+📂 metadata
+├─ 📂 databases
+│  ├─ 📂 default
+│  │  └─ 📂 tables
+│  │     ├─ 📄 public_author.yaml
+│  │     ├─ 📄 public_article.yaml
+│  │     └─ 📄 tables.yaml
+│  └── 📄 databases.yaml
+├─ 📄 actions.graphql
+├─ 📄 actions.yaml
+├─ 📄 allow_list.yaml
+├─ 📄 api_limits.yaml
+├─ 📄 cron_triggers.yaml
+├─ 📄 graphql_schema_introspection.yaml
+├─ 📄 inherited_roles.yaml
+├─ 📄 network.yaml
+├─ 📄 query_collections.yaml
+├─ 📄 remote_schemas.yaml
+├─ 📄 rest_endpoints.yaml
+└─ 📄 version.yaml
+```
 
 There is no way to create an export of partial Metadata.
 
-There are three ways to interact with the Hasura Metadata. Via the [Hasura CLI](/hasura-cli/index.mdx),
-the Hasura Console, and the Hasura API. We'll go over each Metadata command below and how it is executed with each
-method.
+There are three ways to interact with the Hasura Metadata. Via the [Hasura CLI](/hasura-cli/index.mdx), the Hasura
+Console, and the Hasura API. We'll go over each Metadata command below and how it is executed with each method.
 
 ### Metadata Formats
+
 Internally, Hasura saves Metadata as a single **JSON** blob in a table called `hdb_metadata` in a schema called
-`hdb_catalog` in the database which you've designated as your Metadata database. Metadata can be exported and
-imported in this JSON blob format using the Console or Hasura API. Using the Hasura CLI, the Metadata is exported
-and managed in **YAML** format using separate files for each Metadata type.
+`hdb_catalog` in the database which you've designated as your Metadata database. Metadata can be exported and imported
+in this JSON blob format using the Console or Hasura API. Using the Hasura CLI, the Metadata is exported and managed in
+**YAML** format using separate files for each Metadata type.
 
 :::info Tip
 
@@ -73,86 +75,83 @@ same.
 
 ## Export Hasura Metadata {#export-metadata}
 
-To export your Metadata means to save your internal Hasura Metadata configuration to a file or group of files in
-order to track it with version control or use it in a CI/CD pipeline.
+To export your Metadata means to save your internal Hasura Metadata configuration to a file or group of files in order
+to track it with version control or use it in a CI/CD pipeline.
 
 <Tabs className="api-tabs">
 <TabItem value="cli" label="CLI">
 
-  To export your entire Metadata using the Hasura CLI execute the following command in your terminal:
+To export your entire Metadata using the Hasura CLI execute the following command in your terminal:
 
-  ```bash
-  # in project dir
-  hasura metadata export
-  ```
+```bash
+# in project dir
+hasura metadata export
+```
 
-  CLI will log:
-  ```text
-  INFO Metadata exported
-  ```
+CLI will log:
 
-  This will export the Metadata as YAML files in the `/metadata` directory eg:
+```text
+INFO Metadata exported
+```
 
-  ```text
-  📂 metadata
-  ├─ 📂 databases
-  │  ├─ 📂 default
-  │  │  └─ 📂 tables
-  │  │     ├─ 📄 public_author.yaml
-  │  │     ├─ 📄 public_article.yaml
-  │  │     └─ 📄 tables.yaml
-  │  └── 📄 databases.yaml
-  ├─ 📄 actions.graphql
-  ├─ 📄 actions.yaml
-  ├─ 📄 allow_list.yaml
-  ├─ 📄 api_limits.yaml
-  ├─ 📄 cron_triggers.yaml
-  ├─ 📄 graphql_schema_introspection.yaml
-  ├─ 📄 inherited_roles.yaml
-  ├─ 📄 network.yaml
-  ├─ 📄 query_collections.yaml
-  ├─ 📄 remote_schemas.yaml
-  ├─ 📄 rest_endpoints.yaml
-  └─ 📄 version.yaml
-  ```
+This will export the Metadata as YAML files in the `/metadata` directory eg:
+
+```text
+📂 metadata
+├─ 📂 databases
+│  ├─ 📂 default
+│  │  └─ 📂 tables
+│  │     ├─ 📄 public_author.yaml
+│  │     ├─ 📄 public_article.yaml
+│  │     └─ 📄 tables.yaml
+│  └── 📄 databases.yaml
+├─ 📄 actions.graphql
+├─ 📄 actions.yaml
+├─ 📄 allow_list.yaml
+├─ 📄 api_limits.yaml
+├─ 📄 cron_triggers.yaml
+├─ 📄 graphql_schema_introspection.yaml
+├─ 📄 inherited_roles.yaml
+├─ 📄 network.yaml
+├─ 📄 query_collections.yaml
+├─ 📄 remote_schemas.yaml
+├─ 📄 rest_endpoints.yaml
+└─ 📄 version.yaml
+```
 
 </TabItem>
 
 <TabItem value="console" label="Console">
 
-  1. Click on the settings ⚙ icon at the top right corner of the console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-  <Thumbnail
-    alt="Settings navigation button"
-    src="/img/graphql/core/migrations/settings-navigation_console_2-7-0.png"
-  />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
-  2. In the Hasura Metadata actions page that opens, click on the `Export Metadata` button.
+2. In the Hasura Metadata actions page that opens, click on the `Export Metadata` button.
 
-  <Thumbnail
-    src="/img/graphql/core/migrations/metadata-export_console_2-7-0.png"
-    alt="Export metadata"
-  />
+{' '}
+<Thumbnail src='/img/migrations-metadata-seeds/metadata-export_console_2-7-0.png' alt='Export metadata' />
 
-  3. This will prompt a file download for  `hasura_metadata_[timestamp].json`. Save the JSON blob file.
+3. This will prompt a file download for `hasura_metadata_[timestamp].json`. Save the JSON blob file.
 
 </TabItem>
 
 <TabItem value="api" label="API">
 
-  The export can be done via the
-  [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) Metadata API.
+The export can be done via the
+[export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) Metadata API.
 
-  Response will be a JSON object with the Hasura Metadata.
+Response will be a JSON object with the Hasura Metadata.
 
-  Here is an example using `curl` to save this as a file:
+Here is an example using `curl` to save this as a file:
 
-  ```bash
-  curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/metadata -o hasura_metadata.json
-  ```
+```bash
+curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/metadata -o hasura_metadata.json
+```
 
-  This command will create a `hasura_metadata.json` file. If an admin secret is set, add `-H 'X-Hasura-Admin-Secret:
-  [your-admin-secret]'` as the API is an admin-only API.
+This command will create a `hasura_metadata.json` file. If an admin secret is set, add
+`-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
 
 </TabItem>
 </Tabs>
@@ -161,63 +160,60 @@ order to track it with version control or use it in a CI/CD pipeline.
 
 ## Apply Hasura Metadata {#apply-metadata}
 
-You can apply Metadata from one Hasura Server instance to another. You can also apply an older or modified version
-of an instance's Metadata onto itself to replace the existing Metadata.
+You can apply Metadata from one Hasura Server instance to another. You can also apply an older or modified version of an
+instance's Metadata onto itself to replace the existing Metadata.
 
-Applying or importing completely replaces the Metadata on that instance, i.e. you lose any Metadata that existed
-before applying.
+Applying or importing completely replaces the Metadata on that instance, i.e. you lose any Metadata that existed before
+applying.
 
 <Tabs className="api-tabs">
 <TabItem value="cli" label="CLI">
 
-  Metadata can be applied with the [hasura metadata apply](/hasura-cli/commands/hasura_metadata_apply.mdx) command.
+Metadata can be applied with the [hasura metadata apply](/hasura-cli/commands/hasura_metadata_apply.mdx) command.
 
-  ```bash
-  # in project directory
-  hasura metadata apply
-  ```
-  CLI will log:
-  ```text
-  INFO Metadata applied
-  ```
+```bash
+# in project directory
+hasura metadata apply
+```
+
+CLI will log:
+
+```text
+INFO Metadata applied
+```
 
 </TabItem>
 <TabItem value="console" label="Console">
 
-  1. Click on the settings ⚙ icon at the top right corner of the console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-  <Thumbnail
-    alt="Settings navigation button"
-    src="/img/graphql/core/migrations/settings-navigation_console_2-7-0.png"
-  />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
-  2. Click on `Import Metadata` button.
+2. Click on `Import Metadata` button.
 
-  <Thumbnail
-    src="/img/graphql/core/migrations/metadata-import_console_2-7-0.png"
-    alt="Import metadata"
-  />
+{' '}
+<Thumbnail src='/img/migrations-metadata-seeds/metadata-import_console_2-7-0.png' alt='Import metadata' />
 
-  3. Choose a `hasura_metadata.json` file that was exported earlier.
+3. Choose a `hasura_metadata.json` file that was exported earlier.
 
-  4. A notification should appear indicating the success or error.
+4. A notification should appear indicating the success or error.
 
 </TabItem>
 
 <TabItem value="api" label="API">
 
-  The exported JSON can be imported via the
-  [replace_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata)
-  metadata API.
+The exported JSON can be imported via the
+[replace_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata) metadata API.
 
-  Here is an example using `curl`:
+Here is an example using `curl`:
 
-  ```bash
-  curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
-  ```
+```bash
+curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
+```
 
-  This command reads the `hasura_metadata.json` file and makes a POST request to replace the Metadata. If an admin
-  secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
+This command reads the `hasura_metadata.json` file and makes a POST request to replace the Metadata. If an admin secret
+is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
 
 </TabItem>
 
@@ -227,71 +223,69 @@ before applying.
 
 All the dependent objects, like tables, views, functions etc. should exist on the database before importing the
 Metadata. Otherwise, it will result in an error saying the object does not exist. So,
-[apply the database Migration](/migrations-metadata-seeds/manage-migrations.mdx#apply-migrations)
-schema first, before apply the Metadata.
+[apply the database Migration](/migrations-metadata-seeds/manage-migrations.mdx#apply-migrations) schema first, before
+apply the Metadata.
 
 :::
 
 ## Roll back Hasura Metadata {#rollback-metadata}
 
-As Hasura metadata is Managed via snapshots of whole of the Metadata, to roll it back to a particular state you need
-the Metadata snapshot at that point which you would typically achieve by checking out stable checkpoints of a
-project in version control.
+As Hasura metadata is Managed via snapshots of whole of the Metadata, to roll it back to a particular state you need the
+Metadata snapshot at that point which you would typically achieve by checking out stable checkpoints of a project in
+version control.
 
 ## Reload Hasura Metadata {#reload-metadata}
 
-In some cases, the Metadata can be out of sync with the database schema. For example, when a new column has been
-added to a table via an external tool such as `psql`.
+In some cases, the Metadata can be out of sync with the database schema. For example, when a new column has been added
+to a table via an external tool such as `psql`.
 
 <Tabs className="api-tabs">
 
 <TabItem value="cli" label="CLI">
 
-  Metadata can be reloaded with the [hasura metadata reload](/hasura-cli/commands/hasura_metadata_reload.mdx) command.
+Metadata can be reloaded with the [hasura metadata reload](/hasura-cli/commands/hasura_metadata_reload.mdx) command.
 
-  ```bash
-  # in project directory
-  hasura metadata reload
-  ```
-  CLI will log:
-  ```text
-  INFO Metadata reloaded
-  INFO Metadata is consistent
-  ```
+```bash
+# in project directory
+hasura metadata reload
+```
+
+CLI will log:
+
+```text
+INFO Metadata reloaded
+INFO Metadata is consistent
+```
 
 </TabItem>
 <TabItem value="console" label="Console">
 
-  1. Click on the settings ⚙ icon at the top right corner of the console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-  <Thumbnail
-    alt="Settings navigation button"
-    src="/img/graphql/core/migrations/settings-navigation_console_2-7-0.png"
-  />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
-  2. Click on `Reload` button.
+2. Click on `Reload` button.
 
-  <Thumbnail
-    alt="reload metadata"
-    src="/img/graphql/core/migrations/metadata-reload_console_2-7-0.png"
-  />
+{' '}
+<Thumbnail alt='reload metadata' src='/img/migrations-metadata-seeds/metadata-reload_console_2-7-0.png' />
 
-  3. A notification should appear indicating success.
+3. A notification should appear indicating success.
 
 </TabItem>
 
 <TabItem value="api" label="API">
 
-  The reload of Metadata can be done via the
-  [reload_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-reload-metadata) Metadata API.
+The reload of Metadata can be done via the
+[reload_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-reload-metadata) Metadata API.
 
-  Here is an example using `curl`:
+Here is an example using `curl`:
 
-  ```bash
-  curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/metadata
-  ```
+```bash
+curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/metadata
+```
 
-  If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
+If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
 
 </TabItem>
 
@@ -300,8 +294,8 @@ added to a table via an external tool such as `psql`.
 :::info Note
 
 Reloading may result in an `inconsistent metadata` status. You may need to
-[resolve all inconsistent objects](/migrations-metadata-seeds/manage-metadata.mdx#metadata-inconsistency)
-manually or delete them. After that, you will need to reload metadata again.
+[resolve all inconsistent objects](/migrations-metadata-seeds/manage-metadata.mdx#metadata-inconsistency) manually or
+delete them. After that, you will need to reload metadata again.
 
 :::
 
@@ -309,66 +303,61 @@ manually or delete them. After that, you will need to reload metadata again.
 
 Clearing the Hasura Metadata is an irreversible process. It is highly recommended to first
 [export the metadata](/migrations-metadata-seeds/manage-metadata.mdx#export-export) as a backup so that it can be
-reapplied if necessary or else that information will be lost and Hasura will have to be configured again
-from scratch (e.g. tables tracking, relationships, triggers, actions, etc.).
+reapplied if necessary or else that information will be lost and Hasura will have to be configured again from scratch
+(e.g. tables tracking, relationships, triggers, actions, etc.).
 
 <Tabs className="api-tabs">
 
 <TabItem value="cli" label="CLI">
 
-  Metadata can be cleared with the [hasura metadata clear](/hasura-cli/commands/hasura_metadata_clear.mdx) command.
+Metadata can be cleared with the [hasura metadata clear](/hasura-cli/commands/hasura_metadata_clear.mdx) command.
 
-  ```bash
-  hasura metadata clear
-  ```
+```bash
+hasura metadata clear
+```
 
-  CLI will log:
-  ```text
-  INFO Metadata cleared
-  ```
+CLI will log:
+
+```text
+INFO Metadata cleared
+```
 
 </TabItem>
 
 <TabItem value="console" label="Console">
 
-  1. Click on the settings ⚙ icon at the top right corner of the console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-  <Thumbnail
-    alt="Settings navigation button"
-    src="/img/graphql/core/migrations/settings-navigation_console_2-7-0.png"
-  />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
-  2. Click on `Reset` button.
+2. Click on `Reset` button.
 
-  <Thumbnail
-    alt="reset metadata"
-    src="/img/graphql/core/migrations/metadata-reset.png"
-  />
+{' '}
+<Thumbnail alt='reset metadata' src='/img/migrations-metadata-seeds/metadata-reset.png' />
 
-  3. A pop-up will appear prompting you to confirm the process.
+3. A pop-up will appear prompting you to confirm the process.
 
-  4. A notification should appear indicating success.
+4. A notification should appear indicating success.
 
 </TabItem>
 
 <TabItem value="api" label="API">
 
-  The clearing of metadata can be done via the
-  [clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata)
-  Metadata API.
+The clearing of metadata can be done via the
+[clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata) Metadata API.
 
-  Here is an example using `curl`:
+Here is an example using `curl`:
 
-  ```bash
-  curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
-  ```
+```bash
+curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
+```
 
-  If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
+If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
 
 </TabItem>
 
 </Tabs>
-
 
 ## Metadata Inconsistencies {#metadata-inconsistency}
 
@@ -379,94 +368,91 @@ Metadata objects as `inconsistent`.
 
 <TabItem value="cli" label="CLI">
 
-  The status of Metadata inconsistency can be checked with the
-  [hasura metadata inconsistency](/hasura-cli/commands/hasura_metadata_inconsistency_status.mdx) command.
+The status of Metadata inconsistency can be checked with the
+[hasura metadata inconsistency](/hasura-cli/commands/hasura_metadata_inconsistency_status.mdx) command.
 
-  ```bash
-  hasura metadata inconsistency status
-  ```
+```bash
+hasura metadata inconsistency status
+```
 
-  CLI will log:
-  ```text
-  INFO metadata is consistent
-  ```
+CLI will log:
 
-  If there are inconsistent objects they can be listed with:
-  ```bash
-  hasura metadata inconsistency list
-  ```
+```text
+INFO metadata is consistent
+```
 
-  CLI will log, for example:
-  ```text
-  NAME    TYPE   DESCRIPTION                             REASON
+If there are inconsistent objects they can be listed with:
 
-  author  table  {"name":"author","schema":"public"}...  Inconsistent object: no such table/view exists in source: "author"
-  ```
+```bash
+hasura metadata inconsistency list
+```
 
-  You can then manually address each of the inconsistencies or, if necessary, drop them **all** with the command:
-  ```bash
-  hasura metadata inconsistency drop
-  ```
+CLI will log, for example:
 
-  CLI will log:
-  ```text
-  INFO all inconsistent objects removed from metadata
-  ```
+```text
+NAME    TYPE   DESCRIPTION                             REASON
 
+author  table  {"name":"author","schema":"public"}...  Inconsistent object: no such table/view exists in source: "author"
+```
+
+You can then manually address each of the inconsistencies or, if necessary, drop them **all** with the command:
+
+```bash
+hasura metadata inconsistency drop
+```
+
+CLI will log:
+
+```text
+INFO all inconsistent objects removed from metadata
+```
 
 </TabItem>
 
 <TabItem value="console" label="Console">
 
-  1. Click on the settings ⚙ icon at the top right corner of the console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-  <Thumbnail
-    alt="Settings navigation button"
-    src="/img/graphql/core/migrations/settings-navigation_console_2-7-0.png"
-  />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
-  2. Click on `Reset` button.
+2. Click on `Reset` button.
 
-  <Thumbnail
-    alt="reset metadata"
-    src="/img/graphql/core/migrations/metadata-reset.png"
-  />
+{' '}
+<Thumbnail alt='reset metadata' src='/img/migrations-metadata-seeds/metadata-reset.png' />
 
-  3. A pop-up will appear prompting you to confirm the process.
+3. A pop-up will appear prompting you to confirm the process.
 
-  4. A notification should appear indicating success.
+4. A notification should appear indicating success.
 
 </TabItem>
 
 <TabItem value="api" label="API">
 
-  The clearing of metadata can be done via the
-  [clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata)
-  Metadata API.
+The clearing of metadata can be done via the
+[clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata) Metadata API.
 
-  Here is an example using `curl`:
+Here is an example using `curl`:
 
-  ```bash
-  curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
-  ```
+```bash
+curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
+```
 
-  If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
+If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
 
 </TabItem>
 
 </Tabs>
 
+## Diff Metadata {#diff-metadata}
 
-
-## Diff Metadata  {#diff-metadata}
 The Hasura CLI includes a tool to show a highlighted diff between two sets of Metadata.
 
 If no arguments are given it will diff the server endpoint Metadata and the Metadata in the current project directory
 
-
 ```bash
 hasura metadata diff
-````
+```
 
 You can provide the tool with two Metadata folders to diff.
 
@@ -477,7 +463,6 @@ hasura metadata diff folder1 folder2
 ## Auto-Applying Metadata in CI/CD {#auto-apply-metadata}
 
 If you need an automated way of applying Migrations and Metadata, take a look at the
-[cli-migrations](/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can
-automatically apply Migrations and Metadata when the Hasura Server starts.
+[cli-migrations](/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply
+Migrations and Metadata when the Hasura Server starts.
 [Check out more information here](/migrations-metadata-seeds/auto-apply-migrations.mdx).
-

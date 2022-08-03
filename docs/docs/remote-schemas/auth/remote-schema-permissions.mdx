@@ -8,7 +8,7 @@ keywords:
 sidebar_position: 3
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -25,8 +25,7 @@ Remote schema permissions can be defined to:
 
 :::tip Supported from
 
-Remote schema permissions are supported in Hasura GraphQL engine
-versions `v2.0.0` and above.
+Remote schema permissions are supported in Hasura GraphQL engine versions `v2.0.0` and above.
 
 :::
 
@@ -34,15 +33,20 @@ versions `v2.0.0` and above.
 
 Remote schema permissions are **not** enabled by default.
 
-To enable them, you will have to run the GraphQL engine either with the server flag `--enable-remote-schema-permissions` or environment variable `HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS` set to `true`.
+To enable them, you will have to run the GraphQL engine either with the server flag `--enable-remote-schema-permissions`
+or environment variable `HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS` set to `true`.
 
-When remote schema permissions are not enabled, all remote schemas are considered to be public entities, i.e. all roles will have unrestricted access to the remote schemas. Once enabled, access to remote schemas will be restricted for all roles (other than `admin`) unless explicit permissions for the remote schema fields are granted to the roles.
+When remote schema permissions are not enabled, all remote schemas are considered to be public entities, i.e. all roles
+will have unrestricted access to the remote schemas. Once enabled, access to remote schemas will be restricted for all
+roles (other than `admin`) unless explicit permissions for the remote schema fields are granted to the roles.
 
 :::
 
 ## Role based remote schemas {#role-based-remote-schemas}
 
-Role based remote schemas allow you to expose only certain parts of the remote schema . You can choose to remove any fields from objects, interfaces and input object types, doing this will ensure that these fields are not exposed for the role and they will not be able to query the fields that have been hidden.
+Role based remote schemas allow you to expose only certain parts of the remote schema . You can choose to remove any
+fields from objects, interfaces and input object types, doing this will ensure that these fields are not exposed for the
+role and they will not be able to query the fields that have been hidden.
 
 **For example**, let's say we have the following remote schema added to the GraphQL engine:
 
@@ -61,9 +65,14 @@ type Query {
 }
 ```
 
-Now, we want to expose only certain fields of the `User` object for the `public` role here. The `public` role should not be allowed to access the `id`, `email` and `phone` fields of the `User` object. Now, since the `public` role doesn't have access to the `id` field of the `User` object and let's say that the `id` argument of the `user` field defined in the `Query` object is the same as the `id` field of the `User` object, there will be no way of exposing the `user` field in the `Query` object, so we'll remove that field as well.
+Now, we want to expose only certain fields of the `User` object for the `public` role here. The `public` role should not
+be allowed to access the `id`, `email` and `phone` fields of the `User` object. Now, since the `public` role doesn't
+have access to the `id` field of the `User` object and let's say that the `id` argument of the `user` field defined in
+the `Query` object is the same as the `id` field of the `User` object, there will be no way of exposing the `user` field
+in the `Query` object, so we'll remove that field as well.
 
-We can accomplish this by specifying the restricted schema (in GraphQL IDL format) for the `public` role. In the above case, it will be:
+We can accomplish this by specifying the restricted schema (in GraphQL IDL format) for the `public` role. In the above
+case, it will be:
 
 ```graphql
 type User {
@@ -76,7 +85,9 @@ type Query {
 }
 ```
 
-We use the above schema document to configure the remote schema permissions for the `public` role by using the [add_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions) metadata API.
+We use the above schema document to configure the remote schema permissions for the `public` role by using the
+[add_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions)
+metadata API.
 
 You can modify different [GraphQL Types](https://spec.graphql.org/June2018/#sec-Types) in the following manner:
 
@@ -87,9 +98,12 @@ You can modify different [GraphQL Types](https://spec.graphql.org/June2018/#sec-
 5. Enum - An enum can be configured to omit some enum values from its definition.
 6. Input object - An input object, just like object type, can omit some of the (input) fields from its definition.
 
-In a [field definition](https://spec.graphql.org/June2018/#FieldDefinition) the arguments can be configured to only expose a subset of the arguments defined.
+In a [field definition](https://spec.graphql.org/June2018/#FieldDefinition) the arguments can be configured to only
+expose a subset of the arguments defined.
 
-For example, let's consider the remote schema used in the example above, but in this case we want the `public` role to use the `get_user_by_name` with only the `first_name` argument and the `public` role should not be able to access the `last_name` argument. The schema should look like:
+For example, let's consider the remote schema used in the example above, but in this case we want the `public` role to
+use the `get_user_by_name` with only the `first_name` argument and the `public` role should not be able to access the
+`last_name` argument. The schema should look like:
 
 ```graphql
 type User {
@@ -104,13 +118,17 @@ type Query {
 
 ## Argument presets
 
-The role-based schema only helps in changing the type definitions that are exposed. Argument presets are used to constrain the input values in fields.
+The role-based schema only helps in changing the type definitions that are exposed. Argument presets are used to
+constrain the input values in fields.
 
-Argument presets automatically inject values from session variables or static values during execution. Arguments which are preset will not be exposed in the schema. Argument presets are set on an argument value using the `@preset` directive.
+Argument presets automatically inject values from session variables or static values during execution. Arguments which
+are preset will not be exposed in the schema. Argument presets are set on an argument value using the `@preset`
+directive.
 
 :::info Note
 
-A preset value can be defined only at the `INPUT_FIELD_DEFINITION` and `ARGUMENT_DEFINITION` system directive locations i.e. only at an input object field or an argument field.
+A preset value can be defined only at the `INPUT_FIELD_DEFINITION` and `ARGUMENT_DEFINITION` system directive locations
+i.e. only at an input object field or an argument field.
 
 :::
 
@@ -137,7 +155,10 @@ type Query {
 }
 ```
 
-We want to configure the `user` role to only be able to query their own record. To do this, we need to preset the `id` parameter of the `get_user` field defined in the `Query` object. Let's say we have the value of the `id` argument set in one of the [session variables](/auth/authorization/roles-variables.mdx#dynamic-session-variables), we can preset the `id` argument with the session variable. Using the above schema, we can do that in the following manner:
+We want to configure the `user` role to only be able to query their own record. To do this, we need to preset the `id`
+parameter of the `get_user` field defined in the `Query` object. Let's say we have the value of the `id` argument set in
+one of the [session variables](/auth/authorization/roles-variables.mdx#dynamic-session-variables), we can preset the
+`id` argument with the session variable. Using the above schema, we can do that in the following manner:
 
 ```graphql
 type Query {
@@ -146,24 +167,30 @@ type Query {
 }
 ```
 
-Configuring the remote schema for the `user` role with the above schema will remove the `id` argument from the schema and the value of the `id` argument will get injected via the `x-hasura-user-id` session variable, whenever the `user` role executes a query containing the `get_user` field.
+Configuring the remote schema for the `user` role with the above schema will remove the `id` argument from the schema
+and the value of the `id` argument will get injected via the `x-hasura-user-id` session variable, whenever the `user`
+role executes a query containing the `get_user` field.
 
 Preset values can also be static values.
 
 For example:
 
-Suppose, we want the `user` role to allow to only get 10 of the user activities using the `get_user_activities` field, we can do that by setting a `preset` value for the `limit` argument of the `get_user_activities` to 10. The schema implementing this change should look like:
+Suppose, we want the `user` role to allow to only get 10 of the user activities using the `get_user_activities` field,
+we can do that by setting a `preset` value for the `limit` argument of the `get_user_activities` to 10. The schema
+implementing this change should look like:
 
 ```graphql
 type Query {
-  get_user(id: ID! @preset(value: "x-hasura-user-id")) : User
-  get_user_activities(user_id: ID!, limit: Int! @preset(value: 10)) : [Activity]
+  get_user(id: ID! @preset(value: "x-hasura-user-id")): User
+  get_user_activities(user_id: ID!, limit: Int! @preset(value: 10)): [Activity]
 }
 ```
 
 :::info Note
 
-By default, any preset string value in the format of `x-hasura-*` is assumed to be a [session variable](/auth/authorization/roles-variables.mdx#dynamic-session-variables)`. To override this behaviour i.e. to treat the value literally, the `static` argument equal to `true` needs to be added in the `preset` directive. In the following example, the `x-hasura-user-id` will be treated literally.
+By default, any preset string value in the format of `x-hasura-*` is assumed to be a
+[session variable](/auth/authorization/roles-variables.mdx#dynamic-session-variables)`. To override this behaviour i.e. to treat the value literally, the `static`argument equal to`true`needs to be added in the`preset`directive. In the following example, the`x-hasura-user-id`
+will be treated literally.
 
 ```graphql
 get_user(id: ID! @preset(value: "x-hasura-user-id", static: true)) : User
@@ -173,7 +200,9 @@ get_user(id: ID! @preset(value: "x-hasura-user-id", static: true)) : User
 
 ## Input object field presets
 
-Input object fields can also have preset values set. When an input object contains multiple fields and only some of them have a preset set, the other fields which don't contain a preset can be queried by the user and when the query is executed, the user provided arguments are merged with the input object field preset arguments.
+Input object fields can also have preset values set. When an input object contains multiple fields and only some of them
+have a preset set, the other fields which don't contain a preset can be queried by the user and when the query is
+executed, the user provided arguments are merged with the input object field preset arguments.
 
 Let's see an example, to see input object field presets in action.
 
@@ -181,14 +210,14 @@ Suppose, a remote schema with the following schema is added to the GraphQL engin
 
 ```graphql
 input MessageInput {
-  from:       ID!
-  to:         ID!
-  content:    String!
+  from: ID!
+  to: ID!
+  content: String!
 }
 
 type Message {
-  from:    ID!
-  to:      ID!
+  from: ID!
+  to: ID!
   content: String
 }
 
@@ -201,7 +230,10 @@ type Mutation {
 }
 ```
 
-We want to configure the remote schema in a way that when the `user` role creates a new message (using `create_message`), we want the value of the `from` field of the `MessageInput` to come from the `x-hasura-user-id` session variable and the other fields (`to` and `content`) to be set by the user. The schema for the `user` role should be configured in the following manner:
+We want to configure the remote schema in a way that when the `user` role creates a new message (using
+`create_message`), we want the value of the `from` field of the `MessageInput` to come from the `x-hasura-user-id`
+session variable and the other fields (`to` and `content`) to be set by the user. The schema for the `user` role should
+be configured in the following manner:
 
 ```graphql
 input MessageInput {
@@ -229,15 +261,16 @@ Now, when the `user` role wants to create a new message, they can do it in the f
 
 ```graphql
 mutation {
-  create_message(message: {to: "2", content: "hello world"})
+  create_message(message: { to: "2", content: "hello world" })
 }
 ```
 
-The `from` field will get injected into the input object before the GraphQL engine queries the remote server. The final query that will be sent to the remote server will be:
+The `from` field will get injected into the input object before the GraphQL engine queries the remote server. The final
+query that will be sent to the remote server will be:
 
 ```graphql
 mutation {
-  create_message(message: {to: "2", content: "hello world", from: "<x-hasura-user-id>"})
+  create_message(message: { to: "2", content: "hello world", from: "<x-hasura-user-id>" })
 }
 ```
 
@@ -259,43 +292,44 @@ Add a remote schema as described [here](/remote-schemas/adding-schema.mdx), if t
 - Hit `Save Permissions`.
 
 <Thumbnail
-  src="/img/graphql/core/remote-schemas/remote-schemas-user-role.png"
-  alt="Opening the remote relationship section"
-  width="1000px"
+  src='/img/remote-schemas/remote-schemas-user-role.png'
+  alt='Opening the remote relationship section'
+  width='1000px'
 />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can add a new role or edit the permissions for an existing role by editing the `metadata -> remote_schemas.yaml` file:
+You can add a new role or edit the permissions for an existing role by editing the `metadata -> remote_schemas.yaml`
+file:
 
 Add the subset of the remote schema that the role is allowed to access and set any presets.
 
 ```yaml {7-24}
-- name: countries    
-  definition:   
+- name: countries
+  definition:
     url: https://countries.trevorblades.com/
     timeout_seconds: 60
-  comment: "remote schema permissions for role: user"         
-  permissions: 
-   - role: user  
-     definition:
-       schema: |-        
-         schema  { query: Query }
+  comment: 'remote schema permissions for role: user'
+  permissions:
+    - role: user
+      definition:
+        schema: |-
+          schema  { query: Query }
 
-         type Continent { 
-           countries: [Country!]!
-           name: String!
-         }
+          type Continent { 
+            countries: [Country!]!
+            name: String!
+          }
 
-         type Country {
-           name: String!
-           capital: String
-         }  
+          type Country {
+            name: String!
+            capital: String
+          }  
 
-         type Query {
-           continent(code: ID!): Continent
-         }
+          type Query {
+            continent(code: ID!): Continent
+          }
 ```
 
 Apply the metadata by running:
@@ -307,7 +341,8 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can create remote schema permissions by using the [add_remote_schema_permissions metadata API](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions):
+You can create remote schema permissions by using the
+[add_remote_schema_permissions metadata API](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -332,17 +367,16 @@ X-Hasura-Role: admin
 
 ### Step 2: Test and verify the permissions
 
-Head to the `API` section. Add the session variable `X-Hasura-Role` with the value as the role for which we set permissions in the previous step.
+Head to the `API` section. Add the session variable `X-Hasura-Role` with the value as the role for which we set
+permissions in the previous step.
 
-<Thumbnail
-  src="/img/graphql/core/remote-schemas/role-based-schema.png"
-  width="1100px"
-/>
+<Thumbnail src='/img/remote-schemas/role-based-schema.png' width='1100px' />
 
 As we see, the role `user` has access restricted to certain fields of the remote schema.
 
 :::info Additional Resources
 
-Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+Data Federation with Hasura -
+[Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
 :::

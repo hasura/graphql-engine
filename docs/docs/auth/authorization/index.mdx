@@ -9,43 +9,39 @@ slug: index
 sidebar_position: 1
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Authorization / Access control
 
 ## Overview
 
-Hasura supports **role-based** authorization where access control is done by creating rules for each role and operation. In the case of database tables, you can create rules for database operations (select, insert, update, delete) and in the case of [remote schemas](/remote-schemas/index.mdx), you can define rules for access to fields. These access control rules use dynamic session
-variables that are passed to the GraphQL engine from your
-[authentication service](/auth/authentication/index.mdx) with every request. Role information is inferred from the `X-Hasura-Role` and `X-Hasura-Allowed-Roles` session variables. Other session variables can be passed by your auth service as per your requirements.
+Hasura supports **role-based** authorization where access control is done by creating rules for each role and operation.
+In the case of database tables, you can create rules for database operations (select, insert, update, delete) and in the
+case of [remote schemas](/remote-schemas/index.mdx), you can define rules for access to fields. These access control
+rules use dynamic session variables that are passed to the GraphQL engine from your
+[authentication service](/auth/authentication/index.mdx) with every request. Role information is inferred from the
+`X-Hasura-Role` and `X-Hasura-Allowed-Roles` session variables. Other session variables can be passed by your auth
+service as per your requirements.
 
 **For example:**
 
-<Thumbnail
-  src="/img/graphql/core/auth/hasura-perms.png"
-  alt="Create a permission rule"
-  width="800px"
-/>
+<Thumbnail src='/img/auth/hasura-perms.png' alt='Create a permission rule' width='800px' />
 
 :::info Note
 
-Hasura roles and permissions are implemented at the Hasura layer. They
-have nothing to do with Postgres roles and users.
+Hasura roles and permissions are implemented at the Hasura layer. They have nothing to do with Postgres roles and users.
 
 :::
 
 ## Trying out access control
 
-If you just want to see role-based access control in action, you need
-not set up or integrate your auth service with GraphQL engine. You can
-just:
+If you just want to see role-based access control in action, you need not set up or integrate your auth service with
+GraphQL engine. You can just:
 
--   Define permission rules for a table for a role.
--   Use the GraphiQL interface in the console to make a request and send
-    the session variables as request headers (*send a* `X-Hasura-Role`
-    *key, with its value as the name of the role you've defined rules
-    for*). The data in the response will be restricted as per your
-    configuration.
+- Define permission rules for a table for a role.
+- Use the GraphiQL interface in the console to make a request and send the session variables as request headers (_send
+  a_ `X-Hasura-Role` _key, with its value as the name of the role you've defined rules for_). The data in the response
+  will be restricted as per your configuration.
 
 Follow the example at [access control basics](/auth/authorization/basics.mdx).
 
@@ -61,14 +57,14 @@ Follow the example at [access control basics](/auth/authorization/basics.mdx).
 
 :::info API limits and access controls in Hasura Cloud
 
-Additional access controls and API limits like maximum query depth can
-be found in Hasura Cloud. See more at
+Additional access controls and API limits like maximum query depth can be found in Hasura Cloud. See more at
 [API limits with Hasura Cloud](/security/api-limits.mdx).
 
 :::
 
 :::info Additional Resources
 
-Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+Enterprise Grade Authorization -
+[Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
 :::

@@ -60,8 +60,9 @@ The following fields can be defined for a remote schema relationship:
 For example, say we have a table `articles(id int, author_id int)` in the source database and a table
 `author(id int, name text)` in the target database.
 
-We can create an object remote database relationship `author` joining the `articles` table to the `author` table using the
-`articles.author_id` and `author.id` fields.
+We can create an object remote database relationship `author` joining the `articles` table to the `author` table using
+the `articles.author_id` and `author.id` fields.
+
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
@@ -72,7 +73,7 @@ Console support will be added soon.
 Head to the `Data > [database] > [articles] > Relationships` tab. Under the `Remote Database Relationships` section,
 select `Add a remote database relationship`.
 <Thumbnail
-  src='/img/graphql/core/databases/postgres/schema/create-remote-source-relationship.png'
+  src='/img/databases/postgres/schema/create-remote-source-relationship.png'
   alt='Create remote database relationships'
 />
 
@@ -89,16 +90,16 @@ table:
   dataset: source
   name: author
 remote_relationships:
-- name: articles
-  definition:
-    to_source:
-      field_mapping:
-        id: author_id
-      relationship_type: array
-      source: bq-target
-      table:
-        dataset: target
-        name: articles
+  - name: articles
+    definition:
+      to_source:
+        field_mapping:
+          id: author_id
+        relationship_type: array
+        source: bq-target
+        table:
+          dataset: target
+          name: articles
 ```
 
 Apply the metadata:

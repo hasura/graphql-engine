@@ -10,22 +10,20 @@ keywords:
   - tables
 ---
 
-import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
-import Thumbnail from "@site/src/components/Thumbnail";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import Thumbnail from '@site/src/components/Thumbnail';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # BigQuery: Tables basics
 
 ## Introduction
 
-Adding tables allows you to define the GraphQL types of your schema
-including their corresponding fields.
+Adding tables allows you to define the GraphQL types of your schema including their corresponding fields.
 
 ## Creating tables
 
-Let's say we want to create two simple tables for `articles` and
-`author` schema:
+Let's say we want to create two simple tables for `articles` and `author` schema:
 
 ```sql
 authors (
@@ -48,16 +46,12 @@ articles (
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Open the Hasura console and head to the `Data` tab and click on the
-button on the left side bar to open up an interface to create tables.
+Open the Hasura console and head to the `Data` tab and click on the button on the left side bar to open up an interface
+to create tables.
 
-For example, here is the schema for the `articles` table in this
-interface:
+For example, here is the schema for the `articles` table in this interface:
 
-<Thumbnail
-  src="/img/graphql/core/schema/create-table-graphql-bigquery.png"
-  alt="Schema for an article table"
-/>
+<Thumbnail src='/img/schema/create-table-graphql-bigquery.png' alt='Schema for an article table' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -82,8 +76,8 @@ interface:
     );
     ```
 
-2.  Add the following statement to the `down.sql` file in case you need
-    to [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations)` the above statement:
+2.  Add the following statement to the `down.sql` file in case you need to
+    [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations)` the above statement:
 
     ```sql
     DROP TABLE `hasura.author`;
@@ -121,29 +115,23 @@ X-Hasura-Role: admin
 
 ## Tracking tables
 
-Tables can be present in the underlying BigQuery database without being
-exposed over the GraphQL API. In order to expose a table over the
-GraphQL API, it needs to be **tracked**.
+Tables can be present in the underlying BigQuery database without being exposed over the GraphQL API. In order to expose
+a table over the GraphQL API, it needs to be **tracked**.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-When a table is created via the Hasura console, it gets tracked by
-default.
+When a table is created via the Hasura console, it gets tracked by default.
 
-You can track any existing tables in your database from the
-`Data -> Schema` page:
+You can track any existing tables in your database from the `Data -> Schema` page:
 
-<Thumbnail
-  src="/img/graphql/core/schema/schema-track-tables-bigquery.png"
-  alt="Track table"
-/>
+<Thumbnail src='/img/schema/schema-track-tables-bigquery.png' alt='Track table' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-1.  To track the table and expose it over the GraphQL API, edit the
-    `tables.yaml` file in the `metadata` directory as follows:
+1.  To track the table and expose it over the GraphQL API, edit the `tables.yaml` file in the `metadata` directory as
+    follows:
 
     ```yaml {4-6}
     - table:
@@ -163,8 +151,8 @@ You can track any existing tables in your database from the
 </TabItem>
 <TabItem value="api" label="API">
 
-To track the table and expose it over the GraphQL API, make the
-following API call to the [bigquery_track_table](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-track-table) metadata API:
+To track the table and expose it over the GraphQL API, make the following API call to the
+[bigquery_track_table](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-track-table) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -188,11 +176,10 @@ X-Hasura-Role: admin
 
 ## Generated GraphQL schema types
 
-As soon as a table is created and tracked, the corresponding GraphQL
-schema types and query/mutation fields will be automatically generated.
+As soon as a table is created and tracked, the corresponding GraphQL schema types and query/mutation fields will be
+automatically generated.
 
-The following object type is generated for the `articles` table we just
-created and tracked:
+The following object type is generated for the `articles` table we just created and tracked:
 
 ```graphql
 # Object type
@@ -210,12 +197,10 @@ type Articles {
 Let's analyze the above type:
 
 - `Articles` is the name of the type
-- `id`, `title`, `body`, and so on are fields of the
-  `Articles` type
+- `id`, `title`, `body`, and so on are fields of the `Articles` type
 - `Int` and `String`, `Boolean` and `Datetime` are types that fields can have
 
-The following query/mutation fields are generated for the `articles`
-table we just created and tracked:
+The following query/mutation fields are generated for the `articles` table we just created and tracked:
 
 ```graphql
 # Query field: fetch data from the table: "bigquery.articles"
@@ -237,64 +222,59 @@ bigquery_articles_aggregate(
 ): bigquery_articles_aggregate!
 ```
 
-These auto-generated fields will allow you to query data in
-the table.
+These auto-generated fields will allow you to query data in the table.
 
-See the [query](/api-reference/graphql-api/query.mdx) API reference for the full
-specifications.
+See the [query](/api-reference/graphql-api/query.mdx) API reference for the full specifications.
 
 ### GraphQL types documentation
 
-Hasura automatically picks up any comments that might have been added to
-your tables and columns and adds them as GraphQL descriptions of the
-auto-generated types and fields.
+Hasura automatically picks up any comments that might have been added to your tables and columns and adds them as
+GraphQL descriptions of the auto-generated types and fields.
 
 ## Try out basic GraphQL requests
 
-At this point, you should be able to try out basic GraphQL
-queries/mutations on the newly created tables from the `API` tab in
-the console. _(You may want to add some sample data into the tables
-first)_
+At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables from the `API`
+tab in the console. _(You may want to add some sample data into the tables first)_
 
 - Query all rows in the `articles` table:
 
   <GraphiQLIDE
     query={`query {
-      bigquery_articles {
-        author_id
-        id
-        title
-      }
-    }`}
-    response={`{
-    "data": {
-      "bigquery_articles": [
-        {
-          "author_id": "1",
-          "id": "2",
-          "title": "veniam"
-        },
-        {
-          "author_id": "2",
-          "id": "3",
-          "title": "nostrud"
-        },
-        {
-          "author_id": "3",
-          "id": "4",
-          "title": "cillum nostrud"
-        },
-        {
-          "author_id": "3",
-          "id": "1",
-          "title": "dolore"
-        },
-        {
-          "author_id": "4",
-          "id": "5",
-          "title": "culpa qui officia"
-        }
-      ]
+    bigquery_articles {
+      author_id
+      id
+      title
     }
   }`}
+    response={`{
+  "data": {
+    "bigquery_articles": [
+      {
+        "author_id": "1",
+        "id": "2",
+        "title": "veniam"
+      },
+      {
+        "author_id": "2",
+        "id": "3",
+        "title": "nostrud"
+      },
+      {
+        "author_id": "3",
+        "id": "4",
+        "title": "cillum nostrud"
+      },
+      {
+        "author_id": "3",
+        "id": "1",
+        "title": "dolore"
+      },
+      {
+        "author_id": "4",
+        "id": "5",
+        "title": "culpa qui officia"
+      }
+    ]
+  }
+}`}
   />

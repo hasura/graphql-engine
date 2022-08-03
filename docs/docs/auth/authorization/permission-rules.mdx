@@ -19,11 +19,7 @@ import TabItem from '@theme/TabItem';
 Access control rules in Hasura are defined at a role, table and action (_insert, update, select, delete_) level
 granularity:
 
-<Thumbnail
-  src='/img/graphql/core/auth/permission-rule-granularity.png'
-  alt='Access control rules in Hasura'
-  width='1000px'
-/>
+<Thumbnail src='/img/auth/permission-rule-granularity.png' alt='Access control rules in Hasura' width='1000px' />
 
 Requests to Hasura should contain the reserved session variable `X-Hasura-Role` to indicate the requesting user's role,
 and the table and action information is inferred from the request itself. This information is used to determine the
@@ -96,17 +92,9 @@ See the [API reference](/api-reference/syntax-defs.mdx#metadataoperator) for a l
 
 **For example**, the following two images illustrate the different operators available for `integer` and `text` types:
 
-<Thumbnail
-  src='/img/graphql/core/auth/operators-for-integer-types.png'
-  alt='Column operators for integer types'
-  width='400px'
-/>
+<Thumbnail src='/img/auth/operators-for-integer-types.png' alt='Column operators for integer types' width='400px' />
 
-<Thumbnail
-  src='/img/graphql/core/auth/operators-for-text-types.png'
-  alt='Column operators for text types'
-  width='400px'
-/>
+<Thumbnail src='/img/auth/operators-for-text-types.png' alt='Column operators for text types' width='400px' />
 
 #### Using boolean expressions
 
@@ -118,11 +106,7 @@ the `id` column is greater than 10:
 
 You can define permissions using boolean expressions on the Hasura console as follows:
 
-<Thumbnail
-  src='/img/graphql/core/auth/simple-boolean-expression.png'
-  alt='Using boolean expressions to build rules'
-  width='600px'
-/>
+<Thumbnail src='/img/auth/simple-boolean-expression.png' alt='Using boolean expressions to build rules' width='600px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -181,7 +165,7 @@ X-Hasura-Role: admin
 You can construct more complex boolean expressions using the `_and`, `_or` and `not` operators:
 
 <Thumbnail
-  src='/img/graphql/core/auth/boolean-operators.png'
+  src='/img/auth/boolean-operators.png'
   alt='Using more complex boolean expressions to build rules'
   width='600px'
 />
@@ -195,7 +179,7 @@ value in the `id` column is greater than 10 **and** the value in the `name` colu
 You can define permissions using the `_and` operator on the Hasura console as follows:
 
 <Thumbnail
-  src='/img/graphql/core/auth/composite-boolean-expression.png'
+  src='/img/auth/composite-boolean-expression.png'
   alt='Example of a rule with the _and operator'
   width='600px'
 />
@@ -281,7 +265,7 @@ is equal to the value in the session variable (_assuming this variable is being 
 You can define session variables in permissions on the Hasura console:
 
 <Thumbnail
-  src='/img/graphql/core/auth/session-variables-in-permissions-simple-example.png'
+  src='/img/auth/session-variables-in-permissions-simple-example.png'
   alt='Using session variables to build rules'
   width='600px'
 />
@@ -369,7 +353,7 @@ object relationship:
 You can use a nested object to build rules on the Hasura console:
 
 <Thumbnail
-  src='/img/graphql/core/auth/nested-object-permission-simple-example.png'
+  src='/img/auth/nested-object-permission-simple-example.png'
   alt='Using a nested object to build rules'
   width='600px'
 />
@@ -459,11 +443,7 @@ variable.
 
 You can set permissions using unrelated tables on the Hasura console as follows:
 
-<Thumbnail
-  src='/img/graphql/core/auth/exists-permission-example.png'
-  alt='Use an unrelated table to build rules'
-  width='900px'
-/>
+<Thumbnail src='/img/auth/exists-permission-example.png' alt='Use an unrelated table to build rules' width='900px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -552,7 +532,7 @@ Column-level permissions determine access to columns in the rows that are access
 
 Column-level permissions are simple selections on the Hasura console:
 
-<Thumbnail src='/img/graphql/core/auth/column-level-permissions.png' alt='Column level permissions' width='600px' />
+<Thumbnail src='/img/auth/column-level-permissions.png' alt='Column level permissions' width='600px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -629,7 +609,7 @@ configuration:
 
 You can set a row fetch limit on the Hasura console as follows:
 
-<Thumbnail src='/img/graphql/core/auth/limit-rows-for-select.png' alt='Row fetch limit' width='600px' />
+<Thumbnail src='/img/auth/limit-rows-for-select.png' alt='Row fetch limit' width='600px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -704,11 +684,7 @@ enabled for a given role using this configuration.
 
 You can enable aggregation queries permissions on the Hasura console as follows:
 
-<Thumbnail
-  src='/img/graphql/core/auth/aggregation-query-permissions.png'
-  alt='Aggregation queries permissions'
-  width='600px'
-/>
+<Thumbnail src='/img/auth/aggregation-query-permissions.png' alt='Aggregation queries permissions' width='600px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">

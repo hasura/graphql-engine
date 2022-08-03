@@ -8,7 +8,7 @@ keywords:
   - hasura CLI
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Managing Migrations
 
@@ -16,15 +16,16 @@ Hasura will create pure SQL files representing every change made to tracked data
 served by the Hasura CLI.
 
 The Migrations files are automatically generated in a series of Unix nanosecond timestamped directories consisting of
-`up.sql` and `down.sql` files in pure SQL syntax, which describe to Hasura Server both how to create, (`up.sql`) and
-how to roll back (`down.sql`) each of your database changes step-by-step.
+`up.sql` and `down.sql` files in pure SQL syntax, which describe to Hasura Server both how to create, (`up.sql`) and how
+to roll back (`down.sql`) each of your database changes step-by-step.
 
 When these files are committed to version control, your database schema state can be kept in-sync with your codebase.
 
-When used in combination with CI/CD, changes to your database schema can automatically and elegantly be applied to
-your app's development, staging or production versions.
+When used in combination with CI/CD, changes to your database schema can automatically and elegantly be applied to your
+app's development, staging or production versions.
 
 Example `migrations` directory created with the Hasura CLI:
+
 ```text
 📂 migrations
 └─ 📂 default
@@ -35,41 +36,38 @@ Example `migrations` directory created with the Hasura CLI:
       └─ 📄 up.sql
 ```
 
-
 ## Migrations File Format
 
 Migrations are saved in a series or "versions" of Unix nanosecond timestamped directories consisting of `up.sql` and
-`down.sql` files in pure SQL syntax, which describe to Hasura Server both how to create, (`up.sql`) and how to roll
-back (`down.sql`) each of your database changes step-by-step.
+`down.sql` files in pure SQL syntax, which describe to Hasura Server both how to create, (`up.sql`) and how to roll back
+(`down.sql`) each of your database changes step-by-step.
 
 ## Create Migrations
 
-Usually Migrations are created step-by-step whenever you make a change to our database schema on the Console served
-by the Hasura CLI.
+Usually Migrations are created step-by-step whenever you make a change to our database schema on the Console served by
+the Hasura CLI.
 
-:::info Note
-Only changes to the database schema made using the Console served by the Hasura CLI will be tracked with Migrations.
-Changes made using the Console served by the Hasura Server itself at `/console` will not be tracked.
-:::
+:::info Note Only changes to the database schema made using the Console served by the Hasura CLI will be tracked with
+Migrations. Changes made using the Console served by the Hasura Server itself at `/console` will not be tracked. :::
 
 ### Create an initial Migration with the current database schema
 
-By using the `migrate create` command on the Hasura CLI you can create a full `up.sql` file to recreate the
-entire database(s) schema.
+By using the `migrate create` command on the Hasura CLI you can create a full `up.sql` file to recreate the entire
+database(s) schema.
 
 ```bash
 hasura migrate create "init" --from-server
 ```
 
-This will create a new folder named in the format `<timestamp>_init` within another folder of the name of the
-database in Hasura which is being referenced. It will contain only an `up.sql` file which describes in SQL how to
-create the schema in full for that database.
+This will create a new folder named in the format `<timestamp>_init` within another folder of the name of the database
+in Hasura which is being referenced. It will contain only an `up.sql` file which describes in SQL how to create the
+schema in full for that database.
 
 ### Create a Migration manually {#create-manual-migrations}
 
-While the Hasura console can auto generate migrations for every action, sometimes you might want to write the
-migrations yourself, by hand. Using the Hasura CLI, you can bootstrap these Migration files and manually write the SQL
-for the database schema.
+While the Hasura console can auto generate migrations for every action, sometimes you might want to write the migrations
+yourself, by hand. Using the Hasura CLI, you can bootstrap these Migration files and manually write the SQL for the
+database schema.
 
 Set up the migration files:
 
@@ -96,15 +94,15 @@ hasura metadata reload
 ### Create a Migration to insert data
 
 You can also write manual SQL insert statements which can then be saved as a Hasura Migration and used in the normal
-Hasura Migration workflow. You can do this by using the Console served by the Hasura CLI to create the Migration
-file for you based on the SQL statements you give it.
+Hasura Migration workflow. You can do this by using the Console served by the Hasura CLI to create the Migration file
+for you based on the SQL statements you give it.
 
 You can create a Migration file inserting data using the Console served by the Hasura CLI as follows:
 
 **Step 1: Navigate to the SQL section**
 
-On the Hasura console, click on the `Data` tab and then on the `SQL` link on the left. This is a form which allows
-you to enter and then execute standard SQL statements on your chosen database.
+On the Hasura console, click on the `Data` tab and then on the `SQL` link on the left. This is a form which allows you
+to enter and then execute standard SQL statements on your chosen database.
 
 **Step 2: Write an insert statement**
 
@@ -121,16 +119,13 @@ INSERT INTO days_of_week (id, value) VALUES
   (7, 'Sunday');
 ```
 
-<Thumbnail
-    alt="reset metadata"
-    src="/img/graphql/core/migrations/migration-create-seed_console_2-8-1.png"
-/>
+<Thumbnail alt='reset metadata' src='/img/migrations-metadata-seeds/migration-create-seed_console_2-8-1.png' />
 
 **Step 3: Mark the insert as a migration**
 
-Check the box `☑️ This is a migration` and give the migration a name, e.g. `insert_days_of_week_data`. If you don't see this
-checkbox it's likely because you are not on the Console served by the Hasura CLI and rather the one served by Hasura
-Server. You should switch to the Hasura CLI Console in order for this to work.
+Check the box `☑️ This is a migration` and give the migration a name, e.g. `insert_days_of_week_data`. If you don't see
+this checkbox it's likely because you are not on the Console served by the Hasura CLI and rather the one served by
+Hasura Server. You should switch to the Hasura CLI Console in order for this to work.
 
 **Step 4: Run the statement**
 
@@ -138,15 +133,13 @@ Hit the `Run!` button.
 
 **Step 5: Verify data & migration**
 
-If the insert statement was successful, the data is now added to the DB and the Migration is saved with a version
-number in the `migrations` directory on your machine. You can inspect the file in order to see the same SQL
-statements in the `up.sql` file.
+If the insert statement was successful, the data is now added to the DB and the Migration is saved with a version number
+in the `migrations` directory on your machine. You can inspect the file in order to see the same SQL statements in the
+`up.sql` file.
 
-Note that for custom SQL statements executed in this way Hasura will not create a corresponding roll-back
-statements in the `down.sql` file in order to roll back the change and if you need these statements you will need to
-write them by hand in the `down.sql` file.
-
-
+Note that for custom SQL statements executed in this way Hasura will not create a corresponding roll-back statements in
+the `down.sql` file in order to roll back the change and if you need these statements you will need to write them by
+hand in the `down.sql` file.
 
 ## Apply Migrations
 
@@ -165,34 +158,35 @@ Hasura CLI will prompt you to confirm this info.
 
 :::
 
-When using the apply command if you would only like to apply one change to the new instance you can specify which
-one by using the `--version` flag and supplying only the timestamp portion of the folder name to it.
+When using the apply command if you would only like to apply one change to the new instance you can specify which one by
+using the `--version` flag and supplying only the timestamp portion of the folder name to it.
 
 Whenever the `apply` command is used, each Migration that is to be applied is sent to the Hasura Server via a `run_sql`
 API request.
 
 For example:
+
 ```bash
 hasura migrate apply --endpoint https://another-hasura-instance.hasura.app --version 1650879664716
 ```
 
-You can also leave out the `--endpoint` flag if the project has already been initialized in which case the Hasura
-CLI will use the endpoint information from the config.yaml file. Note that Hasura Server keeps track of which
-Migrations have already been applied and will not reapply a migration if it has already been applied.
+You can also leave out the `--endpoint` flag if the project has already been initialized in which case the Hasura CLI
+will use the endpoint information from the config.yaml file. Note that Hasura Server keeps track of which Migrations
+have already been applied and will not reapply a migration if it has already been applied.
 
 ## Rolling back applied Migrations {#roll-back-migrations}
 
 If there are any issues with changes made to the database schema and Hasura metadata it is possible to roll back the
 changes to a previous stable version.
 
-Database schema rollbacks can be achieved via the `down.sql` Migrations generated every time a schema change is made
-but which describe how to remove the particular change.
+Database schema rollbacks can be achieved via the `down.sql` Migrations generated every time a schema change is made but
+which describe how to remove the particular change.
 
 :::info Note
 
-While we guarantee that `up.sql` files will be syntactically correct, if you need to roll back changes with `down.
-sql` files it is advisable to first check the `down.sql` files which will be applied to make sure their syntax is
-correct for the changes you want to do.
+While we guarantee that `up.sql` files will be syntactically correct, if you need to roll back changes with `down. sql`
+files it is advisable to first check the `down.sql` files which will be applied to make sure their syntax is correct for
+the changes you want to do.
 
 :::
 
@@ -202,8 +196,8 @@ For example, to roll back a particular Migration version:
 hasura migrate apply --version 1550925483858 --type down --database-name <database-name>
 ```
 
-This will "undo" each change made to this database schema after and including this version and leave your schema at
-the state it was before this version change was made.
+This will "undo" each change made to this database schema after and including this version and leave your schema at the
+state it was before this version change was made.
 
 You can also roll back `n` number of Migration versions as per the command below:
 
@@ -213,19 +207,19 @@ hasura migrate apply --down 2 --database-name <database-name>
 
 :::info Note
 
-Rollbacks will only work if there are `down` migrations defined for a schema change. e.g. The console will not
-generate `down` migrations for SQL statements executed from the `SQL` tab, and therefore they will not be able to be
-rolled back using this tool.
+Rollbacks will only work if there are `down` migrations defined for a schema change. e.g. The console will not generate
+`down` migrations for SQL statements executed from the `SQL` tab, and therefore they will not be able to be rolled back
+using this tool.
 
 :::
 
 ## Squash Migrations
 
-Hasura CLI contains a tool called `squash` in order to merge multiple migrations into one. This is useful in order
-to improve maintainability of your migrations files and to ensure you can go back to a particular version easily.
-It's most useful when you care working on a feature and there have been multiple changes made to the database
-schemas during development leading to multiple Migration files created. With `squash` you can merge these into
-one directory in order to merge the feature into your main branch with one clean and easily understandable Migration.
+Hasura CLI contains a tool called `squash` in order to merge multiple migrations into one. This is useful in order to
+improve maintainability of your migrations files and to ensure you can go back to a particular version easily. It's most
+useful when you care working on a feature and there have been multiple changes made to the database schemas during
+development leading to multiple Migration files created. With `squash` you can merge these into one directory in order
+to merge the feature into your main branch with one clean and easily understandable Migration.
 
 The following command will squash all migration files from the given migration to the latest migration into a single
 migration file.
@@ -237,10 +231,9 @@ hasura migrate squash --name "<my-feature-name>" --from <start-migration-version
 # note down the version timestamp number
 ```
 
-Because all the Migrations included in the squash have already happened on the Server, we need to tell the Server
-that this new squashed version has already been applied. When we do this using the `hasura migrate apply` command
-but also tell the Server not to execute the statements in the squash to avoid errors and conflicts. We do that as
-follows:
+Because all the Migrations included in the squash have already happened on the Server, we need to tell the Server that
+this new squashed version has already been applied. When we do this using the `hasura migrate apply` command but also
+tell the Server not to execute the statements in the squash to avoid errors and conflicts. We do that as follows:
 
 ```bash
 # mark the squashed migration as applied on this server
@@ -253,6 +246,7 @@ You can check the status of Migrations, whether they are present and applied in 
 database on Hasura server
 
 To check the status of Migrations use:
+
 ```bash
 # in project dir
 hasura migrate status
@@ -278,28 +272,27 @@ We can see the version timestamp number of the migration, it's name, and whether
 filesystem) and also present on the database via the Hasura Server. Hasura keeps track of which migrations have been
 applied to the databases in order to not duplicate applying them and creating errors.
 
-If `SOURCE STATUS` indicates `Not Present`, it means that the migration version is present on the server, but not on
-the current user's local directory. This typically happens if multiple people are collaborating on a project and one
-of the collaborators forgot to pull the latest changes which included the latest migration files, or another
-collaborator forgot to push the latest migration files that were applied on the database. Syncing of the files would
-fix the issue.
+If `SOURCE STATUS` indicates `Not Present`, it means that the migration version is present on the server, but not on the
+current user's local directory. This typically happens if multiple people are collaborating on a project and one of the
+collaborators forgot to pull the latest changes which included the latest migration files, or another collaborator
+forgot to push the latest migration files that were applied on the database. Syncing of the files would fix the issue.
 
 If `DATABASE STATUS` indicates `Not Present`, it means that there are new migration versions in the local directory
 which are not applied on the database yet. To apply them executing `hasura migrate apply` will resolve this.
 
 ## Delete Migrations
 
-You can use the `delete` command to delete the record of the migrations having been applied on the Hasura Server.
-This will not roll back your database schema or change your schema in any way, but merely remove the record of that
-Migration version (identified by its timestamp number) having been applied.
+You can use the `delete` command to delete the record of the migrations having been applied on the Hasura Server. This
+will not roll back your database schema or change your schema in any way, but merely remove the record of that Migration
+version (identified by its timestamp number) having been applied.
 
 For example to delete Migrations on the server only
 
 :::info Best Practise
 
-It's a good idea to always copy or move your migrations before deleting them in case there is an error or mistake
-and you need them again. You can use the command `mv migrations migrations_backup` to quickly move your Migrations
-folder to a backup.
+It's a good idea to always copy or move your migrations before deleting them in case there is an error or mistake and
+you need them again. You can use the command `mv migrations migrations_backup` to quickly move your Migrations folder to
+a backup.
 
 :::
 
@@ -307,17 +300,17 @@ folder to a backup.
 hasura migrate delete --all --server --database-name <database-name>
 ```
 
-This example command specifies the `--all` flag in order to delete all migrations from the server. You can also use
-the `--version` command in order to specify one single Migration version to delete on the server.
+This example command specifies the `--all` flag in order to delete all migrations from the server. You can also use the
+`--version` command in order to specify one single Migration version to delete on the server.
 
-It also uses the `--server` flag in order to specify that it should only apply to the Hasura Server and not the
-local Migrations on your machine.
+It also uses the `--server` flag in order to specify that it should only apply to the Hasura Server and not the local
+Migrations on your machine.
 
 It also specifies the `--database-name` flag in order to bypass the Hasura CLI prompt and tell Hasura only to delete
 Migrations for a that database.
 
-In order to delete Migrations on the Server and clean up the local project Migration files leave out the `--server`
-flag from the command.
+In order to delete Migrations on the Server and clean up the local project Migration files leave out the `--server` flag
+from the command.
 
 ```bash
 hasura migrate delete --all --database-name <database-name>
@@ -326,5 +319,6 @@ hasura migrate delete --all --database-name <database-name>
 ## Auto-Applying Migrations in CI/CD {#auto-apply-migrations}
 
 If you need an automated way of applying Migrations and Metadata, take a look at the [cli-migrations]
-(/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply Migrations and Metadata when the
-Hasura Server starts. [Check out more information here](/migrations-metadata-seeds/auto-apply-migrations.mdx).
+(/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply Migrations and
+Metadata when the Hasura Server starts.
+[Check out more information here](/migrations-metadata-seeds/auto-apply-migrations.mdx).

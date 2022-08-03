@@ -32,7 +32,7 @@ When getting started with Hasura Cloud, regardless of tier, you have the choice 
 Google Cloud Platform (GCP) as hosting providers.
 
 <Thumbnail
-  src='/img/graphql/cloud/getting-started/getting-started-cloud-aws-and-gcp-emphasis.png'
+  src='/img/getting-started/getting-started-cloud-aws-and-gcp-emphasis.png'
   alt='Choose either AWS or GCP'
   width='556px'
 />
@@ -40,29 +40,25 @@ Google Cloud Platform (GCP) as hosting providers.
 Make your selection and then click `Create Free Project`:
 
 <Thumbnail
-  src='/img/graphql/cloud/getting-started/getting-started-cloud-create-project.png'
+  src='/img/getting-started/getting-started-cloud-create-project.png'
   alt='Create project'
   width='556px'
 />
 
 Hasura Cloud creates an initial project. Click `Launch Console` to open the Hasura console in your browser.
 
-<Thumbnail
-  src='/img/graphql/cloud/getting-started/create-project.png'
-  alt='Connect new or existing database'
-  width='556px'
-/>
+<Thumbnail src='/img/getting-started/create-project.png' alt='Connect new or existing database' width='556px' />
 
 ## Step 3: Connect new/existing database {#create-new-db-with-cloud}
 
 On the Hasura console, navigate to `Data -> Manage -> Connect Database`:
 
-<Thumbnail src='/img/graphql/cloud/getting-started/connect-db-console.png' alt='Connect database' width='1000px' />
+<Thumbnail src='/img/getting-started/connect-db-console.png' alt='Connect database' width='1000px' />
 
 - To use an existing database, choose `Connect existing database`.
 - To try out with a new Postgres database, choose `Create Heroku Database`.
 
-<Thumbnail src='/img/graphql/cloud/getting-started/db-setup.png' alt='DB setup' width='556px' />
+<Thumbnail src='/img/getting-started/db-setup.png' alt='DB setup' width='556px' />
 
 ### Step 3.1: Enter database connection URL (for existing database)
 
@@ -70,11 +66,7 @@ If you chose `Connect existing database`, enter your database connection URL.
 
 Click `Connect Database`.
 
-<Thumbnail
-  src='/img/graphql/cloud/getting-started/connect-db.png'
-  alt='Enter URL for existing database'
-  width='556px'
-/>
+<Thumbnail src='/img/getting-started/connect-db-cloud.png' alt='Enter URL for existing database' width='556px' />
 
 If your database is hosted via any of the following managed cloud database services, check out their respective detailed
 guides to get the database connection URL and any other steps required to ensure connectivity from Hasura Cloud:
@@ -102,7 +94,7 @@ profiles (
 )
 ```
 
-<Thumbnail src='/img/graphql/core/getting-started/create-profile-table.png' alt='Create a table' />
+<Thumbnail src='/img/getting-started/create-profile-table.png' alt='Create a table' />
 
 Now, insert some sample data into the table using the `Insert Row` tab of the `profiles` table.
 
@@ -121,14 +113,14 @@ query {
 
 You'll see that you get all the inserted data!
 
-<Thumbnail src='/img/graphql/core/getting-started/profile-query.png' alt='Try out a query' />
+<Thumbnail src='/img/getting-started/profile-query.png' alt='Try out a query' />
 
 ### Check out monitoring
 
 You can navigate to the `Monitoring` tab in the console to check out the extra features for reliability and security
 that Hasura Cloud has set up for you.
 
-<Thumbnail src='/img/graphql/cloud/metrics/monitoring-tab-overview.png' alt='Hasura Console: Monitoring tab' />
+<Thumbnail src='/img/observability/monitoring-tab-overview.png' alt='Hasura Console: Monitoring tab' />
 
 ## Next steps
 
@@ -163,7 +155,7 @@ You can click the gear icon in the Hasura Cloud dashboard to manage your Hasura 
 [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
 [custom domains](/projects/domains.mdx)).
 
-<Thumbnail src='/img/graphql/cloud/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
 
 :::info Additional Resources
 

@@ -33,11 +33,7 @@ New Relic Integration is only available for Hasura Cloud projects on the `Standa
 
 Navigate to the integrations tab on project settings page to find New Relic integration.
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/integrate-newrelic.png'
-  alt='Configure New Relic Integration'
-  width='1146px'
-/>
+<Thumbnail src='/img/observability/integrate-newrelic.png' alt='Configure New Relic Integration' width='1146px' />
 
 Select the New Relic API region and enter the New Relic Insights Insert API key (follow
 [New Relic docs to retrieve the API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/new-relic-api-keys/#insights-insert-key)),
@@ -51,7 +47,7 @@ host, service name and custom attributes to associate with exported logs and met
 | Custom Attributes | Custom Attributes associated with your logs and metrics. A default source tag `hasura-cloud-metrics` is added to all exported logs and metrics. Attributes `project_id` and `project_name` are added to all exported metrics.                                                                                                                                                            |
 | Service Name      | The name of the application or service generating the log events.                                                                                                                                                                                                                                                                                                                        |
 
-<Thumbnail src='/img/graphql/cloud/metrics/configure-newrelic.png' alt='Configure New Relic Integration' />
+<Thumbnail src='/img/observability/configure-newrelic.png' alt='Configure New Relic Integration' />
 
 After adding appropriate values, click `Save`.
 
@@ -62,7 +58,7 @@ When logs are successfully exported, `Last Exported` is continuously updated, in
 line successfully exported to your New Relic account.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/configure-newrelic-done.png'
+  src='/img/observability/configure-newrelic-done.png'
   alt='New Relic Integration successfully configured'
   width='1146px'
 />
@@ -71,7 +67,7 @@ In case there is an error while exporting logs to New Relic, the dot is red and 
 displayed right below it.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/configure-newrelic-fail.png'
+  src='/img/observability/configure-newrelic-fail.png'
   alt='New Relic Integration successfully configured'
   width='1146px'
 />
@@ -83,16 +79,12 @@ The logs can be viewed in your New Relic dashboard, under the `Logs` tab
 To navigate to the same, click `View Logs`.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/newrelic-view-logs.png'
+  src='/img/observability/newrelic-view-logs.png'
   alt='New Relic Integration successfully configured'
   width='1146px'
 />
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/newrelic-logs.png'
-  alt='Logs successfully exported to New Relic'
-  width='1146px'
-/>
+<Thumbnail src='/img/observability/newrelic-logs.png' alt='Logs successfully exported to New Relic' width='1146px' />
 
 To view only logs exported by Hasura Cloud, filter your logs using `attributes` you configured with this integration.
 
@@ -115,7 +107,7 @@ Graphs for all the above metrics can be viewed in your New Relic account. Under 
 choose the metrics name. To navigate to New Relic dashboard, click `View Metrics`.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/newrelic-view-metrics.png'
+  src='/img/observability/newrelic-view-metrics.png'
   alt='New Relic Integration successfully configured'
   width='1146px'
 />
@@ -123,7 +115,7 @@ choose the metrics name. To navigate to New Relic dashboard, click `View Metrics
 Select the graphs you want to view from the metrics explorer.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/newrerlic-metrics.png'
+  src='/img/observability/newrerlic-metrics.png'
   alt='Metrics successfully exported to New Relic'
   width='1146px'
 />

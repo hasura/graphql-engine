@@ -94,13 +94,9 @@ If you're testing Hasura with SQL Server running locally, [read this guide](/gui
 networking in case you're not sure how to make sure that your SQL Server database is reachable from the Hasura docker
 container on Linux, Mac or Windows.
 
-<Thumbnail
-  src='/img/graphql/core/databases/ms-sql-server/1-manage-databases.png'
-  alt='Manage databases'
-  width='1000px'
-/>
+<Thumbnail src='/img/databases/ms-sql-server/1-manage-databases.png' alt='Manage databases' width='1000px' />
 
-<Thumbnail src='/img/graphql/core/databases/ms-sql-server/2-add-source.png' alt='Add source' width='1000px' />
+<Thumbnail src='/img/databases/ms-sql-server/2-add-source.png' alt='Add source' width='1000px' />
 
 Once you add the database, you'll see your database pop up on the sidebar.
 
@@ -109,17 +105,17 @@ Once you add the database, you'll see your database pop up on the sidebar.
 If you have existing tables, head to the database page by clicking on the database name on the sidebar. You should see a
 list of tables.
 
-<Thumbnail src='/img/graphql/core/databases/ms-sql-server/3-manage-mydb.png' alt='Manage my-db' width='1000px' />
+<Thumbnail src='/img/databases/ms-sql-server/3-manage-mydb.png' alt='Manage my-db' width='1000px' />
 
 Track tables selectively or all of them so that Hasura can introspect the tables and create the corresponding GraphQL
 schema.
 
-<Thumbnail src='/img/graphql/core/databases/ms-sql-server/4-track-tables.png' alt='Track tables' width='1000px' />
+<Thumbnail src='/img/databases/ms-sql-server/4-track-tables.png' alt='Track tables' width='1000px' />
 
 If you have foreign keys, you'll also see suggested relationships. Again, you can choose to track them selectively or
 all at once.
 
-<Thumbnail src='/img/graphql/core/databases/ms-sql-server/5-track-rels.png' alt='Track relationships' width='1000px' />
+<Thumbnail src='/img/databases/ms-sql-server/5-track-rels.png' alt='Track relationships' width='1000px' />
 
 ### Step 5: Option 2: Create new tables
 
@@ -129,18 +125,14 @@ tables or hit the Create Table button to create a table.
 If you're running raw SQL queries to create your tables, Don't forget to check "track metadata" at the bottom of the Run
 SQL window to make sure Hasura tracks your new database objects in its GraphQL schema.
 
-<Thumbnail src='/img/graphql/core/databases/ms-sql-server/7-run-sql.png' alt='Run SQL to create table' width='1000px' />
+<Thumbnail src='/img/databases/ms-sql-server/7-run-sql.png' alt='Run SQL to create table' width='1000px' />
 
 ### Step 6: Try out a GraphQL query
 
 Head to the `API` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
 creating a GraphQL query.
 
-<Thumbnail
-  src='/img/graphql/core/databases/ms-sql-server/6-make-graphql-query.png'
-  alt='Make GraphQL query'
-  width='1000px'
-/>
+<Thumbnail src='/img/databases/ms-sql-server/6-make-graphql-query.png' alt='Make GraphQL query' width='1000px' />
 
 ## Keep up to date
 

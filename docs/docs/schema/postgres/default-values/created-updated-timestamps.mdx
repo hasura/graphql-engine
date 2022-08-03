@@ -11,39 +11,34 @@ keywords:
   - timestamps
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Postgres: Adding created_at / updated_at timestamps
 
 ## Introduction
 
-We often need `created_at` and `updated_at` timestamp fields in our
-tables in order to indicate when an object was created or last updated.
-This page explains how to add these.
+We often need `created_at` and `updated_at` timestamp fields in our tables in order to indicate when an object was
+created or last updated. This page explains how to add these.
 
 ## Add a created_at timestamp
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-On the Hasura console, click on the `Modify` tab of a table. When
-clicking on the `+Frequently used columns` button, choose `created_at`:
+On the Hasura console, click on the `Modify` tab of a table. When clicking on the `+Frequently used columns` button,
+choose `created_at`:
 
-<Thumbnail
-  src="/img/graphql/core/schema/created-at.png"
-  alt="Add a created_at time on the Hasura console"
-  width="1000px"
-/>
+<Thumbnail src='/img/schema/created-at.png' alt='Add a created_at time on the Hasura console' width='1000px' />
 
 Click the `Add column` button.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the following
-SQL statement to the `up.sql` file:
+[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the
+following SQL statement to the `up.sql` file:
 
 ```plsql
 ALTER TABLE ONLY "public"."article" ADD COLUMN "created_at" TIMESTAMP DEFAULT NOW();
@@ -66,7 +61,8 @@ hasura metadata reload
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a `created_at` timestamp by using the [run_sql](/api-reference/schema-api/run-sql.mdx#schema-run-sql) schema API:
+You can add a `created_at` timestamp by using the [run_sql](/api-reference/schema-api/run-sql.mdx#schema-run-sql) schema
+API:
 
 ```http
 POST /v2/query HTTP/1.1
@@ -90,30 +86,24 @@ X-Hasura-Role: admin
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-On the Hasura console, click on the `Modify` tab of a table. When
-clicking on the `+Frequently used columns` button, choose `updated_at`:
+On the Hasura console, click on the `Modify` tab of a table. When clicking on the `+Frequently used columns` button,
+choose `updated_at`:
 
-<Thumbnail
-  src="/img/graphql/core/schema/updated-at.png"
-  alt="Add an updated_at time on the Hasura console"
-  width="1000px"
-/>
+<Thumbnail src='/img/schema/updated-at.png' alt='Add an updated_at time on the Hasura console' width='1000px' />
 
 Click the `Add column` button.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the below SQL
-statement to the `up.sql` file:
+[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the
+below SQL statement to the `up.sql` file:
 
 1.  Add an `updated_at` timestamp field to the `article` table.
-2.  Define a [Postgres
-    function](https://www.postgresql.org/docs/current/sql-createfunction.html)
-    to set the `updated_at` field to `NOW()`.
-3.  Create a [Postgres
-    trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html)
-    to call the defined function whenever an article is updated.
+2.  Define a [Postgres function](https://www.postgresql.org/docs/current/sql-createfunction.html) to set the
+    `updated_at` field to `NOW()`.
+3.  Create a [Postgres trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html) to call the defined
+    function whenever an article is updated.
 
 ```plsql
 ALTER TABLE ONLY "public"."article"
@@ -153,17 +143,16 @@ hasura metadata reload
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add an `updated_at` timestamp by using the [run_sql](/api-reference/schema-api/run-sql.mdx#schema-run-sql) schema API.
+You can add an `updated_at` timestamp by using the [run_sql](/api-reference/schema-api/run-sql.mdx#schema-run-sql)
+schema API.
 
 The below SQL statement will achieve the following:
 
 1.  Add an `updated_at` timestamp field to the `article` table.
-2.  Define a [Postgres
-    function](https://www.postgresql.org/docs/current/sql-createfunction.html)
-    to set the `updated_at` field to `NOW()`.
-3.  Create a [Postgres
-    trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html)
-    to call the defined function whenever an article is updated.
+2.  Define a [Postgres function](https://www.postgresql.org/docs/current/sql-createfunction.html) to set the
+    `updated_at` field to `NOW()`.
+3.  Create a [Postgres trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html) to call the defined
+    function whenever an article is updated.
 
 ```http
 POST /v2/query HTTP/1.1

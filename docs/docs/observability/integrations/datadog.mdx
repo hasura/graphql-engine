@@ -32,7 +32,7 @@ Datadog Integration is only available for Hasura Cloud projects on the `Standard
 
 Navigate to the integrations tab on project settings page to find Datadog integration.
 
-<Thumbnail src='/img/graphql/cloud/metrics/integrate-datadog.png' alt='Configure Datadog Integration' width='1146px' />
+<Thumbnail src='/img/observability/integrate-datadog.png' alt='Configure Datadog Integration' width='1146px' />
 
 Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page
 by clicking the `Get API Key` link), host, service name and tags to associate with exported logs, metrics and traces.
@@ -45,7 +45,7 @@ by clicking the `Get API Key` link), host, service name and tags to associate wi
 | Tags         | Tags associated with your logs and metrics. Default tags `project_id` and `project_name` are exported with all logs and metrics. A source tag `hasura-cloud-metrics` is added to all exported logs.                               |
 | Service Name | The name of the application or service generating the log events.                                                                                                                                                                 |
 
-<Thumbnail src='/img/graphql/cloud/metrics/configure-datadog.png' alt='Configure Datadog Integration' width='500px' />
+<Thumbnail src='/img/observability/configure-datadog.png' alt='Configure Datadog Integration' width='500px' />
 
 After adding appropriate values, click `Save`.
 
@@ -56,7 +56,7 @@ logs are successfully exported, `Last Exported` is continuously updated, indicat
 successfully exported to your Datadog dashboard.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/configure-datadog-done.png'
+  src='/img/observability/configure-datadog-done.png'
   alt='Datadog Integration successfully configured'
   width='1146px'
 />
@@ -65,7 +65,7 @@ In case there is an error while exporting logs to datadog, the dot is red and th
 displayed right below it.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/configure-datadog-fail.png'
+  src='/img/observability/configure-datadog-fail.png'
   alt='Datadog Integration successfully configured'
   width='1146px'
 />
@@ -75,16 +75,12 @@ displayed right below it.
 The logs can be viewed in your Datadog dashboard, under the `Logs` tab. To navigate to the same, click `View Logs`.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/datadog-view-logs.png'
+  src='/img/observability/datadog-view-logs.png'
   alt='Datadog Integration successfully configured'
   width='1146px'
 />
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/datadog-logs.png'
-  alt='Logs successfully exported to Datadog'
-  width='1146px'
-/>
+<Thumbnail src='/img/observability/datadog-logs.png' alt='Logs successfully exported to Datadog' width='1146px' />
 
 To view only logs exported by Hasura Cloud, filter your logs using `host` and/or `tags` you configured with this
 integration.
@@ -115,7 +111,7 @@ Graphs for all the above metrics can be viewed in your Datadog dashboard, under 
 same, click `View Metrics`.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/datadog-view-metrics.png'
+  src='/img/observability/datadog-view-metrics.png'
   alt='Datadog Integration successfully configured'
   width='1146px'
 />
@@ -123,11 +119,7 @@ same, click `View Metrics`.
 Select the graphs you want to view from the metrics explorer. Alternatively, select the `host` you configured with this
 integration to see all the graphs corresponding to metrics exported by Hasura Cloud.
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/datadog-metrics.png'
-  alt='Metrics successfully exported to Datadog'
-  width='1146px'
-/>
+<Thumbnail src='/img/observability/datadog-metrics.png' alt='Metrics successfully exported to Datadog' width='1146px' />
 
 ## View traces
 
@@ -140,7 +132,7 @@ visual representation of where the operation spent its execution over time. For 
 milliseconds in total, of which 758 microseconds was the actual Postgres database processing the query.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/datadog-trace-flame-graph.png'
+  src='/img/observability/datadog-trace-flame-graph.png'
   alt='Flame graph for a trace entry in Datadog'
   width='1146px'
 />

@@ -32,7 +32,7 @@ Here are some examples of common use cases.
   information will not be exposed.
 
 <Thumbnail
-  src='/img/graphql/core/auth/anonymous-role-examples.png'
+  src='/img/auth/anonymous-role-examples.png'
   alt='Access control for an anonymous role'
   width='1300px'
   className='no-shadow'
@@ -51,7 +51,7 @@ anonymous user role in Hasura.
   in from your [auth webhook's](/auth/authentication/webhook.mdx) response, or as a request header if you're testing.
 
 <Thumbnail
-  src='/img/graphql/core/auth/user-select-graphiql.png'
+  src='/img/auth/user-select-graphiql.png'
   alt='Access control for a logged-in user'
   width='1300px'
   className='no-shadow'
@@ -69,7 +69,7 @@ organisation either in the same table or via a related table.
   [auth webhook](/auth/authentication/webhook.mdx) for an incoming GraphQL request.
 
 <Thumbnail
-  src='/img/graphql/core/auth/org-manager-graphiql.png'
+  src='/img/auth/org-manager-graphiql.png'
   alt='Access control for a manager of an organisation'
   width='1300px'
   className='no-shadow'
@@ -90,7 +90,7 @@ has `article_id, collaborator_id` columns.
     that of `X-Hasura-User-Id`.
 
 <Thumbnail
-  src='/img/graphql/core/auth/collaborator-relationship.png'
+  src='/img/auth/collaborator-relationship.png'
   alt='Access control for collaborators of an article'
   width='1300px'
   className='no-shadow'
@@ -160,7 +160,7 @@ following roles:
 The following is a reference database schema for our example:
 
 <Thumbnail
-  src='/img/graphql/core/auth/multirole-example-db-schema.png'
+  src='/img/auth/multirole-example-db-schema.png'
   alt='Database schema example for multiple roles per user'
   width='1300px'
 />
@@ -210,7 +210,7 @@ Create an array relationship named `reviewers` based on the foreign key constrai
 `articles` :: `id`:
 
 <Thumbnail
-  src='/img/graphql/core/auth/multirole-example-reviewers-array-relationship.png'
+  src='/img/auth/multirole-example-reviewers-array-relationship.png'
   alt='Create an array relationship'
   width='700px'
   className='no-shadow'
@@ -331,7 +331,7 @@ documented here_) .
     `author_id` column to automatically insert the user's ID i.e. the `X-Hasura-User-Id` session-variable's value. It
     also helps us avoid explicitly passing the user's ID in the insert mutation.
 
-<Thumbnail src='/img/graphql/core/auth/multirole-example-author-insert.png' alt='Permissions for the role author' />
+<Thumbnail src='/img/auth/multirole-example-author-insert.png' alt='Permissions for the role author' />
 
 Notice how we don't need to have an explicit row-level permission (_a custom check_) as only authenticated users with
 the role `author` can perform this action. As we have a column preset for the `author_id` column that automatically
@@ -343,7 +343,7 @@ takes the author's ID (_and the_ `id` _column is an auto-increment integer field
 Again, we'll use **column-level** permissions to restrict access to certain columns. Additionally, we need to define
 row-level permissions (_a custom check_) to restrict access to only those articles authored by the current user:
 
-<Thumbnail src='/img/graphql/core/auth/multirole-example-author-select.png' alt='Column access for the role author' />
+<Thumbnail src='/img/auth/multirole-example-author-select.png' alt='Column access for the role author' />
 
 The row-level permission rule shown here translates to "_if the value in the_ `author_id` _column of this row is equal
 to the user's ID i.e. the\* `X-Hasura-User-Id` \_session-variable's value, allow access to it_".
@@ -356,7 +356,7 @@ to the user's ID i.e. the\* `X-Hasura-User-Id` \_session-variable's value, allow
   [relationship or nested-object permissions](/auth/authorization/permission-rules.mdx#relationships-in-permissions)
   based on the array relationship `reviewers` to restrict access to assigned articles only.
 
-<Thumbnail src='/img/graphql/core/auth/multirole-example-reviewer-update.png' alt='Permissions for the role reviewer' />
+<Thumbnail src='/img/auth/multirole-example-reviewer-update.png' alt='Permissions for the role reviewer' />
 
     The array-relationship based permission rule in the above image
     reads as "_if the ID of any reviewer assigned to this article is
@@ -369,10 +369,7 @@ to the user's ID i.e. the\* `X-Hasura-User-Id` \_session-variable's value, allow
   This permission rule is pretty much the same as the one for update, the only difference being the column-level
   permissions.
 
-<Thumbnail
-  src='/img/graphql/core/auth/multirole-example-reviewer-select.png'
-  alt='Column access for the role reviewer'
-/>
+<Thumbnail src='/img/auth/multirole-example-reviewer-select.png' alt='Column access for the role reviewer' />
 
 #### Permissions for role `editor`
 
@@ -381,13 +378,13 @@ to the user's ID i.e. the\* `X-Hasura-User-Id` \_session-variable's value, allow
   This is a straightforward rule - there's no need for any row-level permissions since editors have access to all rows
   and they can _read_ all columns.
 
-<Thumbnail src='/img/graphql/core/auth/multirole-example-editor-select.png' alt='Permissions for the role editor' />
+<Thumbnail src='/img/auth/multirole-example-editor-select.png' alt='Permissions for the role editor' />
 
 - **Allow editors to update an article**
 
   There's no need for row-level permissions in this case either but we need to restrict access to certain columns only:
 
-<Thumbnail src='/img/graphql/core/auth/multirole-example-editor-update.png' alt='Column access for the role editor' />
+<Thumbnail src='/img/auth/multirole-example-editor-update.png' alt='Column access for the role editor' />
 
 :::info Additional Resources
 

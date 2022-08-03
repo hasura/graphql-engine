@@ -9,22 +9,20 @@ keywords:
   - view
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # MS SQL Server: Extend schema with views
 
 ## What are views?
 
-[Views](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
-can be used to expose the results of a custom query as a virtual table.
-Views are not persisted physically i.e. the query defining a view is
-executed whenever data is requested from the view.
+[Views](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15) can be used
+to expose the results of a custom query as a virtual table. Views are not persisted physically i.e. the query defining a
+view is executed whenever data is requested from the view.
 
-Hasura GraphQL engine lets you expose views over the GraphQL API to
-allow querying them using both `queries` and `subscriptions` just like
-regular tables.
+Hasura GraphQL engine lets you expose views over the GraphQL API to allow querying them using both `queries` and
+`subscriptions` just like regular tables.
 
 ## Creating views {#ms-sql-server-create-views}
 
@@ -34,16 +32,17 @@ regular tables.
 Views can be created using SQL which can be run in the Hasura console:
 
 - Head to the `Data -> SQL` section of the Hasura console
-- Enter your [create view SQL statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
+- Enter your
+  [create view SQL statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
 - Hit the `Run` button
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-1.  [Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add your
+1.  [Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add
+    your
     [create view SQL statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
-    to the `up.sql` file. Also, add an SQL statement to the `down.sql`
-    file that reverts the previous statement.
+    to the `up.sql` file. Also, add an SQL statement to the `down.sql` file that reverts the previous statement.
 
 2.  Apply the migration and metadata by running:
 
@@ -54,8 +53,7 @@ Views can be created using SQL which can be run in the Hasura console:
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a view by using the
-[schema_run_sql metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
+You can add a view by using the [schema_run_sql metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
 
 ```http
 POST /v2/query HTTP/1.1
@@ -76,30 +74,24 @@ X-Hasura-Role: admin
 
 ## Tracking views
 
-Views can be present in the underlying MS SQL Server database without
-being exposed over the GraphQL API. In order to expose a view over the
-GraphQL API, it needs to be **tracked**.
+Views can be present in the underlying MS SQL Server database without being exposed over the GraphQL API. In order to
+expose a view over the GraphQL API, it needs to be **tracked**.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-While creating views from the `Data -> SQL` page, selecting the
-`Track this` checkbox will expose the new view over the GraphQL API
-right after creation.
+While creating views from the `Data -> SQL` page, selecting the `Track this` checkbox will expose the new view over the
+GraphQL API right after creation.
 
-You can track any existing views in your database from the
-`Data -> Schema` page:
+You can track any existing views in your database from the `Data -> Schema` page:
 
-<Thumbnail
-  src="/img/graphql/core/schema/schema-track-views.png"
-  alt="Track views"
-/>
+<Thumbnail src='/img/schema/schema-track-views.png' alt='Track views' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-1.  To track the view and expose it over the GraphQL API, edit the
-    `tables.yaml` file in the `metadata` directory as follows:
+1.  To track the view and expose it over the GraphQL API, edit the `tables.yaml` file in the `metadata` directory as
+    follows:
 
     ```yaml {7-9}
     - table:
@@ -122,8 +114,8 @@ You can track any existing views in your database from the
 </TabItem>
 <TabItem value="api" label="API">
 
-To track the view and expose it over the GraphQL API, make the following
-API call to the [mssql_track_table metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
+To track the view and expose it over the GraphQL API, make the following API call to the
+[mssql_track_table metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -146,18 +138,15 @@ X-Hasura-Role: admin
 
 ## Use cases
 
-Views are ideal solutions for retrieving some derived data based on some
-custom business logic.
+Views are ideal solutions for retrieving some derived data based on some custom business logic.
 
 Let's look at a few example use cases for views:
 
 ### Example: Group by and then aggregate
 
-Sometimes we might want to fetch some data derived by aggregating (avg,
-min, max, etc.) over a group of rows in a table.
+Sometimes we might want to fetch some data derived by aggregating (avg, min, max, etc.) over a group of rows in a table.
 
-Let’s say we want to fetch the average article rating for each author in
-the following schema:
+Let’s say we want to fetch the average article rating for each author in the following schema:
 
 ```plsql
 author(id integer, name text, city text, email text, phone integer, address text)
@@ -165,8 +154,7 @@ author(id integer, name text, city text, email text, phone integer, address text
 article(id integer, title text, content text, rating integer, author_id integer)
 ```
 
-A view that averages the rating of articles for each author can be
-created using the following SQL query:
+A view that averages the rating of articles for each author can be created using the following SQL query:
 
 ```sql
 CREATE VIEW author_average_rating AS
@@ -177,18 +165,15 @@ CREATE VIEW author_average_rating AS
 
 ### Example: Hide certain fields of a table
 
-Sometimes we might have some sensitive information in a table which we
-wouldn't want to expose.
+Sometimes we might have some sensitive information in a table which we wouldn't want to expose.
 
-Let's say, we want to expose the following `author` table without the
-fields `email`, `phone` and `address`:
+Let's say, we want to expose the following `author` table without the fields `email`, `phone` and `address`:
 
 ```plsql
 author(id integer, name text, city text, email text, phone integer, address text)
 ```
 
-A view that only exposes the non-sensitive fields of the `author` table
-can be created using the following SQL query:
+A view that only exposes the non-sensitive fields of the `author` table can be created using the following SQL query:
 
 ```sql
 CREATE VIEW author_public AS

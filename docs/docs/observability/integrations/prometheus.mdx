@@ -34,11 +34,7 @@ Prometheus Integration is only available for Hasura Cloud projects on the `Stand
 
 Navigate to the integrations tab on project settings page to find Prometheus integration.
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/integrate-prometheus.png'
-  alt='Configure Prometheus Integration'
-  width='1146px'
-/>
+<Thumbnail src='/img/observability/integrate-prometheus.png' alt='Configure Prometheus Integration' width='1146px' />
 
 Enter the Namespace and label values to be associated to the exported metrics and click on <em>Connect Integration</em>.
 
@@ -47,11 +43,7 @@ Enter the Namespace and label values to be associated to the exported metrics an
 | Namespace (Optional) | The single word prefix relevant to the domain the metrics belong to. [Read more about namespace on Prometheus docs.](https://prometheus.io/docs/practices/naming/#metric-names)                |
 | Labels (Optional)    | [Labels](https://prometheus.io/docs/practices/naming/#labels) are key-value pairs associated with your metrics used to differentiate the characteristics of the metric that is being measured. |
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/configure-prometheus.png'
-  alt='Configure Prometheus Integration'
-  width='437px'
-/>
+<Thumbnail src='/img/observability/configure-prometheus.png' alt='Configure Prometheus Integration' width='437px' />
 
 ## Prometheus instance configuration
 
@@ -63,13 +55,13 @@ Access token as Password. The Connection URL is needed to configure the Scrape T
 The Access Token is generated once the Integration is created. The token is showed only once and cannot be retrieved
 again. Access token is used as the password for Basic Authentication by the Prometheus Agent.
 
-<Thumbnail src='/img/graphql/cloud/metrics/prometheus-access-token.png' alt='Prometheus Access Token' width='1146px' />
+<Thumbnail src='/img/observability/prometheus-access-token.png' alt='Prometheus Access Token' width='1146px' />
 
 The token can be re-generated from the Configuration Panel of the Integration. This action is permanent and cannot be
 reversed.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/prometheus-regenerate-token.png'
+  src='/img/observability/prometheus-regenerate-token.png'
   alt='Prometheus Access Token Regeneration'
   width='1146px'
 />
@@ -81,21 +73,13 @@ namely scheme, host name and metrics_path. For example, if the connection URL is
 `https://prometheus-exporter.pro.hasura.io/metrics`, then the scheme is `https`, host name (This includes sub-domains as
 well) is `prometheus-exporter.pro.hasura.io` and metrics_path is `/metrics`.
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/prometheus-connection-url.png'
-  alt='Prometheus Connection URL'
-  width='1146px'
-/>
+<Thumbnail src='/img/observability/prometheus-connection-url.png' alt='Prometheus Connection URL' width='1146px' />
 
 ### Project ID
 
 The Project ID is used as the Username for the Basic Authentication by the Prometheus agent.
 
-<Thumbnail
-  src='/img/graphql/cloud/metrics/prometheus-project-id-copy.png'
-  alt='Prometheus Copy Project ID'
-  width='1146px'
-/>
+<Thumbnail src='/img/observability/prometheus-project-id-copy.png' alt='Prometheus Copy Project ID' width='1146px' />
 
 The following YAML template can be used as the
 [config file](https://prometheus.io/docs/prometheus/latest/configuration/configuration/) to establish connectivity with
@@ -123,7 +107,7 @@ Prometheus. When metrics are successfully exported, `Last Exported` is continuou
 the last metric successfully exported to your Prometheus Instance.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/prometheus-configure-done.png'
+  src='/img/observability/prometheus-configure-done.png'
   alt='Prometheus Integration successfully configured'
   width='1146px'
 />
@@ -132,7 +116,7 @@ In case there is an error while exporting metrics to Prometheus, the dot is red 
 below it.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/prometheus-configure-fail.png'
+  src='/img/observability/prometheus-configure-fail.png'
   alt='Prometheus integration Pull failed'
   width='1146px'
 />
@@ -168,4 +152,4 @@ If `Namespace` and `Labels` are configured (Optional), the format of the metric 
 The metrics can be queried from the Prometheus Dashboard (or using tools like
 [Grafana](https://prometheus.io/docs/visualization/grafana/))
 
-<Thumbnail src='/img/graphql/cloud/metrics/prometheus-view-metrics.png' alt='Prometheus view Metrics' width='1200px' />
+<Thumbnail src='/img/observability/prometheus-view-metrics.png' alt='Prometheus view Metrics' width='1200px' />
