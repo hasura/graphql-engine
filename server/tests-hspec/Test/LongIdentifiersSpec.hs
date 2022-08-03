@@ -5,6 +5,7 @@
 --   See "Hasura.Backend.Postgres.SQL.RenameIdentifiers" for more details.
 module Test.LongIdentifiersSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as Bigquery
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -15,8 +16,8 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -24,52 +25,54 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ -- Create table fails currently becasuse we postfix table names for some reason
-      -- which makes the valid table name go over the limit
-      --
-      -- Context.Context
-      --   { name = Context.Backend Context.MySQL,
-      --     mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-      --     setup = Mysql.setup schema,
-      --     teardown = Mysql.teardown schema,
-      --     customOptions = Nothing
-      --   },
-      Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Postgres.setup schema,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        },
-      -- Create table fails currently on a weird error:
-      -- > relation "i_need_a_table_with_a_long_na_i_need_a_column_with_a_long_n_seq" already exists
-      --
-      -- Context.Context
-      --   { name = Context.Backend Context.Citus,
-      --     mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-      --     setup = Citus.setup schema,
-      --     teardown = Citus.teardown schema,
-      --     customOptions = Nothing
-      --   },
-      Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Sqlserver.setup schema,
-          teardown = Sqlserver.teardown schema,
-          customOptions = Nothing
-        },
-      Context.Context
-        { name = Context.Backend Context.BigQuery,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Bigquery.setup schema,
-          teardown = Bigquery.teardown schema,
-          customOptions =
-            Just $
-              Context.Options
-                { stringifyNumbers = True
-                }
-        }
-    ]
+    ( NE.fromList
+        [ -- Create table fails currently becasuse we postfix table names for some reason
+          -- which makes the valid table name go over the limit
+          --
+          -- Context.Context
+          --   { name = Context.Backend Context.MySQL,
+          --     mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          --     setup = Mysql.setup schema,
+          --     teardown = Mysql.teardown schema,
+          --     customOptions = Nothing
+          --   },
+          Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Postgres.setup schema,
+              teardown = Postgres.teardown schema,
+              customOptions = Nothing
+            },
+          -- Create table fails currently on a weird error:
+          -- > relation "i_need_a_table_with_a_long_na_i_need_a_column_with_a_long_n_seq" already exists
+          --
+          -- Context.Context
+          --   { name = Context.Backend Context.Citus,
+          --     mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          --     setup = Citus.setup schema,
+          --     teardown = Citus.teardown schema,
+          --     customOptions = Nothing
+          --   },
+          Context.Context
+            { name = Context.Backend Context.SQLServer,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Sqlserver.setup schema,
+              teardown = Sqlserver.teardown schema,
+              customOptions = Nothing
+            },
+          Context.Context
+            { name = Context.Backend Context.BigQuery,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Bigquery.setup schema,
+              teardown = Bigquery.teardown schema,
+              customOptions =
+                Just $
+                  Context.Options
+                    { stringifyNumbers = True
+                    }
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

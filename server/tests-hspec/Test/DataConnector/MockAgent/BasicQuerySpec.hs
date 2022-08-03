@@ -19,22 +19,24 @@ import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, def
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 
 spec :: SpecWith TestEnvironment
 spec =
   Context.runWithLocalTestEnvironment
-    [ Context.Context
-        { name = Context.Backend Context.DataConnector,
-          mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
-          setup = DataConnector.setupMock sourceMetadata DataConnector.mockBackendConfig,
-          teardown = DataConnector.teardownMock,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.DataConnector,
+              mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
+              setup = DataConnector.setupMock sourceMetadata DataConnector.mockBackendConfig,
+              teardown = DataConnector.teardownMock,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 sourceMetadata :: Aeson.Value

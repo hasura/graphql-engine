@@ -14,16 +14,12 @@ module Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
 where
 
 import Data.Char (isUpper, toLower)
-import Data.Foldable (traverse_)
-import Data.Function ((&))
-import Data.List (intercalate, sortBy)
+import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
-import Data.Text (Text)
 import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -35,8 +31,8 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -44,7 +40,7 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec = Context.runWithLocalTestEnvironment contexts tests
   where
-    contexts = map mkContext [lhsPostgres, lhsSQLServer, lhsRemoteServer]
+    contexts = NE.fromList $ map mkContext [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     lhsPostgres =
       Context
         { name = Context.Backend Context.Postgres,
@@ -347,7 +343,7 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
           orderByFunction = case ta_order_by of
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
-          limitFunction = maybe Prelude.id take ta_limit
+          limitFunction = maybe Hasura.Prelude.id take ta_limit
       pure $
         tracks
           & filter filterFunction

@@ -6,6 +6,7 @@
 module Test.Postgres.TimestampSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
@@ -15,8 +16,8 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -24,21 +25,23 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Postgres.setup schema,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        },
-      Context.Context
-        { name = Context.Backend Context.Citus,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Citus.setup schema,
-          teardown = Citus.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Postgres.setup schema,
+              teardown = Postgres.teardown schema,
+              customOptions = Nothing
+            },
+          Context.Context
+            { name = Context.Backend Context.Citus,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Citus.setup schema,
+              teardown = Citus.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

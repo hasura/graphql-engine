@@ -4,14 +4,14 @@
 -- Interpolation works via the #{expression} syntax.
 module Harness.Quoter.Graphql (graphql, ToGraphqlString (..)) where
 
-import Data.Bifunctor (first)
+import Data.Bifunctor qualified as Bifunctor
 import Data.String (fromString)
+import Hasura.Prelude
 import Language.Haskell.Meta (parseExp)
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
 import Text.Parsec qualified as P
 import Text.Parsec.String (Parser)
-import Prelude
 
 -- | a class for values that can be interpolated in GraphQL queries
 class ToGraphqlString a where
@@ -54,7 +54,7 @@ evalGraphql txt =
     Right result -> interpret result
 
 parseInterpolatedGQL :: String -> Either String [GraphqlPart]
-parseInterpolatedGQL = first show . P.parse parseParts "graphqlQQ"
+parseInterpolatedGQL = Bifunctor.first show . P.parse parseParts "graphqlQQ"
   where
     -- This can probably be made more succinct. We start by trying to parse
     -- an interpolated expression, then we try to parse a comment. The reasoning

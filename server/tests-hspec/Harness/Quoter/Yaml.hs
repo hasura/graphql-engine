@@ -16,7 +16,6 @@ import Control.Exception.Safe (Exception, impureThrow, throwM)
 import Control.Monad.Identity
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson (Value)
-import Data.Aeson qualified
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.KeyMap.Extended qualified as KM
@@ -32,6 +31,7 @@ import Data.Yaml qualified
 import Data.Yaml.Internal qualified
 import Harness.Quoter.Yaml.InterpolateYaml
 import Harness.Test.Context qualified as Context (Options (..))
+import Hasura.Prelude
 import Instances.TH.Lift ()
 import Language.Haskell.TH
 import Language.Haskell.TH.Lift (Lift)
@@ -40,7 +40,6 @@ import Language.Haskell.TH.Quote (QuasiQuoter (..))
 import System.IO.Unsafe (unsafePerformIO)
 import Test.Hspec (HasCallStack, shouldBe, shouldContain)
 import Text.Libyaml qualified as Libyaml
-import Prelude
 
 -------------------------------------------------------------------
 
@@ -159,7 +158,7 @@ processor =
         [|
           Data.Yaml.Internal.objToEvents
             Data.Yaml.Internal.defaultStringStyle
-            (Data.Aeson.toJSON $(varE (mkName anchorName)))
+            (Aeson.toJSON $(varE (mkName anchorName)))
             []
           |]
     -- We disable anchors because aliases are used only to refer to

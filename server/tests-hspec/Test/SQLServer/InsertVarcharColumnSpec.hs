@@ -3,6 +3,7 @@
 -- | Test inserting non-ASCII characters in @'varchar' column type
 module Test.SQLServer.InsertVarcharColumnSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -10,22 +11,24 @@ import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
-import Prelude
 
 -- ** Preamble
 
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = mssqlSetup,
-          teardown = mssqlTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.SQLServer,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = mssqlSetup,
+              teardown = mssqlTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 -- ** Setup and teardown

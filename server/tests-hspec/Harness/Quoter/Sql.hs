@@ -3,9 +3,9 @@
 -- syntax highlighting.
 module Harness.Quoter.Sql (sql) where
 
+import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
-import Prelude
 
 sql :: QuasiQuoter
 sql =

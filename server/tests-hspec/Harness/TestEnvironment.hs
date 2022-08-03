@@ -14,10 +14,13 @@ where
 import Control.Concurrent (ThreadId, killThread)
 import Data.Word
 import Hasura.Prelude
+import System.Log.FastLogger qualified as FL
 
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
-  { server :: Server
+  { server :: Server,
+    logger :: FL.LogStr -> IO (),
+    loggerCleanup :: IO ()
   }
 
 instance Show TestEnvironment where

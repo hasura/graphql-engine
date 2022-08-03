@@ -3,6 +3,7 @@
 -- | Test *_run_sql query API
 module Test.RunSQLSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants qualified as Constants
@@ -12,8 +13,8 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -21,25 +22,29 @@ spec :: SpecWith TestEnvironment
 spec = do
   -- BigQuery
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.BigQuery,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = BigQuery.setup [],
-          teardown = BigQuery.teardown [],
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.BigQuery,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = BigQuery.setup [],
+              teardown = BigQuery.teardown [],
+              customOptions = Nothing
+            }
+        ]
+    )
     bigqueryTests
   -- Postgres
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = postgresSetup,
-          teardown = postgresTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = postgresSetup,
+              teardown = postgresTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     postgresTests
 
 --------------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 module Test.EventTrigger.EventTriggersRecreationSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postV2Query_)
 import Harness.GraphqlEngine qualified as GraphQLEngine
@@ -12,8 +13,8 @@ import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment, stopServer)
 import Harness.Webhook qualified as Webhook
+import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -21,14 +22,16 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec =
   Context.runWithLocalTestEnvironment
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-          setup = postgresSetup,
-          teardown = postgresTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+              setup = postgresSetup,
+              teardown = postgresTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

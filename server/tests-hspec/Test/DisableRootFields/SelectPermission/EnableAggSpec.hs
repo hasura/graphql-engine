@@ -9,6 +9,7 @@
 -- This test, tests that disabling of 'aggregate' of fields works.
 module Test.DisableRootFields.SelectPermission.EnableAggSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -42,12 +43,16 @@ spec = do
             teardown = SQLServer.teardown schema,
             customOptions = Nothing
           }
-  Context.run [pgContext, sqlServerContext] commonTests
   Context.run
-    [ pgContext
-        { Context.setup = Postgres.setup schema
-        }
-    ]
+    (NE.fromList [pgContext, sqlServerContext])
+    commonTests
+  Context.run
+    ( NE.fromList
+        [ pgContext
+            { Context.setup = Postgres.setup schema
+            }
+        ]
+    )
     metadataValidationTests
 
 --------------------------------------------------------------------------------

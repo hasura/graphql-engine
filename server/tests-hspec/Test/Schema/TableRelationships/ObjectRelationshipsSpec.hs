@@ -9,8 +9,8 @@
 -- https://hasura.io/docs/latest/schema/bigquery/table-relationships/index/
 module Test.Schema.TableRelationships.ObjectRelationshipsSpec (spec) where
 
-import Control.Monad (unless)
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
@@ -23,31 +23,35 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 spec :: SpecWith TestEnvironment
 spec = do
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.MySQL,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Mysql.setup schema,
-          teardown = Mysql.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.MySQL,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Mysql.setup schema,
+              teardown = Mysql.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     $ tests MySQL
 
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Postgres.setup schema,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Postgres.setup schema,
+              teardown = Postgres.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     $ tests Postgres
 
   --   Context.run
@@ -73,18 +77,20 @@ spec = do
   --     $ tests SQLServer
 
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.BigQuery,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = BigQuery.setup schema,
-          teardown = BigQuery.teardown schema,
-          customOptions =
-            Just $
-              Context.Options
-                { stringifyNumbers = True
-                }
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.BigQuery,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = BigQuery.setup schema,
+              teardown = BigQuery.teardown schema,
+              customOptions =
+                Just $
+                  Context.Options
+                    { stringifyNumbers = True
+                    }
+            }
+        ]
+    )
     $ tests BigQuery
 
 --------------------------------------------------------------------------------

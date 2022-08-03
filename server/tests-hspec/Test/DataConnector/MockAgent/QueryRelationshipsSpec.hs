@@ -8,6 +8,7 @@ where
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Quoter.Graphql (graphql)
@@ -16,20 +17,22 @@ import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, def
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 spec :: SpecWith TestEnvironment
 spec =
   Context.runWithLocalTestEnvironment
-    [ Context.Context
-        { name = Context.Backend Context.DataConnector,
-          mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
-          setup = DataConnector.setupMock sourceMetadata DataConnector.mockBackendConfig,
-          teardown = DataConnector.teardownMock,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.DataConnector,
+              mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
+              setup = DataConnector.setupMock sourceMetadata DataConnector.mockBackendConfig,
+              teardown = DataConnector.teardownMock,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 sourceMetadata :: Aeson.Value

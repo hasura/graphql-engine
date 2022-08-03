@@ -14,11 +14,10 @@ module Harness.Test.Permissions
   )
 where
 
-import Data.Text (Text)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.TestEnvironment
-import Prelude
+import Hasura.Prelude
 
 -- | Data type used to model permissions to be setup in tests.
 -- Each case of this type mirrors the fields in the correspond permission

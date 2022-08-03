@@ -7,6 +7,7 @@ module Test.EventTrigger.EventTriggersRunSQLSpec (spec) where
 import Control.Concurrent.Chan qualified as Chan
 import Data.Aeson (eitherDecode)
 import Data.ByteString.Lazy.Char8 qualified as L8
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
@@ -16,12 +17,11 @@ import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server (..), TestEnvironment, getServer, stopServer)
 import Harness.Webhook qualified as Webhook
-import Hasura.Prelude (Text, onLeft, onNothing)
+import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import System.Timeout (timeout)
 import Test.HUnit.Base (assertFailure)
 import Test.Hspec (SpecWith, it, shouldBe)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -29,16 +29,18 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec =
   Context.runWithLocalTestEnvironment
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          -- setup the webhook server as the local test environment,
-          -- so that the server can be referenced while testing
-          mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-          setup = postgresSetup,
-          teardown = postgresTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              -- setup the webhook server as the local test environment,
+              -- so that the server can be referenced while testing
+              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+              setup = postgresSetup,
+              teardown = postgresTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

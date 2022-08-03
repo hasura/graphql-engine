@@ -6,6 +6,7 @@
 --   - Postgres: https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/custom-field-names/#expose-table-root-fields-with-a-different-name-in-the-graphql-api
 module Test.CustomRootFieldsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -14,8 +15,8 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 
@@ -24,14 +25,16 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = postgresSetup,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = postgresSetup,
+              teardown = Postgres.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     streamingSubscriptionCustomRootFieldTests
 
 --------------------------------------------------------------------------------

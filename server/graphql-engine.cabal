@@ -1097,7 +1097,7 @@ test-suite graphql-engine-tests
     Test.QuickCheck.Extended
 
 test-suite tests-hspec
-  import: common-all
+  import: common-all, lib-depends
   type: exitcode-stdio-1.0
   build-tool-depends: hspec-discover:hspec-discover
   build-depends:
@@ -1116,6 +1116,7 @@ test-suite tests-hspec
     , dependent-map
     , dependent-sum
     , ekg-core
+    , fast-logger
     , dc-api
     , graphql-engine
     , graphql-parser
@@ -1182,7 +1183,14 @@ test-suite tests-hspec
     , warp
     , websockets
     , yaml
+
+  if !flag(ghci-load-test-with-lib)
+    build-depends: graphql-engine
+
   hs-source-dirs: tests-hspec
+  if flag(ghci-load-test-with-lib)
+    hs-source-dirs: src-lib
+
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
@@ -1239,11 +1247,11 @@ test-suite tests-hspec
     Test.BigQuery.TypeInterpretationSpec
     Test.CustomFieldNamesSpec
     Test.CustomRootFieldsSpec
+    Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
-    Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
-    Test.DataConnector.AggregateQuerySpec
+    Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
     Test.DisableRootFields.Common
@@ -1253,12 +1261,13 @@ test-suite tests-hspec
     Test.DisableRootFields.SelectPermission.EnableAggSpec
     Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
+    Test.EventTrigger.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec
+    Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
     Test.EventTrigger.EventTriggersRecreationSpec
     Test.EventTrigger.EventTriggersRunSQLSpec
-    Test.EventTrigger.EventTriggerDropSourceCleanupSpec
-    Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
-    Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec
     Test.GatheringUniqueConstraintsSpec
+    Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
     Test.InsertOnConflictSpec
@@ -1267,10 +1276,10 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.Postgres.EnumSpec
     Test.Postgres.TimestampSpec
-    Test.Queries.DirectivesSpec
-    Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.IncludeAndSkipSpec
+    Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
+    Test.Queries.DirectivesSpec
     Test.Queries.FilterSearchSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
@@ -1279,6 +1288,8 @@ test-suite tests-hspec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
+    Test.Queries.SortSpec
+    Test.Quoter.YamlSpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
@@ -1289,14 +1300,17 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
-    Test.Schema.TableRelationships.ArrayRelationshipsSpec
-    Test.Schema.TableRelationships.ObjectRelationshipsSpec
+    Test.SQLServer.InsertVarcharColumnSpec
+    Test.SQLServer.InsertVarcharColumnSpec
+    Test.SQLServer.InsertVarcharColumnSpec
+    Test.Schema.DataValidation.PermissionSpec
+    Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DefaultValuesSpec
-    Test.SQLServer.InsertVarcharColumnSpec
+    Test.Schema.TableRelationships.ArrayRelationshipsSpec
+    Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
-    Test.Quoter.YamlSpec
 
 test-suite tests-dc-api
   import: common-all, common-exe

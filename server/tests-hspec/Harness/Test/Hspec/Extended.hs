@@ -4,9 +4,9 @@ module Harness.Test.Hspec.Extended
   )
 where
 
+import Hasura.Prelude
 import Test.Hspec
 import Test.Hspec.Core.Spec
-import Prelude
 
 -- | Modify an 'Item'@ a@ by way of mapping its 'ActionWith'@ a@ function to
 -- some 'ActionWith'@ b@, producing an 'Item'@ b@.

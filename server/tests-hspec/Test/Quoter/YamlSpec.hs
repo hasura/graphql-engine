@@ -9,8 +9,8 @@ import Data.Aeson.KeyMap qualified as KM
 import GHC.Generics
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.TestEnvironment
+import Hasura.Prelude
 import Test.Hspec
-import Prelude
 
 --------------------------------------------------------------------------------
 
