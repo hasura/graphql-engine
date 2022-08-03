@@ -1,5 +1,5 @@
 import React from 'react';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 
 import { getPermissionFilterString } from '../PermissionsSummary/utils';
 import { getLegacyOperator, allOperators } from './PermissionBuilder/utils';
@@ -44,9 +44,7 @@ const tooltipMsg: Record<FilterType, string> = {
 };
 
 export const getUpdateTooltip = (filterType: FilterType) => (
-  <Tooltip id={`tooltip-update-${filterType}`}>
-    {tooltipMsg[filterType]}
-  </Tooltip>
+  <IconTooltip message={tooltipMsg[filterType]} />
 );
 
 const getOptionsForUpdate = (

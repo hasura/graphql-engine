@@ -1,6 +1,6 @@
 import React, { Dispatch, useState } from 'react';
 import { Collapse } from '@/new-components/Collapse';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 
@@ -166,7 +166,7 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
                     <div className={styles.connection_settings_input_layout}>
                       <label className="flex items-center gap-1">
                         <b>Isolation Level</b>
-                        <ToolTip message="The transaction isolation level in which the queries made to the source will be run" />
+                        <IconTooltip message="The transaction isolation level in which the queries made to the source will be run" />
                       </label>
                       <select
                         className={`form-control ${styles.connnection_settings_form_input} cursor-pointer`}
@@ -204,7 +204,7 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
                         />{' '}
                         &nbsp;
                         <b>Use Prepared Statements</b>
-                        <ToolTip message="Prepared statements are disabled by default" />
+                        <IconTooltip message="Prepared statements are disabled by default" />
                       </label>
                     </div>
                   ) : null}
@@ -237,7 +237,7 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
                           <div className="mb-xs">
                             <label className="flex items-center gap-1">
                               <b>SSL Mode</b>
-                              <ToolTip message="SSL certificate verification mode" />
+                              <IconTooltip message="SSL certificate verification mode" />
                             </label>
                             <select
                               className="form-control"

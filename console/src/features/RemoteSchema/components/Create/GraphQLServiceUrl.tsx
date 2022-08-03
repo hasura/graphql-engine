@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { useFormContext } from 'react-hook-form';
 
 export const GraphQLServiceUrl = () => {
@@ -9,7 +9,7 @@ export const GraphQLServiceUrl = () => {
     <div className="mb-md w-6/12">
       <label className="block flex items-center text-gray-600 font-semibold mb-xs">
         GraphQL Service URL
-        <ToolTip message="Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql" />
+        <IconTooltip message="Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql" />
       </label>
       <p className="text-sm text-gray-600 mb-sm">
         Note: Specifying the server URL via an environmental variable is

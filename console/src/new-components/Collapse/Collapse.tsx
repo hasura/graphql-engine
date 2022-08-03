@@ -2,7 +2,7 @@ import React from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { FaChevronRight } from 'react-icons/fa';
 
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 
 export interface CollapseHeaderProps extends React.HTMLAttributes<HTMLElement> {
   title?: string;
@@ -72,7 +72,7 @@ const CollapseHeader: React.FC<CollapseHeaderProps> = ({
       </Collapsible.Trigger>
 
       <div className="flex items-center gap-2">
-        {!!tooltip && <ToolTip message={tooltip} />}
+        {!!tooltip && <IconTooltip message={tooltip} />}
 
         {!!status && (
           <span>

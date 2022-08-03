@@ -1,6 +1,6 @@
 import React from 'react';
 import { NamingConventionOptions } from '@/metadata/types';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { useServerConfig } from '@/hooks';
 import { getSupportedDrivers } from '@/dataSources';
 import { CardRadioGroup } from '@/new-components/CardRadioGroup';
@@ -68,7 +68,7 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
         <div className="p-sm box-border">
           <p className="flex items-center text-gray-600 font-semibold">
             Naming Convention
-            <ToolTip message="Choose a default naming convention for your auto-generated GraphQL schema objects (fields, types, arguments, etc.)" />
+            <IconTooltip message="Choose a default naming convention for your auto-generated GraphQL schema objects (fields, types, arguments, etc.)" />
             <a
               href="https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/naming-convention/#set-naming-convention-for-a-particular-source"
               target="_blank"

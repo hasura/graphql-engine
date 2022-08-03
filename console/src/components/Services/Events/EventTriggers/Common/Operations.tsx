@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import * as tooltip from './Tooltips';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { capitalize } from '../../../../Common/utils/jsUtils';
@@ -37,7 +37,7 @@ export const Operations: React.FC<OperationProps> = ({
       o === 'enable_manual' ? (
         <span className="flex items-center">
           Via console
-          <ToolTip message={tooltip.manualOperationsDescription} />
+          <IconTooltip message={tooltip.manualOperationsDescription} />
           <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/event-triggers/invoke-trigger-console.html" />
         </span>
       ) : (

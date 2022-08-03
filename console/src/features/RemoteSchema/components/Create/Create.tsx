@@ -3,7 +3,7 @@ import { Button } from '@/new-components/Button';
 import { FieldError } from 'react-hook-form';
 import { Form, InputField } from '@/new-components/Form';
 import { useFireNotification } from '@/new-components/Notifications';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import get from 'lodash.get';
 import { APIError } from '@/hooks/error';
 import React, { useState } from 'react';
@@ -116,7 +116,7 @@ export const Create = ({ onSuccess }: Props) => {
             <div className="mb-lg w-4/12">
               <label className="block flex items-center text-gray-600 font-semibold mb-xs">
                 GraphQL Server Timeout
-                <ToolTip message="Configure timeout for your remote GraphQL server. Defaults to 60 seconds." />
+                <IconTooltip message="Configure timeout for your remote GraphQL server. Defaults to 60 seconds." />
               </label>
               <div className="relative w-full">
                 <input
@@ -144,7 +144,7 @@ export const Create = ({ onSuccess }: Props) => {
                 />
                 <label className="pl-3 flex items-center mt-2">
                   Forward all headers from client
-                  <ToolTip
+                  <IconTooltip
                     message="Toggle forwarding headers sent by the client app in the request to
           your remote GraphQL server"
                   />
@@ -153,7 +153,7 @@ export const Create = ({ onSuccess }: Props) => {
               <div>
                 <label className="flex items-center mb-xs">
                   Additional headers:
-                  <ToolTip message="Custom headers to be sent to the remote GraphQL server" />
+                  <IconTooltip message="Custom headers to be sent to the remote GraphQL server" />
                 </label>
               </div>
 
@@ -190,7 +190,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="flex items-center col-span-4">
                       <label className="flex items-center text-gray-600 font-medium">
                         Root Field Namespace
-                        <ToolTip message="Root field type names will be prefixed by this name." />
+                        <IconTooltip message="Root field type names will be prefixed by this name." />
                       </label>
                     </div>
                     <div className="col-span-8">
@@ -208,7 +208,7 @@ export const Create = ({ onSuccess }: Props) => {
 
                   <h2 className="text-lg font-semibold mb-xs items-center flex">
                     Types
-                    <ToolTip message="add a prefix / suffix to all types of the remote schema" />
+                    <IconTooltip message="add a prefix / suffix to all types of the remote schema" />
                   </h2>
 
                   <div className="grid gap-3 grid-cols-12 mb-md">
@@ -246,7 +246,7 @@ export const Create = ({ onSuccess }: Props) => {
 
                   <h2 className="text-lg font-semibold mb-xs flex items-center">
                     Fields
-                    <ToolTip message="add a prefix / suffix to the fields of the query / mutation root fields" />
+                    <IconTooltip message="add a prefix / suffix to the fields of the query / mutation root fields" />
                   </h2>
 
                   <h3 className="font-semibold mb-xs text-gray-600 text-lg">

@@ -1,7 +1,6 @@
 import React from 'react';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { RetryConf } from '../../types';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import { inputStyles } from '../../constants';
 
 type Props = {
@@ -14,7 +13,6 @@ type RetryInputRowType = {
   label: string;
   tooltipProps?:
     | {
-        id: string;
         message: string;
       }
     | undefined;
@@ -38,9 +36,9 @@ const RetryInputRow = ({
         <label className="flex items-center">
           {label}
           {tooltipProps ? (
-            <Tooltip {...tooltipProps} />
+            <IconTooltip {...tooltipProps} />
           ) : (
-            <ToolTip message="Number of retries that Hasura makes to the webhook in case of failure" />
+            <IconTooltip message="Number of retries that Hasura makes to the webhook in case of failure" />
           )}
         </label>
       </div>
@@ -57,7 +55,7 @@ const RetryInputRow = ({
 };
 
 const RetryConfEditor: React.FC<Props> = props => {
-  const { retryConf, setRetryConf, legacyTooltip = true } = props;
+  const { retryConf, setRetryConf } = props;
   const handleRetryConfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const label = e.target.name;
     const value = e.target.value;
@@ -78,15 +76,10 @@ const RetryConfEditor: React.FC<Props> = props => {
           placeholder: 'number of retries (default: 0)',
           onChange: handleRetryConfChange,
         }}
-        tooltipProps={
-          legacyTooltip
-            ? {
-                id: 'retry-conf-num-retries',
-                message:
-                  'Number of retries that Hasura makes to the webhook in case of failure',
-              }
-            : undefined
-        }
+        tooltipProps={{
+          message:
+            'Number of retries that Hasura makes to the webhook in case of failure',
+        }}
       />
       <RetryInputRow
         label="Retry interval in seconds"
@@ -97,14 +90,9 @@ const RetryConfEditor: React.FC<Props> = props => {
           placeholder: 'interval time in seconds (default: 10)',
           onChange: handleRetryConfChange,
         }}
-        tooltipProps={
-          legacyTooltip
-            ? {
-                id: 'retry-conf-interval-sec',
-                message: 'Interval (in seconds) between each retry',
-              }
-            : undefined
-        }
+        tooltipProps={{
+          message: 'Interval (in seconds) between each retry"',
+        }}
       />
 
       <RetryInputRow
@@ -116,14 +104,9 @@ const RetryConfEditor: React.FC<Props> = props => {
           placeholder: 'timeout in seconds (default: 60)',
           onChange: handleRetryConfChange,
         }}
-        tooltipProps={
-          legacyTooltip
-            ? {
-                id: 'retry-conf-timeout-sec',
-                message: 'Request timeout for the webhook',
-              }
-            : undefined
-        }
+        tooltipProps={{
+          message: 'Request timeout for the webhook',
+        }}
       />
 
       {/* exists(retryConf.tolerance_sec) ? (
@@ -133,7 +116,7 @@ const RetryConfEditor: React.FC<Props> = props => {
           <div className={`col-md-3 ${styles.padd_left_remove}`}>
             <label className={`${styles.add_mar_right} ${styles.retryLabel}`}>
               Tolerance in seconds
-              <Tooltip
+              <IconTooltip
                 id="retry-conf-interval-sec"
                 message="If scheduled time for an event is in the past, it gets dropped if it is older than the tolerance limit"
               />

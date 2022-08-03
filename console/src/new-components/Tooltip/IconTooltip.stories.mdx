@@ -1,0 +1,163 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { IconTooltip } from '@/new-components/Tooltip';
+
+<Meta
+  title="components/IconTooltip ✨"
+  component={IconTooltip}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+  decorators={[
+    Story => <div className={'p-16 w-full flex justify-center'}>{Story()}</div>,
+  ]}
+/>
+
+# IconTooltip
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Tooltip/IconTooltip.tsx)
+
+## 🧰 Overview
+
+This component is a special variant of the `<Tooltip />` component triggered by hovering an embedded icon.
+
+Default CSS display is `inline`, provided without padding and margin (displayed here with `padding: 2rem;`).
+
+### Basic usage
+
+```ts
+import { IconTooltip } from '@/new-components/IconTooltip';
+```
+
+```tsx
+<IconTooltip message="The tooltip message" />
+```
+
+<Canvas>
+  <Story name="Overview">
+    <IconTooltip message="The tooltip message" />
+  </Story>
+</Canvas>
+
+export const Template = args => <IconTooltip {...args} />;
+
+export const CustomTemplateStoriesFactory = Template =>
+  TemplateStoriesFactory(Template, 'py-20 flex justify-center');
+
+export const stories = {
+  'Variant - Side Top': {
+    side: 'top',
+    message: 'The tooltip message',
+  },
+  'Variant - Side Right': {
+    side: 'right',
+    message: 'The tooltip message',
+  },
+  'Variant - Side Bottom': {
+    side: 'bottom',
+    message: 'The tooltip message',
+  },
+  'Variant - Side Left': {
+    side: 'left',
+    message: 'The tooltip message',
+  },
+  'Variant - Default Open': {
+    defaultOpen: true,
+    message: 'The tooltip message',
+  },
+  'API playground': {
+    message: 'The tooltip message',
+  },
+  'Testing - Scalability': {
+    message: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.`,
+  },
+};
+
+## 🎭 Variants
+
+### 🎭 Side
+
+<Canvas>
+  <Story
+    name="Variant - Side"
+    args={{
+      'Variant - Side Top': stories['Variant - Side Top'],
+      'Variant - Side Right': stories['Variant - Side Right'],
+      'Variant - Side Bottom': stories['Variant - Side Bottom'],
+      'Variant - Side Left': stories['Variant - Side Left'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+### 🎭 Default Open
+
+<Canvas>
+  <Story name="Variant - Default Open" args={stories['Variant - Default Open']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+## 🧪 Testing
+
+### 🧪 Scalability
+
+<Canvas>
+  <Story name="Testing - Scalability" args={stories['Testing - Scalability']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={Object.keys(stories).reduce((accumulator, storyId) => ({
+      ...accumulator,
+      [storyId]: {
+        ...stories[storyId],
+        defaultOpen: true,
+      },
+    }))}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {CustomTemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

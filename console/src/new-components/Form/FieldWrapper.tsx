@@ -1,4 +1,4 @@
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import * as React from 'react';
 import { FieldError } from 'react-hook-form';
 import clsx from 'clsx';
@@ -125,7 +125,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
               : null}
             {label}
           </span>
-          {tooltip ? <ToolTip message={tooltip} /> : null}
+          {tooltip ? <IconTooltip message={tooltip} /> : null}
         </span>
         {description ? (
           <span className="text-gray-600 mb-xs font-normal text-sm">

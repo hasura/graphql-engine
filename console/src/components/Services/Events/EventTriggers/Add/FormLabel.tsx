@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 
 type FormLabelProps = {
   title: string;
@@ -11,7 +11,7 @@ const FormLabel: React.FC<FormLabelProps> = ({ title, tooltip }) => {
     <>
       <h2 className="text-lg font-semibold mb-xs flex items-center">
         {title}
-        <ToolTip message={tooltip} />
+        <IconTooltip message={tooltip} />
       </h2>
     </>
   );

@@ -2,7 +2,7 @@ import React, { useEffect, useReducer } from 'react';
 import { GraphQLError } from 'graphql';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
-import { Tooltip } from 'react-bootstrap';
+import { IconTooltip } from '@/new-components/Tooltip';
 import requestAction from '@/utils/requestAction';
 import {
   parseValidateApiData,
@@ -382,9 +382,7 @@ const AddAction: React.FC<AddActionProps> = ({
             Create Action
           </Button>
           {readOnlyMode && (
-            <Tooltip id="tooltip-actions-add-readonlymode">
-              Adding new action is not allowed in Read only mode!
-            </Tooltip>
+            <IconTooltip message="Adding new action is not allowed in Read only mode!" />
           )}
         </div>
       </div>

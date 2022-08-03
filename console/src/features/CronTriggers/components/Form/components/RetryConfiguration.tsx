@@ -1,6 +1,6 @@
 import React from 'react';
 import { Collapse } from '@/new-components/Collapse';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { useFormContext } from 'react-hook-form';
 
 const inputStyes =
@@ -20,7 +20,7 @@ export const RetryConfiguration = () => {
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-6 flex items-center">
                 <label className="block">Number of retries</label>
-                <ToolTip message="Number of retries that Hasura makes to the webhook in case of failure" />
+                <IconTooltip message="Number of retries that Hasura makes to the webhook in case of failure" />
               </div>
               <div className="col-span-6">
                 {/* TODO: This is a horizontal/inline input field, currently we do not have it in common so this component implements its own,
@@ -36,7 +36,7 @@ export const RetryConfiguration = () => {
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-6 flex items-center">
                 <label className="block">Retry interval in seconds</label>
-                <ToolTip message="Interval (in seconds) between each retry" />
+                <IconTooltip message="Interval (in seconds) between each retry" />
               </div>
               <div className="col-span-6">
                 <input
@@ -50,7 +50,7 @@ export const RetryConfiguration = () => {
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-6 flex items-center">
                 <label className="block">Timeout in seconds</label>
-                <ToolTip message="Request timeout for the webhook" />
+                <IconTooltip message="Request timeout for the webhook" />
               </div>
               <div className="col-span-6">
                 <input

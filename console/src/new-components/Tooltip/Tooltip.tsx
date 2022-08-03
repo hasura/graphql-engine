@@ -1,31 +1,37 @@
 import React from 'react';
-import * as Tooltip from '@radix-ui/react-tooltip';
-import { FaQuestionCircle } from 'react-icons/fa';
+import * as RadixTooltip from '@radix-ui/react-tooltip';
 
 export type TooltipProps = {
-  message: string;
-  className?: string;
-} & Pick<Tooltip.TooltipContentProps, 'side'> &
-  Pick<Tooltip.TooltipProps, 'defaultOpen'>;
+  /**
+   * The component children
+   */
+  children: React.ReactNode;
+  /**
+   * The tooltip content children
+   */
+  tooltipContentChildren: React.ReactNode;
+} & Pick<RadixTooltip.TooltipContentProps, 'side'> &
+  Pick<RadixTooltip.TooltipProps, 'defaultOpen'>;
 
-export const ToolTip: React.VFC<TooltipProps> = ({
-  message,
-  className,
+export const Tooltip: React.VFC<TooltipProps> = ({
+  children,
+  tooltipContentChildren,
   side = 'right',
   defaultOpen = false,
 }) => (
-  <Tooltip.Root delayDuration={0} defaultOpen={defaultOpen}>
-    <Tooltip.Trigger className="ml-xs flex">
-      <FaQuestionCircle
-        className={`h-4 text-muted cursor-pointer ${className}`}
-      />
-    </Tooltip.Trigger>
-    <Tooltip.Content
+  <RadixTooltip.Root delayDuration={0} defaultOpen={defaultOpen}>
+    <RadixTooltip.Trigger
+      className="ml-xs inline"
+      data-testid="tooltip-trigger"
+    >
+      {children}
+    </RadixTooltip.Trigger>
+    <RadixTooltip.Content
       side={side}
       className="bg-gray-800 p-sm text-white rounded max-w-lg"
     >
-      <Tooltip.Arrow className="fill-current text-gray-800" offset={5} />
-      {message}
-    </Tooltip.Content>
-  </Tooltip.Root>
+      <RadixTooltip.Arrow className="fill-current text-gray-800" offset={5} />
+      {tooltipContentChildren}
+    </RadixTooltip.Content>
+  </RadixTooltip.Root>
 );

@@ -413,7 +413,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
             requestPayloadTransformOnChange={requestPayloadTransformOnChange}
           />
 
-          <div className="flex items-center mb-lg">
+          <div className="flex items-start mb-lg">
             {!readOnlyMode && (
               <>
                 <Button

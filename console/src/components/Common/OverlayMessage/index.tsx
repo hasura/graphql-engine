@@ -1,11 +1,10 @@
 import React from 'react';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { Tooltip, TooltipProps } from '@/new-components/Tooltip';
 
 type Props = {
   children: React.ReactElement;
   message: string;
-  placement?: string;
+  placement?: TooltipProps['side'];
 };
 
 const OverlayMessage: React.FC<Props> = ({
@@ -14,12 +13,9 @@ const OverlayMessage: React.FC<Props> = ({
   placement = 'left',
 }) =>
   message ? (
-    <OverlayTrigger
-      placement={placement}
-      overlay={<Tooltip id={message}>{message}</Tooltip>}
-    >
+    <Tooltip side={placement} tooltipContentChildren={message}>
       {children}
-    </OverlayTrigger>
+    </Tooltip>
   ) : (
     children
   );

@@ -1,4 +1,4 @@
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import React from 'react';
 
 type SubFieldTitleProps = {
@@ -17,7 +17,7 @@ export const SubFieldTitle = ({
       <div className="flex items-center cursor-pointer w-max whitespace-nowrap">
         {!enabled ? (
           <>
-            <ToolTip
+            <IconTooltip
               className="mr-sm text-gray-400"
               message="Only fields with arguments or subfields can be toggled"
             />

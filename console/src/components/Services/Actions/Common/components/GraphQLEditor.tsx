@@ -1,7 +1,7 @@
 import React from 'react';
 import { parse as sdlParser } from 'graphql/language/parser';
 import { GraphQLError } from 'graphql';
-import Tooltip from './Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { Nullable } from '../../../../Common/utils/tsUtils';
@@ -78,11 +78,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
       {label ? (
         <h2 className="text-lg font-bold pb-5 mb-1.5">
           {label}
-          {tooltip ? (
-            <Tooltip id="action-name" text={tooltip} className="ml-2.5" />
-          ) : (
-            <></>
-          )}
+          {tooltip ? <IconTooltip message={tooltip} /> : <></>}
         </h2>
       ) : null}
       <div className="flex mb-1.5">
