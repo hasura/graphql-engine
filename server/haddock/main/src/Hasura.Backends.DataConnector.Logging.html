@@ -34,7 +34,7 @@
 </span><span id="line-31"></span><span>    </span><span id="_rliRequestBody"><span class="annot"><span class="annottext">RequestLogInfo -&gt; Maybe Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#_rliRequestBody"><span class="hs-identifier hs-var hs-var">_rliRequestBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689390463"><span id="local-6989586621689390465"><span id="local-6989586621689390467"><span class="annot"><span class="annottext">Int -&gt; RequestLogInfo -&gt; ShowS
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689386068"><span id="local-6989586621689386070"><span id="local-6989586621689386072"><span class="annot"><span class="annottext">Int -&gt; RequestLogInfo -&gt; ShowS
 [RequestLogInfo] -&gt; ShowS
 RequestLogInfo -&gt; String
 (Int -&gt; RequestLogInfo -&gt; ShowS)
@@ -49,7 +49,7 @@ show :: RequestLogInfo -&gt; String
 $cshow :: RequestLogInfo -&gt; String
 showsPrec :: Int -&gt; RequestLogInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; RequestLogInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689390458"><span id="local-6989586621689390460"><span class="annot"><span class="annottext">RequestLogInfo -&gt; RequestLogInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689386063"><span id="local-6989586621689386065"><span class="annot"><span class="annottext">RequestLogInfo -&gt; RequestLogInfo -&gt; Bool
 (RequestLogInfo -&gt; RequestLogInfo -&gt; Bool)
 -&gt; (RequestLogInfo -&gt; RequestLogInfo -&gt; Bool) -&gt; Eq RequestLogInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -71,7 +71,7 @@ $c== :: RequestLogInfo -&gt; RequestLogInfo -&gt; Bool
 </span><span id="line-40"></span><span>    </span><span id="_aclSpanId"><span class="annot"><span class="annottext">AgentCommunicationLog -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#_aclSpanId"><span class="hs-identifier hs-var hs-var">_aclSpanId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689390445"><span id="local-6989586621689390447"><span id="local-6989586621689390449"><span class="annot"><span class="annottext">Int -&gt; AgentCommunicationLog -&gt; ShowS
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689386050"><span id="local-6989586621689386052"><span id="local-6989586621689386054"><span class="annot"><span class="annottext">Int -&gt; AgentCommunicationLog -&gt; ShowS
 [AgentCommunicationLog] -&gt; ShowS
 AgentCommunicationLog -&gt; String
 (Int -&gt; AgentCommunicationLog -&gt; ShowS)
@@ -86,7 +86,7 @@ show :: AgentCommunicationLog -&gt; String
 $cshow :: AgentCommunicationLog -&gt; String
 showsPrec :: Int -&gt; AgentCommunicationLog -&gt; ShowS
 $cshowsPrec :: Int -&gt; AgentCommunicationLog -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689390441"><span id="local-6989586621689390443"><span class="annot"><span class="annottext">AgentCommunicationLog -&gt; AgentCommunicationLog -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689386046"><span id="local-6989586621689386048"><span class="annot"><span class="annottext">AgentCommunicationLog -&gt; AgentCommunicationLog -&gt; Bool
 (AgentCommunicationLog -&gt; AgentCommunicationLog -&gt; Bool)
 -&gt; (AgentCommunicationLog -&gt; AgentCommunicationLog -&gt; Bool)
 -&gt; Eq AgentCommunicationLog
@@ -98,8 +98,8 @@ $c== :: AgentCommunicationLog -&gt; AgentCommunicationLog -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#AgentCommunicationLog"><span class="hs-identifier hs-type">AgentCommunicationLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621689390437"><span class="annot"><span class="annottext">toEngineLog :: AgentCommunicationLog -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#AgentCommunicationLog"><span class="hs-identifier hs-type">AgentCommunicationLog</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689390431"><span id="local-6989586621689390432"><span id="local-6989586621689390433"><span id="local-6989586621689390434"><span id="local-6989586621689390435"><span class="annot"><span class="annottext">Maybe Int
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621689386042"><span class="annot"><span class="annottext">toEngineLog :: AgentCommunicationLog -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#AgentCommunicationLog"><span class="hs-identifier hs-type">AgentCommunicationLog</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689386036"><span id="local-6989586621689386037"><span id="local-6989586621689386038"><span id="local-6989586621689386039"><span id="local-6989586621689386040"><span class="annot"><span class="annottext">Maybe Int
 Maybe Text
 Maybe RequestLogInfo
 Text
@@ -113,14 +113,14 @@ _aclTraceId :: AgentCommunicationLog -&gt; Text
 _aclError :: AgentCommunicationLog -&gt; Maybe Text
 _aclResponseStatusCode :: AgentCommunicationLog -&gt; Maybe Int
 _aclRequest :: AgentCommunicationLog -&gt; Maybe RequestLogInfo
-</span><a href="#local-6989586621689390431"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689386036"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-46"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelDebug"><span class="hs-identifier hs-var">LevelDebug</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTDataConnectorLog"><span class="hs-identifier hs-var">ELTDataConnectorLog</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689390428"><span class="hs-identifier hs-var">logJson</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689386033"><span class="hs-identifier hs-var">logJson</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-48"></span><span>      </span><span id="local-6989586621689390428"><span class="annot"><span class="annottext">logJson :: Value
-</span><a href="#local-6989586621689390428"><span class="hs-identifier hs-var hs-var">logJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-48"></span><span>      </span><span id="local-6989586621689386033"><span class="annot"><span class="annottext">logJson :: Value
+</span><a href="#local-6989586621689386033"><span class="hs-identifier hs-var hs-var">logJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-49"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -138,7 +138,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.Backends.DataConnector.Logging.html#_rliRequestMethod"><span class="hs-identifier hs-var hs-var">_rliRequestMethod</span></a></span><span> </span><span class="annot"><span class="annottext">(RequestLogInfo -&gt; Pair) -&gt; Maybe RequestLogInfo -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe RequestLogInfo
-</span><a href="#local-6989586621689390435"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689386040"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-52"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;requestUri&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -149,7 +149,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.Backends.DataConnector.Logging.html#_rliRequestUri"><span class="hs-identifier hs-var hs-var">_rliRequestUri</span></a></span><span> </span><span class="annot"><span class="annottext">(RequestLogInfo -&gt; Pair) -&gt; Maybe RequestLogInfo -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe RequestLogInfo
-</span><a href="#local-6989586621689390435"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689386040"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;requestHeaders&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; KeyMap Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -160,7 +160,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.Backends.DataConnector.Logging.html#_rliRequestHeaders"><span class="hs-identifier hs-var hs-var">_rliRequestHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">(RequestLogInfo -&gt; Pair) -&gt; Maybe RequestLogInfo -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe RequestLogInfo
-</span><a href="#local-6989586621689390435"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689386040"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-54"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;requestBody&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -171,21 +171,21 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; Maybe RequestLogInfo -&gt; Maybe Text
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe RequestLogInfo
-</span><a href="#local-6989586621689390435"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689386040"><span class="hs-identifier hs-var">_aclRequest</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-55"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;responseStatusCode&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Pair) -&gt; Maybe Int -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689390434"><span class="hs-identifier hs-var">_aclResponseStatusCode</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689386039"><span class="hs-identifier hs-var">_aclResponseStatusCode</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-56"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Pair) -&gt; Maybe Text -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689390433"><span class="hs-identifier hs-var">_aclError</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689386038"><span class="hs-identifier hs-var">_aclError</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-57"></span><span>              </span><span class="annot"><span class="annottext">Pair -&gt; Maybe Pair
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Pair -&gt; Maybe Pair) -&gt; Pair -&gt; Maybe Pair
@@ -194,7 +194,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;traceId&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689390432"><span class="hs-identifier hs-var">_aclTraceId</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689386037"><span class="hs-identifier hs-var">_aclTraceId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-58"></span><span>              </span><span class="annot"><span class="annottext">Pair -&gt; Maybe Pair
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Pair -&gt; Maybe Pair) -&gt; Pair -&gt; Maybe Pair
@@ -203,36 +203,36 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;spanId&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689390431"><span class="hs-identifier hs-var">_aclSpanId</span></a></span><span>
+</span><a href="#local-6989586621689386036"><span class="hs-identifier hs-var">_aclSpanId</span></a></span><span>
 </span><span id="line-59"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span id="local-6989586621689390423"><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier hs-type">logAgentRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689390423"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689390423"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HttpException</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BSL.ByteString</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689390423"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-61"></span><span id="local-6989586621689386028"><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier hs-type">logAgentRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689386028"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689386028"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HttpException</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BSL.ByteString</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689386028"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-62"></span><span id="logAgentRequest"><span class="annot"><span class="annottext">logAgentRequest :: Logger Hasura
 -&gt; Request -&gt; Either HttpException (Response ByteString) -&gt; m ()
-</span><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier hs-var hs-var">logAgentRequest</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689390421"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier hs-var hs-var">logAgentRequest</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689386026"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689390421"><span class="hs-identifier hs-var">writeLog</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689390420"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390420"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621689390419"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
-</span><a href="#local-6989586621689390419"><span class="hs-identifier hs-var">responseOrError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-63"></span><span>  </span><span id="local-6989586621689390418"><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621689390418"><span class="hs-identifier hs-var">traceCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m TraceContext
+</span><a href="#local-6989586621689386026"><span class="hs-identifier hs-var">writeLog</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689386025"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689386025"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621689386024"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689386024"><span class="hs-identifier hs-var">responseOrError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621689386023"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621689386023"><span class="hs-identifier hs-var">traceCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m TraceContext
 forall (m :: * -&gt; *). MonadTrace m =&gt; m TraceContext
 </span><a href="Hasura.Tracing.html#currentContext"><span class="hs-identifier hs-var">Tracing.currentContext</span></a></span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689390416"><span class="annot"><span class="annottext">_aclRequest :: Maybe RequestLogInfo
-</span><a href="#local-6989586621689390416"><span class="hs-identifier hs-var hs-var">_aclRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestLogInfo -&gt; Maybe RequestLogInfo
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689386021"><span class="annot"><span class="annottext">_aclRequest :: Maybe RequestLogInfo
+</span><a href="#local-6989586621689386021"><span class="hs-identifier hs-var hs-var">_aclRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestLogInfo -&gt; Maybe RequestLogInfo
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(RequestLogInfo -&gt; Maybe RequestLogInfo)
 -&gt; RequestLogInfo -&gt; Maybe RequestLogInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; RequestLogInfo
 </span><a href="Hasura.Backends.DataConnector.Logging.html#extractRequestLogInfoFromClientRequest"><span class="hs-identifier hs-var">extractRequestLogInfoFromClientRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390420"><span class="hs-identifier hs-var">req</span></a></span><span>
-</span><span id="line-65"></span><span>      </span><span id="local-6989586621689390414"><span class="annot"><span class="annottext">_aclResponseStatusCode :: Maybe Int
-</span><a href="#local-6989586621689390414"><span class="hs-identifier hs-var hs-var">_aclResponseStatusCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
-</span><a href="#local-6989586621689390419"><span class="hs-identifier hs-var">responseOrError</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-66"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689390413"><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689390413"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
+</span><a href="#local-6989586621689386025"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><span id="line-65"></span><span>      </span><span id="local-6989586621689386019"><span class="annot"><span class="annottext">_aclResponseStatusCode :: Maybe Int
+</span><a href="#local-6989586621689386019"><span class="hs-identifier hs-var hs-var">_aclResponseStatusCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689386024"><span class="hs-identifier hs-var">responseOrError</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-66"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689386018"><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689386018"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Maybe Int) -&gt; (Status -&gt; Int) -&gt; Status -&gt; Maybe Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -242,16 +242,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString -&gt; Status
 forall body. Response body -&gt; Status
 </span><span class="hs-identifier hs-var hs-var">responseStatus</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689390413"><span class="hs-identifier hs-var">response</span></a></span><span>
-</span><span id="line-67"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689390411"><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689390411"><span class="hs-identifier hs-var">httpExn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Maybe Int
+</span><a href="#local-6989586621689386018"><span class="hs-identifier hs-var">response</span></a></span><span>
+</span><span id="line-67"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689386016"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689386016"><span class="hs-identifier hs-var">httpExn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Maybe Int
 </span><a href="Hasura.HTTP.html#getHTTPExceptionStatus"><span class="hs-identifier hs-var">Hasura.HTTP.getHTTPExceptionStatus</span></a></span><span> </span><span class="annot"><span class="annottext">(HttpException -&gt; Maybe Int) -&gt; HttpException -&gt; Maybe Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; HttpException
 </span><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-var">Hasura.HTTP.HttpException</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689390411"><span class="hs-identifier hs-var">httpExn</span></a></span><span>
-</span><span id="line-68"></span><span>      </span><span id="local-6989586621689390408"><span class="annot"><span class="annottext">_aclError :: Maybe Text
-</span><a href="#local-6989586621689390408"><span class="hs-identifier hs-var hs-var">_aclError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HttpException -&gt; Maybe Text)
+</span><a href="#local-6989586621689386016"><span class="hs-identifier hs-var">httpExn</span></a></span><span>
+</span><span id="line-68"></span><span>      </span><span id="local-6989586621689386013"><span class="annot"><span class="annottext">_aclError :: Maybe Text
+</span><a href="#local-6989586621689386013"><span class="hs-identifier hs-var hs-var">_aclError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HttpException -&gt; Maybe Text)
 -&gt; (Response ByteString -&gt; Maybe Text)
 -&gt; Either HttpException (Response ByteString)
 -&gt; Maybe Text
@@ -267,26 +267,26 @@ forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
-</span><a href="#local-6989586621689390419"><span class="hs-identifier hs-var">responseOrError</span></a></span><span>
-</span><span id="line-69"></span><span>      </span><span id="local-6989586621689390404"><span class="annot"><span class="annottext">_aclTraceId :: Text
-</span><a href="#local-6989586621689390404"><span class="hs-identifier hs-var hs-var">_aclTraceId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
+</span><a href="#local-6989586621689386024"><span class="hs-identifier hs-var">responseOrError</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span id="local-6989586621689386009"><span class="annot"><span class="annottext">_aclTraceId :: Text
+</span><a href="#local-6989586621689386009"><span class="hs-identifier hs-var hs-var">_aclTraceId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
 </span><a href="Hasura.Tracing.html#word64ToHex"><span class="hs-identifier hs-var">Tracing.word64ToHex</span></a></span><span> </span><span class="annot"><span class="annottext">(Word64 -&gt; Text) -&gt; Word64 -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; Word64
 </span><a href="Hasura.Tracing.html#tcCurrentTrace"><span class="hs-identifier hs-var hs-var">Tracing.tcCurrentTrace</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621689390418"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
-</span><span id="line-70"></span><span>      </span><span id="local-6989586621689390401"><span class="annot"><span class="annottext">_aclSpanId :: Text
-</span><a href="#local-6989586621689390401"><span class="hs-identifier hs-var hs-var">_aclSpanId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
+</span><a href="#local-6989586621689386023"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
+</span><span id="line-70"></span><span>      </span><span id="local-6989586621689386006"><span class="annot"><span class="annottext">_aclSpanId :: Text
+</span><a href="#local-6989586621689386006"><span class="hs-identifier hs-var hs-var">_aclSpanId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
 </span><a href="Hasura.Tracing.html#word64ToHex"><span class="hs-identifier hs-var">Tracing.word64ToHex</span></a></span><span> </span><span class="annot"><span class="annottext">(Word64 -&gt; Text) -&gt; Word64 -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; Word64
 </span><a href="Hasura.Tracing.html#tcCurrentSpan"><span class="hs-identifier hs-var hs-var">Tracing.tcCurrentSpan</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621689390418"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
+</span><a href="#local-6989586621689386023"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><span class="annottext">AgentCommunicationLog -&gt; m ()
 forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689390421"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">AgentCommunicationLog :: Maybe RequestLogInfo
+</span><a href="#local-6989586621689386026"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">AgentCommunicationLog :: Maybe RequestLogInfo
 -&gt; Maybe Int -&gt; Maybe Text -&gt; Text -&gt; Text -&gt; AgentCommunicationLog
 </span><a href="Hasura.Backends.DataConnector.Logging.html#AgentCommunicationLog"><span class="hs-identifier hs-type">AgentCommunicationLog</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Maybe Int
 Maybe Text
@@ -302,15 +302,15 @@ _aclTraceId :: Text
 _aclError :: Maybe Text
 _aclResponseStatusCode :: Maybe Int
 _aclRequest :: Maybe RequestLogInfo
-</span><a href="#local-6989586621689390401"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689386006"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-72"></span><span>
 </span><span id="line-73"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#extractRequestLogInfoFromClientRequest"><span class="hs-identifier hs-type">extractRequestLogInfoFromClientRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#RequestLogInfo"><span class="hs-identifier hs-type">RequestLogInfo</span></a></span><span>
 </span><span id="line-74"></span><span id="extractRequestLogInfoFromClientRequest"><span class="annot"><span class="annottext">extractRequestLogInfoFromClientRequest :: Request -&gt; RequestLogInfo
-</span><a href="Hasura.Backends.DataConnector.Logging.html#extractRequestLogInfoFromClientRequest"><span class="hs-identifier hs-var hs-var">extractRequestLogInfoFromClientRequest</span></a></span></span><span> </span><span id="local-6989586621689390399"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390399"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-75"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689390398"><span class="annot"><span class="annottext">_rliRequestMethod :: Text
-</span><a href="#local-6989586621689390398"><span class="hs-identifier hs-var hs-var">_rliRequestMethod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390399"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting ByteString Request ByteString -&gt; ByteString
+</span><a href="Hasura.Backends.DataConnector.Logging.html#extractRequestLogInfoFromClientRequest"><span class="hs-identifier hs-var hs-var">extractRequestLogInfoFromClientRequest</span></a></span></span><span> </span><span id="local-6989586621689386004"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689386004"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689386003"><span class="annot"><span class="annottext">_rliRequestMethod :: Text
+</span><a href="#local-6989586621689386003"><span class="hs-identifier hs-var hs-var">_rliRequestMethod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689386004"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting ByteString Request ByteString -&gt; ByteString
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting ByteString Request ByteString
 Lens' Request ByteString
@@ -318,16 +318,16 @@ Lens' Request ByteString
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#fromUtf8"><span class="hs-identifier hs-var">fromUtf8</span></a></span><span>
-</span><span id="line-76"></span><span>      </span><span id="local-6989586621689390395"><span class="annot"><span class="annottext">_rliRequestUri :: Text
-</span><a href="#local-6989586621689390395"><span class="hs-identifier hs-var hs-var">_rliRequestUri</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390399"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting Text Request Text -&gt; Text
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621689386000"><span class="annot"><span class="annottext">_rliRequestUri :: Text
+</span><a href="#local-6989586621689386000"><span class="hs-identifier hs-var hs-var">_rliRequestUri</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689386004"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting Text Request Text -&gt; Text
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Text Request Text
 Lens' Request Text
 </span><a href="Network.HTTP.Client.Transformable.html#url"><span class="hs-identifier hs-var">url</span></a></span><span>
-</span><span id="line-77"></span><span>      </span><span id="local-6989586621689390394"><span class="annot"><span class="annottext">_rliRequestPath :: Text
-</span><a href="#local-6989586621689390394"><span class="hs-identifier hs-var hs-var">_rliRequestPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390399"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting ByteString Request ByteString -&gt; ByteString
+</span><span id="line-77"></span><span>      </span><span id="local-6989586621689385999"><span class="annot"><span class="annottext">_rliRequestPath :: Text
+</span><a href="#local-6989586621689385999"><span class="hs-identifier hs-var hs-var">_rliRequestPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689386004"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting ByteString Request ByteString -&gt; ByteString
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting ByteString Request ByteString
 Lens' Request ByteString
@@ -335,9 +335,9 @@ Lens' Request ByteString
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#fromUtf8"><span class="hs-identifier hs-var">fromUtf8</span></a></span><span>
-</span><span id="line-78"></span><span>      </span><span id="local-6989586621689390393"><span class="annot"><span class="annottext">_rliRequestHeaders :: KeyMap Text
-</span><a href="#local-6989586621689390393"><span class="hs-identifier hs-var hs-var">_rliRequestHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390399"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting [Header] Request [Header] -&gt; [Header]
+</span><span id="line-78"></span><span>      </span><span id="local-6989586621689385998"><span class="annot"><span class="annottext">_rliRequestHeaders :: KeyMap Text
+</span><a href="#local-6989586621689385998"><span class="hs-identifier hs-var hs-var">_rliRequestHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689386004"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Getting [Header] Request [Header] -&gt; [Header]
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting [Header] Request [Header]
 Lens' Request [Header]
@@ -345,9 +345,9 @@ Lens' Request [Header]
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; KeyMap Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#headersToKeyMap"><span class="hs-identifier hs-var">headersToKeyMap</span></a></span><span>
-</span><span id="line-79"></span><span>      </span><span id="local-6989586621689390391"><span class="annot"><span class="annottext">_rliRequestBody :: Maybe Text
-</span><a href="#local-6989586621689390391"><span class="hs-identifier hs-var hs-var">_rliRequestBody</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689390399"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><span id="line-79"></span><span>      </span><span id="local-6989586621689385996"><span class="annot"><span class="annottext">_rliRequestBody :: Maybe Text
+</span><a href="#local-6989586621689385996"><span class="hs-identifier hs-var hs-var">_rliRequestBody</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689386004"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request
 -&gt; Getting (Maybe ByteString) Request (Maybe ByteString)
 -&gt; Maybe ByteString
 forall s a. s -&gt; Getting a s a -&gt; a
@@ -375,25 +375,25 @@ _rliRequestBody :: Maybe Text
 _rliRequestHeaders :: KeyMap Text
 _rliRequestUri :: Text
 _rliRequestMethod :: Text
-</span><a href="#local-6989586621689390391"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689385996"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span id="local-6989586621689390387"><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier hs-type">logClientError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689390387"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689390387"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ClientError</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689390387"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-82"></span><span id="local-6989586621689385992"><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier hs-type">logClientError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689385992"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689385992"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ClientError</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689385992"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-83"></span><span id="logClientError"><span class="annot"><span class="annottext">logClientError :: Logger Hasura -&gt; ClientError -&gt; m ()
-</span><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier hs-var hs-var">logClientError</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689390386"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier hs-var hs-var">logClientError</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689385991"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689390386"><span class="hs-identifier hs-var">writeLog</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689390385"><span class="annot"><span class="annottext">ClientError
-</span><a href="#local-6989586621689390385"><span class="hs-identifier hs-var">clientError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621689390384"><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621689390384"><span class="hs-identifier hs-var">traceCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m TraceContext
+</span><a href="#local-6989586621689385991"><span class="hs-identifier hs-var">writeLog</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689385990"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621689385990"><span class="hs-identifier hs-var">clientError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621689385989"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621689385989"><span class="hs-identifier hs-var">traceCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m TraceContext
 forall (m :: * -&gt; *). MonadTrace m =&gt; m TraceContext
 </span><a href="Hasura.Tracing.html#currentContext"><span class="hs-identifier hs-var">Tracing.currentContext</span></a></span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689390383"><span class="annot"><span class="annottext">_aclResponseStatusCode :: Maybe Int
-</span><a href="#local-6989586621689390383"><span class="hs-identifier hs-var hs-var">_aclResponseStatusCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ClientError
-</span><a href="#local-6989586621689390385"><span class="hs-identifier hs-var">clientError</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689385988"><span class="annot"><span class="annottext">_aclResponseStatusCode :: Maybe Int
+</span><a href="#local-6989586621689385988"><span class="hs-identifier hs-var hs-var">_aclResponseStatusCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621689385990"><span class="hs-identifier hs-var">clientError</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-86"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">FailureResponse</span></span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString)
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689390381"><span class="annot"><span class="annottext">Response
-</span><a href="#local-6989586621689390381"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689385986"><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621689385986"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Maybe Int) -&gt; (Status -&gt; Int) -&gt; Status -&gt; Maybe Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -403,42 +403,42 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response -&gt; Status
 forall a. ResponseF a -&gt; Status
 </span><span class="hs-identifier hs-var hs-var">responseStatusCode</span></span><span> </span><span class="annot"><span class="annottext">Response
-</span><a href="#local-6989586621689390381"><span class="hs-identifier hs-var">response</span></a></span><span>
+</span><a href="#local-6989586621689385986"><span class="hs-identifier hs-var">response</span></a></span><span>
 </span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">ClientError
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Int
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-88"></span><span>      </span><span id="local-6989586621689390380"><span class="annot"><span class="annottext">_aclRequest :: Maybe RequestLogInfo
-</span><a href="#local-6989586621689390380"><span class="hs-identifier hs-var hs-var">_aclRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Maybe RequestLogInfo
+</span><span id="line-88"></span><span>      </span><span id="local-6989586621689385985"><span class="annot"><span class="annottext">_aclRequest :: Maybe RequestLogInfo
+</span><a href="#local-6989586621689385985"><span class="hs-identifier hs-var hs-var">_aclRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Maybe RequestLogInfo
 </span><a href="Hasura.Backends.DataConnector.Logging.html#extractRequestLogInfoFromClientInfo"><span class="hs-identifier hs-var">extractRequestLogInfoFromClientInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
-</span><a href="#local-6989586621689390385"><span class="hs-identifier hs-var">clientError</span></a></span><span>
-</span><span id="line-89"></span><span>      </span><span id="local-6989586621689390378"><span class="annot"><span class="annottext">_aclError :: Maybe Text
-</span><a href="#local-6989586621689390378"><span class="hs-identifier hs-var hs-var">_aclError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+</span><a href="#local-6989586621689385990"><span class="hs-identifier hs-var">clientError</span></a></span><span>
+</span><span id="line-89"></span><span>      </span><span id="local-6989586621689385983"><span class="annot"><span class="annottext">_aclError :: Maybe Text
+</span><a href="#local-6989586621689385983"><span class="hs-identifier hs-var hs-var">_aclError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Text) -&gt; Text -&gt; Maybe Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Text
 </span><a href="Hasura.HTTP.html#serializeServantClientErrorMessageForDebugging"><span class="hs-identifier hs-var">Hasura.HTTP.serializeServantClientErrorMessageForDebugging</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
-</span><a href="#local-6989586621689390385"><span class="hs-identifier hs-var">clientError</span></a></span><span>
-</span><span id="line-90"></span><span>      </span><span id="local-6989586621689390376"><span class="annot"><span class="annottext">_aclTraceId :: Text
-</span><a href="#local-6989586621689390376"><span class="hs-identifier hs-var hs-var">_aclTraceId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
+</span><a href="#local-6989586621689385990"><span class="hs-identifier hs-var">clientError</span></a></span><span>
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621689385981"><span class="annot"><span class="annottext">_aclTraceId :: Text
+</span><a href="#local-6989586621689385981"><span class="hs-identifier hs-var hs-var">_aclTraceId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
 </span><a href="Hasura.Tracing.html#word64ToHex"><span class="hs-identifier hs-var">Tracing.word64ToHex</span></a></span><span> </span><span class="annot"><span class="annottext">(Word64 -&gt; Text) -&gt; Word64 -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; Word64
 </span><a href="Hasura.Tracing.html#tcCurrentTrace"><span class="hs-identifier hs-var hs-var">Tracing.tcCurrentTrace</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621689390384"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
-</span><span id="line-91"></span><span>      </span><span id="local-6989586621689390375"><span class="annot"><span class="annottext">_aclSpanId :: Text
-</span><a href="#local-6989586621689390375"><span class="hs-identifier hs-var hs-var">_aclSpanId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
+</span><a href="#local-6989586621689385989"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span id="local-6989586621689385980"><span class="annot"><span class="annottext">_aclSpanId :: Text
+</span><a href="#local-6989586621689385980"><span class="hs-identifier hs-var hs-var">_aclSpanId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Text
 </span><a href="Hasura.Tracing.html#word64ToHex"><span class="hs-identifier hs-var">Tracing.word64ToHex</span></a></span><span> </span><span class="annot"><span class="annottext">(Word64 -&gt; Text) -&gt; Word64 -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; Word64
 </span><a href="Hasura.Tracing.html#tcCurrentSpan"><span class="hs-identifier hs-var hs-var">Tracing.tcCurrentSpan</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621689390384"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
+</span><a href="#local-6989586621689385989"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">AgentCommunicationLog -&gt; m ()
 forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689390386"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">AgentCommunicationLog :: Maybe RequestLogInfo
+</span><a href="#local-6989586621689385991"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">AgentCommunicationLog :: Maybe RequestLogInfo
 -&gt; Maybe Int -&gt; Maybe Text -&gt; Text -&gt; Text -&gt; AgentCommunicationLog
 </span><a href="Hasura.Backends.DataConnector.Logging.html#AgentCommunicationLog"><span class="hs-identifier hs-type">AgentCommunicationLog</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Maybe Int
 Maybe Text
@@ -454,39 +454,39 @@ _aclTraceId :: Text
 _aclError :: Maybe Text
 _aclResponseStatusCode :: Maybe Int
 _aclRequest :: Maybe RequestLogInfo
-</span><a href="#local-6989586621689390375"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689385980"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#extractRequestLogInfoFromClientInfo"><span class="hs-identifier hs-type">extractRequestLogInfoFromClientInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ClientError</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#RequestLogInfo"><span class="hs-identifier hs-type">RequestLogInfo</span></a></span><span>
 </span><span id="line-95"></span><span id="extractRequestLogInfoFromClientInfo"><span class="annot"><span class="annottext">extractRequestLogInfoFromClientInfo :: ClientError -&gt; Maybe RequestLogInfo
 </span><a href="Hasura.Backends.DataConnector.Logging.html#extractRequestLogInfoFromClientInfo"><span class="hs-identifier hs-var hs-var">extractRequestLogInfoFromClientInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-96"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">FailureResponse</span></span><span> </span><span id="local-6989586621689390374"><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString)
-</span><a href="#local-6989586621689390374"><span class="hs-identifier hs-var">request</span></a></span></span><span> </span><span class="annot"><span class="annottext">Response
+</span><span id="line-96"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">FailureResponse</span></span><span> </span><span id="local-6989586621689385979"><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString)
+</span><a href="#local-6989586621689385979"><span class="hs-identifier hs-var">request</span></a></span></span><span> </span><span class="annot"><span class="annottext">Response
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-97"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689390373"><span class="annot"><span class="annottext">_rliRequestMethod :: Text
-</span><a href="#local-6989586621689390373"><span class="hs-identifier hs-var hs-var">_rliRequestMethod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString) -&gt; ByteString
+</span><span id="line-97"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689385978"><span class="annot"><span class="annottext">_rliRequestMethod :: Text
+</span><a href="#local-6989586621689385978"><span class="hs-identifier hs-var hs-var">_rliRequestMethod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString) -&gt; ByteString
 forall body path. RequestF body path -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">requestMethod</span></span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString)
-</span><a href="#local-6989586621689390374"><span class="hs-identifier hs-var">request</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; (ByteString -&gt; Text) -&gt; Text
+</span><a href="#local-6989586621689385979"><span class="hs-identifier hs-var">request</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; (ByteString -&gt; Text) -&gt; Text
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#fromUtf8"><span class="hs-identifier hs-var">fromUtf8</span></a></span><span>
-</span><span id="line-98"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621689390371"><span class="annot"><span class="annottext">BaseUrl
-</span><a href="#local-6989586621689390371"><span class="hs-identifier hs-var">baseUrl</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689390370"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689390370"><span class="hs-identifier hs-var">path'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString) -&gt; (BaseUrl, ByteString)
+</span><span id="line-98"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621689385976"><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621689385976"><span class="hs-identifier hs-var">baseUrl</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689385975"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689385975"><span class="hs-identifier hs-var">path'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString) -&gt; (BaseUrl, ByteString)
 forall body path. RequestF body path -&gt; path
 </span><span class="hs-identifier hs-var hs-var">requestPath</span></span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString)
-</span><a href="#local-6989586621689390374"><span class="hs-identifier hs-var">request</span></a></span><span>
-</span><span id="line-99"></span><span>        </span><span id="local-6989586621689390368"><span class="annot"><span class="annottext">_rliRequestUri :: Text
-</span><a href="#local-6989586621689390368"><span class="hs-identifier hs-var hs-var">_rliRequestUri</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="#local-6989586621689385979"><span class="hs-identifier hs-var">request</span></a></span><span>
+</span><span id="line-99"></span><span>        </span><span id="local-6989586621689385973"><span class="annot"><span class="annottext">_rliRequestUri :: Text
+</span><a href="#local-6989586621689385973"><span class="hs-identifier hs-var hs-var">_rliRequestUri</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">Text.pack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BaseUrl -&gt; String
 </span><span class="hs-identifier hs-var">showBaseUrl</span></span><span> </span><span class="annot"><span class="annottext">BaseUrl
-</span><a href="#local-6989586621689390371"><span class="hs-identifier hs-var">baseUrl</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689385976"><span class="hs-identifier hs-var">baseUrl</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#fromUtf8"><span class="hs-identifier hs-var">fromUtf8</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689390370"><span class="hs-identifier hs-var">path'</span></a></span><span>
-</span><span id="line-100"></span><span>        </span><span id="local-6989586621689390366"><span class="annot"><span class="annottext">_rliRequestHeaders :: KeyMap Text
-</span><a href="#local-6989586621689390366"><span class="hs-identifier hs-var hs-var">_rliRequestHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; KeyMap Text
+</span><a href="#local-6989586621689385975"><span class="hs-identifier hs-var">path'</span></a></span><span>
+</span><span id="line-100"></span><span>        </span><span id="local-6989586621689385971"><span class="annot"><span class="annottext">_rliRequestHeaders :: KeyMap Text
+</span><a href="#local-6989586621689385971"><span class="hs-identifier hs-var hs-var">_rliRequestHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; KeyMap Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#headersToKeyMap"><span class="hs-identifier hs-var">headersToKeyMap</span></a></span><span> </span><span class="annot"><span class="annottext">([Header] -&gt; KeyMap Text)
 -&gt; (Seq Header -&gt; [Header]) -&gt; Seq Header -&gt; KeyMap Text
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -497,9 +497,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString) -&gt; Seq Header
 forall body path. RequestF body path -&gt; Seq Header
 </span><span class="hs-identifier hs-var hs-var">requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString)
-</span><a href="#local-6989586621689390374"><span class="hs-identifier hs-var">request</span></a></span><span>
-</span><span id="line-101"></span><span>        </span><span id="local-6989586621689390363"><span class="annot"><span class="annottext">_rliRequestBody :: Maybe a
-</span><a href="#local-6989586621689390363"><span class="hs-identifier hs-var hs-var">_rliRequestBody</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621689385979"><span class="hs-identifier hs-var">request</span></a></span><span>
+</span><span id="line-101"></span><span>        </span><span id="local-6989586621689385968"><span class="annot"><span class="annottext">_rliRequestBody :: Maybe a
+</span><a href="#local-6989586621689385968"><span class="hs-identifier hs-var hs-var">_rliRequestBody</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-102"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">RequestLogInfo -&gt; Maybe RequestLogInfo
@@ -517,7 +517,7 @@ _rliRequestBody :: Maybe Text
 _rliRequestHeaders :: KeyMap Text
 _rliRequestUri :: Text
 _rliRequestMethod :: Text
-</span><a href="#local-6989586621689390363"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689385968"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-103"></span><span>  </span><span class="annot"><span class="annottext">ClientError
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe RequestLogInfo
 forall a. Maybe a
@@ -525,15 +525,15 @@ forall a. Maybe a
 </span><span id="line-104"></span><span>
 </span><span id="line-105"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#headersToKeyMap"><span class="hs-identifier hs-type">headersToKeyMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KeyMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-106"></span><span id="headersToKeyMap"><span class="annot"><span class="annottext">headersToKeyMap :: [Header] -&gt; KeyMap Text
-</span><a href="Hasura.Backends.DataConnector.Logging.html#headersToKeyMap"><span class="hs-identifier hs-var hs-var">headersToKeyMap</span></a></span></span><span> </span><span id="local-6989586621689390362"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689390362"><span class="hs-identifier hs-var">headers'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.DataConnector.Logging.html#headersToKeyMap"><span class="hs-identifier hs-var hs-var">headersToKeyMap</span></a></span></span><span> </span><span id="local-6989586621689385967"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689385967"><span class="hs-identifier hs-var">headers'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689390362"><span class="hs-identifier hs-var">headers'</span></a></span><span>
+</span><a href="#local-6989586621689385967"><span class="hs-identifier hs-var">headers'</span></a></span><span>
 </span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">[Header] -&gt; (Header -&gt; (Key, Text)) -&gt; [(Key, Text)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689390361"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621689390361"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689390360"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689390360"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689385966"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621689385966"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689385965"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689385965"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Key) -&gt; (ByteString -&gt; Text) -&gt; ByteString -&gt; Key
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
@@ -542,9 +542,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; ByteString
 forall s. CI s -&gt; s
 </span><span class="hs-identifier hs-var hs-var">CI.original</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621689390361"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="#local-6989586621689385966"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Logging.html#fromUtf8"><span class="hs-identifier hs-var">fromUtf8</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689390360"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689385965"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">[(Key, Text)] -&gt; ([(Key, Text)] -&gt; KeyMap Text) -&gt; KeyMap Text
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">[(Key, Text)] -&gt; KeyMap Text

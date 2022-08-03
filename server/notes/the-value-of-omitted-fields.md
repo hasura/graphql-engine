@@ -1,6 +1,6 @@
 This note is in [Hasura.GraphQL.Parser.Internal.Input](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Input.hs#L116).
 It is referenced at:
-  - line 411 of [Hasura.Backends.Postgres.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Schema/Select.hs#L411)
+  - line 415 of [Hasura.Backends.Postgres.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Schema/Select.hs#L415)
 
 # The value of omitted fields
 
