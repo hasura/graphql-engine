@@ -24,12 +24,12 @@
 </span><span id="line-24"></span><span class="hs-comment">--</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- NOTE: This type shouldn't _need_ ser/de instances, but they're imposed by</span><span>
 </span><span id="line-26"></span><span class="hs-comment">-- the 'Backend' class.</span><span>
-</span><span id="line-27"></span><span id="local-6989586621689410443"><span id="local-6989586621689410444"></span></span><span class="hs-keyword">data</span><span> </span><span id="Value"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span>
+</span><span id="line-27"></span><span id="local-6989586621689415501"><span id="local-6989586621689415502"></span></span><span class="hs-keyword">data</span><span> </span><span id="Value"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="String"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#String"><span class="hs-identifier hs-var">String</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Number"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Number"><span class="hs-identifier hs-var">Number</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Scientific</span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Boolean"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Boolean"><span class="hs-identifier hs-var">Boolean</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Null"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Null"><span class="hs-identifier hs-var">Null</span></a></span></span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cNull"><span id="%24cBoolean"><span id="%24cNumber"><span id="%24cString"><span id="%24tValue"><span id="local-6989586621689410410"><span id="local-6989586621689410412"><span id="local-6989586621689410414"><span id="local-6989586621689410416"><span id="local-6989586621689410418"><span id="local-6989586621689410420"><span id="local-6989586621689410422"><span id="local-6989586621689410424"><span id="local-6989586621689410426"><span id="local-6989586621689410428"><span id="local-6989586621689410430"><span id="local-6989586621689410432"><span id="local-6989586621689410434"><span id="local-6989586621689410436"><span class="annot"><span class="annottext">Typeable Value
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cNull"><span id="%24cBoolean"><span id="%24cNumber"><span id="%24cString"><span id="%24tValue"><span id="local-6989586621689415468"><span id="local-6989586621689415470"><span id="local-6989586621689415472"><span id="local-6989586621689415474"><span id="local-6989586621689415476"><span id="local-6989586621689415478"><span id="local-6989586621689415480"><span id="local-6989586621689415482"><span id="local-6989586621689415484"><span id="local-6989586621689415486"><span id="local-6989586621689415488"><span id="local-6989586621689415490"><span id="local-6989586621689415492"><span id="local-6989586621689415494"><span class="annot"><span class="annottext">Typeable Value
 DataType
 Constr
 Typeable Value
@@ -180,7 +180,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Value -&gt; c Value
 $cp1Data :: Typeable Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410400"><span id="local-6989586621689410402"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415458"><span id="local-6989586621689415460"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
 (Value -&gt; Value -&gt; Bool) -&gt; (Value -&gt; Value -&gt; Bool) -&gt; Eq Value
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Value -&gt; Value -&gt; Bool
@@ -195,7 +195,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Value x -&gt; Value
 $cfrom :: forall x. Value -&gt; Rep Value x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410381"><span id="local-6989586621689410383"><span id="local-6989586621689410385"><span id="local-6989586621689410387"><span id="local-6989586621689410389"><span id="local-6989586621689410391"><span id="local-6989586621689410393"><span class="annot"><span class="annottext">Eq Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415439"><span id="local-6989586621689415441"><span id="local-6989586621689415443"><span id="local-6989586621689415445"><span id="local-6989586621689415447"><span id="local-6989586621689415449"><span id="local-6989586621689415451"><span class="annot"><span class="annottext">Eq Value
 Eq Value
 -&gt; (Value -&gt; Value -&gt; Ordering)
 -&gt; (Value -&gt; Value -&gt; Bool)
@@ -233,7 +233,7 @@ $c&lt; :: Value -&gt; Value -&gt; Bool
 compare :: Value -&gt; Value -&gt; Ordering
 $ccompare :: Value -&gt; Value -&gt; Ordering
 $cp1Ord :: Eq Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410374"><span id="local-6989586621689410376"><span id="local-6989586621689410378"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415432"><span id="local-6989586621689415434"><span id="local-6989586621689415436"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
 [Value] -&gt; ShowS
 Value -&gt; String
 (Int -&gt; Value -&gt; ShowS)
@@ -247,14 +247,14 @@ $cshow :: Value -&gt; String
 showsPrec :: Int -&gt; Value -&gt; ShowS
 $cshowsPrec :: Int -&gt; Value -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689410370"><span class="annot"><span class="annottext">Eq Value
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689415428"><span class="annot"><span class="annottext">Eq Value
 Eq Value -&gt; (Accesses -&gt; Value -&gt; Value -&gt; Bool) -&gt; Cacheable Value
 Accesses -&gt; Value -&gt; Value -&gt; Bool
 forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Value -&gt; Value -&gt; Bool
 $cunchanged :: Accesses -&gt; Value -&gt; Value -&gt; Bool
 $cp1Cacheable :: Eq Value
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410365"><span id="local-6989586621689410367"><span class="annot"><span class="annottext">Value -&gt; Parser [Value]
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415423"><span id="local-6989586621689415425"><span class="annot"><span class="annottext">Value -&gt; Parser [Value]
 Value -&gt; Parser Value
 (Value -&gt; Parser Value)
 -&gt; (Value -&gt; Parser [Value]) -&gt; FromJSON Value
@@ -264,7 +264,7 @@ parseJSONList :: Value -&gt; Parser [Value]
 $cparseJSONList :: Value -&gt; Parser [Value]
 parseJSON :: Value -&gt; Parser Value
 $cparseJSON :: Value -&gt; Parser Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410360"><span id="local-6989586621689410362"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415418"><span id="local-6989586621689415420"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; Int
 Value -&gt; Int
 (Int -&gt; Value -&gt; Int) -&gt; (Value -&gt; Int) -&gt; Hashable Value
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -272,12 +272,12 @@ hash :: Value -&gt; Int
 $chash :: Value -&gt; Int
 hashWithSalt :: Int -&gt; Value -&gt; Int
 $chashWithSalt :: Int -&gt; Value -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410357"><span class="annot"><span class="annottext">Value -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415415"><span class="annot"><span class="annottext">Value -&gt; ()
 (Value -&gt; ()) -&gt; NFData Value
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Value -&gt; ()
 $crnf :: Value -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410348"><span id="local-6989586621689410350"><span id="local-6989586621689410352"><span id="local-6989586621689410354"><span class="annot"><span class="annottext">[Value] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415406"><span id="local-6989586621689415408"><span id="local-6989586621689415410"><span id="local-6989586621689415412"><span class="annot"><span class="annottext">[Value] -&gt; Value
 [Value] -&gt; Encoding
 Value -&gt; Value
 Value -&gt; Encoding
@@ -303,47 +303,47 @@ $ctoJSON :: Value -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Value</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-36"></span><span>  </span><span id="local-6989586621689410344"><span class="annot"><span class="annottext">from :: Value -&gt; Value
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621689415402"><span class="annot"><span class="annottext">from :: Value -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-37"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.String</span></a></span><span> </span><span id="local-6989586621689410341"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689410341"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.String</span></a></span><span> </span><span id="local-6989586621689415399"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689415399"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689410341"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-38"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Number</span></a></span><span> </span><span id="local-6989586621689410339"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689410339"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="#local-6989586621689415399"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Number</span></a></span><span> </span><span id="local-6989586621689415397"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689415397"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Number"><span class="hs-identifier hs-var">Number</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689410339"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-39"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Boolean</span></a></span><span> </span><span id="local-6989586621689410337"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689410337"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621689415397"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Boolean</span></a></span><span> </span><span id="local-6989586621689415395"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689415395"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Boolean"><span class="hs-identifier hs-var">Boolean</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689410337"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><a href="#local-6989586621689415395"><span class="hs-identifier hs-var">p</span></a></span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Null</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Null"><span class="hs-identifier hs-var">Null</span></a></span><span>
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Value</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621689410334"><span class="annot"><span class="annottext">from :: Value -&gt; Value
-</span><a href="#local-6989586621689410334"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621689410333"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689410333"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621689415392"><span class="annot"><span class="annottext">from :: Value -&gt; Value
+</span><a href="#local-6989586621689415392"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621689415391"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689415391"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689410333"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621689410332"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689410332"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="#local-6989586621689415391"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621689415390"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689415390"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Number</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689410332"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-46"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Boolean"><span class="hs-identifier hs-type">Boolean</span></a></span><span> </span><span id="local-6989586621689410331"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689410331"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621689415390"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Boolean"><span class="hs-identifier hs-type">Boolean</span></a></span><span> </span><span id="local-6989586621689415389"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689415389"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Boolean</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689410331"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><a href="#local-6989586621689415389"><span class="hs-identifier hs-var">p</span></a></span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Null"><span class="hs-identifier hs-var">Null</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Null</span></a></span><span>
 </span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span id="local-6989586621689410329"><span id="local-6989586621689410330"></span></span><span class="hs-keyword">data</span><span> </span><span id="Literal"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span>
+</span><span id="line-49"></span><span id="local-6989586621689415387"><span id="local-6989586621689415388"></span></span><span class="hs-keyword">data</span><span> </span><span id="Literal"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ValueLiteral"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#ValueLiteral"><span class="hs-identifier hs-var">ValueLiteral</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ArrayLiteral"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#ArrayLiteral"><span class="hs-identifier hs-var">ArrayLiteral</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-52"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689410323"><span id="local-6989586621689410325"><span class="annot"><span class="annottext">Literal -&gt; Literal -&gt; Bool
+</span><span id="line-52"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689415381"><span id="local-6989586621689415383"><span class="annot"><span class="annottext">Literal -&gt; Literal -&gt; Bool
 (Literal -&gt; Literal -&gt; Bool)
 -&gt; (Literal -&gt; Literal -&gt; Bool) -&gt; Eq Literal
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -351,7 +351,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Literal -&gt; Literal -&gt; Bool
 == :: Literal -&gt; Literal -&gt; Bool
 $c== :: Literal -&gt; Literal -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410317"><span id="local-6989586621689410319"><span id="local-6989586621689410321"><span class="annot"><span class="annottext">Int -&gt; Literal -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415375"><span id="local-6989586621689415377"><span id="local-6989586621689415379"><span class="annot"><span class="annottext">Int -&gt; Literal -&gt; ShowS
 [Literal] -&gt; ShowS
 Literal -&gt; String
 (Int -&gt; Literal -&gt; ShowS)
@@ -372,7 +372,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Literal x -&gt; Literal
 $cfrom :: forall x. Literal -&gt; Rep Literal x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410300"><span id="local-6989586621689410302"><span id="local-6989586621689410304"><span id="local-6989586621689410306"><span id="local-6989586621689410308"><span id="local-6989586621689410310"><span id="local-6989586621689410312"><span class="annot"><span class="annottext">Eq Literal
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415358"><span id="local-6989586621689415360"><span id="local-6989586621689415362"><span id="local-6989586621689415364"><span id="local-6989586621689415366"><span id="local-6989586621689415368"><span id="local-6989586621689415370"><span class="annot"><span class="annottext">Eq Literal
 Eq Literal
 -&gt; (Literal -&gt; Literal -&gt; Ordering)
 -&gt; (Literal -&gt; Literal -&gt; Bool)
@@ -411,7 +411,7 @@ compare :: Literal -&gt; Literal -&gt; Ordering
 $ccompare :: Literal -&gt; Literal -&gt; Ordering
 $cp1Ord :: Eq Literal
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-53"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689410297"><span class="annot"><span class="annottext">Eq Literal
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689415355"><span class="annot"><span class="annottext">Eq Literal
 Eq Literal
 -&gt; (Accesses -&gt; Literal -&gt; Literal -&gt; Bool) -&gt; Cacheable Literal
 Accesses -&gt; Literal -&gt; Literal -&gt; Bool
@@ -419,7 +419,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Literal -&gt; Literal -&gt; Bool
 $cunchanged :: Accesses -&gt; Literal -&gt; Literal -&gt; Bool
 $cp1Cacheable :: Eq Literal
-</span><a href="#local-6989586621689410297"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410293"><span id="local-6989586621689410295"><span class="annot"><span class="annottext">Int -&gt; Literal -&gt; Int
+</span><a href="#local-6989586621689415355"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415351"><span id="local-6989586621689415353"><span class="annot"><span class="annottext">Int -&gt; Literal -&gt; Int
 Literal -&gt; Int
 (Int -&gt; Literal -&gt; Int) -&gt; (Literal -&gt; Int) -&gt; Hashable Literal
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -427,12 +427,12 @@ hash :: Literal -&gt; Int
 $chash :: Literal -&gt; Int
 hashWithSalt :: Int -&gt; Literal -&gt; Int
 $chashWithSalt :: Int -&gt; Literal -&gt; Int
-</span><a href="#local-6989586621689410293"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410291"><span class="annot"><span class="annottext">Literal -&gt; ()
+</span><a href="#local-6989586621689415351"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415349"><span class="annot"><span class="annottext">Literal -&gt; ()
 (Literal -&gt; ()) -&gt; NFData Literal
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Literal -&gt; ()
 $crnf :: Literal -&gt; ()
-</span><a href="#local-6989586621689410291"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410283"><span id="local-6989586621689410285"><span id="local-6989586621689410287"><span id="local-6989586621689410289"><span class="annot"><span class="annottext">[Literal] -&gt; Value
+</span><a href="#local-6989586621689415349"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415341"><span id="local-6989586621689415343"><span id="local-6989586621689415345"><span id="local-6989586621689415347"><span class="annot"><span class="annottext">[Literal] -&gt; Value
 [Literal] -&gt; Encoding
 Literal -&gt; Value
 Literal -&gt; Encoding
@@ -455,16 +455,16 @@ toEncoding :: Literal -&gt; Encoding
 $ctoEncoding :: Literal -&gt; Encoding
 toJSON :: Literal -&gt; Value
 $ctoJSON :: Literal -&gt; Value
-</span><a href="#local-6989586621689410283"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689415341"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>
 </span><span id="line-55"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#parseValue"><span class="hs-identifier hs-type">parseValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#Type"><span class="hs-identifier hs-type">IR.S.T.Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span>
 </span><span id="line-56"></span><span id="parseValue"><span class="annot"><span class="annottext">parseValue :: Type -&gt; Value -&gt; Parser Value
-</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#parseValue"><span class="hs-identifier hs-var hs-var">parseValue</span></a></span></span><span> </span><span id="local-6989586621689410282"><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621689410282"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span id="local-6989586621689410281"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410281"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#parseValue"><span class="hs-identifier hs-var hs-var">parseValue</span></a></span></span><span> </span><span id="local-6989586621689415340"><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621689415340"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span id="local-6989586621689415339"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689415339"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621689410282"><span class="hs-identifier hs-var">type'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410281"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689415340"><span class="hs-identifier hs-var">type'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689415339"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-58"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Value
@@ -472,30 +472,30 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Null"><span class="hs-identifier hs-var">Null</span></a></span><span>
 </span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type
-</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#String"><span class="hs-identifier hs-var">IR.S.T.String</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410278"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410278"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#String"><span class="hs-identifier hs-var">IR.S.T.String</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415336"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689415336"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Parser Text -&gt; Parser Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410278"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689415336"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-60"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type
-</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#Bool"><span class="hs-identifier hs-var">IR.S.T.Bool</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410274"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410274"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#Bool"><span class="hs-identifier hs-var">IR.S.T.Bool</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415332"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689415332"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Boolean"><span class="hs-identifier hs-var">Boolean</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Value) -&gt; Parser Bool -&gt; Parser Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Bool
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410274"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689415332"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-61"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type
-</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#Number"><span class="hs-identifier hs-var">IR.S.T.Number</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689410272"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410272"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#Number"><span class="hs-identifier hs-var">IR.S.T.Number</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689415330"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689415330"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Number"><span class="hs-identifier hs-var">Number</span></a></span><span> </span><span class="annot"><span class="annottext">(Scientific -&gt; Value) -&gt; Parser Scientific -&gt; Parser Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Scientific
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689410272"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689415330"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-62"></span></pre></body></html>

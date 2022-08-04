@@ -28191,6 +28191,15 @@ runUntrackTableQ :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetada
 --   columns, not relationships; those pieces of information are filled in
 --   later.
 buildTableCache :: forall arr m b. (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, ArrowCache m arr, MonadIO m, MonadBaseControl IO m, BackendMetadata b) => (SourceName, SourceConfig b, DBTablesMetadata b, [TableBuildInput b], Dependency InvalidationKey, NamingCase) `arr` HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+data SetApolloFederationConfig b
+SetApolloFederationConfig :: SourceName -> TableName b -> Maybe ApolloFederationConfig -> SetApolloFederationConfig b
+[_safcSource] :: SetApolloFederationConfig b -> SourceName
+[_safcTable] :: SetApolloFederationConfig b -> TableName b
+
+-- | Apollo Federation config for the table, setting <a>Nothing</a> would
+--   disable Apollo Federation support on the table.
+[_safcApolloFederationConfig] :: SetApolloFederationConfig b -> Maybe ApolloFederationConfig
+runSetApolloFederationConfig :: forall b m. (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) => SetApolloFederationConfig b -> m EncJSON
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Table.SetTableIsEnum
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Table.SetTableIsEnum
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.Schema.Table.TrackTableV2 b)
@@ -28203,6 +28212,7 @@ instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.RQL.DDL.Sch
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.Schema.Table.TrackTable b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.RQL.DDL.Schema.Table.UntrackTable b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.Schema.Table.UntrackTable b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Table.SetApolloFederationConfig b)
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Table.SetTableCustomFields
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Table.SetTableCustomization b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Table.TrackTableV2 b)
@@ -30807,6 +30817,7 @@ RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
 RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
 RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
 RMSetTableCustomization :: !AnyBackend SetTableCustomization -> RQLMetadataV1
+RMSetApolloFederationConfig :: AnyBackend SetApolloFederationConfig -> RQLMetadataV1
 RMPgSetTableIsEnum :: !SetTableIsEnum -> RQLMetadataV1
 RMCreateInsertPermission :: !AnyBackend (CreatePerm InsPerm) -> RQLMetadataV1
 RMCreateSelectPermission :: !AnyBackend (CreatePerm SelPerm) -> RQLMetadataV1
