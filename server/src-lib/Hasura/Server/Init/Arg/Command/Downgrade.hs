@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
--- | TODO(SOLOMON):
+-- | The Downgrade Command Parser
 module Hasura.Server.Init.Arg.Command.Downgrade
   ( downgradeCommandParser,
   )

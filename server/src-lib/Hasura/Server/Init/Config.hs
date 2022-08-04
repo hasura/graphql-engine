@@ -49,6 +49,8 @@ module Hasura.Server.Init.Config
 
     -- * Downgrade Options
     DowngradeOptions (..),
+    -- $experimentalFeatures
+    -- $readOnlyMode
   )
 where
 
@@ -59,22 +61,25 @@ import Control.Lens qualified as Lens
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as Aeson
 import Data.Text qualified as Text
-import Data.Time qualified as Time
+import Data.Time (NominalDiffTime)
+import Data.URL.Template (URLTemplate)
 import Data.URL.Template qualified as Template
-import Database.PG.Query qualified as Q
-import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
+import Database.PG.Query (ConnParams, TxIsolation)
+import Hasura.GraphQL.Execute.Subscription.Options (BatchSize, LiveQueriesOptions, RefetchInterval, StreamQueriesOptions)
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
-import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Logging qualified as Logging
+import Hasura.GraphQL.Schema.Options (InferFunctionPermissions, RemoteSchemaPermissions, StringifyNumbers)
+import Hasura.Logging (EngineLogType, LogLevel)
 import Hasura.Prelude
-import Hasura.RQL.Types.Common qualified as Common
-import Hasura.Server.Auth qualified as Auth
-import Hasura.Server.Cors qualified as Cors
-import Hasura.Server.Logging qualified as Server.Logging
-import Hasura.Server.Types qualified as Types
+import Hasura.RQL.Types.Common (NonNegativeInt, UrlConf)
+import Hasura.Server.Auth (AdminSecretHash, AuthHook, AuthHookType, JWTConfig)
+import Hasura.Server.Cors (CorsConfig)
+import Hasura.Server.Logging (MetadataQueryLoggingMode)
+import Hasura.Server.Types (EventingMode, ExperimentalFeature, MaintenanceMode, ReadOnlyMode)
+import Hasura.Session (RoleName)
 import Hasura.Session qualified as Session
+import Network.Wai.Handler.Warp (HostPreference)
 import Network.Wai.Handler.Warp qualified as Warp
-import Network.WebSockets qualified as WebSockets
+import Network.WebSockets (ConnectionOptions)
 
 --------------------------------------------------------------------------------
 
@@ -98,7 +103,7 @@ horCommand = Lens.lens _horCommand $ \hdu a -> hdu {_horCommand = a}
 
 -- | The final processed HGE options.
 data HGEOptions impl = HGEOptions
-  { _hoDatabaseUrl :: PostgresConnInfo (Maybe Common.UrlConf),
+  { _hoDatabaseUrl :: PostgresConnInfo (Maybe UrlConf),
     _hoMetadataDbUrl :: Maybe String,
     _hoCommand :: HGECommand impl
   }
@@ -142,7 +147,7 @@ data PostgresConnInfoRaw
 mkUrlConnInfo :: String -> PostgresConnInfoRaw
 mkUrlConnInfo = PGConnDatabaseUrl . Template.mkPlainURLTemplate . Text.pack
 
-_PGConnDatabaseUrl :: Prism' PostgresConnInfoRaw Template.URLTemplate
+_PGConnDatabaseUrl :: Prism' PostgresConnInfoRaw URLTemplate
 _PGConnDatabaseUrl = Lens.prism' PGConnDatabaseUrl $ \case
   PGConnDatabaseUrl template -> Just template
   PGConnDetails _ -> Nothing
@@ -152,7 +157,7 @@ _PGConnDetails = Lens.prism' PGConnDetails $ \case
   PGConnDatabaseUrl _ -> Nothing
   PGConnDetails prcd -> Just prcd
 
-rawConnDetailsToUrl :: PostgresConnDetailsRaw -> Template.URLTemplate
+rawConnDetailsToUrl :: PostgresConnDetailsRaw -> URLTemplate
 rawConnDetailsToUrl =
   Template.mkPlainURLTemplate . rawConnDetailsToUrlText
 
@@ -231,44 +236,44 @@ data ServeOptionsRaw impl = ServeOptionsRaw
   { rsoPort :: Maybe Int,
     rsoHost :: Maybe Warp.HostPreference,
     rsoConnParams :: ConnParamsRaw,
-    rsoTxIso :: Maybe Q.TxIsolation,
-    rsoAdminSecret :: Maybe Auth.AdminSecretHash,
+    rsoTxIso :: Maybe TxIsolation,
+    rsoAdminSecret :: Maybe AdminSecretHash,
     rsoAuthHook :: AuthHookRaw,
-    rsoJwtSecret :: Maybe Auth.JWTConfig,
-    rsoUnAuthRole :: Maybe Session.RoleName,
-    rsoCorsConfig :: Maybe Cors.CorsConfig,
+    rsoJwtSecret :: Maybe JWTConfig,
+    rsoUnAuthRole :: Maybe RoleName,
+    rsoCorsConfig :: Maybe CorsConfig,
     rsoEnableConsole :: Bool,
     rsoConsoleAssetsDir :: Maybe Text,
     rsoEnableTelemetry :: Maybe Bool,
     rsoWsReadCookie :: Bool,
-    rsoStringifyNum :: Options.StringifyNumbers,
+    rsoStringifyNum :: StringifyNumbers,
     rsoDangerousBooleanCollapse :: Maybe Bool,
     rsoEnabledAPIs :: Maybe [API],
-    rsoMxRefetchInt :: Maybe Subscription.Options.RefetchInterval,
-    rsoMxBatchSize :: Maybe Subscription.Options.BatchSize,
+    rsoMxRefetchInt :: Maybe RefetchInterval,
+    rsoMxBatchSize :: Maybe BatchSize,
     -- We have different config options for livequery and streaming subscriptions
-    rsoStreamingMxRefetchInt :: Maybe Subscription.Options.RefetchInterval,
-    rsoStreamingMxBatchSize :: Maybe Subscription.Options.BatchSize,
+    rsoStreamingMxRefetchInt :: Maybe RefetchInterval,
+    rsoStreamingMxBatchSize :: Maybe BatchSize,
     rsoEnableAllowlist :: Bool,
-    rsoEnabledLogTypes :: Maybe [Logging.EngineLogType impl],
-    rsoLogLevel :: Maybe Logging.LogLevel,
+    rsoEnabledLogTypes :: Maybe [EngineLogType impl],
+    rsoLogLevel :: Maybe LogLevel,
     rsoDevMode :: Bool,
     rsoAdminInternalErrors :: Maybe Bool,
     rsoEventsHttpPoolSize :: Maybe Int,
     rsoEventsFetchInterval :: Maybe Milliseconds,
     rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
-    rsoEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
+    rsoEnableRemoteSchemaPermissions :: RemoteSchemaPermissions,
     rsoWebSocketCompression :: Bool,
     rsoWebSocketKeepAlive :: Maybe KeepAliveDelay,
-    rsoInferFunctionPermissions :: Maybe Options.InferFunctionPermissions,
-    rsoEnableMaintenanceMode :: Types.MaintenanceMode (),
+    rsoInferFunctionPermissions :: Maybe InferFunctionPermissions,
+    rsoEnableMaintenanceMode :: MaintenanceMode (),
     rsoSchemaPollInterval :: Maybe OptionalInterval,
-    -- See Note [Experimental features] at bottom of module
-    rsoExperimentalFeatures :: Maybe [Types.ExperimentalFeature],
-    rsoEventsFetchBatchSize :: Maybe Common.NonNegativeInt,
+    -- | See Note '$experimentalFeatures' at bottom of module
+    rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
+    rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
     rsoGracefulShutdownTimeout :: Maybe Seconds,
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
-    rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
+    rsoEnableMetadataQueryLoggingEnv :: MetadataQueryLoggingMode,
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase
   }
@@ -305,7 +310,7 @@ instance Hashable API
 
 data AuthHookRaw = AuthHookRaw
   { ahrUrl :: Maybe Text,
-    ahrType :: Maybe Auth.AuthHookType
+    ahrType :: Maybe AuthHookType
   }
 
 -- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')
@@ -338,10 +343,10 @@ data ConnParamsRaw = ConnParamsRaw
     rcpIdleTime :: Maybe Int,
     -- | Time from connection creation after which to destroy a connection and
     -- choose a different/new one.
-    rcpConnLifetime :: Maybe Time.NominalDiffTime,
+    rcpConnLifetime :: Maybe NominalDiffTime,
     rcpAllowPrepare :: Maybe Bool,
     -- | See @HASURA_GRAPHQL_PG_POOL_TIMEOUT@
-    rcpPoolTimeout :: Maybe Time.NominalDiffTime
+    rcpPoolTimeout :: Maybe NominalDiffTime
   }
   deriving (Show, Eq)
 
@@ -382,43 +387,45 @@ defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: In
 -- running the server.
 data ServeOptions impl = ServeOptions
   { soPort :: Int,
-    soHost :: Warp.HostPreference,
-    soConnParams :: Q.ConnParams,
-    soTxIso :: Q.TxIsolation,
-    soAdminSecret :: HashSet Auth.AdminSecretHash,
-    soAuthHook :: Maybe Auth.AuthHook,
-    soJwtSecret :: [Auth.JWTConfig],
-    soUnAuthRole :: Maybe Session.RoleName,
-    soCorsConfig :: Cors.CorsConfig,
+    soHost :: HostPreference,
+    soConnParams :: ConnParams,
+    soTxIso :: TxIsolation,
+    soAdminSecret :: HashSet AdminSecretHash,
+    soAuthHook :: Maybe AuthHook,
+    soJwtSecret :: [JWTConfig],
+    soUnAuthRole :: Maybe RoleName,
+    soCorsConfig :: CorsConfig,
     soEnableConsole :: Bool,
     soConsoleAssetsDir :: Maybe Text,
     soEnableTelemetry :: Bool,
-    soStringifyNum :: Options.StringifyNumbers,
+    soStringifyNum :: StringifyNumbers,
     soDangerousBooleanCollapse :: Bool,
     soEnabledAPIs :: HashSet API,
-    soLiveQueryOpts :: Subscription.Options.LiveQueriesOptions,
-    soStreamingQueryOpts :: Subscription.Options.StreamQueriesOptions,
+    soLiveQueryOpts :: LiveQueriesOptions,
+    soStreamingQueryOpts :: StreamQueriesOptions,
     soEnableAllowlist :: Bool,
-    soEnabledLogTypes :: HashSet (Logging.EngineLogType impl),
-    soLogLevel :: Logging.LogLevel,
+    soEnabledLogTypes :: HashSet (EngineLogType impl),
+    soLogLevel :: LogLevel,
     soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
     soEventsHttpPoolSize :: Maybe Int,
     soEventsFetchInterval :: Maybe Milliseconds,
     soAsyncActionsFetchInterval :: OptionalInterval,
-    soEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
-    soConnectionOptions :: WebSockets.ConnectionOptions,
+    soEnableRemoteSchemaPermissions :: RemoteSchemaPermissions,
+    soConnectionOptions :: ConnectionOptions,
     soWebSocketKeepAlive :: KeepAliveDelay,
-    soInferFunctionPermissions :: Options.InferFunctionPermissions,
-    soEnableMaintenanceMode :: Types.MaintenanceMode (),
+    soInferFunctionPermissions :: InferFunctionPermissions,
+    soEnableMaintenanceMode :: MaintenanceMode (),
     soSchemaPollInterval :: OptionalInterval,
-    soExperimentalFeatures :: HashSet Types.ExperimentalFeature,
-    soEventsFetchBatchSize :: Common.NonNegativeInt,
+    -- | See note '$experimentalFeatures'
+    soExperimentalFeatures :: HashSet ExperimentalFeature,
+    soEventsFetchBatchSize :: NonNegativeInt,
     soDevMode :: Bool,
     soGracefulShutdownTimeout :: Seconds,
     soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
-    soEventingMode :: Types.EventingMode,
-    soReadOnlyMode :: Types.ReadOnlyMode,
-    soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
+    soEventingMode :: EventingMode,
+    -- | See note '$readOnlyMode'
+    soReadOnlyMode :: ReadOnlyMode,
+    soEnableMetadataQueryLogging :: MetadataQueryLoggingMode,
     soDefaultNamingConvention :: Maybe NamingCase
   }
 
@@ -431,7 +438,7 @@ data ResponseInternalErrorsConfig
   | InternalErrorsDisabled
   deriving (Show, Eq)
 
-shouldIncludeInternal :: Session.RoleName -> ResponseInternalErrorsConfig -> Bool
+shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
 shouldIncludeInternal role = \case
   InternalErrorsAllRequests -> True
   InternalErrorsAdminOnly -> role == Session.adminRoleName
@@ -442,36 +449,54 @@ shouldIncludeInternal role = \case
 -- | The Downgrade Command options. These are only sourced from the
 -- Arg Parser and are used directly in 'Hasura.Server.Migrate'.
 data DowngradeOptions = DowngradeOptions
-  { dgoTargetVersion :: !Text,
-    dgoDryRun :: !Bool
+  { dgoTargetVersion :: Text,
+    dgoDryRun :: Bool
   }
   deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
 
-{- Note: [Experimental features]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- $experimentalFeatures
+-- Note Experimental features:
+--
+-- The graphql-engine accepts a list of experimental features that can be
+-- enabled at the startup. Experimental features are a way to introduce
+-- new, but not stable features to our users in a manner in which they have
+-- the choice to enable or disable a certain feature(s).
+--
+-- The objective of an experimental feature should be that when the feature is disabled,
+-- the graphql-engine should work the same way as it worked before adding the said feature.
+--
+-- The experimental feature's flag is `--experimental-features` and the corresponding
+-- environment variable is `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` which expects a comma-seperated
+-- value.
+--
+-- When an experimental feature is stable enough i.e. it's stable through multiple non-beta releases
+-- then we make the feature not experimental i.e. it will always be enabled. Note that when we do this
+-- we still have to support parsing of the experimental feature because users of the previous version
+-- will have it enabled and when they upgrade an error should not be thrown at the startup. For example:
+--
+-- The inherited roles was an experimental feature when introduced and it was enabled by
+-- setting `--experimental-features` to `inherited_roles` and then it was decided to make the inherited roles
+-- a stable feature, so it was removed as an experimental feature but the code was modified such that
+-- `--experimental-features inherited_roles` to not throw an error.
 
-The graphql-engine accepts a list of experimental features that can be
-enabled at the startup. Experimental features are a way to introduce
-new, but not stable features to our users in a manner in which they have
-the choice to enable or disable a certain feature(s).
+--------------------------------------------------------------------------------
 
-The objective of an experimental feature should be that when the feature is disabled,
-the graphql-engine should work the same way as it worked before adding the said feature.
-
-The experimental feature's flag is `--experimental-features` and the corresponding
-environment variable is `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` which expects a comma-seperated
-value.
-
-When an experimental feature is stable enough i.e. it's stable through multiple non-beta releases
-then we make the feature not experimental i.e. it will always be enabled. Note that when we do this
-we still have to support parsing of the experimental feature because users of the previous version
-will have it enabled and when they upgrade an error should not be thrown at the startup. For example:
-
-The inherited roles was an experimental feature when introduced and it was enabled by
-setting `--experimental-features` to `inherited_roles` and then it was decided to make the inherited roles
-a stable feature, so it was removed as an experimental feature but the code was modified such that
-`--experimental-features inherited_roles` to not throw an error.
-
--}
+-- $readOnlyMode
+-- Note ReadOnly Mode:
+--
+-- This mode starts the server in a (database) read-only mode. That is, only
+-- read-only queries are allowed on users' database sources, and write
+-- queries throw a runtime error. The use-case is for failsafe operations.
+-- Metadata APIs are also disabled.
+--
+-- Following is the precise behaviour -
+--   1. For any GraphQL API (relay/hasura; http/websocket) - disable execution of
+--   mutations
+--   2. Metadata API is disabled
+--   3. /v2/query API - insert, delete, update, run_sql are disabled
+--   4. /v1/query API - insert, delete, update, run_sql are disabled
+--   5. No source catalog migrations are run
+--   6. During build schema cache phase, building event triggers are disabled (as
+--   they create corresponding database triggers)
