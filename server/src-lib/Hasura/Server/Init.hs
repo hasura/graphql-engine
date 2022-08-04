@@ -333,11 +333,11 @@ mkServeOptions rso = do
           poolTimeout
           allowCancel
 
-    mkAuthHook (Auth.AuthHookG mUrl mType) = do
+    mkAuthHook (AuthHookRaw mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
       authModeM <- withEnv mType (fst authHookModeEnv)
       ty <- onNothing authModeM (authHookTyEnv mType)
-      return (flip Auth.AuthHookG ty <$> mUrlEnv)
+      return (flip Auth.AuthHook ty <$> mUrlEnv)
 
     -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
     -- TODO (from master):- drop this in next major update
