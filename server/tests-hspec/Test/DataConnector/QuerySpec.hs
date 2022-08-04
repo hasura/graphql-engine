@@ -46,7 +46,7 @@ sourceMetadata =
 name : *source
 kind: *backendType
 tables:
-  - table: Album
+  - table: [Album]
     configuration:
       custom_root_fields:
         select: albums
@@ -62,10 +62,10 @@ tables:
       - name: artist
         using:
           manual_configuration:
-            remote_table: Artist
+            remote_table: [Artist]
             column_mapping:
               ArtistId: ArtistId
-  - table: Artist
+  - table: [Artist]
     configuration:
       custom_root_fields:
         select: artists
@@ -79,22 +79,22 @@ tables:
       - name: albums
         using:
           manual_configuration:
-            remote_table: Album
+            remote_table: [Album]
             column_mapping:
               ArtistId: ArtistId
-  - table: Playlist
-  - table: PlaylistTrack
+  - table: [Playlist]
+  - table: [PlaylistTrack]
     object_relationships:
       - name: Playlist
         using:
           manual_configuration:
-            remote_table: Playlist
+            remote_table: [Playlist]
             column_mapping:
               PlaylistId: PlaylistId
       - name: Track
         using:
           manual_configuration:
-            remote_table: Track
+            remote_table: [Track]
             column_mapping:
               TrackId: TrackId
   - table: Track

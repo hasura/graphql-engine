@@ -1,6 +1,6 @@
 [
   {
-    "name": "Artist",
+    "name": ["Artist"],
     "primary_key": ["ArtistId"],
     "description": "Collection of artists of music",
     "columns": [
@@ -19,7 +19,7 @@
     ]
   },
   {
-    "name": "Album",
+    "name": ["Album"],
     "primary_key": ["AlbumId"],
     "description": "Collection of music albums created by artists",
     "columns": [
@@ -44,7 +44,7 @@
     ]
   },
   {
-    "name": "Customer",
+    "name": ["Customer"],
     "primary_key": ["CustomerId"],
     "description": "Collection of customers who can buy tracks",
     "columns": [
@@ -129,7 +129,7 @@
     ]
   },
   {
-    "name": "Employee",
+    "name": ["Employee"],
     "primary_key": ["EmployeeId"],
     "description": "Collection of employees who work for the business",
     "columns": [
@@ -226,7 +226,7 @@
     ]
   },
   {
-    "name": "Genre",
+    "name": ["Genre"],
     "primary_key": ["GenreId"],
     "description": "Genres of music",
     "columns": [
@@ -245,7 +245,7 @@
     ]
   },
   {
-    "name": "Invoice",
+    "name": ["Invoice"],
     "primary_key": ["InvoiceId"],
     "description": "Collection of invoices of music purchases by a customer",
     "columns": [
@@ -306,7 +306,7 @@
     ]
   },
   {
-    "name": "InvoiceLine",
+    "name": ["InvoiceLine"],
     "primary_key": ["InvoiceLineId"],
     "description": "Collection of track purchasing line items of invoices",
     "columns": [
@@ -343,7 +343,7 @@
     ]
   },
   {
-    "name": "MediaType",
+    "name": ["MediaType"],
     "primary_key": ["MediaTypeId"],
     "description": "Collection of media types that tracks can be encoded in",
     "columns": [
@@ -362,7 +362,7 @@
     ]
   },
   {
-    "name": "Playlist",
+    "name": ["Playlist"],
     "primary_key": ["PlaylistId"],
     "description": "Collection of playlists",
     "columns": [
@@ -381,7 +381,7 @@
     ]
   },
   {
-    "name": "PlaylistTrack",
+    "name": ["PlaylistTrack"],
     "primary_key": ["PlaylistId", "TrackId"],
     "description": "Associations between playlists and tracks",
     "columns": [
@@ -400,7 +400,7 @@
     ]
   },
   {
-    "name": "Track",
+    "name": ["Track"],
     "primary_key": ["TrackId"],
     "description": "Collection of music tracks",
     "columns": [

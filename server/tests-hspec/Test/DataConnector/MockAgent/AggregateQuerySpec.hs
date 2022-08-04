@@ -43,36 +43,36 @@ sourceMetadata =
         name : *source
         kind: *backendType
         tables:
-          - table: Album
+          - table: [Album]
             object_relationships:
               - name: Artist
                 using:
                   manual_configuration:
-                    remote_table: Artist
+                    remote_table: [Artist]
                     column_mapping:
                       ArtistId: ArtistId
-          - table: Artist
+          - table: [Artist]
             array_relationships:
               - name: Albums
                 using:
                   manual_configuration:
-                    remote_table: Album
+                    remote_table: [Album]
                     column_mapping:
                       ArtistId: ArtistId
-          - table: Invoice
+          - table: [Invoice]
             array_relationships:
               - name: InvoiceLines
                 using:
                   manual_configuration:
-                    remote_table: InvoiceLine
+                    remote_table: [InvoiceLine]
                     column_mapping:
                       InvoiceId: InvoiceId
-          - table: InvoiceLine
+          - table: [InvoiceLine]
             object_relationships:
               - name: Invoice
                 using:
                   manual_configuration:
-                    remote_table: Invoice
+                    remote_table: [Invoice]
                     column_mapping:
                       InvoiceId: InvoiceId
         configuration: {}
@@ -139,15 +139,15 @@ tests opts = describe "Aggregate Query Tests" $ do
             { _whenQuery =
                 Just
                   ( API.QueryRequest
-                      { _qrTable = API.TableName "Artist",
+                      { _qrTable = API.TableName ("Artist" :| []),
                         _qrTableRelationships =
                           [ API.TableRelationships
-                              { _trSourceTable = API.TableName "Artist",
+                              { _trSourceTable = API.TableName ("Artist" :| []),
                                 _trRelationships =
                                   HashMap.fromList
                                     [ ( API.RelationshipName "Albums",
                                         API.Relationship
-                                          { _rTargetTable = API.TableName "Album",
+                                          { _rTargetTable = API.TableName ("Album" :| []),
                                             _rRelationshipType = API.ArrayRelationship,
                                             _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
                                           }
@@ -270,15 +270,15 @@ tests opts = describe "Aggregate Query Tests" $ do
             { _whenQuery =
                 Just
                   ( API.QueryRequest
-                      { _qrTable = API.TableName "Invoice",
+                      { _qrTable = API.TableName ("Invoice" :| []),
                         _qrTableRelationships =
                           [ API.TableRelationships
-                              { _trSourceTable = API.TableName "Invoice",
+                              { _trSourceTable = API.TableName ("Invoice" :| []),
                                 _trRelationships =
                                   HashMap.fromList
                                     [ ( API.RelationshipName "InvoiceLines",
                                         API.Relationship
-                                          { _rTargetTable = API.TableName "InvoiceLine",
+                                          { _rTargetTable = API.TableName ("InvoiceLine" :| []),
                                             _rRelationshipType = API.ArrayRelationship,
                                             _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
                                           }

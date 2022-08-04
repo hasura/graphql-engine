@@ -23,6 +23,9 @@ data MockConfig = MockConfig
     _queryResponse :: API.QueryRequest -> API.QueryResponse
   }
 
+mkTableName :: Text -> API.TableName
+mkTableName = API.TableName . (:| [])
+
 -- | Stock Capabilities for a Chinook Agent
 capabilities :: API.CapabilitiesResponse
 capabilities =
@@ -62,7 +65,7 @@ schema =
   API.SchemaResponse
     { API.srTables =
         [ API.TableInfo
-            { API.dtiName = API.TableName "Artist",
+            { API.dtiName = mkTableName "Artist",
               API.dtiColumns =
                 [ API.ColumnInfo
                     { API.dciName = API.ColumnName "ArtistId",
@@ -81,7 +84,7 @@ schema =
               API.dtiDescription = Just "Collection of artists of music"
             },
           API.TableInfo
-            { API.dtiName = API.TableName "Album",
+            { API.dtiName = mkTableName "Album",
               API.dtiColumns =
                 [ API.ColumnInfo
                     { API.dciName = API.ColumnName "AlbumId",
@@ -106,7 +109,7 @@ schema =
               API.dtiDescription = Just "Collection of music albums created by artists"
             },
           API.TableInfo
-            { API.dtiName = API.TableName "Genre",
+            { API.dtiName = mkTableName "Genre",
               API.dtiColumns =
                 [ API.ColumnInfo
                     { API.dciName = API.ColumnName "GenreId",
@@ -125,7 +128,7 @@ schema =
               API.dtiDescription = Just "Genres of music"
             },
           API.TableInfo
-            { API.dtiName = API.TableName "Invoice",
+            { API.dtiName = mkTableName "Invoice",
               API.dtiColumns =
                 [ API.ColumnInfo
                     { API.dciName = API.ColumnName "InvoiceId",
@@ -186,7 +189,7 @@ schema =
               API.dtiDescription = Just "Collection of invoices of music purchases by a customer"
             },
           API.TableInfo
-            { API.dtiName = API.TableName "InvoiceLine",
+            { API.dtiName = mkTableName "InvoiceLine",
               API.dtiColumns =
                 [ API.ColumnInfo
                     { API.dciName = API.ColumnName "InvoiceLineId",
@@ -223,7 +226,7 @@ schema =
               API.dtiDescription = Just "Collection of track purchasing line items of invoices"
             },
           API.TableInfo
-            { API.dtiName = API.TableName "MediaType",
+            { API.dtiName = mkTableName "MediaType",
               API.dtiColumns =
                 [ API.ColumnInfo
                     { API.dciName = API.ColumnName "MediaTypeId",
@@ -242,7 +245,7 @@ schema =
               API.dtiDescription = Just "Collection of media types that tracks can be encoded in"
             },
           API.TableInfo
-            { API.dtiName = API.TableName "Track",
+            { API.dtiName = mkTableName "Track",
               API.dtiColumns =
                 [ API.ColumnInfo
                     { API.dciName = API.ColumnName "TrackId",

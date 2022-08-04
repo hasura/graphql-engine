@@ -52,5 +52,6 @@ export type { SingleColumnAggregateFunction } from './models/SingleColumnAggrega
 export type { StarCountAggregate } from './models/StarCountAggregate';
 export type { SubscriptionCapabilities } from './models/SubscriptionCapabilities';
 export type { TableInfo } from './models/TableInfo';
+export type { TableName } from './models/TableName';
 export type { TableRelationships } from './models/TableRelationships';
 export type { UnaryComparisonOperator } from './models/UnaryComparisonOperator';

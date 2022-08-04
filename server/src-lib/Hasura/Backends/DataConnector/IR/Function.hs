@@ -1,22 +1,33 @@
-module Hasura.Backends.DataConnector.IR.Function (Name) where
+module Hasura.Backends.DataConnector.IR.Function
+  ( Name (..),
+  )
+where
 
---------------------------------------------------------------------------------
+import Data.Aeson (FromJSON, ToJSON, ToJSONKey (..))
+import Data.Aeson.Types (toJSONKeyText)
+import Data.List.NonEmpty qualified as NonEmpty
+import Data.Text qualified as Text
+import Data.Text.Extended (ToTxt (..))
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
+import Hasura.Incremental (Cacheable)
+import Hasura.Prelude
 
-import Hasura.Backends.DataConnector.IR.Name qualified as IR.N
+newtype Name = Name {unName :: NonEmpty Text}
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving newtype
+    ( Cacheable,
+      FromJSON,
+      Hashable,
+      NFData,
+      ToJSON
+    )
 
---------------------------------------------------------------------------------
+instance ToJSONKey Name where
+  toJSONKey = toJSONKeyText toTxt
 
--- | An alias for 'Name.Function' 'Name.Name's.
---
--- This alias is defined in its own module primarily for the convenience of
--- importing it qualified.
---
--- For example:
--- @
---   import Data.Coerce (coerce)
---   import Hasura.Experimental.IR.Function qualified as Function (Name)
---
---   example :: Function.Name
---   example = coerce @Text @Function.Name "function_name"
--- @
-type Name = IR.N.Name 'IR.N.Function
+instance ToTxt Name where
+  toTxt = Text.intercalate "." . NonEmpty.toList . unName
+
+instance ToErrorValue Name where
+  toErrorValue = ErrorValue.squote . toTxt

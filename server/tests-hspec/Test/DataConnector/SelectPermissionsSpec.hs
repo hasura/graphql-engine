@@ -49,12 +49,12 @@ sourceMetadata =
         name : *source
         kind: *backendType
         tables:
-          - table: Employee
+          - table: [Employee]
             array_relationships:
               - name: SupportRepForCustomers
                 using:
                   manual_configuration:
-                    remote_table: Customer
+                    remote_table: [Customer]
                     column_mapping:
                       EmployeeId: SupportRepId
             select_permissions:
@@ -69,12 +69,12 @@ sourceMetadata =
                     SupportRepForCustomers:
                       Country:
                         _ceq: [ "$", "Country" ]
-          - table: Customer
+          - table: [Customer]
             object_relationships:
               - name: SupportRep
                 using:
                   manual_configuration:
-                    remote_table: Employee
+                    remote_table: [Employee]
                     column_mapping:
                       SupportRepId: EmployeeId
             select_permissions:

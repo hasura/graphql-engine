@@ -524,6 +524,13 @@
         ],
         "type": "object"
       },
+      "TableName": {
+        "description": "The fully qualified name of a table, where the last item in the array is the table name and any earlier items represent the namespacing of the table name",
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
       "ScalarType": {
         "enum": [
           "string",
@@ -573,8 +580,7 @@
             "type": "string"
           },
           "name": {
-            "description": "The name of the table",
-            "type": "string"
+            "$ref": "#/components/schemas/TableName"
           },
           "primary_key": {
             "description": "The primary key of the table",
@@ -654,8 +660,7 @@
             "$ref": "#/components/schemas/Query"
           },
           "table": {
-            "description": "The name of the table to query",
-            "type": "string"
+            "$ref": "#/components/schemas/TableName"
           },
           "table_relationships": {
             "description": "The relationships between tables involved in the entire query request",
@@ -692,8 +697,7 @@
             "$ref": "#/components/schemas/RelationshipType"
           },
           "target_table": {
-            "description": "The name of the target table in the relationship",
-            "type": "string"
+            "$ref": "#/components/schemas/TableName"
           }
         },
         "required": [
@@ -713,8 +717,7 @@
             "type": "object"
           },
           "source_table": {
-            "description": "The name of the source table in the relationship",
-            "type": "string"
+            "$ref": "#/components/schemas/TableName"
           }
         },
         "required": [

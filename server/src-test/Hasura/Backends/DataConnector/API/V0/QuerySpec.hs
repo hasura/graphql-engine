@@ -70,14 +70,14 @@ spec = do
   describe "QueryRequest" $ do
     let queryRequest =
           QueryRequest
-            { _qrTable = TableName "my_table",
+            { _qrTable = TableName ["my_table"],
               _qrTableRelationships = [],
               _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing
             }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
-        { "table": "my_table",
+        { "table": ["my_table"],
           "table_relationships": [],
           "query": { "fields": {} } }
       |]

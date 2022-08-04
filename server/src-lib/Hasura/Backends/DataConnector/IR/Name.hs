@@ -43,12 +43,6 @@ newtype Name ty = Name {unName :: Text}
 instance ToErrorValue (Name ty) where
   toErrorValue = ErrorValue.squote . unName
 
-instance Witch.From API.TableName (Name 'Table) where
-  from (API.TableName n) = Name n
-
-instance Witch.From (Name 'Table) API.TableName where
-  from (Name n) = API.TableName n
-
 instance Witch.From API.ColumnName (Name 'Column) where
   from (API.ColumnName n) = Name n
 
@@ -68,6 +62,4 @@ instance Witch.From (Name 'Relationship) API.RelationshipName where
 -- shared abstraction.
 data NameType
   = Column
-  | Function
-  | Table
   | Relationship

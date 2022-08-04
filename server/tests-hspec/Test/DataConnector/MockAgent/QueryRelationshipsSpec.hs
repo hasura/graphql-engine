@@ -43,20 +43,20 @@ sourceMetadata =
         name : *source
         kind: *backendType
         tables:
-          - table: Genre
-          - table: MediaType
-          - table: Track
+          - table: [Genre]
+          - table: [MediaType]
+          - table: [Track]
             object_relationships:
               - name: Genre
                 using:
                   manual_configuration:
-                    remote_table: Genre
+                    remote_table: [Genre]
                     column_mapping:
                       GenreId: GenreId
               - name: MediaType
                 using:
                   manual_configuration:
-                    remote_table: MediaType
+                    remote_table: [MediaType]
                     column_mapping:
                       MediaTypeId: MediaTypeId
         configuration: {}
@@ -118,22 +118,22 @@ tests opts = do
               { _whenQuery =
                   Just
                     ( API.QueryRequest
-                        { _qrTable = API.TableName "Track",
+                        { _qrTable = API.TableName ("Track" :| []),
                           _qrTableRelationships =
                             [ API.TableRelationships
-                                { _trSourceTable = API.TableName "Track",
+                                { _trSourceTable = API.TableName ("Track" :| []),
                                   _trRelationships =
                                     HashMap.fromList
                                       [ ( API.RelationshipName "Genre",
                                           API.Relationship
-                                            { _rTargetTable = API.TableName "Genre",
+                                            { _rTargetTable = API.TableName ("Genre" :| []),
                                               _rRelationshipType = API.ObjectRelationship,
                                               _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
                                             }
                                         ),
                                         ( API.RelationshipName "MediaType",
                                           API.Relationship
-                                            { _rTargetTable = API.TableName "MediaType",
+                                            { _rTargetTable = API.TableName ("MediaType" :| []),
                                               _rRelationshipType = API.ObjectRelationship,
                                               _rColumnMapping =
                                                 HashMap.fromList

@@ -5,12 +5,14 @@ module Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..)
 import Data.Aeson qualified as J (ToJSON (..), Value)
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
+import Data.List.NonEmpty qualified as NonEmpty
+import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
+import Data.Text.Extended ((<<>))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Function qualified as IR.F
-import Hasura.Backends.DataConnector.IR.Name qualified as IR.N
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
@@ -104,22 +106,21 @@ instance Backend 'DataConnector where
   tableToFunction = coerce
 
   tableGraphQLName :: TableName 'DataConnector -> Either QErr G.Name
-  tableGraphQLName name =
-    G.mkName (IR.N.unName name)
-      `onNothing` throw400 ValidationFailed ("TableName " <> IR.N.unName name <> " is not a valid GraphQL identifier")
+  tableGraphQLName name = do
+    let snakedName = snakeCaseTableName @'DataConnector name
+    G.mkName snakedName
+      `onNothing` throw400 ValidationFailed ("TableName " <> snakedName <> " is not a valid GraphQL identifier")
 
   functionGraphQLName :: FunctionName 'DataConnector -> Either QErr G.Name
   functionGraphQLName = error "functionGraphQLName: not implemented for the Data Connector backend."
 
   snakeCaseTableName :: TableName 'DataConnector -> Text
-  snakeCaseTableName = IR.N.unName
+  snakeCaseTableName = Text.intercalate "_" . NonEmpty.toList . IR.T.unName
 
   getTableIdentifier :: TableName 'DataConnector -> Either QErr C.GQLNameIdentifier
-  getTableIdentifier name = do
-    gqlTableName <-
-      G.mkName (IR.N.unName name)
-        `onNothing` throw400 ValidationFailed ("TableName " <> IR.N.unName name <> " is not a valid GraphQL identifier")
-    pure $ C.Identifier gqlTableName []
+  getTableIdentifier name@(IR.T.Name (prefix :| suffixes)) = do
+    (C.Identifier <$> G.mkName prefix <*> traverse G.mkNameSuffix suffixes)
+      `onNothing` throw400 ValidationFailed ("TableName " <> name <<> " is not a valid GraphQL identifier")
 
   namingConventionSupport :: SupportedNamingCase
   namingConventionSupport = OnlyHasuraCase
