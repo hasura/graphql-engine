@@ -9,8 +9,8 @@ import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
 import Test.Data qualified as Data
+import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
-import Test.Hspec.Expectations.Pretty (shouldBe)
 import Prelude
 
 spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
@@ -26,8 +26,8 @@ spec api sourceName config = describe "Relationship Queries" $ do
     let removeArtistId = KeyMap.delete "ArtistId"
 
     let expectedAlbums = (removeArtistId . joinInArtist) <$> Data.albumsRows
-    Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-    _qrAggregates receivedAlbums `shouldBe` Nothing
+    Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "perform an array relationship query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
@@ -41,8 +41,8 @@ spec api sourceName config = describe "Relationship Queries" $ do
            in KeyMap.insert "Albums" (mkSubqueryResponse albums') artist
 
     let expectedAlbums = joinInAlbums <$> Data.artistsRows
-    Data.responseRows receivedArtists `shouldBe` expectedAlbums
-    _qrAggregates receivedArtists `shouldBe` Nothing
+    Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
   it "perform an object relationship query by joining employee to customers and filter comparing columns across the object relationship" $ do
     -- Join Employee to Customers via SupportRep, and only get those customers that have a rep
@@ -68,8 +68,8 @@ spec api sourceName config = describe "Relationship Queries" $ do
            in maybe False (`elem` supportRepCountry) customerCountry
 
     let expectedCustomers = filter filterCustomersBySupportRepCountry $ Data.filterColumnsByQueryFields (query ^. qrQuery) . joinInSupportRep <$> Data.customersRows
-    Data.responseRows receivedCustomers `shouldBe` expectedCustomers
-    _qrAggregates receivedCustomers `shouldBe` Nothing
+    Data.responseRows receivedCustomers `rowsShouldBe` expectedCustomers
+    _qrAggregates receivedCustomers `jsonShouldBe` Nothing
 
   it "perform an array relationship query by joining customers to employees and filter comparing columns across the array relationship" $ do
     -- Join Customers to Employees via SupportRepForCustomers, and only get those employees that are reps for
@@ -97,8 +97,8 @@ spec api sourceName config = describe "Relationship Queries" $ do
            in maybe False (`elem` customerCountries) employeeCountry
 
     let expectedEmployees = filter filterEmployeesByCustomerCountry $ Data.filterColumnsByQueryFields (query ^. qrQuery) . joinInCustomers <$> Data.employeesRows
-    Data.responseRows receivedEmployees `shouldBe` expectedEmployees
-    _qrAggregates receivedEmployees `shouldBe` Nothing
+    Data.responseRows receivedEmployees `rowsShouldBe` expectedEmployees
+    _qrAggregates receivedEmployees `jsonShouldBe` Nothing
 
 albumsWithArtistQuery :: (Query -> Query) -> QueryRequest
 albumsWithArtistQuery modifySubquery =

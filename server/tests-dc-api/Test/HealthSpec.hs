@@ -3,8 +3,7 @@ module Test.HealthSpec (spec) where
 import Hasura.Backends.DataConnector.API (Config, Routes (..), SourceName)
 import Servant.API (NamedRoutes, NoContent (..))
 import Servant.Client (Client, (//))
-import Test.Hspec (Spec, describe, it)
-import Test.Hspec.Expectations.Pretty (shouldBe)
+import Test.Hspec (Spec, describe, it, shouldBe)
 import Prelude
 
 spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec

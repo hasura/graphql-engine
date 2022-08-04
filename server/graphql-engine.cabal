@@ -1316,7 +1316,9 @@ test-suite tests-dc-api
   import: common-all, common-exe
   type: exitcode-stdio-1.0
   build-depends:
+    , Diff
     , aeson
+    , ansi-terminal
     , autodocodec
     , autodocodec-openapi3
     , base
@@ -1328,7 +1330,6 @@ test-suite tests-dc-api
     , hashable
     , hspec
     , hspec-core
-    , hspec-expectations-pretty-diff
     , http-client
     , lens
     , lens-aeson
@@ -1346,6 +1347,7 @@ test-suite tests-dc-api
     , vector
     , xml-conduit
     , xml-lens
+    , yaml
     , zlib
   hs-source-dirs: tests-dc-api
   -- Turning off optimizations is intentional; tests aren't
@@ -1357,6 +1359,7 @@ test-suite tests-dc-api
     , Paths_graphql_engine
     , Test.Data
     , Test.CapabilitiesSpec
+    , Test.Expectations
     , Test.HealthSpec
     , Test.QuerySpec
     , Test.QuerySpec.AggregatesSpec
