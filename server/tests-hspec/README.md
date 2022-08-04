@@ -146,7 +146,9 @@ Tests are written using [`hspec`](http://hspec.github.io/) and
   which serves as the entry point for the module.
 
 See the documentation for `hspec` and `hspec-discover`, as well as other
-modules in the `Test` namespace, for more guidance.
+modules in the `Test` namespace, for more guidance. As well as this, the module
+[Test.HelloWorldSpec](Test/HelloWorldSpec.hs) contains a skeleton for writing
+new tests.
 
 ### Specifying contexts
 
