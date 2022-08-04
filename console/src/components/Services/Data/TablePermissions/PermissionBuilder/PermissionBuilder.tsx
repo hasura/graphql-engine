@@ -596,7 +596,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
       if (
         currentTypeMap?.boolean &&
         currentTypeMap.boolean.includes(valueType) &&
-        currentDriver === 'postgres'
+        (currentDriver === 'postgres' || currentDriver === 'bigquery')
       ) {
         input = renderBoolSelect(dispatchInput, value);
       } else if (

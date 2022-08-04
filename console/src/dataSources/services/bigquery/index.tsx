@@ -24,6 +24,7 @@ const permissionColumnDataTypes = {
   ],
   numeric: [],
   dateTime: ['DATETIME', 'TIME', 'TIMESTAMP'],
+  boolean: ['BOOL'],
   user_defined: [],
 };
 
