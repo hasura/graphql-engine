@@ -6,8 +6,8 @@ import Hasura.Backends.DataConnector.API.V0.Column (ColumnInfo (..))
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
 import Test.Data qualified as Data
+import Test.Expectations (jsonShouldBe)
 import Test.Hspec (Spec, describe, it)
-import Test.Hspec.Expectations.Pretty (shouldBe)
 import Prelude
 
 removeDescriptionFromColumn :: ColumnInfo -> ColumnInfo
@@ -22,4 +22,4 @@ spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
 spec api sourceName config = describe "schema API" $ do
   it "returns Chinook schema" $ do
     tables <- (map removeDescription . sortOn dtiName . srTables) <$> (api // _schema) sourceName config
-    tables `shouldBe` map removeDescription Data.schemaTables
+    tables `jsonShouldBe` map removeDescription Data.schemaTables

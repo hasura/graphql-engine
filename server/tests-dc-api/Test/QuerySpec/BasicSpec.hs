@@ -10,8 +10,8 @@ import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
 import Test.Data qualified as Data
+import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
-import Test.Hspec.Expectations.Pretty (shouldBe)
 import Prelude
 
 spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
@@ -22,8 +22,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
       let expectedArtists = Data.artistsRows
-      Data.responseRows receivedArtists `shouldBe` expectedArtists
-      _qrAggregates receivedArtists `shouldBe` Nothing
+      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+      _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
     it "can query for a list of albums with a subset of columns" $ do
       let fields = KeyMap.fromList [("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
@@ -34,8 +34,8 @@ spec api sourceName config = describe "Basic Queries" $ do
             KeyMap.filterWithKey (\propName _value -> propName == "ArtistId" || propName == "Title")
 
       let expectedAlbums = Data.sortBy "Title" $ filterToRequiredProperties <$> Data.albumsRows
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can project columns into fields with different names" $ do
       let fields = KeyMap.fromList [("Artist_Id", Data.columnField "ArtistId"), ("Artist_Name", Data.columnField "Name")]
@@ -52,8 +52,8 @@ spec api sourceName config = describe "Basic Queries" $ do
               id
 
       let expectedArtists = Data.sortBy "ArtistId" $ renameProperties <$> Data.artistsRows
-      Data.responseRows receivedArtists `shouldBe` expectedArtists
-      _qrAggregates receivedArtists `shouldBe` Nothing
+      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+      _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
   describe "Limit & Offset" $ do
     it "can use limit and offset to paginate results" $ do
@@ -65,8 +65,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       page1Artists <- Data.responseRows <$> (api // _query) sourceName config page1Query
       page2Artists <- Data.responseRows <$> (api // _query) sourceName config page2Query
 
-      page1Artists `shouldBe` take 10 allArtists
-      page2Artists `shouldBe` take 10 (drop 10 allArtists)
+      page1Artists `rowsShouldBe` take 10 allArtists
+      page2Artists `rowsShouldBe` take 10 (drop 10 allArtists)
 
   describe "Order By" $ do
     it "can use order by to order results in ascending order" $ do
@@ -75,8 +75,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       receivedAlbums <- (api // _query) sourceName config query
 
       let expectedAlbums = sortOn (^? ix "Title") Data.albumsRows
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can use order by to order results in descending order" $ do
       let orderBy = OrderBy (ColumnName "Title") Descending :| []
@@ -84,8 +84,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       receivedAlbums <- (api // _query) sourceName config query
 
       let expectedAlbums = sortOn (Down . (^? ix "Title")) Data.albumsRows
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can use multiple order bys to order results" $ do
       let orderBy = OrderBy (ColumnName "ArtistId") Ascending :| [OrderBy (ColumnName "Title") Descending]
@@ -95,8 +95,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             sortOn (\album -> (album ^? ix "ArtistId", Down (album ^? ix "Title"))) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   describe "Where" $ do
     it "can filter using an equality expression" $ do
@@ -107,8 +107,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter ((== Just 2) . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter using an inequality expression" $ do
       let where' = Not (ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 2)))
@@ -118,8 +118,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter ((/= Just 2) . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter using an in expression" $ do
       let where' = ApplyBinaryArrayComparisonOperator In (Data.localComparisonColumn "AlbumId") [Number 2, Number 3]
@@ -129,8 +129,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter (flip elem [Just 2, Just 3] . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can negate an in expression filter using a not expression" $ do
       let where' = Not (ApplyBinaryArrayComparisonOperator In (Data.localComparisonColumn "AlbumId") [Number 2, Number 3])
@@ -140,8 +140,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter (flip notElem [Just 2, Just 3] . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can combine filters using an and expression" $ do
       let where1 = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "ArtistId") (ScalarValue (Number 58))
@@ -157,8 +157,8 @@ spec api sourceName config = describe "Basic Queries" $ do
               )
               Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can combine filters using an or expression" $ do
       let where1 = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 2))
@@ -170,8 +170,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter (flip elem [Just 2, Just 3] . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter by applying the greater than operator" $ do
       let where' = ApplyBinaryComparisonOperator GreaterThan (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 300))
@@ -181,8 +181,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter ((> Just 300) . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter by applying the greater than or equal operator" $ do
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 300))
@@ -192,8 +192,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter ((>= Just 300) . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter by applying the less than operator" $ do
       let where' = ApplyBinaryComparisonOperator LessThan (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 100))
@@ -203,8 +203,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter ((< Just 100) . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter by applying the less than or equal operator" $ do
       let where' = ApplyBinaryComparisonOperator LessThanOrEqual (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 100))
@@ -214,8 +214,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter ((<= Just 100) . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter using a greater than operator with a column comparison" $ do
       let where' = ApplyBinaryComparisonOperator GreaterThan (Data.localComparisonColumn "AlbumId") (AnotherColumn (Data.localComparisonColumn "ArtistId"))
@@ -225,8 +225,8 @@ spec api sourceName config = describe "Basic Queries" $ do
       let expectedAlbums =
             filter (\album -> (album ^? ix "AlbumId" . Data._ColumnFieldNumber) > (album ^? ix "ArtistId" . Data._ColumnFieldNumber)) Data.albumsRows
 
-      Data.responseRows receivedAlbums `shouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `shouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
 artistsQueryRequest :: QueryRequest
 artistsQueryRequest =

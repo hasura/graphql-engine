@@ -14,8 +14,8 @@ import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
 import Test.Data qualified as Data
+import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
-import Test.Hspec.Expectations.Pretty (shouldBe)
 import Prelude
 
 spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
@@ -29,8 +29,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let invoiceCount = length Data.invoicesRows
       let expectedAggregates = KeyMap.fromList [("count_all", Number $ fromIntegral invoiceCount)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "counts all rows, after applying filters" $ do
       let where' = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "BillingCity") (ScalarValue (String "Oslo"))
@@ -41,8 +41,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let invoiceCount = length $ filter ((^? ix "BillingCity" . Data._ColumnFieldString) >>> (== Just "Oslo")) Data.invoicesRows
       let expectedAggregates = KeyMap.fromList [("count_all", Number $ fromIntegral invoiceCount)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "counts all rows, after applying pagination" $ do
       let aggregates = KeyMap.fromList [("count_all", StarCount)]
@@ -52,8 +52,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let invoiceCount = length . take 20 $ drop 400 Data.invoicesRows
       let expectedAggregates = KeyMap.fromList [("count_all", Number $ fromIntegral invoiceCount)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
   describe "Column Count" $ do
     it "counts all rows with non-null columns" $ do
@@ -64,8 +64,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let invoiceCount = length $ filter ((^? ix "BillingState" . Data._ColumnFieldString) >>> (/= Nothing)) Data.invoicesRows
       let expectedAggregates = KeyMap.fromList [("count_cols", Number $ fromIntegral invoiceCount)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "can count all rows with non-null values in a column, after applying pagination and filtering" $ do
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (Data.localComparisonColumn "InvoiceId") (ScalarValue (Number 380))
@@ -82,8 +82,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
 
       let expectedAggregates = KeyMap.fromList [("count_cols", Number $ fromIntegral invoiceCount)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "can count all rows with distinct non-null values in a column" $ do
       let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState") True)]
@@ -93,8 +93,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let billingStateCount = length . HashSet.fromList $ mapMaybe ((^? ix "BillingState" . Data._ColumnFieldString)) Data.invoicesRows
       let expectedAggregates = KeyMap.fromList [("count_cols", Number $ fromIntegral billingStateCount)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "can count all rows with distinct non-null values in a column, after applying pagination and filtering" $ do
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (Data.localComparisonColumn "InvoiceId") (ScalarValue (Number 380))
@@ -112,8 +112,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
 
       let expectedAggregates = KeyMap.fromList [("count_cols", Number $ fromIntegral billingStateCount)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
   describe "Single Column Function" $ do
     it "can get the max total from all rows" $ do
@@ -124,8 +124,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let maxTotal = maximum $ mapMaybe ((^? ix "Total" . Data._ColumnFieldNumber)) Data.invoicesRows
       let expectedAggregates = KeyMap.fromList [("max", Number maxTotal)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "can get the max total from all rows, after applying pagination, filtering and ordering" $ do
       let where' = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "BillingCountry") (ScalarValue (String "USA"))
@@ -144,8 +144,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
 
       let expectedAggregates = KeyMap.fromList [("max", Number maxTotal)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "can get the min and max of a non-numeric comparable type such as a string" $ do
       let aggregates =
@@ -163,8 +163,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
                 ("max", aggregate (String . maximum) names)
               ]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "aggregates over empty row lists results in nulls" $ do
       let where' = ApplyBinaryComparisonOperator LessThan (Data.localComparisonColumn "ArtistId") (ScalarValue (Number 0))
@@ -174,8 +174,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
 
       let expectedAggregates = KeyMap.fromList [("min", Null)]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
   describe "Multiple Aggregates and Returning Rows" $ do
     it "can get the max total from all rows, the count and the distinct count, simultaneously" $ do
@@ -199,8 +199,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
                 ("maxTotal", maxTotal)
               ]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "can reuse the same aggregate twice" $ do
       let aggregates =
@@ -220,8 +220,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
                 ("minTotal", maxTotal)
               ]
 
-      Data.responseAggregates response `shouldBe` expectedAggregates
-      Data.responseRows response `shouldBe` []
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
 
     it "can also query for the rows involved in the aggregate" $ do
       let fields =
@@ -249,8 +249,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let expectedAggregates = KeyMap.fromList [("min", maxTotal)]
       let expectedRows = Data.filterColumnsByQueryFields (_qrQuery queryRequest) <$> invoiceRows
 
-      Data.responseRows response `shouldBe` expectedRows
-      Data.responseAggregates response `shouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` expectedRows
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
 
   describe "Aggregates via Relationships" $ do
     it "can query aggregates via an array relationship" $ do
@@ -270,8 +270,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
               & take 5
               & fmap joinInAlbums
 
-      Data.responseRows receivedArtists `shouldBe` expectedArtists
-      Data.responseAggregates receivedArtists `shouldBe` mempty
+      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+      Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
     it "can query aggregates via an array relationship and include the rows in that relationship" $ do
       let albumFields =
@@ -296,8 +296,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
               & take 5
               & fmap joinInAlbums
 
-      Data.responseRows receivedArtists `shouldBe` expectedArtists
-      Data.responseAggregates receivedArtists `shouldBe` mempty
+      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+      Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
     it "can query with many nested relationships, with aggregates at multiple levels, with filtering, pagination and ordering" $ do
       receivedArtists <- (api // _query) sourceName config deeplyNestedArtistsQuery
@@ -354,8 +354,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
               & fmap joinInAlbums
               & Data.filterColumns ["Name", "Albums_aggregate"]
 
-      Data.responseRows receivedArtists `shouldBe` expectedArtists
-      Data.responseAggregates receivedArtists `shouldBe` mempty
+      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+      Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
 artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
 artistsWithAlbumsQuery modifySubquery =
