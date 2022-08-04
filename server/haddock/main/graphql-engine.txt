@@ -29852,11 +29852,10 @@ module Hasura.Server.Auth.WebHook
 data AuthHookType
 AHTGet :: AuthHookType
 AHTPost :: AuthHookType
-data AuthHookG a b
-AuthHookG :: !a -> !b -> AuthHookG a b
-[ahUrl] :: AuthHookG a b -> !a
-[ahType] :: AuthHookG a b -> !b
-type AuthHook = AuthHookG Text AuthHookType
+data AuthHook
+AuthHook :: Text -> AuthHookType -> AuthHook
+[ahUrl] :: AuthHook -> Text
+[ahType] :: AuthHook -> AuthHookType
 hookMethod :: AuthHook -> StdMethod
 
 -- | Makes an authentication request to the given AuthHook and returns
@@ -29866,8 +29865,8 @@ hookMethod :: AuthHook -> StdMethod
 userInfoFromAuthHook :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m) => Logger Hasura -> Manager -> AuthHook -> [Header] -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])
 mkUserInfoFromResp :: (MonadIO m, MonadError QErr m) => Logger Hasura -> Text -> StdMethod -> Status -> ByteString -> [Header] -> m (UserInfo, Maybe UTCTime, [Header])
 instance GHC.Classes.Eq Hasura.Server.Auth.WebHook.AuthHookType
-instance (GHC.Classes.Eq a, GHC.Classes.Eq b) => GHC.Classes.Eq (Hasura.Server.Auth.WebHook.AuthHookG a b)
-instance (GHC.Show.Show a, GHC.Show.Show b) => GHC.Show.Show (Hasura.Server.Auth.WebHook.AuthHookG a b)
+instance GHC.Classes.Eq Hasura.Server.Auth.WebHook.AuthHook
+instance GHC.Show.Show Hasura.Server.Auth.WebHook.AuthHook
 instance GHC.Show.Show Hasura.Server.Auth.WebHook.AuthHookType
 
 module Hasura.Server.Auth
@@ -30050,7 +30049,10 @@ PGDUMP :: API
 DEVELOPER :: API
 CONFIG :: API
 METRICS :: API
-type AuthHookRaw = AuthHookG (Maybe Text) (Maybe AuthHookType)
+data AuthHookRaw
+AuthHookRaw :: Maybe Text -> Maybe AuthHookType -> AuthHookRaw
+[ahrUrl] :: AuthHookRaw -> Maybe Text
+[ahrType] :: AuthHookRaw -> Maybe AuthHookType
 
 -- | Sleep time interval for recurring activities such as
 --   (<tt><tt>asyncActionsProcessor</tt>) Presently
