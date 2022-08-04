@@ -17,8 +17,8 @@
 </span><span id="line-17"></span><span>
 </span><span id="line-18"></span><span class="annot"><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkEnvVarDoc"><span class="hs-identifier hs-type">mkEnvVarDoc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PP.Doc</span></span><span>
 </span><span id="line-19"></span><span id="mkEnvVarDoc"><span class="annot"><span class="annottext">mkEnvVarDoc :: [(String, String)] -&gt; Doc
-</span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkEnvVarDoc"><span class="hs-identifier hs-var hs-var">mkEnvVarDoc</span></a></span></span><span> </span><span id="local-6989586621689379678"><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621689379678"><span class="hs-identifier hs-var">envVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkEnvVarDoc"><span class="hs-identifier hs-var hs-var">mkEnvVarDoc</span></a></span></span><span> </span><span id="local-6989586621689379655"><span class="annot"><span class="annottext">[(String, String)]
+</span><a href="#local-6989586621689379655"><span class="hs-identifier hs-var">envVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-20"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.text</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Environment variables: &quot;</span></span><span>
@@ -31,26 +31,26 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((String, String) -&gt; Doc) -&gt; [(String, String)] -&gt; [Doc]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(String, String) -&gt; Doc
-</span><a href="#local-6989586621689379675"><span class="hs-identifier hs-var">mkEnvVarLine</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621689379678"><span class="hs-identifier hs-var">envVars</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689379652"><span class="hs-identifier hs-var">mkEnvVarLine</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, String)]
+</span><a href="#local-6989586621689379655"><span class="hs-identifier hs-var">envVars</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-23"></span><span>    </span><span id="local-6989586621689379675"><span class="annot"><span class="annottext">mkEnvVarLine :: (String, String) -&gt; Doc
-</span><a href="#local-6989586621689379675"><span class="hs-identifier hs-var hs-var">mkEnvVarLine</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689379674"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689379674"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379673"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689379673"><span class="hs-identifier hs-var">desc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-23"></span><span>    </span><span id="local-6989586621689379652"><span class="annot"><span class="annottext">mkEnvVarLine :: (String, String) -&gt; Doc
+</span><a href="#local-6989586621689379652"><span class="hs-identifier hs-var hs-var">mkEnvVarLine</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689379651"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689379651"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379650"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689379650"><span class="hs-identifier hs-var">desc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-24"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Doc -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.fillBreak</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">40</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.text</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689379674"><span class="hs-identifier hs-var">var</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+</span><a href="#local-6989586621689379651"><span class="hs-identifier hs-var">var</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 </span><span class="hs-operator hs-var">PP.&lt;+&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
-</span><a href="#local-6989586621689379670"><span class="hs-identifier hs-var">prettifyDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689379673"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+</span><a href="#local-6989586621689379647"><span class="hs-identifier hs-var">prettifyDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689379650"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc
 </span><span class="hs-identifier hs-var">PP.hardline</span></span><span>
-</span><span id="line-25"></span><span>    </span><span id="local-6989586621689379670"><span class="annot"><span class="annottext">prettifyDesc :: String -&gt; Doc
-</span><a href="#local-6989586621689379670"><span class="hs-identifier hs-var hs-var">prettifyDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc
+</span><span id="line-25"></span><span>    </span><span id="local-6989586621689379647"><span class="annot"><span class="annottext">prettifyDesc :: String -&gt; Doc
+</span><a href="#local-6989586621689379647"><span class="hs-identifier hs-var hs-var">prettifyDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.align</span></span><span> </span><span class="annot"><span class="annottext">(Doc -&gt; Doc) -&gt; (String -&gt; Doc) -&gt; String -&gt; Doc
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[Doc] -&gt; Doc
@@ -66,8 +66,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="annot"><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkExamplesDoc"><span class="hs-identifier hs-type">mkExamplesDoc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PP.Doc</span></span><span>
 </span><span id="line-28"></span><span id="mkExamplesDoc"><span class="annot"><span class="annottext">mkExamplesDoc :: [[String]] -&gt; Doc
-</span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkExamplesDoc"><span class="hs-identifier hs-var hs-var">mkExamplesDoc</span></a></span></span><span> </span><span id="local-6989586621689379664"><span class="annot"><span class="annottext">[[String]]
-</span><a href="#local-6989586621689379664"><span class="hs-identifier hs-var">exampleLines</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkExamplesDoc"><span class="hs-identifier hs-var hs-var">mkExamplesDoc</span></a></span></span><span> </span><span id="local-6989586621689379641"><span class="annot"><span class="annottext">[[String]]
+</span><a href="#local-6989586621689379641"><span class="hs-identifier hs-var">exampleLines</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-29"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.text</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Examples: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
@@ -75,10 +75,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">PP.indent</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Doc] -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.vsep</span></span><span> </span><span class="annot"><span class="annottext">[Doc]
-</span><a href="#local-6989586621689379663"><span class="hs-identifier hs-var">examples</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689379640"><span class="hs-identifier hs-var">examples</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>    </span><span id="local-6989586621689379663"><span class="annot"><span class="annottext">examples :: [Doc]
-</span><a href="#local-6989586621689379663"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Doc) -&gt; [String] -&gt; [Doc]
+</span><span id="line-31"></span><span>    </span><span id="local-6989586621689379640"><span class="annot"><span class="annottext">examples :: [Doc]
+</span><a href="#local-6989586621689379640"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Doc) -&gt; [String] -&gt; [Doc]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.text</span></span><span> </span><span class="annot"><span class="annottext">([String] -&gt; [Doc]) -&gt; [String] -&gt; [Doc]
@@ -87,5 +87,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. [a] -&gt; [[a]] -&gt; [a]
 </span><span class="hs-identifier hs-var">intercalate</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">[[String]]
-</span><a href="#local-6989586621689379664"><span class="hs-identifier hs-var">exampleLines</span></a></span><span>
+</span><a href="#local-6989586621689379641"><span class="hs-identifier hs-var">exampleLines</span></a></span><span>
 </span><span id="line-32"></span></pre></body></html>

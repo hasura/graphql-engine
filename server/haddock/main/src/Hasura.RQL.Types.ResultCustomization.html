@@ -20,7 +20,7 @@
 </span><span id="line-20"></span><span class="hs-comment">-- E.g. for aliases created in the remote server query for remote joins.</span><span>
 </span><span id="line-21"></span><span class="hs-keyword">newtype</span><span> </span><span id="AliasMapping"><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-var">AliasMapping</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AliasMapping"><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-var">AliasMapping</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unAliasMapping"><span class="annot"><span class="annottext">AliasMapping -&gt; Name -&gt; Name
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#unAliasMapping"><span class="hs-identifier hs-var hs-var">unAliasMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">}</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378822"><span id="local-6989586621689378824"><span id="local-6989586621689378826"><span class="annot"><span class="annottext">b -&gt; AliasMapping -&gt; AliasMapping
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378799"><span id="local-6989586621689378801"><span id="local-6989586621689378803"><span class="annot"><span class="annottext">b -&gt; AliasMapping -&gt; AliasMapping
 NonEmpty AliasMapping -&gt; AliasMapping
 AliasMapping -&gt; AliasMapping -&gt; AliasMapping
 (AliasMapping -&gt; AliasMapping -&gt; AliasMapping)
@@ -39,7 +39,7 @@ sconcat :: NonEmpty AliasMapping -&gt; AliasMapping
 $csconcat :: NonEmpty AliasMapping -&gt; AliasMapping
 &lt;&gt; :: AliasMapping -&gt; AliasMapping -&gt; AliasMapping
 $c&lt;&gt; :: AliasMapping -&gt; AliasMapping -&gt; AliasMapping
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378814"><span id="local-6989586621689378816"><span id="local-6989586621689378818"><span class="annot"><span class="annottext">Semigroup AliasMapping
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378791"><span id="local-6989586621689378793"><span id="local-6989586621689378795"><span class="annot"><span class="annottext">Semigroup AliasMapping
 AliasMapping
 Semigroup AliasMapping
 -&gt; AliasMapping
@@ -62,22 +62,22 @@ $cp1Monoid :: Semigroup AliasMapping
 </span><span id="line-24"></span><span class="hs-comment">-- | AliasMapping that maps a single field name to an alias</span><span>
 </span><span id="line-25"></span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#singletonAliasMapping"><span class="hs-identifier hs-type">singletonAliasMapping</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-type">AliasMapping</span></a></span><span>
 </span><span id="line-26"></span><span id="singletonAliasMapping"><span class="annot"><span class="annottext">singletonAliasMapping :: Name -&gt; Name -&gt; AliasMapping
-</span><a href="Hasura.RQL.Types.ResultCustomization.html#singletonAliasMapping"><span class="hs-identifier hs-var hs-var">singletonAliasMapping</span></a></span></span><span> </span><span id="local-6989586621689378812"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378812"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689378811"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378811"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; AliasMapping
+</span><a href="Hasura.RQL.Types.ResultCustomization.html#singletonAliasMapping"><span class="hs-identifier hs-var hs-var">singletonAliasMapping</span></a></span></span><span> </span><span id="local-6989586621689378789"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689378788"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378788"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; AliasMapping
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-var">AliasMapping</span></a></span><span> </span><span class="annot"><span class="annottext">((Name -&gt; Name) -&gt; AliasMapping) -&gt; (Name -&gt; Name) -&gt; AliasMapping
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378810"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378810"><span class="hs-identifier hs-var">fieldName'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378787"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378787"><span class="hs-identifier hs-var">fieldName'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378812"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
+</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378810"><span class="hs-identifier hs-var">fieldName'</span></a></span><span>
+</span><a href="#local-6989586621689378787"><span class="hs-identifier hs-var">fieldName'</span></a></span><span>
 </span><span id="line-28"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378811"><span class="hs-identifier hs-var">alias</span></a></span><span>
+</span><a href="#local-6989586621689378788"><span class="hs-identifier hs-var">alias</span></a></span><span>
 </span><span id="line-29"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378810"><span class="hs-identifier hs-var">fieldName'</span></a></span><span>
+</span><a href="#local-6989586621689378787"><span class="hs-identifier hs-var">fieldName'</span></a></span><span>
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="hs-comment">-- | Function to modify JSON values returned from the remote server</span><span>
 </span><span id="line-32"></span><span class="hs-comment">-- e.g. to map values of __typename fields to customized type names.</span><span>
@@ -85,7 +85,7 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span id="line-34"></span><span class="hs-comment">-- where no customizations are needed.</span><span>
 </span><span id="line-35"></span><span class="hs-keyword">newtype</span><span> </span><span id="ResultCustomizer"><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-var">ResultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ResultCustomizer"><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-var">ResultCustomizer</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unResultCustomizer"><span class="annot"><span class="annottext">ResultCustomizer -&gt; AliasMapping -&gt; Value -&gt; Value
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#unResultCustomizer"><span class="hs-identifier hs-var hs-var">unResultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-type">AliasMapping</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Value</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378802"><span id="local-6989586621689378804"><span id="local-6989586621689378806"><span class="annot"><span class="annottext">b -&gt; ResultCustomizer -&gt; ResultCustomizer
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378779"><span id="local-6989586621689378781"><span id="local-6989586621689378783"><span class="annot"><span class="annottext">b -&gt; ResultCustomizer -&gt; ResultCustomizer
 NonEmpty ResultCustomizer -&gt; ResultCustomizer
 ResultCustomizer -&gt; ResultCustomizer -&gt; ResultCustomizer
 (ResultCustomizer -&gt; ResultCustomizer -&gt; ResultCustomizer)
@@ -106,7 +106,7 @@ sconcat :: NonEmpty ResultCustomizer -&gt; ResultCustomizer
 $csconcat :: NonEmpty ResultCustomizer -&gt; ResultCustomizer
 &lt;&gt; :: ResultCustomizer -&gt; ResultCustomizer -&gt; ResultCustomizer
 $c&lt;&gt; :: ResultCustomizer -&gt; ResultCustomizer -&gt; ResultCustomizer
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378795"><span id="local-6989586621689378797"><span id="local-6989586621689378799"><span class="annot"><span class="annottext">Semigroup ResultCustomizer
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378772"><span id="local-6989586621689378774"><span id="local-6989586621689378776"><span class="annot"><span class="annottext">Semigroup ResultCustomizer
 ResultCustomizer
 Semigroup ResultCustomizer
 -&gt; ResultCustomizer
@@ -145,122 +145,122 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-42"></span><span class="hs-comment">-- | Apply an AliasMapping to a ResultCustomizer.</span><span>
 </span><span id="line-43"></span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#applyAliasMapping"><span class="hs-identifier hs-type">applyAliasMapping</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-type">AliasMapping</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span>
 </span><span id="line-44"></span><span id="applyAliasMapping"><span class="annot"><span class="annottext">applyAliasMapping :: AliasMapping -&gt; ResultCustomizer -&gt; ResultCustomizer
-</span><a href="Hasura.RQL.Types.ResultCustomization.html#applyAliasMapping"><span class="hs-identifier hs-var hs-var">applyAliasMapping</span></a></span></span><span> </span><span id="local-6989586621689378793"><span class="annot"><span class="annottext">AliasMapping
-</span><a href="#local-6989586621689378793"><span class="hs-identifier hs-var">aliasMapping</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span id="local-6989586621689378792"><span class="annot"><span class="annottext">AliasMapping -&gt; Value -&gt; Value
-</span><a href="#local-6989586621689378792"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.Types.ResultCustomization.html#applyAliasMapping"><span class="hs-identifier hs-var hs-var">applyAliasMapping</span></a></span></span><span> </span><span id="local-6989586621689378770"><span class="annot"><span class="annottext">AliasMapping
+</span><a href="#local-6989586621689378770"><span class="hs-identifier hs-var">aliasMapping</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span id="local-6989586621689378769"><span class="annot"><span class="annottext">AliasMapping -&gt; Value -&gt; Value
+</span><a href="#local-6989586621689378769"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">(AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-var">ResultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">((AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer)
 -&gt; (AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AliasMapping -&gt; Value -&gt; Value
-</span><a href="#local-6989586621689378792"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">(AliasMapping -&gt; Value -&gt; Value)
+</span><a href="#local-6989586621689378769"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">(AliasMapping -&gt; Value -&gt; Value)
 -&gt; (AliasMapping -&gt; AliasMapping) -&gt; AliasMapping -&gt; Value -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AliasMapping -&gt; AliasMapping -&gt; AliasMapping
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">AliasMapping
-</span><a href="#local-6989586621689378793"><span class="hs-identifier hs-var">aliasMapping</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689378770"><span class="hs-identifier hs-var">aliasMapping</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span>
 </span><span id="line-47"></span><span class="hs-comment">-- | Take a ResultCustomizer for a JSON subtree, and a fieldName,</span><span>
 </span><span id="line-48"></span><span class="hs-comment">-- and produce a ResultCustomizer for a parent object or array of objects</span><span>
 </span><span id="line-49"></span><span class="hs-comment">-- that applies the subtree customizer to the subtree at the given fieldName.</span><span>
 </span><span id="line-50"></span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#modifyFieldByName"><span class="hs-identifier hs-type">modifyFieldByName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span>
 </span><span id="line-51"></span><span id="modifyFieldByName"><span class="annot"><span class="annottext">modifyFieldByName :: Name -&gt; ResultCustomizer -&gt; ResultCustomizer
-</span><a href="Hasura.RQL.Types.ResultCustomization.html#modifyFieldByName"><span class="hs-identifier hs-var hs-var">modifyFieldByName</span></a></span></span><span> </span><span id="local-6989586621689378791"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378791"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378790"><span class="annot"><span class="annottext">AliasMapping -&gt; Value -&gt; Value
+</span><a href="Hasura.RQL.Types.ResultCustomization.html#modifyFieldByName"><span class="hs-identifier hs-var hs-var">modifyFieldByName</span></a></span></span><span> </span><span id="local-6989586621689378768"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378768"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378767"><span class="annot"><span class="annottext">AliasMapping -&gt; Value -&gt; Value
 unResultCustomizer :: AliasMapping -&gt; Value -&gt; Value
 unResultCustomizer :: ResultCustomizer -&gt; AliasMapping -&gt; Value -&gt; Value
-</span><a href="#local-6989586621689378790"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689378767"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">(AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-var">ResultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">((AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer)
 -&gt; (AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-type">AliasMapping</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378789"><span class="annot"><span class="annottext">Name -&gt; Name
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#AliasMapping"><span class="hs-identifier hs-type">AliasMapping</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378766"><span class="annot"><span class="annottext">Name -&gt; Name
 unAliasMapping :: Name -&gt; Name
 unAliasMapping :: AliasMapping -&gt; Name -&gt; Name
-</span><a href="#local-6989586621689378789"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-53"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378788"><span class="annot"><span class="annottext">applyCustomizer :: Value -&gt; Value
-</span><a href="#local-6989586621689378788"><span class="hs-identifier hs-var hs-var">applyCustomizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AliasMapping -&gt; Value -&gt; Value
-</span><a href="#local-6989586621689378790"><span class="hs-identifier hs-var">unResultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">AliasMapping
+</span><a href="#local-6989586621689378766"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378765"><span class="annot"><span class="annottext">applyCustomizer :: Value -&gt; Value
+</span><a href="#local-6989586621689378765"><span class="hs-identifier hs-var hs-var">applyCustomizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AliasMapping -&gt; Value -&gt; Value
+</span><a href="#local-6989586621689378767"><span class="hs-identifier hs-var">unResultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">AliasMapping
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-54"></span><span>        </span><span id="local-6989586621689378787"><span class="annot"><span class="annottext">modifyFieldByName' :: Value -&gt; Value
-</span><a href="#local-6989586621689378787"><span class="hs-identifier hs-var hs-var">modifyFieldByName'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-55"></span><span>          </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Object</span></a></span><span> </span><span id="local-6989586621689378785"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689378785"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object -&gt; Value
+</span><span id="line-54"></span><span>        </span><span id="local-6989586621689378764"><span class="annot"><span class="annottext">modifyFieldByName' :: Value -&gt; Value
+</span><a href="#local-6989586621689378764"><span class="hs-identifier hs-var hs-var">modifyFieldByName'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-55"></span><span>          </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Object</span></a></span><span> </span><span id="local-6989586621689378762"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689378762"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.Object</span></a></span><span> </span><span class="annot"><span class="annottext">(Object -&gt; Value) -&gt; Object -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Value) -&gt; Text -&gt; Object -&gt; Object
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.adjust</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
-</span><a href="#local-6989586621689378788"><span class="hs-identifier hs-var">applyCustomizer</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><a href="#local-6989586621689378765"><span class="hs-identifier hs-var">applyCustomizer</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Text) -&gt; Name -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">unAliasMapping</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378791"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689378785"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-56"></span><span>          </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Array</span></a></span><span> </span><span id="local-6989586621689378781"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689378781"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Array -&gt; Value
+</span><a href="#local-6989586621689378766"><span class="hs-identifier hs-var">unAliasMapping</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378768"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689378762"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-56"></span><span>          </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Array</span></a></span><span> </span><span id="local-6989586621689378758"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689378758"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Array -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.Array</span></a></span><span> </span><span class="annot"><span class="annottext">(Array -&gt; Value) -&gt; Array -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
-</span><a href="#local-6989586621689378787"><span class="hs-identifier hs-var">modifyFieldByName'</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Value) -&gt; Array -&gt; Array
+</span><a href="#local-6989586621689378764"><span class="hs-identifier hs-var">modifyFieldByName'</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Value) -&gt; Array -&gt; Array
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689378781"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-57"></span><span>          </span><span id="local-6989586621689378779"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378779"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378779"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689378758"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-57"></span><span>          </span><span id="local-6989586621689378756"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689378756"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689378756"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-58"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
-</span><a href="#local-6989586621689378787"><span class="hs-identifier hs-var">modifyFieldByName'</span></a></span><span>
+</span><a href="#local-6989586621689378764"><span class="hs-identifier hs-var">modifyFieldByName'</span></a></span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-comment">-- | Create a RemoteResultCustomizer that applies the typeNameMap</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- to a JSON string value, e.g. for use in customizing a __typename field value.</span><span>
 </span><span id="line-62"></span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#customizeTypeNameString"><span class="hs-identifier hs-type">customizeTypeNameString</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span>
 </span><span id="line-63"></span><span id="customizeTypeNameString"><span class="annot"><span class="annottext">customizeTypeNameString :: HashMap Name Name -&gt; ResultCustomizer
-</span><a href="Hasura.RQL.Types.ResultCustomization.html#customizeTypeNameString"><span class="hs-identifier hs-var hs-var">customizeTypeNameString</span></a></span></span><span> </span><span id="local-6989586621689378778"><span class="annot"><span class="annottext">HashMap Name Name
-</span><a href="#local-6989586621689378778"><span class="hs-identifier hs-var">typeNameMap</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">HashMap Name Name -&gt; Bool
+</span><a href="Hasura.RQL.Types.ResultCustomization.html#customizeTypeNameString"><span class="hs-identifier hs-var hs-var">customizeTypeNameString</span></a></span></span><span> </span><span id="local-6989586621689378755"><span class="annot"><span class="annottext">HashMap Name Name
+</span><a href="#local-6989586621689378755"><span class="hs-identifier hs-var">typeNameMap</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">HashMap Name Name -&gt; Bool
 forall k v. HashMap k v -&gt; Bool
 </span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
-</span><a href="#local-6989586621689378778"><span class="hs-identifier hs-var">typeNameMap</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
+</span><a href="#local-6989586621689378755"><span class="hs-identifier hs-var">typeNameMap</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-64"></span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#customizeTypeNameString"><span class="hs-identifier hs-var">customizeTypeNameString</span></a></span><span> </span><span id="local-6989586621689378776"><span class="annot"><span class="annottext">HashMap Name Name
-</span><a href="#local-6989586621689378776"><span class="hs-identifier hs-var">typeNameMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#customizeTypeNameString"><span class="hs-identifier hs-var">customizeTypeNameString</span></a></span><span> </span><span id="local-6989586621689378753"><span class="annot"><span class="annottext">HashMap Name Name
+</span><a href="#local-6989586621689378753"><span class="hs-identifier hs-var">typeNameMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-65"></span><span>  </span><span class="annot"><span class="annottext">(AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-var">ResultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">((AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer)
 -&gt; (AliasMapping -&gt; Value -&gt; Value) -&gt; ResultCustomizer
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378775"><span class="annot"><span class="annottext">AliasMapping
-</span><a href="#local-6989586621689378775"><span class="hs-identifier hs-var">_aliasMapping</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-66"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.String</span></a></span><span> </span><span id="local-6989586621689378773"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378773"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378752"><span class="annot"><span class="annottext">AliasMapping
+</span><a href="#local-6989586621689378752"><span class="hs-identifier hs-var">_aliasMapping</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.String</span></a></span><span> </span><span id="local-6989586621689378750"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689378750"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text -&gt; Text
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378773"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Text) -&gt; Maybe Text -&gt; Text
+</span><a href="#local-6989586621689378750"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Text) -&gt; Maybe Text -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-68"></span><span>        </span><span class="hs-comment">-- This function is only meant to be applied on type names, and creating a</span><span>
 </span><span id="line-69"></span><span>        </span><span class="hs-comment">-- GraphQL name out of the string should never fail. If it nonetheless</span><span>
 </span><span id="line-70"></span><span>        </span><span class="hs-comment">-- fails, we assume there will not be customization information and we</span><span>
 </span><span id="line-71"></span><span>        </span><span class="hs-comment">-- return it unmodified.</span><span>
-</span><span id="line-72"></span><span>        </span><span id="local-6989586621689378771"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378771"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><span id="line-72"></span><span>        </span><span id="local-6989586621689378748"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378748"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378773"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689378750"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Text) -&gt; Maybe Name -&gt; Maybe Text
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; HashMap Name Name -&gt; Maybe Name
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378771"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
-</span><a href="#local-6989586621689378776"><span class="hs-identifier hs-var">typeNameMap</span></a></span><span>
-</span><span id="line-74"></span><span>    </span><span id="local-6989586621689378768"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378768"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378768"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689378748"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
+</span><a href="#local-6989586621689378753"><span class="hs-identifier hs-var">typeNameMap</span></a></span><span>
+</span><span id="line-74"></span><span>    </span><span id="local-6989586621689378745"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689378745"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689378745"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-75"></span></pre></body></html>
