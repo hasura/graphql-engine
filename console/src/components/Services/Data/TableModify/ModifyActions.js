@@ -58,6 +58,7 @@ import {
   getDropComputedFieldQuery,
   getSetCustomRootFieldsQuery,
   getSetTableEnumQuery,
+  getSetTableApolloFederationQuery,
 } from '../../../../metadata/queryUtils';
 import { getColumnUpdateMigration } from '../../../../utils/migration/utils';
 import Migration from '../../../../utils/migration/Migration';
@@ -96,6 +97,11 @@ const REMOVE_UNIQUE_KEY = 'ModifyTable/REMOVE_UNIQUE_KEY';
 const TOGGLE_ENUM = 'ModifyTable/TOGGLE_ENUM';
 const TOGGLE_ENUM_SUCCESS = 'ModifyTable/TOGGLE_ENUM_SUCCESS';
 const TOGGLE_ENUM_FAILURE = 'ModifyTable/TOGGLE_ENUM_FAILURE';
+const TOGGLE_APOLLO_FEDERATION = 'ModifyTable/TOGGLE_APOLLO_FEDERATION';
+const TOGGLE_APOLLO_FEDERATION_SUCCESS =
+  'ModifyTable/TOGGLE_APOLLO_FEDERATION_SUCCESS';
+const TOGGLE_APOLLO_FEDERATION_FAILURE =
+  'ModifyTable/TOGGLE_APOLLO_FEDERATION_FAILURE';
 
 const MODIFY_TABLE_CUSTOM_NAME = 'ModifyTable/MODIFY_TABLE_CUSTOM_NAME';
 const MODIFY_ROOT_FIELD = 'ModifyTable/MODIFY_ROOT_FIELD';
@@ -115,6 +121,14 @@ const toggleEnumSuccess = () => ({
 
 const toggleEnumFailure = () => ({
   type: TOGGLE_ENUM_FAILURE,
+});
+
+const toggleApolloFederationFailure = () => ({
+  type: TOGGLE_APOLLO_FEDERATION_FAILURE,
+});
+
+const toggleApolloFederationSuccess = () => ({
+  type: TOGGLE_APOLLO_FEDERATION_SUCCESS,
 });
 
 const setForeignKeys = fks => ({
@@ -1767,6 +1781,79 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
 
   const customOnError = () => {
     dispatch(toggleEnumFailure());
+
+    if (failureCallback) {
+      failureCallback();
+    }
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    migration.upMigration,
+    migration.downMigration,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const toggleAsApollofederation = (
+  isApolloFederationSupported,
+  successCallback,
+  failureCallback
+) => (dispatch, getState) => {
+  const confirmMessage = `This will ${
+    isApolloFederationSupported ? 'disable' : 'add'
+  } the apollo federation support for the table`;
+  const isOk = getConfirmation(confirmMessage);
+  if (!isOk) {
+    return;
+  }
+
+  dispatch({ type: TOGGLE_APOLLO_FEDERATION });
+
+  const { currentTable, currentSchema, currentDataSource } = getState().tables;
+  const migration = new Migration();
+  migration.add(
+    getSetTableApolloFederationQuery(
+      generateTableDef(currentTable, currentSchema),
+      !isApolloFederationSupported,
+      currentDataSource
+    ),
+    getSetTableApolloFederationQuery(
+      generateTableDef(currentTable, currentSchema),
+      isApolloFederationSupported,
+      currentDataSource
+    )
+  );
+
+  const migrationName =
+    'alter_table_' +
+    currentSchema +
+    '_' +
+    currentTable +
+    '_set_apollo_federation_' +
+    !isApolloFederationSupported;
+
+  const action = !isApolloFederationSupported ? 'enabled' : 'disabled';
+  const requestMsg = `Enabling apollo federation support...`;
+  const successMsg = `Apollo federation support is successful ${action}`;
+  const errorMsg = `Enabling apollo federation support failed`;
+
+  const customOnSuccess = () => {
+    if (successCallback) {
+      successCallback();
+    }
+
+    dispatch(toggleApolloFederationSuccess());
+  };
+
+  const customOnError = () => {
+    dispatch(toggleApolloFederationFailure());
 
     if (failureCallback) {
       failureCallback();

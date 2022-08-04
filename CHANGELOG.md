@@ -6,6 +6,8 @@
 
 
 - server: add warning log for missing admin secret
+- server: add metadata API to enable Apollo Federation for a table
+- console: add console support for Apollo Federation
 - console: add custom names for streaming subscriptions
 ## v2.10.0-beta.1
 

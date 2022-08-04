@@ -39,6 +39,7 @@ data RQLMetadataV1
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMUntrackTable !(AnyBackend UntrackTable)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
+  | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
   | -- Tables (PG-specific)
     RMPgSetTableIsEnum !SetTableIsEnum
   | -- Tables permissions

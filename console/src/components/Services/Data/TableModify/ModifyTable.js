@@ -9,6 +9,7 @@ import {
   RESET,
   setUniqueKeys,
   toggleTableAsEnum,
+  toggleAsApollofederation,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
@@ -54,6 +55,7 @@ import FeatureDisabled from '../FeatureDisabled';
 import IndexFields from './IndexFields';
 import PartitionInfo from './PartitionInfo';
 import { FaFlask } from 'react-icons/fa';
+import { ApolloFederationSupport } from '../Common/Components/ApolloFederationSupport';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -168,6 +170,9 @@ class ModifyTable extends React.Component {
         </React.Fragment>
       );
     };
+
+    const toggleApollofederation = () =>
+      dispatch(toggleAsApollofederation(table.is_apollo_federation_supported));
 
     return (
       <RightContainer>
@@ -397,6 +402,13 @@ class ModifyTable extends React.Component {
               )}
               {isFeatureSupported('tables.modify.setAsEnum') &&
                 getEnumsSection()}
+
+              <ApolloFederationSupport
+                toggleApollofederation={toggleApollofederation}
+                isApolloFederationSupported={
+                  table.is_apollo_federation_supported
+                }
+              />
 
               <div className="mb-lg">
                 {isFeatureSupported('tables.modify.untrack') && untrackBtn}

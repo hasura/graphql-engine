@@ -66,6 +66,7 @@ export interface TableConfig {
 export interface TableEntry {
   table: QualifiedTable;
   is_enum?: boolean;
+  apollo_federation_config?: { enable: 'v1' };
   configuration?: TableConfig;
   event_triggers?: EventTrigger[];
   computed_fields?: ComputedField[];
