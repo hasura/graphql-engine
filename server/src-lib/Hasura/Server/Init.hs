@@ -7,8 +7,16 @@
 -- This module is intended as the interface for options parsing and
 -- its submodules should not need to be imported directly.
 module Hasura.Server.Init
-  ( -- TODO(SOLOMON): Reduce API surface area drastically.
-    module Hasura.Server.Init,
+  ( -- * Option Fetching and Merging
+    mkHGEOptions,
+    mkServeOptions,
+    processPostgresConnInfo,
+
+    -- * Metadata DB
+    getDbId,
+    getPgVersion,
+
+    -- * Re-exports
     module Hasura.Server.Init.Config,
     module Hasura.Server.Init.Env,
     module Hasura.Server.Init.Arg,
@@ -18,88 +26,50 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as Aeson
-import Data.HashSet qualified as Set
-import Data.Text qualified as T
-import Database.PG.Query qualified as Q
-import Hasura.Backends.Postgres.Connection qualified as PG
+import Data.HashSet qualified as HashSet
+import Data.Text qualified as Text
+import Database.PG.Query (TxE)
+import Database.PG.Query qualified as Query
+import Hasura.Backends.Postgres.Connection qualified as Connection
+import Hasura.Base.Error (QErr)
 import Hasura.Base.Error qualified as Error
 import Hasura.Eventing.EventTrigger qualified as EventTrigger
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Logging qualified as L
+import Hasura.Logging (EnabledLogTypes)
+import Hasura.Logging qualified as Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Common qualified as RTC
+import Hasura.RQL.Types.Common (UrlConf)
+import Hasura.RQL.Types.Common qualified as Common
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg
 import Hasura.Server.Init.Config
 import Hasura.Server.Init.Env
 import Hasura.Server.Init.Logging
-import Hasura.Server.Logging qualified as Logging
+import Hasura.Server.Logging qualified as Server.Logging
+import Hasura.Server.Types (MetadataDbId)
 import Hasura.Server.Types qualified as Types
 import Hasura.Server.Utils qualified as Utils
-import Network.WebSockets qualified as WS
-
---------------------------------------------------------------------------------
--- TODO(SOLOMON): Where does this note belong?
-
-{- Note [ReadOnly Mode]
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This mode starts the server in a (database) read-only mode. That is, only
-read-only queries are allowed on users' database sources, and write
-queries throw a runtime error. The use-case is for failsafe operations.
-Metadata APIs are also disabled.
-
-Following is the precise behaviour -
-  1. For any GraphQL API (relay/hasura; http/websocket) - disable execution of
-  mutations
-  2. Metadata API is disabled
-  3. /v2/query API - insert, delete, update, run_sql are disabled
-  4. /v1/query API - insert, delete, update, run_sql are disabled
-  5. No source catalog migrations are run
-  6. During build schema cache phase, building event triggers are disabled (as
-  they create corresponding database triggers)
--}
+import Network.WebSockets qualified as WebSockets
 
 --------------------------------------------------------------------------------
 
--- | Query the Metadata DB for the catalog version.
---
--- NOTE: Is this the appropriate module for this?
-getDbId :: Q.TxE Error.QErr Types.MetadataDbId
+-- | Query the Metadata DB for the Metadata DB UUID.
+-- TODO: Move into a dedicated Metadata module (ala Pro).
+getDbId :: TxE QErr MetadataDbId
 getDbId =
-  Types.MetadataDbId . runIdentity . Q.getRow
-    <$> Q.withQE
-      PG.defaultTxErrorHandler
-      [Q.sql|
+  Types.MetadataDbId . runIdentity . Query.getRow
+    <$> Query.withQE
+      Connection.defaultTxErrorHandler
+      [Query.sql|
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
   |]
       ()
       False
 
-getPgVersion :: Q.TxE Error.QErr Types.PGVersion
-getPgVersion = Types.PGVersion <$> Q.serverVersion
-
-generateInstanceId :: IO Types.InstanceId
-generateInstanceId = Types.InstanceId <$> Utils.generateFingerprint
-
-data StartupTimeInfo = StartupTimeInfo
-  { _stiMessage :: !Text,
-    _stiTimeTaken :: !Double
-  }
-
-instance FromJSON StartupTimeInfo where
-  parseJSON = Aeson.withObject "StartupTimeInfo" \obj -> do
-    _stiMessage <- obj Aeson..: "message"
-    _stiTimeTaken <- obj Aeson..: "time_taken"
-    pure StartupTimeInfo {..}
-
-instance ToJSON StartupTimeInfo where
-  toJSON StartupTimeInfo {..} =
-    Aeson.object ["message" Aeson..= _stiMessage, "time_taken" Aeson..= _stiTimeTaken]
+getPgVersion :: Query.TxE Error.QErr Types.PGVersion
+getPgVersion = Types.PGVersion <$> Query.serverVersion
 
 --------------------------------------------------------------------------------
 
@@ -108,7 +78,7 @@ instance ToJSON StartupTimeInfo where
 -- command parser, then process the subcommand raw values if
 -- necessary.
 mkHGEOptions ::
-  L.EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
+  EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
 mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
   dbUrl <- processPostgresConnInfo rawDbUrl
   metadataDbUrl <- withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
@@ -127,7 +97,7 @@ mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
 -- vars.
 processPostgresConnInfo ::
   PostgresConnInfo (Maybe PostgresConnInfoRaw) ->
-  WithEnv (PostgresConnInfo (Maybe RTC.UrlConf))
+  WithEnv (PostgresConnInfo (Maybe UrlConf))
 processPostgresConnInfo PostgresConnInfo {..} = do
   withEnvRetries <- withEnv _pciRetries $ fst retriesNumEnv
   databaseUrl <- rawConnInfoToUrlConf _pciDatabaseConn
@@ -136,7 +106,7 @@ processPostgresConnInfo PostgresConnInfo {..} = do
 -- | A helper function for 'processPostgresConnInfo' which fetches
 -- postgres connection info from the 'WithEnv' and merges it with the
 -- arg parser result.
-rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe RTC.UrlConf)
+rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe UrlConf)
 rawConnInfoToUrlConf maybeRawConnInfo = do
   env <- ask
   let databaseUrlEnvVar = fst databaseUrlEnv
@@ -148,10 +118,10 @@ rawConnInfoToUrlConf maybeRawConnInfo = do
       if hasDatabaseUrlEnv
         then -- Consider env variable as is in order to store it as @`UrlConf`
         -- in default source configuration in metadata
-          Just $ RTC.UrlFromEnv $ T.pack databaseUrlEnvVar
+          Just $ Common.UrlFromEnv $ Text.pack databaseUrlEnvVar
         else Nothing
     Just databaseConn ->
-      Just . RTC.UrlValue . RTC.InputWebhook $ case databaseConn of
+      Just . Common.UrlValue . Common.InputWebhook $ case databaseConn of
         PGConnDatabaseUrl urlTemplate -> urlTemplate
         PGConnDetails connDetails -> rawConnDetailsToUrl connDetails
 
@@ -160,7 +130,7 @@ rawConnInfoToUrlConf maybeRawConnInfo = do
 
 -- | Merge the results of the serve subcommmand arg parser with
 -- corresponding values from the 'WithEnv' context.
-mkServeOptions :: L.EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
+mkServeOptions :: EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
 mkServeOptions rso = do
   port <- fromMaybe 8080 <$> withEnv (rsoPort rso) (fst servePortEnv)
 
@@ -168,9 +138,9 @@ mkServeOptions rso = do
 
   connParams <- mkConnParams $ rsoConnParams rso
 
-  txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsolationEnv)
+  txIso <- fromMaybe Query.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsolationEnv)
 
-  adminScrt <- fmap (maybe mempty Set.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
+  adminScrt <- fmap (maybe mempty HashSet.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
 
   authHook <- mkAuthHook $ rsoAuthHook rso
 
@@ -195,7 +165,7 @@ mkServeOptions rso = do
     fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
 
   enabledAPIs <-
-    Set.fromList . fromMaybe defaultEnabledAPIs
+    HashSet.fromList . fromMaybe defaultEnabledAPIs
       <$> withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
 
   lqOpts <- mkLQOpts
@@ -204,9 +174,9 @@ mkServeOptions rso = do
 
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
 
-  enabledLogs <- maybe L.defaultEnabledLogTypes Set.fromList <$> withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
+  enabledLogs <- maybe Logging.defaultEnabledLogTypes HashSet.fromList <$> withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
 
-  serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
+  serverLogLevel <- fromMaybe Logging.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
 
   devMode <- withEnvBool (rsoDevMode rso) $ fst graphqlDevModeEnv
 
@@ -237,15 +207,15 @@ mkServeOptions rso = do
   schemaPollInterval <- fromMaybe defaultSchemaPollInterval <$> withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
 
   let connectionOptions =
-        WS.defaultConnectionOptions
-          { WS.connectionCompressionOptions =
+        WebSockets.defaultConnectionOptions
+          { WebSockets.connectionCompressionOptions =
               if webSocketCompressionFromEnv
-                then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
-                else WS.NoCompression
+                then WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate
+                else WebSockets.NoCompression
           }
   webSocketKeepAlive <- fromMaybe defaultKeepAliveDelay <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
-  experimentalFeatures <- maybe mempty Set.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
+  experimentalFeatures <- maybe mempty HashSet.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
 
   inferFunctionPerms <- fromMaybe Options.InferFunctionPermissions <$> withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv)
 
@@ -264,7 +234,7 @@ mkServeOptions rso = do
     fromMaybe defaultWSConnectionInitTimeout <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
 
   enableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv rso of
-    Logging.MetadataQueryLoggingDisabled -> fromMaybe Logging.MetadataQueryLoggingDisabled <$> considerEnv (fst enableMetadataQueryLoggingEnv)
+    Server.Logging.MetadataQueryLoggingDisabled -> fromMaybe Server.Logging.MetadataQueryLoggingDisabled <$> considerEnv (fst enableMetadataQueryLoggingEnv)
     metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
 
   globalDefaultNamingCase <- withEnv (rsoDefaultNamingConvention rso) $ fst defaultNamingConventionEnv
@@ -324,7 +294,7 @@ mkServeOptions rso = do
       poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
       let allowCancel = True
       return $
-        Q.ConnParams
+        Query.ConnParams
           stripes
           conns
           iTime

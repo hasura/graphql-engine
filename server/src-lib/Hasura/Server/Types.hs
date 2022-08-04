@@ -1,6 +1,7 @@
 module Hasura.Server.Types
   ( ExperimentalFeature (..),
     InstanceId (..),
+    generateInstanceId,
     MetadataDbId (..),
     DbUid (..),
     mdDbIdToDbUid,
@@ -64,6 +65,10 @@ mdDbIdToDbUid = DbUid . getMetadataDbId
 
 newtype InstanceId = InstanceId {getInstanceId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
+
+-- | Generate an 'InstanceId' from a 'UUID'
+generateInstanceId :: IO InstanceId
+generateInstanceId = InstanceId <$> generateFingerprint
 
 data ExperimentalFeature
   = EFInheritedRoles
