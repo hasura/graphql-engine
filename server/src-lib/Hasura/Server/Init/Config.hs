@@ -33,7 +33,7 @@ module Hasura.Server.Init.Config
     API (..),
     KeepAliveDelay (..),
     OptionalInterval (..),
-    AuthHookRaw,
+    AuthHookRaw (..),
     ConnParamsRaw (..),
     ResponseInternalErrorsConfig (..),
     WSConnectionInitTimeout (..),
@@ -303,8 +303,10 @@ instance ToJSON API where
 
 instance Hashable API
 
--- TODO(SOLOMON): Monomorphize
-type AuthHookRaw = Auth.AuthHookG (Maybe Text) (Maybe Auth.AuthHookType)
+data AuthHookRaw = AuthHookRaw
+  { ahrUrl :: Maybe Text,
+    ahrType :: Maybe Auth.AuthHookType
+  }
 
 -- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')
 --   Presently @'msToOptionalInterval' interprets `0` as Skip.

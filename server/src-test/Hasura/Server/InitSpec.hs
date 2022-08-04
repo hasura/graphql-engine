@@ -16,7 +16,6 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.Server.Auth qualified as Auth
-import Hasura.Server.Auth qualified as UUT
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
@@ -51,7 +50,7 @@ emptyServeOptionsRaw =
           },
       rsoTxIso = Nothing,
       rsoAdminSecret = Nothing,
-      rsoAuthHook = UUT.AuthHookG Nothing Nothing,
+      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing,
       rsoJwtSecret = Nothing,
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
@@ -303,7 +302,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -316,11 +315,11 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTPost))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookG (Just "http://auth.hook.com") (Just UUT.AHTGet)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet)}
             -- When
             env =
               [ ("HASURA_GRAPHQL_AUTH_HOOK", "http://auth.hook.net"),
@@ -329,7 +328,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
 
     Hspec.describe "soJwtSecret" $ do
       Hspec.it "Env > Nothing" $ do
@@ -349,7 +348,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            jwtConfig = eitherToMaybe $ UUT.fromEnv @UUT.JWTConfig "{\"type\": \"HS256\", \"key\": \"22222222222222222222222222222222\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}"
+            jwtConfig = eitherToMaybe $ UUT.fromEnv @Auth.JWTConfig "{\"type\": \"HS256\", \"key\": \"22222222222222222222222222222222\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}"
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoJwtSecret = jwtConfig}
             -- When
             env =

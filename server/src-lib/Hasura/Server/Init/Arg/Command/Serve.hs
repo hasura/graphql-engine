@@ -277,7 +277,7 @@ accessKeyEnv =
 
 parseAuthHook :: Opt.Parser Config.AuthHookRaw
 parseAuthHook =
-  Auth.AuthHookG <$> url <*> urlType
+  Config.AuthHookRaw <$> url <*> urlType
   where
     url =
       Opt.optional $

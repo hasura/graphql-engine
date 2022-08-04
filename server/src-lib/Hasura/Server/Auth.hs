@@ -10,8 +10,7 @@ module Hasura.Server.Auth
 
     -- * WebHook related
     AuthHookType (..),
-    AuthHookG (..),
-    AuthHook,
+    AuthHook (..),
 
     -- * JWT related
     RawJWT,

@@ -1,7 +1,6 @@
 module Hasura.Server.Auth.WebHook
   ( AuthHookType (..),
-    AuthHookG (..),
-    AuthHook,
+    AuthHook (..),
     userInfoFromAuthHook,
   )
 where
@@ -38,13 +37,11 @@ instance Show AuthHookType where
   show AHTGet = "GET"
   show AHTPost = "POST"
 
-data AuthHookG a b = AuthHookG
-  { ahUrl :: !a,
-    ahType :: !b
+data AuthHook = AuthHook
+  { ahUrl :: Text,
+    ahType :: AuthHookType
   }
   deriving (Show, Eq)
-
-type AuthHook = AuthHookG Text AuthHookType
 
 hookMethod :: AuthHook -> HTTP.StdMethod
 hookMethod authHook = case ahType authHook of

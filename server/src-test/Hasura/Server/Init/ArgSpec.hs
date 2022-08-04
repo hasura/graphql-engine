@@ -491,7 +491,7 @@ serveParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap (Auth.ahUrl . UUT.rsoAuthHook) result `Hspec.shouldSatisfy` \case
+      fmap (UUT.ahrUrl . UUT.rsoAuthHook) result `Hspec.shouldSatisfy` \case
         Opt.Success ahUrl -> ahUrl == Just "http://www.auth.com"
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
@@ -517,7 +517,7 @@ serveParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap (Auth.ahType . UUT.rsoAuthHook) result `Hspec.shouldSatisfy` \case
+      fmap (UUT.ahrType . UUT.rsoAuthHook) result `Hspec.shouldSatisfy` \case
         Opt.Success ahType -> ahType == Just Auth.AHTPost
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
