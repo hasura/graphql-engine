@@ -35,23 +35,6 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
     title = 'Please wait...';
   }
 
-  // const getCompatibilityNote = () => {
-  //   return (
-  //     <div>
-  //       <i>
-  //         * The table must meet some requirements for you to set it as an enum.{' '}
-  //         <a
-  //           href={enumCompatibilityDocsUrl}
-  //           target="_blank"
-  //           rel="noopener noreferrer"
-  //         >
-  //           See requirements.
-  //         </a>
-  //       </i>
-  //     </div>
-  //   );
-  // };
-
   return (
     <div className="mb-lg">
       <div className="flex items-center mb-formlabel">

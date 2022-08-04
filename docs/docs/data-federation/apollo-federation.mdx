@@ -12,6 +12,7 @@ keywords:
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Apollo Federation support
 
@@ -49,6 +50,11 @@ type user @key(fields: "id") {
 }
 ```
 
+The Apollo Federation support in Hasura only allows extending other subgraphs with Hasura types. The other way i.e.
+extending Hasura types with other subgraphs is not possible currently. We recommend using
+[remote relationships](/remote-schemas/remote-relationships/index.mdx) for extending types from other subgraphs in
+Hasura.
+
 :::note Note
 
 Other types such as action types, remote schema types, etc. cannot be extended to other subgraphs.
@@ -58,7 +64,13 @@ Other types such as action types, remote schema types, etc. cannot be extended t
 <Tabs className="api-tabs">
   <TabItem value="console" label="Console">
 
-_Hasura Console support will be added soon._
+Head to the `Data -> [table-name] -> Modify` tab in the console and toggle the switch in the `Enable Apollo Federation`
+section:
+
+<Thumbnail
+  src="/img/graphql/core/data-federation/apollo-federation-enable.png"
+  alt="Set table as enum"
+/>
 
   </TabItem>
   <TabItem value="cli" label="CLI">
@@ -85,7 +97,7 @@ hasura metadata apply
   <TabItem value="api" label="API">
 
 To extend the types using the [Hasura Metadata API](/api-reference/metadata-api/table-view.mdx), you can to enable
-it with the particular `*_track_table` call:
+it with the particular `*_set_apollo_federation_config` call:
 
 ```http {16-18}
 POST /v1/metadata HTTP/1.1
@@ -93,10 +105,10 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_table",
+  "type": "pg_set_apollo_federation_config",
   "args": {
+    "source": "<source_name>",
     "table": "<table_name>",
-    "schema": "<schema_name>",
     "apollo_federation_config": {
       "enable": "v1"
     }

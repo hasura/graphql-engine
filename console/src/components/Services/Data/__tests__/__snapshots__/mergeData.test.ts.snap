@@ -35,6 +35,7 @@ Array [
     "computed_fields": Array [],
     "configuration": Object {},
     "foreign_key_constraints": Array [],
+    "is_apollo_federation_supported": false,
     "is_enum": false,
     "is_table_tracked": true,
     "opp_foreign_key_constraints": Array [
@@ -144,6 +145,7 @@ Array [
         "table_schema": "public",
       },
     ],
+    "is_apollo_federation_supported": false,
     "is_enum": false,
     "is_table_tracked": true,
     "opp_foreign_key_constraints": Array [],
@@ -211,6 +213,7 @@ Array [
     "computed_fields": Array [],
     "configuration": Object {},
     "foreign_key_constraints": Array [],
+    "is_apollo_federation_supported": false,
     "is_enum": false,
     "is_table_tracked": true,
     "opp_foreign_key_constraints": Array [],
