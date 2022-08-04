@@ -14,6 +14,7 @@ else
 fi
 
 PG_PASSWORD=postgres
+PG_VOLUME_NAME='hasura-dev-postgres'
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
 PG_DB_URL="postgresql://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
 PG_DOCKER="docker exec -u postgres -it $PG_CONTAINER_NAME psql $PG_DB_URL"
@@ -65,14 +66,17 @@ CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
 #     Functions      #
 ######################
 
-function pg_launch_container(){
+function pg_launch_container {
   echo_pretty "Launching postgres container: $PG_CONTAINER_NAME"
+  docker volume create "$PG_VOLUME_NAME"
   docker run \
     --name "$PG_CONTAINER_NAME" \
-    -p 127.0.0.1:"$PG_PORT":$PG_PORT \
+    --publish "127.0.0.1:${PG_PORT}:${PG_PORT}" \
     --expose="$PG_PORT" \
-    -e POSTGRES_PASSWORD="$PG_PASSWORD" \
-    -d "$PG_CONTAINER_IMAGE" \
+    --volume="${PG_VOLUME_NAME}:/var/lib/postgresql/data" \
+    --env=POSTGRES_PASSWORD="$PG_PASSWORD" \
+    --detach \
+    "$PG_CONTAINER_IMAGE" \
     $CONF_FLAGS
 
   # graphql-engine calls the pg_dump executable. To avoid a version mismatch (and
@@ -101,7 +105,7 @@ function pg_wait {
   echo " Ok"
 }
 
-function pg_cleanup(){
+function pg_cleanup {
   # Since scripts here are tailored to the env we've just launched:
   rm -r "$DEV_SHIM_PATH"
 
@@ -110,4 +114,5 @@ function pg_cleanup(){
   read -t5 || true
   docker stop "$PG_CONTAINER_NAME"
   docker rm -v "$PG_CONTAINER_NAME"
+  docker volume rm "$PG_VOLUME_NAME"
 }
