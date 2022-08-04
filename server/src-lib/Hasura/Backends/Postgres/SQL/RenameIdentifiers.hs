@@ -85,7 +85,7 @@ prefixHash (Identifier name) =
     if T.length name > 63
       then
         let hash = T.decodeUtf8 . Base16.encode . MD5.hash . T.encodeUtf8 $ name
-         in hash <> "_" <> name
+         in "md5_" <> hash <> "_" <> name
       else name
 
 ------------------------------------------------

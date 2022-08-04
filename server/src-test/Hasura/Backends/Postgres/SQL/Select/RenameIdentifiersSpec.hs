@@ -220,11 +220,11 @@ simpleQueries =
                 "_e"
                 "_root.base"
                 "_e"
-                "c4da2dba0563dfc8fb91b8480b624b93__root.or.author_with_a_very_long_name_that_is_almost_63_characters_long.base"
-                "03bb88dfd239383315424d089039209c__root_or_author_with_a_very_long_name_that_is_almost_63_characters_long"
+                "md5_c4da2dba0563dfc8fb91b8480b624b93__root.or.author_with_a_very_long_name_that_is_almost_63_characters_long.base"
+                "md5_03bb88dfd239383315424d089039209c__root_or_author_with_a_very_long_name_that_is_almost_63_characters_long"
                 "_root"
-                "0a05b89ec186374db29e23e032db5417_root.or.author_with_a_very_long_name_that_is_almost_63_characters_long.pg.name"
-                "bd48f5a68cba955aa3eb9edb769b8596_root.or.author_with_a_very_long_name_that_is_almost_63_characters_long.pg.id"
+                "md5_0a05b89ec186374db29e23e032db5417_root.or.author_with_a_very_long_name_that_is_almost_63_characters_long.pg.name"
+                "md5_bd48f5a68cba955aa3eb9edb769b8596_root.or.author_with_a_very_long_name_that_is_almost_63_characters_long.pg.id"
             )
 
       renameIdentifiers input `shouldBe` expected
@@ -344,10 +344,10 @@ simpleQueries =
                 "_root.ar.root.these_are_such_nice_articles_honest"
                 "_root.ar.root.these_are_such_nice_articles_honest"
                 "_root.ar.root.these_are_such_nice_articles_honest"
-                "ac1b16cded5dd05d0da14065dd60aff0_root.ar.root.these_are_such_nice_articles_honest.pg.published_on"
+                "md5_ac1b16cded5dd05d0da14065dd60aff0_root.ar.root.these_are_such_nice_articles_honest.pg.published_on"
                 "_root"
                 "root.ar.root.these_are_such_nice_articles_honest.pg.content"
-                "ac1b16cded5dd05d0da14065dd60aff0_root.ar.root.these_are_such_nice_articles_honest.pg.published_on"
+                "md5_ac1b16cded5dd05d0da14065dd60aff0_root.ar.root.these_are_such_nice_articles_honest.pg.published_on"
             )
 
       renameIdentifiers input `shouldBe` expected
