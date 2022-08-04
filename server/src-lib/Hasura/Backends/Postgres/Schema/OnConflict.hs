@@ -137,7 +137,7 @@ conflictConstraint ::
   TableInfo ('Postgres pgKind) ->
   m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 conflictConstraint constraints sourceInfo tableInfo =
-  memoizeOn 'conflictConstraint (_siName sourceInfo, tableName) $ do
+  P.memoizeOn 'conflictConstraint (_siName sourceInfo, tableName) $ do
     tableGQLName <- getTableGQLName tableInfo
     constraintEnumValues <- for
       constraints

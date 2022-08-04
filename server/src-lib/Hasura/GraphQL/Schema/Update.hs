@@ -193,7 +193,7 @@ setOp ::
     Has MkTypename r,
     Has NamingCase r,
     MonadError QErr m,
-    P.MonadSchema n m
+    P.MonadParse n
   ) =>
   UpdateOperator b m n (UnpreparedValue b)
 setOp = UpdateOperator {..}
@@ -220,7 +220,7 @@ incOp ::
   ( Backend b,
     MonadReader r m,
     MonadError QErr m,
-    P.MonadSchema n m,
+    P.MonadParse n,
     BackendSchema b,
     Has MkTypename r,
     Has NamingCase r

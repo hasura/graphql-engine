@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.SubscriptionStream
   )
 where
 
+import Control.Monad.Memoize
 import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended ((<>>))
@@ -58,7 +59,7 @@ cursorBatchSizeArg tCase =
 -- > }
 cursorOrderingArgParser ::
   forall n m r.
-  (MonadSchema n m, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
+  (MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
   m (Parser 'Both n CursorOrdering)
 cursorOrderingArgParser = do
   tCase <- asks getter
@@ -84,7 +85,7 @@ cursorOrderingArgParser = do
 -- > ordering: cursor_ordering
 cursorOrderingArg ::
   forall n m r.
-  (MonadSchema n m, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
+  (MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
   m (InputFieldsParser n (Maybe CursorOrdering))
 cursorOrderingArg = do
   cursorOrderingParser' <- cursorOrderingArgParser
@@ -95,7 +96,7 @@ cursorOrderingArg = do
 -- > column_name: column_type
 streamColumnParserArg ::
   forall b n m r.
-  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   ColumnInfo b ->
   m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
 streamColumnParserArg colInfo = do
@@ -117,7 +118,7 @@ streamColumnParserArg colInfo = do
 -- > }
 streamColumnValueParser ::
   forall b n m r.
-  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   SourceInfo b ->
   G.Name ->
   [ColumnInfo b] ->
@@ -136,7 +137,8 @@ streamColumnValueParser sourceInfo tableGQLName colInfos =
 streamColumnValueParserArg ::
   forall b n m r.
   ( BackendSchema b,
-    MonadSchema n m,
+    MonadMemoize m,
+    MonadParse n,
     Has MkTypename r,
     MonadReader r m,
     MonadError QErr m,
@@ -158,7 +160,7 @@ streamColumnValueParserArg sourceInfo tableGQLName colInfos = do
 -- >
 tableStreamColumnArg ::
   forall n m r b.
-  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   SourceInfo b ->
   G.Name ->
   [ColumnInfo b] ->

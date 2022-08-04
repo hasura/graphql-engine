@@ -52,8 +52,8 @@ import Hasura.GraphQL.Schema.Parser
     FieldParser,
     InputFieldsParser,
     Kind (..),
+    MonadMemoize,
     MonadParse,
-    MonadSchema,
     Parser,
     memoize,
   )
@@ -358,7 +358,7 @@ buildFunctionRelayQueryFields mkRootFieldName sourceName functionName functionIn
 -- Individual components
 
 columnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType ('Postgres pgKind) ->
   G.Nullability ->
   m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue ('Postgres pgKind))))
@@ -471,7 +471,8 @@ orderByOperators tCase =
 comparisonExps ::
   forall pgKind m n r.
   ( BackendSchema ('Postgres pgKind),
-    MonadSchema n m,
+    MonadMemoize m,
+    MonadParse n,
     MonadError QErr m,
     MonadReader r m,
     Has SchemaOptions r,
@@ -801,7 +802,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
 
 geographyWithinDistanceInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue ('Postgres pgKind))))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar PGGeography) (G.Nullability False)
@@ -821,7 +822,7 @@ geographyWithinDistanceInput = do
 
 geometryWithinDistanceInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeomOp (IR.UnpreparedValue ('Postgres pgKind))))
 geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -833,7 +834,7 @@ geometryWithinDistanceInput = do
 
 intersectsNbandGeomInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (STIntersectsNbandGeommin (IR.UnpreparedValue ('Postgres pgKind))))
 intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -845,7 +846,7 @@ intersectsNbandGeomInput = do
 
 intersectsGeomNbandInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (STIntersectsGeomminNband (IR.UnpreparedValue ('Postgres pgKind))))
 intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -880,7 +881,7 @@ prependOp ::
   ( BackendSchema ('Postgres pgKind),
     MonadReader r m,
     MonadError QErr m,
-    MonadSchema n m,
+    MonadParse n,
     Has MkTypename r,
     Has NamingCase r
   ) =>
@@ -915,7 +916,7 @@ appendOp ::
   ( BackendSchema ('Postgres pgKind),
     MonadReader r m,
     MonadError QErr m,
-    MonadSchema n m,
+    MonadParse n,
     Has MkTypename r,
     Has NamingCase r
   ) =>
@@ -950,7 +951,7 @@ deleteKeyOp ::
   ( BackendSchema ('Postgres pgKind),
     MonadReader r m,
     MonadError QErr m,
-    MonadSchema n m,
+    MonadParse n,
     Has MkTypename r,
     Has NamingCase r
   ) =>
@@ -981,7 +982,7 @@ deleteElemOp ::
   ( BackendSchema ('Postgres pgKind),
     MonadReader r m,
     MonadError QErr m,
-    MonadSchema n m,
+    MonadParse n,
     Has MkTypename r,
     Has NamingCase r
   ) =>
@@ -1014,7 +1015,7 @@ deleteAtPathOp ::
   ( BackendSchema ('Postgres pgKind),
     MonadReader r m,
     MonadError QErr m,
-    MonadSchema n m,
+    MonadParse n,
     Has MkTypename r,
     Has NamingCase r
   ) =>

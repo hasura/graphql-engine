@@ -87,12 +87,12 @@ experimentalBuildTableRelayQueryFields ::
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
   NESeq (RQL.ColumnInfo 'DataConnector) ->
-  m [a]
+  m [P.FieldParser n a]
 experimentalBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 columnParser' ::
-  (MonadSchema n m, MonadError QErr m) =>
+  (MonadParse n, MonadError QErr m) =>
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
   m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
@@ -132,7 +132,8 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
 comparisonExps' ::
   forall m n r.
   ( BackendSchema 'DataConnector,
-    MonadSchema n m,
+    P.MonadMemoize m,
+    MonadParse n,
     MonadError QErr m,
     MonadReader r m,
     Has SchemaOptions r,
@@ -145,15 +146,12 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
   collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
 
   typedParser <- columnParser' columnType (GQL.Nullability False)
-  nullableTextParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability True)
-  textParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability False)
   let name = P.getName typedParser <> $$(GQL.litName "_Dynamic_comparison_exp")
       desc =
         GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
-      textListParser = fmap IR.openValueOrigin <$> P.list textParser
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
   pure $
     P.object name (Just desc) $

@@ -56,6 +56,9 @@ module Hasura.GraphQL.Schema.Parser
     P.ParseErrorCode (..),
     toQErr,
     module Hasura.GraphQL.Parser,
+    Memoize.MonadMemoize,
+    memoizeOn,
+    memoize,
   )
 where
 
@@ -63,6 +66,8 @@ where
 -- this module.
 
 import Control.Monad.Error.Class
+import Control.Monad.Memoize qualified as Memoize
+import Data.Typeable
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (ErrorMessage (fromErrorMessage))
 import Hasura.GraphQL.Parser hiding
@@ -85,6 +90,7 @@ import Hasura.GraphQL.Parser hiding
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Object
+import Language.Haskell.TH qualified as TH
 
 type FieldParser = P.FieldParser MetadataObjId
 
@@ -132,3 +138,30 @@ toQErr = either (throwError . parseErrorToQErr) pure
     parseErrorCodeToCode P.ParseFailed = ParseFailed
     parseErrorCodeToCode P.ConflictingDefinitionsError = Unexpected
     parseErrorCodeToCode P.NotSupported = NotSupported
+
+memoizeOn ::
+  (Memoize.MonadMemoize m, Ord a, Typeable a, Typeable p, MonadParse n, Typeable b) =>
+  -- | A unique name used to identify the function being memoized. There isn’t
+  -- really any metaprogramming going on here, we just use a Template Haskell
+  -- 'TH.Name' as a convenient source for a static, unique identifier.
+  TH.Name ->
+  -- | The value to use as the memoization key. It’s the caller’s
+  -- responsibility to ensure multiple calls to the same function don’t use
+  -- the same key.
+  a ->
+  -- | The value to be memoized. 'p' is intended to be either 'Parser k' or
+  -- 'FieldParser'.
+  m (p n b) ->
+  m (p n b)
+memoizeOn = Memoize.memoizeOn
+
+-- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
+-- as the key.
+memoize ::
+  (Memoize.MonadMemoize m, Ord a, Typeable a, Typeable p, MonadParse n, Typeable b) =>
+  TH.Name ->
+  -- | A function generating something to be memoized. 'p' is intended to be
+  -- either 'Parser k' or 'FieldParser'.
+  (a -> m (p n b)) ->
+  (a -> m (p n b))
+memoize = Memoize.memoize

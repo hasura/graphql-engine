@@ -980,14 +980,6 @@ customizeRemoteNamespace remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fie
          in IR.RemoteSchemaRootField remoteSchemaInfo resultCustomizer $ IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
     mkNamespaceTypename = MkTypename $ const $ runMkTypename (remoteSchemaCustomizeTypeName rsCustomizer) rootTypeName
 
-{-
-NOTE: Unused. Should we remove?
-type MonadBuildRemoteSchema r m n = (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has CustomizeRemoteFieldName r)
-
-runMonadBuildRemoteSchema :: Monad m => SchemaT n (ReaderT (MkTypename, CustomizeRemoteFieldName) m) a -> m a
-runMonadBuildRemoteSchema m = flip runReaderT (mempty, mempty) $ runSchemaT m
--}
-
 withRemoteSchemaCustomization ::
   forall m r a.
   (MonadReader r m, Has MkTypename r, Has CustomizeRemoteFieldName r) =>

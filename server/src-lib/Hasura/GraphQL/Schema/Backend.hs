@@ -60,8 +60,6 @@ import Hasura.SQL.Backend
 import Hasura.Server.Types (StreamingSubscriptionsCtx)
 import Language.GraphQL.Draft.Syntax qualified as G
 
--- TODO: Might it make sense to add those constraints to MonadSchema directly?
-
 -- | Bag of constraints available to the methods of @BackendSchema@.
 --
 -- Note that @BackendSchema b@ is itself part of this, so a methods may also
@@ -211,7 +209,7 @@ class
 
   -- individual components
   columnParser ::
-    (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+    (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
     ColumnType b ->
     G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
     m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))

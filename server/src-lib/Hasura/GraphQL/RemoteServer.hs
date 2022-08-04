@@ -9,6 +9,7 @@ where
 import Control.Arrow.Extended (left)
 import Control.Exception (try)
 import Control.Lens (set, (^.))
+import Control.Monad.Memoize
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
@@ -20,7 +21,7 @@ import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Monad (Parse, runSchemaT)
+import Hasura.GraphQL.Parser.Monad (Parse)
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
@@ -82,7 +83,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   -- quickly reject an invalid schema.
   void $
     flip runReaderT minimumValidContext $
-      runSchemaT $
+      runMemoizeT $
         buildRemoteParser @_ @_ @Parse
           _rscIntroOriginal
           _rscRemoteRelationships

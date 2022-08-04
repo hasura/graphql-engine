@@ -54,7 +54,7 @@ boolExp ::
   SourceInfo b ->
   TableInfo b ->
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
+boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
   name <- mkTypename $ tableGQLName <> Name.__bool_exp
   let description =

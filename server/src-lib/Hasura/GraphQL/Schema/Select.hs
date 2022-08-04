@@ -107,7 +107,7 @@ defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
   roleName <- retrieve scRole
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   selectionSetParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
-  lift $ memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableArgsParser <- tableArguments sourceInfo tableInfo
     pure $
@@ -165,7 +165,7 @@ selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = r
   xRelayInfo <- hoistMaybe $ relayExtension @b
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   selectionSetParser <- fmap P.nonNullableParser <$> MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
-  lift $ memoizeOn 'selectTableConnection (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'selectTableConnection (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     selectArgsParser <- tableConnectionArgs pkeyColumns sourceInfo tableInfo
     pure $
@@ -217,7 +217,7 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
   primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
   selectionSetParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   guard $ all (\c -> ciColumn c `Map.member` spiCols selectPermissions) primaryKeys
-  lift $ memoizeOn 'selectTableByPk (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'selectTableByPk (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     argsParser <-
       sequenceA <$> for primaryKeys \columnInfo -> do
@@ -272,7 +272,7 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
   guard $ spiAllowAgg selectPermissions
   xNodesAgg <- hoistMaybe $ nodesAggExtension @b
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
-  lift $ memoizeOn 'defaultSelectTableAggregate (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'defaultSelectTableAggregate (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableGQLName <- getTableGQLName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
@@ -383,7 +383,7 @@ defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
   -- incomplete selection set, we fail early and return 'Nothing'. This check
   -- must happen first, since we can't memoize a @Maybe Parser@.
   guard $ isHasuraSchema schemaKind || isJust (relayExtension @b)
-  lift $ memoizeOn 'defaultTableSelectionSet (sourceName, tableName) do
+  lift $ P.memoizeOn 'defaultTableSelectionSet (sourceName, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectTypename <- mkTypename tableGQLName
     let xRelay = relayExtension @b
@@ -484,7 +484,7 @@ tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
   tableGQLName <- lift $ getTableGQLName tableInfo
   void $ hoistMaybe $ tableSelectPermissions roleName tableInfo
   edgesParser <- MaybeT $ tableEdgesSelectionSet tableGQLName
-  lift $ memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
+  lift $ P.memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
     connectionTypeName <- mkTypename $ tableGQLName <> Name._Connection
     let pageInfo =
           P.subselection_
@@ -870,7 +870,7 @@ tableAggregationFields ::
   TableInfo b ->
   m (Parser 'Output n (IR.AggregateFields b))
 tableAggregationFields sourceInfo tableInfo =
-  memoizeOn 'tableAggregationFields (_siName sourceInfo, tableInfoName tableInfo) do
+  P.memoizeOn 'tableAggregationFields (_siName sourceInfo, tableInfoName tableInfo) do
     tableGQLName <- getTableGQLName tableInfo
     tCase <- asks getter
     allColumns <- tableSelectColumns sourceInfo tableInfo

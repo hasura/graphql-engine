@@ -30,8 +30,8 @@ import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
     Kind (..),
+    MonadMemoize,
     MonadParse,
-    MonadSchema,
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
@@ -106,7 +106,7 @@ msBuildTableRelayQueryFields ::
   TableInfo 'MSSQL ->
   C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'MSSQL) ->
-  m [a]
+  m [P.FieldParser n a]
 msBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
@@ -162,7 +162,7 @@ msBuildFunctionQueryFields ::
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
-  m [a]
+  m [P.FieldParser n a]
 msBuildFunctionQueryFields _ _ _ _ _ =
   pure []
 
@@ -174,7 +174,7 @@ msBuildFunctionRelayQueryFields ::
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   NESeq (ColumnInfo 'MSSQL) ->
-  m [a]
+  m [P.FieldParser n a]
 msBuildFunctionRelayQueryFields _mkRootFieldName _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
@@ -185,7 +185,7 @@ msBuildFunctionMutationFields ::
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
-  m [a]
+  m [P.FieldParser n a]
 msBuildFunctionMutationFields _ _ _ _ _ =
   pure []
 
@@ -241,7 +241,7 @@ msMkRelationshipParser _sourceName _relationshipInfo = do
 -- * Individual components
 
 msColumnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'MSSQL ->
   G.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
@@ -340,7 +340,8 @@ msOrderByOperators _tCase =
 msComparisonExps ::
   forall m n r.
   ( BackendSchema 'MSSQL,
-    MonadSchema n m,
+    MonadMemoize m,
+    MonadParse n,
     MonadError QErr m,
     MonadReader r m,
     Has SchemaOptions r,
@@ -355,10 +356,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
   -- parsers used for individual values
   typedParser <- columnParser columnType (G.Nullability False)
-  _nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
-  textParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability False)
   let columnListParser = fmap openValueOrigin <$> P.list typedParser
-      _textListParser = fmap openValueOrigin <$> P.list textParser
 
   -- field info
   let name = P.getName typedParser <> Name.__MSSQL_comparison_exp

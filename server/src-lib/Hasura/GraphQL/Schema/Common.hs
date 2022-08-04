@@ -101,7 +101,8 @@ isHasuraSchema = \case
 type MonadBuildSchemaBase r m n =
   ( MonadError QErr m,
     MonadReader r m,
-    P.MonadSchema n m,
+    P.MonadMemoize m,
+    P.MonadParse n,
     Has SchemaOptions r,
     Has SchemaContext r,
     -- TODO: make all `Has x r` explicit fields of 'SchemaContext'

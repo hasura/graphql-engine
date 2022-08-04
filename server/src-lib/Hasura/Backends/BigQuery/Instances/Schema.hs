@@ -25,8 +25,8 @@ import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
     Kind (..),
+    MonadMemoize,
     MonadParse,
-    MonadSchema,
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
@@ -95,7 +95,7 @@ bqBuildTableRelayQueryFields ::
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'BigQuery) ->
-  m [a]
+  m [P.FieldParser n a]
 bqBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
@@ -107,7 +107,7 @@ bqBuildTableInsertMutationFields ::
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
-  m [a]
+  m [P.FieldParser n a]
 bqBuildTableInsertMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
@@ -119,7 +119,7 @@ bqBuildTableUpdateMutationFields ::
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
-  m [a]
+  m [P.FieldParser n a]
 bqBuildTableUpdateMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
@@ -131,7 +131,7 @@ bqBuildTableDeleteMutationFields ::
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
-  m [a]
+  m [P.FieldParser n a]
 bqBuildTableDeleteMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
@@ -142,7 +142,7 @@ bqBuildFunctionQueryFields ::
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
-  m [a]
+  m [P.FieldParser n a]
 bqBuildFunctionQueryFields _ _ _ _ _ =
   pure []
 
@@ -154,7 +154,7 @@ bqBuildFunctionRelayQueryFields ::
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   NESeq (ColumnInfo 'BigQuery) ->
-  m [a]
+  m [P.FieldParser n a]
 bqBuildFunctionRelayQueryFields _mkRootFieldName _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
@@ -165,7 +165,7 @@ bqBuildFunctionMutationFields ::
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
-  m [a]
+  m [P.FieldParser n a]
 bqBuildFunctionMutationFields _ _ _ _ _ =
   pure []
 
@@ -173,7 +173,7 @@ bqBuildFunctionMutationFields _ _ _ _ _ =
 -- Individual components
 
 bqColumnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'BigQuery ->
   G.Nullability ->
   m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
@@ -283,7 +283,6 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   tCase <- asks getter
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
-  _nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
   -- textParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
   let name = P.getName typedParser <> Name.__BigQuery_comparison_exp
       desc =
@@ -404,7 +403,7 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
