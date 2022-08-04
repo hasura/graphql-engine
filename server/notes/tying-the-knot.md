@@ -1,8 +1,8 @@
-This note is in [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L16).
+This note is in [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L23).
 It is referenced at:
-  - line 84 of [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L84)
+  - line 89 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L89)
+  - line 189 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L189)
   - line 56 of [Hasura.GraphQL.Parser.Internal.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Types.hs#L56)
-  - line 103 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L103)
   - line 411 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L411)
   - line 833 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L833)
   - line 852 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L852)
@@ -65,7 +65,7 @@ tricky, and it would require a lot of inversion of control to thread the shared
 parsers around.
 
 To avoid contorting the program, we instead implement a form of memoization. The
-MonadSchema class provides a mechanism to memoize a parser constructor function,
+MonadMemoize class provides a mechanism to memoize a parser constructor function,
 which allows us to get sharing mostly for free. The memoization strategy also
 annotates cached parsers with a Unique that can be used to break cycles while
 traversing the graph, so we get observable sharing as well.

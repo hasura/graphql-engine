@@ -11,14 +11,14 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier">FieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier">getFieldNameTxt</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier">PostgresKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">class</span><span> </span><span id="PostgresAnnotatedFieldJSON"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-var">PostgresAnnotatedFieldJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689515818"><span class="annot"><a href="#local-6989586621689515818"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">class</span><span> </span><span id="PostgresAnnotatedFieldJSON"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-var">PostgresAnnotatedFieldJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516061"><span class="annot"><a href="#local-6989586621689516061"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-15"></span><span>  </span><span id="annRowToJson"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#annRowToJson"><span class="hs-identifier hs-type">annRowToJson</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621689515789"><span class="annot"><span class="annottext">annRowToJson :: FieldName -&gt; [(FieldName, SQLExp)] -&gt; (ColumnAlias, SQLExp)
-</span><a href="#local-6989586621689515789"><span class="hs-identifier hs-var hs-var hs-var hs-var">annRowToJson</span></a></span></span><span> </span><span id="local-6989586621689515788"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515788"><span class="hs-identifier hs-var">fieldAlias</span></a></span></span><span> </span><span id="local-6989586621689515787"><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
-</span><a href="#local-6989586621689515787"><span class="hs-identifier hs-var">fieldExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621689516032"><span class="annot"><span class="annottext">annRowToJson :: FieldName -&gt; [(FieldName, SQLExp)] -&gt; (ColumnAlias, SQLExp)
+</span><a href="#local-6989586621689516032"><span class="hs-identifier hs-var hs-var hs-var hs-var">annRowToJson</span></a></span></span><span> </span><span id="local-6989586621689516031"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689516031"><span class="hs-identifier hs-var">fieldAlias</span></a></span></span><span> </span><span id="local-6989586621689516030"><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
+</span><a href="#local-6989586621689516030"><span class="hs-identifier hs-var">fieldExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-19"></span><span>    </span><span class="hs-comment">-- postgres ignores anything beyond 63 chars for an iden</span><span>
 </span><span id="line-20"></span><span>    </span><span class="hs-comment">-- in this case, we'll need to use json_build_object function</span><span>
 </span><span id="line-21"></span><span>    </span><span class="hs-comment">-- json_build_object is slower than row_to_json hence it is only</span><span>
@@ -44,21 +44,21 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(FieldName, SQLExp) -&gt; FieldName
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
-</span><a href="#local-6989586621689515787"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
+</span><a href="#local-6989586621689516030"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
 </span><span id="line-24"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; [SQLExp] -&gt; (ColumnAlias, SQLExp)
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Helpers.html#withJsonBuildObj"><span class="hs-identifier hs-var">withJsonBuildObj</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515788"><span class="hs-identifier hs-var">fieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; (ColumnAlias, SQLExp))
+</span><a href="#local-6989586621689516031"><span class="hs-identifier hs-var">fieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; (ColumnAlias, SQLExp))
 -&gt; [SQLExp] -&gt; (ColumnAlias, SQLExp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((FieldName, SQLExp) -&gt; [SQLExp])
 -&gt; [(FieldName, SQLExp)] -&gt; [SQLExp]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">(FieldName, SQLExp) -&gt; [SQLExp]
-</span><a href="#local-6989586621689515781"><span class="hs-identifier hs-var">toJsonBuildObjectExps</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
-</span><a href="#local-6989586621689515787"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
+</span><a href="#local-6989586621689516024"><span class="hs-identifier hs-var">toJsonBuildObjectExps</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
+</span><a href="#local-6989586621689516030"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
 </span><span id="line-25"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; [Extractor] -&gt; (ColumnAlias, SQLExp)
-</span><a href="#local-6989586621689515780"><span class="hs-identifier hs-var">withRowToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515788"><span class="hs-identifier hs-var">fieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">([Extractor] -&gt; (ColumnAlias, SQLExp))
+</span><a href="#local-6989586621689516023"><span class="hs-identifier hs-var">withRowToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689516031"><span class="hs-identifier hs-var">fieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">([Extractor] -&gt; (ColumnAlias, SQLExp))
 -&gt; [Extractor] -&gt; (ColumnAlias, SQLExp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((FieldName, SQLExp) -&gt; Extractor)
@@ -66,28 +66,28 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(FieldName, SQLExp) -&gt; Extractor
 forall a. IsIdentifier a =&gt; (a, SQLExp) -&gt; Extractor
-</span><a href="#local-6989586621689515779"><span class="hs-identifier hs-var">toRowToJsonExtr</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
-</span><a href="#local-6989586621689515787"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
+</span><a href="#local-6989586621689516022"><span class="hs-identifier hs-var">toRowToJsonExtr</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
+</span><a href="#local-6989586621689516030"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
 </span><span id="line-26"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>      </span><span id="local-6989586621689515781"><span class="annot"><span class="annottext">toJsonBuildObjectExps :: (FieldName, SQLExp) -&gt; [SQLExp]
-</span><a href="#local-6989586621689515781"><span class="hs-identifier hs-var hs-var">toJsonBuildObjectExps</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689515778"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515778"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689515777"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689515777"><span class="hs-identifier hs-var">fieldExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>      </span><span id="local-6989586621689516024"><span class="annot"><span class="annottext">toJsonBuildObjectExps :: (FieldName, SQLExp) -&gt; [SQLExp]
+</span><a href="#local-6989586621689516024"><span class="hs-identifier hs-var hs-var">toJsonBuildObjectExps</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516021"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689516021"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516020"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689516020"><span class="hs-identifier hs-var">fieldExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-28"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">S.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SQLExp) -&gt; Text -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515778"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689515777"><span class="hs-identifier hs-var">fieldExp</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689516021"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689516020"><span class="hs-identifier hs-var">fieldExp</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621689515779"><span class="annot"><span class="annottext">toRowToJsonExtr :: (a, SQLExp) -&gt; Extractor
-</span><a href="#local-6989586621689515779"><span class="hs-identifier hs-var hs-var">toRowToJsonExtr</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689515775"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689515775"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689515774"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689515774"><span class="hs-identifier hs-var">fieldExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621689516022"><span class="annot"><span class="annottext">toRowToJsonExtr :: (a, SQLExp) -&gt; Extractor
+</span><a href="#local-6989586621689516022"><span class="hs-identifier hs-var hs-var">toRowToJsonExtr</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516018"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689516018"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516017"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689516017"><span class="hs-identifier hs-var">fieldExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe ColumnAlias -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">S.Extractor</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689515774"><span class="hs-identifier hs-var">fieldExp</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe ColumnAlias -&gt; Extractor) -&gt; Maybe ColumnAlias -&gt; Extractor
+</span><a href="#local-6989586621689516017"><span class="hs-identifier hs-var">fieldExp</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe ColumnAlias -&gt; Extractor) -&gt; Maybe ColumnAlias -&gt; Extractor
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; Maybe ColumnAlias
 forall a. a -&gt; Maybe a
@@ -97,55 +97,55 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689515775"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621689516018"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-32"></span><span>
 </span><span id="line-33"></span><span>      </span><span class="hs-comment">-- uses row_to_json to build a json object</span><span>
-</span><span id="line-34"></span><span>      </span><span class="annot"><a href="#local-6989586621689515780"><span class="hs-identifier hs-type">withRowToJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-34"></span><span>      </span><span class="annot"><a href="#local-6989586621689516023"><span class="hs-identifier hs-type">withRowToJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-35"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-type">S.Extractor</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621689515780"><span class="annot"><span class="annottext">withRowToJSON :: FieldName -&gt; [Extractor] -&gt; (ColumnAlias, SQLExp)
-</span><a href="#local-6989586621689515780"><span class="hs-identifier hs-var hs-var">withRowToJSON</span></a></span></span><span> </span><span id="local-6989586621689515771"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515771"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621689515770"><span class="annot"><span class="annottext">[Extractor]
-</span><a href="#local-6989586621689515770"><span class="hs-identifier hs-var">extrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621689516023"><span class="annot"><span class="annottext">withRowToJSON :: FieldName -&gt; [Extractor] -&gt; (ColumnAlias, SQLExp)
+</span><a href="#local-6989586621689516023"><span class="hs-identifier hs-var hs-var">withRowToJSON</span></a></span></span><span> </span><span id="local-6989586621689516014"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689516014"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621689516013"><span class="annot"><span class="annottext">[Extractor]
+</span><a href="#local-6989586621689516013"><span class="hs-identifier hs-var">extrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-37"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515771"><span class="hs-identifier hs-var">parAls</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689515769"><span class="hs-identifier hs-var">jsonRow</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689516014"><span class="hs-identifier hs-var">parAls</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689516012"><span class="hs-identifier hs-var">jsonRow</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>        </span><span class="hs-keyword">where</span><span>
-</span><span id="line-39"></span><span>          </span><span id="local-6989586621689515769"><span class="annot"><span class="annottext">jsonRow :: SQLExp
-</span><a href="#local-6989586621689515769"><span class="hs-identifier hs-var hs-var">jsonRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Extractor] -&gt; SQLExp
+</span><span id="line-39"></span><span>          </span><span id="local-6989586621689516012"><span class="annot"><span class="annottext">jsonRow :: SQLExp
+</span><a href="#local-6989586621689516012"><span class="hs-identifier hs-var hs-var">jsonRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Extractor] -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#applyRowToJson"><span class="hs-identifier hs-var">S.applyRowToJson</span></a></span><span> </span><span class="annot"><span class="annottext">[Extractor]
-</span><a href="#local-6989586621689515770"><span class="hs-identifier hs-var">extrs</span></a></span><span>
+</span><a href="#local-6989586621689516013"><span class="hs-identifier hs-var">extrs</span></a></span><span>
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621689515766"><span class="annot"><span class="annottext">annRowToJson :: FieldName -&gt; [(FieldName, SQLExp)] -&gt; (ColumnAlias, SQLExp)
-</span><a href="#local-6989586621689515766"><span class="hs-identifier hs-var hs-var hs-var hs-var">annRowToJson</span></a></span></span><span> </span><span id="local-6989586621689515765"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515765"><span class="hs-identifier hs-var">fieldAlias</span></a></span></span><span> </span><span id="local-6989586621689515764"><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
-</span><a href="#local-6989586621689515764"><span class="hs-identifier hs-var">fieldExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621689516009"><span class="annot"><span class="annottext">annRowToJson :: FieldName -&gt; [(FieldName, SQLExp)] -&gt; (ColumnAlias, SQLExp)
+</span><a href="#local-6989586621689516009"><span class="hs-identifier hs-var hs-var hs-var hs-var">annRowToJson</span></a></span></span><span> </span><span id="local-6989586621689516008"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689516008"><span class="hs-identifier hs-var">fieldAlias</span></a></span></span><span> </span><span id="local-6989586621689516007"><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
+</span><a href="#local-6989586621689516007"><span class="hs-identifier hs-var">fieldExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-43"></span><span>    </span><span class="hs-comment">-- Due to the restrictions Citus imposes on joins between tables of various</span><span>
 </span><span id="line-44"></span><span>    </span><span class="hs-comment">-- distribution types we cannot use row_to_json and have to only rely on</span><span>
 </span><span id="line-45"></span><span>    </span><span class="hs-comment">-- json_build_object.</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">FieldName -&gt; [SQLExp] -&gt; (ColumnAlias, SQLExp)
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Helpers.html#withJsonBuildObj"><span class="hs-identifier hs-var">withJsonBuildObj</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515765"><span class="hs-identifier hs-var">fieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; (ColumnAlias, SQLExp))
+</span><a href="#local-6989586621689516008"><span class="hs-identifier hs-var">fieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; (ColumnAlias, SQLExp))
 -&gt; [SQLExp] -&gt; (ColumnAlias, SQLExp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((FieldName, SQLExp) -&gt; [SQLExp])
 -&gt; [(FieldName, SQLExp)] -&gt; [SQLExp]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">(FieldName, SQLExp) -&gt; [SQLExp]
-</span><a href="#local-6989586621689515763"><span class="hs-identifier hs-var">toJsonBuildObjectExps</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
-</span><a href="#local-6989586621689515764"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
+</span><a href="#local-6989586621689516006"><span class="hs-identifier hs-var">toJsonBuildObjectExps</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, SQLExp)]
+</span><a href="#local-6989586621689516007"><span class="hs-identifier hs-var">fieldExps</span></a></span><span>
 </span><span id="line-47"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-48"></span><span>      </span><span id="local-6989586621689515763"><span class="annot"><span class="annottext">toJsonBuildObjectExps :: (FieldName, SQLExp) -&gt; [SQLExp]
-</span><a href="#local-6989586621689515763"><span class="hs-identifier hs-var hs-var">toJsonBuildObjectExps</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689515762"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515762"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689515761"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689515761"><span class="hs-identifier hs-var">fieldExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-48"></span><span>      </span><span id="local-6989586621689516006"><span class="annot"><span class="annottext">toJsonBuildObjectExps :: (FieldName, SQLExp) -&gt; [SQLExp]
+</span><a href="#local-6989586621689516006"><span class="hs-identifier hs-var hs-var">toJsonBuildObjectExps</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516005"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689516005"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516004"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689516004"><span class="hs-identifier hs-var">fieldExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-49"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">S.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SQLExp) -&gt; Text -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689515762"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689515761"><span class="hs-identifier hs-var">fieldExp</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689516005"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689516004"><span class="hs-identifier hs-var">fieldExp</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-50"></span></pre></body></html>

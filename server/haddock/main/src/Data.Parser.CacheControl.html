@@ -28,7 +28,7 @@
 </span><span id="line-28"></span><span class="hs-keyword">data</span><span> </span><span id="CacheControlDirective"><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControlDirective"><span class="hs-identifier hs-var">CacheControlDirective</span></a></span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CCDOnlyToken"><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-var">CCDOnlyToken</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CCDTokenWithVal"><span class="annot"><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-var">CCDTokenWithVal</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689394918"><span id="local-6989586621689394920"><span id="local-6989586621689394922"><span class="annot"><span class="annottext">Int -&gt; CacheControlDirective -&gt; ShowS
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689395146"><span id="local-6989586621689395148"><span id="local-6989586621689395150"><span class="annot"><span class="annottext">Int -&gt; CacheControlDirective -&gt; ShowS
 [CacheControlDirective] -&gt; ShowS
 CacheControlDirective -&gt; String
 (Int -&gt; CacheControlDirective -&gt; ShowS)
@@ -43,7 +43,7 @@ show :: CacheControlDirective -&gt; String
 $cshow :: CacheControlDirective -&gt; String
 showsPrec :: Int -&gt; CacheControlDirective -&gt; ShowS
 $cshowsPrec :: Int -&gt; CacheControlDirective -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689394913"><span id="local-6989586621689394915"><span class="annot"><span class="annottext">CacheControlDirective -&gt; CacheControlDirective -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689395141"><span id="local-6989586621689395143"><span class="annot"><span class="annottext">CacheControlDirective -&gt; CacheControlDirective -&gt; Bool
 (CacheControlDirective -&gt; CacheControlDirective -&gt; Bool)
 -&gt; (CacheControlDirective -&gt; CacheControlDirective -&gt; Bool)
 -&gt; Eq CacheControlDirective
@@ -55,13 +55,13 @@ $c== :: CacheControlDirective -&gt; CacheControlDirective -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>
 </span><span id="line-33"></span><span class="hs-comment">-- | Tries to parse the @max-age@ or @s-maxage@ present in the value of @Cache-Control@ header</span><span>
-</span><span id="line-34"></span><span id="local-6989586621689394911"><span class="annot"><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-type">parseMaxAge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integral</span></span><span> </span><span class="annot"><a href="#local-6989586621689394911"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621689394911"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-34"></span><span id="local-6989586621689395139"><span class="annot"><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-type">parseMaxAge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integral</span></span><span> </span><span class="annot"><a href="#local-6989586621689395139"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621689395139"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-35"></span><span id="parseMaxAge"><span class="annot"><span class="annottext">parseMaxAge :: Text -&gt; Either String a
-</span><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-var hs-var">parseMaxAge</span></a></span></span><span> </span><span id="local-6989586621689394910"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394910"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-var hs-var">parseMaxAge</span></a></span></span><span> </span><span id="local-6989586621689395138"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395138"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; Either String [CacheControlDirective]
 </span><a href="Data.Parser.CacheControl.html#parseCacheControl"><span class="hs-identifier hs-var">parseCacheControl</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394910"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Either String [CacheControlDirective]
+</span><a href="#local-6989586621689395138"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Either String [CacheControlDirective]
 -&gt; ([CacheControlDirective] -&gt; Either String (Maybe a))
 -&gt; Either String (Maybe a)
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
@@ -78,26 +78,26 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Either String a
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689394908"><span class="hs-identifier hs-var">notFoundErr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">a -&gt; Either String a
+</span><a href="#local-6989586621689395136"><span class="hs-identifier hs-var">notFoundErr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">a -&gt; Either String a
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span>
 </span><span id="line-37"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>    </span><span id="local-6989586621689394908"><span class="annot"><span class="annottext">notFoundErr :: String
-</span><a href="#local-6989586621689394908"><span class="hs-identifier hs-var hs-var">notFoundErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-38"></span><span>    </span><span id="local-6989586621689395136"><span class="annot"><span class="annottext">notFoundErr :: String
+</span><a href="#local-6989586621689395136"><span class="hs-identifier hs-var hs-var">notFoundErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;could not find max-age/s-maxage&quot;</span></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span id="local-6989586621689394985"><span class="annot"><a href="Data.Parser.CacheControl.html#findMaxAge"><span class="hs-identifier hs-type">findMaxAge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integral</span></span><span> </span><span class="annot"><a href="#local-6989586621689394985"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControl"><span class="hs-identifier hs-type">CacheControl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689394985"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-40"></span><span id="local-6989586621689395213"><span class="annot"><a href="Data.Parser.CacheControl.html#findMaxAge"><span class="hs-identifier hs-type">findMaxAge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integral</span></span><span> </span><span class="annot"><a href="#local-6989586621689395213"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControl"><span class="hs-identifier hs-type">CacheControl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689395213"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-41"></span><span id="findMaxAge"><span class="annot"><span class="annottext">findMaxAge :: [CacheControlDirective] -&gt; Either String (Maybe a)
-</span><a href="Data.Parser.CacheControl.html#findMaxAge"><span class="hs-identifier hs-var hs-var">findMaxAge</span></a></span></span><span> </span><span id="local-6989586621689394907"><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394907"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Data.Parser.CacheControl.html#findMaxAge"><span class="hs-identifier hs-var hs-var">findMaxAge</span></a></span></span><span> </span><span id="local-6989586621689395135"><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395135"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Bool) -&gt; [CacheControlDirective] -&gt; Maybe (Text, Text)
 </span><a href="Data.Parser.CacheControl.html#findCCDTokenWithVal"><span class="hs-identifier hs-var">findCCDTokenWithVal</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 forall a. (Eq a, IsString a) =&gt; a -&gt; Bool
-</span><a href="#local-6989586621689394905"><span class="hs-identifier hs-var">checkMaxAgeToken</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394907"><span class="hs-identifier hs-var">cacheControl</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689395133"><span class="hs-identifier hs-var">checkMaxAgeToken</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395135"><span class="hs-identifier hs-var">cacheControl</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-43"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689394904"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394904"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689395132"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395132"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Maybe a) -&gt; Either String a -&gt; Either String (Maybe a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -105,12 +105,12 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS
 forall p p. IsString p =&gt; p -&gt; p
-</span><a href="#local-6989586621689394902"><span class="hs-identifier hs-var">parseErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser a -&gt; Text -&gt; Either String a
+</span><a href="#local-6989586621689395130"><span class="hs-identifier hs-var">parseErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser a -&gt; Text -&gt; Either String a
 forall a. Parser a -&gt; Text -&gt; Either String a
 </span><span class="hs-identifier hs-var">AT.parseOnly</span></span><span> </span><span class="annot"><span class="annottext">Parser a
 forall a. Integral a =&gt; Parser a
 </span><span class="hs-identifier hs-var">AT.decimal</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394904"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689395132"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">Maybe (Text, Text)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Either String (Maybe a)
 forall a b. b -&gt; Either a b
@@ -118,19 +118,19 @@ forall a b. b -&gt; Either a b
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-45"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621689394902"><span class="annot"><span class="annottext">parseErr :: p -&gt; p
-</span><a href="#local-6989586621689394902"><span class="hs-identifier hs-var hs-var">parseErr</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621689395130"><span class="annot"><span class="annottext">parseErr :: p -&gt; p
+</span><a href="#local-6989586621689395130"><span class="hs-identifier hs-var hs-var">parseErr</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p
 </span><span class="hs-string">&quot;could not parse max-age/s-maxage value&quot;</span></span><span>
-</span><span id="line-47"></span><span>    </span><span id="local-6989586621689394905"><span class="annot"><span class="annottext">checkMaxAgeToken :: a -&gt; Bool
-</span><a href="#local-6989586621689394905"><span class="hs-identifier hs-var hs-var">checkMaxAgeToken</span></a></span></span><span> </span><span id="local-6989586621689394899"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689394899"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689394899"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><span id="line-47"></span><span>    </span><span id="local-6989586621689395133"><span class="annot"><span class="annottext">checkMaxAgeToken :: a -&gt; Bool
+</span><a href="#local-6989586621689395133"><span class="hs-identifier hs-var hs-var">checkMaxAgeToken</span></a></span></span><span> </span><span id="local-6989586621689395127"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689395127"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689395127"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;max-age&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689394899"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621689395127"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;s-maxage&quot;</span></span><span>
@@ -138,8 +138,8 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span id="line-49"></span><span class="hs-comment">-- | Checks if the @no-cache@ directive is present</span><span>
 </span><span id="line-50"></span><span class="annot"><a href="Data.Parser.CacheControl.html#noCacheExists"><span class="hs-identifier hs-type">noCacheExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControl"><span class="hs-identifier hs-type">CacheControl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-51"></span><span id="noCacheExists"><span class="annot"><span class="annottext">noCacheExists :: [CacheControlDirective] -&gt; Bool
-</span><a href="Data.Parser.CacheControl.html#noCacheExists"><span class="hs-identifier hs-var hs-var">noCacheExists</span></a></span></span><span> </span><span id="local-6989586621689394897"><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394897"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Parser.CacheControl.html#noCacheExists"><span class="hs-identifier hs-var hs-var">noCacheExists</span></a></span></span><span> </span><span id="local-6989586621689395125"><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395125"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">Maybe Text -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Bool) -&gt; Maybe Text -&gt; Bool
@@ -149,13 +149,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;no-cache&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394897"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
+</span><a href="#local-6989586621689395125"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- | Checks if the @no-store@ directive is present</span><span>
 </span><span id="line-55"></span><span class="annot"><a href="Data.Parser.CacheControl.html#noStoreExists"><span class="hs-identifier hs-type">noStoreExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControl"><span class="hs-identifier hs-type">CacheControl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-56"></span><span id="noStoreExists"><span class="annot"><span class="annottext">noStoreExists :: [CacheControlDirective] -&gt; Bool
-</span><a href="Data.Parser.CacheControl.html#noStoreExists"><span class="hs-identifier hs-var hs-var">noStoreExists</span></a></span></span><span> </span><span id="local-6989586621689394894"><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394894"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Parser.CacheControl.html#noStoreExists"><span class="hs-identifier hs-var hs-var">noStoreExists</span></a></span></span><span> </span><span id="local-6989586621689395122"><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395122"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-57"></span><span>  </span><span class="annot"><span class="annottext">Maybe Text -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Bool) -&gt; Maybe Text -&gt; Bool
@@ -165,13 +165,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;no-store&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394894"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
+</span><a href="#local-6989586621689395122"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-comment">-- | Checks if the @must-revalidate@ directive is present</span><span>
 </span><span id="line-60"></span><span class="annot"><a href="Data.Parser.CacheControl.html#mustRevalidateExists"><span class="hs-identifier hs-type">mustRevalidateExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControl"><span class="hs-identifier hs-type">CacheControl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-61"></span><span id="mustRevalidateExists"><span class="annot"><span class="annottext">mustRevalidateExists :: [CacheControlDirective] -&gt; Bool
-</span><a href="Data.Parser.CacheControl.html#mustRevalidateExists"><span class="hs-identifier hs-var hs-var">mustRevalidateExists</span></a></span></span><span> </span><span id="local-6989586621689394893"><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394893"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Parser.CacheControl.html#mustRevalidateExists"><span class="hs-identifier hs-var hs-var">mustRevalidateExists</span></a></span></span><span> </span><span id="local-6989586621689395121"><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395121"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-62"></span><span>  </span><span class="annot"><span class="annottext">Maybe Text -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Bool) -&gt; Maybe Text -&gt; Bool
@@ -181,13 +181,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;must-revalidate&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394893"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
+</span><a href="#local-6989586621689395121"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="annot"><a href="Data.Parser.CacheControl.html#findCCDOnlyToken"><span class="hs-identifier hs-type">findCCDOnlyToken</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControl"><span class="hs-identifier hs-type">CacheControl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-65"></span><span id="findCCDOnlyToken"><span class="annot"><span class="annottext">findCCDOnlyToken :: (Text -&gt; Bool) -&gt; [CacheControlDirective] -&gt; Maybe Text
-</span><a href="Data.Parser.CacheControl.html#findCCDOnlyToken"><span class="hs-identifier hs-var hs-var">findCCDOnlyToken</span></a></span></span><span> </span><span id="local-6989586621689394892"><span class="annot"><span class="annottext">Text -&gt; Bool
-</span><a href="#local-6989586621689394892"><span class="hs-identifier hs-var">tokenPredicate</span></a></span></span><span> </span><span id="local-6989586621689394891"><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394891"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Parser.CacheControl.html#findCCDOnlyToken"><span class="hs-identifier hs-var hs-var">findCCDOnlyToken</span></a></span></span><span> </span><span id="local-6989586621689395120"><span class="annot"><span class="annottext">Text -&gt; Bool
+</span><a href="#local-6989586621689395120"><span class="hs-identifier hs-var">tokenPredicate</span></a></span></span><span> </span><span id="local-6989586621689395119"><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395119"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-66"></span><span>  </span><span class="annot"><span class="annottext">[Text] -&gt; Maybe Text
 forall a. [a] -&gt; Maybe a
 </span><span class="hs-identifier hs-var">listToMaybe</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Maybe Text) -&gt; [Text] -&gt; Maybe Text
@@ -198,19 +198,19 @@ forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective -&gt; Maybe Text
-</span><a href="#local-6989586621689394888"><span class="hs-identifier hs-var">check</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394891"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
+</span><a href="#local-6989586621689395116"><span class="hs-identifier hs-var">check</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395119"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621689394888"><span class="annot"><span class="annottext">check :: CacheControlDirective -&gt; Maybe Text
-</span><a href="#local-6989586621689394888"><span class="hs-identifier hs-var hs-var">check</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-69"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-type">CCDOnlyToken</span></a></span><span> </span><span id="local-6989586621689394887"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394887"><span class="hs-identifier hs-var">token</span></a></span></span><span>
+</span><span id="line-68"></span><span>    </span><span id="local-6989586621689395116"><span class="annot"><span class="annottext">check :: CacheControlDirective -&gt; Maybe Text
+</span><a href="#local-6989586621689395116"><span class="hs-identifier hs-var hs-var">check</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-type">CCDOnlyToken</span></a></span><span> </span><span id="local-6989586621689395115"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395115"><span class="hs-identifier hs-var">token</span></a></span></span><span>
 </span><span id="line-70"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
-</span><a href="#local-6989586621689394892"><span class="hs-identifier hs-var">tokenPredicate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394887"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+</span><a href="#local-6989586621689395120"><span class="hs-identifier hs-var">tokenPredicate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395115"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394887"><span class="hs-identifier hs-var">token</span></a></span><span>
+</span><a href="#local-6989586621689395115"><span class="hs-identifier hs-var">token</span></a></span><span>
 </span><span id="line-71"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
@@ -223,9 +223,9 @@ forall a. Maybe a
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="annot"><a href="Data.Parser.CacheControl.html#findCCDTokenWithVal"><span class="hs-identifier hs-type">findCCDTokenWithVal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControl"><span class="hs-identifier hs-type">CacheControl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span id="findCCDTokenWithVal"><span class="annot"><span class="annottext">findCCDTokenWithVal :: (Text -&gt; Bool) -&gt; [CacheControlDirective] -&gt; Maybe (Text, Text)
-</span><a href="Data.Parser.CacheControl.html#findCCDTokenWithVal"><span class="hs-identifier hs-var hs-var">findCCDTokenWithVal</span></a></span></span><span> </span><span id="local-6989586621689394886"><span class="annot"><span class="annottext">Text -&gt; Bool
-</span><a href="#local-6989586621689394886"><span class="hs-identifier hs-var">tokenPredicate</span></a></span></span><span> </span><span id="local-6989586621689394885"><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394885"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Parser.CacheControl.html#findCCDTokenWithVal"><span class="hs-identifier hs-var hs-var">findCCDTokenWithVal</span></a></span></span><span> </span><span id="local-6989586621689395114"><span class="annot"><span class="annottext">Text -&gt; Bool
+</span><a href="#local-6989586621689395114"><span class="hs-identifier hs-var">tokenPredicate</span></a></span></span><span> </span><span id="local-6989586621689395113"><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395113"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>  </span><span class="annot"><span class="annottext">[(Text, Text)] -&gt; Maybe (Text, Text)
 forall a. [a] -&gt; Maybe a
 </span><span class="hs-identifier hs-var">listToMaybe</span></span><span> </span><span class="annot"><span class="annottext">([(Text, Text)] -&gt; Maybe (Text, Text))
@@ -237,25 +237,25 @@ forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective -&gt; Maybe (Text, Text)
-</span><a href="#local-6989586621689394884"><span class="hs-identifier hs-var">check</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621689394885"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
+</span><a href="#local-6989586621689395112"><span class="hs-identifier hs-var">check</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621689395113"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-78"></span><span>    </span><span id="local-6989586621689394884"><span class="annot"><span class="annottext">check :: CacheControlDirective -&gt; Maybe (Text, Text)
-</span><a href="#local-6989586621689394884"><span class="hs-identifier hs-var hs-var">check</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621689395112"><span class="annot"><span class="annottext">check :: CacheControlDirective -&gt; Maybe (Text, Text)
+</span><a href="#local-6989586621689395112"><span class="hs-identifier hs-var hs-var">check</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-79"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-type">CCDOnlyToken</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (Text, Text)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-80"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-type">CCDTokenWithVal</span></a></span><span> </span><span id="local-6989586621689394883"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394883"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span id="local-6989586621689394882"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394882"><span class="hs-identifier hs-var">value</span></a></span></span><span>
+</span><span id="line-80"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-type">CCDTokenWithVal</span></a></span><span> </span><span id="local-6989586621689395111"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395111"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span id="local-6989586621689395110"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395110"><span class="hs-identifier hs-var">value</span></a></span></span><span>
 </span><span id="line-81"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
-</span><a href="#local-6989586621689394886"><span class="hs-identifier hs-var">tokenPredicate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394883"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Text, Text) -&gt; Maybe (Text, Text)
+</span><a href="#local-6989586621689395114"><span class="hs-identifier hs-var">tokenPredicate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395111"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Text, Text) -&gt; Maybe (Text, Text)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394883"><span class="hs-identifier hs-var">token</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394882"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689395111"><span class="hs-identifier hs-var">token</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395110"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (Text, Text)
 forall a. Maybe a
@@ -288,11 +288,11 @@ forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
 </span><a href="Data.Parser.CacheControl.html#optionalWhitespaceParser"><span class="hs-identifier hs-var">optionalWhitespaceParser</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621689394877"><span class="annot"><span class="annottext">CacheControlDirective
-</span><a href="#local-6989586621689394877"><span class="hs-identifier hs-var">cd</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621689395105"><span class="annot"><span class="annottext">CacheControlDirective
+</span><a href="#local-6989586621689395105"><span class="hs-identifier hs-var">cd</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#cacheDirectiveParser"><span class="hs-identifier hs-var">cacheDirectiveParser</span></a></span><span>
-</span><span id="line-94"></span><span>  </span><span id="local-6989586621689394875"><span class="annot"><span class="annottext">[Maybe CacheControlDirective]
-</span><a href="#local-6989586621689394875"><span class="hs-identifier hs-var">cds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe CacheControlDirective)
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621689395103"><span class="annot"><span class="annottext">[Maybe CacheControlDirective]
+</span><a href="#local-6989586621689395103"><span class="hs-identifier hs-var">cds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe CacheControlDirective)
 -&gt; Parser Text [Maybe CacheControlDirective]
 forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
 </span><span class="hs-identifier hs-var">AT.many'</span></span><span> </span><span class="annot"><span class="annottext">(Parser Text (Maybe CacheControlDirective)
@@ -321,23 +321,23 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; Parser Text (Maybe CacheControlDirective)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
-</span><a href="#local-6989586621689394873"><span class="hs-identifier hs-var">optionalDirective</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689395101"><span class="hs-identifier hs-var">optionalDirective</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>  </span><span class="annot"><span class="annottext">[CacheControlDirective] -&gt; Parser [CacheControlDirective]
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">([CacheControlDirective] -&gt; Parser [CacheControlDirective])
 -&gt; [CacheControlDirective] -&gt; Parser [CacheControlDirective]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
-</span><a href="#local-6989586621689394877"><span class="hs-identifier hs-var">cd</span></a></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
+</span><a href="#local-6989586621689395105"><span class="hs-identifier hs-var">cd</span></a></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
 -&gt; [CacheControlDirective] -&gt; [CacheControlDirective]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Maybe CacheControlDirective] -&gt; [CacheControlDirective]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">[Maybe CacheControlDirective]
-</span><a href="#local-6989586621689394875"><span class="hs-identifier hs-var">cds</span></a></span><span>
+</span><a href="#local-6989586621689395103"><span class="hs-identifier hs-var">cds</span></a></span><span>
 </span><span id="line-96"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-97"></span><span>    </span><span id="local-6989586621689394873"><span class="annot"><span class="annottext">optionalDirective :: Parser CacheControlDirective
-</span><a href="#local-6989586621689394873"><span class="hs-identifier hs-var hs-var">optionalDirective</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621689395101"><span class="annot"><span class="annottext">optionalDirective :: Parser CacheControlDirective
+</span><a href="#local-6989586621689395101"><span class="hs-identifier hs-var hs-var">optionalDirective</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
 </span><a href="Data.Parser.CacheControl.html#optionalWhitespaceParser"><span class="hs-identifier hs-var">optionalWhitespaceParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
 -&gt; Parser CacheControlDirective -&gt; Parser CacheControlDirective
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
@@ -365,23 +365,23 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-106"></span><span class="annot"><a href="Data.Parser.CacheControl.html#cacheDirectiveParser"><span class="hs-identifier hs-type">cacheDirectiveParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControlDirective"><span class="hs-identifier hs-type">CacheControlDirective</span></a></span><span>
 </span><span id="line-107"></span><span id="cacheDirectiveParser"><span class="annot"><span class="annottext">cacheDirectiveParser :: Parser CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#cacheDirectiveParser"><span class="hs-identifier hs-var hs-var">cacheDirectiveParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
-</span><a href="#local-6989586621689394870"><span class="hs-identifier hs-var">tokenWithValue</span></a></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
+</span><a href="#local-6989586621689395098"><span class="hs-identifier hs-var">tokenWithValue</span></a></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
 -&gt; Parser CacheControlDirective -&gt; Parser CacheControlDirective
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
-</span><a href="#local-6989586621689394868"><span class="hs-identifier hs-var">onlyToken</span></a></span><span>
+</span><a href="#local-6989586621689395096"><span class="hs-identifier hs-var">onlyToken</span></a></span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-109"></span><span>    </span><span id="local-6989586621689394868"><span class="annot"><span class="annottext">onlyToken :: Parser CacheControlDirective
-</span><a href="#local-6989586621689394868"><span class="hs-identifier hs-var hs-var">onlyToken</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; CacheControlDirective
+</span><span id="line-109"></span><span>    </span><span id="local-6989586621689395096"><span class="annot"><span class="annottext">onlyToken :: Parser CacheControlDirective
+</span><a href="#local-6989586621689395096"><span class="hs-identifier hs-var hs-var">onlyToken</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-var">CCDOnlyToken</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; CacheControlDirective)
 -&gt; Parser Text Text -&gt; Parser CacheControlDirective
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Text
 </span><a href="Data.Parser.CacheControl.html#tokenParser"><span class="hs-identifier hs-var">tokenParser</span></a></span><span>
-</span><span id="line-110"></span><span>    </span><span id="local-6989586621689394870"><span class="annot"><span class="annottext">tokenWithValue :: Parser CacheControlDirective
-</span><a href="#local-6989586621689394870"><span class="hs-identifier hs-var hs-var">tokenWithValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-111"></span><span>      </span><span id="local-6989586621689394866"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394866"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621689395098"><span class="annot"><span class="annottext">tokenWithValue :: Parser CacheControlDirective
+</span><a href="#local-6989586621689395098"><span class="hs-identifier hs-var hs-var">tokenWithValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-111"></span><span>      </span><span id="local-6989586621689395094"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395094"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
 </span><a href="Data.Parser.CacheControl.html#tokenParser"><span class="hs-identifier hs-var">tokenParser</span></a></span><span>
 </span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
@@ -391,8 +391,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
 </span><span class="hs-identifier hs-var">AT.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'='</span></span><span>
-</span><span id="line-113"></span><span>      </span><span id="local-6989586621689394864"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394864"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
+</span><span id="line-113"></span><span>      </span><span id="local-6989586621689395092"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395092"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
 </span><a href="Data.Parser.CacheControl.html#tokenParser"><span class="hs-identifier hs-var">tokenParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text -&gt; Parser Text Text -&gt; Parser Text Text
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Text
@@ -404,8 +404,8 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-var">CCDTokenWithVal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394866"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689394864"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621689395094"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395092"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-115"></span><span>
 </span><span id="line-116"></span><span class="hs-comment">-- ABNF: 1*tchar</span><span>
 </span><span id="line-117"></span><span class="hs-comment">-- https://tools.ietf.org/html/rfc7230#section-3.2.6</span><span>
