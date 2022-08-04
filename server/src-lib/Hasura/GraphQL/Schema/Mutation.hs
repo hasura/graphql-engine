@@ -16,7 +16,6 @@ import Data.Has (getter)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Text.Extended
-import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
@@ -174,7 +173,7 @@ tableFieldsInput ::
   TableInfo b ->
   m (Parser 'Input n (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)))
 tableFieldsInput sourceInfo tableInfo =
-  memoizeOn 'tableFieldsInput (_siName sourceInfo, tableName) do
+  P.memoizeOn 'tableFieldsInput (_siName sourceInfo, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectFields <- traverse mkFieldParser (Map.elems allFields)
     objectName <- mkTypename $ tableGQLName <> Name.__insert_input
@@ -268,7 +267,7 @@ objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ d
   let permissions = getRolePermInfo roleName tableInfo
       updatePerms = _permUpd permissions
   insertPerms <- hoistMaybe $ _permIns permissions
-  lift $ memoizeOn 'objectRelationshipInput (_siName sourceInfo, tableName) do
+  lift $ P.memoizeOn 'objectRelationshipInput (_siName sourceInfo, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
@@ -302,7 +301,7 @@ arrayRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
   let permissions = getRolePermInfo roleName tableInfo
       updatePerms = _permUpd permissions
   insertPerms <- hoistMaybe $ _permIns permissions
-  lift $ memoizeOn 'arrayRelationshipInput (_siName sourceInfo, tableName) do
+  lift $ P.memoizeOn 'arrayRelationshipInput (_siName sourceInfo, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
@@ -445,7 +444,7 @@ mutationSelectionSet ::
   TableInfo b ->
   m (Parser 'Output n (IR.MutFldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
 mutationSelectionSet sourceInfo tableInfo =
-  memoizeOn 'mutationSelectionSet (_siName sourceInfo, tableName) do
+  P.memoizeOn 'mutationSelectionSet (_siName sourceInfo, tableName) do
     roleName <- retrieve scRole
     tableGQLName <- getTableGQLName tableInfo
     returning <- runMaybeT do

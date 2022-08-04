@@ -4,6 +4,7 @@
 module Hasura.GraphQL.Schema.RemoteTest (spec) where
 
 import Control.Lens (Prism', prism', to, (^..), _Right)
+import Control.Monad.Memoize
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -138,7 +139,7 @@ buildQueryParsers introspection = do
   RemoteSchemaParser query _ _ <-
     runError $
       flip runReaderT schemaInfo $
-        P.runSchemaT $
+        runMemoizeT $
           buildRemoteParser introResult remoteSchemaRels remoteSchemaInfo
   pure $
     head query <&> \case

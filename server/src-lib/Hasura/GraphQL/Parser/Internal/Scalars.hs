@@ -33,7 +33,7 @@ import Data.Text qualified as Text
 import Data.Text.Read (decimal)
 import Data.UUID qualified as UUID
 import Hasura.Base.ErrorMessage (toErrorMessage)
-import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Parser.Internal.Convert
 import Hasura.GraphQL.Parser.Internal.TypeChecking

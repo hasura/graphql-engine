@@ -11,12 +11,13 @@ module Test.Parser.Monad
   )
 where
 
+import Control.Monad.Memoize
 import Data.Aeson.Internal (JSONPathElement)
 import Data.Has (Has (..))
 import Data.Text qualified as T
 import Hasura.Base.Error (QErr)
 import Hasura.Base.ErrorMessage
-import Hasura.GraphQL.Parser.Class (MonadParse (..), MonadSchema (..))
+import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaKind (..), ignoreRemoteRelationship)
 import Hasura.GraphQL.Schema.NamingCase
@@ -132,8 +133,8 @@ newtype ParserTestT a = ParserTestT (Either (IO ()) a)
   deriving stock (Functor)
   deriving (Applicative, Monad) via (Either (IO ()))
 
-instance MonadSchema ParserTestT SchemaTestT where
-  memoizeOn :: TH.Name -> a -> SchemaTestT (p ParserTestT b) -> SchemaTestT (p ParserTestT b)
+instance MonadMemoize SchemaTestT where
+  memoizeOn :: TH.Name -> a -> SchemaTestT p -> SchemaTestT p
   memoizeOn _ _ = id
 
 instance MonadParse ParserTestT where

@@ -33,7 +33,7 @@ import Data.Type.Equality
 import Data.Void (Void)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
-import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Collect
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Internal.Input

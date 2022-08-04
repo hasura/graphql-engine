@@ -395,6 +395,7 @@ library
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
                      , Control.Monad.Circular
+                     , Control.Monad.Memoize
                      , Control.Monad.Stateless
                      , Control.Monad.Trans.Managed
                      , Control.Monad.Unique
@@ -797,7 +798,6 @@ library
                      , Hasura.GraphQL.ParameterizedQueryHash
                      , Hasura.GraphQL.Parser
                      , Hasura.GraphQL.Parser.Class
-                     , Hasura.GraphQL.Parser.Class.Parse
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.DirectiveName
                      , Hasura.GraphQL.Parser.Directives

@@ -279,7 +279,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
     outputFieldParser ::
       ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType) ->
       m (FieldParser n (AnnotatedActionField))
-    outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) = memoizeOn 'actionOutputFields (_aotName annotatedObject, name) do
+    outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) = P.memoizeOn 'actionOutputFields (_aotName annotatedObject, name) do
       case objectFieldType of
         AOFTScalar def ->
           wrapScalar $ customScalarParser def
@@ -372,7 +372,7 @@ actionInputArguments nonObjectTypeMap arguments = do
         NOCTEnum def -> pure $ mkResult $ customEnumParser def
         -- input objects however may recursively contain one another
         NOCTInputObject (InputObjectTypeDefinition (InputObjectTypeName objectName) objectDesc inputFields) ->
-          mkResult <$> memoizeOn 'actionInputArguments objectName do
+          mkResult <$> P.memoizeOn 'actionInputArguments objectName do
             inputFieldsParsers <- forM
               (toList inputFields)
               \(InputObjectFieldDefinition (InputObjectFieldName fieldName) fieldDesc (GraphQLType fieldType)) -> do

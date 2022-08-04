@@ -15,7 +15,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options (RemoteSchemaPermissions)
-import Hasura.GraphQL.Schema.Parser (FieldParser, MonadSchema)
+import Hasura.GraphQL.Schema.Parser (FieldParser, MonadMemoize)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
 import Hasura.GraphQL.Schema.Select
@@ -146,7 +146,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
       foldr (modifyFieldByName . fcName) resultCustomizer $ NE.init fieldCalls
 
 lookupNestedFieldType' ::
-  (MonadSchema n m, MonadError QErr m) =>
+  (MonadMemoize m, MonadError QErr m) =>
   G.Name ->
   RemoteSchemaIntrospection ->
   FieldCall ->
@@ -160,7 +160,7 @@ lookupNestedFieldType' parentTypeName remoteSchemaIntrospection (FieldCall fcNam
         Just G.FieldDefinition {..} -> pure _fldType
 
 lookupNestedFieldType ::
-  (MonadSchema n m, MonadError QErr m) =>
+  (MonadMemoize m, MonadError QErr m) =>
   G.Name ->
   RemoteSchemaIntrospection ->
   NonEmpty FieldCall ->

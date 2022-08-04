@@ -34,7 +34,7 @@ import Data.Vector qualified as V
 import Data.Void (Void)
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
-import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.GraphQL.Parser.Schema

@@ -9,6 +9,7 @@ where
 
 import Control.Concurrent.Extended (forConcurrentlyEIO)
 import Control.Lens
+import Control.Monad.Memoize
 import Data.Aeson.Ordered qualified as JO
 import Data.Has
 import Data.HashMap.Strict qualified as Map
@@ -36,7 +37,6 @@ import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     Kind (..),
     MonadParse,
-    MonadSchema,
     Parser,
     Schema,
   )
@@ -752,7 +752,7 @@ parseBuildIntrospectionSchema q m s =
 
 queryWithIntrospectionHelper ::
   forall n m.
-  (MonadSchema n m, MonadError QErr m) =>
+  (MonadMemoize m, MonadParse n, MonadError QErr m) =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   Maybe (Parser 'Output n (RootFieldMap (MutationRootField UnpreparedValue))) ->
   Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))) ->
@@ -909,8 +909,7 @@ throwOnConflictingDefinitions :: QErrM m => Either P.ConflictingDefinitions a ->
 throwOnConflictingDefinitions = either (throw500 . fromErrorMessage . toErrorValue) pure
 
 type ConcreteSchemaT m a =
-  P.SchemaT
-    P.Parse
+  MemoizeT
     ( ReaderT
         ( SchemaOptions,
           SchemaContext,
@@ -931,7 +930,7 @@ runMonadSchema ::
   m a
 runMonadSchema options context m =
   flip runReaderT (options, context, mempty, mempty, HasuraCase) $
-    P.runSchemaT m
+    runMemoizeT m
 
 buildBackendSource ::
   (forall b. BackendSchema b => SourceInfo b -> r) ->

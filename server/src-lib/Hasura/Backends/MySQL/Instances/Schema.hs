@@ -22,8 +22,8 @@ import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
+    MonadMemoize,
     MonadParse,
-    MonadSchema,
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
@@ -100,7 +100,7 @@ buildTableRelayQueryFields' ::
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'MySQL) ->
-  m [a]
+  m [P.FieldParser n a]
 buildTableRelayQueryFields' _mkRootFieldName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
@@ -112,7 +112,7 @@ buildTableInsertMutationFields' ::
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
-  m [a]
+  m [P.FieldParser n a]
 buildTableInsertMutationFields' _mkRootFieldName _scenario _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
@@ -124,7 +124,7 @@ buildTableUpdateMutationFields' ::
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
-  m [a]
+  m [P.FieldParser n a]
 buildTableUpdateMutationFields' _mkRootFieldName _scenario _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
@@ -136,7 +136,7 @@ buildTableDeleteMutationFields' ::
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
-  m [a]
+  m [P.FieldParser n a]
 buildTableDeleteMutationFields' _mkRootFieldName _scenario _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
@@ -147,7 +147,7 @@ buildFunctionQueryFields' ::
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
-  m [a]
+  m [P.FieldParser n a]
 buildFunctionQueryFields' _ _ _ _ _ =
   pure []
 
@@ -159,7 +159,7 @@ buildFunctionRelayQueryFields' ::
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   NESeq (ColumnInfo 'MySQL) ->
-  m [a]
+  m [P.FieldParser n a]
 buildFunctionRelayQueryFields' _mkRootFieldName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
@@ -170,7 +170,7 @@ buildFunctionMutationFields' ::
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
-  m [a]
+  m [P.FieldParser n a]
 buildFunctionMutationFields' _ _ _ _ _ =
   pure []
 
@@ -178,7 +178,7 @@ bsParser :: MonadParse m => Parser 'Both m ByteString
 bsParser = encodeUtf8 <$> P.string
 
 columnParser' ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'MySQL ->
   GQL.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
@@ -265,22 +265,18 @@ orderByOperators' _tCase =
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
   forall m n r.
-  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (BackendSchema 'MySQL, MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'MySQL ->
   m (Parser 'Input n [ComparisonExp 'MySQL])
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (GQL.Nullability False)
-  _nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability True)
-  textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability False)
   let name = P.getName typedParser <> Name.__MySQL_comparison_exp
       desc =
         GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
-      _textListParser = fmap openValueOrigin <$> P.list textParser
-      _columnListParser = fmap openValueOrigin <$> P.list typedParser
   pure $
     P.object name (Just desc) $
       catMaybes

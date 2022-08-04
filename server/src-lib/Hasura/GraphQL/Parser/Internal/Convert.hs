@@ -19,7 +19,7 @@ import Data.Vector qualified as V
 import Data.Void (Void, absurd)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
-import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G

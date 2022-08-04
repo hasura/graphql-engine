@@ -142,7 +142,7 @@ sense, since scalar fields don’t have selection sets!
 Another issue with this representation has to do with effectful parser
 constructors (such as constructors that can throw errors). These have types like
 
-    mkFooParser :: MonadSchema n m => Blah -> m (Parser k n Foo)
+    mkFooParser :: (MonadMemoize m, MonadParse n) => Blah -> m (Parser k n Foo)
 
 where the parser construction is itself monadic. This causes some annoyance,
 since even if mkFooParser returns a Parser of a polymorphic kind, code like this
