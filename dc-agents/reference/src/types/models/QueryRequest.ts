@@ -3,14 +3,12 @@
 /* eslint-disable */
 
 import type { Query } from './Query';
+import type { TableName } from './TableName';
 import type { TableRelationships } from './TableRelationships';
 
 export type QueryRequest = {
   query: Query;
-  /**
-   * The name of the table to query
-   */
-  table: string;
+  table: TableName;
   /**
    * The relationships between tables involved in the entire query request
    */

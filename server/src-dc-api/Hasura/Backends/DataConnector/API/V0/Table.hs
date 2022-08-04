@@ -12,9 +12,10 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -23,14 +24,16 @@ import Prelude
 
 --------------------------------------------------------------------------------
 
-newtype TableName = TableName {unTableName :: Text}
+newtype TableName = TableName {unTableName :: NonEmpty Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
-  deriving newtype (FromJSONKey, ToJSONKey)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableName
 
 instance HasCodec TableName where
-  codec = dimapCodec TableName unTableName textCodec
+  codec =
+    named "TableName" $
+      dimapCodec TableName unTableName codec
+        <?> "The fully qualified name of a table, where the last item in the array is the table name and any earlier items represent the namespacing of the table name"
 
 --------------------------------------------------------------------------------
 

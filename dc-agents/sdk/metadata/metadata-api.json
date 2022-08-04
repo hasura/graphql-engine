@@ -9,13 +9,13 @@
           "kind": "reference",
           "tables": [
             {
-              "table": "Album",
+              "table": ["Album"],
               "object_relationships": [
                 {
                   "name": "Artist",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Artist",
+                      "remote_table": ["Artist"],
                       "column_mapping": {
                         "ArtistId": "ArtistId"
                       }
@@ -28,7 +28,7 @@
                   "name": "Tracks",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Track",
+                      "remote_table": ["Track"],
                       "column_mapping": {
                         "AlbumId": "AlbumId"
                       }
@@ -38,13 +38,13 @@
               ]
             },
             {
-              "table": "Artist",
+              "table": ["Artist"],
               "array_relationships": [
                 {
                   "name": "Albums",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Album",
+                      "remote_table": ["Album"],
                       "column_mapping": {
                         "ArtistId": "ArtistId"
                       }
@@ -54,13 +54,13 @@
               ]
             },
             {
-              "table": "Customer",
+              "table": ["Customer"],
               "object_relationships": [
                 {
                   "name": "SupportRep",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Employee",
+                      "remote_table": ["Employee"],
                       "column_mapping": {
                         "SupportRepId": "EmployeeId"
                       }
@@ -73,7 +73,7 @@
                   "name": "Invoices",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Invoice",
+                      "remote_table": ["Invoice"],
                       "column_mapping": {
                         "CustomerId": "CustomerId"
                       }
@@ -83,13 +83,13 @@
               ]
             },
             {
-              "table": "Employee",
+              "table": ["Employee"],
               "object_relationships": [
                 {
                   "name": "ReportsTo",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Employee",
+                      "remote_table": ["Employee"],
                       "column_mapping": {
                         "ReportsTo": "EmployeeId"
                       }
@@ -102,7 +102,7 @@
                   "name": "SupportRepForCustomers",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Customer",
+                      "remote_table": ["Customer"],
                       "column_mapping": {
                         "EmployeeId": "SupportRepId"
                       }
@@ -113,7 +113,7 @@
                   "name": "DirectReports",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Employee",
+                      "remote_table": ["Employee"],
                       "column_mapping": {
                         "EmployeeId": "ReportsTo"
                       }
@@ -123,13 +123,13 @@
               ]
             },
             {
-              "table": "Genre",
+              "table": ["Genre"],
               "array_relationships": [
                 {
                   "name": "Tracks",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Track",
+                      "remote_table": ["Track"],
                       "column_mapping": {
                         "GenreId": "GenreId"
                       }
@@ -139,13 +139,13 @@
               ]
             },
             {
-              "table": "Invoice",
+              "table": ["Invoice"],
               "object_relationships": [
                 {
                   "name": "Customer",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Customer",
+                      "remote_table": ["Customer"],
                       "column_mapping": {
                         "CustomerId": "CustomerId"
                       }
@@ -158,7 +158,7 @@
                   "name": "InvoiceLines",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "InvoiceLine",
+                      "remote_table": ["InvoiceLine"],
                       "column_mapping": {
                         "InvoiceId": "InvoiceId"
                       }
@@ -168,13 +168,13 @@
               ]
             },
             {
-              "table": "InvoiceLine",
+              "table": ["InvoiceLine"],
               "object_relationships": [
                 {
                   "name": "Invoice",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Invoice",
+                      "remote_table": ["Invoice"],
                       "column_mapping": {
                         "InvoiceId": "InvoiceId"
                       }
@@ -185,7 +185,7 @@
                   "name": "Track",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Track",
+                      "remote_table": ["Track"],
                       "column_mapping": {
                         "TrackId": "TrackId"
                       }
@@ -195,13 +195,13 @@
               ]
             },
             {
-              "table": "MediaType",
+              "table": ["MediaType"],
               "array_relationships": [
                 {
                   "name": "Tracks",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Track",
+                      "remote_table": ["Track"],
                       "column_mapping": {
                         "MediaTypeId": "MediaTypeId"
                       }
@@ -211,13 +211,13 @@
               ]
             },
             {
-              "table": "Playlist",
+              "table": ["Playlist"],
               "array_relationships": [
                 {
                   "name": "PlaylistTracks",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "PlaylistTrack",
+                      "remote_table": ["PlaylistTrack"],
                       "column_mapping": {
                         "PlaylistId": "PlaylistId"
                       }
@@ -227,13 +227,13 @@
               ]
             },
             {
-              "table": "PlaylistTrack",
+              "table": ["PlaylistTrack"],
               "object_relationships": [
                 {
                   "name": "Playlist",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Playlist",
+                      "remote_table": ["Playlist"],
                       "column_mapping": {
                         "PlaylistId": "PlaylistId"
                       }
@@ -244,7 +244,7 @@
                   "name": "Track",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Track",
+                      "remote_table": ["Track"],
                       "column_mapping": {
                         "TrackId": "TrackId"
                       }
@@ -254,13 +254,13 @@
               ]
             },
             {
-              "table": "Track",
+              "table": ["Track"],
               "object_relationships": [
                 {
                   "name": "Album",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Album",
+                      "remote_table": ["Album"],
                       "column_mapping": {
                         "AlbumId": "AlbumId"
                       }
@@ -271,7 +271,7 @@
                   "name": "MediaType",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "MediaType",
+                      "remote_table": ["MediaType"],
                       "column_mapping": {
                         "MediaTypeId": "MediaTypeId"
                       }
@@ -282,7 +282,7 @@
                   "name": "Genre",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Genre",
+                      "remote_table": ["Genre"],
                       "column_mapping": {
                         "GenreId": "GenreId"
                       }
@@ -295,7 +295,7 @@
                   "name": "InvoiceLines",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "InvoiceLine",
+                      "remote_table": ["InvoiceLine"],
                       "column_mapping": {
                         "TrackId": "TrackId"
                       }
@@ -306,7 +306,7 @@
                   "name": "PlaylistTracks",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "PlaylistTrack",
+                      "remote_table": ["PlaylistTrack"],
                       "column_mapping": {
                         "TrackId": "TrackId"
                       }

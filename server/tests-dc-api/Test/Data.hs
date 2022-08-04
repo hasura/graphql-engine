@@ -74,11 +74,14 @@ import Data.Aeson.Lens (_Bool, _Number, _String)
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
+import Data.CaseInsensitive (CI)
 import Data.CaseInsensitive qualified as CI
 import Data.FileEmbed (embedFile, makeRelativeToProject)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (find, sortOn)
+import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Scientific (Scientific)
 import Data.Text (Text)
@@ -105,11 +108,14 @@ chinookXml :: XML.Document
 chinookXml = XML.parseLBS_ XML.def . GZip.decompress $ BSL.fromStrict chinookXmlBS
 
 readTableFromXmlIntoRows :: API.TableName -> [KeyMap API.FieldValue]
-readTableFromXmlIntoRows (API.TableName tableName) =
+readTableFromXmlIntoRows tableName =
   rowToJsonObject <$> tableRows
   where
+    tableNameToXmlTag :: API.TableName -> CI Text
+    tableNameToXmlTag (API.TableName names) = CI.mk . Text.intercalate "_" $ NonEmpty.toList names
+
     tableRows :: [XML.Element]
-    tableRows = chinookXml ^.. XML.root . XML.nodes . traverse . XML._Element . XML.named (CI.mk tableName)
+    tableRows = chinookXml ^.. XML.root . XML.nodes . traverse . XML._Element . XML.named (tableNameToXmlTag tableName)
 
     rowToJsonObject :: XML.Element -> KeyMap API.FieldValue
     rowToJsonObject element =
@@ -131,8 +137,11 @@ readTableFromXmlIntoRows (API.TableName tableName) =
                     else API.mkColumnFieldValue $ J.String textValue
        in (name, value)
 
+mkTableName :: Text -> API.TableName
+mkTableName = API.TableName . (:| [])
+
 artistsTableName :: API.TableName
-artistsTableName = API.TableName "Artist"
+artistsTableName = mkTableName "Artist"
 
 artistsRows :: [KeyMap API.FieldValue]
 artistsRows = sortBy "ArtistId" $ readTableFromXmlIntoRows artistsTableName
@@ -155,7 +164,7 @@ artistsTableRelationships =
         )
 
 albumsTableName :: API.TableName
-albumsTableName = API.TableName "Album"
+albumsTableName = mkTableName "Album"
 
 albumsRows :: [KeyMap API.FieldValue]
 albumsRows = sortBy "AlbumId" $ readTableFromXmlIntoRows albumsTableName
@@ -179,7 +188,7 @@ tracksRelationshipName :: API.RelationshipName
 tracksRelationshipName = API.RelationshipName "Tracks"
 
 customersTableName :: API.TableName
-customersTableName = API.TableName "Customer"
+customersTableName = mkTableName "Customer"
 
 customersRows :: [KeyMap API.FieldValue]
 customersRows = sortBy "CustomerId" $ readTableFromXmlIntoRows customersTableName
@@ -198,7 +207,7 @@ supportRepRelationshipName :: API.RelationshipName
 supportRepRelationshipName = API.RelationshipName "SupportRep"
 
 employeesTableName :: API.TableName
-employeesTableName = API.TableName "Employee"
+employeesTableName = mkTableName "Employee"
 
 employeesRows :: [KeyMap API.FieldValue]
 employeesRows = sortBy "EmployeeId" $ readTableFromXmlIntoRows employeesTableName
@@ -221,25 +230,25 @@ supportRepForCustomersRelationshipName :: API.RelationshipName
 supportRepForCustomersRelationshipName = API.RelationshipName "SupportRepForCustomers"
 
 invoicesTableName :: API.TableName
-invoicesTableName = API.TableName "Invoice"
+invoicesTableName = mkTableName "Invoice"
 
 invoicesRows :: [KeyMap API.FieldValue]
 invoicesRows = sortBy "InvoiceId" $ readTableFromXmlIntoRows invoicesTableName
 
 invoiceLinesTableName :: API.TableName
-invoiceLinesTableName = API.TableName "InvoiceLine"
+invoiceLinesTableName = mkTableName "InvoiceLine"
 
 invoiceLinesRows :: [KeyMap API.FieldValue]
 invoiceLinesRows = sortBy "InvoiceLineId" $ readTableFromXmlIntoRows invoiceLinesTableName
 
 mediaTypesTableName :: API.TableName
-mediaTypesTableName = API.TableName "MediaType"
+mediaTypesTableName = mkTableName "MediaType"
 
 mediaTypesRows :: [KeyMap API.FieldValue]
 mediaTypesRows = sortBy "MediaTypeId" $ readTableFromXmlIntoRows mediaTypesTableName
 
 tracksTableName :: API.TableName
-tracksTableName = API.TableName "Track"
+tracksTableName = mkTableName "Track"
 
 tracksRows :: [KeyMap API.FieldValue]
 tracksRows = sortBy "TrackId" $ readTableFromXmlIntoRows tracksTableName

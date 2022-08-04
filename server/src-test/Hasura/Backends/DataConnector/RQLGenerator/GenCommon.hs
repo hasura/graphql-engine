@@ -12,8 +12,10 @@ module Hasura.Backends.DataConnector.RQLGenerator.GenCommon
 where
 
 import Data.Functor.Const
+import Hasura.Backends.DataConnector.IR.Function qualified as FunctionName
 import Hasura.Backends.DataConnector.IR.Name qualified as Name
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as ScalarType
+import Hasura.Backends.DataConnector.IR.Table qualified as TableName
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText, genHashMap)
 import Hasura.Prelude (coerce, fmap, pure, ($), (<$>), (<*>))
 import Hasura.RQL.IR
@@ -22,7 +24,8 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.Backend
 import Hedgehog (MonadGen)
-import Hedgehog.Gen (bool_, choice, element, list)
+import Hedgehog.Gen (bool_, choice, element, list, nonEmpty)
+import Hedgehog.Internal.Range (linear)
 
 --------------------------------------------------------------------------------
 
@@ -83,7 +86,7 @@ genColumn :: MonadGen m => m (Column 'DataConnector)
 genColumn = coerce <$> genArbitraryUnicodeText defaultRange
 
 genTableName :: MonadGen m => m (TableName 'DataConnector)
-genTableName = coerce <$> genArbitraryUnicodeText defaultRange
+genTableName = coerce <$> nonEmpty (linear 1 3) (genArbitraryUnicodeText defaultRange)
 
 genScalarType :: MonadGen m => m (ScalarType 'DataConnector)
 genScalarType =
@@ -94,7 +97,7 @@ genScalarType =
     ]
 
 genFunctionName :: MonadGen m => m (FunctionName 'DataConnector)
-genFunctionName = coerce <$> genArbitraryUnicodeText defaultRange
+genFunctionName = coerce <$> nonEmpty (linear 1 3) (genArbitraryUnicodeText defaultRange)
 
 genFunctionArgumentExp :: MonadGen m => m (FunctionArgumentExp 'DataConnector a)
 genFunctionArgumentExp = pure (Const ())

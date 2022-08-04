@@ -1,12 +1,7 @@
-﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse, Aggregate, SingleColumnAggregate, ColumnCountAggregate } from "./types";
-import { coerceUndefinedToNull, crossProduct, unreachable, zip } from "./util";
+﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName } from "./types";
+import { coerceUndefinedToNull, crossProduct, tableNameEquals, unreachable, zip } from "./util";
 import * as math from "mathjs";
 
-type StaticData = {
-  [tableName: string]: Record<string, ScalarValue>[]
-}
-
-type TableName = string
 type RelationshipName = string
 
 type ProjectedRow = {
@@ -187,7 +182,7 @@ const paginateRows = (rows: Record<string, ScalarValue>[], offset: number | null
 };
 
 const makeFindRelationship = (allTableRelationships: TableRelationships[], tableName: TableName) => (relationshipName: RelationshipName): Relationship => {
-  const relationship = allTableRelationships.find(r => r.source_table === tableName)?.relationships?.[relationshipName];
+  const relationship = allTableRelationships.find(r => tableNameEquals(r.source_table)(tableName))?.relationships?.[relationshipName];
   if (relationship === undefined)
     throw `No relationship named ${relationshipName} found for table ${tableName}`;
   else
@@ -377,9 +372,9 @@ const calculateAggregates = (rows: Record<string, ScalarValue>[], aggregateReque
   }));
 };
 
-export const queryData = (staticData: StaticData, queryRequest: QueryRequest) => {
+export const queryData = (getTable: (tableName: TableName) => Record<string, ScalarValue>[] | undefined, queryRequest: QueryRequest) => {
   const performQuery = (tableName: TableName, query: Query): QueryResponse => {
-    const rows = staticData[tableName];
+    const rows = getTable(tableName);
     if (rows === undefined) {
       throw `${tableName} is not a valid table`;
     }

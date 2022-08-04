@@ -40,13 +40,13 @@ POST /v1/metadata
           "kind": "reference",
           "tables": [
             {
-              "table": "Album",
+              "table": ["Album"],
               "object_relationships": [
                 {
                   "name": "Artist",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Artist",
+                      "remote_table": ["Artist"],
                       "column_mapping": {
                         "ArtistId": "ArtistId"
                       }
@@ -56,13 +56,13 @@ POST /v1/metadata
               ]
             },
             {
-              "table": "Artist",
+              "table": ["Artist"],
               "array_relationships": [
                 {
                   "name": "Album",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Album",
+                      "remote_table": ["Album"],
                       "column_mapping": {
                         "ArtistId": "ArtistId"
                       }
@@ -73,7 +73,9 @@ POST /v1/metadata
             }
           ],
           "configuration": {
-            "tables": [ "Artist", "Album" ]
+            "value": {
+              "tables": [ "Artist", "Album" ]
+            }
           }
         }
       ]
@@ -165,7 +167,7 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
 {
   "tables": [
     {
-      "name": "Artist",
+      "name": ["Artist"],
       "primary_key": ["ArtistId"],
       "description": "Collection of artists of music",
       "columns": [
@@ -184,7 +186,7 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
       ]
     },
     {
-      "name": "Album",
+      "name": ["Album"],
       "primary_key": ["AlbumId"],
       "description": "Collection of music albums created by artists",
       "columns": [
@@ -216,6 +218,8 @@ The `tables` section describes the two available tables, as well as their column
 
 Notice that the names of tables and columns are used in the metadata document to describe tracked tables and relationships.
 
+Table names are described as an array of strings. This allows agents to fully qualify their table names with whatever namespacing requirements they have. For example, if the agent connects to a database that puts tables inside schemas, the agent could use table names such as `["my_schema", "my_table"]`.
+
 #### Type definitions
 
 The `SchemaResponse` TypeScript type from [the reference implementation](./reference/src/types/index.ts) describes the valid response body for the `GET /schema` endpoint.
@@ -239,7 +243,7 @@ and here is the resulting query request payload:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [],
   "query": {
     "where": {
@@ -267,7 +271,7 @@ The implementation of the service is responsible for intepreting this data struc
 
 Let's break down the request:
 
-- The `table` field tells us which table to fetch the data from, namely the `Artist` table.
+- The `table` field tells us which table to fetch the data from, namely the `Artist` table. The table name (ie. the array of strings) must be one that was returned previously by the `/schema` endpoint.
 - The `table_relationships` field that lists any relationships used to join between tables in the query. This query does not use any relationships, so this is just an empty list here.
 - The `query` field contains further information about how to query the specified table:
   - The `where` field tells us that there is currently no (interesting) predicate being applied to the rows of the data set (just an empty conjunction, which ought to return every row).
@@ -458,13 +462,13 @@ This will generate the following JSON query if the agent supports relationships:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [
     {
-      "source_table": "Artist",
+      "source_table": ["Artist"],
       "relationships": {
         "ArtistAlbums": {
-          "target_table": "Album",
+          "target_table": ["Album"],
           "relationship_type": "array",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -491,7 +495,6 @@ This will generate the following JSON query if the agent supports relationships:
             "type": "and"
           },
           "offset": null,
-          "from": "albums",
           "order_by": [],
           "limit": null,
           "fields": {
@@ -523,7 +526,6 @@ Note the `Albums` field in particular, which traverses the `Artists` -> `Albums`
       "type": "and"
     },
     "offset": null,
-    "from": "albums",
     "order_by": [],
     "limit": null,
     "fields": {
@@ -602,13 +604,13 @@ POST /v1/metadata
           "kind": "reference",
           "tables": [
             {
-              "table": "Customer",
+              "table": ["Customer"],
               "object_relationships": [
                 {
                   "name": "SupportRep",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Employee",
+                      "remote_table": ["Employee"],
                       "column_mapping": {
                         "SupportRepId": "EmployeeId"
                       }
@@ -639,7 +641,7 @@ POST /v1/metadata
               ]
             },
             {
-              "table": "Employee"
+              "table": ["Employee"]
             }
           ],
           "configuration": {}
@@ -668,13 +670,13 @@ We would get the following query request JSON:
 
 ```json
 {
-  "table": "Customer",
+  "table": ["Customer"],
   "table_relationships": [
     {
-      "source_table": "Customer",
+      "source_table": ["Customer"],
       "relationships": {
         "SupportRep": {
-          "target_table": "Employee",
+          "target_table": ["Employee"],
           "relationship_type": "object",
           "column_mapping": {
             "SupportRepId": "EmployeeId"
@@ -753,7 +755,7 @@ This would cause the following query request to be performed:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [],
   "query": {
     "aggregates": {
@@ -796,7 +798,7 @@ query {
 
 ```json
 {
-  "table": "Album",
+  "table": ["Album"],
   "table_relationships": [],
   "query": {
     "aggregates": {
@@ -848,7 +850,7 @@ The `nodes` part of the query ends up as standard `fields` in the `Query`, and t
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [],
   "query": {
     "aggregates": {
@@ -917,13 +919,13 @@ This would generate the following `QueryRequest`:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [
     {
-      "source_table": "Artist",
+      "source_table": ["Artist"],
       "relationships": {
         "Albums": {
-          "target_table": "Album",
+          "target_table": ["Album"],
           "relationship_type": "array",
           "column_mapping": {
             "ArtistId": "ArtistId"

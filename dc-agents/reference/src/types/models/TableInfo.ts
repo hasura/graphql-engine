@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 import type { ColumnInfo } from './ColumnInfo';
+import type { TableName } from './TableName';
 
 export type TableInfo = {
   /**
@@ -13,10 +14,7 @@ export type TableInfo = {
    * Description of the table
    */
   description?: string | null;
-  /**
-   * The name of the table
-   */
-  name: string;
+  name: TableName;
   /**
    * The primary key of the table
    */

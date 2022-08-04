@@ -47,7 +47,7 @@ sourceMetadata =
         name : *source
         kind: *backendType
         tables:
-          - table: Album
+          - table: [Album]
             configuration:
               custom_root_fields:
                 select: albums
@@ -63,10 +63,10 @@ sourceMetadata =
               - name: artist
                 using:
                   manual_configuration:
-                    remote_table: Artist
+                    remote_table: [Artist]
                     column_mapping:
                       ArtistId: ArtistId
-          - table: Artist
+          - table: [Artist]
             configuration:
               custom_root_fields:
                 select: artists
@@ -80,7 +80,7 @@ sourceMetadata =
               - name: albums
                 using:
                   manual_configuration:
-                    remote_table: Album
+                    remote_table: [Album]
                     column_mapping:
                       ArtistId: ArtistId
         configuration:
@@ -132,7 +132,7 @@ tests opts = do
               { _whenQuery =
                   Just
                     ( API.QueryRequest
-                        { _qrTable = API.TableName "Album",
+                        { _qrTable = API.TableName ("Album" :| []),
                           _qrTableRelationships = [],
                           _qrQuery =
                             API.Query
