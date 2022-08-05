@@ -52,6 +52,8 @@ const defaultQueryPermissions = {
   },
   select: {
     columns: [],
+    subscription_root_fields: null,
+    query_root_fields: null,
     computed_fields: [],
     backend_only: false,
     filter: {},

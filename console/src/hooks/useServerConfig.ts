@@ -5,6 +5,11 @@ import { useQuery, UseQueryOptions } from 'react-query';
 import { APIError } from './error';
 import { Api } from './apiUtils';
 
+type ExperimentalFeature =
+  | 'streaming_subscriptions'
+  | 'naming_convention'
+  | 'apollo_federation';
+
 export interface ServerConfig {
   version: string;
   is_function_permissions_inferred: boolean;
@@ -12,7 +17,7 @@ export interface ServerConfig {
   is_auth_hook_set: boolean;
   is_remote_schema_permissions_enabled: boolean;
   is_jwt_set: boolean;
-  experimental_features: string[];
+  experimental_features: ExperimentalFeature[];
   jwt: {
     claims_namespace: string;
     claims_format: string;

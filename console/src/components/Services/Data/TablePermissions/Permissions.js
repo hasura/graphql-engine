@@ -5,7 +5,9 @@ import { IconTooltip } from '@/new-components/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import 'brace/mode/json';
 import 'brace/theme/github';
-
+import { LS_KEYS, setLSItem, getLSItem } from '@/utils/localStorage';
+import { Button } from '@/new-components/Button';
+import { getPrimaryKeysFromTable } from './utils';
 import { RESET } from '../TableModify/ModifyActions';
 import {
   permOpenEdit,
@@ -16,11 +18,9 @@ import {
   permAllowAll,
   permCloseEdit,
   permSetRoleName,
-  // permToggleAllowUpsert,
   permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
-  // permRemoveRole,
   permSetBulkSelect,
   permRemoveMultipleRoles,
   permSetApplySamePerm,
@@ -31,8 +31,13 @@ import {
   SET_PRESET_VALUE,
   DELETE_PRESET,
   X_HASURA_CONST,
+  PERM_UPDATE_QUERY_ROOT_FIELDS,
+  PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
 } from './Actions';
-
+import {
+  RootFieldPermissions,
+  QUERY_ROOT_VALUES,
+} from './RootFieldPermissions/RootFieldPermissions';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
@@ -51,7 +56,6 @@ import {
   getTablePermissionsByRoles,
   getPermissionRowAccessSummary,
 } from '../PermissionsSummary/utils';
-import Button from '../../../Common/Button/Button';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import {
@@ -81,12 +85,24 @@ import {
   getUpdateTooltip,
   getQuerySingleRowMutation,
   getPermissionsIcon,
+  hasSelectedTablePrimaryKeyFromMetadata,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
 import { rolesSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
 import { FaInfoCircle, FaPencilAlt, FaTimes } from 'react-icons/fa';
+import { PermissionsConfirmationModal } from './RootFieldPermissions/PermissionsConfirmationModal';
+import {
+  getPermissionsModalTitle,
+  getPermissionsModalDescription,
+} from './RootFieldPermissions/PermissionsConfirmationModal.utils';
+
+const getPermissionModalEnabled = () => {
+  const status = getLSItem(LS_KEYS.permissionConfirmationModalStatus);
+  const isEnabled = !status || status === 'enabled';
+  return isEnabled;
+};
 
 class Permissions extends Component {
   constructor() {
@@ -107,6 +123,8 @@ class Permissions extends Component {
       },
       prevPermissionsState: {},
       presetsOrdered: [],
+      isPermissionsModalVisible: false,
+      permissionsModalScenario: '',
     };
   }
 
@@ -214,6 +232,8 @@ class Permissions extends Component {
       trackableFunctions,
       currentSource,
     } = this.props;
+
+    const isPermissionsConfirmationModalEnabled = getPermissionModalEnabled();
 
     const { localFilterString, presetsOrdered } = this.state;
 
@@ -934,14 +954,59 @@ class Permissions extends Component {
         );
       };
 
+      const primaryKeys =
+        getPrimaryKeysFromTable(this.props.allSchemas, this.props) || [];
+
+      const onColumnClick = fieldType => e => {
+        const columnName = e.target.value;
+        const isChecked = e.target.checked;
+
+        const allPrimaryKeysSelected = hasSelectedTablePrimaryKeyFromMetadata(
+          this.props
+        );
+
+        const isSelectByPkSelectedInQueryRoots = this.props.permissionsState?.select?.query_root_fields?.includes(
+          'select_by_pk'
+        );
+        const isSelectByPkSelectedInSubscriptionRoots = this.props.permissionsState?.select?.subscription_root_fields?.includes(
+          'select_by_pk'
+        );
+        if (
+          isPermissionsConfirmationModalEnabled &&
+          primaryKeys.includes(columnName) &&
+          !isChecked &&
+          allPrimaryKeysSelected &&
+          (isSelectByPkSelectedInQueryRoots ||
+            isSelectByPkSelectedInSubscriptionRoots)
+        ) {
+          this.setState({
+            isPermissionsModalVisible: true,
+            permissionsModalScenario: 'pk',
+            permissionsModalPkColumn: columnName,
+            permissionsModalFieldType: fieldType,
+          });
+          return;
+        }
+        dispatch(permToggleField(fieldType, columnName));
+      };
+
+      const getAllFields = () => {
+        const allFields = {};
+
+        allFields.columns = (tableSchema.columns || []).map(c => c.column_name);
+
+        if (query === 'select') {
+          allFields.computed_fields = groupedComputedFields.scalar.map(
+            cf => cf.computed_field_name
+          );
+        }
+
+        return allFields;
+      };
+
       const getColumnSection = () => {
         const getColumnList = () => {
           const _columnList = [];
-
-          const dispatchToggleField = fieldType => e => {
-            const fieldName = e.target.value;
-            dispatch(permToggleField(fieldType, fieldName));
-          };
 
           const getFieldCheckbox = (fieldType, fieldName) => {
             let checked = false;
@@ -964,7 +1029,7 @@ class Permissions extends Component {
                       className="legacy-input-fix"
                       checked={checked}
                       value={fieldName}
-                      onChange={dispatchToggleField(fieldType)}
+                      onChange={onColumnClick(fieldType)}
                       disabled={noPermissions}
                       title={noPermissions ? noPermissionsMsg : ''}
                     />
@@ -1024,16 +1089,31 @@ class Permissions extends Component {
 
         const getToggleAllBtn = () => {
           const dispatchToggleAllColumns = () => {
-            const allFields = {};
+            const allFields = getAllFields();
 
-            allFields.columns = (tableSchema.columns || []).map(
-              c => c.column_name
+            const allPrimaryKeysSelected = hasSelectedTablePrimaryKeyFromMetadata(
+              this.props
             );
 
-            if (query === 'select') {
-              allFields.computed_fields = groupedComputedFields.scalar.map(
-                cf => cf.computed_field_name
-              );
+            const isSelectByPkSelectedInQueryRoots = this.props.permissionsState?.select?.query_root_fields?.includes(
+              'select_by_pk'
+            );
+            const isSelectByPkSelectedInSubscriptionRoots = this.props.permissionsState?.select?.subscription_root_fields?.includes(
+              'select_by_pk'
+            );
+
+            if (
+              isPermissionsConfirmationModalEnabled &&
+              allPrimaryKeysSelected &&
+              (isSelectByPkSelectedInQueryRoots ||
+                isSelectByPkSelectedInSubscriptionRoots)
+            ) {
+              this.setState({
+                isPermissionsModalVisible: true,
+                permissionsModalScenario: 'pks',
+                permissionsModalPkColumn: primaryKeys.join(', '),
+              });
+              return;
             }
 
             dispatch(permToggleAllFields(allFields));
@@ -1041,7 +1121,7 @@ class Permissions extends Component {
 
           return (
             <Button
-              size={'xs'}
+              size="sm"
               onClick={dispatchToggleAllColumns}
               disabled={noPermissions}
               title={noPermissions ? noPermissionsMsg : ''}
@@ -1123,6 +1203,39 @@ class Permissions extends Component {
         }
 
         return _columnSection;
+      };
+
+      const getQueryRootPermissionsSection = () => {
+        if (query !== 'select') return null;
+
+        const hasSelectedPrimaryKey = hasSelectedTablePrimaryKeyFromMetadata(
+          this.props
+        );
+        return (
+          <RootFieldPermissions
+            hasSelectedPrimaryKeys={hasSelectedPrimaryKey}
+            hasEnabledAggregations={Boolean(
+              this.props.permissionsState?.select?.allow_aggregations
+            )}
+            disabled={!this.props.permissionsState?.select}
+            queryRootPermissions={
+              this.props.permissionsState?.select?.query_root_fields || null
+            }
+            subscriptionRootPermissions={
+              this.props.permissionsState?.select?.subscription_root_fields ||
+              null
+            }
+            onSubmitUpdate={(key, value) => {
+              dispatch({
+                type:
+                  key === QUERY_ROOT_VALUES
+                    ? PERM_UPDATE_QUERY_ROOT_FIELDS
+                    : PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
+                value,
+              });
+            }}
+          />
+        );
       };
 
       const getPresetsSection = action => {
@@ -1456,6 +1569,10 @@ class Permissions extends Component {
         );
       };
 
+      const onDisableAggregation = () => {
+        dispatch(permToggleAllowAggregation(false));
+      };
+
       const getAggregationSection = () => {
         if (!isFeatureSupported('tables.permissions.aggregation')) {
           return null;
@@ -1466,6 +1583,24 @@ class Permissions extends Component {
         }
 
         const handleClick = e => {
+          const isAggregateSelectedInQueryRoots = this.props.permissionsState?.select?.query_root_fields?.includes(
+            'select_aggregate'
+          );
+          const isAggregateSelectedInSubscriptionRoots = this.props.permissionsState?.select?.subscription_root_fields?.includes(
+            'select_aggregate'
+          );
+          if (
+            isPermissionsConfirmationModalEnabled &&
+            !e.target.checked &&
+            (isAggregateSelectedInQueryRoots ||
+              isAggregateSelectedInSubscriptionRoots)
+          ) {
+            this.setState({
+              isPermissionsModalVisible: true,
+              permissionsModalScenario: 'aggregate',
+            });
+            return;
+          }
           dispatch(permToggleAllowAggregation(e.target.checked));
         };
 
@@ -1518,15 +1653,10 @@ class Permissions extends Component {
           return null;
         }
 
-        // const applySameSelected = e => {
-        //   const isChecked = e.target.checked;
-        //   const selectedRole = e.target.getAttribute('data-role');
-        //   dispatch(permSetSameSelect(isChecked, selectedRole));
-        // };
-
         const applySameBulk = () => {
           const confirmMessage = 'This will overwrite any existing permissions';
           const isOk = getConfirmation(confirmMessage);
+
           if (isOk) {
             dispatch(applySamePermissionsBulk(tableSchema, permsChanged));
           }
@@ -1727,6 +1857,45 @@ class Permissions extends Component {
         );
       };
 
+      const onClosePermissionsModal = () =>
+        this.setState({ isPermissionsModalVisible: false });
+
+      const onSubmitPermissionsModal = ({
+        noPermissionsConfirmationDialog,
+      }) => {
+        if (this.state.permissionsModalScenario === 'aggregate') {
+          onDisableAggregation();
+        }
+
+        if (this.state.permissionsModalScenario === 'pk') {
+          dispatch(
+            permToggleField(
+              this.state.permissionsModalFieldType,
+              this.state.permissionsModalPkColumn
+            )
+          );
+        }
+
+        if (this.state.permissionsModalScenario === 'pks') {
+          dispatch(permToggleAllFields(getAllFields()));
+        }
+        onClosePermissionsModal();
+
+        if (noPermissionsConfirmationDialog === 'enabled') {
+          setLSItem(LS_KEYS.permissionConfirmationModalStatus, 'disabled');
+        }
+      };
+
+      const permissionsModalTitle = getPermissionsModalTitle({
+        scenario: this.state.permissionsModalScenario,
+        role: permissionsState.role,
+        primaryKeyColumns: this.state.permissionsModalPkColumn,
+      });
+
+      const permissionsModalDescription = getPermissionsModalDescription(
+        this.state.permissionsModalScenario
+      );
+
       return (
         <div
           id={'permission-edit-section'}
@@ -1736,7 +1905,7 @@ class Permissions extends Component {
           <div className={styles.editPermsHeading}>
             <span className={styles.add_mar_right}>
               <Button
-                size="xs"
+                size="sm"
                 onClick={dispatchCloseEdit}
                 data-test={'close-button'}
               >
@@ -1752,6 +1921,7 @@ class Permissions extends Component {
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
+            {getQueryRootPermissionsSection()}
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
             {getBackendOnlySection()}
@@ -1765,6 +1935,14 @@ class Permissions extends Component {
               currQueryPermissions={currQueryPermissions}
             />
             {getClonePermsSection()}
+            {this.state.isPermissionsModalVisible && (
+              <PermissionsConfirmationModal
+                title={permissionsModalTitle}
+                description={permissionsModalDescription}
+                onSubmit={onSubmitPermissionsModal}
+                onClose={onClosePermissionsModal}
+              />
+            )}
           </div>
         </div>
       );

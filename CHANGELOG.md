@@ -9,7 +9,9 @@
 - server: add metadata API to enable Apollo Federation for a table
 - console: add console support for Apollo Federation
 - console: add custom names for streaming subscriptions
+- console: add support for table query and subscription root fields visibility permissions
 - console: fix the BigQuery row-level restrictions on boolean columns
+
 ## v2.10.0-beta.1
 
 ### Introducing Apollo Federation v1 support (experimental)
