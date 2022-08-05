@@ -943,6 +943,7 @@ test-suite graphql-engine-tests
     , http-client
     , http-client-tls
     , http-types
+    , HUnit
     , immortal
     , insert-ordered-containers
     , jose
@@ -1035,6 +1036,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.SQL.EDSL
     Hasura.Backends.Postgres.SQL.Select.RenameIdentifiersSpec
     Hasura.Backends.Postgres.SQL.ValueSpec
+    Hasura.Backends.Postgres.Translate.UpdateSpec
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
@@ -1066,11 +1068,13 @@ test-suite graphql-engine-tests
     Hasura.StreamingSubscriptionSuite
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Utils
+    Test.Backend.Postgres.Update
     Test.Parser.Expectation
     Test.Parser.Field
     Test.Parser.Internal
     Test.Parser.Monad
     Test.QuickCheck.Extended
+    Test.SIString
 
 test-suite tests-hspec
   import: common-all, lib-depends
@@ -1211,7 +1215,6 @@ test-suite tests-hspec
 
  -- Harness.Quoter
     Harness.Quoter.Graphql
-    Harness.Quoter.Sql
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml
 
