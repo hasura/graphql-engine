@@ -9,6 +9,8 @@ module Test.Parser.Expectation
     MultiRowUpdateBuilder (..),
     runUpdateFieldTest,
     module I,
+    AnnotatedUpdateBuilder (..),
+    mkAnnotatedUpdate,
   )
 where
 
@@ -32,14 +34,14 @@ import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax qualified as Syntax
 import Test.Hspec
 import Test.Parser.Internal
-import Test.Parser.Internal as I (ColumnInfoBuilder (..))
+import Test.Parser.Internal as I (ColumnInfoBuilder (..), mkColumnInfo, mkTable)
 import Test.Parser.Monad
 
 type PG = 'Postgres 'Vanilla
 
 type BoolExp = GBoolExp PG (AnnBoolExpFld PG (UnpreparedValue PG))
 
-type Output = MutationOutputG PG (RemoteRelationshipFieldWrapper UnpreparedValue) (UnpreparedValue PG)
+type Output r = MutationOutputG PG r (UnpreparedValue PG)
 
 type Field = Syntax.Field Syntax.NoFragments Variable
 
@@ -65,7 +67,7 @@ data UpdateExpectationBuilder = UpdateExpectationBuilder
   { -- | build the expected selection set/output, e.g.
     --
     -- > MOutMultirowFields [("affected_rows", MCount)]
-    utbOutput :: Output,
+    utbOutput :: Output (RemoteRelationshipFieldWrapper UnpreparedValue),
     -- | expected where condition(s), e.g. given a @nameColumn ::
     -- ColumnInfoBuilder@ and @oldValue :: UnpreparedValue PG@:
     --
@@ -116,11 +118,11 @@ runUpdateFieldTest UpdateTestSetup {..} =
 -- | Internal use only. The intended use is through 'runUpdateFieldTest'.
 --
 -- Build an 'AnnotatedUpdateG', to be used with 'mkAnnotatedUpdate'.
-data AnnotatedUpdateBuilder = AnnotatedUpdateBuilder
+data AnnotatedUpdateBuilder r = AnnotatedUpdateBuilder
   { -- | the main table for the update
     aubTable :: QualifiedTable,
     -- | the 'Output' clause, e.g., selection set, affected_rows, etc.
-    aubOutput :: Output,
+    aubOutput :: Output r,
     -- | the table columns (all of them)
     aubColumns :: [ColumnInfo PG],
     -- | the where clause(s)
@@ -154,8 +156,9 @@ instance Eq (RemoteRelationshipFieldWrapper vf) where
 
 -- | Internal use, see 'runUpdateFieldTest'.
 mkAnnotatedUpdate ::
-  AnnotatedUpdateBuilder ->
-  AnnotatedUpdateG PG (RemoteRelationshipFieldWrapper UnpreparedValue) (UnpreparedValue PG)
+  forall r.
+  AnnotatedUpdateBuilder r ->
+  AnnotatedUpdateG PG r (UnpreparedValue PG)
 mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
   where
     toBoolExp :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])] -> BoolExp
@@ -187,7 +190,7 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
           mruExpression = HM.fromList $ fmap (bimap ciColumn id) mrubUpdate
         }
 
-    _auOutput :: Output
+    _auOutput :: Output r
     _auOutput = aubOutput
 
     _auAllCols :: [ColumnInfo PG]

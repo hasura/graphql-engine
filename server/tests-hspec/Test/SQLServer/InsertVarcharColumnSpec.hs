@@ -4,10 +4,10 @@
 module Test.SQLServer.InsertVarcharColumnSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
+import Database.PG.Query.Pool (sql)
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
