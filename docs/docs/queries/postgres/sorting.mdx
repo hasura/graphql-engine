@@ -533,3 +533,9 @@ response={`{
   }
 }`}
 />
+
+:::info Note
+
+Key order in input object for order_by is [not preserved](https://github.com/hasura/graphql-engine/releases/tag/v2.0.0). This means you should only have a single key per object, or you may see unexpected behavior.
+
+:::
