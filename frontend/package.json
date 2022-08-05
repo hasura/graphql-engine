@@ -1,0 +1,53 @@
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start": "nx serve",
+    "build": "nx build",
+    "test": "nx test"
+  },
+  "private": true,
+  "dependencies": {
+    "core-js": "^3.6.5",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "regenerator-runtime": "0.13.7",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@nrwl/cli": "14.5.2",
+    "@nrwl/cypress": "14.5.2",
+    "@nrwl/eslint-plugin-nx": "14.5.2",
+    "@nrwl/jest": "14.5.2",
+    "@nrwl/linter": "14.5.2",
+    "@nrwl/react": "14.5.2",
+    "@nrwl/web": "14.5.2",
+    "@nrwl/workspace": "14.5.2",
+    "@testing-library/cypress": "^8.0.3",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^11.2.7",
+    "@testing-library/react-hooks": "7.0.2",
+    "@types/jest": "27.4.1",
+    "@types/node": "16.11.7",
+    "@types/react": "17.0.39",
+    "@types/react-dom": "17.0.17",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "babel-jest": "27.5.1",
+    "cypress": "^10.2.0",
+    "eslint": "~8.15.0",
+    "eslint-config-prettier": "8.1.0",
+    "eslint-plugin-cypress": "^2.10.3",
+    "eslint-plugin-import": "2.26.0",
+    "eslint-plugin-jsx-a11y": "6.6.1",
+    "eslint-plugin-react": "7.30.1",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "jest": "27.5.1",
+    "nx": "14.5.2",
+    "prettier": "^2.6.2",
+    "ts-jest": "27.1.4",
+    "ts-node": "~10.8.0",
+    "typescript": "~4.7.2"
+  }
+}
