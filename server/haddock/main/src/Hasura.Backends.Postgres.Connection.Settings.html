@@ -49,7 +49,7 @@
 </span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Test.QuickCheck.Instances.Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Test.QuickCheck.Instances.Time</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span id="local-6989586621689281896"><span id="local-6989586621689281897"></span></span><span class="hs-keyword">data</span><span> </span><span id="PostgresPoolSettings"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-var">PostgresPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresPoolSettings"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-var">PostgresPoolSettings</span></a></span></span><span>
+</span><span id="line-52"></span><span id="local-6989586621689281962"><span id="local-6989586621689281963"></span></span><span class="hs-keyword">data</span><span> </span><span id="PostgresPoolSettings"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-var">PostgresPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresPoolSettings"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-var">PostgresPoolSettings</span></a></span></span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ppsMaxConnections"><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Maybe Int
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_ppsMaxConnections"><span class="hs-identifier hs-var hs-var">_ppsMaxConnections</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-54"></span><span>    </span><span id="_ppsIdleTimeout"><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Maybe Int
@@ -61,7 +61,7 @@
 </span><span id="line-57"></span><span>    </span><span id="_ppsConnectionLifetime"><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Maybe NominalDiffTime
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_ppsConnectionLifetime"><span class="hs-identifier hs-var hs-var">_ppsConnectionLifetime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NominalDiffTime</span></span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281884"><span id="local-6989586621689281886"><span id="local-6989586621689281888"><span class="annot"><span class="annottext">Int -&gt; PostgresPoolSettings -&gt; ShowS
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281950"><span id="local-6989586621689281952"><span id="local-6989586621689281954"><span class="annot"><span class="annottext">Int -&gt; PostgresPoolSettings -&gt; ShowS
 [PostgresPoolSettings] -&gt; ShowS
 PostgresPoolSettings -&gt; String
 (Int -&gt; PostgresPoolSettings -&gt; ShowS)
@@ -76,7 +76,7 @@ show :: PostgresPoolSettings -&gt; String
 $cshow :: PostgresPoolSettings -&gt; String
 showsPrec :: Int -&gt; PostgresPoolSettings -&gt; ShowS
 $cshowsPrec :: Int -&gt; PostgresPoolSettings -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281879"><span id="local-6989586621689281881"><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; PostgresPoolSettings -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281945"><span id="local-6989586621689281947"><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; PostgresPoolSettings -&gt; Bool
 (PostgresPoolSettings -&gt; PostgresPoolSettings -&gt; Bool)
 -&gt; (PostgresPoolSettings -&gt; PostgresPoolSettings -&gt; Bool)
 -&gt; Eq PostgresPoolSettings
@@ -96,16 +96,16 @@ $cto :: forall x. Rep PostgresPoolSettings x -&gt; PostgresPoolSettings
 $cfrom :: forall x. PostgresPoolSettings -&gt; Rep PostgresPoolSettings x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281872"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281938"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281867"><span id="local-6989586621689281869"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281933"><span id="local-6989586621689281935"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281864"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281930"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-special">$(</span><span id="local-6989586621689281855"><span id="local-6989586621689281857"><span id="local-6989586621689281859"><span id="local-6989586621689281861"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresPoolSettings</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span class="hs-special">$(</span><span id="local-6989586621689281921"><span id="local-6989586621689281923"><span id="local-6989586621689281925"><span id="local-6989586621689281927"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresPoolSettings</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281849"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621689281847"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PostgresPoolSettings
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281915"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621689281913"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PostgresPoolSettings
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser PostgresPoolSettings)
 -&gt; Value
@@ -118,8 +118,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser PostgresPoolSettings
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689281844"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281844"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689281910"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689281910"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">Maybe Int
 -&gt; Maybe Int
 -&gt; Maybe Int
@@ -142,7 +142,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       -&gt; PostgresPoolSettings)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
+</span><a href="#local-6989586621689281910"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;max_connections&quot;</span></span><span>
@@ -160,7 +160,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
       -&gt; PostgresPoolSettings)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
+</span><a href="#local-6989586621689281910"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;idle_timeout&quot;</span></span><span>
@@ -175,7 +175,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
       -&gt; Maybe NominalDiffTime -&gt; PostgresPoolSettings)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
+</span><a href="#local-6989586621689281910"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;retries&quot;</span></span><span>
@@ -186,7 +186,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 -&gt; Parser (Maybe NominalDiffTime -&gt; PostgresPoolSettings)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe NominalDiffTime)
+</span><a href="#local-6989586621689281910"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe NominalDiffTime)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;pool_timeout&quot;</span></span><span>
@@ -194,7 +194,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 -&gt; Parser (Maybe NominalDiffTime) -&gt; Parser PostgresPoolSettings
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe NominalDiffTime)
+</span><a href="#local-6989586621689281910"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe NominalDiffTime)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;connection_lifetime&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime)
@@ -214,7 +214,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><span id="line-82"></span><span>    </span><span id="_dppsConnectionLifetime"><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; Maybe NominalDiffTime
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_dppsConnectionLifetime"><span class="hs-identifier hs-var hs-var">_dppsConnectionLifetime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NominalDiffTime</span></span><span>
 </span><span id="line-83"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281830"><span id="local-6989586621689281832"><span id="local-6989586621689281834"><span class="annot"><span class="annottext">Int -&gt; DefaultPostgresPoolSettings -&gt; ShowS
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281896"><span id="local-6989586621689281898"><span id="local-6989586621689281900"><span class="annot"><span class="annottext">Int -&gt; DefaultPostgresPoolSettings -&gt; ShowS
 [DefaultPostgresPoolSettings] -&gt; ShowS
 DefaultPostgresPoolSettings -&gt; String
 (Int -&gt; DefaultPostgresPoolSettings -&gt; ShowS)
@@ -229,7 +229,7 @@ show :: DefaultPostgresPoolSettings -&gt; String
 $cshow :: DefaultPostgresPoolSettings -&gt; String
 showsPrec :: Int -&gt; DefaultPostgresPoolSettings -&gt; ShowS
 $cshowsPrec :: Int -&gt; DefaultPostgresPoolSettings -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281826"><span id="local-6989586621689281828"><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; DefaultPostgresPoolSettings -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281892"><span id="local-6989586621689281894"><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; DefaultPostgresPoolSettings -&gt; Bool
 (DefaultPostgresPoolSettings
  -&gt; DefaultPostgresPoolSettings -&gt; Bool)
 -&gt; (DefaultPostgresPoolSettings
@@ -307,68 +307,68 @@ forall a. Maybe a
 </span><span id="line-102"></span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#getDefaultPGPoolSettingIfNotExists"><span class="hs-identifier hs-type">getDefaultPGPoolSettingIfNotExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresPoolSettings"><span class="hs-identifier hs-type">PostgresPoolSettings</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#DefaultPostgresPoolSettings"><span class="hs-identifier hs-type">DefaultPostgresPoolSettings</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span id="getDefaultPGPoolSettingIfNotExists"><span class="annot"><span class="annottext">getDefaultPGPoolSettingIfNotExists :: Maybe PostgresPoolSettings
 -&gt; DefaultPostgresPoolSettings -&gt; (Int, Int, Int)
-</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#getDefaultPGPoolSettingIfNotExists"><span class="hs-identifier hs-var hs-var">getDefaultPGPoolSettingIfNotExists</span></a></span></span><span> </span><span id="local-6989586621689281825"><span class="annot"><span class="annottext">Maybe PostgresPoolSettings
-</span><a href="#local-6989586621689281825"><span class="hs-identifier hs-var">connSettings</span></a></span></span><span> </span><span id="local-6989586621689281824"><span class="annot"><span class="annottext">DefaultPostgresPoolSettings
-</span><a href="#local-6989586621689281824"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#getDefaultPGPoolSettingIfNotExists"><span class="hs-identifier hs-var hs-var">getDefaultPGPoolSettingIfNotExists</span></a></span></span><span> </span><span id="local-6989586621689281891"><span class="annot"><span class="annottext">Maybe PostgresPoolSettings
+</span><a href="#local-6989586621689281891"><span class="hs-identifier hs-var">connSettings</span></a></span></span><span> </span><span id="local-6989586621689281890"><span class="annot"><span class="annottext">DefaultPostgresPoolSettings
+</span><a href="#local-6989586621689281890"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-104"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresPoolSettings
-</span><a href="#local-6989586621689281825"><span class="hs-identifier hs-var">connSettings</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689281891"><span class="hs-identifier hs-var">connSettings</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-105"></span><span>    </span><span class="hs-comment">-- Atleast one of the postgres pool settings is set, then set default values to other settings</span><span>
-</span><span id="line-106"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689281823"><span class="annot"><span class="annottext">PostgresPoolSettings
-</span><a href="#local-6989586621689281823"><span class="hs-identifier hs-var">connSettings'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689281889"><span class="annot"><span class="annottext">PostgresPoolSettings
+</span><a href="#local-6989586621689281889"><span class="hs-identifier hs-var">connSettings'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-107"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Int
-</span><a href="#local-6989586621689281822"><span class="hs-identifier hs-var">maxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings
-</span><a href="#local-6989586621689281823"><span class="hs-identifier hs-var">connSettings'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Int
-</span><a href="#local-6989586621689281821"><span class="hs-identifier hs-var">idleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings
-</span><a href="#local-6989586621689281823"><span class="hs-identifier hs-var">connSettings'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Int
-</span><a href="#local-6989586621689281820"><span class="hs-identifier hs-var">retries</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings
-</span><a href="#local-6989586621689281823"><span class="hs-identifier hs-var">connSettings'</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689281888"><span class="hs-identifier hs-var">maxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings
+</span><a href="#local-6989586621689281889"><span class="hs-identifier hs-var">connSettings'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Int
+</span><a href="#local-6989586621689281887"><span class="hs-identifier hs-var">idleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings
+</span><a href="#local-6989586621689281889"><span class="hs-identifier hs-var">connSettings'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Int
+</span><a href="#local-6989586621689281886"><span class="hs-identifier hs-var">retries</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings
+</span><a href="#local-6989586621689281889"><span class="hs-identifier hs-var">connSettings'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span><span>    </span><span class="hs-comment">-- No PG Pool settings provided by user, set default values for all</span><span>
 </span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">Maybe PostgresPoolSettings
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689281819"><span class="hs-identifier hs-var">defMaxConnections</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689281818"><span class="hs-identifier hs-var">defIdleTimeout</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689281817"><span class="hs-identifier hs-var">defRetries</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689281885"><span class="hs-identifier hs-var">defMaxConnections</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689281884"><span class="hs-identifier hs-var">defIdleTimeout</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689281883"><span class="hs-identifier hs-var">defRetries</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-111"></span><span>    </span><span id="local-6989586621689281819"><span class="annot"><span class="annottext">defMaxConnections :: Int
-</span><a href="#local-6989586621689281819"><span class="hs-identifier hs-var hs-var">defMaxConnections</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; Int
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621689281885"><span class="annot"><span class="annottext">defMaxConnections :: Int
+</span><a href="#local-6989586621689281885"><span class="hs-identifier hs-var hs-var">defMaxConnections</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; Int
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_dppsMaxConnections"><span class="hs-identifier hs-var hs-var">_dppsMaxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings
-</span><a href="#local-6989586621689281824"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span><span>
-</span><span id="line-112"></span><span>    </span><span id="local-6989586621689281818"><span class="annot"><span class="annottext">defIdleTimeout :: Int
-</span><a href="#local-6989586621689281818"><span class="hs-identifier hs-var hs-var">defIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; Int
+</span><a href="#local-6989586621689281890"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span><span>
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621689281884"><span class="annot"><span class="annottext">defIdleTimeout :: Int
+</span><a href="#local-6989586621689281884"><span class="hs-identifier hs-var hs-var">defIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; Int
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_dppsIdleTimeout"><span class="hs-identifier hs-var hs-var">_dppsIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings
-</span><a href="#local-6989586621689281824"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span><span>
-</span><span id="line-113"></span><span>    </span><span id="local-6989586621689281817"><span class="annot"><span class="annottext">defRetries :: Int
-</span><a href="#local-6989586621689281817"><span class="hs-identifier hs-var hs-var">defRetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; Int
+</span><a href="#local-6989586621689281890"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span><span>
+</span><span id="line-113"></span><span>    </span><span id="local-6989586621689281883"><span class="annot"><span class="annottext">defRetries :: Int
+</span><a href="#local-6989586621689281883"><span class="hs-identifier hs-var hs-var">defRetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings -&gt; Int
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_dppsRetries"><span class="hs-identifier hs-var hs-var">_dppsRetries</span></a></span><span> </span><span class="annot"><span class="annottext">DefaultPostgresPoolSettings
-</span><a href="#local-6989586621689281824"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span><span>
+</span><a href="#local-6989586621689281890"><span class="hs-identifier hs-var">defaultPgPoolSettings</span></a></span><span>
 </span><span id="line-114"></span><span>
-</span><span id="line-115"></span><span>    </span><span id="local-6989586621689281822"><span class="annot"><span class="annottext">maxConnections :: PostgresPoolSettings -&gt; Int
-</span><a href="#local-6989586621689281822"><span class="hs-identifier hs-var hs-var">maxConnections</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int -&gt; Int
+</span><span id="line-115"></span><span>    </span><span id="local-6989586621689281888"><span class="annot"><span class="annottext">maxConnections :: PostgresPoolSettings -&gt; Int
+</span><a href="#local-6989586621689281888"><span class="hs-identifier hs-var hs-var">maxConnections</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int -&gt; Int
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689281819"><span class="hs-identifier hs-var">defMaxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Int)
+</span><a href="#local-6989586621689281885"><span class="hs-identifier hs-var">defMaxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Int)
 -&gt; (PostgresPoolSettings -&gt; Maybe Int)
 -&gt; PostgresPoolSettings
 -&gt; Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Maybe Int
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_ppsMaxConnections"><span class="hs-identifier hs-var hs-var">_ppsMaxConnections</span></a></span><span>
-</span><span id="line-116"></span><span>    </span><span id="local-6989586621689281821"><span class="annot"><span class="annottext">idleTimeout :: PostgresPoolSettings -&gt; Int
-</span><a href="#local-6989586621689281821"><span class="hs-identifier hs-var hs-var">idleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int -&gt; Int
+</span><span id="line-116"></span><span>    </span><span id="local-6989586621689281887"><span class="annot"><span class="annottext">idleTimeout :: PostgresPoolSettings -&gt; Int
+</span><a href="#local-6989586621689281887"><span class="hs-identifier hs-var hs-var">idleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int -&gt; Int
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689281818"><span class="hs-identifier hs-var">defIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Int)
+</span><a href="#local-6989586621689281884"><span class="hs-identifier hs-var">defIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Int)
 -&gt; (PostgresPoolSettings -&gt; Maybe Int)
 -&gt; PostgresPoolSettings
 -&gt; Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Maybe Int
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_ppsIdleTimeout"><span class="hs-identifier hs-var hs-var">_ppsIdleTimeout</span></a></span><span>
-</span><span id="line-117"></span><span>    </span><span id="local-6989586621689281820"><span class="annot"><span class="annottext">retries :: PostgresPoolSettings -&gt; Int
-</span><a href="#local-6989586621689281820"><span class="hs-identifier hs-var hs-var">retries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int -&gt; Int
+</span><span id="line-117"></span><span>    </span><span id="local-6989586621689281886"><span class="annot"><span class="annottext">retries :: PostgresPoolSettings -&gt; Int
+</span><a href="#local-6989586621689281886"><span class="hs-identifier hs-var hs-var">retries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int -&gt; Int
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689281817"><span class="hs-identifier hs-var">defRetries</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Int)
+</span><a href="#local-6989586621689281883"><span class="hs-identifier hs-var">defRetries</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Int)
 -&gt; (PostgresPoolSettings -&gt; Maybe Int)
 -&gt; PostgresPoolSettings
 -&gt; Int
@@ -376,14 +376,14 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">PostgresPoolSettings -&gt; Maybe Int
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_ppsRetries"><span class="hs-identifier hs-var hs-var">_ppsRetries</span></a></span><span>
 </span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span id="local-6989586621689281813"><span id="local-6989586621689281814"></span></span><span class="hs-keyword">data</span><span> </span><span id="SSLMode"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-var">SSLMode</span></a></span></span><span>
+</span><span id="line-119"></span><span id="local-6989586621689281879"><span id="local-6989586621689281880"></span></span><span class="hs-keyword">data</span><span> </span><span id="SSLMode"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-var">SSLMode</span></a></span></span><span>
 </span><span id="line-120"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Disable"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#Disable"><span class="hs-identifier hs-var">Disable</span></a></span></span><span>
 </span><span id="line-121"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Allow"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#Allow"><span class="hs-identifier hs-var">Allow</span></a></span></span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Prefer"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#Prefer"><span class="hs-identifier hs-var">Prefer</span></a></span></span><span>
 </span><span id="line-123"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Require"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#Require"><span class="hs-identifier hs-var">Require</span></a></span></span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VerifyCA"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#VerifyCA"><span class="hs-identifier hs-var">VerifyCA</span></a></span></span><span>
 </span><span id="line-125"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VerifyFull"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#VerifyFull"><span class="hs-identifier hs-var">VerifyFull</span></a></span></span><span>
-</span><span id="line-126"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281803"><span id="local-6989586621689281805"><span class="annot"><span class="annottext">SSLMode -&gt; SSLMode -&gt; Bool
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281869"><span id="local-6989586621689281871"><span class="annot"><span class="annottext">SSLMode -&gt; SSLMode -&gt; Bool
 (SSLMode -&gt; SSLMode -&gt; Bool)
 -&gt; (SSLMode -&gt; SSLMode -&gt; Bool) -&gt; Eq SSLMode
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -391,7 +391,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: SSLMode -&gt; SSLMode -&gt; Bool
 == :: SSLMode -&gt; SSLMode -&gt; Bool
 $c== :: SSLMode -&gt; SSLMode -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281788"><span id="local-6989586621689281790"><span id="local-6989586621689281792"><span id="local-6989586621689281794"><span id="local-6989586621689281796"><span id="local-6989586621689281798"><span id="local-6989586621689281800"><span class="annot"><span class="annottext">Eq SSLMode
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281854"><span id="local-6989586621689281856"><span id="local-6989586621689281858"><span id="local-6989586621689281860"><span id="local-6989586621689281862"><span id="local-6989586621689281864"><span id="local-6989586621689281866"><span class="annot"><span class="annottext">Eq SSLMode
 Eq SSLMode
 -&gt; (SSLMode -&gt; SSLMode -&gt; Ordering)
 -&gt; (SSLMode -&gt; SSLMode -&gt; Bool)
@@ -437,7 +437,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep SSLMode x -&gt; SSLMode
 $cfrom :: forall x. SSLMode -&gt; Rep SSLMode x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281769"><span id="local-6989586621689281771"><span id="local-6989586621689281773"><span id="local-6989586621689281775"><span id="local-6989586621689281777"><span id="local-6989586621689281779"><span id="local-6989586621689281781"><span id="local-6989586621689281783"><span class="annot"><span class="annottext">Int -&gt; SSLMode
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281835"><span id="local-6989586621689281837"><span id="local-6989586621689281839"><span id="local-6989586621689281841"><span id="local-6989586621689281843"><span id="local-6989586621689281845"><span id="local-6989586621689281847"><span id="local-6989586621689281849"><span class="annot"><span class="annottext">Int -&gt; SSLMode
 SSLMode -&gt; Int
 SSLMode -&gt; [SSLMode]
 SSLMode -&gt; SSLMode
@@ -478,7 +478,7 @@ pred :: SSLMode -&gt; SSLMode
 $cpred :: SSLMode -&gt; SSLMode
 succ :: SSLMode -&gt; SSLMode
 $csucc :: SSLMode -&gt; SSLMode
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281764"><span id="local-6989586621689281766"><span class="annot"><span class="annottext">SSLMode
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281830"><span id="local-6989586621689281832"><span class="annot"><span class="annottext">SSLMode
 SSLMode -&gt; SSLMode -&gt; Bounded SSLMode
 forall a. a -&gt; a -&gt; Bounded a
 maxBound :: SSLMode
@@ -487,14 +487,14 @@ minBound :: SSLMode
 $cminBound :: SSLMode
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281760"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span><span>
+</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281826"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span><span>
 </span><span id="line-129"></span><span>
-</span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281756"><span id="local-6989586621689281758"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281822"><span id="local-6989586621689281824"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span><span>
 </span><span id="line-131"></span><span>
-</span><span id="line-132"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281754"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span><span>
+</span><span id="line-132"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281820"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span><span>
 </span><span id="line-133"></span><span>
-</span><span id="line-134"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281749"><span id="local-6989586621689281752"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-135"></span><span>  </span><span id="local-6989586621689281748"><span class="annot"><span class="annottext">show :: SSLMode -&gt; String
+</span><span id="line-134"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281815"><span id="local-6989586621689281818"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621689281814"><span class="annot"><span class="annottext">show :: SSLMode -&gt; String
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-136"></span><span>    </span><span class="annot"><span class="annottext">SSLMode
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#Disable"><span class="hs-identifier hs-var">Disable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
@@ -515,11 +515,11 @@ $cminBound :: SSLMode
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#VerifyFull"><span class="hs-identifier hs-var">VerifyFull</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;verify-full&quot;</span></span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span id="local-6989586621689281741"><span id="local-6989586621689281743"><span id="local-6989586621689281745"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Max</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span></span><span>
+</span><span id="line-143"></span><span id="local-6989586621689281807"><span id="local-6989586621689281809"><span id="local-6989586621689281811"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Max</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span></span><span>
 </span><span id="line-144"></span><span>
-</span><span id="line-145"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281737"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-146"></span><span>  </span><span id="local-6989586621689281736"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SSLMode
-</span><a href="#local-6989586621689281736"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser SSLMode) -&gt; Value -&gt; Parser SSLMode
+</span><span id="line-145"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281803"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-146"></span><span>  </span><span id="local-6989586621689281802"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SSLMode
+</span><a href="#local-6989586621689281802"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser SSLMode) -&gt; Value -&gt; Parser SSLMode
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;SSLMode&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser SSLMode) -&gt; Value -&gt; Parser SSLMode)
@@ -556,8 +556,8 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SSLMode
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#VerifyFull"><span class="hs-identifier hs-var">VerifyFull</span></a></span><span>
-</span><span id="line-153"></span><span>    </span><span id="local-6989586621689281734"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689281734"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser SSLMode
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621689281800"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689281800"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser SSLMode
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser SSLMode) -&gt; String -&gt; Parser SSLMode
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -566,11 +566,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689281734"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621689281800"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-154"></span><span>
-</span><span id="line-155"></span><span id="local-6989586621689281732"><span id="local-6989586621689281733"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CertVar"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-var">CertVar</span></a></span></span><span>
+</span><span id="line-155"></span><span id="local-6989586621689281798"><span id="local-6989586621689281799"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CertVar"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-var">CertVar</span></a></span></span><span>
 </span><span id="line-156"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CertVar"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-var">CertVar</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-157"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281725"><span id="local-6989586621689281727"><span id="local-6989586621689281729"><span class="annot"><span class="annottext">Int -&gt; CertVar -&gt; ShowS
+</span><span id="line-157"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281791"><span id="local-6989586621689281793"><span id="local-6989586621689281795"><span class="annot"><span class="annottext">Int -&gt; CertVar -&gt; ShowS
 [CertVar] -&gt; ShowS
 CertVar -&gt; String
 (Int -&gt; CertVar -&gt; ShowS)
@@ -583,7 +583,7 @@ show :: CertVar -&gt; String
 $cshow :: CertVar -&gt; String
 showsPrec :: Int -&gt; CertVar -&gt; ShowS
 $cshowsPrec :: Int -&gt; CertVar -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281721"><span id="local-6989586621689281723"><span class="annot"><span class="annottext">CertVar -&gt; CertVar -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281787"><span id="local-6989586621689281789"><span class="annot"><span class="annottext">CertVar -&gt; CertVar -&gt; Bool
 (CertVar -&gt; CertVar -&gt; Bool)
 -&gt; (CertVar -&gt; CertVar -&gt; Bool) -&gt; Eq CertVar
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -601,40 +601,40 @@ $cto :: forall x. Rep CertVar x -&gt; CertVar
 $cfrom :: forall x. CertVar -&gt; Rep CertVar x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-158"></span><span>
-</span><span id="line-159"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281716"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span><span>
+</span><span id="line-159"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281782"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span><span>
 </span><span id="line-160"></span><span>
-</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281712"><span id="local-6989586621689281714"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span></span><span>
+</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281778"><span id="local-6989586621689281780"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span></span><span>
 </span><span id="line-162"></span><span>
-</span><span id="line-163"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281710"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span><span>
+</span><span id="line-163"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281776"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span><span>
 </span><span id="line-164"></span><span>
-</span><span id="line-165"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281703"><span id="local-6989586621689281705"><span id="local-6989586621689281707"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-166"></span><span>  </span><span id="local-6989586621689281702"><span class="annot"><span class="annottext">toJSON :: CertVar -&gt; Value
-</span><a href="#local-6989586621689281702"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span><span> </span><span id="local-6989586621689281701"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689281701"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-165"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281769"><span id="local-6989586621689281771"><span id="local-6989586621689281773"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-166"></span><span>  </span><span id="local-6989586621689281768"><span class="annot"><span class="annottext">toJSON :: CertVar -&gt; Value
+</span><a href="#local-6989586621689281768"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span><span> </span><span id="local-6989586621689281767"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689281767"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689281701"><span class="hs-identifier hs-var">var</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689281767"><span class="hs-identifier hs-var">var</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-167"></span><span>
-</span><span id="line-168"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281696"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-169"></span><span>  </span><span id="local-6989586621689281695"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CertVar
-</span><a href="#local-6989586621689281695"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser CertVar) -&gt; Value -&gt; Parser CertVar
+</span><span id="line-168"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281762"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-169"></span><span>  </span><span id="local-6989586621689281761"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CertVar
+</span><a href="#local-6989586621689281761"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser CertVar) -&gt; Value -&gt; Parser CertVar
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;CertVar&quot;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689281694"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281694"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; CertVar
+</span><span class="hs-string">&quot;CertVar&quot;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689281760"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689281760"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; CertVar
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-var">CertVar</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; CertVar) -&gt; Parser String -&gt; Parser CertVar
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281694"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
+</span><a href="#local-6989586621689281760"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-170"></span><span>
-</span><span id="line-171"></span><span id="local-6989586621689281691"><span id="local-6989586621689281692"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CertData"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertData"><span class="hs-identifier hs-var">CertData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CertData"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertData"><span class="hs-identifier hs-var">CertData</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCert"><span class="annot"><span class="annottext">CertData -&gt; Text
+</span><span id="line-171"></span><span id="local-6989586621689281757"><span id="local-6989586621689281758"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CertData"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertData"><span class="hs-identifier hs-var">CertData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CertData"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertData"><span class="hs-identifier hs-var">CertData</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCert"><span class="annot"><span class="annottext">CertData -&gt; Text
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#unCert"><span class="hs-identifier hs-var hs-var">unCert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-172"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281683"><span id="local-6989586621689281685"><span id="local-6989586621689281687"><span class="annot"><span class="annottext">Int -&gt; CertData -&gt; ShowS
+</span><span id="line-172"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281749"><span id="local-6989586621689281751"><span id="local-6989586621689281753"><span class="annot"><span class="annottext">Int -&gt; CertData -&gt; ShowS
 [CertData] -&gt; ShowS
 CertData -&gt; String
 (Int -&gt; CertData -&gt; ShowS)
@@ -647,7 +647,7 @@ show :: CertData -&gt; String
 $cshow :: CertData -&gt; String
 showsPrec :: Int -&gt; CertData -&gt; ShowS
 $cshowsPrec :: Int -&gt; CertData -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281679"><span id="local-6989586621689281681"><span class="annot"><span class="annottext">CertData -&gt; CertData -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281745"><span id="local-6989586621689281747"><span class="annot"><span class="annottext">CertData -&gt; CertData -&gt; Bool
 (CertData -&gt; CertData -&gt; Bool)
 -&gt; (CertData -&gt; CertData -&gt; Bool) -&gt; Eq CertData
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -665,27 +665,27 @@ $cto :: forall x. Rep CertData x -&gt; CertData
 $cfrom :: forall x. CertData -&gt; Rep CertData x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-173"></span><span>
-</span><span id="line-174"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281670"><span id="local-6989586621689281672"><span id="local-6989586621689281674"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertData"><span class="hs-identifier hs-type">CertData</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-175"></span><span>  </span><span id="local-6989586621689281669"><span class="annot"><span class="annottext">toJSON :: CertData -&gt; Value
-</span><a href="#local-6989586621689281669"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-174"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281736"><span id="local-6989586621689281738"><span id="local-6989586621689281740"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertData"><span class="hs-identifier hs-type">CertData</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-175"></span><span>  </span><span id="local-6989586621689281735"><span class="annot"><span class="annottext">toJSON :: CertData -&gt; Value
+</span><a href="#local-6989586621689281735"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (CertData -&gt; Text) -&gt; CertData -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">CertData -&gt; Text
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#unCert"><span class="hs-identifier hs-var hs-var">unCert</span></a></span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span id="local-6989586621689281666"><span id="local-6989586621689281667"></span></span><span class="hs-keyword">data</span><span> </span><span id="PGClientCerts"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-var">PGClientCerts</span></a></span></span><span> </span><span id="local-6989586621689281979"><span class="annot"><a href="#local-6989586621689281979"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621689281978"><span class="annot"><a href="#local-6989586621689281978"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PGClientCerts"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-var">PGClientCerts</span></a></span></span><span>
+</span><span id="line-177"></span><span id="local-6989586621689281732"><span id="local-6989586621689281733"></span></span><span class="hs-keyword">data</span><span> </span><span id="PGClientCerts"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-var">PGClientCerts</span></a></span></span><span> </span><span id="local-6989586621689282045"><span class="annot"><a href="#local-6989586621689282045"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621689282044"><span class="annot"><a href="#local-6989586621689282044"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PGClientCerts"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-var">PGClientCerts</span></a></span></span><span>
 </span><span id="line-178"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="pgcSslCert"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; Maybe a
-</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslCert"><span class="hs-identifier hs-var hs-var">pgcSslCert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689281978"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslCert"><span class="hs-identifier hs-var hs-var">pgcSslCert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689282044"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-179"></span><span>    </span><span id="pgcSslKey"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; Maybe a
-</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslKey"><span class="hs-identifier hs-var hs-var">pgcSslKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689281978"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslKey"><span class="hs-identifier hs-var hs-var">pgcSslKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689282044"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-180"></span><span>    </span><span id="pgcSslRootCert"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; Maybe a
-</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslRootCert"><span class="hs-identifier hs-var hs-var">pgcSslRootCert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689281978"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslRootCert"><span class="hs-identifier hs-var hs-var">pgcSslRootCert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689282044"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-181"></span><span>    </span><span id="pgcSslMode"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; SSLMode
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslMode"><span class="hs-identifier hs-var hs-var">pgcSslMode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-182"></span><span>    </span><span id="pgcSslPassword"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; Maybe p
-</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslPassword"><span class="hs-identifier hs-var hs-var">pgcSslPassword</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689281979"><span class="hs-identifier hs-type">p</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslPassword"><span class="hs-identifier hs-var hs-var">pgcSslPassword</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689282045"><span class="hs-identifier hs-type">p</span></a></span><span>
 </span><span id="line-183"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-184"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281654"><span id="local-6989586621689281656"><span id="local-6989586621689281658"><span class="annot"><span class="annottext">Int -&gt; PGClientCerts p a -&gt; ShowS
+</span><span id="line-184"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281720"><span id="local-6989586621689281722"><span id="local-6989586621689281724"><span class="annot"><span class="annottext">Int -&gt; PGClientCerts p a -&gt; ShowS
 [PGClientCerts p a] -&gt; ShowS
 PGClientCerts p a -&gt; String
 (Int -&gt; PGClientCerts p a -&gt; ShowS)
@@ -703,7 +703,7 @@ show :: PGClientCerts p a -&gt; String
 $cshow :: forall p a. (Show a, Show p) =&gt; PGClientCerts p a -&gt; String
 showsPrec :: Int -&gt; PGClientCerts p a -&gt; ShowS
 $cshowsPrec :: forall p a. (Show a, Show p) =&gt; Int -&gt; PGClientCerts p a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281650"><span id="local-6989586621689281652"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; PGClientCerts p a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281716"><span id="local-6989586621689281718"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; PGClientCerts p a -&gt; Bool
 (PGClientCerts p a -&gt; PGClientCerts p a -&gt; Bool)
 -&gt; (PGClientCerts p a -&gt; PGClientCerts p a -&gt; Bool)
 -&gt; Eq (PGClientCerts p a)
@@ -730,7 +730,7 @@ forall p a x. Rep (PGClientCerts p a) x -&gt; PGClientCerts p a
 forall p a x. PGClientCerts p a -&gt; Rep (PGClientCerts p a) x
 $cto :: forall p a x. Rep (PGClientCerts p a) x -&gt; PGClientCerts p a
 $cfrom :: forall p a x. PGClientCerts p a -&gt; Rep (PGClientCerts p a) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281644"><span id="local-6989586621689281646"><span class="annot"><span class="annottext">a -&gt; PGClientCerts p b -&gt; PGClientCerts p a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281710"><span id="local-6989586621689281712"><span class="annot"><span class="annottext">a -&gt; PGClientCerts p b -&gt; PGClientCerts p a
 (a -&gt; b) -&gt; PGClientCerts p a -&gt; PGClientCerts p b
 (forall a b. (a -&gt; b) -&gt; PGClientCerts p a -&gt; PGClientCerts p b)
 -&gt; (forall a b. a -&gt; PGClientCerts p b -&gt; PGClientCerts p a)
@@ -746,7 +746,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall p a b. a -&gt; PGClientCerts p b -&gt; PGClientCerts p a
 fmap :: (a -&gt; b) -&gt; PGClientCerts p a -&gt; PGClientCerts p b
 $cfmap :: forall p a b. (a -&gt; b) -&gt; PGClientCerts p a -&gt; PGClientCerts p b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281609"><span id="local-6989586621689281611"><span id="local-6989586621689281613"><span id="local-6989586621689281615"><span id="local-6989586621689281617"><span id="local-6989586621689281619"><span id="local-6989586621689281621"><span id="local-6989586621689281623"><span id="local-6989586621689281625"><span id="local-6989586621689281627"><span id="local-6989586621689281629"><span id="local-6989586621689281631"><span id="local-6989586621689281633"><span id="local-6989586621689281635"><span id="local-6989586621689281637"><span id="local-6989586621689281639"><span id="local-6989586621689281641"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281675"><span id="local-6989586621689281677"><span id="local-6989586621689281679"><span id="local-6989586621689281681"><span id="local-6989586621689281683"><span id="local-6989586621689281685"><span id="local-6989586621689281687"><span id="local-6989586621689281689"><span id="local-6989586621689281691"><span id="local-6989586621689281693"><span id="local-6989586621689281695"><span id="local-6989586621689281697"><span id="local-6989586621689281699"><span id="local-6989586621689281701"><span id="local-6989586621689281703"><span id="local-6989586621689281705"><span id="local-6989586621689281707"><span class="annot"><span class="annottext">PGClientCerts p a -&gt; Bool
 (a -&gt; m) -&gt; PGClientCerts p a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; PGClientCerts p a -&gt; b
 (forall m. Monoid m =&gt; PGClientCerts p m -&gt; m)
@@ -842,7 +842,7 @@ foldMap :: (a -&gt; m) -&gt; PGClientCerts p a -&gt; m
 $cfoldMap :: forall p m a. Monoid m =&gt; (a -&gt; m) -&gt; PGClientCerts p a -&gt; m
 fold :: PGClientCerts p m -&gt; m
 $cfold :: forall p m. Monoid m =&gt; PGClientCerts p m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281598"><span id="local-6989586621689281600"><span id="local-6989586621689281602"><span id="local-6989586621689281604"><span class="annot"><span class="annottext">Functor (PGClientCerts p)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281664"><span id="local-6989586621689281666"><span id="local-6989586621689281668"><span id="local-6989586621689281670"><span class="annot"><span class="annottext">Functor (PGClientCerts p)
 Foldable (PGClientCerts p)
 Functor (PGClientCerts p)
 -&gt; Foldable (PGClientCerts p)
@@ -918,37 +918,37 @@ $cp2Traversable :: forall p. Foldable (PGClientCerts p)
 $cp1Traversable :: forall p. Functor (PGClientCerts p)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-185"></span><span>
-</span><span id="line-186"></span><span class="hs-special">$(</span><span id="local-6989586621689281593"><span id="local-6989586621689281595"><span id="local-6989586621689281978"><span id="local-6989586621689281979"><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">fmap</span><span> </span><span class="hs-identifier">toLower</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGClientCerts</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-187"></span><span class="hs-special">$(</span><span id="local-6989586621689281585"><span id="local-6989586621689281587"><span id="local-6989586621689281589"><span id="local-6989586621689281591"><span id="local-6989586621689281978"><span id="local-6989586621689281979"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">fmap</span><span> </span><span class="hs-identifier">toLower</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGClientCerts</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-186"></span><span class="hs-special">$(</span><span id="local-6989586621689281659"><span id="local-6989586621689281661"><span id="local-6989586621689282044"><span id="local-6989586621689282045"><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">fmap</span><span> </span><span class="hs-identifier">toLower</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGClientCerts</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-187"></span><span class="hs-special">$(</span><span id="local-6989586621689281651"><span id="local-6989586621689281653"><span id="local-6989586621689281655"><span id="local-6989586621689281657"><span id="local-6989586621689282044"><span id="local-6989586621689282045"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">fmap</span><span> </span><span class="hs-identifier">toLower</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGClientCerts</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-188"></span><span>
-</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281580"><span id="local-6989586621689281582"><span class="annot"><span class="hs-identifier hs-type">Bifunctor</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-190"></span><span>  </span><span id="local-6989586621689281578"><span class="annot"><span class="annottext">bimap :: (a -&gt; b) -&gt; (c -&gt; d) -&gt; PGClientCerts a c -&gt; PGClientCerts b d
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">bimap</span></span></span><span> </span><span id="local-6989586621689281576"><span class="annot"><span class="annottext">a -&gt; b
-</span><a href="#local-6989586621689281576"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689281575"><span class="annot"><span class="annottext">c -&gt; d
-</span><a href="#local-6989586621689281575"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621689281574"><span class="annot"><span class="annottext">oldCerts :: PGClientCerts a c
-</span><a href="#local-6989586621689281574"><span class="hs-identifier hs-var">oldCerts</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689281573"><span class="annot"><span class="annottext">Maybe a
+</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281646"><span id="local-6989586621689281648"><span class="annot"><span class="hs-identifier hs-type">Bifunctor</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621689281644"><span class="annot"><span class="annottext">bimap :: (a -&gt; b) -&gt; (c -&gt; d) -&gt; PGClientCerts a c -&gt; PGClientCerts b d
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">bimap</span></span></span><span> </span><span id="local-6989586621689281642"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621689281642"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689281641"><span class="annot"><span class="annottext">c -&gt; d
+</span><a href="#local-6989586621689281641"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621689281640"><span class="annot"><span class="annottext">oldCerts :: PGClientCerts a c
+</span><a href="#local-6989586621689281640"><span class="hs-identifier hs-var">oldCerts</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689281639"><span class="annot"><span class="annottext">Maybe a
 pgcSslPassword :: Maybe a
 pgcSslPassword :: forall p a. PGClientCerts p a -&gt; Maybe p
-</span><a href="#local-6989586621689281573"><span class="hs-identifier hs-var hs-var">pgcSslPassword</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-191"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689281572"><span class="annot"><span class="annottext">certs :: PGClientCerts b c
-</span><a href="#local-6989586621689281572"><span class="hs-identifier hs-var hs-var">certs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PGClientCerts a c
-</span><a href="#local-6989586621689281574"><span class="hs-identifier hs-var">oldCerts</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">pgcSslPassword :: Maybe b
+</span><a href="#local-6989586621689281639"><span class="hs-identifier hs-var hs-var">pgcSslPassword</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-191"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689281638"><span class="annot"><span class="annottext">certs :: PGClientCerts b c
+</span><a href="#local-6989586621689281638"><span class="hs-identifier hs-var hs-var">certs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PGClientCerts a c
+</span><a href="#local-6989586621689281640"><span class="hs-identifier hs-var">oldCerts</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">pgcSslPassword :: Maybe b
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#pgcSslPassword"><span class="hs-identifier hs-var">pgcSslPassword</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; b
-</span><a href="#local-6989586621689281576"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+</span><a href="#local-6989586621689281642"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; Maybe a -&gt; Maybe b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
-</span><a href="#local-6989586621689281573"><span class="hs-identifier hs-var">pgcSslPassword</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689281639"><span class="hs-identifier hs-var">pgcSslPassword</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-192"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">c -&gt; d
-</span><a href="#local-6989586621689281575"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">(c -&gt; d) -&gt; PGClientCerts b c -&gt; PGClientCerts b d
+</span><a href="#local-6989586621689281641"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">(c -&gt; d) -&gt; PGClientCerts b c -&gt; PGClientCerts b d
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">PGClientCerts b c
-</span><a href="#local-6989586621689281572"><span class="hs-identifier hs-var">certs</span></a></span><span>
+</span><a href="#local-6989586621689281638"><span class="hs-identifier hs-var">certs</span></a></span><span>
 </span><span id="line-193"></span><span>
-</span><span id="line-194"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281565"><span id="local-6989586621689281567"><span id="local-6989586621689281570"><span class="annot"><span class="hs-identifier hs-type">Bifoldable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-195"></span><span>  </span><span id="local-6989586621689281563"><span class="annot"><span class="annottext">bifoldMap :: (a -&gt; m) -&gt; (b -&gt; m) -&gt; PGClientCerts a b -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">bifoldMap</span></span></span><span> </span><span id="local-6989586621689281561"><span class="annot"><span class="annottext">a -&gt; m
-</span><a href="#local-6989586621689281561"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689281560"><span class="annot"><span class="annottext">b -&gt; m
-</span><a href="#local-6989586621689281560"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689281555"><span id="local-6989586621689281556"><span id="local-6989586621689281557"><span id="local-6989586621689281558"><span id="local-6989586621689281559"><span class="annot"><span class="annottext">Maybe a
+</span><span id="line-194"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281631"><span id="local-6989586621689281633"><span id="local-6989586621689281636"><span class="annot"><span class="hs-identifier hs-type">Bifoldable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-195"></span><span>  </span><span id="local-6989586621689281629"><span class="annot"><span class="annottext">bifoldMap :: (a -&gt; m) -&gt; (b -&gt; m) -&gt; PGClientCerts a b -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">bifoldMap</span></span></span><span> </span><span id="local-6989586621689281627"><span class="annot"><span class="annottext">a -&gt; m
+</span><a href="#local-6989586621689281627"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689281626"><span class="annot"><span class="annottext">b -&gt; m
+</span><a href="#local-6989586621689281626"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689281621"><span id="local-6989586621689281622"><span id="local-6989586621689281623"><span id="local-6989586621689281624"><span id="local-6989586621689281625"><span class="annot"><span class="annottext">Maybe a
 Maybe b
 SSLMode
 pgcSslPassword :: Maybe a
@@ -961,9 +961,9 @@ pgcSslMode :: forall p a. PGClientCerts p a -&gt; SSLMode
 pgcSslRootCert :: forall p a. PGClientCerts p a -&gt; Maybe a
 pgcSslKey :: forall p a. PGClientCerts p a -&gt; Maybe a
 pgcSslCert :: forall p a. PGClientCerts p a -&gt; Maybe a
-</span><a href="#local-6989586621689281555"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-196"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689281554"><span class="annot"><span class="annottext">gs :: m
-</span><a href="#local-6989586621689281554"><span class="hs-identifier hs-var hs-var">gs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Maybe b -&gt; m) -&gt; [Maybe b] -&gt; m
+</span><a href="#local-6989586621689281621"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-196"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689281620"><span class="annot"><span class="annottext">gs :: m
+</span><a href="#local-6989586621689281620"><span class="hs-identifier hs-var hs-var">gs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Maybe b -&gt; m) -&gt; [Maybe b] -&gt; m
 forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
@@ -972,30 +972,30 @@ forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; m
-</span><a href="#local-6989586621689281560"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe b
-</span><a href="#local-6989586621689281559"><span class="hs-identifier hs-var">pgcSslCert</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe b
-</span><a href="#local-6989586621689281558"><span class="hs-identifier hs-var">pgcSslKey</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe b
-</span><a href="#local-6989586621689281557"><span class="hs-identifier hs-var">pgcSslRootCert</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-197"></span><span>        </span><span id="local-6989586621689281552"><span class="annot"><span class="annottext">fs :: m
-</span><a href="#local-6989586621689281552"><span class="hs-identifier hs-var hs-var">fs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; m) -&gt; Maybe a -&gt; m
+</span><a href="#local-6989586621689281626"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621689281625"><span class="hs-identifier hs-var">pgcSslCert</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621689281624"><span class="hs-identifier hs-var">pgcSslKey</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621689281623"><span class="hs-identifier hs-var">pgcSslRootCert</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-197"></span><span>        </span><span id="local-6989586621689281618"><span class="annot"><span class="annottext">fs :: m
+</span><a href="#local-6989586621689281618"><span class="hs-identifier hs-var hs-var">fs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; m) -&gt; Maybe a -&gt; m
 forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; m
-</span><a href="#local-6989586621689281561"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
-</span><a href="#local-6989586621689281555"><span class="hs-identifier hs-var">pgcSslPassword</span></a></span><span>
+</span><a href="#local-6989586621689281627"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621689281621"><span class="hs-identifier hs-var">pgcSslPassword</span></a></span><span>
 </span><span id="line-198"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">m
-</span><a href="#local-6989586621689281554"><span class="hs-identifier hs-var">gs</span></a></span><span> </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
+</span><a href="#local-6989586621689281620"><span class="hs-identifier hs-var">gs</span></a></span><span> </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">m
-</span><a href="#local-6989586621689281552"><span class="hs-identifier hs-var">fs</span></a></span><span>
+</span><a href="#local-6989586621689281618"><span class="hs-identifier hs-var">fs</span></a></span><span>
 </span><span id="line-199"></span><span>
 </span><span id="line-200"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bitraversable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-201"></span><span>  </span><span id="local-6989586621689281547"><span class="annot"><span class="annottext">bitraverse :: (a -&gt; f c)
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621689281613"><span class="annot"><span class="annottext">bitraverse :: (a -&gt; f c)
 -&gt; (b -&gt; f d) -&gt; PGClientCerts a b -&gt; f (PGClientCerts c d)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">bitraverse</span></span></span><span> </span><span id="local-6989586621689281545"><span class="annot"><span class="annottext">a -&gt; f c
-</span><a href="#local-6989586621689281545"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689281544"><span class="annot"><span class="annottext">b -&gt; f d
-</span><a href="#local-6989586621689281544"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689281539"><span id="local-6989586621689281540"><span id="local-6989586621689281541"><span id="local-6989586621689281542"><span id="local-6989586621689281543"><span class="annot"><span class="annottext">Maybe a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">bitraverse</span></span></span><span> </span><span id="local-6989586621689281611"><span class="annot"><span class="annottext">a -&gt; f c
+</span><a href="#local-6989586621689281611"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689281610"><span class="annot"><span class="annottext">b -&gt; f d
+</span><a href="#local-6989586621689281610"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689281605"><span id="local-6989586621689281606"><span id="local-6989586621689281607"><span id="local-6989586621689281608"><span id="local-6989586621689281609"><span class="annot"><span class="annottext">Maybe a
 Maybe b
 SSLMode
 pgcSslPassword :: Maybe a
@@ -1008,7 +1008,7 @@ pgcSslMode :: forall p a. PGClientCerts p a -&gt; SSLMode
 pgcSslRootCert :: forall p a. PGClientCerts p a -&gt; Maybe a
 pgcSslKey :: forall p a. PGClientCerts p a -&gt; Maybe a
 pgcSslCert :: forall p a. PGClientCerts p a -&gt; Maybe a
-</span><a href="#local-6989586621689281539"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689281605"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-202"></span><span>    </span><span class="annot"><span class="annottext">Maybe d
 -&gt; Maybe d -&gt; Maybe d -&gt; SSLMode -&gt; Maybe c -&gt; PGClientCerts c d
 forall p a.
@@ -1026,8 +1026,8 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; f d
-</span><a href="#local-6989586621689281544"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe b
-</span><a href="#local-6989586621689281543"><span class="hs-identifier hs-var">pgcSslCert</span></a></span><span>
+</span><a href="#local-6989586621689281610"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621689281609"><span class="hs-identifier hs-var">pgcSslCert</span></a></span><span>
 </span><span id="line-204"></span><span>      </span><span class="annot"><span class="annottext">f (Maybe d -&gt; Maybe d -&gt; SSLMode -&gt; Maybe c -&gt; PGClientCerts c d)
 -&gt; f (Maybe d)
 -&gt; f (Maybe d -&gt; SSLMode -&gt; Maybe c -&gt; PGClientCerts c d)
@@ -1037,8 +1037,8 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; f d
-</span><a href="#local-6989586621689281544"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe b
-</span><a href="#local-6989586621689281542"><span class="hs-identifier hs-var">pgcSslKey</span></a></span><span>
+</span><a href="#local-6989586621689281610"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621689281608"><span class="hs-identifier hs-var">pgcSslKey</span></a></span><span>
 </span><span id="line-205"></span><span>      </span><span class="annot"><span class="annottext">f (Maybe d -&gt; SSLMode -&gt; Maybe c -&gt; PGClientCerts c d)
 -&gt; f (Maybe d) -&gt; f (SSLMode -&gt; Maybe c -&gt; PGClientCerts c d)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
@@ -1047,15 +1047,15 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; f d
-</span><a href="#local-6989586621689281544"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe b
-</span><a href="#local-6989586621689281541"><span class="hs-identifier hs-var">pgcSslRootCert</span></a></span><span>
+</span><a href="#local-6989586621689281610"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621689281607"><span class="hs-identifier hs-var">pgcSslRootCert</span></a></span><span>
 </span><span id="line-206"></span><span>      </span><span class="annot"><span class="annottext">f (SSLMode -&gt; Maybe c -&gt; PGClientCerts c d)
 -&gt; f SSLMode -&gt; f (Maybe c -&gt; PGClientCerts c d)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">SSLMode -&gt; f SSLMode
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SSLMode
-</span><a href="#local-6989586621689281540"><span class="hs-identifier hs-var">pgcSslMode</span></a></span><span>
+</span><a href="#local-6989586621689281606"><span class="hs-identifier hs-var">pgcSslMode</span></a></span><span>
 </span><span id="line-207"></span><span>      </span><span class="annot"><span class="annottext">f (Maybe c -&gt; PGClientCerts c d)
 -&gt; f (Maybe c) -&gt; f (PGClientCerts c d)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
@@ -1064,18 +1064,18 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; f c
-</span><a href="#local-6989586621689281545"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
-</span><a href="#local-6989586621689281539"><span class="hs-identifier hs-var">pgcSslPassword</span></a></span><span>
+</span><a href="#local-6989586621689281611"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621689281605"><span class="hs-identifier hs-var">pgcSslPassword</span></a></span><span>
 </span><span id="line-208"></span><span>
-</span><span id="line-209"></span><span id="local-6989586621689281536"><span id="local-6989586621689281537"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281533"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281537"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281536"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281537"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281536"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-209"></span><span id="local-6989586621689281602"><span id="local-6989586621689281603"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281599"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281603"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281602"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281603"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281602"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-210"></span><span>
-</span><span id="line-211"></span><span id="local-6989586621689281531"><span id="local-6989586621689281532"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281527"><span id="local-6989586621689281529"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689281532"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689281531"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281532"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281531"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-211"></span><span id="local-6989586621689281597"><span id="local-6989586621689281598"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281593"><span id="local-6989586621689281595"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689281598"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689281597"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281598"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281597"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-212"></span><span>
-</span><span id="line-213"></span><span id="local-6989586621689281525"><span id="local-6989586621689281526"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281523"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689281526"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689281525"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281526"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281525"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-213"></span><span id="local-6989586621689281591"><span id="local-6989586621689281592"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281589"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689281592"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689281591"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281592"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689281591"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-214"></span><span>
-</span><span id="line-215"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281516"><span id="local-6989586621689281518"><span id="local-6989586621689281520"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-216"></span><span>  </span><span id="local-6989586621689281515"><span class="annot"><span class="annottext">toJSON :: SSLMode -&gt; Value
-</span><a href="#local-6989586621689281515"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-215"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281582"><span id="local-6989586621689281584"><span id="local-6989586621689281586"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#SSLMode"><span class="hs-identifier hs-type">SSLMode</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-216"></span><span>  </span><span id="local-6989586621689281581"><span class="annot"><span class="annottext">toJSON :: SSLMode -&gt; Value
+</span><a href="#local-6989586621689281581"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (SSLMode -&gt; Text) -&gt; SSLMode -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SSLMode -&gt; Text
@@ -1084,23 +1084,23 @@ forall a. Show a =&gt; a -&gt; Text
 </span><span id="line-217"></span><span>
 </span><span id="line-218"></span><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Generic</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span><span>
 </span><span id="line-219"></span><span>
-</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281509"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span><span>
+</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281575"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span><span>
 </span><span id="line-221"></span><span>
-</span><span id="line-222"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281507"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span><span>
+</span><span id="line-222"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281573"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span><span>
 </span><span id="line-223"></span><span>
-</span><span id="line-224"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281503"><span id="local-6989586621689281505"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span></span><span>
+</span><span id="line-224"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281569"><span id="local-6989586621689281571"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span></span><span>
 </span><span id="line-225"></span><span>
-</span><span id="line-226"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281500"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-227"></span><span>  </span><span id="local-6989586621689281499"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TxIsolation
-</span><a href="#local-6989586621689281499"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-226"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281566"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-227"></span><span>  </span><span id="local-6989586621689281565"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TxIsolation
+</span><a href="#local-6989586621689281565"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser TxIsolation) -&gt; Value -&gt; Parser TxIsolation
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Q.TxIsolation&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser TxIsolation) -&gt; Value -&gt; Parser TxIsolation)
 -&gt; (Text -&gt; Parser TxIsolation) -&gt; Value -&gt; Parser TxIsolation
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689281498"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689281498"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689281564"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689281564"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-228"></span><span>    </span><span class="annot"><span class="annottext">Either String TxIsolation
 -&gt; (String -&gt; Parser TxIsolation) -&gt; Parser TxIsolation
 forall (m :: * -&gt; *) e a.
@@ -1112,13 +1112,13 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689281498"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser TxIsolation
+</span><a href="#local-6989586621689281564"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser TxIsolation
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span>
 </span><span id="line-229"></span><span>
-</span><span id="line-230"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281490"><span id="local-6989586621689281492"><span id="local-6989586621689281494"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-231"></span><span>  </span><span id="local-6989586621689281489"><span class="annot"><span class="annottext">toJSON :: TxIsolation -&gt; Value
-</span><a href="#local-6989586621689281489"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">TxIsolation
+</span><span id="line-230"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281556"><span id="local-6989586621689281558"><span id="local-6989586621689281560"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxIsolation</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-231"></span><span>  </span><span id="local-6989586621689281555"><span class="annot"><span class="annottext">toJSON :: TxIsolation -&gt; Value
+</span><a href="#local-6989586621689281555"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">TxIsolation
 </span><span class="hs-identifier hs-var">Q.ReadCommitted</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-string">&quot;read-committed&quot;</span></span><span>
 </span><span id="line-232"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">TxIsolation
@@ -1128,7 +1128,7 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">Q.Serializable</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-string">&quot;serializable&quot;</span></span><span>
 </span><span id="line-234"></span><span>
-</span><span id="line-235"></span><span id="local-6989586621689281484"><span id="local-6989586621689281485"></span></span><span class="hs-keyword">data</span><span> </span><span id="PostgresSourceConnInfo"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-var">PostgresSourceConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresSourceConnInfo"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-var">PostgresSourceConnInfo</span></a></span></span><span>
+</span><span id="line-235"></span><span id="local-6989586621689281550"><span id="local-6989586621689281551"></span></span><span class="hs-keyword">data</span><span> </span><span id="PostgresSourceConnInfo"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-var">PostgresSourceConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresSourceConnInfo"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-var">PostgresSourceConnInfo</span></a></span></span><span>
 </span><span id="line-236"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_psciDatabaseUrl"><span class="annot"><span class="annottext">PostgresSourceConnInfo -&gt; UrlConf
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_psciDatabaseUrl"><span class="hs-identifier hs-var hs-var">_psciDatabaseUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#UrlConf"><span class="hs-identifier hs-type">UrlConf</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-237"></span><span>    </span><span id="_psciPoolSettings"><span class="annot"><span class="annottext">PostgresSourceConnInfo -&gt; Maybe PostgresPoolSettings
@@ -1140,7 +1140,7 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span id="line-240"></span><span>    </span><span id="_psciSslConfiguration"><span class="annot"><span class="annottext">PostgresSourceConnInfo -&gt; Maybe (PGClientCerts CertVar CertVar)
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_psciSslConfiguration"><span class="hs-identifier hs-var hs-var">_psciSslConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PGClientCerts"><span class="hs-identifier hs-type">PGClientCerts</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#CertVar"><span class="hs-identifier hs-type">CertVar</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-241"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-242"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281472"><span id="local-6989586621689281474"><span id="local-6989586621689281476"><span class="annot"><span class="annottext">Int -&gt; PostgresSourceConnInfo -&gt; ShowS
+</span><span id="line-242"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281538"><span id="local-6989586621689281540"><span id="local-6989586621689281542"><span class="annot"><span class="annottext">Int -&gt; PostgresSourceConnInfo -&gt; ShowS
 [PostgresSourceConnInfo] -&gt; ShowS
 PostgresSourceConnInfo -&gt; String
 (Int -&gt; PostgresSourceConnInfo -&gt; ShowS)
@@ -1155,7 +1155,7 @@ show :: PostgresSourceConnInfo -&gt; String
 $cshow :: PostgresSourceConnInfo -&gt; String
 showsPrec :: Int -&gt; PostgresSourceConnInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; PostgresSourceConnInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281468"><span id="local-6989586621689281470"><span class="annot"><span class="annottext">PostgresSourceConnInfo -&gt; PostgresSourceConnInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281534"><span id="local-6989586621689281536"><span class="annot"><span class="annottext">PostgresSourceConnInfo -&gt; PostgresSourceConnInfo -&gt; Bool
 (PostgresSourceConnInfo -&gt; PostgresSourceConnInfo -&gt; Bool)
 -&gt; (PostgresSourceConnInfo -&gt; PostgresSourceConnInfo -&gt; Bool)
 -&gt; Eq PostgresSourceConnInfo
@@ -1176,18 +1176,18 @@ $cto :: forall x. Rep PostgresSourceConnInfo x -&gt; PostgresSourceConnInfo
 $cfrom :: forall x. PostgresSourceConnInfo -&gt; Rep PostgresSourceConnInfo x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-243"></span><span>
-</span><span id="line-244"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281463"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span><span>
+</span><span id="line-244"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281529"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span><span>
 </span><span id="line-245"></span><span>
-</span><span id="line-246"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281459"><span id="local-6989586621689281461"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span></span><span>
+</span><span id="line-246"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281525"><span id="local-6989586621689281527"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span></span><span>
 </span><span id="line-247"></span><span>
-</span><span id="line-248"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281457"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span><span>
+</span><span id="line-248"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281523"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span><span>
 </span><span id="line-249"></span><span>
-</span><span id="line-250"></span><span class="hs-special">$(</span><span id="local-6989586621689281449"><span id="local-6989586621689281451"><span id="local-6989586621689281453"><span id="local-6989586621689281455"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresSourceConnInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-250"></span><span class="hs-special">$(</span><span id="local-6989586621689281515"><span id="local-6989586621689281517"><span id="local-6989586621689281519"><span id="local-6989586621689281521"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresSourceConnInfo</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-251"></span><span class="hs-special">$(</span><span id="psciSslConfiguration"><span id="psciIsolationLevel"><span id="psciUsePreparedStatements"><span id="psciPoolSettings"><span id="psciDatabaseUrl"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresSourceConnInfo</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-252"></span><span>
-</span><span id="line-253"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281446"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-254"></span><span>  </span><span id="local-6989586621689281445"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PostgresSourceConnInfo
-</span><a href="#local-6989586621689281445"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-253"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281512"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-254"></span><span>  </span><span id="local-6989586621689281511"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PostgresSourceConnInfo
+</span><a href="#local-6989586621689281511"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser PostgresSourceConnInfo)
 -&gt; Value
 -&gt; Parser PostgresSourceConnInfo
@@ -1199,8 +1199,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser PostgresSourceConnInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689281444"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281444"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689281510"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689281510"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-255"></span><span>    </span><span class="annot"><span class="annottext">UrlConf
 -&gt; Maybe PostgresPoolSettings
 -&gt; Bool
@@ -1223,7 +1223,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       -&gt; PostgresSourceConnInfo)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281444"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser UrlConf
+</span><a href="#local-6989586621689281510"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser UrlConf
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;database_url&quot;</span></span><span>
@@ -1241,7 +1241,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
       -&gt; PostgresSourceConnInfo)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281444"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe PostgresPoolSettings)
+</span><a href="#local-6989586621689281510"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe PostgresPoolSettings)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;pool_settings&quot;</span></span><span>
@@ -1256,7 +1256,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
       -&gt; Maybe (PGClientCerts CertVar CertVar) -&gt; PostgresSourceConnInfo)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281444"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
+</span><a href="#local-6989586621689281510"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;use_prepared_statements&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
@@ -1271,7 +1271,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
      (Maybe (PGClientCerts CertVar CertVar) -&gt; PostgresSourceConnInfo)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281444"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe TxIsolation)
+</span><a href="#local-6989586621689281510"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe TxIsolation)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;isolation_level&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe TxIsolation) -&gt; TxIsolation -&gt; Parser TxIsolation
@@ -1284,19 +1284,19 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser PostgresSourceConnInfo
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689281444"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (PGClientCerts CertVar CertVar))
+</span><a href="#local-6989586621689281510"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (PGClientCerts CertVar CertVar))
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;ssl_configuration&quot;</span></span><span>
 </span><span id="line-261"></span><span>
-</span><span id="line-262"></span><span id="local-6989586621689281441"><span id="local-6989586621689281442"></span></span><span class="hs-keyword">data</span><span> </span><span id="PostgresConnConfiguration"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-var">PostgresConnConfiguration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresConnConfiguration"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-var">PostgresConnConfiguration</span></a></span></span><span>
+</span><span id="line-262"></span><span id="local-6989586621689281507"><span id="local-6989586621689281508"></span></span><span class="hs-keyword">data</span><span> </span><span id="PostgresConnConfiguration"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-var">PostgresConnConfiguration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresConnConfiguration"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-var">PostgresConnConfiguration</span></a></span></span><span>
 </span><span id="line-263"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_pccConnectionInfo"><span class="annot"><span class="annottext">PostgresConnConfiguration -&gt; PostgresSourceConnInfo
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_pccConnectionInfo"><span class="hs-identifier hs-var hs-var">_pccConnectionInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-264"></span><span>    </span><span id="_pccReadReplicas"><span class="annot"><span class="annottext">PostgresConnConfiguration
 -&gt; Maybe (NonEmpty PostgresSourceConnInfo)
 </span><a href="Hasura.Backends.Postgres.Connection.Settings.html#_pccReadReplicas"><span class="hs-identifier hs-var hs-var">_pccReadReplicas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresSourceConnInfo"><span class="hs-identifier hs-type">PostgresSourceConnInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-265"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-266"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281432"><span id="local-6989586621689281434"><span id="local-6989586621689281436"><span class="annot"><span class="annottext">Int -&gt; PostgresConnConfiguration -&gt; ShowS
+</span><span id="line-266"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689281498"><span id="local-6989586621689281500"><span id="local-6989586621689281502"><span class="annot"><span class="annottext">Int -&gt; PostgresConnConfiguration -&gt; ShowS
 [PostgresConnConfiguration] -&gt; ShowS
 PostgresConnConfiguration -&gt; String
 (Int -&gt; PostgresConnConfiguration -&gt; ShowS)
@@ -1311,7 +1311,7 @@ show :: PostgresConnConfiguration -&gt; String
 $cshow :: PostgresConnConfiguration -&gt; String
 showsPrec :: Int -&gt; PostgresConnConfiguration -&gt; ShowS
 $cshowsPrec :: Int -&gt; PostgresConnConfiguration -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281428"><span id="local-6989586621689281430"><span class="annot"><span class="annottext">PostgresConnConfiguration -&gt; PostgresConnConfiguration -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689281494"><span id="local-6989586621689281496"><span class="annot"><span class="annottext">PostgresConnConfiguration -&gt; PostgresConnConfiguration -&gt; Bool
 (PostgresConnConfiguration -&gt; PostgresConnConfiguration -&gt; Bool)
 -&gt; (PostgresConnConfiguration -&gt; PostgresConnConfiguration -&gt; Bool)
 -&gt; Eq PostgresConnConfiguration
@@ -1337,12 +1337,12 @@ $cfrom :: forall x.
 PostgresConnConfiguration -&gt; Rep PostgresConnConfiguration x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-267"></span><span>
-</span><span id="line-268"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281423"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span></span><span>
+</span><span id="line-268"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281489"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span></span><span>
 </span><span id="line-269"></span><span>
-</span><span id="line-270"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281419"><span id="local-6989586621689281421"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span></span></span><span>
+</span><span id="line-270"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281485"><span id="local-6989586621689281487"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span></span></span><span>
 </span><span id="line-271"></span><span>
-</span><span id="line-272"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281417"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span></span><span>
+</span><span id="line-272"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689281483"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span></span><span>
 </span><span id="line-273"></span><span>
-</span><span id="line-274"></span><span class="hs-special">$(</span><span id="local-6989586621689281405"><span id="local-6989586621689281407"><span id="local-6989586621689281409"><span id="local-6989586621689281411"><span id="local-6989586621689281413"><span id="local-6989586621689281415"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresConnConfiguration</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-274"></span><span class="hs-special">$(</span><span id="local-6989586621689281471"><span id="local-6989586621689281473"><span id="local-6989586621689281475"><span id="local-6989586621689281477"><span id="local-6989586621689281479"><span id="local-6989586621689281481"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresConnConfiguration</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-275"></span><span class="hs-special">$(</span><span id="pccReadReplicas"><span id="pccConnectionInfo"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresConnConfiguration</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-276"></span></pre></body></html>
