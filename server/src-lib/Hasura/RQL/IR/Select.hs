@@ -484,11 +484,29 @@ data ComputedFieldOrderByElement (b :: BackendType) v
       -- ^ Sort by aggregation fields of table rows returned by computed field
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v), Eq (FunctionArgumentExp b v)) => Eq (ComputedFieldOrderByElement b v)
+deriving stock instance
+  ( Backend b,
+    Eq v,
+    Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v)
+  ) =>
+  Eq (ComputedFieldOrderByElement b v)
 
-deriving stock instance (Backend b, Show v, Show (BooleanOperators b v), Show (FunctionArgumentExp b v)) => Show (ComputedFieldOrderByElement b v)
+deriving stock instance
+  ( Backend b,
+    Show v,
+    Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v)
+  ) =>
+  Show (ComputedFieldOrderByElement b v)
 
-instance (Backend b, Hashable v, Hashable (BooleanOperators b v), Hashable (FunctionArgumentExp b v)) => Hashable (ComputedFieldOrderByElement b v)
+instance
+  ( Backend b,
+    Hashable v,
+    Hashable (BooleanOperators b v),
+    Hashable (FunctionArgumentExp b v)
+  ) =>
+  Hashable (ComputedFieldOrderByElement b v)
 
 data ComputedFieldOrderBy (b :: BackendType) v = ComputedFieldOrderBy
   { _cfobXField :: XComputedField b,
@@ -505,11 +523,29 @@ deriving stock instance (Backend b) => Foldable (ComputedFieldOrderBy b)
 
 deriving stock instance (Backend b) => Traversable (ComputedFieldOrderBy b)
 
-deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v), Eq (FunctionArgumentExp b v)) => Eq (ComputedFieldOrderBy b v)
+deriving stock instance
+  ( Backend b,
+    Eq v,
+    Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v)
+  ) =>
+  Eq (ComputedFieldOrderBy b v)
 
-deriving stock instance (Backend b, Show v, Show (BooleanOperators b v), Show (FunctionArgumentExp b v)) => Show (ComputedFieldOrderBy b v)
+deriving stock instance
+  ( Backend b,
+    Show v,
+    Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v)
+  ) =>
+  Show (ComputedFieldOrderBy b v)
 
-instance (Backend b, Hashable v, Hashable (BooleanOperators b v), Hashable (FunctionArgumentExp b v)) => Hashable (ComputedFieldOrderBy b v)
+instance
+  ( Backend b,
+    Hashable v,
+    Hashable (BooleanOperators b v),
+    Hashable (FunctionArgumentExp b v)
+  ) =>
+  Hashable (ComputedFieldOrderBy b v)
 
 data AnnotatedOrderByElement (b :: BackendType) v
   = AOCColumn (ColumnInfo b)
@@ -526,11 +562,29 @@ data AnnotatedOrderByElement (b :: BackendType) v
   | AOCComputedField (ComputedFieldOrderBy b v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v), Eq (FunctionArgumentExp b v)) => Eq (AnnotatedOrderByElement b v)
+deriving stock instance
+  ( Backend b,
+    Eq v,
+    Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v)
+  ) =>
+  Eq (AnnotatedOrderByElement b v)
 
-deriving stock instance (Backend b, Show v, Show (BooleanOperators b v), Show (FunctionArgumentExp b v)) => Show (AnnotatedOrderByElement b v)
+deriving stock instance
+  ( Backend b,
+    Show v,
+    Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v)
+  ) =>
+  Show (AnnotatedOrderByElement b v)
 
-instance (Backend b, Hashable v, Hashable (BooleanOperators b v), Hashable (FunctionArgumentExp b v)) => Hashable (AnnotatedOrderByElement b v)
+instance
+  ( Backend b,
+    Hashable v,
+    Hashable (BooleanOperators b v),
+    Hashable (FunctionArgumentExp b v)
+  ) =>
+  Hashable (AnnotatedOrderByElement b v)
 
 data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount

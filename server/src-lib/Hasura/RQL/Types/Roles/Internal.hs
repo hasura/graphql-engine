@@ -135,10 +135,27 @@ instance (Backend b, Eq a, Hashable a) => OnlyRelevantEq (GBoolExp b a) where
   BoolField boolExpL `relevantEq` BoolField boolExpR = boolExpL == boolExpR
   _ `relevantEq` _ = False
 
-instance (Backend b, Eq a, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a)) => OnlyRelevantEq (AnnComputedFieldBoolExp b a) where
+instance
+  ( Backend b,
+    Eq a,
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a)
+  ) =>
+  OnlyRelevantEq (AnnComputedFieldBoolExp b a)
+  where
   relevantEq = (==)
 
-instance (Backend b, Hashable a, Eq a, Hashable (BooleanOperators b a), Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Hashable (FunctionArgumentExp b a)) => OnlyRelevantEq (AnnBoolExpFld b a) where
+instance
+  ( Backend b,
+    Hashable a,
+    Eq a,
+    Hashable (BooleanOperators b a),
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Hashable (FunctionArgumentExp b a)
+  ) =>
+  OnlyRelevantEq (AnnBoolExpFld b a)
+  where
   annBoolExpFldL `relevantEq` annBoolExpFldR =
     case (annBoolExpFldL, annBoolExpFldR) of
       (AVColumn colInfoL opExpsL, AVColumn colInfoR opExpsR) ->
