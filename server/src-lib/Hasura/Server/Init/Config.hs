@@ -1,12 +1,16 @@
 -- | Types and classes related to configuration when the server is initialised
 module Hasura.Server.Init.Config
-  ( -- * HGEOptions
+  ( -- * Option
+    Option (..),
+    optionPP,
+
+    -- * HGEOptionsRaw
     HGEOptionsRaw (..),
     horDatabaseUrl,
     horMetadataDbUrl,
     horCommand,
 
-    -- * HGEOptionsRaw
+    -- * HGEOptions
     HGEOptions (..),
     hoCommand,
 
@@ -37,8 +41,6 @@ module Hasura.Server.Init.Config
     ConnParamsRaw (..),
     ResponseInternalErrorsConfig (..),
     WSConnectionInitTimeout (..),
-    defaultKeepAliveDelay,
-    defaultWSConnectionInitTimeout,
     msToOptionalInterval,
     rawConnDetailsToUrl,
     rawConnDetailsToUrlText,
@@ -58,7 +60,7 @@ where
 
 import Control.Lens (Lens', Prism')
 import Control.Lens qualified as Lens
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Text qualified as Text
 import Data.Time (NominalDiffTime)
@@ -80,6 +82,20 @@ import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp (HostPreference)
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.WebSockets (ConnectionOptions)
+
+--------------------------------------------------------------------------------
+
+-- | The collected default value, env var, and help message for an
+-- option. If there should be no default value then use 'Option ()'.
+data Option def = Option
+  { _default :: def,
+    _envVar :: String,
+    _helpMessage :: String
+  }
+
+-- | Helper function for pretty printing @Option a@.
+optionPP :: Option a -> (String, String)
+optionPP = _envVar &&& _helpMessage
 
 --------------------------------------------------------------------------------
 
@@ -177,24 +193,24 @@ data PostgresConnDetailsRaw = PostgresConnDetailsRaw
 
 instance FromJSON PostgresConnDetailsRaw where
   parseJSON = Aeson.withObject "PostgresConnDetailsRaw" \o -> do
-    connHost <- o Aeson..: "host"
-    connPort <- o Aeson..: "port"
-    connUser <- o Aeson..: "user"
-    connPassword <- o Aeson..: "password"
-    connDatabase <- o Aeson..: "database"
-    connOptions <- o Aeson..:? "options"
+    connHost <- o .: "host"
+    connPort <- o .: "port"
+    connUser <- o .: "user"
+    connPassword <- o .: "password"
+    connDatabase <- o .: "database"
+    connOptions <- o .:? "options"
     pure $ PostgresConnDetailsRaw {..}
 
 instance ToJSON PostgresConnDetailsRaw where
   toJSON PostgresConnDetailsRaw {..} =
     Aeson.object $
-      [ "host" Aeson..= connHost,
-        "port" Aeson..= connPort,
-        "user" Aeson..= connUser,
-        "password" Aeson..= connPassword,
-        "database" Aeson..= connDatabase
+      [ "host" .= connHost,
+        "port" .= connPort,
+        "user" .= connUser,
+        "password" .= connPassword,
+        "database" .= connDatabase
       ]
-        <> catMaybes [fmap ("options" Aeson..=) connOptions]
+        <> catMaybes [fmap ("options" .=) connOptions]
 
 rawConnDetailsToUrlText :: PostgresConnDetailsRaw -> Text
 rawConnDetailsToUrlText PostgresConnDetailsRaw {..} =
@@ -232,6 +248,9 @@ _HCServe = Lens.prism' HCServe \case
 --------------------------------------------------------------------------------
 
 -- | The Serve Command options accumulated from the arg parser and env.
+--
+-- NOTE: A 'Nothing' value indicates the absence of a particular flag
+-- rather. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl = ServeOptionsRaw
   { rsoPort :: Maybe Int,
     rsoHost :: Maybe Warp.HostPreference,
@@ -248,14 +267,14 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoWsReadCookie :: Bool,
     rsoStringifyNum :: StringifyNumbers,
     rsoDangerousBooleanCollapse :: Maybe Bool,
-    rsoEnabledAPIs :: Maybe [API],
+    rsoEnabledAPIs :: Maybe (HashSet API),
     rsoMxRefetchInt :: Maybe RefetchInterval,
     rsoMxBatchSize :: Maybe BatchSize,
     -- We have different config options for livequery and streaming subscriptions
     rsoStreamingMxRefetchInt :: Maybe RefetchInterval,
     rsoStreamingMxBatchSize :: Maybe BatchSize,
     rsoEnableAllowlist :: Bool,
-    rsoEnabledLogTypes :: Maybe [EngineLogType impl],
+    rsoEnabledLogTypes :: Maybe (HashSet (EngineLogType impl)),
     rsoLogLevel :: Maybe LogLevel,
     rsoDevMode :: Bool,
     rsoAdminInternalErrors :: Maybe Bool,
@@ -269,7 +288,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoEnableMaintenanceMode :: MaintenanceMode (),
     rsoSchemaPollInterval :: Maybe OptionalInterval,
     -- | See Note '$experimentalFeatures' at bottom of module
-    rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
+    rsoExperimentalFeatures :: Maybe (HashSet ExperimentalFeature),
     rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
     rsoGracefulShutdownTimeout :: Maybe Seconds,
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
@@ -355,30 +374,26 @@ newtype KeepAliveDelay = KeepAliveDelay {unKeepAliveDelay :: Seconds}
 
 instance FromJSON KeepAliveDelay where
   parseJSON = Aeson.withObject "KeepAliveDelay" \o -> do
-    unKeepAliveDelay <- o Aeson..: "keep_alive_delay"
+    unKeepAliveDelay <- o .: "keep_alive_delay"
     pure $ KeepAliveDelay {..}
 
 instance ToJSON KeepAliveDelay where
   toJSON KeepAliveDelay {..} =
-    Aeson.object ["keep_alive_delay" Aeson..= unKeepAliveDelay]
+    Aeson.object ["keep_alive_delay" .= unKeepAliveDelay]
 
-defaultKeepAliveDelay :: KeepAliveDelay
-defaultKeepAliveDelay = KeepAliveDelay $ fromIntegral (5 :: Int)
+--------------------------------------------------------------------------------
 
 newtype WSConnectionInitTimeout = WSConnectionInitTimeout {unWSConnectionInitTimeout :: Seconds}
   deriving (Eq, Show)
 
 instance FromJSON WSConnectionInitTimeout where
   parseJSON = Aeson.withObject "WSConnectionInitTimeout" \o -> do
-    unWSConnectionInitTimeout <- o Aeson..: "w_s_connection_init_timeout"
+    unWSConnectionInitTimeout <- o .: "w_s_connection_init_timeout"
     pure $ WSConnectionInitTimeout {..}
 
 instance ToJSON WSConnectionInitTimeout where
   toJSON WSConnectionInitTimeout {..} =
-    Aeson.object ["w_s_connection_init_timeout" Aeson..= unWSConnectionInitTimeout]
-
-defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
-defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: Int)
+    Aeson.object ["w_s_connection_init_timeout" .= unWSConnectionInitTimeout]
 
 --------------------------------------------------------------------------------
 
@@ -429,9 +444,11 @@ data ServeOptions impl = ServeOptions
     soDefaultNamingConvention :: Maybe NamingCase
   }
 
--- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
--- errors in the response to the client.
--- See the github comment https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705 for more details.
+-- | 'ResponseInternalErrorsConfig' represents the encoding of the
+-- internal errors in the response to the client.
+--
+-- For more details, see this github comment:
+-- https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705
 data ResponseInternalErrorsConfig
   = InternalErrorsAllRequests
   | InternalErrorsAdminOnly

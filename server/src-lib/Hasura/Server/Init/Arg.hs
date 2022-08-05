@@ -1,16 +1,18 @@
 {-# LANGUAGE ApplicativeDo #-}
 
--- TODO(SOLOMON): Minimize Exports
 module Hasura.Server.Init.Arg
-  ( module Downgrade,
-    module Serve,
+  ( -- * Main Parser
     parseHgeOpts,
     parsePostgresConnInfo,
     parseMetadataDbUrl,
     mainCmdFooter,
-    metadataDbUrlEnv,
-    retriesNumEnv,
-    databaseUrlEnv,
+    metadataDbUrlOption,
+    retriesNumOption,
+    databaseUrlOption,
+
+    -- * Command Parsers
+    module Downgrade,
+    module Serve,
   )
 where
 
@@ -90,14 +92,16 @@ parsePostgresConnInfo = do
           Opt.auto
           ( Opt.long "retries"
               <> Opt.metavar "NO OF RETRIES"
-              <> Opt.help (snd retriesNumEnv)
+              <> Opt.help (Config._helpMessage retriesNumOption)
           )
 
-retriesNumEnv :: (String, String)
-retriesNumEnv =
-  ( "HASURA_GRAPHQL_NO_OF_RETRIES",
-    "No.of retries if Postgres connection error occurs (default: 1)"
-  )
+retriesNumOption :: Config.Option ()
+retriesNumOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_NO_OF_RETRIES",
+      Config._helpMessage = "No.of retries if Postgres connection error occurs (default: 1)"
+    }
 
 parseDatabaseUrl :: Opt.Parser (Maybe Template.URLTemplate)
 parseDatabaseUrl =
@@ -106,14 +110,16 @@ parseDatabaseUrl =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "database-url"
           <> Opt.metavar "<DATABASE-URL>"
-          <> Opt.help (snd databaseUrlEnv)
+          <> Opt.help (Config._helpMessage databaseUrlOption)
       )
 
-databaseUrlEnv :: (String, String)
-databaseUrlEnv =
-  ( "HASURA_GRAPHQL_DATABASE_URL",
-    "Postgres database URL. Example postgres://foo:bar@example.com:2345/database"
-  )
+databaseUrlOption :: Config.Option ()
+databaseUrlOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_DATABASE_URL",
+      Config._helpMessage = "Postgres database URL. Example postgres://foo:bar@example.com:2345/database"
+    }
 
 parseRawConnDetails :: Opt.Parser (Maybe Config.PostgresConnDetailsRaw)
 parseRawConnDetails = do
@@ -192,14 +198,16 @@ parseMetadataDbUrl =
     Opt.strOption
       ( Opt.long "metadata-database-url"
           <> Opt.metavar "<METADATA-DATABASE-URL>"
-          <> Opt.help (snd metadataDbUrlEnv)
+          <> Opt.help (Config._helpMessage metadataDbUrlOption)
       )
 
-metadataDbUrlEnv :: (String, String)
-metadataDbUrlEnv =
-  ( "HASURA_GRAPHQL_METADATA_DATABASE_URL",
-    "Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database"
-  )
+metadataDbUrlOption :: Config.Option ()
+metadataDbUrlOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_METADATA_DATABASE_URL",
+      Config._helpMessage = "Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database"
+    }
 
 --------------------------------------------------------------------------------
 -- Pretty Printer
@@ -218,4 +226,9 @@ mainCmdFooter =
         ]
       ]
 
-    envVarDoc = PP.mkEnvVarDoc [databaseUrlEnv, retriesNumEnv]
+    envVarDoc =
+      PP.mkEnvVarDoc
+        [ Config.optionPP databaseUrlOption,
+          Config.optionPP metadataDbUrlOption,
+          Config.optionPP retriesNumOption
+        ]

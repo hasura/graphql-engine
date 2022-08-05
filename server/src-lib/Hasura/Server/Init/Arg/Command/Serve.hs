@@ -1,13 +1,62 @@
 -- | The Arg Parser for the 'serve' subcommand.
 module Hasura.Server.Init.Arg.Command.Serve
-  ( module Hasura.Server.Init.Arg.Command.Serve,
+  ( -- * Parser
+    serveCommandParser,
+
+    -- * Options
+    servePortOption,
+    serveHostOption,
+    pgStripesOption,
+    pgConnsOption,
+    pgTimeoutOption,
+    pgConnLifetimeOption,
+    pgUsePreparedStatementsOption,
+    pgPoolTimeoutOption,
+    txIsolationOption,
+    adminSecretOption,
+    accessKeyOption,
+    authHookOption,
+    authHookModeOption,
+    jwtSecretOption,
+    unAuthRoleOption,
+    corsDomainOption,
+    disableCorsOption,
+    enableConsoleOption,
+    consoleAssetsDirOption,
+    enableTelemetryOption,
+    wsReadCookieOption,
+    stringifyNumOption,
+    dangerousBooleanCollapseOption,
+    enabledAPIsOption,
+    mxRefetchDelayOption,
+    mxBatchSizeOption,
+    streamingMxRefetchDelayOption,
+    streamingMxBatchSizeOption,
+    enableAllowlistOption,
+    enabledLogsOption,
+    logLevelOption,
+    graphqlDevModeOption,
+    graphqlAdminInternalErrorsOption,
+    graphqlEventsHttpPoolSizeOption,
+    graphqlEventsFetchIntervalOption,
+    asyncActionsFetchIntervalOption,
+    enableRemoteSchemaPermsOption,
+    webSocketCompressionOption,
+    webSocketKeepAliveOption,
+    inferFunctionPermsOption,
+    enableMaintenanceModeOption,
+    schemaPollIntervalOption,
+    experimentalFeaturesOption,
+    eventsFetchBatchSizeOption,
+    gracefulShutdownOption,
+    webSocketConnectionInitTimeoutOption,
+    enableMetadataQueryLoggingOption,
+    defaultNamingConventionOption,
+
+    -- * Pretty Printer
+    serveCmdFooter,
   )
 where
-
--- TODO(SOLOMON): How do I want to handle exports of the help tuples?
---  ( serveCommandParser,
---    serveCmdFooter,
---  )
 
 --------------------------------------------------------------------------------
 
@@ -16,6 +65,7 @@ import Data.Text qualified as T
 import Data.Time qualified as Time
 import Database.PG.Query qualified as Query
 import Hasura.Cache.Bounded qualified as Cache
+import Hasura.GraphQL.Execute.Subscription.Options (RefetchInterval)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ESO
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -25,7 +75,6 @@ import Hasura.RQL.Types.Common qualified as Common
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
-import Hasura.Server.Init.Config (OptionalInterval)
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Init.Env qualified as Env
 import Hasura.Server.Logging qualified as Logging
@@ -94,14 +143,16 @@ parseServerPort =
       Opt.auto
       ( Opt.long "server-port"
           <> Opt.metavar "<PORT>"
-          <> Opt.help (snd servePortEnv)
+          <> Opt.help (Config._helpMessage servePortOption)
       )
 
-servePortEnv :: (String, String)
-servePortEnv =
-  ( "HASURA_GRAPHQL_SERVER_PORT",
-    "Port on which graphql-engine should be served (default: 8080)"
-  )
+servePortOption :: Config.Option Int
+servePortOption =
+  Config.Option
+    { _default = 8080,
+      _envVar = "HASURA_GRAPHQL_SERVER_PORT",
+      _helpMessage = "Port on which graphql-engine should be served (default: 8080)"
+    }
 
 parseServerHost :: Opt.Parser (Maybe Warp.HostPreference)
 parseServerHost =
@@ -109,20 +160,23 @@ parseServerHost =
     Opt.strOption
       ( Opt.long "server-host"
           <> Opt.metavar "<HOST>"
-          <> Opt.help (snd serveHostEnv)
+          <> Opt.help (Config._helpMessage serveHostOption)
       )
 
-serveHostEnv :: (String, String)
-serveHostEnv =
-  ( "HASURA_GRAPHQL_SERVER_HOST",
-    "Host on which graphql-engine will listen (default: *)"
-  )
+serveHostOption :: Config.Option Warp.HostPreference
+serveHostOption =
+  Config.Option
+    { _default = "*",
+      _envVar = "HASURA_GRAPHQL_SERVER_HOST",
+      _helpMessage = "Host on which graphql-engine will listen (default: *)"
+    }
 
 parseConnParams :: Opt.Parser Config.ConnParamsRaw
 parseConnParams =
-  Config.ConnParamsRaw <$> pgStripes <*> pgConns <*> pgIdleTimeout <*> pgConnLifetime <*> pgAllowPrepare <*> pgPoolTimeout
+  Config.ConnParamsRaw <$> pgStripes <*> pgConns <*> pgTimeout <*> pgConnLifetime <*> pgUsePreparedStatements <*> pgPoolTimeout
   where
     -- TODO(SOLOMON): Review, currently accepts negative integers
+    pgStripes :: Opt.Parser (Maybe Int)
     pgStripes =
       Opt.optional $
         Opt.option
@@ -130,10 +184,11 @@ parseConnParams =
           ( Opt.long "stripes"
               <> Opt.short 's'
               <> Opt.metavar "<NO OF STRIPES>"
-              <> Opt.help (snd pgStripesEnv)
+              <> Opt.help (Config._helpMessage pgStripesOption)
           )
 
     -- TODO(SOLOMON): Review, currently accepts negative integers
+    pgConns :: Opt.Parser (Maybe Int)
     pgConns =
       Opt.optional $
         Opt.option
@@ -141,20 +196,22 @@ parseConnParams =
           ( Opt.long "connections"
               <> Opt.short 'c'
               <> Opt.metavar "<NO OF CONNS>"
-              <> Opt.help (snd pgConnsEnv)
+              <> Opt.help (Config._helpMessage pgConnsOption)
           )
 
     -- TODO(SOLOMON): Review, currently accepts negative integers
-    pgIdleTimeout =
+    pgTimeout :: Opt.Parser (Maybe Int)
+    pgTimeout =
       Opt.optional $
         Opt.option
           Opt.auto
           ( Opt.long "timeout"
               <> Opt.metavar "<SECONDS>"
-              <> Opt.help (snd pgTimeoutEnv)
+              <> Opt.help (Config._helpMessage pgTimeoutOption)
           )
 
     -- TODO(SOLOMON): Review, currently accepts negative integers
+    pgConnLifetime :: Opt.Parser (Maybe Time.NominalDiffTime)
     pgConnLifetime =
       fmap (fmap (realToFrac :: Int -> Time.NominalDiffTime)) $
         Opt.optional $
@@ -162,19 +219,21 @@ parseConnParams =
             Opt.auto
             ( Opt.long "conn-lifetime"
                 <> Opt.metavar "<SECONDS>"
-                <> Opt.help (snd pgConnLifetimeEnv)
+                <> Opt.help (Config._helpMessage pgConnLifetimeOption)
             )
 
-    pgAllowPrepare =
+    pgUsePreparedStatements :: Opt.Parser (Maybe Bool)
+    pgUsePreparedStatements =
       Opt.optional $
         Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "use-prepared-statements"
               <> Opt.metavar "<true|false>"
-              <> Opt.help (snd pgUsePrepareEnv)
+              <> Opt.help (Config._helpMessage pgUsePreparedStatementsOption)
           )
 
     -- TODO(SOLOMON): Review, currently accepts negative integers
+    pgPoolTimeout :: Opt.Parser (Maybe Time.NominalDiffTime)
     pgPoolTimeout =
       fmap (fmap (realToFrac :: Int -> Time.NominalDiffTime)) $
         Opt.optional $
@@ -182,49 +241,64 @@ parseConnParams =
             Opt.auto
             ( Opt.long "pool-timeout"
                 <> Opt.metavar "<SECONDS>"
-                <> Opt.help (snd pgPoolTimeoutEnv)
+                <> Opt.help (Config._helpMessage pgPoolTimeoutOption)
             )
 
-pgStripesEnv :: (String, String)
-pgStripesEnv =
-  ( "HASURA_GRAPHQL_PG_STRIPES",
-    "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). "
-      <> "New connections will be taken from a particular stripe pseudo-randomly."
-  )
+pgStripesOption :: Config.Option Int
+pgStripesOption =
+  Config.Option
+    { _default = 1,
+      _envVar = "HASURA_GRAPHQL_PG_STRIPES",
+      _helpMessage =
+        "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). "
+          <> "New connections will be taken from a particular stripe pseudo-randomly."
+    }
 
-pgConnsEnv :: (String, String)
-pgConnsEnv =
-  ( "HASURA_GRAPHQL_PG_CONNECTIONS",
-    "Maximum number of Postgres connections that can be opened per stripe (default: 50). "
-      <> "When the maximum is reached we will block until a new connection becomes available, "
-      <> "even if there is capacity in other stripes."
-  )
+pgConnsOption :: Config.Option Int
+pgConnsOption =
+  Config.Option
+    { _default = 50,
+      _envVar = "HASURA_GRAPHQL_PG_CONNECTIONS",
+      _helpMessage =
+        "Maximum number of Postgres connections that can be opened per stripe (default: 50). "
+          <> "When the maximum is reached we will block until a new connection becomes available, "
+          <> "even if there is capacity in other stripes."
+    }
 
-pgTimeoutEnv :: (String, String)
-pgTimeoutEnv =
-  ( "HASURA_GRAPHQL_PG_TIMEOUT",
-    "Each connection's idle time before it is closed (default: 180 sec)"
-  )
+pgTimeoutOption :: Config.Option Int
+pgTimeoutOption =
+  Config.Option
+    { _default = 180,
+      _envVar = "HASURA_GRAPHQL_PG_TIMEOUT",
+      _helpMessage = "Each connection's idle time before it is closed (default: 180 sec)"
+    }
 
-pgConnLifetimeEnv :: (String, String)
-pgConnLifetimeEnv =
-  ( "HASURA_GRAPHQL_PG_CONN_LIFETIME",
-    "Time from connection creation after which the connection should be destroyed and a new one "
-      <> "created. A value of 0 indicates we should never destroy an active connection. If 0 is "
-      <> "passed, memory from large query results may not be reclaimed. (default: 600 sec)"
-  )
+pgConnLifetimeOption :: Config.Option Time.NominalDiffTime
+pgConnLifetimeOption =
+  Config.Option
+    { _default = 600,
+      _envVar = "HASURA_GRAPHQL_PG_CONN_LIFETIME",
+      _helpMessage =
+        "Time from connection creation after which the connection should be destroyed and a new one "
+          <> "created. A value of 0 indicates we should never destroy an active connection. If 0 is "
+          <> "passed, memory from large query results may not be reclaimed. (default: 600 sec)"
+    }
 
-pgUsePrepareEnv :: (String, String)
-pgUsePrepareEnv =
-  ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS",
-    "Use prepared statements for queries (default: true)"
-  )
+pgUsePreparedStatementsOption :: Config.Option Bool
+pgUsePreparedStatementsOption =
+  Config.Option
+    { _default = True,
+      _envVar = "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS",
+      _helpMessage = "Use prepared statements for queries (default: true)"
+    }
 
-pgPoolTimeoutEnv :: (String, String)
-pgPoolTimeoutEnv =
-  ( "HASURA_GRAPHQL_PG_POOL_TIMEOUT",
-    "How long to wait when acquiring a Postgres connection, in seconds (default: forever)."
-  )
+pgPoolTimeoutOption :: Config.Option ()
+pgPoolTimeoutOption =
+  Config.Option
+    { _default = (),
+      _envVar = "HASURA_GRAPHQL_PG_POOL_TIMEOUT",
+      _helpMessage = "How long to wait when acquiring a Postgres connection, in seconds (default: forever)."
+    }
 
 parseTxIsolation :: Opt.Parser (Maybe Query.TxIsolation)
 parseTxIsolation =
@@ -234,14 +308,16 @@ parseTxIsolation =
       ( Opt.long "tx-iso"
           <> Opt.short 'i'
           <> Opt.metavar "<TXISO>"
-          <> Opt.help (snd txIsolationEnv)
+          <> Opt.help (Config._helpMessage txIsolationOption)
       )
 
-txIsolationEnv :: (String, String)
-txIsolationEnv =
-  ( "HASURA_GRAPHQL_TX_ISOLATION",
-    "transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)"
-  )
+txIsolationOption :: Config.Option Query.TxIsolation
+txIsolationOption =
+  Config.Option
+    { Config._default = Query.ReadCommitted,
+      Config._envVar = "HASURA_GRAPHQL_TX_ISOLATION",
+      Config._helpMessage = "transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)"
+    }
 
 parseAdminSecret :: Opt.Parser (Maybe Auth.AdminSecretHash)
 parseAdminSecret =
@@ -250,14 +326,16 @@ parseAdminSecret =
       <$> Opt.strOption
         ( Opt.long "admin-secret"
             <> Opt.metavar "ADMIN SECRET KEY"
-            <> Opt.help (snd adminSecretEnv)
+            <> Opt.help (Config._helpMessage adminSecretOption)
         )
 
-adminSecretEnv :: (String, String)
-adminSecretEnv =
-  ( "HASURA_GRAPHQL_ADMIN_SECRET",
-    "Admin Secret key, required to access this instance"
-  )
+adminSecretOption :: Config.Option ()
+adminSecretOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_ADMIN_SECRET",
+      Config._helpMessage = "Admin Secret key, required to access this instance"
+    }
 
 parseAccessKey :: Opt.Parser (Maybe Auth.AdminSecretHash)
 parseAccessKey =
@@ -266,14 +344,16 @@ parseAccessKey =
       <$> Opt.strOption
         ( Opt.long "access-key"
             <> Opt.metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)"
-            <> Opt.help (snd accessKeyEnv)
+            <> Opt.help (Config._helpMessage accessKeyOption)
         )
 
-accessKeyEnv :: (String, String)
-accessKeyEnv =
-  ( "HASURA_GRAPHQL_ACCESS_KEY",
-    "Admin secret key, required to access this instance (deprecated: use HASURA_GRAPHQL_ADMIN_SECRET instead)"
-  )
+accessKeyOption :: Config.Option ()
+accessKeyOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_ACCESS_KEY",
+      Config._helpMessage = "Admin secret key, required to access this instance (deprecated: use HASURA_GRAPHQL_ADMIN_SECRET instead)"
+    }
 
 parseAuthHook :: Opt.Parser Config.AuthHookRaw
 parseAuthHook =
@@ -284,7 +364,7 @@ parseAuthHook =
         Opt.strOption
           ( Opt.long "auth-hook"
               <> Opt.metavar "<WEB HOOK URL>"
-              <> Opt.help (snd authHookEnv)
+              <> Opt.help (Config._helpMessage authHookOption)
           )
     urlType =
       Opt.optional $
@@ -292,20 +372,24 @@ parseAuthHook =
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "auth-hook-mode"
               <> Opt.metavar "<GET|POST>"
-              <> Opt.help (snd authHookModeEnv)
+              <> Opt.help (Config._helpMessage authHookModeOption)
           )
 
-authHookEnv :: (String, String)
-authHookEnv =
-  ( "HASURA_GRAPHQL_AUTH_HOOK",
-    "URL of the authorization webhook required to authorize requests"
-  )
+authHookOption :: Config.Option ()
+authHookOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_AUTH_HOOK",
+      Config._helpMessage = "URL of the authorization webhook required to authorize requests"
+    }
 
-authHookModeEnv :: (String, String)
-authHookModeEnv =
-  ( "HASURA_GRAPHQL_AUTH_HOOK_MODE",
-    "HTTP method to use for authorization webhook (default: GET)"
-  )
+authHookModeOption :: Config.Option Auth.AuthHookType
+authHookModeOption =
+  Config.Option
+    { Config._default = Auth.AHTGet,
+      Config._envVar = "HASURA_GRAPHQL_AUTH_HOOK_MODE",
+      Config._helpMessage = "HTTP method to use for authorization webhook (default: GET)"
+    }
 
 parseJwtSecret :: Opt.Parser (Maybe Auth.JWTConfig)
 parseJwtSecret =
@@ -314,16 +398,19 @@ parseJwtSecret =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "jwt-secret"
           <> Opt.metavar "<JSON CONFIG>"
-          <> Opt.help (snd jwtSecretEnv)
+          <> Opt.help (Config._helpMessage jwtSecretOption)
       )
 
-jwtSecretEnv :: (String, String)
-jwtSecretEnv =
-  ( "HASURA_GRAPHQL_JWT_SECRET",
-    "The JSON containing type and the JWK used for verifying. e.g: "
-      <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`,"
-      <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
-  )
+jwtSecretOption :: Config.Option ()
+jwtSecretOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_JWT_SECRET",
+      Config._helpMessage =
+        "The JSON containing type and the JWK used for verifying. e.g: "
+          <> "`{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`,"
+          <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
+    }
 
 parseUnAuthRole :: Opt.Parser (Maybe Session.RoleName)
 parseUnAuthRole =
@@ -332,17 +419,20 @@ parseUnAuthRole =
       Opt.strOption
         ( Opt.long "unauthorized-role"
             <> Opt.metavar "<ROLE>"
-            <> Opt.help (snd unAuthRoleEnv)
+            <> Opt.help (Config._helpMessage unAuthRoleOption)
         )
   where
     mkRoleName mText = mText >>= Session.mkRoleName
 
-unAuthRoleEnv :: (String, String)
-unAuthRoleEnv =
-  ( "HASURA_GRAPHQL_UNAUTHORIZED_ROLE",
-    "Unauthorized role, used when admin-secret is not sent in admin-secret only mode "
-      ++ "or \"Authorization\" header is absent in JWT mode"
-  )
+unAuthRoleOption :: Config.Option ()
+unAuthRoleOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_UNAUTHORIZED_ROLE",
+      Config._helpMessage =
+        "Unauthorized role, used when admin-secret is not sent in admin-secret only mode "
+          ++ "or \"Authorization\" header is absent in JWT mode"
+    }
 
 parseCorsConfig :: Opt.Parser (Maybe Cors.CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain
@@ -353,43 +443,50 @@ parseCorsConfig = mapCC <$> disableCors <*> corsDomain
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "cors-domain"
               <> Opt.metavar "<DOMAINS>"
-              <> Opt.help (snd corsDomainEnv)
+              <> Opt.help (Config._helpMessage corsDomainOption)
           )
 
     disableCors =
       Opt.switch
         ( Opt.long "disable-cors"
-            <> Opt.help (snd disableCorsEnv)
+            <> Opt.help (Config._helpMessage disableCorsOption)
         )
 
     mapCC isDisabled domains =
       bool domains (Just $ Cors.CCDisabled False) isDisabled
 
-corsDomainEnv :: (String, String)
-corsDomainEnv =
-  ( "HASURA_GRAPHQL_CORS_DOMAIN",
-    "CSV of list of domains, excluding scheme (http/https) and including  port, "
-      ++ "to allow CORS for. Wildcard domains are allowed. See docs for details."
-  )
+corsDomainOption :: Config.Option Cors.CorsConfig
+corsDomainOption =
+  Config.Option
+    { Config._default = Cors.CCAllowAll,
+      Config._envVar = "HASURA_GRAPHQL_CORS_DOMAIN",
+      Config._helpMessage =
+        "CSV of list of domains, excluding scheme (http/https) and including  port, "
+          ++ "to allow CORS for. Wildcard domains are allowed. See docs for details."
+    }
 
-disableCorsEnv :: (String, String)
-disableCorsEnv =
-  ( "HASURA_GRAPHQL_DISABLE_CORS",
-    "Disable CORS. Do not send any CORS headers on any request"
-  )
+disableCorsOption :: Config.Option Bool
+disableCorsOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_DISABLE_CORS",
+      Config._helpMessage = "Disable CORS. Do not send any CORS headers on any request"
+    }
 
 parseEnableConsole :: Opt.Parser Bool
 parseEnableConsole =
   Opt.switch
     ( Opt.long "enable-console"
-        <> Opt.help (snd enableConsoleEnv)
+        <> Opt.help (Config._helpMessage enableConsoleOption)
     )
 
-enableConsoleEnv :: (String, String)
-enableConsoleEnv =
-  ( "HASURA_GRAPHQL_ENABLE_CONSOLE",
-    "Enable API Console (default: false)"
-  )
+enableConsoleOption :: Config.Option Bool
+enableConsoleOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_CONSOLE",
+      Config._helpMessage = "Enable API Console (default: false)"
+    }
 
 parseConsoleAssetsDir :: Opt.Parser (Maybe Text)
 parseConsoleAssetsDir =
@@ -397,16 +494,19 @@ parseConsoleAssetsDir =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "console-assets-dir"
-          <> Opt.help (snd consoleAssetsDirEnv)
+          <> Opt.help (Config._helpMessage consoleAssetsDirOption)
       )
 
-consoleAssetsDirEnv :: (String, String)
-consoleAssetsDirEnv =
-  ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR",
-    "A directory from which static assets required for console is served at"
-      ++ "'/console/assets' path. Can be set to '/srv/console-assets' on the"
-      ++ " default docker image to disable loading assets from CDN."
-  )
+consoleAssetsDirOption :: Config.Option ()
+consoleAssetsDirOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR",
+      Config._helpMessage =
+        "A directory from which static assets required for console is served at"
+          ++ "'/console/assets' path. Can be set to '/srv/console-assets' on the"
+          ++ " default docker image to disable loading assets from CDN."
+    }
 
 -- NOTE: Should this be an 'Opt.flag'?
 parseEnableTelemetry :: Opt.Parser (Maybe Bool)
@@ -415,45 +515,52 @@ parseEnableTelemetry =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "enable-telemetry"
-          <> Opt.help (snd enableTelemetryEnv)
+          <> Opt.help (Config._helpMessage enableTelemetryOption)
       )
 
-enableTelemetryEnv :: (String, String)
-enableTelemetryEnv =
-  ( "HASURA_GRAPHQL_ENABLE_TELEMETRY",
-    -- TODO (from master): better description
-    "Enable anonymous telemetry (default: true)"
-  )
+enableTelemetryOption :: Config.Option Bool
+enableTelemetryOption =
+  Config.Option
+    { _default = True,
+      _envVar = "HASURA_GRAPHQL_ENABLE_TELEMETRY",
+      -- TODO (from master): better description
+      _helpMessage = "Enable anonymous telemetry (default: true)"
+    }
 
 parseWsReadCookie :: Opt.Parser Bool
 parseWsReadCookie =
   Opt.switch
     ( Opt.long "ws-read-cookie"
-        <> Opt.help (snd wsReadCookieEnv)
+        <> Opt.help (Config._helpMessage wsReadCookieOption)
     )
 
-wsReadCookieEnv :: (String, String)
-wsReadCookieEnv =
-  ( "HASURA_GRAPHQL_WS_READ_COOKIE",
-    "Read cookie on WebSocket initial handshake, even when CORS is disabled."
-      ++ " This can be a potential security flaw! Please make sure you know "
-      ++ "what you're doing."
-      ++ " This configuration is only applicable when CORS is disabled."
-  )
+wsReadCookieOption :: Config.Option Bool
+wsReadCookieOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_WS_READ_COOKIE",
+      Config._helpMessage =
+        "Read cookie on WebSocket initial handshake, even when CORS is disabled."
+          ++ " This can be a potential security flaw! Please make sure you know "
+          ++ "what you're doing."
+          ++ " This configuration is only applicable when CORS is disabled."
+    }
 
 parseStringifyNum :: Opt.Parser Options.StringifyNumbers
 parseStringifyNum =
   fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) $
     Opt.switch
       ( Opt.long "stringify-numeric-types"
-          <> Opt.help (snd stringifyNumEnv)
+          <> Opt.help (Config._helpMessage stringifyNumOption)
       )
 
-stringifyNumEnv :: (String, String)
-stringifyNumEnv =
-  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES",
-    "Stringify numeric types (default: false)"
-  )
+stringifyNumOption :: Config.Option Options.StringifyNumbers
+stringifyNumOption =
+  Config.Option
+    { Config._default = Options.Don'tStringifyNumbers,
+      Config._envVar = "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES",
+      Config._helpMessage = "Stringify numeric types (default: false)"
+    }
 
 parseDangerousBooleanCollapse :: Opt.Parser (Maybe Bool)
 parseDangerousBooleanCollapse =
@@ -461,31 +568,36 @@ parseDangerousBooleanCollapse =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "v1-boolean-null-collapse"
-          <> Opt.help (snd dangerousBooleanCollapseEnv)
+          <> Opt.help (Config._helpMessage dangerousBooleanCollapseOption)
       )
 
-dangerousBooleanCollapseEnv :: (String, String)
-dangerousBooleanCollapseEnv =
-  ( "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE",
-    "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
-      <> " value will be interpreted to mean that the field should be ignored"
-      <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
-  )
+dangerousBooleanCollapseOption :: Config.Option Bool
+dangerousBooleanCollapseOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE",
+      Config._helpMessage =
+        "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
+          <> " value will be interpreted to mean that the field should be ignored"
+          <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
+    }
 
-parseEnabledAPIs :: Opt.Parser (Maybe [Config.API])
+parseEnabledAPIs :: Opt.Parser (Maybe (HashSet Config.API))
 parseEnabledAPIs =
   Opt.optional $
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "enabled-apis"
-          <> Opt.help (snd enabledAPIsEnv)
+          <> Opt.help (Config._helpMessage enabledAPIsOption)
       )
 
-enabledAPIsEnv :: (String, String)
-enabledAPIsEnv =
-  ( "HASURA_GRAPHQL_ENABLED_APIS",
-    "Comma separated list of enabled APIs. (default: metadata,graphql,pgdump,config)"
-  )
+enabledAPIsOption :: Config.Option (HashSet Config.API)
+enabledAPIsOption =
+  Config.Option
+    { Config._default = Set.fromList [Config.METADATA, Config.GRAPHQL, Config.PGDUMP, Config.CONFIG],
+      Config._envVar = "HASURA_GRAPHQL_ENABLED_APIS",
+      Config._helpMessage = "Comma separated list of enabled APIs. (default: metadata,graphql,pgdump,config)"
+    }
 
 parseMxRefetchDelay :: Opt.Parser (Maybe ESO.RefetchInterval)
 parseMxRefetchDelay =
@@ -494,15 +606,18 @@ parseMxRefetchDelay =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "live-queries-multiplexed-refetch-interval"
           <> Opt.metavar "<INTERVAL(ms)>"
-          <> Opt.help (snd mxRefetchDelayEnv)
+          <> Opt.help (Config._envVar mxRefetchDelayOption)
       )
 
-mxRefetchDelayEnv :: (String, String)
-mxRefetchDelayEnv =
-  ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
-    "results will only be sent once in this interval (in milliseconds) for "
-      <> "live queries which can be multiplexed. Default: 1000 (1sec)"
-  )
+mxRefetchDelayOption :: Config.Option RefetchInterval
+mxRefetchDelayOption =
+  Config.Option
+    { Config._default = ESO.RefetchInterval 1,
+      Config._envVar = "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
+      Config._helpMessage =
+        "results will only be sent once in this interval (in milliseconds) for "
+          <> "live queries which can be multiplexed. Default: 1000 (1sec)"
+    }
 
 parseMxBatchSize :: Opt.Parser (Maybe ESO.BatchSize)
 parseMxBatchSize =
@@ -511,15 +626,18 @@ parseMxBatchSize =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "live-queries-multiplexed-batch-size"
           <> Opt.metavar "BATCH_SIZE"
-          <> Opt.help (snd mxBatchSizeEnv)
+          <> Opt.help (Config._helpMessage mxBatchSizeOption)
       )
 
-mxBatchSizeEnv :: (String, String)
-mxBatchSizeEnv =
-  ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE",
-    "multiplexed live queries are split into batches of the specified "
-      <> "size. Default 100. "
-  )
+mxBatchSizeOption :: Config.Option ESO.BatchSize
+mxBatchSizeOption =
+  Config.Option
+    { _default = ESO.BatchSize 100,
+      _envVar = "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE",
+      _helpMessage =
+        "multiplexed live queries are split into batches of the specified "
+          <> "size. Default 100. "
+    }
 
 parseStreamingMxRefetchDelay :: Opt.Parser (Maybe ESO.RefetchInterval)
 parseStreamingMxRefetchDelay =
@@ -528,15 +646,18 @@ parseStreamingMxRefetchDelay =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "streaming-queries-multiplexed-refetch-interval"
           <> Opt.metavar "<INTERVAL(ms)>"
-          <> Opt.help (snd streamingMxRefetchDelayEnv)
+          <> Opt.help (Config._helpMessage streamingMxRefetchDelayOption)
       )
 
-streamingMxRefetchDelayEnv :: (String, String)
-streamingMxRefetchDelayEnv =
-  ( "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
-    "results will only be sent once in this interval (in milliseconds) for "
-      <> "streaming queries which can be multiplexed. Default: 1000 (1sec)"
-  )
+streamingMxRefetchDelayOption :: Config.Option ESO.RefetchInterval
+streamingMxRefetchDelayOption =
+  Config.Option
+    { Config._default = ESO.RefetchInterval 1,
+      Config._envVar = "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
+      Config._helpMessage =
+        "results will only be sent once in this interval (in milliseconds) for "
+          <> "streaming queries which can be multiplexed. Default: 1000 (1sec)"
+    }
 
 parseStreamingMxBatchSize :: Opt.Parser (Maybe ESO.BatchSize)
 parseStreamingMxBatchSize =
@@ -545,49 +666,57 @@ parseStreamingMxBatchSize =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "streaming-queries-multiplexed-batch-size"
           <> Opt.metavar "BATCH_SIZE"
-          <> Opt.help (snd streamingMxBatchSizeEnv)
+          <> Opt.help (Config._helpMessage streamingMxBatchSizeOption)
       )
 
-streamingMxBatchSizeEnv :: (String, String)
-streamingMxBatchSizeEnv =
-  ( "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE",
-    "multiplexed live queries are split into batches of the specified "
-      <> "size. Default 100. "
-  )
+streamingMxBatchSizeOption :: Config.Option ESO.BatchSize
+streamingMxBatchSizeOption =
+  Config.Option
+    { Config._default = ESO.BatchSize 100,
+      Config._envVar = "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE",
+      Config._helpMessage =
+        "multiplexed live queries are split into batches of the specified "
+          <> "size. Default 100. "
+    }
 
 parseEnableAllowlist :: Opt.Parser Bool
 parseEnableAllowlist =
   Opt.switch
     ( Opt.long "enable-allowlist"
-        <> Opt.help (snd enableAllowlistEnv)
+        <> Opt.help (Config._helpMessage enableAllowlistOption)
     )
 
-enableAllowlistEnv :: (String, String)
-enableAllowlistEnv =
-  ( "HASURA_GRAPHQL_ENABLE_ALLOWLIST",
-    "Only accept allowed GraphQL queries"
-  )
+enableAllowlistOption :: Config.Option Bool
+enableAllowlistOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_ALLOWLIST",
+      Config._helpMessage = "Only accept allowed GraphQL queries"
+    }
 
-parseEnabledLogs :: L.EnabledLogTypes impl => Opt.Parser (Maybe [L.EngineLogType impl])
+parseEnabledLogs :: forall impl. L.EnabledLogTypes impl => Opt.Parser (Maybe (HashSet (L.EngineLogType impl)))
 parseEnabledLogs =
   Opt.optional $
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "enabled-log-types"
-          <> Opt.help (snd enabledLogsEnv)
+          <> Opt.help (Config._helpMessage (enabledLogsOption @impl))
       )
 
-enabledLogsEnv :: (String, String)
-enabledLogsEnv =
-  ( "HASURA_GRAPHQL_ENABLED_LOG_TYPES",
-    "Comma separated list of enabled log types "
-      <> "(default: "
-      <> defaultLogTypes
-      <> ")"
-      <> "(all: "
-      <> allAllowedLogTypes
-      <> ")"
-  )
+enabledLogsOption :: L.EnabledLogTypes impl => Config.Option (HashSet (L.EngineLogType impl))
+enabledLogsOption =
+  Config.Option
+    { Config._default = L.defaultEnabledLogTypes,
+      Config._envVar = "HASURA_GRAPHQL_ENABLED_LOG_TYPES",
+      Config._helpMessage =
+        "Comma separated list of enabled log types "
+          <> "(default: "
+          <> defaultLogTypes
+          <> ")"
+          <> "(all: "
+          <> allAllowedLogTypes
+          <> ")"
+    }
   where
     defaultLogTypes = T.unpack . T.intercalate "," $ Witch.into @Text <$> Set.toList L.defaultEnabledEngineLogTypes
     allAllowedLogTypes = T.unpack . T.intercalate "," $ Witch.into @Text <$> L.userAllowedLogTypes
@@ -598,14 +727,16 @@ parseLogLevel =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "log-level"
-          <> Opt.help (snd logLevelEnv)
+          <> Opt.help (Config._helpMessage logLevelOption)
       )
 
-logLevelEnv :: (String, String)
-logLevelEnv =
-  ( "HASURA_GRAPHQL_LOG_LEVEL",
-    "Server log level (default: info) (all: error, warn, info, debug)"
-  )
+logLevelOption :: Config.Option L.LogLevel
+logLevelOption =
+  Config.Option
+    { Config._default = L.LevelInfo,
+      Config._envVar = "HASURA_GRAPHQL_LOG_LEVEL",
+      Config._helpMessage = "Server log level (default: info) (all: error, warn, info, debug)"
+    }
 
 parsePlanCacheSize :: Opt.Parser (Maybe Cache.CacheSize)
 parsePlanCacheSize =
@@ -624,14 +755,16 @@ parseGraphqlDevMode :: Opt.Parser Bool
 parseGraphqlDevMode =
   Opt.switch
     ( Opt.long "dev-mode"
-        <> Opt.help (snd graphqlDevModeEnv)
+        <> Opt.help (Config._helpMessage graphqlDevModeOption)
     )
 
-graphqlDevModeEnv :: (String, String)
-graphqlDevModeEnv =
-  ( "HASURA_GRAPHQL_DEV_MODE",
-    "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
-  )
+graphqlDevModeOption :: Config.Option Bool
+graphqlDevModeOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_DEV_MODE",
+      Config._helpMessage = "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
+    }
 
 parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Bool)
 parseGraphqlAdminInternalErrors =
@@ -639,14 +772,17 @@ parseGraphqlAdminInternalErrors =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "admin-internal-errors"
-          <> Opt.help (snd graphqlAdminInternalErrorsEnv)
+          <> Opt.help (Config._helpMessage graphqlAdminInternalErrorsOption)
       )
 
-graphqlAdminInternalErrorsEnv :: (String, String)
-graphqlAdminInternalErrorsEnv =
-  ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS",
-    "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
-  )
+graphqlAdminInternalErrorsOption :: Config.Option Bool
+graphqlAdminInternalErrorsOption =
+  Config.Option
+    { -- Default to `true` to enable backwards compatibility
+      Config._default = True,
+      Config._envVar = "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS",
+      Config._helpMessage = "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
+    }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
 parseGraphqlEventsHttpPoolSize :: Opt.Parser (Maybe Int)
@@ -655,16 +791,23 @@ parseGraphqlEventsHttpPoolSize =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "events-http-pool-size"
-          <> Opt.metavar (fst graphqlEventsHttpPoolSizeEnv)
-          <> Opt.help (snd graphqlEventsHttpPoolSizeEnv)
+          <> Opt.metavar (Config._envVar graphqlEventsHttpPoolSizeOption)
+          <> Opt.help (Config._helpMessage graphqlEventsHttpPoolSizeOption)
       )
 
--- TODO(SOLOMON): There actually isn't a default value set in 'ServeOptions' for this:
-graphqlEventsHttpPoolSizeEnv :: (String, String)
-graphqlEventsHttpPoolSizeEnv =
-  ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE",
-    "Max event processing threads (default: 100)"
-  )
+-- TODO(SOLOMON): The default value for this option is set in App.hs:
+-- https://github.com/hasura/graphql-engine-mono/blob/main/server/src-lib/Hasura/App.hs#L910
+-- We should move the defaulting into the 'Option' term and
+-- remove the 'Maybe' from 'soEventsHttpPoolSize' but this
+-- should be done in an isolated PR to prevent potential
+-- regressions.
+graphqlEventsHttpPoolSizeOption :: Config.Option ()
+graphqlEventsHttpPoolSizeOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE",
+      Config._helpMessage = "Max event processing threads (default: 100)"
+    }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
 parseGraphqlEventsFetchInterval :: Opt.Parser (Maybe Milliseconds)
@@ -673,15 +816,17 @@ parseGraphqlEventsFetchInterval =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "events-fetch-interval"
-          <> Opt.metavar (fst graphqlEventsFetchIntervalEnv)
-          <> Opt.help (snd graphqlEventsFetchIntervalEnv)
+          <> Opt.metavar (Config._envVar graphqlEventsFetchIntervalOption)
+          <> Opt.help (Config._helpMessage graphqlEventsFetchIntervalOption)
       )
 
-graphqlEventsFetchIntervalEnv :: (String, String)
-graphqlEventsFetchIntervalEnv =
-  ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL",
-    "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
-  )
+graphqlEventsFetchIntervalOption :: Config.Option ()
+graphqlEventsFetchIntervalOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL",
+      Config._helpMessage = "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+    }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
 parseGraphqlAsyncActionsFetchInterval :: Opt.Parser (Maybe Config.OptionalInterval)
@@ -690,44 +835,51 @@ parseGraphqlAsyncActionsFetchInterval =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "async-actions-fetch-interval"
-          <> Opt.metavar (fst asyncActionsFetchIntervalEnv)
-          <> Opt.help (snd asyncActionsFetchIntervalEnv)
+          <> Opt.metavar (Config._envVar asyncActionsFetchIntervalOption)
+          <> Opt.help (Config._helpMessage asyncActionsFetchIntervalOption)
       )
 
-asyncActionsFetchIntervalEnv :: (String, String)
-asyncActionsFetchIntervalEnv =
-  ( "HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL",
-    "Interval in milliseconds to sleep before trying to fetch new async actions. "
-      ++ "Value \"0\" implies completely disable fetching async actions from storage. "
-      ++ "Default 1000 milliseconds"
-  )
+asyncActionsFetchIntervalOption :: Config.Option Config.OptionalInterval
+asyncActionsFetchIntervalOption =
+  Config.Option
+    { Config._default = Config.Interval 1000,
+      Config._envVar = "HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL",
+      Config._helpMessage =
+        "Interval in milliseconds to sleep before trying to fetch new async actions. "
+          ++ "Value \"0\" implies completely disable fetching async actions from storage. "
+          ++ "Default 1000 milliseconds"
+    }
 
 parseEnableRemoteSchemaPerms :: Opt.Parser Options.RemoteSchemaPermissions
 parseEnableRemoteSchemaPerms =
   fmap (bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions) $
     Opt.switch
       ( Opt.long "enable-remote-schema-permissions"
-          <> Opt.help (snd enableRemoteSchemaPermsEnv)
+          <> Opt.help (Config._helpMessage enableRemoteSchemaPermsOption)
       )
 
-enableRemoteSchemaPermsEnv :: (String, String)
-enableRemoteSchemaPermsEnv =
-  ( "HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS",
-    "Enables remote schema permissions (default: false)"
-  )
+enableRemoteSchemaPermsOption :: Config.Option Options.RemoteSchemaPermissions
+enableRemoteSchemaPermsOption =
+  Config.Option
+    { Config._default = Options.DisableRemoteSchemaPermissions,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS",
+      Config._helpMessage = "Enables remote schema permissions (default: false)"
+    }
 
 parseWebSocketCompression :: Opt.Parser Bool
 parseWebSocketCompression =
   Opt.switch
     ( Opt.long "websocket-compression"
-        <> Opt.help (snd webSocketCompressionEnv)
+        <> Opt.help (Config._helpMessage webSocketCompressionOption)
     )
 
-webSocketCompressionEnv :: (String, String)
-webSocketCompressionEnv =
-  ( "HASURA_GRAPHQL_CONNECTION_COMPRESSION",
-    "Enable WebSocket permessage-deflate compression (default: false)"
-  )
+webSocketCompressionOption :: Config.Option Bool
+webSocketCompressionOption =
+  Config.Option
+    { Config._default = False,
+      Config._envVar = "HASURA_GRAPHQL_CONNECTION_COMPRESSION",
+      Config._helpMessage = "Enable WebSocket permessage-deflate compression (default: false)"
+    }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
 parseWebSocketKeepAlive :: Opt.Parser (Maybe Config.KeepAliveDelay)
@@ -736,15 +888,17 @@ parseWebSocketKeepAlive =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "websocket-keepalive"
-          <> Opt.help (snd webSocketKeepAliveEnv)
+          <> Opt.help (Config._helpMessage webSocketKeepAliveOption)
       )
 
 -- NOTE: this is purely used by Apollo-Subscription-Transport-WS
-webSocketKeepAliveEnv :: (String, String)
-webSocketKeepAliveEnv =
-  ( "HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE",
-    "Control websocket keep-alive timeout (default 5 seconds)"
-  )
+webSocketKeepAliveOption :: Config.Option Config.KeepAliveDelay
+webSocketKeepAliveOption =
+  Config.Option
+    { Config._default = Config.KeepAliveDelay (fromIntegral @Int 5),
+      Config._envVar = "HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE",
+      Config._helpMessage = "Control websocket keep-alive timeout (default 5 seconds)"
+    }
 
 parseInferFunctionPerms :: Opt.Parser (Maybe Options.InferFunctionPermissions)
 parseInferFunctionPerms =
@@ -752,66 +906,76 @@ parseInferFunctionPerms =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "infer-function-permissions"
-          <> Opt.help (snd inferFunctionPermsEnv)
+          <> Opt.help (Config._helpMessage inferFunctionPermsOption)
       )
 
-inferFunctionPermsEnv :: (String, String)
-inferFunctionPermsEnv =
-  ( "HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS",
-    "Infers function permissions (default: true)"
-  )
+inferFunctionPermsOption :: Config.Option Options.InferFunctionPermissions
+inferFunctionPermsOption =
+  Config.Option
+    { Config._default = Options.InferFunctionPermissions,
+      Config._envVar = "HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS",
+      Config._helpMessage = "Infers function permissions (default: true)"
+    }
 
 parseEnableMaintenanceMode :: Opt.Parser (Types.MaintenanceMode ())
 parseEnableMaintenanceMode =
   fmap (bool Types.MaintenanceModeDisabled (Types.MaintenanceModeEnabled ())) $
     Opt.switch
       ( Opt.long "enable-maintenance-mode"
-          <> Opt.help (snd enableMaintenanceModeEnv)
+          <> Opt.help (Config._helpMessage enableMaintenanceModeOption)
       )
 
-enableMaintenanceModeEnv :: (String, String)
-enableMaintenanceModeEnv =
-  ( "HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE",
-    "Flag to enable maintenance mode in the graphql-engine"
-  )
+enableMaintenanceModeOption :: Config.Option (Types.MaintenanceMode ())
+enableMaintenanceModeOption =
+  Config.Option
+    { Config._default = Types.MaintenanceModeDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE",
+      Config._helpMessage = "Flag to enable maintenance mode in the graphql-engine"
+    }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
-parseSchemaPollInterval :: Opt.Parser (Maybe OptionalInterval)
+parseSchemaPollInterval :: Opt.Parser (Maybe Config.OptionalInterval)
 parseSchemaPollInterval =
   Opt.optional $
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "schema-sync-poll-interval"
-          <> Opt.metavar (fst schemaPollIntervalEnv)
-          <> Opt.help (snd schemaPollIntervalEnv)
+          <> Opt.metavar (Config._envVar schemaPollIntervalOption)
+          <> Opt.help (Config._helpMessage schemaPollIntervalOption)
       )
 
-schemaPollIntervalEnv :: (String, String)
-schemaPollIntervalEnv =
-  ( "HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL",
-    "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
-  )
+schemaPollIntervalOption :: Config.Option Config.OptionalInterval
+schemaPollIntervalOption =
+  Config.Option
+    { -- 1000 Milliseconds or 1 Second
+      Config._default = Config.Interval 1000,
+      Config._envVar = "HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL",
+      Config._helpMessage = "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
+    }
 
-parseExperimentalFeatures :: Opt.Parser (Maybe [Types.ExperimentalFeature])
+parseExperimentalFeatures :: Opt.Parser (Maybe (HashSet Types.ExperimentalFeature))
 parseExperimentalFeatures =
   Opt.optional $
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "experimental-features"
-          <> Opt.help (snd experimentalFeaturesEnv)
+          <> Opt.help (Config._helpMessage experimentalFeaturesOption)
       )
 
-experimentalFeaturesEnv :: (String, String)
-experimentalFeaturesEnv =
-  ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
-    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters and naming_convention, streaming_subscriptions, apollo_federation). "
-      <> "optimize_permission_filters: Use experimental SQL optimization"
-      <> "transformations for permission filters. "
-      <> "inherited_roles: ignored; inherited roles cannot be switched off"
-      <> "naming_convention: apply naming convention (graphql-default/hasura-default) based on source customization"
-      <> "apollo_federation: use hasura as a subgraph in an Apollo gateway"
-      <> "streaming_subscriptions: A streaming subscription streams the response according to the cursor provided by the user"
-  )
+experimentalFeaturesOption :: Config.Option (HashSet Types.ExperimentalFeature)
+experimentalFeaturesOption =
+  Config.Option
+    { Config._default = Set.empty,
+      Config._envVar = "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
+      Config._helpMessage =
+        "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters and naming_convention, streaming_subscriptions, apollo_federation). "
+          <> "optimize_permission_filters: Use experimental SQL optimization"
+          <> "transformations for permission filters. "
+          <> "inherited_roles: ignored; inherited roles cannot be switched off"
+          <> "naming_convention: apply naming convention (graphql-default/hasura-default) based on source customization"
+          <> "apollo_federation: use hasura as a subgraph in an Apollo gateway"
+          <> "streaming_subscriptions: A streaming subscription streams the response according to the cursor provided by the user"
+    }
 
 parseEventsFetchBatchSize :: Opt.Parser (Maybe Common.NonNegativeInt)
 parseEventsFetchBatchSize =
@@ -819,16 +983,19 @@ parseEventsFetchBatchSize =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "events-fetch-batch-size"
-          <> Opt.metavar (fst eventsFetchBatchSizeEnv)
-          <> Opt.help (snd eventsFetchBatchSizeEnv)
+          <> Opt.metavar (Config._envVar eventsFetchBatchSizeOption)
+          <> Opt.help (Config._helpMessage eventsFetchBatchSizeOption)
       )
 
-eventsFetchBatchSizeEnv :: (String, String)
-eventsFetchBatchSizeEnv =
-  ( "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE",
-    "The maximum number of events to be fetched from the events table in a single batch. Default 100"
-      ++ "Value \"0\" implies completely disable fetching events from events table. "
-  )
+eventsFetchBatchSizeOption :: Config.Option Common.NonNegativeInt
+eventsFetchBatchSizeOption =
+  Config.Option
+    { Config._default = Common.unsafeNonNegativeInt 100,
+      Config._envVar = "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE",
+      Config._helpMessage =
+        "The maximum number of events to be fetched from the events table in a single batch. Default 100"
+          ++ "Value \"0\" implies completely disable fetching events from events table. "
+    }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
 parseGracefulShutdownTimeout :: Opt.Parser (Maybe Seconds)
@@ -838,15 +1005,18 @@ parseGracefulShutdownTimeout =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "graceful-shutdown-timeout"
           <> Opt.metavar "<INTERVAL (seconds)>"
-          <> Opt.help (snd gracefulShutdownEnv)
+          <> Opt.help (Config._helpMessage gracefulShutdownOption)
       )
 
-gracefulShutdownEnv :: (String, String)
-gracefulShutdownEnv =
-  ( "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT",
-    "Timeout for graceful shutdown before which in-flight scheduled events, "
-      <> " cron events and async actions to complete (default: 60 seconds)"
-  )
+gracefulShutdownOption :: Config.Option Seconds
+gracefulShutdownOption =
+  Config.Option
+    { Config._default = 60,
+      Config._envVar = "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT",
+      Config._helpMessage =
+        "Timeout for graceful shutdown before which in-flight scheduled events, "
+          <> " cron events and async actions to complete (default: 60 seconds)"
+    }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
 parseWebSocketConnectionInitTimeout :: Opt.Parser (Maybe Config.WSConnectionInitTimeout)
@@ -855,47 +1025,59 @@ parseWebSocketConnectionInitTimeout =
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "websocket-connection-init-timeout"
-          <> Opt.help (snd webSocketConnectionInitTimeoutEnv)
+          <> Opt.help (Config._helpMessage webSocketConnectionInitTimeoutOption)
       )
 
 -- NOTE: this is purely used by GraphQL-WS
-webSocketConnectionInitTimeoutEnv :: (String, String)
-webSocketConnectionInitTimeoutEnv =
-  ( "HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", -- FIXME?: maybe a better name
-    "Control websocket connection_init timeout (default 3 seconds)"
-  )
+webSocketConnectionInitTimeoutOption :: Config.Option Config.WSConnectionInitTimeout
+webSocketConnectionInitTimeoutOption =
+  Config.Option
+    { Config._default = Config.WSConnectionInitTimeout $ fromIntegral @Int 3,
+      Config._envVar = "HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", -- FIXME?: maybe a better name
+      Config._helpMessage = "Control websocket connection_init timeout (default 3 seconds)"
+    }
 
 parseEnableMetadataQueryLogging :: Opt.Parser Logging.MetadataQueryLoggingMode
 parseEnableMetadataQueryLogging =
   fmap (bool Logging.MetadataQueryLoggingDisabled Logging.MetadataQueryLoggingEnabled) $
     Opt.switch
       ( Opt.long "enable-metadata-query-logging"
-          <> Opt.help (snd enableMetadataQueryLoggingEnv)
+          <> Opt.help (Config._helpMessage enableMetadataQueryLoggingOption)
       )
 
-enableMetadataQueryLoggingEnv :: (String, String)
-enableMetadataQueryLoggingEnv =
-  ( "HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING",
-    "Enables the query field in http-logs for metadata queries (default: false)"
-  )
+enableMetadataQueryLoggingOption :: Config.Option Logging.MetadataQueryLoggingMode
+enableMetadataQueryLoggingOption =
+  Config.Option
+    { Config._default = Logging.MetadataQueryLoggingDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING",
+      Config._helpMessage = "Enables the query field in http-logs for metadata queries (default: false)"
+    }
 
--- TODO(SOLOMON): Should this have a default value?
+-- TODO(SOLOMON): The defaulting behavior for this occurs inside the Engine. In
+-- an isolated PR we should move that defaulting in the parsing stage.
 parseDefaultNamingConvention :: Opt.Parser (Maybe NC.NamingCase)
 parseDefaultNamingConvention =
   Opt.optional $
     Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "default-naming-convention"
-          <> Opt.help (snd defaultNamingConventionEnv)
+          <> Opt.help (Config._helpMessage defaultNamingConventionOption)
       )
 
-defaultNamingConventionEnv :: (String, String)
-defaultNamingConventionEnv =
-  ( "HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION",
-    "Default naming convention for the auto generated graphql names. Possible values are"
-      <> "hasura-default: Use snake_case for all names."
-      <> "graphql-default: Use camelCase for field names and PascalCase for type names."
-  )
+-- NOTE: This should be 'Config.Option NC.NamingCase' with a default
+--of 'NC.HasuraCase' but 'ServeOptions' expects a 'Maybe
+--NC.NamingCase' and HGE handles the dafaulting explicitly. This
+--should be changed in a subsequent PR.
+defaultNamingConventionOption :: Config.Option ()
+defaultNamingConventionOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION",
+      Config._helpMessage =
+        "Default naming convention for the auto generated graphql names. Possible values are"
+          <> "hasura-default: Use snake_case for all names."
+          <> "graphql-default: Use camelCase for field names and PascalCase for type names."
+    }
 
 --------------------------------------------------------------------------------
 -- Pretty Printer
@@ -945,53 +1127,53 @@ serveCmdFooter =
 
     envVarDoc = PP.mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ servePortEnv,
-        serveHostEnv,
-        pgStripesEnv,
-        pgConnsEnv,
-        pgTimeoutEnv,
-        pgConnLifetimeEnv,
-        pgUsePrepareEnv,
-        pgPoolTimeoutEnv,
-        txIsolationEnv,
-        adminSecretEnv,
-        accessKeyEnv,
-        authHookEnv,
-        authHookModeEnv,
-        jwtSecretEnv,
-        unAuthRoleEnv,
-        corsDomainEnv,
-        disableCorsEnv,
-        enableConsoleEnv,
-        consoleAssetsDirEnv,
-        enableTelemetryEnv,
-        wsReadCookieEnv,
-        stringifyNumEnv,
-        dangerousBooleanCollapseEnv,
-        enabledAPIsEnv,
-        mxRefetchDelayEnv,
-        mxBatchSizeEnv,
-        streamingMxRefetchDelayEnv,
-        streamingMxBatchSizeEnv,
-        enableAllowlistEnv,
-        enabledLogsEnv,
-        logLevelEnv,
-        graphqlDevModeEnv,
-        graphqlAdminInternalErrorsEnv,
-        graphqlEventsHttpPoolSizeEnv,
-        graphqlEventsFetchIntervalEnv,
-        asyncActionsFetchIntervalEnv,
-        enableRemoteSchemaPermsEnv,
-        webSocketCompressionEnv,
-        webSocketKeepAliveEnv,
-        inferFunctionPermsEnv,
-        enableMaintenanceModeEnv,
-        schemaPollIntervalEnv,
-        experimentalFeaturesEnv,
-        eventsFetchBatchSizeEnv,
-        gracefulShutdownEnv,
-        webSocketConnectionInitTimeoutEnv,
-        enableMetadataQueryLoggingEnv,
-        defaultNamingConventionEnv
+      [ Config.optionPP servePortOption,
+        Config.optionPP serveHostOption,
+        Config.optionPP pgStripesOption,
+        Config.optionPP pgConnsOption,
+        Config.optionPP pgTimeoutOption,
+        Config.optionPP pgConnLifetimeOption,
+        Config.optionPP pgUsePreparedStatementsOption,
+        Config.optionPP pgPoolTimeoutOption,
+        Config.optionPP txIsolationOption,
+        Config.optionPP adminSecretOption,
+        Config.optionPP accessKeyOption,
+        Config.optionPP authHookOption,
+        Config.optionPP authHookModeOption,
+        Config.optionPP jwtSecretOption,
+        Config.optionPP unAuthRoleOption,
+        Config.optionPP corsDomainOption,
+        Config.optionPP disableCorsOption,
+        Config.optionPP enableConsoleOption,
+        Config.optionPP consoleAssetsDirOption,
+        Config.optionPP enableTelemetryOption,
+        Config.optionPP wsReadCookieOption,
+        Config.optionPP stringifyNumOption,
+        Config.optionPP dangerousBooleanCollapseOption,
+        Config.optionPP enabledAPIsOption,
+        Config.optionPP mxRefetchDelayOption,
+        Config.optionPP mxBatchSizeOption,
+        Config.optionPP streamingMxRefetchDelayOption,
+        Config.optionPP streamingMxBatchSizeOption,
+        Config.optionPP enableAllowlistOption,
+        Config.optionPP (enabledLogsOption @L.Hasura),
+        Config.optionPP logLevelOption,
+        Config.optionPP graphqlDevModeOption,
+        Config.optionPP graphqlAdminInternalErrorsOption,
+        Config.optionPP graphqlEventsHttpPoolSizeOption,
+        Config.optionPP graphqlEventsFetchIntervalOption,
+        Config.optionPP asyncActionsFetchIntervalOption,
+        Config.optionPP enableRemoteSchemaPermsOption,
+        Config.optionPP webSocketCompressionOption,
+        Config.optionPP webSocketKeepAliveOption,
+        Config.optionPP inferFunctionPermsOption,
+        Config.optionPP enableMaintenanceModeOption,
+        Config.optionPP schemaPollIntervalOption,
+        Config.optionPP experimentalFeaturesOption,
+        Config.optionPP eventsFetchBatchSizeOption,
+        Config.optionPP gracefulShutdownOption,
+        Config.optionPP webSocketConnectionInitTimeoutOption,
+        Config.optionPP enableMetadataQueryLoggingOption,
+        Config.optionPP defaultNamingConventionOption
       ]
-    eventEnvs = [graphqlEventsHttpPoolSizeEnv, graphqlEventsFetchIntervalEnv]
+    eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

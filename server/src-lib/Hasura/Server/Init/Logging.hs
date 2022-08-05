@@ -57,9 +57,7 @@ updateQuery f uri =
 censorURI :: Text -> URI -> URI
 censorURI sensitive uri = updateQuery (censorQuery sensitive) uri
 
---------------------------------------------------------------------------------
-
--- | Generate a 'Logging.StartupLog' from the Postgres 'Q.ConnInfo'.
+-- | Generate a 'StartupLog' from the Postgres 'ConnInfo'.
 connInfoToLog :: ConnInfo -> StartupLog
 connInfoToLog connInfo =
   Server.Logging.StartupLog Logging.LevelInfo "postgres_connection" infoVal
@@ -87,7 +85,7 @@ connInfoToLog connInfo =
               "database_url" .= s
             ]
 
--- | Generate a 'Logging.StartupLog' from the final 'Config.ServeOptions'.
+-- | Generate a 'StartupLog' from the final 'ServeOptions'.
 serveOptsToLog :: ToJSON (EngineLogType impl) => ServeOptions impl -> StartupLog
 serveOptsToLog so =
   Server.Logging.StartupLog Logging.LevelInfo "server_configuration" infoVal

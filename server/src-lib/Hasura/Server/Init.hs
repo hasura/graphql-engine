@@ -33,11 +33,9 @@ import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection qualified as Connection
 import Hasura.Base.Error (QErr)
 import Hasura.Base.Error qualified as Error
-import Hasura.Eventing.EventTrigger qualified as EventTrigger
-import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging (EnabledLogTypes)
-import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf)
 import Hasura.RQL.Types.Common qualified as Common
@@ -50,7 +48,6 @@ import Hasura.Server.Init.Logging
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types (MetadataDbId)
 import Hasura.Server.Types qualified as Types
-import Hasura.Server.Utils qualified as Utils
 import Network.WebSockets qualified as WebSockets
 
 --------------------------------------------------------------------------------
@@ -81,7 +78,7 @@ mkHGEOptions ::
   EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
 mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
   dbUrl <- processPostgresConnInfo rawDbUrl
-  metadataDbUrl <- withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
+  metadataDbUrl <- withOption rawMetadataDbUrl metadataDbUrlOption
   cmd <- case rawCmd of
     HCServe rso -> HCServe <$> mkServeOptions rso
     HCExport -> pure HCExport
@@ -99,7 +96,7 @@ processPostgresConnInfo ::
   PostgresConnInfo (Maybe PostgresConnInfoRaw) ->
   WithEnv (PostgresConnInfo (Maybe UrlConf))
 processPostgresConnInfo PostgresConnInfo {..} = do
-  withEnvRetries <- withEnv _pciRetries $ fst retriesNumEnv
+  withEnvRetries <- withOption _pciRetries retriesNumOption
   databaseUrl <- rawConnInfoToUrlConf _pciDatabaseConn
   pure $ PostgresConnInfo databaseUrl withEnvRetries
 
@@ -109,7 +106,7 @@ processPostgresConnInfo PostgresConnInfo {..} = do
 rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe UrlConf)
 rawConnInfoToUrlConf maybeRawConnInfo = do
   env <- ask
-  let databaseUrlEnvVar = fst databaseUrlEnv
+  let databaseUrlEnvVar = _envVar databaseUrlOption
       hasDatabaseUrlEnv = any ((== databaseUrlEnvVar) . fst) env
 
   pure $ case maybeRawConnInfo of
@@ -126,223 +123,134 @@ rawConnInfoToUrlConf maybeRawConnInfo = do
         PGConnDetails connDetails -> rawConnDetailsToUrl connDetails
 
 --------------------------------------------------------------------------------
--- TODO(SOLOMON): Decompose 'mkServeOptions'
 
 -- | Merge the results of the serve subcommmand arg parser with
 -- corresponding values from the 'WithEnv' context.
-mkServeOptions :: EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
-mkServeOptions rso = do
-  port <- fromMaybe 8080 <$> withEnv (rsoPort rso) (fst servePortEnv)
-
-  host <- fromMaybe "*" <$> withEnv (rsoHost rso) (fst serveHostEnv)
-
-  connParams <- mkConnParams $ rsoConnParams rso
-
-  txIso <- fromMaybe Query.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsolationEnv)
-
-  adminScrt <- fmap (maybe mempty HashSet.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
-
-  authHook <- mkAuthHook $ rsoAuthHook rso
-
-  jwtSecret <- (`onNothing` mempty) <$> withEnv (rsoJwtSecret rso) (fst jwtSecretEnv)
-
-  unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
-
-  corsCfg <- mkCorsConfig $ rsoCorsConfig rso
-
-  enableConsole <- withEnvBool (rsoEnableConsole rso) $ fst enableConsoleEnv
-
-  consoleAssetsDir <- withEnv (rsoConsoleAssetsDir rso) (fst consoleAssetsDirEnv)
-
-  enableTelemetry <- fromMaybe True <$> withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-
-  strfyNum <-
-    case rsoStringifyNum rso of
-      Options.Don'tStringifyNumbers -> fmap (fromMaybe Options.Don'tStringifyNumbers) $ considerEnv (fst stringifyNumEnv)
+mkServeOptions :: forall impl. EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
+mkServeOptions ServeOptionsRaw {..} = do
+  soPort <- withOptionDefault rsoPort servePortOption
+  soHost <- withOptionDefault rsoHost serveHostOption
+  soConnParams <- mkConnParams rsoConnParams
+  soTxIso <- withOptionDefault rsoTxIso txIsolationOption
+  soAdminSecret <- maybe mempty (HashSet.singleton) <$> withOptions rsoAdminSecret [adminSecretOption, accessKeyOption]
+  soAuthHook <- mkAuthHook rsoAuthHook
+  soJwtSecret <- maybeToList <$> withOption rsoJwtSecret jwtSecretOption
+  soUnAuthRole <- withOption rsoUnAuthRole unAuthRoleOption
+  soCorsConfig <- mkCorsConfig rsoCorsConfig
+  soEnableConsole <- withOptionSwitch rsoEnableConsole enableConsoleOption
+  soConsoleAssetsDir <- withOption rsoConsoleAssetsDir consoleAssetsDirOption
+  soEnableTelemetry <- withOptionDefault rsoEnableTelemetry enableTelemetryOption
+  soStringifyNum <-
+    case rsoStringifyNum of
+      Options.Don'tStringifyNumbers -> withOptionDefault Nothing stringifyNumOption
       stringifyNums -> pure stringifyNums
-
-  dangerousBooleanCollapse <-
-    fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
-
-  enabledAPIs <-
-    HashSet.fromList . fromMaybe defaultEnabledAPIs
-      <$> withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
-
-  lqOpts <- mkLQOpts
-
-  streamQOpts <- mkStreamQueryOpts
-
-  enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
-
-  enabledLogs <- maybe Logging.defaultEnabledLogTypes HashSet.fromList <$> withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
-
-  serverLogLevel <- fromMaybe Logging.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-
-  devMode <- withEnvBool (rsoDevMode rso) $ fst graphqlDevModeEnv
-
-  adminInternalErrors <-
-    fromMaybe True
-      <$> withEnv (rsoAdminInternalErrors rso) (fst graphqlAdminInternalErrorsEnv) -- Default to `true` to enable backwards compatibility
-  let internalErrorsConfig =
-        if
-            | devMode -> InternalErrorsAllRequests
-            | adminInternalErrors -> InternalErrorsAdminOnly
-            | otherwise -> InternalErrorsDisabled
-
-  eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst graphqlEventsHttpPoolSizeEnv)
-
-  eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst graphqlEventsFetchIntervalEnv)
-
-  asyncActionsFetchInterval <- fromMaybe defaultAsyncActionsFetchInterval <$> withEnv (rsoAsyncActionsFetchInterval rso) (fst asyncActionsFetchIntervalEnv)
-
-  enableRemoteSchemaPerms <-
-    case rsoEnableRemoteSchemaPermissions rso of
-      Options.DisableRemoteSchemaPermissions -> fmap (fromMaybe Options.DisableRemoteSchemaPermissions) $ considerEnv (fst enableRemoteSchemaPermsEnv)
+  soDangerousBooleanCollapse <- withOptionDefault rsoDangerousBooleanCollapse dangerousBooleanCollapseOption
+  soEnabledAPIs <- withOptionDefault rsoEnabledAPIs enabledAPIsOption
+  soLiveQueryOpts <- do
+    _lqoRefetchInterval <- withOptionDefault rsoMxRefetchInt mxRefetchDelayOption
+    _lqoBatchSize <- withOptionDefault rsoMxBatchSize mxBatchSizeOption
+    pure $ Subscription.Options.SubscriptionsOptions {..}
+  soStreamingQueryOpts <- do
+    _lqoRefetchInterval <- withOptionDefault rsoStreamingMxRefetchInt streamingMxRefetchDelayOption
+    _lqoBatchSize <- withOptionDefault rsoStreamingMxBatchSize streamingMxBatchSizeOption
+    pure $ Subscription.Options.SubscriptionsOptions {..}
+  soEnableAllowlist <- withOptionSwitch rsoEnableAllowlist enableAllowlistOption
+  soEnabledLogTypes <- withOptionDefault rsoEnabledLogTypes (enabledLogsOption @impl)
+  soLogLevel <- withOptionDefault rsoLogLevel logLevelOption
+  soDevMode <- withOptionSwitch rsoDevMode graphqlDevModeOption
+  soResponseInternalErrorsConfig <- mkResponseInternalErrorsConfig soDevMode
+  soEventsHttpPoolSize <- withOption rsoEventsHttpPoolSize graphqlEventsHttpPoolSizeOption
+  soEventsFetchInterval <- withOption rsoEventsFetchInterval graphqlEventsFetchIntervalOption
+  soAsyncActionsFetchInterval <- withOptionDefault rsoAsyncActionsFetchInterval asyncActionsFetchIntervalOption
+  soEnableRemoteSchemaPermissions <-
+    case rsoEnableRemoteSchemaPermissions of
+      Options.DisableRemoteSchemaPermissions -> withOptionDefault Nothing enableRemoteSchemaPermsOption
       enableRemoteSchemaPermissions -> pure enableRemoteSchemaPermissions
+  soConnectionOptions <- mkConnectionOptions
+  soWebSocketKeepAlive <- withOptionDefault rsoWebSocketKeepAlive webSocketKeepAliveOption
+  soInferFunctionPermissions <- withOptionDefault rsoInferFunctionPermissions inferFunctionPermsOption
+  soEnableMaintenanceMode <- case rsoEnableMaintenanceMode of
+    Types.MaintenanceModeDisabled -> withOptionDefault Nothing enableMaintenanceModeOption
+    maintenanceModeEnabled -> pure maintenanceModeEnabled
+  soSchemaPollInterval <- withOptionDefault rsoSchemaPollInterval schemaPollIntervalOption
+  soExperimentalFeatures <- withOptionDefault rsoExperimentalFeatures experimentalFeaturesOption
+  soEventsFetchBatchSize <- withOptionDefault rsoEventsFetchBatchSize eventsFetchBatchSizeOption
+  soGracefulShutdownTimeout <- withOptionDefault rsoGracefulShutdownTimeout gracefulShutdownOption
+  soWebSocketConnectionInitTimeout <- withOptionDefault rsoWebSocketConnectionInitTimeout webSocketConnectionInitTimeoutOption
+  let soEventingMode = Types.EventingEnabled
+  let soReadOnlyMode = Types.ReadOnlyModeDisabled
+  soEnableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv of
+    Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption
+    metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
+  soDefaultNamingConvention <- withOption rsoDefaultNamingConvention defaultNamingConventionOption
 
-  webSocketCompressionFromEnv <-
-    withEnvBool (rsoWebSocketCompression rso) $
-      fst webSocketCompressionEnv
+  pure $
+    ServeOptions {..}
+  where
+    mkConnParams ConnParamsRaw {..} = do
+      cpStripes <- withOptionDefault rcpStripes pgStripesOption
+      -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
+      -- hard throughput cap at 1000RPS when db queries take 50ms on average:
+      cpConns <- withOptionDefault rcpConns pgConnsOption
+      cpIdleTime <- withOptionDefault rcpIdleTime pgTimeoutOption
+      cpAllowPrepare <- withOptionDefault rcpAllowPrepare pgUsePreparedStatementsOption
+      -- TODO: Add newtype to allow this:
+      cpMbLifetime <- do
+        lifetime <- withOptionDefault rcpConnLifetime pgConnLifetimeOption
+        if lifetime == 0
+          then pure Nothing
+          else pure (Just lifetime)
+      cpTimeout <- withOption rcpPoolTimeout pgPoolTimeoutOption
+      let cpCancel = True
+      return $
+        Query.ConnParams {..}
 
-  schemaPollInterval <- fromMaybe defaultSchemaPollInterval <$> withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
+    mkAuthHook (AuthHookRaw mUrl mType) = do
+      mUrlEnv <- withOption mUrl authHookOption
+      -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
+      -- TODO (from master):- drop this in next major update (2020-08-21)
+      authMode <-
+        case mType of
+          Nothing -> fromMaybe (_default authHookModeOption) <$> considerEnvs [_envVar authHookModeOption, "HASURA_GRAPHQL_AUTH_HOOK_TYPE"]
+          Just ty -> pure ty
+      pure $ (`Auth.AuthHook` authMode) <$> mUrlEnv
 
-  let connectionOptions =
+    mkCorsConfig mCfg = do
+      corsCfg <- do
+        corsDisabled <- withOptionDefault Nothing disableCorsOption
+        if corsDisabled
+          then pure (Cors.CCDisabled $ _default disableCorsOption)
+          else withOptionDefault mCfg corsDomainOption
+
+      readCookVal <-
+        case rsoWsReadCookie of
+          False -> withOptionDefault Nothing wsReadCookieOption
+          p -> pure p
+      wsReadCookie <- case (Cors.isCorsDisabled corsCfg, readCookVal) of
+        (True, _) -> pure readCookVal
+        (False, True) ->
+          throwError $
+            _envVar wsReadCookieOption
+              <> " can only be used when CORS is disabled"
+        (False, False) -> return False
+      pure $ case corsCfg of
+        Cors.CCDisabled _ -> Cors.CCDisabled wsReadCookie
+        _ -> corsCfg
+
+    mkResponseInternalErrorsConfig devMode = do
+      adminInternalErrors <- withOptionDefault rsoAdminInternalErrors graphqlAdminInternalErrorsOption
+
+      if
+          | devMode -> pure InternalErrorsAllRequests
+          | adminInternalErrors -> pure InternalErrorsAdminOnly
+          | otherwise -> pure InternalErrorsDisabled
+
+    mkConnectionOptions = do
+      webSocketCompressionFromEnv <- withOptionSwitch rsoWebSocketCompression webSocketCompressionOption
+      pure $
         WebSockets.defaultConnectionOptions
           { WebSockets.connectionCompressionOptions =
               if webSocketCompressionFromEnv
                 then WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate
                 else WebSockets.NoCompression
           }
-  webSocketKeepAlive <- fromMaybe defaultKeepAliveDelay <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
-
-  experimentalFeatures <- maybe mempty HashSet.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
-
-  inferFunctionPerms <- fromMaybe Options.InferFunctionPermissions <$> withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv)
-
-  maintenanceMode <- case rsoEnableMaintenanceMode rso of
-    Types.MaintenanceModeDisabled -> fmap (fromMaybe Types.MaintenanceModeDisabled) $ considerEnv (fst enableMaintenanceModeEnv)
-    maintenanceModeEnabled -> pure maintenanceModeEnabled
-
-  eventsFetchBatchSize <-
-    fromMaybe EventTrigger.defaultFetchBatchSize
-      <$> withEnv (rsoEventsFetchBatchSize rso) (fst eventsFetchBatchSizeEnv)
-
-  gracefulShutdownTime <-
-    fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
-
-  webSocketConnectionInitTimeout <-
-    fromMaybe defaultWSConnectionInitTimeout <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
-
-  enableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv rso of
-    Server.Logging.MetadataQueryLoggingDisabled -> fromMaybe Server.Logging.MetadataQueryLoggingDisabled <$> considerEnv (fst enableMetadataQueryLoggingEnv)
-    metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
-
-  globalDefaultNamingCase <- withEnv (rsoDefaultNamingConvention rso) $ fst defaultNamingConventionEnv
-
-  pure $
-    ServeOptions
-      port
-      host
-      connParams
-      txIso
-      adminScrt
-      authHook
-      jwtSecret
-      unAuthRole
-      corsCfg
-      enableConsole
-      consoleAssetsDir
-      enableTelemetry
-      strfyNum
-      dangerousBooleanCollapse
-      enabledAPIs
-      lqOpts
-      streamQOpts
-      enableAL
-      enabledLogs
-      serverLogLevel
-      internalErrorsConfig
-      eventsHttpPoolSize
-      eventsFetchInterval
-      asyncActionsFetchInterval
-      enableRemoteSchemaPerms
-      connectionOptions
-      webSocketKeepAlive
-      inferFunctionPerms
-      maintenanceMode
-      schemaPollInterval
-      experimentalFeatures
-      eventsFetchBatchSize
-      devMode
-      gracefulShutdownTime
-      webSocketConnectionInitTimeout
-      Types.EventingEnabled
-      Types.ReadOnlyModeDisabled
-      enableMetadataQueryLogging
-      globalDefaultNamingCase
-  where
-    defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
-    defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
-    mkConnParams (ConnParamsRaw s c i cl p pt) = do
-      stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
-      -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
-      -- hard throughput cap at 1000RPS when db queries take 50ms on average:
-      conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
-      iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> Utils.parseConnLifeTime
-      allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
-      let allowCancel = True
-      return $
-        Query.ConnParams
-          stripes
-          conns
-          iTime
-          allowPrepare
-          connLifetime
-          poolTimeout
-          allowCancel
-
-    mkAuthHook (AuthHookRaw mUrl mType) = do
-      mUrlEnv <- withEnv mUrl $ fst authHookEnv
-      authModeM <- withEnv mType (fst authHookModeEnv)
-      ty <- onNothing authModeM (authHookTyEnv mType)
-      return (flip Auth.AuthHook ty <$> mUrlEnv)
-
-    -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
-    -- TODO (from master):- drop this in next major update
-    authHookTyEnv mType =
-      fromMaybe Auth.AHTGet
-        <$> withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
-
-    mkCorsConfig mCfg = do
-      corsDisabled <- withEnvBool False (fst disableCorsEnv)
-      corsCfg <-
-        if corsDisabled
-          then return (Cors.CCDisabled True)
-          else fromMaybe Cors.CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
-
-      readCookVal <- withEnvBool (rsoWsReadCookie rso) (fst wsReadCookieEnv)
-      wsReadCookie <- case (Cors.isCorsDisabled corsCfg, readCookVal) of
-        (True, _) -> return readCookVal
-        (False, True) ->
-          throwError $
-            fst wsReadCookieEnv
-              <> " can only be used when CORS is disabled"
-        (False, False) -> return False
-      return $ case corsCfg of
-        Cors.CCDisabled _ -> Cors.CCDisabled wsReadCookie
-        _ -> corsCfg
-
-    mkLQOpts = do
-      refetchInterval <- withEnv (rsoMxRefetchInt rso) $ fst mxRefetchDelayEnv
-      batchSize <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
-      return $ ES.mkSubscriptionsOptions batchSize refetchInterval
-
-    mkStreamQueryOpts = do
-      refetchInterval <- withEnv (rsoStreamingMxRefetchInt rso) $ fst streamingMxRefetchDelayEnv
-      batchSize <- withEnv (rsoStreamingMxBatchSize rso) $ fst streamingMxBatchSizeEnv
-      return $ ES.mkSubscriptionsOptions batchSize refetchInterval
-
-defaultEnabledAPIs :: [API]
-defaultEnabledAPIs = [METADATA, GRAPHQL, PGDUMP, CONFIG]
