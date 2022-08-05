@@ -23307,7 +23307,6 @@ EventPayload :: EventId -> TableName b -> TriggerMetadata -> Value -> DeliveryIn
 [epCreatedAt] :: EventPayload (b :: BackendType) -> UTCTime
 defaultMaxEventThreads :: Int
 defaultFetchInterval :: DiffTime
-defaultFetchBatchSize :: NonNegativeInt
 initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
 saveLockedEventTriggerEvents :: MonadIO m => SourceName -> [EventId] -> TVar (HashMap SourceName (Set EventId)) -> m ()
 removeEventTriggerEventFromLockedEvents :: MonadIO m => SourceName -> EventId -> TVar (HashMap SourceName (Set EventId)) -> m ()
@@ -26412,9 +26411,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_ay06e. Lens' (QueryParametersInfo b_ay06e) (Seq (ColumnValue b_ay06e))
-qpiReusableVariableValues :: forall b_ay06e. Lens' (QueryParametersInfo b_ay06e) (HashMap Name (ColumnValue b_ay06e))
-qpiReferencedSessionVariables :: forall b_ay06e. Lens' (QueryParametersInfo b_ay06e) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ay05x. Lens' (QueryParametersInfo b_ay05x) (Seq (ColumnValue b_ay05x))
+qpiReusableVariableValues :: forall b_ay05x. Lens' (QueryParametersInfo b_ay05x) (HashMap Name (ColumnValue b_ay05x))
+qpiReferencedSessionVariables :: forall b_ay05x. Lens' (QueryParametersInfo b_ay05x) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -29945,6 +29944,17 @@ instance GHC.Show.Show Hasura.Server.Auth.AdminSecretHash
 --   initialised
 module Hasura.Server.Init.Config
 
+-- | The collected default value, env var, and help message for an option.
+--   If there should be no default value then use 'Option ()'.
+data Option def
+Option :: def -> String -> String -> Option def
+[_default] :: Option def -> def
+[_envVar] :: Option def -> String
+[_helpMessage] :: Option def -> String
+
+-- | Helper function for pretty printing <tt>Option a</tt>.
+optionPP :: Option a -> (String, String)
+
 -- | Raw HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl
 HGEOptionsRaw :: PostgresConnInfo (Maybe PostgresConnInfoRaw) -> Maybe String -> HGECommand impl -> HGEOptionsRaw impl
@@ -30013,8 +30023,11 @@ HCDowngrade :: !DowngradeOptions -> HGECommand a
 _HCServe :: Prism' (HGECommand a) a
 
 -- | The Serve Command options accumulated from the arg parser and env.
+--   
+--   NOTE: A <a>Nothing</a> value indicates the absence of a particular
+--   flag rather. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Int -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Int -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe Bool -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Int
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -30030,13 +30043,13 @@ ServeOptionsRaw :: Maybe Int -> Maybe HostPreference -> ConnParamsRaw -> Maybe T
 [rsoWsReadCookie] :: ServeOptionsRaw impl -> Bool
 [rsoStringifyNum] :: ServeOptionsRaw impl -> StringifyNumbers
 [rsoDangerousBooleanCollapse] :: ServeOptionsRaw impl -> Maybe Bool
-[rsoEnabledAPIs] :: ServeOptionsRaw impl -> Maybe [API]
+[rsoEnabledAPIs] :: ServeOptionsRaw impl -> Maybe (HashSet API)
 [rsoMxRefetchInt] :: ServeOptionsRaw impl -> Maybe RefetchInterval
 [rsoMxBatchSize] :: ServeOptionsRaw impl -> Maybe BatchSize
 [rsoStreamingMxRefetchInt] :: ServeOptionsRaw impl -> Maybe RefetchInterval
 [rsoStreamingMxBatchSize] :: ServeOptionsRaw impl -> Maybe BatchSize
 [rsoEnableAllowlist] :: ServeOptionsRaw impl -> Bool
-[rsoEnabledLogTypes] :: ServeOptionsRaw impl -> Maybe [EngineLogType impl]
+[rsoEnabledLogTypes] :: ServeOptionsRaw impl -> Maybe (HashSet (EngineLogType impl))
 [rsoLogLevel] :: ServeOptionsRaw impl -> Maybe LogLevel
 [rsoDevMode] :: ServeOptionsRaw impl -> Bool
 [rsoAdminInternalErrors] :: ServeOptionsRaw impl -> Maybe Bool
@@ -30051,7 +30064,7 @@ ServeOptionsRaw :: Maybe Int -> Maybe HostPreference -> ConnParamsRaw -> Maybe T
 [rsoSchemaPollInterval] :: ServeOptionsRaw impl -> Maybe OptionalInterval
 
 -- | See Note '$experimentalFeatures' at bottom of module
-[rsoExperimentalFeatures] :: ServeOptionsRaw impl -> Maybe [ExperimentalFeature]
+[rsoExperimentalFeatures] :: ServeOptionsRaw impl -> Maybe (HashSet ExperimentalFeature)
 [rsoEventsFetchBatchSize] :: ServeOptionsRaw impl -> Maybe NonNegativeInt
 [rsoGracefulShutdownTimeout] :: ServeOptionsRaw impl -> Maybe Seconds
 [rsoWebSocketConnectionInitTimeout] :: ServeOptionsRaw impl -> Maybe WSConnectionInitTimeout
@@ -30101,11 +30114,9 @@ ConnParamsRaw :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe NominalDiffTime ->
 newtype KeepAliveDelay
 KeepAliveDelay :: Seconds -> KeepAliveDelay
 [unKeepAliveDelay] :: KeepAliveDelay -> Seconds
-defaultKeepAliveDelay :: KeepAliveDelay
 newtype WSConnectionInitTimeout
 WSConnectionInitTimeout :: Seconds -> WSConnectionInitTimeout
 [unWSConnectionInitTimeout] :: WSConnectionInitTimeout -> Seconds
-defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
 
 -- | The final Serve Command options accummulated from the Arg Parser and
 --   the Environment, fully processed and ready to apply when running the
@@ -30156,10 +30167,11 @@ ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet Ad
 [soEnableMetadataQueryLogging] :: ServeOptions impl -> MetadataQueryLoggingMode
 [soDefaultNamingConvention] :: ServeOptions impl -> Maybe NamingCase
 
--- | @<a>ResponseInternalErrorsConfig</a> represents the encoding of the
---   internal errors in the response to the client. See the github comment
+-- | <a>ResponseInternalErrorsConfig</a> represents the encoding of the
+--   internal errors in the response to the client.
+--   
+--   For more details, see this github comment:
 --   <a>https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705</a>
---   for more details.
 data ResponseInternalErrorsConfig
 InternalErrorsAllRequests :: ResponseInternalErrorsConfig
 InternalErrorsAdminOnly :: ResponseInternalErrorsConfig
@@ -30244,20 +30256,39 @@ considerEnv :: (Monad m, FromEnv a) => String -> WithEnvT m (Maybe a)
 -- | Lookup a list of keys with <a>considerEnv</a> and return the first
 --   value to parse successfully.
 considerEnvs :: (Monad m, FromEnv a) => [String] -> WithEnvT m (Maybe a)
-withEnv :: (Monad m, FromEnv a) => Maybe a -> String -> WithEnvT m (Maybe a)
 
--- | Return <tt>a</tt> if Just or else call <a>considerEnv</a> with a list
---   of env keys k
-withEnvs :: (Monad m, FromEnv a) => Maybe a -> [String] -> WithEnvT m (Maybe a)
+-- | Lookup a list of keys with <a>withOption</a> and return the first
+--   value to parse successfully.
+withOptions :: (Monad m, FromEnv option) => Maybe option -> [Option ()] -> WithEnvT m (Maybe option)
 
--- | If <tt>bVal</tt> is <a>True</a> then return it, else lookup the
---   <tt>envVar</tt> in the environment and return <a>False</a> if absent.
-withEnvBool :: Monad m => Bool -> String -> WithEnvT m Bool
+-- | Given the parse result for an option and the 'Option def' record for
+--   that option, query the environment, and then merge the results from
+--   the parser and environment.
+withOption :: (Monad m, FromEnv option) => Maybe option -> Option () -> WithEnvT m (Maybe option)
 
--- | <a>withEnv</a> for types isomorphic to an array. <a>Proxy</a> is
---   generally used to pass on the type info. Here <a>Proxy</a> helps us to
---   specify what the underlying array type should be.
-withEnvList :: (Monad m, FromEnv b, Coercible b [a]) => Proxy [a] -> b -> String -> WithEnvT m b
+-- | Given the parse result for an option and the 'Option def' record for
+--   that option, query the environment, and then merge the results from
+--   the parser, environment, and the default.
+withOptionDefault :: (Monad m, FromEnv option) => Maybe option -> Option option -> WithEnvT m option
+
+-- | Switches in 'optparse-applicative' have different semantics then
+--   ordinary flags. They are always optional and produce a <a>False</a>
+--   when absent rather then a <a>Nothing</a>.
+--   
+--   In HGE we give Env Vars a higher precedence then an absent Switch but
+--   the ordinary <tt>withEnv</tt> operation expects a <a>Nothing</a> for
+--   an absent arg parser result.
+--   
+--   This function executes with 'withOption Nothing' when the Switch is
+--   absent, otherwise it returns <a>True</a>.
+--   
+--   An alternative solution would be to make Switches return 'Maybe _',
+--   where '_' is an option specific sum type. This would allow us to use
+--   <a>withOptionDefault</a> directly. Additionally, all fields of
+--   <a>ServeOptionsRaw</a> would become <a>Maybe</a> or <tt>First</tt>
+--   values which would allow us to write a 'Monoid ServeOptionsRaw'
+--   instance for combing different option sources.
+withOptionSwitch :: Monad m => Bool -> Option Bool -> WithEnvT m Bool
 
 -- | A <a>Read</a> style parser used for consuming envvars and building
 --   <tt>ReadM</tt> parsers for 'optparse-applicative'.
@@ -30284,6 +30315,7 @@ instance Hasura.Server.Init.Env.FromEnv Data.Time.Clock.Internal.NominalDiffTime
 instance Hasura.Server.Init.Env.FromEnv GHC.Base.String
 instance Hasura.Server.Init.Env.FromEnv Data.Streaming.Network.Internal.HostPreference
 instance Hasura.Server.Init.Env.FromEnv Data.Text.Internal.Text
+instance Hasura.Server.Init.Env.FromEnv a => Hasura.Server.Init.Env.FromEnv (GHC.Maybe.Maybe a)
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.WebHook.AuthHookType
 instance Hasura.Server.Init.Env.FromEnv GHC.Types.Int
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.AdminSecretHash
@@ -30296,9 +30328,9 @@ instance Hasura.Server.Init.Env.FromEnv (Hasura.Server.Types.MaintenanceMode ())
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Logging.MetadataQueryLoggingMode
 instance Hasura.Server.Init.Env.FromEnv Database.PG.Query.Transaction.TxIsolation
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Cors.CorsConfig
-instance Hasura.Server.Init.Env.FromEnv [Hasura.Server.Init.Config.API]
+instance Hasura.Server.Init.Env.FromEnv (Data.HashSet.Internal.HashSet Hasura.Server.Init.Config.API)
 instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.NamingCase.NamingCase
-instance Hasura.Server.Init.Env.FromEnv [Hasura.Server.Types.ExperimentalFeature]
+instance Hasura.Server.Init.Env.FromEnv (Data.HashSet.Internal.HashSet Hasura.Server.Types.ExperimentalFeature)
 instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Execute.Subscription.Options.BatchSize
 instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Execute.Subscription.Options.RefetchInterval
 instance Hasura.Server.Init.Env.FromEnv Data.Time.Clock.Units.Milliseconds
@@ -30308,7 +30340,7 @@ instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.WSConnectionIn
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.KeepAliveDelay
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.JWT.JWTConfig
 instance Hasura.Server.Init.Env.FromEnv [Hasura.Server.Auth.JWT.JWTConfig]
-instance Hasura.Logging.EnabledLogTypes impl => Hasura.Server.Init.Env.FromEnv [Hasura.Logging.EngineLogType impl]
+instance Hasura.Logging.EnabledLogTypes impl => Hasura.Server.Init.Env.FromEnv (Data.HashSet.Internal.HashSet (Hasura.Logging.EngineLogType impl))
 instance Hasura.Server.Init.Env.FromEnv Hasura.Logging.LogLevel
 instance Hasura.Server.Init.Env.FromEnv Data.URL.Template.URLTemplate
 instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Common.NonNegativeInt
@@ -30328,95 +30360,95 @@ downgradeCommandParser :: Parser DowngradeOptions
 module Hasura.Server.Init.Arg.Command.Serve
 serveCommandParser :: EnabledLogTypes impl => Parser (ServeOptionsRaw impl)
 parseServerPort :: Parser (Maybe Int)
-servePortEnv :: (String, String)
+servePortOption :: Option Int
 parseServerHost :: Parser (Maybe HostPreference)
-serveHostEnv :: (String, String)
+serveHostOption :: Option HostPreference
 parseConnParams :: Parser ConnParamsRaw
-pgStripesEnv :: (String, String)
-pgConnsEnv :: (String, String)
-pgTimeoutEnv :: (String, String)
-pgConnLifetimeEnv :: (String, String)
-pgUsePrepareEnv :: (String, String)
-pgPoolTimeoutEnv :: (String, String)
+pgStripesOption :: Option Int
+pgConnsOption :: Option Int
+pgTimeoutOption :: Option Int
+pgConnLifetimeOption :: Option NominalDiffTime
+pgUsePreparedStatementsOption :: Option Bool
+pgPoolTimeoutOption :: Option ()
 parseTxIsolation :: Parser (Maybe TxIsolation)
-txIsolationEnv :: (String, String)
+txIsolationOption :: Option TxIsolation
 parseAdminSecret :: Parser (Maybe AdminSecretHash)
-adminSecretEnv :: (String, String)
+adminSecretOption :: Option ()
 parseAccessKey :: Parser (Maybe AdminSecretHash)
-accessKeyEnv :: (String, String)
+accessKeyOption :: Option ()
 parseAuthHook :: Parser AuthHookRaw
-authHookEnv :: (String, String)
-authHookModeEnv :: (String, String)
+authHookOption :: Option ()
+authHookModeOption :: Option AuthHookType
 parseJwtSecret :: Parser (Maybe JWTConfig)
-jwtSecretEnv :: (String, String)
+jwtSecretOption :: Option ()
 parseUnAuthRole :: Parser (Maybe RoleName)
-unAuthRoleEnv :: (String, String)
+unAuthRoleOption :: Option ()
 parseCorsConfig :: Parser (Maybe CorsConfig)
-corsDomainEnv :: (String, String)
-disableCorsEnv :: (String, String)
+corsDomainOption :: Option CorsConfig
+disableCorsOption :: Option Bool
 parseEnableConsole :: Parser Bool
-enableConsoleEnv :: (String, String)
+enableConsoleOption :: Option Bool
 parseConsoleAssetsDir :: Parser (Maybe Text)
-consoleAssetsDirEnv :: (String, String)
+consoleAssetsDirOption :: Option ()
 parseEnableTelemetry :: Parser (Maybe Bool)
-enableTelemetryEnv :: (String, String)
+enableTelemetryOption :: Option Bool
 parseWsReadCookie :: Parser Bool
-wsReadCookieEnv :: (String, String)
+wsReadCookieOption :: Option Bool
 parseStringifyNum :: Parser StringifyNumbers
-stringifyNumEnv :: (String, String)
+stringifyNumOption :: Option StringifyNumbers
 parseDangerousBooleanCollapse :: Parser (Maybe Bool)
-dangerousBooleanCollapseEnv :: (String, String)
-parseEnabledAPIs :: Parser (Maybe [API])
-enabledAPIsEnv :: (String, String)
+dangerousBooleanCollapseOption :: Option Bool
+parseEnabledAPIs :: Parser (Maybe (HashSet API))
+enabledAPIsOption :: Option (HashSet API)
 parseMxRefetchDelay :: Parser (Maybe RefetchInterval)
-mxRefetchDelayEnv :: (String, String)
+mxRefetchDelayOption :: Option RefetchInterval
 parseMxBatchSize :: Parser (Maybe BatchSize)
-mxBatchSizeEnv :: (String, String)
+mxBatchSizeOption :: Option BatchSize
 parseStreamingMxRefetchDelay :: Parser (Maybe RefetchInterval)
-streamingMxRefetchDelayEnv :: (String, String)
+streamingMxRefetchDelayOption :: Option RefetchInterval
 parseStreamingMxBatchSize :: Parser (Maybe BatchSize)
-streamingMxBatchSizeEnv :: (String, String)
+streamingMxBatchSizeOption :: Option BatchSize
 parseEnableAllowlist :: Parser Bool
-enableAllowlistEnv :: (String, String)
-parseEnabledLogs :: EnabledLogTypes impl => Parser (Maybe [EngineLogType impl])
-enabledLogsEnv :: (String, String)
+enableAllowlistOption :: Option Bool
+parseEnabledLogs :: forall impl. EnabledLogTypes impl => Parser (Maybe (HashSet (EngineLogType impl)))
+enabledLogsOption :: EnabledLogTypes impl => Option (HashSet (EngineLogType impl))
 parseLogLevel :: Parser (Maybe LogLevel)
-logLevelEnv :: (String, String)
+logLevelOption :: Option LogLevel
 parsePlanCacheSize :: Parser (Maybe CacheSize)
 parseGraphqlDevMode :: Parser Bool
-graphqlDevModeEnv :: (String, String)
+graphqlDevModeOption :: Option Bool
 parseGraphqlAdminInternalErrors :: Parser (Maybe Bool)
-graphqlAdminInternalErrorsEnv :: (String, String)
+graphqlAdminInternalErrorsOption :: Option Bool
 parseGraphqlEventsHttpPoolSize :: Parser (Maybe Int)
-graphqlEventsHttpPoolSizeEnv :: (String, String)
+graphqlEventsHttpPoolSizeOption :: Option ()
 parseGraphqlEventsFetchInterval :: Parser (Maybe Milliseconds)
-graphqlEventsFetchIntervalEnv :: (String, String)
+graphqlEventsFetchIntervalOption :: Option ()
 parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe OptionalInterval)
-asyncActionsFetchIntervalEnv :: (String, String)
+asyncActionsFetchIntervalOption :: Option OptionalInterval
 parseEnableRemoteSchemaPerms :: Parser RemoteSchemaPermissions
-enableRemoteSchemaPermsEnv :: (String, String)
+enableRemoteSchemaPermsOption :: Option RemoteSchemaPermissions
 parseWebSocketCompression :: Parser Bool
-webSocketCompressionEnv :: (String, String)
+webSocketCompressionOption :: Option Bool
 parseWebSocketKeepAlive :: Parser (Maybe KeepAliveDelay)
-webSocketKeepAliveEnv :: (String, String)
+webSocketKeepAliveOption :: Option KeepAliveDelay
 parseInferFunctionPerms :: Parser (Maybe InferFunctionPermissions)
-inferFunctionPermsEnv :: (String, String)
+inferFunctionPermsOption :: Option InferFunctionPermissions
 parseEnableMaintenanceMode :: Parser (MaintenanceMode ())
-enableMaintenanceModeEnv :: (String, String)
+enableMaintenanceModeOption :: Option (MaintenanceMode ())
 parseSchemaPollInterval :: Parser (Maybe OptionalInterval)
-schemaPollIntervalEnv :: (String, String)
-parseExperimentalFeatures :: Parser (Maybe [ExperimentalFeature])
-experimentalFeaturesEnv :: (String, String)
+schemaPollIntervalOption :: Option OptionalInterval
+parseExperimentalFeatures :: Parser (Maybe (HashSet ExperimentalFeature))
+experimentalFeaturesOption :: Option (HashSet ExperimentalFeature)
 parseEventsFetchBatchSize :: Parser (Maybe NonNegativeInt)
-eventsFetchBatchSizeEnv :: (String, String)
+eventsFetchBatchSizeOption :: Option NonNegativeInt
 parseGracefulShutdownTimeout :: Parser (Maybe Seconds)
-gracefulShutdownEnv :: (String, String)
+gracefulShutdownOption :: Option Seconds
 parseWebSocketConnectionInitTimeout :: Parser (Maybe WSConnectionInitTimeout)
-webSocketConnectionInitTimeoutEnv :: (String, String)
+webSocketConnectionInitTimeoutOption :: Option WSConnectionInitTimeout
 parseEnableMetadataQueryLogging :: Parser MetadataQueryLoggingMode
-enableMetadataQueryLoggingEnv :: (String, String)
+enableMetadataQueryLoggingOption :: Option MetadataQueryLoggingMode
 parseDefaultNamingConvention :: Parser (Maybe NamingCase)
-defaultNamingConventionEnv :: (String, String)
+defaultNamingConventionOption :: Option ()
 serveCmdFooter :: Doc
 
 module Hasura.Server.Init.Arg
@@ -30432,12 +30464,12 @@ module Hasura.Server.Init.Arg
 parseHgeOpts :: EnabledLogTypes impl => Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 parseHGECommand :: EnabledLogTypes impl => Parser (HGECommand (ServeOptionsRaw impl))
 parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
-retriesNumEnv :: (String, String)
+retriesNumOption :: Option ()
 parseDatabaseUrl :: Parser (Maybe URLTemplate)
-databaseUrlEnv :: (String, String)
+databaseUrlOption :: Option ()
 parseRawConnDetails :: Parser (Maybe PostgresConnDetailsRaw)
 parseMetadataDbUrl :: Parser (Maybe String)
-metadataDbUrlEnv :: (String, String)
+metadataDbUrlOption :: Option ()
 mainCmdFooter :: Doc
 
 
@@ -30472,8 +30504,7 @@ rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe UrlConf)
 
 -- | Merge the results of the serve subcommmand arg parser with
 --   corresponding values from the <a>WithEnv</a> context.
-mkServeOptions :: EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
-defaultEnabledAPIs :: [API]
+mkServeOptions :: forall impl. EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
 
 
 -- | Migrations for the Hasura catalog.

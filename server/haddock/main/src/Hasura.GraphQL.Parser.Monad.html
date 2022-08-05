@@ -20,11 +20,11 @@
 </span><span id="line-20"></span><span class="hs-comment">-- -------------------------------------------------------------------------------------------------</span><span>
 </span><span id="line-21"></span><span class="hs-comment">-- query parsing</span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">newtype</span><span> </span><span id="Parse"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-var">Parse</span></a></span></span><span> </span><span id="local-6989586621689382413"><span class="annot"><a href="#local-6989586621689382413"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Parse"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-var">Parse</span></a></span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">newtype</span><span> </span><span id="Parse"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-var">Parse</span></a></span></span><span> </span><span id="local-6989586621689380888"><span class="annot"><a href="#local-6989586621689380888"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Parse"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-var">Parse</span></a></span></span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unParse"><span class="annot"><span class="annottext">Parse a -&gt; Except ParseError a
-</span><a href="Hasura.GraphQL.Parser.Monad.html#unParse"><span class="hs-identifier hs-var hs-var">unParse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Except</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#ParseError"><span class="hs-identifier hs-type">ParseError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382413"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><a href="Hasura.GraphQL.Parser.Monad.html#unParse"><span class="hs-identifier hs-var hs-var">unParse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Except</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#ParseError"><span class="hs-identifier hs-type">ParseError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689380888"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689382389"><span id="local-6989586621689382391"><span class="annot"><span class="annottext">a -&gt; Parse b -&gt; Parse a
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689380864"><span id="local-6989586621689380866"><span class="annot"><span class="annottext">a -&gt; Parse b -&gt; Parse a
 (a -&gt; b) -&gt; Parse a -&gt; Parse b
 (forall a b. (a -&gt; b) -&gt; Parse a -&gt; Parse b)
 -&gt; (forall a b. a -&gt; Parse b -&gt; Parse a) -&gt; Functor Parse
@@ -37,7 +37,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; Parse b -&gt; Parse a
 fmap :: (a -&gt; b) -&gt; Parse a -&gt; Parse b
 $cfmap :: forall a b. (a -&gt; b) -&gt; Parse a -&gt; Parse b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689382377"><span id="local-6989586621689382379"><span id="local-6989586621689382381"><span id="local-6989586621689382383"><span id="local-6989586621689382385"><span class="annot"><span class="annottext">Functor Parse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689380852"><span id="local-6989586621689380854"><span id="local-6989586621689380856"><span id="local-6989586621689380858"><span id="local-6989586621689380860"><span class="annot"><span class="annottext">Functor Parse
 a -&gt; Parse a
 Functor Parse
 -&gt; (forall a. a -&gt; Parse a)
@@ -74,7 +74,7 @@ $c&lt;*&gt; :: forall a b. Parse (a -&gt; b) -&gt; Parse a -&gt; Parse b
 pure :: a -&gt; Parse a
 $cpure :: forall a. a -&gt; Parse a
 $cp1Applicative :: Functor Parse
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689382369"><span id="local-6989586621689382371"><span id="local-6989586621689382373"><span class="annot"><span class="annottext">Applicative Parse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689380844"><span id="local-6989586621689380846"><span id="local-6989586621689380848"><span class="annot"><span class="annottext">Applicative Parse
 a -&gt; Parse a
 Applicative Parse
 -&gt; (forall a b. Parse a -&gt; (a -&gt; Parse b) -&gt; Parse b)
@@ -101,13 +101,13 @@ $c&gt;&gt;= :: forall a b. Parse a -&gt; (a -&gt; Parse b) -&gt; Parse b
 $cp1Monad :: Applicative Parse
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span id="local-6989586621689382366"><span id="local-6989586621689382367"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#runParse"><span class="hs-identifier hs-type">runParse</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#ParseError"><span class="hs-identifier hs-type">ParseError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382367"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-30"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-type">Parse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382366"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-31"></span><span>  </span><span class="annot"><a href="#local-6989586621689382367"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382366"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-28"></span><span id="local-6989586621689380841"><span id="local-6989586621689380842"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#runParse"><span class="hs-identifier hs-type">runParse</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#ParseError"><span class="hs-identifier hs-type">ParseError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689380842"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-type">Parse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689380841"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><a href="#local-6989586621689380842"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689380841"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-32"></span><span id="runParse"><span class="annot"><span class="annottext">runParse :: Parse a -&gt; m a
-</span><a href="Hasura.GraphQL.Parser.Monad.html#runParse"><span class="hs-identifier hs-var hs-var">runParse</span></a></span></span><span> </span><span id="local-6989586621689382365"><span class="annot"><span class="annottext">Parse a
-</span><a href="#local-6989586621689382365"><span class="hs-identifier hs-var">parse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Monad.html#runParse"><span class="hs-identifier hs-var hs-var">runParse</span></a></span></span><span> </span><span id="local-6989586621689380840"><span class="annot"><span class="annottext">Parse a
+</span><a href="#local-6989586621689380840"><span class="hs-identifier hs-var">parse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-33"></span><span>  </span><span class="annot"><span class="annottext">(ParseError -&gt; m a) -&gt; (a -&gt; m a) -&gt; Either ParseError a -&gt; m a
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">ParseError -&gt; m a
@@ -126,12 +126,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parse a -&gt; Except ParseError a
 forall a. Parse a -&gt; Except ParseError a
 </span><a href="Hasura.GraphQL.Parser.Monad.html#unParse"><span class="hs-identifier hs-var hs-var">unParse</span></a></span><span> </span><span class="annot"><span class="annottext">Parse a
-</span><a href="#local-6989586621689382365"><span class="hs-identifier hs-var">parse</span></a></span><span>
+</span><a href="#local-6989586621689380840"><span class="hs-identifier hs-var">parse</span></a></span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-type">Parse</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-36"></span><span>  </span><span id="local-6989586621689382355"><span class="annot"><span class="annottext">withKey :: JSONPathElement -&gt; Parse a -&gt; Parse a
-</span><a href="Hasura.GraphQL.Parser.Class.html#withKey"><span class="hs-identifier hs-var hs-var hs-var hs-var">withKey</span></a></span></span><span> </span><span id="local-6989586621689382353"><span class="annot"><span class="annottext">JSONPathElement
-</span><a href="#local-6989586621689382353"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Except ParseError a -&gt; Parse a
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621689380830"><span class="annot"><span class="annottext">withKey :: JSONPathElement -&gt; Parse a -&gt; Parse a
+</span><a href="Hasura.GraphQL.Parser.Class.html#withKey"><span class="hs-identifier hs-var hs-var hs-var hs-var">withKey</span></a></span></span><span> </span><span id="local-6989586621689380828"><span class="annot"><span class="annottext">JSONPathElement
+</span><a href="#local-6989586621689380828"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Except ParseError a -&gt; Parse a
 forall a. Except ParseError a -&gt; Parse a
 </span><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-var">Parse</span></a></span><span> </span><span class="annot"><span class="annottext">(Except ParseError a -&gt; Parse a)
 -&gt; (Parse a -&gt; Except ParseError a) -&gt; Parse a -&gt; Parse a
@@ -141,15 +141,15 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (m :: * -&gt; *) e e' a.
 Functor m =&gt;
 (e -&gt; e') -&gt; ExceptT e m a -&gt; ExceptT e' m a
-</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689382351"><span class="annot"><span class="annottext">ParseError
-</span><a href="#local-6989586621689382351"><span class="hs-identifier hs-var">pe</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ParseError
-</span><a href="#local-6989586621689382351"><span class="hs-identifier hs-var">pe</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">pePath :: JSONPath
+</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689380826"><span class="annot"><span class="annottext">ParseError
+</span><a href="#local-6989586621689380826"><span class="hs-identifier hs-var">pe</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ParseError
+</span><a href="#local-6989586621689380826"><span class="hs-identifier hs-var">pe</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">pePath :: JSONPath
 </span><a href="Hasura.GraphQL.Parser.Monad.html#pePath"><span class="hs-identifier hs-var">pePath</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPathElement
-</span><a href="#local-6989586621689382353"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPathElement -&gt; JSONPath -&gt; JSONPath
+</span><a href="#local-6989586621689380828"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPathElement -&gt; JSONPath -&gt; JSONPath
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">ParseError -&gt; JSONPath
 </span><a href="Hasura.GraphQL.Parser.Monad.html#pePath"><span class="hs-identifier hs-var hs-var">pePath</span></a></span><span> </span><span class="annot"><span class="annottext">ParseError
-</span><a href="#local-6989586621689382351"><span class="hs-identifier hs-var">pe</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Except ParseError a -&gt; Except ParseError a)
+</span><a href="#local-6989586621689380826"><span class="hs-identifier hs-var">pe</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Except ParseError a -&gt; Except ParseError a)
 -&gt; (Parse a -&gt; Except ParseError a)
 -&gt; Parse a
 -&gt; Except ParseError a
@@ -157,10 +157,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Parse a -&gt; Except ParseError a
 forall a. Parse a -&gt; Except ParseError a
 </span><a href="Hasura.GraphQL.Parser.Monad.html#unParse"><span class="hs-identifier hs-var hs-var">unParse</span></a></span><span>
-</span><span id="line-37"></span><span>  </span><span id="local-6989586621689382349"><span class="annot"><span class="annottext">parseErrorWith :: ParseErrorCode -&gt; ErrorMessage -&gt; Parse a
-</span><a href="Hasura.GraphQL.Parser.Class.html#parseErrorWith"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseErrorWith</span></a></span></span><span> </span><span id="local-6989586621689382347"><span class="annot"><span class="annottext">ParseErrorCode
-</span><a href="#local-6989586621689382347"><span class="hs-identifier hs-var">code</span></a></span></span><span> </span><span id="local-6989586621689382346"><span class="annot"><span class="annottext">ErrorMessage
-</span><a href="#local-6989586621689382346"><span class="hs-identifier hs-var">message</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Except ParseError a -&gt; Parse a
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621689380824"><span class="annot"><span class="annottext">parseErrorWith :: ParseErrorCode -&gt; ErrorMessage -&gt; Parse a
+</span><a href="Hasura.GraphQL.Parser.Class.html#parseErrorWith"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseErrorWith</span></a></span></span><span> </span><span id="local-6989586621689380822"><span class="annot"><span class="annottext">ParseErrorCode
+</span><a href="#local-6989586621689380822"><span class="hs-identifier hs-var">code</span></a></span></span><span> </span><span id="local-6989586621689380821"><span class="annot"><span class="annottext">ErrorMessage
+</span><a href="#local-6989586621689380821"><span class="hs-identifier hs-var">message</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Except ParseError a -&gt; Parse a
 forall a. Except ParseError a -&gt; Parse a
 </span><a href="Hasura.GraphQL.Parser.Monad.html#Parse"><span class="hs-identifier hs-var">Parse</span></a></span><span> </span><span class="annot"><span class="annottext">(Except ParseError a -&gt; Parse a) -&gt; Except ParseError a -&gt; Parse a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -173,10 +173,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParseError :: JSONPath -&gt; ErrorMessage -&gt; ParseErrorCode -&gt; ParseError
 </span><a href="Hasura.GraphQL.Parser.Monad.html#ParseError"><span class="hs-identifier hs-type">ParseError</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">peCode :: ParseErrorCode
 </span><a href="Hasura.GraphQL.Parser.Monad.html#peCode"><span class="hs-identifier hs-var">peCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ParseErrorCode
-</span><a href="#local-6989586621689382347"><span class="hs-identifier hs-var">code</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">pePath :: JSONPath
+</span><a href="#local-6989586621689380822"><span class="hs-identifier hs-var">code</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">pePath :: JSONPath
 </span><a href="Hasura.GraphQL.Parser.Monad.html#pePath"><span class="hs-identifier hs-var">pePath</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">peMessage :: ErrorMessage
 </span><a href="Hasura.GraphQL.Parser.Monad.html#peMessage"><span class="hs-identifier hs-var">peMessage</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ErrorMessage
-</span><a href="#local-6989586621689382346"><span class="hs-identifier hs-var">message</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689380821"><span class="hs-identifier hs-var">message</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-39"></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">data</span><span> </span><span id="ParseError"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#ParseError"><span class="hs-identifier hs-var">ParseError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ParseError"><span class="annot"><a href="Hasura.GraphQL.Parser.Monad.html#ParseError"><span class="hs-identifier hs-var">ParseError</span></a></span></span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="pePath"><span class="annot"><span class="annottext">ParseError -&gt; JSONPath
