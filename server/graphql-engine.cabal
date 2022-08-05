@@ -1266,7 +1266,6 @@ test-suite tests-hspec
     Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
     Test.EventTrigger.EventTriggersRecreationSpec
     Test.EventTrigger.EventTriggersRunSQLSpec
-    Test.GatheringUniqueConstraintsSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
@@ -1276,6 +1275,7 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.Postgres.EnumSpec
     Test.Postgres.TimestampSpec
+    Test.Postgres.UniqueConstraintsSpec
     Test.Queries.Directives.IncludeAndSkipSpec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
