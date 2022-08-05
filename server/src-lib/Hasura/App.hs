@@ -567,18 +567,23 @@ runHGEServer ::
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
+  -- | A hook which can be called to indicate when the server is started succesfully
+  Maybe (IO ()) ->
   PrometheusMetrics ->
   ManagedT m ()
-runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics = do
+runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore startupStatusHook prometheusMetrics = do
   waiApplication <-
     mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics
 
+  -- `startupStatusHook`: add `Service started successfully` message to config_status
+  -- table when a tenant starts up in multitenant
   let warpSettings :: Warp.Settings
       warpSettings =
         Warp.setPort (soPort serveOptions)
           . Warp.setHost (soHost serveOptions)
           . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
           . Warp.setInstallShutdownHandler shutdownHandler
+          . Warp.setBeforeMainLoop (onJust startupStatusHook id)
           . setForkIOWithMetrics
           $ Warp.defaultSettings
 

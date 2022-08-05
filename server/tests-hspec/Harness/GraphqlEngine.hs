@@ -285,6 +285,7 @@ runApp serveOptions = do
               Nothing
               serverMetrics
               ekgStore
+              Nothing
               prometheusMetrics
 
 -- | Used only for 'runApp' above.
