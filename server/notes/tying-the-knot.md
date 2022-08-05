@@ -2,10 +2,6 @@ This note is in [Control.Monad.Memoize](https://github.com/hasura/graphql-engine
 It is referenced at:
   - line 89 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L89)
   - line 189 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L189)
-  - line 56 of [Hasura.GraphQL.Parser.Internal.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Types.hs#L56)
-  - line 411 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L411)
-  - line 833 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L833)
-  - line 852 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L852)
 
 # Tying the knot
 
