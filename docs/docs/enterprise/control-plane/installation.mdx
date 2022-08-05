@@ -47,7 +47,7 @@ This doc covers how you can install the Hasura EE Control Plane. The Hasura EE C
 
 ### Step 1: Download the Lux Helm Charts tarball
 
-**Download**: [lux.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.8.tgz)
+**Download**: [lux.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.13.tgz)
 
 This tarball contains all the helm charts and templates that will help you generate the final kubernetes manifests.
 
@@ -64,7 +64,7 @@ Create the file in the same directory where you have the `lux` tarball.
 
 ```
 .
-└── lux-2.0.8.tgz
+└── lux-2.0.13.tgz
 └── override-values.yaml
 ```
 
@@ -191,13 +191,13 @@ After configuring the override file to your requirements, run the commands below
 **View rendered manifests:**
 
 ```
-helm template -f override-values.yaml lux-2.0.8.tgz
+helm template -f override-values.yaml lux-2.0.13.tgz
 ```
 
 **Render and apply manifests using kubectl:**
 
 ```
-helm template -f override-values.yaml lux-2.0.8.tgz | kubectl apply -f-
+helm template -f override-values.yaml lux-2.0.13.tgz | kubectl apply -f-
 ```
 
 This will start all services and will be available on the configured domain in the overrides file.
