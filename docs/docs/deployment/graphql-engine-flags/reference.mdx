@@ -32,38 +32,44 @@ For the `graphql-engine` command these are the available flags and environment v
 <table>
 <thead>
 <tr>
-<th width="15%">Flag</th>
-<th width="20%">ENV variable</th>
-<th width="30%">Description</th>
+<th>Flag and ENV Variable</th>
+<th>Details</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>
 
+**Flag:**
+
 `--database-url <DB_URL>`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_DATABASE_URL`
 
 </td>
 <td>
 
-Postgres database URL: `postgres://<user>:<password>@<host>:<port>/<db-name>`
+Postgres database URL:
 
-Example: `postgres://admin:mypass@mydomain.com:5432/mydb`
+`postgres://<user>:<password>@<host>:<port>/<db-name>`
+
+Example:
+
+`postgres://admin:mypass@mydomain.com:5432/mydb`
 
 </td>
+
 </tr>
 <tr>
 <td>
 
+**Flag:**
+
 `--metadata-database-url <METADATA-DATABASE-URL>`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_METADATA_DATABASE_URL`
 
@@ -73,13 +79,18 @@ Example: `postgres://admin:mypass@mydomain.com:5432/mydb`
 Postgres database URL that will be used to store the Hasura metadata. By default the database configured using
 `HASURA_GRAPHQL_DATABASE_URL` will be used to store the metadata.
 
+Postgres database URL:
+
 `postgres://<user>:<password>@<host>:<port>/<db-name>`
 
-Example: `postgres://admin:mypass@mydomain.com:5432/metadata_db`
+Example:
+
+`postgres://admin:mypass@mydomain.com:5432/metadata_db`
 
 _(Available for versions > v2.0.0)_
 
 </td>
+
 </tr>
 </tbody>
 </table>
@@ -109,244 +120,65 @@ database url:
 
 ## **serve** sub-command flags / environment variables {#command-flags}
 
-For the `serve` sub-command these are the available flags and environment variables:
+For the `serve` sub-command the table below contains the available flags and environment variables. For those available
+only on Hasura EE, reference [this table](#EE-flags) at the bottom of the page.
 
-<table width="100%">
+<table>
 <thead>
 <tr>
-<th width="15%">Flag</th>
-<th width="20%">ENV variable</th>
-<th width="65%">Description</th>
+<th>Flag and ENV Variable</th>
+<th>Details</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>
 
-`--server-port <PORT>`
+**Flag:**
+
+`--admin-internal-errors <true|false>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_SERVER_PORT`
+Enables including 'internal' information in an error response for requests made by an 'admin' (default: `true`)
 
-</td>
-<td>Port on which graphql-engine should be served (default: 8080)</td>
-</tr>
-<tr>
-<td>
-
-`--server-host <HOST>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_SERVER_HOST`
-
-</td>
-<td>
-
-Host on which graphql-engine will listen (default: `*`)
+_(Available for versions > v1.2.0)_
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--enable-console <true|false>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_ENABLE_CONSOLE`
-
-</td>
-<td>
-
-Enable the Hasura Console (served by the server on `/` and `/console`) (default: false)
-
-</td>
-</tr>
-<tr>
-<td>
+**Flag:**
 
 `--admin-secret <ADMIN_SECRET_KEY>`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_ADMIN_SECRET`
 
 </td>
-<td>Admin secret key, required to access this instance. This is mandatory when you use webhook or JWT.</td>
-</tr>
-<tr>
 <td>
 
-`--auth-hook <WEBHOOK_URL>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_AUTH_HOOK`
-
-</td>
-<td>URL of the authorization webhook required to authorize requests. See auth webhooks docs for more details.</td>
-</tr>
-<tr>
-<td>
-
-`--auth-hook-mode <GET|POST>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_AUTH_HOOK_MODE`
-
-</td>
-<td>HTTP method to use for the authorization webhook (default: GET)</td>
-</tr>
-<tr>
-<td>
-
-`--jwt-secret <JSON_CONFIG>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_JWT_SECRET`
-
-</td>
-<td>
-
-A JSON string containing type and the JWK used for verifying (and other optional details). Example:
-`{"type": "HS256", "key": "3bd561c37d214b4496d09049fadc542c"}`. See the JWT docs for more details.
-
-</td>
-
-</tr>
-<tr>
-<td>
-
-`--unauthorized-role <ROLE>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_UNAUTHORIZED_ROLE`
-
-</td>
-<td>
-
-Unauthorized role, used when access-key is not sent in access-key only mode or the `Authorization` header is absent in
-JWT mode. Example: `anonymous`. Now whenever the "authorization" header is absent, the request's role will default to
-`anonymous`.
+Admin secret key, required to access this instance. This is mandatory when you use webhook or JWT.
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--cors-domain <DOMAINS>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_CORS_DOMAIN`
-
-</td>
-<td>
-
-CSV of list of domains, incuding scheme (http/https) and port, to allow for CORS. Wildcard domains are allowed. (See
-[Configure CORS](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors))
-
-</td>
-</tr>
-<tr>
-<td>
-
-`--disable-cors`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_DISABLE_CORS`
-
-</td>
-<td>Disable CORS. Do not send any CORS headers on any request.</td>
-</tr>
-<tr>
-<td>
-
-`--ws-read-cookie <true|false>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_WS_READ_COOKIE`
-
-</td>
-<td>Read cookie on WebSocket initial handshake even when CORS is disabled.
-This can be a potential security flaw! Please make sure you know what you're doing.
-This configuration is only applicable when CORS is disabled. (default: false)</td>
-</tr>
-<tr>
-<td>
-
-`--enable-telemetry <true|false>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_ENABLE_TELEMETRY`
-
-</td>
-<td>Enable anonymous telemetry (default: true)</td>
-</tr>
-<tr>
-<td>N/A</td>
-<td>
-
-`HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE`
-
-</td>
-<td>Maximum number of concurrent http workers delivering events at any time (default: 100)</td>
-</tr>
-<tr>
-<td>N/A</td>
-<td>
-
-`HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL`
-
-</td>
-<td>Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres</td>
-</tr>
-<tr>
-<td>
-
-`--events-fetch-batch-size`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE`
-
-</td>
-<td>
-
-Maximum number of events to be fetched from the DB in a single batch (default: 100)
-
-<em>(Available for versions > v2.0.0)</em>
-
-</td>
-</tr>
-<tr>
-<td>
+**Flag:**
 
 `--async-actions-fetch-interval`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL`
 
@@ -356,235 +188,182 @@ Maximum number of events to be fetched from the DB in a single batch (default: 1
 Interval in milliseconds to sleep before trying to fetch async actions again after a fetch returned no async actions
 from metadata storage. Value `0` implies completely disable fetching async actions from the storage.
 
-<em>(Available for versions > v2.0.0)</em>
+_(Available for versions > v2.0.0)_
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`-s, --stripes <NO_OF_STRIPES>`
+**Flag:**
+
+`--auth-hook <WEBHOOK_URL>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_AUTH_HOOK`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_PG_STRIPES`
+URL of the authorization webhook required to authorize requests. See [auth webhooks](/auth/authentication/webhook.mdx)
+docs for more details.
 
 </td>
-<td>Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). New connections will be taken from a particular stripe pseudo-randomly.</td>
 </tr>
+
 <tr>
 <td>
+
+**Flag:**
+
+`--auth-hook-mode <GET|POST>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_AUTH_HOOK_MODE`
+
+</td>
+<td>
+
+HTTP method to use for the authorization webhook. (default: `GET`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
 
 `-c, --connections <NO_OF_CONNS>`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_PG_CONNECTIONS`
 
 </td>
 <td>
 
-Maximum number of Postgres connections that can be opened per stripe (default: 50). When the maximum is reached we will
-block until a new connection becomes available, even if there is capacity in other stripes.
+Maximum number of Postgres connections that can be opened per stripe (default: `50`). When the maximum is reached we
+will block until a new connection becomes available, even if there is capacity in other stripes.
 
-(<strong>Deprecated in versions > v2.0.0</strong>. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))
-
-</td>
-</tr>
-<tr>
-<td>
-
-`--timeout <SECONDS>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_PG_TIMEOUT`
-
-</td>
-<td>
-
-Each connection's idle time before it is closed (default: 180 sec)
-
-(<strong>Deprecated in versions > v2.0.0</strong>. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--use-prepared-statements <true|false>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_USE_PREPARED_STATEMENTS`
-
-</td>
-<td>
-
-Use prepared statements for queries (default: true)
-
-(<strong>Deprecated in versions > v2.0.0</strong>. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))
-
-</td>
-</tr>
-<tr>
-<td>
-
-`-i, --tx-iso <TXISO>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_TX_ISOLATION`
-
-</td>
-<td>
-
-Transaction isolation. read-committed / repeatable-read / serializable (default: read-committed)
-
-(<strong>Deprecated in versions > v2.0.0</strong>. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))
-
-</td>
-</tr>
-<tr>
-<td>
-
-`--retries <NO_OF_RETRIES>`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_NO_OF_RETRIES`
-
-</td>
-<td>
-
-Number of retries if Postgres connection error occurs (default: 1)
-
-(<strong>Deprecated in versions > v2.0.0</strong>. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))
-
-</td>
-</tr>
-<tr>
-<td>
+**Flag:**
 
 `--conn-lifetime <SECONDS>`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_PG_CONN_LIFETIME`
 
 </td>
 <td>
 
-Time from connection creation after which the connection should be destroyed and a new one created. A value of 0
-indicates we should never destroy an active connection. If 0 is passed, memory from large query results may not be
-reclaimed. (default: 600 sec)
+Time from connection creation after which the connection should be destroyed and a new one created. A value of `0`
+indicates we should never destroy an active connection. If `0` is passed, memory from large query results may not be
+reclaimed. (default: `600` **sec**)
 
-(<strong>Deprecated in versions > v2.0.0</strong>. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))
-
-</td>
-</tr>
-<tr>
-<td>
-
-`--stringify-numeric-types`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES`
-
-</td>
-<td>
-
-Stringify certain Postgres numeric types, specifically `bigint` ,`numeric` ,`decimal` and `double precision` as they
-don't fit into the `IEEE-754` spec for JSON encoding-decoding. (default: false)
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--enabled-apis <APIS>`
+**Flag:**
+
+`--console-assets-dir`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_CONSOLE_ASSETS_DIR`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_ENABLED_APIS`
-
-</td>
-<td>
-
-Comma separated list of APIs (options: `metadata`, `graphql`, `pgdump`, `config`) to be enabled. (default:
-`metadata,graphql,pgdump,config`)
+Set the value to `/srv/console-assets` for the console to load assets from the server itself instead of CDN.
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--live-queries-multiplexed-refetch-interval`
+**Flag:**
+
+`--cors-domain <DOMAINS>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_CORS_DOMAIN`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`
+CSV of list of domains, including scheme (http/https) and port, to allow for CORS. Wildcard domains are allowed. (See
+[Configure CORS](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors))
 
 </td>
-<td>Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries which can be multiplexed. Default: 1000 (1sec)</td>
 </tr>
+
 <tr>
 <td>
 
-`--live-queries-multiplexed-batch-size`
+**Flag:**
+
+`--dev-mode`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_DEV_MODE`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE`
+Set dev mode for GraphQL requests; include the `internal` key in the errors extensions of the response (if required).
+
+_(Available for versions > v1.2.0)_
 
 </td>
-<td>Multiplexed live queries are split into batches of the specified size. Default: 100</td>
 </tr>
+
 <tr>
 <td>
 
-`--streaming-queries-multiplexed-refetch-interval`
+**Flag:**
+
+`--disable-cors`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_DISABLE_CORS`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`
+Disable CORS. Do not send any CORS headers on any request.
 
 </td>
-<td>Updated results (if any) will be sent at most once in this interval (in milliseconds) for streaming queries which can be multiplexed. Default: 1000 (1sec)</td>
 </tr>
+
 <tr>
 <td>
 
-`--streaming-queries-multiplexed-batch-size`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE`
-
-</td>
-<td>Multiplexed streaming queries are split into batches of the specified size. Default: 100</td>
-</tr>
-<tr>
-<td>
+**Flag:**
 
 `--enable-allowlist`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_ENABLE_ALLOWLIST`
 
@@ -596,31 +375,152 @@ Default: `false`
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--console-assets-dir`
+**Flag:**
+
+`--enable-console <true|false>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ENABLE_CONSOLE`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_CONSOLE_ASSETS_DIR`
+Enable the Hasura Console (served by the server on `/` and `/console`). (default: `false`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--enable-log-compression <true|false>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ENABLE_LOG_COMPRESSION`
 
 </td>
 <td>
 
-Set the value to `/srv/console-assets` for the console to load assets from the server itself instead of CDN
+Enable sending compressed logs to metrics server.
 
 </td>
+</tr>
 
+<tr>
+<td>
+
+**Flag:**
+
+`--enable-maintenance-mode`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE`
+
+</td>
+<td>
+
+Disable updating of metadata on the server. (default: `false`)
+
+_(Available for versions > v2.0.0)_
+
+</td>
 </tr>
 <tr>
 <td>
 
-`--enabled-log-types`
+**Flag:**
+
+`--enable-metadata-query-logging`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ENABLE_METADATDA_QUERY_LOGGING`
 
 </td>
 <td>
+
+Enables the query field in http-logs for metadata queries. (default: `false`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--enable-remote-schema-permissions`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`
+
+</td>
+<td>
+
+Enable remote schema permissions. (default: `false`)
+
+_(Available for versions > v2.0.0)_
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--enable-telemetry <true|false>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ENABLE_TELEMETRY`
+
+</td>
+<td>
+
+Enable anonymous telemetry. (default: `true`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--enabled-apis <APIS>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ENABLED_APIS`
+
+</td>
+<td>
+
+Comma separated list of APIs (options: `metadata`, `graphql`, `pgdump`, `config`) to be enabled. (default:
+`metadata, graphql, pgdump, config`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--enabled-log-types`
+
+**ENV variable:**
 
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES`
 
@@ -635,84 +535,135 @@ Set the enabled log types. This is a comma-separated list of log-types to enable
 <tr>
 <td>
 
-`--log-level`
+**Flag:**
+
+`--events-http-pool-size`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_LOG_LEVEL`
+Max event processing threads. (default: `100`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--events-fetch-batch-size`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE`
 
 </td>
 <td>
 
-Set the logging level. Default: `info`. Options: `debug`, `info`, `warn`, `error`.
+Maximum number of events to be fetched from the DB in a single batch. (default: `100`)
+
+_(Available for versions > v2.0.0)_
 
 </td>
 </tr>
 <tr>
 <td>
 
-`--dev-mode`
+**Flag:**
+
+`--events-fetch-interval`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_DEV_MODE`
-
-</td>
-<td>
-
-Set dev mode for GraphQL requests; include the `internal` key in the errors extensions of the response (if required).
-
-<em>(Available for versions > v1.2.0)</em>
-
-</td>
-</tr>
-<tr>
-<td>
-
-`--admin-internal-errors`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS`
-
-</td>
-<td>
-
-Include the `internal` key in the errors extensions of the response for GraphQL requests with the admin role (if
-required).
-
-<em>(Available for versions > v1.2.0)</em></td>
-
-</tr>
-<tr>
-<td>
-
-`--enable-remote-schema-permissions`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`
-
-</td>
-<td>
-
-Enable remote schema permissions (default: `false`)
-
-<em>(Available for versions > v2.0.0)</em>
+Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres.
 
 </td>
 </tr>
+
 <tr>
 <td>
+
+**Flag:**
+
+`--experimental-features`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`
+
+</td>
+<td>
+
+List of experimental features to be enabled. A comma separated value is expected. Options: `inherited_roles`,
+`naming_convention`, `streaming_subscriptions`.
+
+_(Available for versions > v2.0.0)_
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--graceful-shutdown-timeout`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT`
+
+</td>
+<td>
+
+Timeout (in seconds) to wait for the in-flight events (event triggers and scheduled triggers) and async actions to
+complete before the server shuts down completely (default: `60` **sec**). If the in-flight events are not completed
+within the timeout, those events are marked as pending.
+
+_(Available for versions > v2.0.0)_
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`-i, --tx-iso <TXISO>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_TX_ISOLATION`
+
+</td>
+<td>
+
+Transaction isolation. read-committed / repeatable-read / serializable (default: read-committed)
+
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
 
 `--infer-function-permissions`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS`
 
@@ -726,123 +677,383 @@ permission will only be allowed if there is a select permission on the table typ
 function is inferred from the select permissions from the target table of the function, only for stable/immutable
 functions. Volatile functions are not exposed to any of the roles in this case.
 
-<em>(Available for versions > v2.0.0)</em>
+_(Available for versions > v2.0.0)_
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--schema-sync-poll-interval`
+**Flag:**
+
+`--jwt-secret <JSON_CONFIG>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_JWT_SECRET`
 
 </td>
 <td>
+
+A JSON string containing type and the JWK used for verifying (and other optional details). Example:
+`{"type": "HS256", "key": "3bd561c37d214b4496d09049fadc542c"}`. See the [JWT docs](/auth/authentication/jwt.mdx) for
+more details.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--live-queries-multiplexed-batch-size`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE`
+
+</td>
+<td>
+
+Multiplexed live queries are split into batches of the specified size. Default: `100`
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--live-queries-multiplexed-refetch-interval`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`
+
+</td>
+<td>
+
+Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries which can be
+multiplexed. Default: `1000` (`1` **sec**)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--log-level`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_LOG_LEVEL`
+
+</td>
+<td>
+
+Set the logging level. Default: `info`. Options: `debug`, `info`, `warn`, `error`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--pool-timeout`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_POOL_TIMEOUT`
+
+</td>
+<td>
+
+How long to wait when acquiring a Postgres connection, in seconds. (default: forever)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--query-plan-cache-size`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE`
+
+</td>
+<td>
+
+The maximum number of query plans that can be cached, allowed values: 0-65535, 0 disables the cache. (Default: 4000)
+
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--retries <NO_OF_RETRIES>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_NO_OF_RETRIES`
+
+</td>
+<td>
+
+Number of retries if Postgres connection error occurs. (default: `1`)
+
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`-s, --stripes <NO_OF_STRIPES>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_PG_STRIPES`
+
+</td>
+<td>
+
+Number of stripes (distinct sub-pools) to maintain with Postgres (default: `1`). New connections will be taken from a
+particular stripe pseudo-randomly.
+
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--schema-sync-poll-interval`
+
+**ENV variable:**
 
 `HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL`
 
 </td>
-<td>Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable.
-
-<em>(Available for versions > v2.0.0)</em></td>
-</tr>
-<tr>
 <td>
 
-`--experimental-features`
+Interval to poll metadata storage for updates in milliseconds. Default: `1000` (`1` **sec**). Set to `0` to disable.
 
-</td>
-<td>
-
-`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`
-
-</td>
-<td>
-
-List of experimental features to be enabled. A comma separated value is expected. Options: `inherited_roles`,
-`naming_convention, streaming_subscriptions`.
-
-<em>(Available for versions > v2.0.0)</em>
+_(Available for versions > v2.0.0)_
 
 </td>
 </tr>
+
 <tr>
 <td>
 
-`--graceful-shutdown-timeout`
+**Flag:**
+
+`--server-host <HOST>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_SERVER_HOST`
 
 </td>
 <td>
 
-`HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT`
-
-</td>
-<td>Timeout (in seconds) to wait for the in-flight events (event triggers and scheduled triggers) and async actions to complete before the server shuts down completely (default: 60 seconds). If the in-flight events are not completed within the timeout, those events are marked as pending.
-
-<em>(Available for versions > v2.0.0)</em></td>
-</tr>
-<tr>
-<td>
-
-`--enable-maintenance-mode`
-
-</td>
-<td>
-
-`HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE`
-
-</td>
-<td>
-
-Disable updating of metadata on the server (default: `false`)
-
-<em>(Available for versions > v2.0.0)</em>
+Host on which graphql-engine will listen (default: `*`)
 
 </td>
 </tr>
+
 <tr>
 <td>
+
+**Flag:**
+
+`--server-port <PORT>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_SERVER_PORT`
+
+</td>
+<td>
+
+Port on which graphql-engine should be served (default: `8080`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--streaming-queries-multiplexed-batch-size`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE`
+
+</td>
+<td>
+
+Multiplexed streaming queries are split into batches of the specified size. (Default: `100`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--streaming-queries-multiplexed-refetch-interval`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`
+
+</td>
+<td>
+
+Updated results (if any) will be sent at most once in this interval (in milliseconds) for streaming queries which can be
+multiplexed. (Default: `1000`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--stringify-numeric-types`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES`
+
+</td>
+<td>
+
+Stringify certain Postgres numeric types, specifically `bigint` ,`numeric` ,`decimal` and `double precision` as they
+don't fit into the `IEEE-754` spec for JSON encoding-decoding. (default: `false`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--timeout <SECONDS>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_PG_TIMEOUT`
+
+</td>
+<td>
+
+Each connection's idle time before it is closed (default: `180` **sec**)
+
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--unauthorized-role <ROLE>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_UNAUTHORIZED_ROLE`
+
+</td>
+<td>
+
+Unauthorized role, used when access-key is not sent in access-key only mode or the `Authorization` header is absent in
+JWT mode. Example: `anonymous`. Now whenever the "authorization" header is absent, the request's role will default to
+`anonymous`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--use-prepared-statements <true|false>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_USE_PREPARED_STATEMENTS`
+
+</td>
+<td>
+
+Use prepared statements for queries. (default: `true`)
+
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
 
 `--websocket-compression`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_CONNECTION_COMPRESSION`
 
 </td>
-<td>Enable WebSocket permessage-deflate compression (default: false)
-
-<em>(Available for versions > v2.0.0)</em></td>
-</tr>
-<tr>
 <td>
 
-`--websocket-keepalive <SECONDS>`
+Enable WebSocket permessage-deflate compression. (default: `false`)
 
-</td>
-<td>
-
-`HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE`
-
-</td>
-<td>
-
-Used to set the `Keep Alive` delay for client that use the `subscription-transport-ws` (Apollo) protocol. For
-`graphql-ws` clients the graphql-engine sends `PING` messages instead.
-
-(default: `5`)
-
-<em>(Available for versions > v2.0.0)</em>
+_(Available for versions > v2.0.0)_
 
 </td>
 </tr>
+
 <tr>
 <td>
+
+**Flag:**
 
 `--websocket-connection-init-timeout <SECONDS>`
 
-</td>
-<td>
+**ENV variable:**
 
 `HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT`
 
@@ -850,17 +1061,118 @@ Used to set the `Keep Alive` delay for client that use the `subscription-transpo
 <td>
 
 Used to set the connection initialisation timeout for `graphql-ws` clients. This is ignored for
-`subscription-transport-ws` (Apollo) clients.
-
-(default: `3`)
+`subscription-transport-ws` (Apollo) clients. (default: `3`)
 
 </td>
 </tr>
+
 <tr>
 <td>
-N/A
+
+**Flag:**
+
+`--websocket-keepalive <SECONDS>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE`
+
 </td>
 <td>
+
+Used to set the `Keep Alive` delay for client that use the `subscription-transport-ws` (Apollo) protocol. For
+`graphql-ws` clients the graphql-engine sends `PING` messages instead. (default: `5`)
+
+_(Available for versions > v2.0.0)_
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--ws-read-cookie <true|false>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_WS_READ_COOKIE`
+
+</td>
+<td>
+
+Read cookie on WebSocket initial handshake even when CORS is disabled. **This can be a potential security flaw!** Please
+make sure you know what you're doing. This configuration is only applicable when CORS is disabled. (default: `false`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`N/A`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE`
+
+</td>
+<td>
+
+Maximum number of concurrent http workers delivering events at any time. (default: `100`)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`N/A`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL`
+
+</td>
+<td>
+
+Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--v1-boolean-null-collapse`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`
+
+</td>
+<td>
+
+Evaluate `null` values in `where` input object to `True` instead of `error`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`N/A`
+
+**ENV variable:**
 
 `HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION`
 
@@ -876,6 +1188,7 @@ Used to set the default naming convention for all sources. See
 
 </td>
 </tr>
+  
 </tbody>
 </table>
 
@@ -884,3 +1197,309 @@ Used to set the default naming convention for all sources. See
 When the equivalent flags for environment variables are used, the flags will take precedence.
 
 :::
+
+## Hasura EE sub-command flags / environment variables {#EE-flags}
+
+The following `serve` sub-commands are available **only** on Hasura EE.
+
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--admin-secrets`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_ADMIN_SECRETS`
+
+</td>
+<td>
+
+A list of valid admin secret keys.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--connections-per-read-replica <NO OF CONNS PER READ REPLICA>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA`
+
+</td>
+<td>
+
+Maximum number of Postgres connections per read-replica that can be opened per stripe (default: `50`). When the maximum
+is reached we will block until a new connection becomes available, even if there is capacity in other stripes.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--jwt-secrets`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_JWT_SECRETS`
+
+</td>
+<td>
+
+A JSON array of objects containing type and the JWK used for verifying. e.g:
+
+`[{\"type\": \"HS256\", \"key\": \"<your-hmac-shared-secret>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}, {\"type\": \"RS256\", \"issuer\": \"my-issuer\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}]`
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--max-cache-size`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_MAX_CACHE_SIZE`
+
+</td>
+<td>
+
+Maximum cache size in MB. (Default: 1 MB)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--pg-ssl-certificate-path <DIRECTORY>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_PG_SSL_CERTIFICATE_PATH`
+
+</td>
+<td>
+
+Path for storage of postgres SSL certificates when set via environment variable reference.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--pro-endpoint <HASURA PRO ENDPOINT>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_PRO_ENDPOINT`
+
+</td>
+<td>
+
+The pro endpoint for authorization and collect metrics.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--pro-key <HASURA PRO KEY>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_PRO_KEY`
+
+</td>
+<td>
+
+The pro key that you have received.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--rate-limit-redis-tls-hostname <HOSTNAME>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME`
+
+</td>
+<td>
+
+Hostname to use for SNI when connecting to rate-limiting Redis instance over TLS.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--rate-limit-redis-url <URL>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
+
+</td>
+<td>
+
+Redis URL in the form `redis://username:password@host:port/db` to use for rate limiting.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--rate-limit-redis-use-tls <true|false>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_RATE_LIMIT_REDIS_USE_TLS`
+
+</td>
+<td>
+
+Whether or not to use TLS to connect to caching Redis instance.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--read-replica-url <READ REPLICA URL>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_READ_REPLICA_URL`
+
+</td>
+<td>
+
+URL for a read replica of the database.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--redis-tls-hostname <HOSTNAME>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_REDIS_TLS_HOSTNAME`
+
+</td>
+<td>
+
+Hostname to use for SNI when connecting to caching Redis instance over TLS.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--redis-tls-shared-ca-store-path <PATH TO SHARED CA STORE>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_REDIS_TLS_SHARED_CA_STORE_PATH`
+
+</td>
+<td>
+
+Path to shared CA store to use to connect to both (caching and rate-limiting) Redis URLs over TLS.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--redis-url <URL>`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_REDIS_URL`
+
+</td>
+<td>
+
+Redis URL in the form `redis://username:password@host:port/db` to use for query caching.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--stripes-per-read-replica`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA`
+
+</td>
+<td>
+
+Number of stripes (connection pools) to maintain per read replica.
+
+**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+
+</td>
+</tr>
+
+</tbody>
+</table>
