@@ -220,11 +220,23 @@ deriving instance (Backend b) => Eq (PartialSQLExp b)
 
 deriving instance (Backend b) => Show (PartialSQLExp b)
 
-instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (PartialSQLExp b)
+instance
+  ( Backend b,
+    NFData (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  NFData (PartialSQLExp b)
 
-instance (Backend b, Hashable (BooleanOperators b (PartialSQLExp b))) => Hashable (PartialSQLExp b)
+instance
+  ( Backend b,
+    Hashable (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Hashable (PartialSQLExp b)
 
-instance (Backend b, Cacheable (BooleanOperators b (PartialSQLExp b))) => Cacheable (PartialSQLExp b)
+instance
+  ( Backend b,
+    Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Cacheable (PartialSQLExp b)
 
 instance Backend b => ToJSON (PartialSQLExp b) where
   toJSON = \case
@@ -307,17 +319,48 @@ deriving instance (Backend b) => Foldable (OpExpG b)
 
 deriving instance (Backend b) => Traversable (OpExpG b)
 
-deriving instance (Backend b, Show (BooleanOperators b a), Show a) => Show (OpExpG b a)
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b a),
+    Show a
+  ) =>
+  Show (OpExpG b a)
 
-deriving instance (Backend b, Eq (BooleanOperators b a), Eq a) => Eq (OpExpG b a)
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b a),
+    Eq a
+  ) =>
+  Eq (OpExpG b a)
 
-instance (Backend b, NFData (BooleanOperators b a), NFData a) => NFData (OpExpG b a)
+instance
+  ( Backend b,
+    NFData (BooleanOperators b a),
+    NFData a
+  ) =>
+  NFData (OpExpG b a)
 
-instance (Backend b, Cacheable (BooleanOperators b a), Cacheable a) => Cacheable (OpExpG b a)
+instance
+  ( Backend b,
+    Cacheable (BooleanOperators b a),
+    Cacheable a
+  ) =>
+  Cacheable (OpExpG b a)
 
-instance (Backend b, Hashable (BooleanOperators b a), Hashable a) => Hashable (OpExpG b a)
+instance
+  ( Backend b,
+    Hashable (BooleanOperators b a),
+    Hashable a
+  ) =>
+  Hashable (OpExpG b a)
 
-instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONKeyValue (OpExpG b a) where
+instance
+  ( Backend b,
+    ToJSONKeyValue (BooleanOperators b a),
+    ToJSON a
+  ) =>
+  ToJSONKeyValue (OpExpG b a)
+  where
   toJSONKeyValue = \case
     ACast a -> ("_cast", toJSON $ object . map toJSONKeyValue <$> a)
     AEQ _ a -> ("_eq", toJSON a)
@@ -359,15 +402,45 @@ data ComputedFieldBoolExp (backend :: BackendType) scalar
     CFBETable (TableName backend) (AnnBoolExp backend scalar)
   deriving (Functor, Foldable, Traversable, Generic)
 
-deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (ComputedFieldBoolExp b a)
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq a
+  ) =>
+  Eq (ComputedFieldBoolExp b a)
 
-deriving instance (Backend b, Show (BooleanOperators b a), Show (FunctionArgumentExp b a), Show a) => Show (ComputedFieldBoolExp b a)
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b a),
+    Show (FunctionArgumentExp b a),
+    Show a
+  ) =>
+  Show (ComputedFieldBoolExp b a)
 
-instance (Backend b, NFData (BooleanOperators b a), NFData (FunctionArgumentExp b a), NFData a) => NFData (ComputedFieldBoolExp b a)
+instance
+  ( Backend b,
+    NFData (BooleanOperators b a),
+    NFData (FunctionArgumentExp b a),
+    NFData a
+  ) =>
+  NFData (ComputedFieldBoolExp b a)
 
-instance (Backend b, Cacheable (BooleanOperators b a), Cacheable (FunctionArgumentExp b a), Cacheable a) => Cacheable (ComputedFieldBoolExp b a)
+instance
+  ( Backend b,
+    Cacheable (BooleanOperators b a),
+    Cacheable (FunctionArgumentExp b a),
+    Cacheable a
+  ) =>
+  Cacheable (ComputedFieldBoolExp b a)
 
-instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgumentExp b a), Hashable a) => Hashable (ComputedFieldBoolExp b a)
+instance
+  ( Backend b,
+    Hashable (BooleanOperators b a),
+    Hashable (FunctionArgumentExp b a),
+    Hashable a
+  ) =>
+  Hashable (ComputedFieldBoolExp b a)
 
 -- | Using a computed field in boolean expression.
 -- Example: A computed field "full_name" ("first_name" || "last_name") is defined to the "user"
@@ -398,15 +471,45 @@ deriving instance (Backend b) => Foldable (AnnComputedFieldBoolExp b)
 
 deriving instance (Backend b) => Traversable (AnnComputedFieldBoolExp b)
 
-deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (AnnComputedFieldBoolExp b a)
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq a
+  ) =>
+  Eq (AnnComputedFieldBoolExp b a)
 
-deriving instance (Backend b, Show (BooleanOperators b a), Show (FunctionArgumentExp b a), Show a) => Show (AnnComputedFieldBoolExp b a)
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b a),
+    Show (FunctionArgumentExp b a),
+    Show a
+  ) =>
+  Show (AnnComputedFieldBoolExp b a)
 
-instance (Backend b, NFData (BooleanOperators b a), NFData (FunctionArgumentExp b a), NFData a) => NFData (AnnComputedFieldBoolExp b a)
+instance
+  ( Backend b,
+    NFData (BooleanOperators b a),
+    NFData (FunctionArgumentExp b a),
+    NFData a
+  ) =>
+  NFData (AnnComputedFieldBoolExp b a)
 
-instance (Backend b, Cacheable (BooleanOperators b a), Cacheable (FunctionArgumentExp b a), Cacheable a) => Cacheable (AnnComputedFieldBoolExp b a)
+instance
+  ( Backend b,
+    Cacheable (BooleanOperators b a),
+    Cacheable (FunctionArgumentExp b a),
+    Cacheable a
+  ) =>
+  Cacheable (AnnComputedFieldBoolExp b a)
 
-instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgumentExp b a), Hashable a) => Hashable (AnnComputedFieldBoolExp b a)
+instance
+  ( Backend b,
+    Hashable (BooleanOperators b a),
+    Hashable (FunctionArgumentExp b a),
+    Hashable a
+  ) =>
+  Hashable (AnnComputedFieldBoolExp b a)
 
 -- | This type is used for boolean terms in GBoolExp in the schema; there are two kinds boolean
 -- terms:
@@ -421,17 +524,53 @@ data AnnBoolExpFld (backend :: BackendType) leaf
   | AVComputedField (AnnComputedFieldBoolExp backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
 
-deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (AnnBoolExpFld b a)
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq a
+  ) =>
+  Eq (AnnBoolExpFld b a)
 
-deriving instance (Backend b, Show (BooleanOperators b a), Show (FunctionArgumentExp b a), Show a) => Show (AnnBoolExpFld b a)
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b a),
+    Show (FunctionArgumentExp b a),
+    Show a
+  ) =>
+  Show (AnnBoolExpFld b a)
 
-instance (Backend b, NFData (BooleanOperators b a), NFData (FunctionArgumentExp b a), NFData a) => NFData (AnnBoolExpFld b a)
+instance
+  ( Backend b,
+    NFData (BooleanOperators b a),
+    NFData (FunctionArgumentExp b a),
+    NFData a
+  ) =>
+  NFData (AnnBoolExpFld b a)
 
-instance (Backend b, Cacheable (BooleanOperators b a), Cacheable (FunctionArgumentExp b a), Cacheable a) => Cacheable (AnnBoolExpFld b a)
+instance
+  ( Backend b,
+    Cacheable (BooleanOperators b a),
+    Cacheable (FunctionArgumentExp b a),
+    Cacheable a
+  ) =>
+  Cacheable (AnnBoolExpFld b a)
 
-instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgumentExp b a), Hashable a) => Hashable (AnnBoolExpFld b a)
+instance
+  ( Backend b,
+    Hashable (BooleanOperators b a),
+    Hashable (FunctionArgumentExp b a),
+    Hashable a
+  ) =>
+  Hashable (AnnBoolExpFld b a)
 
-instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONKeyValue (AnnBoolExpFld b a) where
+instance
+  ( Backend b,
+    ToJSONKeyValue (BooleanOperators b a),
+    ToJSON a
+  ) =>
+  ToJSONKeyValue (AnnBoolExpFld b a)
+  where
   toJSONKeyValue = \case
     AVColumn pci opExps ->
       ( K.fromText $ toTxt $ ciColumn pci,
@@ -542,17 +681,53 @@ $(deriveJSON hasuraJSON ''STIntersectsGeomminNband)
 newtype AnnColumnCaseBoolExpField (backend :: BackendType) field = AnnColumnCaseBoolExpField {_accColCaseBoolExpField :: AnnBoolExpFld backend field}
   deriving (Functor, Foldable, Traversable, Generic)
 
-deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (AnnColumnCaseBoolExpField b a)
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq a
+  ) =>
+  Eq (AnnColumnCaseBoolExpField b a)
 
-deriving instance (Backend b, Show (BooleanOperators b a), Show (FunctionArgumentExp b a), Show a) => Show (AnnColumnCaseBoolExpField b a)
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b a),
+    Show (FunctionArgumentExp b a),
+    Show a
+  ) =>
+  Show (AnnColumnCaseBoolExpField b a)
 
-instance (Backend b, NFData (BooleanOperators b a), NFData (FunctionArgumentExp b a), NFData a) => NFData (AnnColumnCaseBoolExpField b a)
+instance
+  ( Backend b,
+    NFData (BooleanOperators b a),
+    NFData (FunctionArgumentExp b a),
+    NFData a
+  ) =>
+  NFData (AnnColumnCaseBoolExpField b a)
 
-instance (Backend b, Cacheable (BooleanOperators b a), Cacheable (FunctionArgumentExp b a), Cacheable a) => Cacheable (AnnColumnCaseBoolExpField b a)
+instance
+  ( Backend b,
+    Cacheable (BooleanOperators b a),
+    Cacheable (FunctionArgumentExp b a),
+    Cacheable a
+  ) =>
+  Cacheable (AnnColumnCaseBoolExpField b a)
 
-instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgumentExp b a), Hashable a) => Hashable (AnnColumnCaseBoolExpField b a)
+instance
+  ( Backend b,
+    Hashable (BooleanOperators b a),
+    Hashable (FunctionArgumentExp b a),
+    Hashable a
+  ) =>
+  Hashable (AnnColumnCaseBoolExpField b a)
 
-instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONKeyValue (AnnColumnCaseBoolExpField b a) where
+instance
+  ( Backend b,
+    ToJSONKeyValue (BooleanOperators b a),
+    ToJSON a
+  ) =>
+  ToJSONKeyValue (AnnColumnCaseBoolExpField b a)
+  where
   toJSONKeyValue = toJSONKeyValue . _accColCaseBoolExpField
 
 -- | Similar to AnnBoolExp, this type alias ties together
