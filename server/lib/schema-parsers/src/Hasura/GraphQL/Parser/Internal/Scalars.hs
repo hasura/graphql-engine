@@ -42,7 +42,6 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax hiding (Definition)
-import Prelude
 
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onLeft" :: String) #-}

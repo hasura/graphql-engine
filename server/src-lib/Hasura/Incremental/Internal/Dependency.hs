@@ -45,6 +45,7 @@ import GHC.Generics
     (:*:) (..),
     (:+:) (..),
   )
+import Hasura.GraphQL.Parser qualified as P
 import Hasura.Incremental.Select
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -402,6 +403,12 @@ instance Cacheable G.SchemaIntrospection
 instance Cacheable Scheme
 
 instance Cacheable BaseUrl
+
+instance (Cacheable v) => Cacheable (P.InputValue v)
+
+instance Cacheable P.Variable
+
+instance Cacheable P.VariableInfo
 
 class GCacheable f where
   gunchanged :: f p -> f p -> Accesses -> Bool

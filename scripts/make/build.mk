@@ -56,6 +56,6 @@ build-multitenant-integration-tests: $(GENERATED_CABAL_FILES)
 # See the documentation for more information:
 # https://www.gnu.org/software/make/manual/html_node/Static-Pattern.html
 # https://www.gnu.org/software/make/manual/html_node/Secondary-Expansion.html
-$(GENERATED_CABAL_FILES): %.cabal: $$(dir %)/package.yaml
+$(GENERATED_CABAL_FILES): %.cabal: $$(dir %)/package.yaml server/lib/common.yaml $$(shell find $$(dir %) -name '*.hs')
 	./scripts/hpack.sh $@
 	@ touch $@  # Required because `hpack` will not change the modified timestamp if the file is up-to-date.

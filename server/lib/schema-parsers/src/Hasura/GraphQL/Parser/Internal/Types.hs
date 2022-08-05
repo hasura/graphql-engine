@@ -11,7 +11,6 @@ import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax hiding (Definition)
-import Prelude
 
 -- -----------------------------------------------------------------------------
 -- type definitions

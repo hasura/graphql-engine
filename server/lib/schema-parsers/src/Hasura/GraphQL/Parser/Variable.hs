@@ -10,14 +10,12 @@ import Data.Hashable (Hashable)
 import Data.Void (Void)
 import GHC.Generics (Generic)
 import Hasura.GraphQL.Parser.Names
-import Hasura.Incremental (Cacheable)
 import Language.GraphQL.Draft.Syntax
   ( GType (..),
     Name (..),
     Value (..),
   )
 import Language.Haskell.TH.Lift qualified as TH
-import Prelude
 
 {- Note [Parsing variable values]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,8 +79,6 @@ data InputValue v
 
 instance (Hashable v) => Hashable (InputValue v)
 
-instance (Cacheable v) => Cacheable (InputValue v)
-
 data Variable = Variable
   { vInfo :: VariableInfo,
     vType :: GType,
@@ -93,8 +89,6 @@ data Variable = Variable
   deriving (Show, Eq, Generic, Ord, TH.Lift)
 
 instance Hashable Variable
-
-instance Cacheable Variable
 
 instance HasName Variable where
   getName = getName . vInfo
@@ -108,8 +102,6 @@ data VariableInfo
   deriving (Show, Eq, Generic, Ord, TH.Lift)
 
 instance Hashable VariableInfo
-
-instance Cacheable VariableInfo
 
 instance HasName VariableInfo where
   getName (VIRequired name) = name

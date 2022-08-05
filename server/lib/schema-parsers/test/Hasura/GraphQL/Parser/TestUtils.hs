@@ -6,36 +6,36 @@ module Hasura.GraphQL.Parser.TestUtils
   )
 where
 
+import Data.Functor ((<&>))
 import Data.HashMap.Strict qualified as M
 import Data.List.NonEmpty qualified as NE
-import Data.Text qualified as T
-import Hasura.Base.ErrorMessage (fromErrorMessage)
-import Hasura.GraphQL.Schema.Parser
-import Hasura.Prelude
+import Hasura.Base.ErrorMessage (ErrorMessage)
+import Hasura.GraphQL.Parser
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- test monad
 
-newtype TestMonad a = TestMonad {runTest :: Either Text a}
-  deriving (Functor, Applicative, Monad)
+newtype TestMonad a = TestMonad {runTest :: Either ErrorMessage a}
+  deriving newtype (Functor, Applicative, Monad)
 
 instance MonadParse TestMonad where
   withKey = const id
-  parseErrorWith = const $ TestMonad . Left . fromErrorMessage
+  parseErrorWith = const $ TestMonad . Left
 
 -- values generation
 
 fakeScalar :: G.Name -> G.Value Variable
-fakeScalar =
-  G.unName >>> \case
-    "Int" -> G.VInt 4242
-    "Boolean" -> G.VBoolean False
-    name -> error $ "no test value implemented for scalar " <> T.unpack name
+fakeScalar name =
+  if
+      | name == GName._Int -> G.VInt 4242
+      | name == GName._Boolean -> G.VBoolean False
+      | otherwise -> error $ "no test value implemented for scalar " <> show name
 
-fakeInputFieldValue :: InputFieldInfo -> G.Value Variable
+fakeInputFieldValue :: forall origin. InputFieldInfo origin -> G.Value Variable
 fakeInputFieldValue (InputFieldInfo t _) = go t
   where
-    go :: forall k. ('Input <: k) => Type k -> G.Value Variable
+    go :: forall k. ('Input <: k) => Type origin k -> G.Value Variable
     go = \case
       TList _ t' -> G.VList [go t', go t']
       TNamed _ (Definition name _ _ _ info) -> case (info, subKind @'Input @k) of
@@ -47,7 +47,7 @@ fakeInputFieldValue (InputFieldInfo t _) = go t
             pure (fieldName, fakeInputFieldValue fieldInfo)
         _ -> error "fakeInputFieldValue: non-exhaustive. FIXME"
 
-fakeDirective :: DirectiveInfo -> G.Directive Variable
+fakeDirective :: DirectiveInfo origin -> G.Directive Variable
 fakeDirective DirectiveInfo {..} =
   G.Directive diName $
     M.fromList $

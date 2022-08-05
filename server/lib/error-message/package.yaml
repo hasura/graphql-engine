@@ -3,17 +3,10 @@ spec-version: 0.34.7
 name: hasura-error-message
 description: >
   An error message type that makes it difficult to convert back to text.
-version: 1.0.0
-author:
-  - Hasura, Inc.
-github: hasura/github-engine
 
-extra-source-files:
-  - ../../../LICENSE
-
-ghc-options:
-  - "-Wall"
-  - "-Werror"
+_common: !include "../common.yaml"
+<<: *common-boilerplate
+<<: *common-lib
 
 default-extensions:
   - BlockArguments

@@ -72,7 +72,6 @@ import Language.GraphQL.Draft.Syntax
     Value (..),
   )
 import Language.GraphQL.Draft.Syntax qualified as G
-import Prelude
 
 -- | GraphQL types are divided into two classes: input types and output types.
 -- The GraphQL spec does not use the word “kind” to describe these classes, but

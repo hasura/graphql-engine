@@ -14,16 +14,13 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.ErrorCode
 import Prelude
 
--- Disable custom prelude warnings in preparation for extracting this module into a separate package.
-{-# ANN module ("HLint: ignore Use onLeft" :: String) #-}
-
 -- -------------------------------------------------------------------------------------------------
 -- query parsing
 
 newtype Parse a = Parse
   { unParse :: Except ParseError a
   }
-  deriving (Functor, Applicative, Monad)
+  deriving newtype (Functor, Applicative, Monad)
 
 runParse ::
   MonadError ParseError m =>

@@ -8,7 +8,6 @@ where
 import Data.List.NonEmpty qualified as NonEmpty
 import Hasura.GraphQL.Parser.Schema
 import Language.GraphQL.Draft.Syntax qualified as G
-import Prelude
 
 -------------------------------------------------------------------------------
 

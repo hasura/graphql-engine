@@ -20,7 +20,6 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax
-import Prelude
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.

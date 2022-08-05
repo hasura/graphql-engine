@@ -23,7 +23,6 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
-import Prelude
 
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
