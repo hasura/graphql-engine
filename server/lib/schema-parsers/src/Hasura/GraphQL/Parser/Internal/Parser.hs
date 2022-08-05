@@ -45,7 +45,6 @@ import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Witherable (catMaybes, mapMaybe)
-import Prelude
 
 infixl 1 `bind`
 

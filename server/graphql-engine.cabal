@@ -159,6 +159,7 @@ common lib-depends
                      , free
                      , hashable
                      , hasura-error-message
+                     , hasura-schema-parsers
                      , http-client-tls
                      , http-conduit
                      , http-media
@@ -796,26 +797,6 @@ library
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Namespace
                      , Hasura.GraphQL.ParameterizedQueryHash
-                     , Hasura.GraphQL.Parser
-                     , Hasura.GraphQL.Parser.Class
-                     , Hasura.GraphQL.Parser.Collect
-                     , Hasura.GraphQL.Parser.DirectiveName
-                     , Hasura.GraphQL.Parser.Directives
-                     , Hasura.GraphQL.Parser.ErrorCode
-                     , Hasura.GraphQL.Parser.Internal.Convert
-                     , Hasura.GraphQL.Parser.Internal.Input
-                     , Hasura.GraphQL.Parser.Internal.Parser
-                     , Hasura.GraphQL.Parser.Internal.Scalars
-                     , Hasura.GraphQL.Parser.Internal.TypeChecking
-                     , Hasura.GraphQL.Parser.Internal.Types
-                     , Hasura.GraphQL.Parser.Monad
-                     , Hasura.GraphQL.Parser.Name
-                     , Hasura.GraphQL.Parser.Name.Introspection
-                     , Hasura.GraphQL.Parser.Name.TypeSystem
-                     , Hasura.GraphQL.Parser.Names
-                     , Hasura.GraphQL.Parser.Schema
-                     , Hasura.GraphQL.Parser.Schema.Convert
-                     , Hasura.GraphQL.Parser.Variable
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
@@ -864,7 +845,6 @@ library
                      , Hasura.Eventing.ScheduledTrigger
                      , Hasura.Eventing.ScheduledTrigger.Types
                      , Hasura.Name
-                     , Data.GADT.Compare.Extended
                      , Hasura.SQL.AnyBackend
                      , Hasura.SQL.Backend
                      , Hasura.SQL.BackendMap
@@ -1058,10 +1038,6 @@ test-suite graphql-engine-tests
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
-    Hasura.GraphQL.Parser.DirectivesTest
-    Hasura.GraphQL.Parser.MonadParseTest
-    Hasura.GraphQL.Parser.TestInstances
-    Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec

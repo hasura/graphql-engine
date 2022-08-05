@@ -7,8 +7,7 @@ module Data.GADT.Compare.Extended
   )
 where
 
-import "some" Data.GADT.Compare
-import Prelude
+import Data.GADT.Compare
 
 strengthenOrdering :: Ordering -> GOrdering a a
 strengthenOrdering LT = GLT

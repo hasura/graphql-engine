@@ -48,7 +48,6 @@ import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
 import Type.Reflection (Typeable, typeRep, (:~:) (..))
 import Witherable (catMaybes)
-import Prelude
 
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onNothing" :: String) #-}

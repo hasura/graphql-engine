@@ -28,3 +28,8 @@ cradle:
     - path: "server/lib/error-message/test"
       component: "hasura-error-message:test:tests"
 
+    - path: "server/lib/schema-parsers/src"
+      component: "hasura-schema-parsers:lib:hasura-schema-parsers"
+    - path: "server/lib/schema-parsers/test"
+      component: "hasura-schema-parsers:test:tests"
+

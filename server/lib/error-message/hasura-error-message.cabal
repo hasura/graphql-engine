@@ -23,6 +23,16 @@ source-repository head
   type: git
   location: https://github.com/hasura/github-engine
 
+flag optimize-hasura
+  description: Compile hasura code with appropriate optimizations
+  manual: False
+  default: True
+
+flag profiling
+  description: Configures the project to be profiling-compatible
+  manual: True
+  default: False
+
 library
   exposed-modules:
       Hasura.Base.ErrorMessage
@@ -39,13 +49,19 @@ library
       ImportQualifiedPost
       OverloadedStrings
       ScopedTypeVariables
-  ghc-options: -Wall -Werror
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
   build-depends:
       aeson
     , base
     , graphql-parser
     , text
     , unordered-containers
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
   default-language: Haskell2010
 
 test-suite tests
@@ -63,7 +79,7 @@ test-suite tests
       ImportQualifiedPost
       OverloadedStrings
       ScopedTypeVariables
-  ghc-options: -Wall -Werror -main-is Main
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists -main-is Main
   build-depends:
       aeson
     , base
@@ -74,4 +90,10 @@ test-suite tests
     , text
     , unordered-containers
     , vector
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
   default-language: Haskell2010

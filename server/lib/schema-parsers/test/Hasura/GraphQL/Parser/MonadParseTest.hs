@@ -6,7 +6,6 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.Parser.TestInstances ()
-import Hasura.Prelude
 import Test.Hspec
 
 runParse' :: Parse () -> Either ParseError ()
