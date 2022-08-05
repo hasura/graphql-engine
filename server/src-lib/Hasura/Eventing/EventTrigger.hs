@@ -33,7 +33,6 @@ module Hasura.Eventing.EventTrigger
     processEventQueue,
     defaultMaxEventThreads,
     defaultFetchInterval,
-    defaultFetchBatchSize,
     Event (..),
     EventEngineCtx (..),
     -- Exported for testing
@@ -168,9 +167,6 @@ defaultMaxEventThreads = 100
 
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
-
-defaultFetchBatchSize :: NonNegativeInt
-defaultFetchBatchSize = unsafeNonNegativeInt 100
 
 initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do

@@ -96,7 +96,7 @@ buildPostgresSpecs = do
 
   pgUrlText <- flip onLeft printErrExit $
     runWithEnv env $ do
-      let envVar = fst databaseUrlEnv
+      let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
         throwError $ "Expected: " <> envVar

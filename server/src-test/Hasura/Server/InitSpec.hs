@@ -615,7 +615,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledAPIs = Just [UUT.CONFIG]}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledAPIs = Just $ Set.fromList [UUT.CONFIG]}
             -- When
             env = [("HASURA_GRAPHQL_ENABLED_APIS", "metadata,graphql")]
             -- Then
@@ -785,7 +785,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledLogTypes = Just [Logging.ELTActionHandler]}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledLogTypes = Just (Set.fromList [Logging.ELTActionHandler])}
             -- When
             env = [("HASURA_GRAPHQL_ENABLED_LOG_TYPES", "http-log")]
             -- Then
@@ -903,9 +903,13 @@ mkServeOptionsSpec =
         fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
 
     Hspec.describe "soEventsHttpPoolSize" $ do
-      -- TODO(SOLOMON): Despite the parser help message, there
-      -- actually isn't a default value set in 'ServeOptions' for
-      -- this:
+      -- TODO(SOLOMON): The default value for this option is set in App.hs:
+      -- https://github.com/hasura/graphql-engine-mono/blob/main/server/src-lib/Hasura/App.hs#L910
+      -- We should move the defaulting into the 'Option' term and
+      -- remove the 'Maybe' from 'soEventsHttpPoolSize' but this
+      -- should be done in an isolated PR to prevent potential
+      -- regressions.
+      --
       --Hspec.it "Default == 100" $ do
       --  let -- Given
       --      rawServeOptions = emptyServeOptionsRaw
@@ -1222,7 +1226,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoExperimentalFeatures = Just [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions]}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoExperimentalFeatures = Just (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])}
             -- When
             env = [("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "inherited_roles")]
             -- Then

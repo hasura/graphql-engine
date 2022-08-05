@@ -5,11 +5,12 @@ module Hasura.Server.Init.Env
     WithEnv,
     runWithEnvT,
     runWithEnv,
-    withEnv,
-    withEnvs,
-    withEnvBool,
-    withEnvList,
+    withOption,
+    withOptionDefault,
+    withOptions,
+    withOptionSwitch,
     considerEnv,
+    considerEnvs,
   )
 where
 
@@ -17,8 +18,7 @@ where
 
 import Control.Monad.Morph (MFunctor (..))
 import Data.Char qualified as C
-import Data.Coerce (Coercible)
-import Data.Proxy (Proxy, asProxyTypeOf)
+import Data.HashSet qualified as Set
 import Data.String qualified as String
 import Data.Text qualified as T
 import Data.Time (NominalDiffTime)
@@ -60,40 +60,46 @@ considerEnv envVar = do
 considerEnvs :: (Monad m, FromEnv a) => [String] -> WithEnvT m (Maybe a)
 considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 
-withEnv :: (Monad m, FromEnv a) => Maybe a -> String -> WithEnvT m (Maybe a)
-withEnv mVal envVar =
-  maybe (considerEnv envVar) (pure . Just) mVal
+-- | Lookup a list of keys with 'withOption' and return the first
+-- value to parse successfully.
+withOptions :: (Monad m, FromEnv option) => Maybe option -> [Option ()] -> WithEnvT m (Maybe option)
+withOptions parsed options = foldl1 (<|>) <$> traverse (withOption parsed) options
 
--- | Return 'a' if Just or else call 'considerEnv' with a list of env keys k
-withEnvs :: (Monad m, FromEnv a) => Maybe a -> [String] -> WithEnvT m (Maybe a)
-withEnvs mVal envVars =
-  maybe (considerEnvs envVars) (pure . Just) mVal
+-- | Given the parse result for an option and the 'Option def' record
+-- for that option, query the environment, and then merge the results
+-- from the parser and environment.
+withOption :: (Monad m, FromEnv option) => Maybe option -> Option () -> WithEnvT m (Maybe option)
+withOption parsed option =
+  let option' = option {_default = Nothing}
+   in withOptionDefault (fmap Just parsed) option'
 
--- | If @bVal@ is 'True' then return it, else lookup the 'envVar' in
--- the environment and return 'False' if absent.
-withEnvBool :: Monad m => Bool -> String -> WithEnvT m Bool
-withEnvBool bVal envVar =
-  if bVal
-    then pure bVal
-    else do
-      mVal <- considerEnv @_ @Bool envVar
-      pure $ fromMaybe False mVal
+-- | Given the parse result for an option and the 'Option def' record
+-- for that option, query the environment, and then merge the results
+-- from the parser, environment, and the default.
+withOptionDefault :: (Monad m, FromEnv option) => Maybe option -> Option option -> WithEnvT m option
+withOptionDefault parsed Option {..} = case parsed of
+  Nothing -> fromMaybe _default <$> considerEnv _envVar
+  Just option -> pure option
 
--- | 'withEnv' for types isomorphic to an array. 'Proxy' is generally
--- used to pass on the type info. Here 'Proxy' helps us to specify
--- what the underlying array type should be.
-withEnvList ::
-  (Monad m, FromEnv b, Coercible b [a]) =>
-  Proxy [a] ->
-  b ->
-  String ->
-  WithEnvT m b
-withEnvList proxy x env
-  | null (asArrayType $ coerce x) = fromMaybe emptyArr <$> considerEnv env
-  | otherwise = return x
-  where
-    asArrayType = flip asProxyTypeOf proxy
-    emptyArr = coerce $ asArrayType []
+-- | Switches in 'optparse-applicative' have different semantics then
+-- ordinary flags. They are always optional and produce a 'False' when
+-- absent rather then a 'Nothing'.
+--
+-- In HGE we give Env Vars a higher precedence then an absent Switch
+-- but the ordinary 'withEnv' operation expects a 'Nothing' for an
+-- absent arg parser result.
+--
+-- This function executes with 'withOption Nothing' when the Switch is
+-- absent, otherwise it returns 'True'.
+--
+-- An alternative solution would be to make Switches return 'Maybe _',
+-- where '_' is an option specific sum type. This would allow us to
+-- use 'withOptionDefault' directly. Additionally, all fields of
+-- 'ServeOptionsRaw' would become 'Maybe' or 'First' values which
+-- would allow us to write a 'Monoid ServeOptionsRaw' instance for
+-- combing different option sources.
+withOptionSwitch :: Monad m => Bool -> Option Bool -> WithEnvT m Bool
+withOptionSwitch parsed option = bool (withOptionDefault Nothing option) (pure True) parsed
 
 --------------------------------------------------------------------------------
 
@@ -139,6 +145,9 @@ instance FromEnv HostPreference where
 
 instance FromEnv Text where
   fromEnv = Right . T.pack
+
+instance FromEnv a => FromEnv (Maybe a) where
+  fromEnv = fmap Just . fromEnv
 
 instance FromEnv AuthHookType where
   fromEnv = \case
@@ -198,8 +207,8 @@ instance FromEnv Q.TxIsolation where
 instance FromEnv CorsConfig where
   fromEnv = readCorsDomains
 
-instance FromEnv [API] where
-  fromEnv = traverse readAPI . T.splitOn "," . T.pack
+instance FromEnv (HashSet API) where
+  fromEnv = fmap Set.fromList . traverse readAPI . T.splitOn "," . T.pack
     where
       readAPI si = case T.toUpper $ T.strip si of
         "METADATA" -> Right METADATA
@@ -213,8 +222,8 @@ instance FromEnv [API] where
 instance FromEnv NamingCase where
   fromEnv = parseNamingConventionFromText . T.pack
 
-instance FromEnv [ExperimentalFeature] where
-  fromEnv = traverse readAPI . T.splitOn "," . T.pack
+instance FromEnv (HashSet ExperimentalFeature) where
+  fromEnv = fmap Set.fromList . traverse readAPI . T.splitOn "," . T.pack
     where
       readAPI si = case T.toLower $ T.strip si of
         "inherited_roles" -> Right EFInheritedRoles
@@ -263,8 +272,8 @@ instance FromEnv JWTConfig where
 instance FromEnv [JWTConfig] where
   fromEnv = readJson
 
-instance L.EnabledLogTypes impl => FromEnv [L.EngineLogType impl] where
-  fromEnv = L.parseEnabledLogTypes
+instance L.EnabledLogTypes impl => FromEnv (HashSet (L.EngineLogType impl)) where
+  fromEnv = fmap Set.fromList . L.parseEnabledLogTypes
 
 instance FromEnv L.LogLevel where
   fromEnv s = case T.toLower $ T.strip $ T.pack s of

@@ -6,6 +6,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Lens (preview, _Just)
+import Data.HashSet qualified as Set
 import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
@@ -883,7 +884,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEnabledAPIs result `Hspec.shouldSatisfy` \case
-        Opt.Success enabledAPIs -> enabledAPIs == Just [UUT.GRAPHQL, UUT.PGDUMP]
+        Opt.Success enabledAPIs -> enabledAPIs == Just (Set.fromList [UUT.GRAPHQL, UUT.PGDUMP])
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1104,7 +1105,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEnabledLogTypes result `Hspec.shouldSatisfy` \case
-        Opt.Success enabledLogTypes -> enabledLogTypes == Just [Logging.ELTStartup, Logging.ELTWebhookLog]
+        Opt.Success enabledLogTypes -> enabledLogTypes == Just (Set.fromList [Logging.ELTStartup, Logging.ELTWebhookLog])
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1599,7 +1600,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoExperimentalFeatures result `Hspec.shouldSatisfy` \case
-        Opt.Success schemaPollInterval -> schemaPollInterval == Just [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters]
+        Opt.Success schemaPollInterval -> schemaPollInterval == Just (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters])
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
