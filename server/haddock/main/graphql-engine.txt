@@ -32166,7 +32166,7 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> UTCTime -> Maybe SubscriptionPostPollHook -> ServerMetrics -> Store EmptyMetrics -> PrometheusMetrics -> ManagedT m ()
+runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> UTCTime -> Maybe SubscriptionPostPollHook -> ServerMetrics -> Store EmptyMetrics -> Maybe (IO ()) -> PrometheusMetrics -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See

@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span>
 </span><span id="line-15"></span><span class="hs-comment">-- | Convert back from our &quot;live&quot; schema representation into a flat</span><span>
 </span><span id="line-16"></span><span class="hs-comment">-- static set of definitions.</span><span>
-</span><span id="line-17"></span><span id="local-6989586621689382167"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertToSchemaIntrospection"><span class="hs-identifier hs-type">convertToSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Schema"><span class="hs-identifier hs-type">Schema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382167"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span></span><span>
+</span><span id="line-17"></span><span id="local-6989586621689382276"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertToSchemaIntrospection"><span class="hs-identifier hs-type">convertToSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Schema"><span class="hs-identifier hs-type">Schema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382276"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span></span><span>
 </span><span id="line-18"></span><span id="convertToSchemaIntrospection"><span class="annot"><span class="annottext">convertToSchemaIntrospection :: Schema origin -&gt; SchemaIntrospection
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertToSchemaIntrospection"><span class="hs-identifier hs-var hs-var">convertToSchemaIntrospection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
 -&gt; SchemaIntrospection
@@ -48,10 +48,10 @@ Schema origin -&gt; HashMap Name (SomeDefinitionTypeInfo origin)
 </span><span id="line-19"></span><span>
 </span><span id="line-20"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-21"></span><span>
-</span><span id="line-22"></span><span id="local-6989586621689382226"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertType"><span class="hs-identifier hs-type">convertType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeDefinitionTypeInfo"><span class="hs-identifier hs-type">SomeDefinitionTypeInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382226"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinition</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span></span><span>
+</span><span id="line-22"></span><span id="local-6989586621689382335"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertType"><span class="hs-identifier hs-type">convertType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeDefinitionTypeInfo"><span class="hs-identifier hs-type">SomeDefinitionTypeInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382335"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinition</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span></span><span>
 </span><span id="line-23"></span><span id="convertType"><span class="annot"><span class="annottext">convertType :: SomeDefinitionTypeInfo origin
 -&gt; TypeDefinition [Name] InputValueDefinition
-</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertType"><span class="hs-identifier hs-var hs-var">convertType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeDefinitionTypeInfo"><span class="hs-identifier hs-type">SomeDefinitionTypeInfo</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382156"><span id="local-6989586621689382157"><span id="local-6989586621689382158"><span id="local-6989586621689382159"><span id="local-6989586621689382160"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertType"><span class="hs-identifier hs-var hs-var">convertType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeDefinitionTypeInfo"><span class="hs-identifier hs-type">SomeDefinitionTypeInfo</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382265"><span id="local-6989586621689382266"><span id="local-6989586621689382267"><span id="local-6989586621689382268"><span id="local-6989586621689382269"><span class="annot"><span class="annottext">[Directive Void]
 Maybe origin
 Maybe Description
 Name
@@ -67,7 +67,7 @@ dOrigin :: Maybe origin
 dDescription :: Maybe Description
 dName :: Name
 </span><a href="Hasura.GraphQL.Parser.Schema.html#dInfo"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">TypeInfo origin k
-</span><a href="#local-6989586621689382156"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689382265"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-24"></span><span>  </span><span class="annot"><span class="annottext">TypeInfo origin k
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TIScalar"><span class="hs-identifier hs-var">TIScalar</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-25"></span><span>    </span><span class="annot"><span class="annottext">ScalarTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition
@@ -84,16 +84,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-type">G.ScalarTypeDefinition</span></span><span>
 </span><span id="line-27"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_stdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._stdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382159"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382268"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-28"></span><span>          </span><span class="annot"><span class="annottext">_stdName :: Name
 </span><span class="hs-identifier hs-var">G._stdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382160"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382269"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>          </span><span class="annot"><span class="annottext">_stdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._stdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382157"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
+</span><a href="#local-6989586621689382266"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
 </span><span id="line-30"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-31"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIEnum"><span class="hs-identifier hs-type">TIEnum</span></a></span><span> </span><span id="local-6989586621689382143"><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo)
-</span><a href="#local-6989586621689382143"><span class="hs-identifier hs-var">enumInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIEnum"><span class="hs-identifier hs-type">TIEnum</span></a></span><span> </span><span id="local-6989586621689382252"><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo)
+</span><a href="#local-6989586621689382252"><span class="hs-identifier hs-var">enumInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">EnumTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition
 forall possibleTypes inputType.
 EnumTypeDefinition -&gt; TypeDefinition possibleTypes inputType
@@ -109,13 +109,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-type">G.EnumTypeDefinition</span></span><span>
 </span><span id="line-34"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_etdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._etdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382159"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382268"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-35"></span><span>          </span><span class="annot"><span class="annottext">_etdName :: Name
 </span><span class="hs-identifier hs-var">G._etdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382160"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382269"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-36"></span><span>          </span><span class="annot"><span class="annottext">_etdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._etdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382157"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382266"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-37"></span><span>          </span><span class="annot"><span class="annottext">_etdValueDefinitions :: [EnumValueDefinition]
 </span><span class="hs-identifier hs-var">G._etdValueDefinitions</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin EnumValueInfo -&gt; EnumValueDefinition)
 -&gt; [Definition origin EnumValueInfo] -&gt; [EnumValueDefinition]
@@ -130,10 +130,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [Definition origin EnumValueInfo]
 forall a. NonEmpty a -&gt; [a]
 </span><span class="hs-identifier hs-var">NonEmpty.toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo)
-</span><a href="#local-6989586621689382143"><span class="hs-identifier hs-var">enumInfo</span></a></span><span>
+</span><a href="#local-6989586621689382252"><span class="hs-identifier hs-var">enumInfo</span></a></span><span>
 </span><span id="line-38"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-39"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInputObject"><span class="hs-identifier hs-type">TIInputObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputObjectInfo"><span class="hs-identifier hs-type">InputObjectInfo</span></a></span><span> </span><span id="local-6989586621689382132"><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
-</span><a href="#local-6989586621689382132"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInputObject"><span class="hs-identifier hs-type">TIInputObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputObjectInfo"><span class="hs-identifier hs-type">InputObjectInfo</span></a></span><span> </span><span id="local-6989586621689382241"><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
+</span><a href="#local-6989586621689382241"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
 -&gt; TypeDefinition [Name] InputValueDefinition
 forall possibleTypes inputType.
@@ -154,13 +154,13 @@ Maybe Description
 </span><span class="hs-identifier hs-type">G.InputObjectTypeDefinition</span></span><span>
 </span><span id="line-42"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_iotdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._iotdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382159"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382268"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-43"></span><span>          </span><span class="annot"><span class="annottext">_iotdName :: Name
 </span><span class="hs-identifier hs-var">G._iotdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382160"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382269"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-44"></span><span>          </span><span class="annot"><span class="annottext">_iotdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._iotdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382157"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382266"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-45"></span><span>          </span><span class="annot"><span class="annottext">_iotdValueDefinitions :: [InputValueDefinition]
 </span><span class="hs-identifier hs-var">G._iotdValueDefinitions</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin (InputFieldInfo origin) -&gt; InputValueDefinition)
 -&gt; [Definition origin (InputFieldInfo origin)]
@@ -170,11 +170,11 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall origin.
 Definition origin (InputFieldInfo origin) -&gt; InputValueDefinition
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-var">convertInputField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
-</span><a href="#local-6989586621689382132"><span class="hs-identifier hs-var">values</span></a></span><span>
+</span><a href="#local-6989586621689382241"><span class="hs-identifier hs-var">values</span></a></span><span>
 </span><span id="line-46"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIObject"><span class="hs-identifier hs-type">TIObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ObjectInfo"><span class="hs-identifier hs-type">ObjectInfo</span></a></span><span> </span><span id="local-6989586621689382122"><span class="annot"><span class="annottext">[Definition origin (FieldInfo origin)]
-</span><a href="#local-6989586621689382122"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621689382121"><span class="annot"><span class="annottext">[Definition origin (InterfaceInfo origin)]
-</span><a href="#local-6989586621689382121"><span class="hs-identifier hs-var">interfaces</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIObject"><span class="hs-identifier hs-type">TIObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ObjectInfo"><span class="hs-identifier hs-type">ObjectInfo</span></a></span><span> </span><span id="local-6989586621689382231"><span class="annot"><span class="annottext">[Definition origin (FieldInfo origin)]
+</span><a href="#local-6989586621689382231"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621689382230"><span class="annot"><span class="annottext">[Definition origin (InterfaceInfo origin)]
+</span><a href="#local-6989586621689382230"><span class="hs-identifier hs-var">interfaces</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">ObjectTypeDefinition InputValueDefinition
 -&gt; TypeDefinition [Name] InputValueDefinition
 forall possibleTypes inputType.
@@ -196,13 +196,13 @@ Maybe Description
 </span><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span>
 </span><span id="line-50"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_otdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._otdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382159"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382268"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-51"></span><span>          </span><span class="annot"><span class="annottext">_otdName :: Name
 </span><span class="hs-identifier hs-var">G._otdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382160"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382269"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-52"></span><span>          </span><span class="annot"><span class="annottext">_otdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._otdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382157"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382266"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>          </span><span class="annot"><span class="annottext">_otdImplementsInterfaces :: [Name]
 </span><span class="hs-identifier hs-var">G._otdImplementsInterfaces</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin (InterfaceInfo origin) -&gt; Name)
 -&gt; [Definition origin (InterfaceInfo origin)] -&gt; [Name]
@@ -210,7 +210,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition origin (InterfaceInfo origin) -&gt; Name
 forall origin a. Definition origin a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var">getDefinitionName</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (InterfaceInfo origin)]
-</span><a href="#local-6989586621689382121"><span class="hs-identifier hs-var">interfaces</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382230"><span class="hs-identifier hs-var">interfaces</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-54"></span><span>          </span><span class="annot"><span class="annottext">_otdFieldsDefinition :: [FieldDefinition InputValueDefinition]
 </span><span class="hs-identifier hs-var">G._otdFieldsDefinition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin (FieldInfo origin)
  -&gt; FieldDefinition InputValueDefinition)
@@ -223,11 +223,11 @@ forall origin.
 Definition origin (FieldInfo origin)
 -&gt; FieldDefinition InputValueDefinition
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-var">convertField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (FieldInfo origin)]
-</span><a href="#local-6989586621689382122"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><a href="#local-6989586621689382231"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-55"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInterface"><span class="hs-identifier hs-type">TIInterface</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InterfaceInfo"><span class="hs-identifier hs-type">InterfaceInfo</span></a></span><span> </span><span id="local-6989586621689382109"><span class="annot"><span class="annottext">[Definition origin (FieldInfo origin)]
-</span><a href="#local-6989586621689382109"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621689382108"><span class="annot"><span class="annottext">[Definition origin (ObjectInfo origin)]
-</span><a href="#local-6989586621689382108"><span class="hs-identifier hs-var">possibleTypes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInterface"><span class="hs-identifier hs-type">TIInterface</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InterfaceInfo"><span class="hs-identifier hs-type">InterfaceInfo</span></a></span><span> </span><span id="local-6989586621689382218"><span class="annot"><span class="annottext">[Definition origin (FieldInfo origin)]
+</span><a href="#local-6989586621689382218"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621689382217"><span class="annot"><span class="annottext">[Definition origin (ObjectInfo origin)]
+</span><a href="#local-6989586621689382217"><span class="hs-identifier hs-var">possibleTypes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">InterfaceTypeDefinition [Name] InputValueDefinition
 -&gt; TypeDefinition [Name] InputValueDefinition
 forall possibleTypes inputType.
@@ -249,13 +249,13 @@ Maybe Description
 </span><span class="hs-identifier hs-type">G.InterfaceTypeDefinition</span></span><span>
 </span><span id="line-59"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_itdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._itdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382159"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382268"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">_itdName :: Name
 </span><span class="hs-identifier hs-var">G._itdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382160"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382269"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">_itdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._itdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382157"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382266"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">_itdFieldsDefinition :: [FieldDefinition InputValueDefinition]
 </span><span class="hs-identifier hs-var">G._itdFieldsDefinition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin (FieldInfo origin)
  -&gt; FieldDefinition InputValueDefinition)
@@ -268,7 +268,7 @@ forall origin.
 Definition origin (FieldInfo origin)
 -&gt; FieldDefinition InputValueDefinition
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-var">convertField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (FieldInfo origin)]
-</span><a href="#local-6989586621689382109"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382218"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">_itdPossibleTypes :: [Name]
 </span><span class="hs-identifier hs-var">G._itdPossibleTypes</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin (ObjectInfo origin) -&gt; Name)
 -&gt; [Definition origin (ObjectInfo origin)] -&gt; [Name]
@@ -276,10 +276,10 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition origin (ObjectInfo origin) -&gt; Name
 forall origin a. Definition origin a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var">getDefinitionName</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (ObjectInfo origin)]
-</span><a href="#local-6989586621689382108"><span class="hs-identifier hs-var">possibleTypes</span></a></span><span>
+</span><a href="#local-6989586621689382217"><span class="hs-identifier hs-var">possibleTypes</span></a></span><span>
 </span><span id="line-64"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIUnion"><span class="hs-identifier hs-type">TIUnion</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#UnionInfo"><span class="hs-identifier hs-type">UnionInfo</span></a></span><span> </span><span id="local-6989586621689382098"><span class="annot"><span class="annottext">[Definition origin (ObjectInfo origin)]
-</span><a href="#local-6989586621689382098"><span class="hs-identifier hs-var">possibleTypes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIUnion"><span class="hs-identifier hs-type">TIUnion</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#UnionInfo"><span class="hs-identifier hs-type">UnionInfo</span></a></span><span> </span><span id="local-6989586621689382207"><span class="annot"><span class="annottext">[Definition origin (ObjectInfo origin)]
+</span><a href="#local-6989586621689382207"><span class="hs-identifier hs-var">possibleTypes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">UnionTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition
 forall possibleTypes inputType.
 UnionTypeDefinition -&gt; TypeDefinition possibleTypes inputType
@@ -293,13 +293,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-type">G.UnionTypeDefinition</span></span><span>
 </span><span id="line-68"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_utdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._utdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382159"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382268"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-69"></span><span>          </span><span class="annot"><span class="annottext">_utdName :: Name
 </span><span class="hs-identifier hs-var">G._utdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382160"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382269"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">_utdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._utdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382157"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382266"><span class="hs-identifier hs-var">dDirectives</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">_utdMemberTypes :: [Name]
 </span><span class="hs-identifier hs-var">G._utdMemberTypes</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin (ObjectInfo origin) -&gt; Name)
 -&gt; [Definition origin (ObjectInfo origin)] -&gt; [Name]
@@ -307,12 +307,12 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition origin (ObjectInfo origin) -&gt; Name
 forall origin a. Definition origin a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var">getDefinitionName</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (ObjectInfo origin)]
-</span><a href="#local-6989586621689382098"><span class="hs-identifier hs-var">possibleTypes</span></a></span><span>
+</span><a href="#local-6989586621689382207"><span class="hs-identifier hs-var">possibleTypes</span></a></span><span>
 </span><span id="line-72"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span id="local-6989586621689382203"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertEnumValue"><span class="hs-identifier hs-type">convertEnumValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382203"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.EnumValueDefinition</span></span></span><span>
+</span><span id="line-74"></span><span id="local-6989586621689382312"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertEnumValue"><span class="hs-identifier hs-type">convertEnumValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382312"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.EnumValueDefinition</span></span></span><span>
 </span><span id="line-75"></span><span id="convertEnumValue"><span class="annot"><span class="annottext">convertEnumValue :: Definition origin EnumValueInfo -&gt; EnumValueDefinition
-</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertEnumValue"><span class="hs-identifier hs-var hs-var">convertEnumValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382087"><span id="local-6989586621689382088"><span id="local-6989586621689382089"><span id="local-6989586621689382090"><span id="local-6989586621689382091"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertEnumValue"><span class="hs-identifier hs-var hs-var">convertEnumValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382196"><span id="local-6989586621689382197"><span id="local-6989586621689382198"><span id="local-6989586621689382199"><span id="local-6989586621689382200"><span class="annot"><span class="annottext">[Directive Void]
 Maybe origin
 Maybe Description
 Name
@@ -327,25 +327,25 @@ dDirectives :: forall origin a. Definition origin a -&gt; [Directive Void]
 dOrigin :: forall origin a. Definition origin a -&gt; Maybe origin
 dDescription :: forall origin a. Definition origin a -&gt; Maybe Description
 dName :: forall origin a. Definition origin a -&gt; Name
-</span><a href="#local-6989586621689382087"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689382196"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>  </span><span class="annot"><span class="annottext">EnumValueDefinition :: Maybe Description
 -&gt; EnumValue -&gt; [Directive Void] -&gt; EnumValueDefinition
 </span><span class="hs-identifier hs-type">G.EnumValueDefinition</span></span><span>
 </span><span id="line-77"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_evdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._evdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382090"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382199"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">_evdName :: EnumValue
 </span><span class="hs-identifier hs-var">G._evdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; EnumValue
 </span><span class="hs-identifier hs-var">G.EnumValue</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382091"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382200"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-79"></span><span>      </span><span class="annot"><span class="annottext">_evdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._evdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382088"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
+</span><a href="#local-6989586621689382197"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
 </span><span id="line-80"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span id="local-6989586621689382197"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-type">convertInputField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382197"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382197"><span class="hs-identifier hs-type">origin</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span></span><span>
+</span><span id="line-82"></span><span id="local-6989586621689382306"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-type">convertInputField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382306"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382306"><span class="hs-identifier hs-type">origin</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span></span><span>
 </span><span id="line-83"></span><span id="convertInputField"><span class="annot"><span class="annottext">convertInputField :: Definition origin (InputFieldInfo origin) -&gt; InputValueDefinition
-</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-var hs-var">convertInputField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382077"><span id="local-6989586621689382078"><span id="local-6989586621689382079"><span id="local-6989586621689382080"><span id="local-6989586621689382081"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-var hs-var">convertInputField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382186"><span id="local-6989586621689382187"><span id="local-6989586621689382188"><span id="local-6989586621689382189"><span id="local-6989586621689382190"><span class="annot"><span class="annottext">[Directive Void]
 Maybe origin
 Maybe Description
 Name
@@ -360,11 +360,11 @@ dDirectives :: forall origin a. Definition origin a -&gt; [Directive Void]
 dOrigin :: forall origin a. Definition origin a -&gt; Maybe origin
 dDescription :: forall origin a. Definition origin a -&gt; Maybe Description
 dName :: forall origin a. Definition origin a -&gt; Name
-</span><a href="#local-6989586621689382077"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InputFieldInfo origin
-</span><a href="#local-6989586621689382077"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span id="local-6989586621689382075"><span class="annot"><span class="annottext">Type origin k
-</span><a href="#local-6989586621689382075"><span class="hs-identifier hs-var">typeInfo</span></a></span></span><span> </span><span id="local-6989586621689382074"><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621689382074"><span class="hs-identifier hs-var">defaultValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689382186"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InputFieldInfo origin
+</span><a href="#local-6989586621689382186"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span id="local-6989586621689382184"><span class="annot"><span class="annottext">Type origin k
+</span><a href="#local-6989586621689382184"><span class="hs-identifier hs-var">typeInfo</span></a></span></span><span> </span><span id="local-6989586621689382183"><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621689382183"><span class="hs-identifier hs-var">defaultValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">InputValueDefinition :: Maybe Description
 -&gt; Name
 -&gt; GType
@@ -374,27 +374,27 @@ dName :: forall origin a. Definition origin a -&gt; Name
 </span><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span>
 </span><span id="line-86"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_ivdDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._ivdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382080"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382189"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">_ivdName :: Name
 </span><span class="hs-identifier hs-var">G._ivdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382081"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382190"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">_ivdType :: GType
 </span><span class="hs-identifier hs-var">G._ivdType</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; GType
 forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type origin k
-</span><a href="#local-6989586621689382075"><span class="hs-identifier hs-var">typeInfo</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382184"><span class="hs-identifier hs-var">typeInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">_ivdDefaultValue :: Maybe (Value Void)
 </span><span class="hs-identifier hs-var">G._ivdDefaultValue</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621689382074"><span class="hs-identifier hs-var">defaultValue</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382183"><span class="hs-identifier hs-var">defaultValue</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-90"></span><span>        </span><span class="annot"><span class="annottext">_ivdDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._ivdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382078"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
+</span><a href="#local-6989586621689382187"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
 </span><span id="line-91"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span id="local-6989586621689382190"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-type">convertField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382190"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382190"><span class="hs-identifier hs-type">origin</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span></span><span>
+</span><span id="line-93"></span><span id="local-6989586621689382299"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-type">convertField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382299"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382299"><span class="hs-identifier hs-type">origin</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span></span><span>
 </span><span id="line-94"></span><span id="convertField"><span class="annot"><span class="annottext">convertField :: Definition origin (FieldInfo origin)
 -&gt; FieldDefinition InputValueDefinition
-</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-var hs-var">convertField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382062"><span id="local-6989586621689382063"><span id="local-6989586621689382064"><span id="local-6989586621689382065"><span id="local-6989586621689382066"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-var hs-var">convertField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689382171"><span id="local-6989586621689382172"><span id="local-6989586621689382173"><span id="local-6989586621689382174"><span id="local-6989586621689382175"><span class="annot"><span class="annottext">[Directive Void]
 Maybe origin
 Maybe Description
 Name
@@ -409,11 +409,11 @@ dDirectives :: forall origin a. Definition origin a -&gt; [Directive Void]
 dOrigin :: forall origin a. Definition origin a -&gt; Maybe origin
 dDescription :: forall origin a. Definition origin a -&gt; Maybe Description
 dName :: forall origin a. Definition origin a -&gt; Name
-</span><a href="#local-6989586621689382062"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo origin
-</span><a href="#local-6989586621689382062"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-95"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span id="local-6989586621689382060"><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
-</span><a href="#local-6989586621689382060"><span class="hs-identifier hs-var">arguments</span></a></span></span><span> </span><span id="local-6989586621689382059"><span class="annot"><span class="annottext">Type origin k
-</span><a href="#local-6989586621689382059"><span class="hs-identifier hs-var">typeInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689382171"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo origin
+</span><a href="#local-6989586621689382171"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span id="local-6989586621689382169"><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
+</span><a href="#local-6989586621689382169"><span class="hs-identifier hs-var">arguments</span></a></span></span><span> </span><span id="local-6989586621689382168"><span class="annot"><span class="annottext">Type origin k
+</span><a href="#local-6989586621689382168"><span class="hs-identifier hs-var">typeInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">FieldDefinition :: forall inputType.
 Maybe Description
 -&gt; Name
@@ -424,10 +424,10 @@ Maybe Description
 </span><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span>
 </span><span id="line-97"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_fldDescription :: Maybe Description
 </span><span class="hs-identifier hs-var">G._fldDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689382065"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382174"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">_fldName :: Name
 </span><span class="hs-identifier hs-var">G._fldName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689382066"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382175"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">_fldArgumentsDefinition :: [InputValueDefinition]
 </span><span class="hs-identifier hs-var">G._fldArgumentsDefinition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition origin (InputFieldInfo origin) -&gt; InputValueDefinition)
 -&gt; [Definition origin (InputFieldInfo origin)]
@@ -437,20 +437,20 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall origin.
 Definition origin (InputFieldInfo origin) -&gt; InputValueDefinition
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-var">convertInputField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
-</span><a href="#local-6989586621689382060"><span class="hs-identifier hs-var">arguments</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382169"><span class="hs-identifier hs-var">arguments</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">_fldType :: GType
 </span><span class="hs-identifier hs-var">G._fldType</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; GType
 forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type origin k
-</span><a href="#local-6989586621689382059"><span class="hs-identifier hs-var">typeInfo</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689382168"><span class="hs-identifier hs-var">typeInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">_fldDirectives :: [Directive Void]
 </span><span class="hs-identifier hs-var">G._fldDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689382063"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
+</span><a href="#local-6989586621689382172"><span class="hs-identifier hs-var">dDirectives</span></a></span><span>
 </span><span id="line-102"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span id="local-6989586621689382051"><span id="local-6989586621689382052"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-type">getDefinitionName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382052"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382051"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span></span><span>
+</span><span id="line-106"></span><span id="local-6989586621689382160"><span id="local-6989586621689382161"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-type">getDefinitionName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382161"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689382160"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span></span><span>
 </span><span id="line-107"></span><span id="getDefinitionName"><span class="annot"><span class="annottext">getDefinitionName :: Definition origin a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var hs-var">getDefinitionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Definition origin a -&gt; Name
 forall origin a. Definition origin a -&gt; Name
