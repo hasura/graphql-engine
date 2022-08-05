@@ -493,8 +493,6 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
   -- Otherwise there is an ambiguous situation which we currently treat as an error.
   issuerMatches <- traverse issuerMatch $ intersectKeys (keyCtxOnAuthTypes jwtCtxs) (keyTokensOnAuthTypes headers)
 
-  -- ltraceM "issuerMatches" issuerMatches
-
   case (lefts issuerMatches, rights issuerMatches) of
     ([], []) -> withoutAuthZ
     (_ : _, []) -> jwtNotIssuerError
