@@ -5,10 +5,11 @@ module Test.HelloWorldSpec (spec) where
 
 import Data.Aeson (Value (Null))
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
+import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 

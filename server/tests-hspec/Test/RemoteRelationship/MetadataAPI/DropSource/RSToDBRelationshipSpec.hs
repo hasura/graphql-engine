@@ -34,9 +34,10 @@ import Data.Aeson.Lens (key, values, _String)
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe qualified as Unsafe (fromJust)
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
+import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..), remoteSchemaToDBRemoteRelationshipContext)
