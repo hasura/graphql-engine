@@ -27,9 +27,10 @@ module Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
+import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.Yaml (shouldReturnYaml)
 import Test.Hspec (SpecWith, describe, it)
 import Test.RemoteRelationship.MetadataAPI.Common qualified as Common
 

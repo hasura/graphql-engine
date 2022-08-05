@@ -17,6 +17,7 @@ import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server (..), TestEnvironment, getServer, stopServer)
 import Harness.Webhook qualified as Webhook
+import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import System.Timeout (timeout)
