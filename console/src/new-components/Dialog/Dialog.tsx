@@ -9,7 +9,7 @@ export type FooterProps = {
   callToDeny?: string;
   onSubmit?: () => void;
   onClose: () => void;
-  isLoading: boolean;
+  isLoading?: boolean;
 };
 
 const Footer: React.FC<FooterProps> = ({
@@ -52,7 +52,7 @@ export type DialogProps = {
   description?: string;
   hasBackdrop: boolean;
   onClose?: () => void;
-  footer?: FooterProps;
+  footer?: FooterProps | React.ReactElement;
 };
 
 export const Dialog = ({
@@ -62,32 +62,35 @@ export const Dialog = ({
   description,
   onClose,
   footer,
-}: DialogProps) => {
-  return (
-    <RadixDialog.Root open>
-      {hasBackdrop && <Backdrop />}
-      <RadixDialog.Content className="fixed transform -translate-x-2/4 left-2/4 mt-lg top-0 w-full h-auto max-w-2xl bg-gray-50 rounded overflow-hidden shadow-lg z-[101]">
-        {onClose && (
-          <RadixDialog.Close className="fixed right-3 top-3">
-            <FaTimes
-              className="ml-auto w-5 h-5 cursor-pointer text-gray-400 fill-current hover:text-gray-500"
-              onClick={onClose}
-            />
-          </RadixDialog.Close>
-        )}
+}: DialogProps) => (
+  <RadixDialog.Root open>
+    {hasBackdrop && <Backdrop />}
+    <RadixDialog.Content className="fixed transform -translate-x-2/4 left-2/4 mt-lg top-0 w-full h-auto max-w-2xl bg-gray-50 rounded overflow-hidden shadow-lg z-[101]">
+      {onClose && (
+        <RadixDialog.Close className="fixed right-3 top-3">
+          <FaTimes
+            className="ml-auto w-5 h-5 cursor-pointer text-gray-400 fill-current hover:text-gray-500"
+            onClick={onClose}
+          />
+        </RadixDialog.Close>
+      )}
+      {title && (
         <RadixDialog.Title className="flex items-top mb-1 pl-sm pt-sm pr-sm text-xl font-semibold">
           {title}
         </RadixDialog.Title>
+      )}
+      {description && (
         <RadixDialog.Description className="text-muted pl-sm pb-sm pr-sm ">
           {description}
         </RadixDialog.Description>
-        <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
-          {children}
-        </div>
-        {footer && <Footer {...footer} />}
-      </RadixDialog.Content>
-    </RadixDialog.Root>
-  );
-};
+      )}
+      <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
+        {children}
+      </div>
+      {React.isValidElement(footer) && footer}
+      {footer && !React.isValidElement(footer) && <Footer {...footer} />}
+    </RadixDialog.Content>
+  </RadixDialog.Root>
+);
 
 Dialog.Footer = Footer;

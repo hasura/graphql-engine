@@ -99,6 +99,8 @@ export const LS_KEYS = {
   vpcBannerLastDismissed: 'console:vpcBannerLastDismissed',
   webhookTransformEnvVars: 'console:webhookTransformEnvVars',
   featureFlag: 'console:featureFlag',
+  permissionConfirmationModalStatus:
+    'console:permissionConfirmationModalStatus',
 };
 
 export const clearGraphiqlLS = () => {

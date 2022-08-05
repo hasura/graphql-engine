@@ -1,3 +1,5 @@
+import produce from 'immer';
+
 import { defaultModifyState, defaultPermissionsState } from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
@@ -79,12 +81,18 @@ import {
   updateApplySamePerms,
   DELETE_PRESET,
   SET_PRESET_VALUE,
+  PERM_UPDATE_QUERY_ROOT_FIELDS,
+  PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
+  modifyRootPermissionState,
 } from '../TablePermissions/Actions';
-import { getDefaultFilterType } from '../TablePermissions/utils';
+import {
+  getDefaultFilterType,
+  getPrimaryKeysFromTable,
+  hasSelectPrimaryKey,
+} from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
-
   switch (action.type) {
     case RESET:
       return { ...defaultModifyState };
@@ -311,16 +319,19 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_TOGGLE_ALLOW_AGGREGATION:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...updatePermissionsState(
-            modifyState.permissionsState,
-            'allow_aggregations',
-            action.data
-          ),
-        },
-      };
+      return produce(modifyState, draft => {
+        const newPermissionsState = updatePermissionsState(
+          modifyState.permissionsState,
+          'allow_aggregations',
+          action.data
+        );
+
+        draft.permissionsState = modifyRootPermissionState(
+          newPermissionsState,
+          'select_aggregate',
+          action.data
+        );
+      });
 
     case PERM_TOGGLE_MODIFY_LIMIT:
       return {
@@ -407,20 +418,28 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return returnState;
 
     case PERM_TOGGLE_FIELD:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...updatePermissionsState(
-            modifyState.permissionsState,
-            action.fieldType,
-            toggleField(
-              modifyState.permissionsState[modifyState.permissionsState.query],
-              action.fieldName,
-              action.fieldType
-            )
-          ),
-        },
-      };
+      const tablePrimaryKeys = getPrimaryKeysFromTable(schemas, modifyState);
+      return produce(modifyState, draft => {
+        const newPermissionsState = updatePermissionsState(
+          modifyState.permissionsState,
+          action.fieldType,
+          toggleField(
+            modifyState.permissionsState[modifyState.permissionsState.query],
+            action.fieldName,
+            action.fieldType
+          )
+        );
+
+        const hasSelectedPrimaryKey = hasSelectPrimaryKey(
+          tablePrimaryKeys,
+          newPermissionsState?.select?.columns
+        );
+        draft.permissionsState = modifyRootPermissionState(
+          newPermissionsState,
+          'select_by_pk',
+          hasSelectedPrimaryKey
+        );
+      });
 
     case PERM_REMOVE_ACCESS:
       return {
@@ -665,6 +684,15 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         checkConstraintsModify: action.constraints,
       };
+    case PERM_UPDATE_QUERY_ROOT_FIELDS:
+      return produce(modifyState, draft => {
+        draft.permissionsState.select.query_root_fields = action.value;
+      });
+    case PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS:
+      return produce(modifyState, draft => {
+        draft.permissionsState.select.subscription_root_fields = action.value;
+      });
+
     default:
       return modifyState;
   }

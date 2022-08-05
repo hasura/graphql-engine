@@ -45,3 +45,27 @@ Complete.args = {
   hasBackdrop: true,
   isLoading: false,
 };
+
+export const CustomFooter: Story<DialogProps & FooterProps> = args => (
+  <Dialog
+    hasBackdrop={args.hasBackdrop}
+    title={args.title}
+    description={args.description}
+    onClose={args.onClose}
+    footer={args.footer}
+  >
+    <>
+      <div>I am the body!</div>
+    </>
+  </Dialog>
+);
+
+CustomFooter.args = {
+  title: 'Title',
+  description: 'Description',
+  callToDeny: 'Cancel',
+  callToAction: 'Submit',
+  hasBackdrop: true,
+  isLoading: false,
+  footer: <div>custom footer</div>,
+};
