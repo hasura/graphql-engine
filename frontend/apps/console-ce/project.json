@@ -1,0 +1,83 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/console-ce/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/apps/console-ce",
+        "index": "apps/console-ce/src/index.html",
+        "baseHref": "/",
+        "main": "apps/console-ce/src/main.tsx",
+        "polyfills": "apps/console-ce/src/polyfills.ts",
+        "tsConfig": "apps/console-ce/tsconfig.app.json",
+        "assets": [
+          "apps/console-ce/src/favicon.ico",
+          "apps/console-ce/src/assets"
+        ],
+        "styles": ["apps/console-ce/src/styles.css"],
+        "scripts": [],
+        "webpackConfig": "@nrwl/react/plugins/webpack"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "apps/console-ce/src/environments/environment.ts",
+              "with": "apps/console-ce/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/web:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "console-ce:build",
+        "hmr": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "console-ce:build:development"
+        },
+        "production": {
+          "buildTarget": "console-ce:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/console-ce/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/console-ce"],
+      "options": {
+        "jestConfig": "apps/console-ce/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}
