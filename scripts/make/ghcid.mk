@@ -64,3 +64,8 @@ ghcid-test-mysql: start-postgres start-mysql remove-tix-file
 ghcid-test-citus: start-postgres start-citus remove-tix-file
 	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Citus)
 
+.PHONY: ghcid-library-pro
+## ghcid-library-pro: build and watch pro library in ghcid
+ghcid-library-pro:
+	$(call run_ghcid,graphql-engine-pro:lib:graphql-engine-pro)
+
