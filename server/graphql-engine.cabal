@@ -1252,7 +1252,6 @@ test-suite tests-hspec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.ObjectRelationshipsLimitSpec
-    Test.Postgres.EnumSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
     Test.Queries.Directives.IncludeAndSkipSpec
@@ -1286,6 +1285,7 @@ test-suite tests-hspec
     Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DefaultValuesSpec
+    Test.Schema.EnumSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.ServiceLivenessSpec
