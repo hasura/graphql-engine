@@ -1266,7 +1266,6 @@ test-suite tests-hspec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
-    Test.Queries.SortSpec
     Test.Quoter.YamlSpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
@@ -1279,10 +1278,6 @@ test-suite tests-hspec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
     Test.SQLServer.InsertVarcharColumnSpec
-    Test.SQLServer.InsertVarcharColumnSpec
-    Test.SQLServer.InsertVarcharColumnSpec
-    Test.Schema.DataValidation.PermissionSpec
-    Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DefaultValuesSpec
     Test.Schema.EnumSpec
