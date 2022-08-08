@@ -1,6 +1,9 @@
 import { Database, Feature } from '..';
 import { runSQL } from '../api';
 import { adaptIntrospectedTables } from '../common/utils';
+import { getTableColumns } from './introspection';
+
+export type MssqlTable = { schema: string; name: string };
 
 export const mssql: Database = {
   introspection: {
@@ -29,5 +32,6 @@ export const mssql: Database = {
     getDatabaseHierarchy: async () => {
       return ['schema', 'name'];
     },
+    getTableColumns,
   },
 };

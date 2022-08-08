@@ -11,8 +11,10 @@ import type {
   Ref,
   OneOf,
   IntrospectedTable,
+  MetadataTable,
   Table,
   SupportedDrivers,
+  TableColumn,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
@@ -39,6 +41,10 @@ export type Database = {
       configuration: any
     ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
     getDatabaseHierarchy: () => Promise<string[] | Feature.NotImplemented>;
+    getTableColumns: (
+      dataSourceName: string,
+      table: Table
+    ) => Promise<TableColumn[] | Feature.NotImplemented>;
   };
   query?: {
     getTableData: () => void;
@@ -52,6 +58,22 @@ const drivers: Record<SupportedDrivers, Database> = {
   citus,
   mssql,
   gdc,
+};
+
+const getDatabaseMethods = async (dataSourceName: string) => {
+  const metadata = await exportMetadata();
+
+  const dataSource = metadata.sources.find(
+    source => source.name === dataSourceName
+  );
+
+  if (!dataSource) {
+    throw Error(
+      'DataSource.introspectTables data source not found in metadata'
+    );
+  }
+
+  return drivers[dataSource.kind];
 };
 
 export const DataSource = (hasuraFetch: AxiosInstance) => ({
@@ -158,6 +180,24 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
 
     return result;
   },
+  getTableColumns: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods(dataSourceName);
+    if (!database) return [];
+
+    const introspection = database.introspection;
+    if (!introspection) return [];
+
+    const result = await introspection.getTableColumns(dataSourceName, table);
+    if (result === Feature.NotImplemented) return [];
+
+    return result;
+  },
 });
 
 export { exportMetadata, utils };
@@ -168,4 +208,5 @@ export type {
   SupportedDrivers,
   IntrospectedTable,
   Table,
+  MetadataTable,
 };

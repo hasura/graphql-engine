@@ -1,5 +1,7 @@
 import { Database, Feature } from '..';
-import { getTrackableTables } from './introspection';
+import { getTrackableTables, getTableColumns } from './introspection';
+
+export type BigQueryTable = { name: string; dataset: string };
 
 export const bigquery: Database = {
   introspection: {
@@ -10,5 +12,6 @@ export const bigquery: Database = {
     getDatabaseHierarchy: async () => {
       return ['dataset', 'name'];
     },
+    getTableColumns,
   },
 };
