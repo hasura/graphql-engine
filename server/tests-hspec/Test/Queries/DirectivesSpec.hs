@@ -17,11 +17,11 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (Options (..))
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -91,12 +91,14 @@ tests opts = do
 
   describe "Directives" do
     it "Rejects unknown directives" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               errors:
               - extensions:
-                  path: $.selectionSet.hasura_author.selectionSet
+                  path: $.selectionSet.#{schemaName}_author.selectionSet
                   code: validation-failed
                 message: |-
                   directive 'exclude' is not defined in the schema
@@ -108,7 +110,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author {
+                  #{schemaName}_author {
                     id @exclude(if: true)
                     name
                   }
@@ -118,12 +120,14 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Rejects duplicate directives" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               errors:
               - extensions:
-                  path: $.selectionSet.hasura_author.selectionSet
+                  path: $.selectionSet.#{schemaName}_author.selectionSet
                   code: validation-failed
                 message: |-
                   the following directives are used more than once: ['include']
@@ -135,7 +139,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author {
+                  #{schemaName}_author {
                     id @include(if: true) @include(if: true)
                     name
                   }
@@ -145,6 +149,8 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Rejects directives on wrong element" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
             [yaml|
@@ -162,7 +168,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query @include(if: true) {
-                  hasura_author {
+                  #{schemaName}_author {
                     id
                     name
                   }

@@ -1159,6 +1159,7 @@ test-suite tests-hspec
     , unliftio-core
     , unordered-containers
     , utf8-string
+    , uuid
     , vector
     , warp
     , websockets
@@ -1212,6 +1213,7 @@ test-suite tests-hspec
     Harness.Test.Introspection
     Harness.Test.Schema
     Harness.Test.Permissions
+    Harness.Test.SchemaName
 
  -- Harness.Quoter
     Harness.Quoter.Graphql

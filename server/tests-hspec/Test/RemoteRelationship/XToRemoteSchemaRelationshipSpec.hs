@@ -30,6 +30,7 @@ import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -137,7 +138,7 @@ lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.Postgres
+      schemaName = getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -148,7 +149,7 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable track
+  Postgres.createTable testEnvironment track
   Postgres.insertTable track
   Schema.trackTable Context.Postgres sourceName track testEnvironment
   GraphqlEngine.postMetadata_
@@ -189,7 +190,8 @@ lhsSQLServerSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.SQLServer
+      schemaName = getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment

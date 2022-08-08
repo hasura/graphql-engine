@@ -16,12 +16,13 @@ import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.Context (Options (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -151,11 +152,13 @@ tests backend opts = describe "Object relationships" do
       shouldBe = shouldReturnYaml opts
 
   it "Select articles and their authors" \testEnvironment -> do
+    let schemaName = getSchemaName testEnvironment
+
     let expected :: Value
         expected =
-          [yaml|
+          [interpolateYaml|
             data:
-              hasura_article:
+              #{schemaName}_article:
               - id: 1
                 author_by_author_id_to_id:
                   id: 1
@@ -177,7 +180,7 @@ tests backend opts = describe "Object relationships" do
             testEnvironment
             [graphql|
               query {
-                hasura_article(order_by: [{ id: asc }]) {
+                #{schemaName}_article(order_by: [{ id: asc }]) {
                   id
 
                   author_by_author_id_to_id {
@@ -192,11 +195,13 @@ tests backend opts = describe "Object relationships" do
   unless (backend `elem` [MySQL, BigQuery]) do
     describe "Null relationships" do
       it "Select articles their (possibly null) co-authors" \testEnvironment -> do
+        let schemaName = getSchemaName testEnvironment
+
         let expected :: Value
             expected =
-              [yaml|
+              [interpolateYaml|
                 data:
-                  hasura_article:
+                  #{schemaName}_article:
                   - id: 1
                     author_by_co_author_id_to_id: null
                   - id: 2
@@ -212,7 +217,7 @@ tests backend opts = describe "Object relationships" do
                 testEnvironment
                 [graphql|
                   query {
-                    hasura_article(order_by: [{ id: asc }]) {
+                    #{schemaName}_article(order_by: [{ id: asc }]) {
                       id
 
                       author_by_co_author_id_to_id {

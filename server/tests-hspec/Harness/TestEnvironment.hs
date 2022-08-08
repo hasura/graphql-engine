@@ -12,15 +12,26 @@ module Harness.TestEnvironment
 where
 
 import Control.Concurrent (ThreadId, killThread)
+import Data.UUID (UUID)
 import Data.Word
+import Harness.Test.BackendType
 import Hasura.Prelude
 import System.Log.FastLogger qualified as FL
 
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
-  { server :: Server,
+  { -- | connection details for the instance of HGE we're connecting to
+    server :: Server,
+    -- | shared function to log information from tests
     logger :: FL.LogStr -> IO (),
-    loggerCleanup :: IO ()
+    -- | action to clean up logger
+    loggerCleanup :: IO (),
+    -- | a uuid generated for each test suite used to generate a unique
+    -- `SchemaName`
+    uniqueTestId :: UUID,
+    -- | the main backend type of the test, if applicable (ie, where we are not
+    -- testing `remote <-> remote` joins or someting similarly esoteric)
+    backendType :: Maybe BackendType
   }
 
 instance Show TestEnvironment where

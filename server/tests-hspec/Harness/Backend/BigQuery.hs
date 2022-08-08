@@ -12,7 +12,7 @@ module Harness.Backend.BigQuery
     getServiceAccount,
     getProjectId,
     createTable,
-    defaultSourceMetadata,
+    createDataset,
     trackTable,
     dropTable,
     untrackTable,
@@ -24,7 +24,6 @@ module Harness.Backend.BigQuery
 where
 
 import Control.Concurrent.Extended
-import Data.Aeson (Value (..))
 import Data.List qualified as List
 import Data.String
 import Data.Text qualified as T
@@ -36,8 +35,8 @@ import Harness.Env
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
-import Harness.Test.Fixture (SetupAction (..))
+import Harness.Test.BackendType (BackendType (BigQuery))
+import Harness.Test.Fixture (SetupAction (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),
@@ -46,7 +45,8 @@ import Harness.Test.Schema
     Table (..),
   )
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SchemaName
+import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
@@ -102,18 +102,41 @@ bigQueryError e query =
         ]
     )
 
--- | Serialize Table into a SQL statement, as needed, and execute it on the BigQuery backend
-createTable :: Schema.Table -> IO ()
-createTable table@Schema.Table {tableName, tableColumns} = do
+-- | create a new BigQuery dataset
+createDataset :: SchemaName -> IO ()
+createDataset schemaName = do
   serviceAccount <- getServiceAccount
   projectId <- getProjectId
+  conn <- initConnection serviceAccount projectId Nothing
+  res <- runExceptT $ Execute.insertDataset conn (unSchemaName schemaName)
+  case res of
+    Right _ -> pure ()
+    Left e -> bigQueryError e mempty
+
+-- | remove a new BigQuery dataset, used at the end of tests to clean up
+removeDataset :: SchemaName -> IO ()
+removeDataset schemaName = do
+  serviceAccount <- getServiceAccount
+  projectId <- getProjectId
+  conn <- initConnection serviceAccount projectId Nothing
+  res <- runExceptT $ Execute.deleteDataset conn (unSchemaName schemaName)
+  case res of
+    Right _ -> pure ()
+    Left e -> bigQueryError e mempty
+
+-- | Serialize Table into a SQL statement, as needed, and execute it on the BigQuery backend
+createTable :: SchemaName -> Schema.Table -> IO ()
+createTable schemaName table@Schema.Table {tableName, tableColumns} = do
+  serviceAccount <- getServiceAccount
+  projectId <- getProjectId
+
   run_
     serviceAccount
     projectId
     $ T.unpack $
       T.unwords
         ( [ "CREATE TABLE",
-            T.pack Constants.bigqueryDataset <> "." <> tableName,
+            unSchemaName schemaName <> "." <> tableName,
             "(",
             commaSeparated (mkColumn <$> tableColumns),
             -- Primary keys are not supported by BigQuery
@@ -169,84 +192,60 @@ serialize = \case
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvBigQuery
 
 -- | Serialize Table into an SQL DROP statement and execute it
-dropTable :: Schema.Table -> IO ()
-dropTable Schema.Table {tableName} = do
+dropTable :: SchemaName -> Schema.Table -> IO ()
+dropTable schemaName Schema.Table {tableName} = do
   serviceAccount <- getServiceAccount
   projectId <- getProjectId
+
   run_
     serviceAccount
     projectId
     $ T.unpack $
       T.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          T.pack Constants.bigqueryDataset <> "." <> tableName,
+          unSchemaName schemaName <> "." <> tableName,
           ";"
         ]
 
 -- | Post an http request to start tracking
 -- Overriding here because bigquery's API is uncommon
-trackTable :: TestEnvironment -> Schema.Table -> IO ()
-trackTable testEnvironment Schema.Table {tableName} = do
-  let datasetName = T.pack Constants.bigqueryDataset
-      source = defaultSource BigQuery
+trackTable :: TestEnvironment -> SchemaName -> Schema.Table -> IO ()
+trackTable testEnvironment schemaName Schema.Table {tableName} = do
+  let source = defaultSource BigQuery
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: bigquery_track_table
-args:
-  source: *source
-  table:
-    dataset: *datasetName
-    name: *tableName
-|]
+      type: bigquery_track_table
+      args:
+        source: *source
+        table:
+          dataset: *schemaName
+          name: *tableName
+    |]
 
 -- | Post an http request to stop tracking the table
 -- Overriding `Schema.trackTable` here because bigquery's API expects a `dataset` key
-untrackTable :: TestEnvironment -> Schema.Table -> IO ()
-untrackTable testEnvironment Schema.Table {tableName} = do
-  let datasetName = T.pack Constants.bigqueryDataset
-      source = defaultSource BigQuery
+untrackTable :: TestEnvironment -> SchemaName -> Schema.Table -> IO ()
+untrackTable testEnvironment schemaName Schema.Table {tableName} = do
+  let source = defaultSource BigQuery
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: bigquery_untrack_table
-args:
-  source: *source
-  table:
-    dataset: *datasetName
-    name: *tableName
-|]
-
--- | Metadata source information for the default BigQuery instance
-defaultSourceMetadata :: IO Value
-defaultSourceMetadata = do
-  let dataset = Constants.bigqueryDataset
-      source = defaultSource BigQuery
-      backendType = defaultBackendTypeString BigQuery
-  serviceAccount <- getServiceAccount
-  projectId <- getProjectId
-  pure $
-    [yaml|
-type: replace_metadata
-args:
-  version: 3
-  sources:
-  - name: *source
-    kind: *backendType
-    tables: []
-    configuration:
-      service_account: *serviceAccount
-      project_id: *projectId
-      datasets: [*dataset]
-|]
+      type: bigquery_untrack_table
+      args:
+        source: *source
+        table:
+          dataset: *schemaName
+          name: *tableName
+    |]
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
 setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables' (testEnvironment, _) = do
-  let dataset = Constants.bigqueryDataset
-      source = defaultSource BigQuery
+  let source = defaultSource BigQuery
       backendType = defaultBackendTypeString BigQuery
+      schemaName = getSchemaName testEnvironment
       tables =
         map
           ( \t ->
@@ -256,28 +255,30 @@ setup tables' (testEnvironment, _) = do
                 }
           )
           tables'
-  -- Clear and reconfigure the metadata
   serviceAccount <- getServiceAccount
   projectId <- getProjectId
+  -- create the dataset
+  createDataset schemaName
+  -- Clear and reconfigure the metadata
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: replace_metadata
-args:
-  version: 3
-  sources:
-  - name: *source
-    kind: *backendType
-    tables: []
-    configuration:
-      service_account: *serviceAccount
-      project_id: *projectId
-      datasets: [*dataset]
-|]
+      type: replace_metadata
+      args:
+        version: 3
+        sources:
+        - name: *source
+          kind: *backendType
+          tables: []
+          configuration:
+            service_account: *serviceAccount
+            project_id: *projectId
+            datasets: [*schemaName]
+    |]
   -- Setup and track tables
   for_ tables $ \table -> do
-    retryIfJobRateLimitExceeded $ createTable table
-    trackTable testEnvironment table
+    retryIfJobRateLimitExceeded $ createTable schemaName table
+    trackTable testEnvironment schemaName table
   -- Setup relationships
   for_ tables $ \table -> do
     Schema.trackObjectRelationships BigQuery table testEnvironment
@@ -287,16 +288,21 @@ args:
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 teardown (reverse -> tables) (testEnvironment, _) = do
+  let schemaName = getSchemaName testEnvironment
   finally
     -- Teardown relationships first
     ( forFinally_ tables $ \table ->
         Schema.untrackRelationships BigQuery table testEnvironment
     )
     -- Then teardown tables
-    ( forFinally_ tables $ \table -> do
-        finally
-          (untrackTable testEnvironment table)
-          (dropTable table)
+    ( finally
+        ( forFinally_ tables $ \table -> do
+            finally
+              (untrackTable testEnvironment schemaName table)
+              (dropTable schemaName table)
+        )
+        -- remove test dataset
+        (removeDataset schemaName)
     )
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction

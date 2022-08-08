@@ -10,10 +10,11 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -120,11 +121,13 @@ tests opts = do
 
   describe "Understanding BigQuery values via GraphQL" do
     it "Selects all types" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_all_types:
+                #{schemaName}_all_types:
                 - string: 'ANOTHER STRING'
                   bytes: BQQDAgEA
                   integer: '3'
@@ -163,7 +166,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_all_types(order_by: [{ string: asc }]) {
+                  #{schemaName}_all_types(order_by: [{ string: asc }]) {
                     string
                     bytes
                     integer
@@ -184,11 +187,13 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Aggregates all comparable types" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_all_types_aggregate:
+                #{schemaName}_all_types_aggregate:
                   aggregate:
                     max:
                       bignumeric: '23456789098765432'
@@ -222,7 +227,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_all_types_aggregate {
+                  #{schemaName}_all_types_aggregate {
                     aggregate {
                       max {
                         string
