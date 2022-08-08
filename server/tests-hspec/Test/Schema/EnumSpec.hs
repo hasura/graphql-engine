@@ -1,6 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Postgres.EnumSpec (spec) where
+-- |
+-- Tests for interacting with enum fields.
+--
+-- https://hasura.io/docs/latest/schema/postgres/enums/
+module Test.Schema.EnumSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
