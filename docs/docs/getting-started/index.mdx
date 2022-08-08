@@ -11,7 +11,7 @@ keywords:
 slug: index
 ---
 
-import HeadingIcon from '@site/src/components/HeadingIcon';
+import HeadingIcon from "@site/src/components/HeadingIcon";
 
 # Getting Started
 
@@ -19,7 +19,7 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 To use the Hasura GraphQL Engine, you'll need to:
 
-- Deploy the Hasura GraphQL engine, with access to a Postgres database to store its metadata.
+- Deploy the Hasura GraphQL engine with access to a Postgres database to store its metadata.
 - Connect new/existing database(s) and set up and test your GraphQL API using the Hasura console UI (also possible via
   CLI or API).
 - Consume the generated GraphQL API from your client apps.
@@ -35,21 +35,25 @@ friction between trying out Hasura and moving into production,
 
 ### Docker Compose
 
-Alternatively, if you'd like to get a local version up and running that you can eventually deploy to a host of your
-choice, [check out our quickstart using Docker Compose](/getting-started/docker-simple.mdx). At its heart, Hasura is
-open-source and within minutes you'll have a fully functional Hasura GraphQL Engine instance running locally with which
-you can experiment. If you're looking to learn more about Hasura GraphQL Engine's core features and see if it's right
+If you'd like to get a local version up and running fast, [check out our quickstart using Docker Compose](/getting-started/docker-simple.mdx). At its heart, Hasura is open-source, and within minutes you'll have a fully functional Hasura GraphQL Engine instance running locally to experiment. If you want to learn more about Hasura GraphQL Engine's core features and see if it's right
 for you, consider this option.
+
+### Local Development with Docker Compose
+
+[Hasura Migrations and Metadata](/migrations-metadata-seeds/index.mdx) allow you to keep track of, update, roll back, or move
+your database and Hasura Server configurations using the [Hasura CLI](/hasura-cli/index.mdx). Combined with Docker Compose, the [local development quickstart](/getting-started/docker-local.mdx) lets you track changes in version control and deploy anywhere.
 
 ### Supported databases
 
-Regardless of which option above you choose, Hasura GraphQL Engine supports:
+Regardless of which option you choose, Hasura GraphQL Engine supports:
 
 - [Postgres](/databases/postgres/index.mdx)
 - [MS SQL Server](/databases/ms-sql-server/index.mdx)
 - [Citus / Hyperscale](/databases/postgres/citus-hyperscale-postgres/index.mdx)
 - [BigQuery](/databases/bigquery/index.mdx)
 - **MySQL** (in preview) - See the [preview guide](/guides/mysql-preview.mdx)
+
+To support other data sources, check out [Hasura GraphQL Data Connectors](https://hasura.io/blog/hasura-graphql-data-connectors/).
 
 <!-- Remove the admonition below? -->
 

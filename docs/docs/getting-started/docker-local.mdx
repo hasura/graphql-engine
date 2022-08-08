@@ -1,0 +1,192 @@
+---
+sidebar_label: Quickstart with Local Development
+sidebar_position: 4
+description: Quickstart with local development
+keywords:
+  - hasura
+  - docs
+  - start
+  - migration
+  - setup
+  - metadata
+  - docker
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Quickstart with Local Development
+
+## Introduction
+
+This guide will help you set up local development with [Migrations, Metadata](/migrations-metadata-seeds/index.mdx), and Docker Compose. Then we can easily keep track of, update, roll back, or move
+your database and Hasura Server configurations using the [Hasura CLI](/hasura-cli/index.mdx).
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Hasura CLI](/hasura-cli/index.mdx)
+
+## Step 1: Get the docker-compose file
+
+The [hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
+repo contains all installation manifests required to deploy Hasura anywhere. Get the Docker Compose file from there:
+
+```bash
+# in a new directory run
+wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose-local/docker-compose.yaml
+# or run
+curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose-local/docker-compose.yaml -o docker-compose.yml
+```
+
+We are using [the `cli-migrations` image](/migrations-metadata-seeds/auto-apply-migrations.mdx), which automatically applies migrations and metadata.
+
+## Step 2: Create Migrations and Metadata Folder
+
+Use the Hasura CLI to [initialize the Migrations and Metadata folder](/hasura-cli/commands/hasura_init.mdx). For this example, we will name the folder `hasura`. If you use a different name, make sure to update the `docker-compose.yaml` volumes.
+
+```bash
+hasura init hasura
+```
+
+## Step 2: Run Hasura GraphQL Engine
+
+The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
+
+```bash
+$ docker-compose up -d
+```
+
+Check if the containers are running:
+
+```bash
+$ docker ps
+
+CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
+097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
+b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
+```
+
+## Step 3: Connect a database
+
+Run the [Hasura console](/hasura-cli/commands/hasura_console.mdx)
+
+```bash
+hasura console --project hasura
+```
+
+Head to `http://localhost:8080/console` to open the Hasura console.
+
+Navigate to `Data -> Manage -> Connect Database`:
+
+<Thumbnail
+  src="/img/getting-started/connect-db-console.png"
+  alt="Connect database"
+  width="1000px"
+/>
+
+Name the database default and connect via the `PG_DATABASE_URL` environment variable.
+
+<Thumbnail
+  src="/img/getting-started/connect-db-local.png"
+  alt="Connect via PG_DATABASE_URL enviroment variable"
+  width="700px"
+/>
+
+## Step 4: Try out Hasura
+
+### Create a table
+
+On the Hasura console, navigate to `Data -> Create table` and create a sample table called `profiles` with the following
+columns:
+
+```sql
+profiles (
+  id SERIAL PRIMARY KEY, -- serial -> auto-incrementing integer
+  name TEXT
+)
+```
+
+<Thumbnail
+  src="/img/getting-started/create-profile-table.png"
+  alt="Create a table"
+  width="1200px"
+/>
+
+In your `hasura` folder, you can see the new metadata and generated SQL migration.
+
+Now, insert some sample data into the table using the `Insert Row` tab of the `profiles` table.
+
+### Try out a query
+
+Head to the `API` tab in the console and try running the following query:
+
+```graphql
+query {
+  profiles {
+    id
+    name
+  }
+}
+```
+
+You'll see that you get all the inserted data!
+
+<Thumbnail
+  src="/img/getting-started/profile-query.png"
+  alt="Try out a query"
+  width="1200px"
+/>
+
+### Deploy
+
+Now you can apply the migrations and metadata to any Hasura instance. For example, to sync with [cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default) you can use the [Github integration](/deployment/github-integration.mdx) or the Hasura CLI:
+
+```bash
+hasura migrate apply --project hasura --database-name default --endpoint <Hasura Cloud endpoint> --admin-secret <secret>
+hasura metadata apply --project hasura --database-name default --endpoint <Hasura Cloud endpoint> --admin-secret <secret>
+```
+
+## Next steps
+
+### Learn course
+
+For a full hands-on tour of Hasura, check out our
+[30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/).
+
+### Stay up to date
+
+We release new features every month. Sign up for our newsletter by using the link below. We send newsletters only once a
+month. <https://hasura.io/newsletter/>.
+
+### Database operations
+
+- [Database modeling](/schema/postgres/index.mdx): Learn how to model your database schema, as well as how to extend
+  it.
+- [Querying data](/queries/postgres/index.mdx): Use GraphQL queries to query data from your GraphQL API.
+- [Inserting data](/mutations/postgres/index.mdx): Use GraphQL mutations to insert data into your GraphQL API.
+
+### Business logic
+
+Depending on your use case, there are several options for implementing business logic.
+
+- [Actions](/actions/index.mdx): Actions can be used if you'd like to extend your GraphQL schema by integrating with a
+  REST endpoint.
+- [Remote schemas](/remote-schemas/index.mdx): If you have an existing GraphQL server or if you're comfortable with
+  implementing one, you can use remote schemas.
+- [Event triggers](/event-triggers/index.mdx): To trigger a serverless function based on a database event, use event
+  triggers.
+- [Scheduled triggers](/scheduled-triggers/index.mdx): Scheduled triggers are used to execute custom business logic at
+  specific points in time.
+
+### Secure your endpoint
+
+[Add an admin secret](/deployment/deployment-guides/docker.mdx#docker-secure) to make sure that your GraphQL endpoint
+and the Hasura console are not publicly accessible.
+
+:::info Additional Resources
+
+Get Started with Hasura today -
+[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
+
+:::
