@@ -18,6 +18,16 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Cloud: Heroku database integration <HeadingIcon icon={`cloud`} size={36} />
 
+:::warning Warning
+
+Recently, Heroku introduced a [change to Postgres extensions](https://devcenter.heroku.com/changelog-items/2446) that
+affects our integration and the use of event triggers. If you're having trouble creating event triggers with a database
+hosted on Heroku, you can utilize
+[this workaround](https://devcenter.heroku.com/articles/heroku-postgres-extensions-postgis-full-text-search#installing-extensions)
+to correct the issue.
+
+:::
+
 ## Introduction
 
 Hasura Cloud makes it easy for you to use Heroku Postgres as a datasource in your Hasura Cloud projects. It makes sure
