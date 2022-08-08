@@ -7,6 +7,10 @@ module Hasura.GraphQL.Schema.Common
     NodeInterfaceParserBuilder (..),
     MonadBuildSchemaBase,
     retrieve,
+    MonadBuildSourceSchema,
+    MonadBuildRemoteSchema,
+    runSourceSchema,
+    runRemoteSchema,
     ignoreRemoteRelationship,
     isHasuraSchema,
     AggSelectExp,
@@ -152,6 +156,42 @@ retrieve ::
   (a -> b) ->
   m b
 retrieve f = asks $ f . getter
+
+-------------------------------------------------------------------------------
+
+type MonadBuildSourceSchema r m n = MonadBuildSchemaBase r m n
+
+runSourceSchema ::
+  SchemaContext ->
+  SchemaOptions ->
+  ReaderT
+    ( SchemaContext,
+      SchemaOptions,
+      MkTypename,
+      CustomizeRemoteFieldName,
+      NamingCase
+    )
+    m
+    a ->
+  m a
+runSourceSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
+
+type MonadBuildRemoteSchema r m n = MonadBuildSchemaBase r m n
+
+runRemoteSchema ::
+  SchemaContext ->
+  SchemaOptions ->
+  ReaderT
+    ( SchemaContext,
+      SchemaOptions,
+      MkTypename,
+      CustomizeRemoteFieldName,
+      NamingCase
+    )
+    m
+    a ->
+  m a
+runRemoteSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
 
 -------------------------------------------------------------------------------
 
