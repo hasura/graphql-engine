@@ -23,7 +23,7 @@ const Collapsed: React.FC<Props> = ({ relationship }) => {
       <div>
         <i>
           {`- ${relationship.table_name} → ${
-            relationship.definition.remote_schema
+            parseRelationship.remoteSchema
           }  ${relationMap()}`}
         </i>
       </div>

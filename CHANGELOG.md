@@ -11,6 +11,7 @@
 - console: add custom names for streaming subscriptions
 - console: add support for table query and subscription root fields visibility permissions
 - console: fix the BigQuery row-level restrictions on boolean columns
+- console: add support for new DB-to-RS metadata format in old table relationships UI
 
 ## v2.10.0-beta.1
 
