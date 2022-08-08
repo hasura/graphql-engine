@@ -14,5 +14,8 @@ export const gdc: Database = {
        */
       return Feature.NotImplemented;
     },
+    getTableColumns: async () => {
+      return Feature.NotImplemented;
+    },
   },
 };

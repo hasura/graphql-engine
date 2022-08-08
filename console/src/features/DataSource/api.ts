@@ -41,7 +41,10 @@ export const runSQL = async ({
   if (source.kind === 'gdc') throw Error('GDC does not support run sql');
 
   const type = getRunSqlType(source.kind);
-  const result = await httpClient.post<RunSQLResponse>('v1/query', {
+  /**
+   * Use v2 query instead of v1 because it supports other <db>_run_sql commands
+   */
+  const result = await httpClient.post<RunSQLResponse>('v2/query', {
     type,
     args: {
       sql,

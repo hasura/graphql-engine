@@ -1,5 +1,11 @@
 import { Database } from '..';
-import { getDatabaseConfiguration, getTrackableTables } from './introspection';
+import {
+  getDatabaseConfiguration,
+  getTrackableTables,
+  getTableColumns,
+} from './introspection';
+
+export type PostgresTable = { name: string; schema: string };
 
 export const postgres: Database = {
   introspection: {
@@ -8,5 +14,6 @@ export const postgres: Database = {
     getDatabaseHierarchy: async () => {
       return ['schema', 'name'];
     },
+    getTableColumns,
   },
 };

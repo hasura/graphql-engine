@@ -1,5 +1,5 @@
 import { DataSource, Feature, exportMetadata } from '@/features/DataSource';
-import type { IntrospectedTable, Table } from '@/features/DataSource';
+import type { IntrospectedTable, MetadataTable } from '@/features/DataSource';
 import type { MetadataDataSource } from '@/metadata/types';
 import axios from 'axios';
 import uniqueId from 'lodash.uniqueid';
@@ -70,7 +70,7 @@ export type TrackableTable = {
 );
 
 const getTrackableTables = (
-  trackedTables: Table[],
+  trackedTables: MetadataTable[],
   introspectedTables: IntrospectedTable[]
 ) =>
   introspectedTables.map(introspectedTable => {

@@ -68,7 +68,7 @@ describe('useTables', () => {
         rest.post('/v1/metadata', (req, res, ctx) => {
           return res(ctx.status(200), ctx.json(metadataStub));
         }),
-        rest.post('/v1/query', (req, res, ctx) => {
+        rest.post('/v2/query', (req, res, ctx) => {
           return res(ctx.status(200), ctx.json(runSqlStub));
         })
       );

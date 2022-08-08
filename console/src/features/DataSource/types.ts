@@ -31,7 +31,7 @@ export type SupportedDrivers =
   | 'gdc';
 
 // This is the new Metadata type that we need to keep updating
-export type Table = {
+export type MetadataTable = {
   table: Record<string, string>;
   configuration?: {
     custom_root_fields?: {
@@ -53,7 +53,7 @@ export type Table = {
 export type Source = {
   name: string;
   kind: SupportedDrivers;
-  tables: Table[];
+  tables: MetadataTable[];
 };
 
 export type Metadata = {
@@ -76,3 +76,16 @@ export type IntrospectedTable = {
   table: SqlTable | BigQueryTable;
   type: string;
 };
+
+export type TableColumn = {
+  name: string;
+  dataType: string;
+};
+
+/**
+ * This represents the type of a table for a datasource as stored in the metadata.
+ * With GDC, the type of the table cannot be determined during build time and we can assume the
+ * table object to be any valid json representation. The same metadata table metadata object is
+ * expected in APIs the server provides when it asks for a table property.
+ */
+export type Table = unknown;

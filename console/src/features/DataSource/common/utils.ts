@@ -1,6 +1,5 @@
 import get from 'lodash.get';
-
-import { IntrospectedTable, Property, Ref } from '../types';
+import { IntrospectedTable, Property, Ref, TableColumn } from '../types';
 import { RunSQLResponse } from '../api';
 
 export const isProperty = (
@@ -52,4 +51,15 @@ export const adaptIntrospectedTables = (
     }));
 
   return adaptedResponse ?? [];
+};
+
+export const adaptTableColumns = (
+  result: RunSQLResponse['result']
+): TableColumn[] => {
+  if (!result) return [];
+
+  return result.slice(1).map(row => ({
+    name: row[0],
+    dataType: row[1],
+  }));
 };
