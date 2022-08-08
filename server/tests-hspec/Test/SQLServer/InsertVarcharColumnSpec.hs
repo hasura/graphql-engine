@@ -1,173 +1,134 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Test inserting non-ASCII characters in @'varchar' column type
+-- |
+-- Tests around inserting non-ASCII characters in @VARCHAR@ column type.
 module Test.SQLServer.InsertVarcharColumnSpec (spec) where
 
-import Data.List.NonEmpty qualified as NE
-import Database.PG.Query.Pool (sql)
+import Data.Aeson (Value)
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.Schema (Table (..), table)
+import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, it)
-
--- ** Preamble
+import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
-spec =
-  Context.run
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.SQLServer,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = mssqlSetup,
-              teardown = mssqlTeardown,
-              customOptions = Nothing
-            }
-        ]
-    )
+spec = do
+  Fixture.run
+    [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Sqlserver.setupTablesAction schema testEnv
+            ]
+        }
+    ]
     tests
 
--- ** Setup and teardown
+--------------------------------------------------------------------------------
+-- Schema
 
-mssqlSetup :: (TestEnvironment, ()) -> IO ()
-mssqlSetup (testEnv, ()) = do
-  -- Clear metadata and configure the source
-  GraphqlEngine.setSource testEnv Sqlserver.defaultSourceMetadata Nothing
+schema :: [Schema.Table]
+schema =
+  [ (table "test")
+      { tableColumns =
+          [ Schema.column "id" Schema.TInt,
+            Schema.column "test" do
+              Schema.TCustomType
+                Schema.defaultBackendScalarType
+                  { Schema.bstMssql = Just "varchar(MAX)"
+                  }
+          ],
+        tablePrimaryKey = ["id"]
+      },
+    (table "test_bin")
+      { tableColumns =
+          [ Schema.column "id" Schema.TInt,
+            Schema.column "test" do
+              Schema.TCustomType
+                Schema.defaultBackendScalarType
+                  { Schema.bstMssql = Just "varchar(MAX) collate SQL_Latin1_General_CP437_BIN"
+                  }
+          ],
+        tablePrimaryKey = ["id"]
+      }
+  ]
 
-  -- Setup DB schema
-  Sqlserver.run_ setupSQL
+--------------------------------------------------------------------------------
+-- Tests
 
-  -- Track tables
-  GraphqlEngine.postMetadata_
-    testEnv
-    [yaml|
-type: bulk
-args:
-- type: mssql_track_table
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: test
-- type: mssql_track_table
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: test_bin
-|]
-
-setupSQL :: String
-setupSQL =
-  [sql|
-CREATE TABLE test (
-  id INT PRIMARY KEY,
-  varchar_column varchar(MAX)
-);
-CREATE TABLE test_bin (
-  id INT PRIMARY KEY,
-  varchar_column varchar(MAX) collate SQL_Latin1_General_CP437_BIN
-);
-|]
-
-mssqlTeardown :: (TestEnvironment, ()) -> IO ()
-mssqlTeardown (testEnv, ()) = do
-  -- Untrack table
-  GraphqlEngine.postMetadata_
-    testEnv
-    [yaml|
-type: bulk
-args:
-- type: mssql_untrack_table
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: test
-- type: mssql_untrack_table
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: test_bin
-|]
-
-  -- Teardown DB schema
-  Sqlserver.run_ teardownSQL
-
-  -- Clear metadata
-  GraphqlEngine.clearMetadata testEnv
-
-teardownSQL :: String
-teardownSQL =
-  [sql|
-DROP TABLE test;
-DROP TABLE test_bin;
-|]
-
--- * Tests
-
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Insert into varchar column with non ASCII value" $ \testEnv ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnv
-          [graphql|
-mutation {
-  insert_hasura_test(
-    objects: [{id: 1, varchar_column: "££££"}]
-  ) {
-    affected_rows
-    returning{
-      id
-      varchar_column
-    }
-  }
-}
-|]
-      )
-      [yaml|
-data:
-  insert_hasura_test:
-    returning:
-    - id: 1
-      varchar_column: "££££"
-    affected_rows: 1
+  let shouldBe :: IO Value -> Value -> IO ()
+      shouldBe = shouldReturnYaml opts
 
-|]
+  describe "Inserting into varchar columns" do
+    it "Insert into varchar column with non ASCII value" $ \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              data:
+                insert_hasura_test:
+                  returning:
+                  - id: 1
+                    test: "££££"
+                  affected_rows: 1
 
-  it "Insert into collated varchar column with non ASCII value" $ \testEnv ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnv
-          [graphql|
-mutation {
-  insert_hasura_test_bin(
-    objects: [{id: 1, varchar_column: "££££"}]
-  ) {
-    affected_rows
-    returning{
-      id
-      varchar_column
-    }
-  }
-}
-|]
-      )
-      [yaml|
-data:
-  insert_hasura_test_bin:
-    returning:
-    - id: 1
-      varchar_column: "££££"
-    affected_rows: 1
+            |]
 
-|]
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_hasura_test(objects:
+                    [ { id: 1, test: "££££" }
+                    ]
+                  ) {
+                    affected_rows
+                    returning {
+                      id
+                      test
+                    }
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
+
+    it "Insert into collated varchar column with non ASCII value" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              data:
+                insert_hasura_test_bin:
+                  returning:
+                  - id: 1
+                    test: "££££"
+                  affected_rows: 1
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_hasura_test_bin(objects:
+                    [ { id: 1, test: "££££" }
+                    ]
+                  ) {
+                    affected_rows
+                    returning {
+                      id
+                      test
+                    }
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
