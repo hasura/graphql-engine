@@ -17,11 +17,11 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql, postGraphqlWithPair)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (Options (..))
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -94,11 +94,13 @@ tests opts = do
 
   describe "Skip fields conditionally" do
     it "Skips field with @skip(if: true)" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_author:
+                #{schemaName}_author:
                 - name: Author 1
                 - name: Author 2
             |]
@@ -109,7 +111,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author(order_by: [{ id: asc }]) {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
                     id @skip(if: true)
                     name
                   }
@@ -119,11 +121,13 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Doesn't skip field with @skip(if: false)" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_author:
+                #{schemaName}_author:
                 - id: 1
                   name: Author 1
                 - id: 2
@@ -136,7 +140,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query test($skip: Boolean!) {
-                  hasura_author(order_by: [{ id: asc }]) {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
                     id @skip(if: $skip)
                     name
                   }

@@ -11,10 +11,11 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -124,34 +125,38 @@ longtable =
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "select long table" $ \testEnvironment ->
+  it "select long table" $ \testEnvironment -> do
+    let schemaName = getSchemaName testEnvironment
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
 query {
-  hasura_i_need_a_table_with_a_long_name_to_test_rename_identifiers(order_by:[{id:asc}]) {
+  #{schemaName}_i_need_a_table_with_a_long_name_to_test_rename_identifiers(order_by:[{id:asc}]) {
     id
   }
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 data:
-  hasura_i_need_a_table_with_a_long_name_to_test_rename_identifiers:
+  #{schemaName}_i_need_a_table_with_a_long_name_to_test_rename_identifiers:
   - id: 1
   - id: 2
 |]
 
-  it "select long column" $ \testEnvironment ->
+  it "select long column" $ \testEnvironment -> do
+    let schemaName = getSchemaName testEnvironment
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
-          [yaml|
+          [interpolateYaml|
 query {
-  hasura_i_need_a_table_with_a_long_name_to_test_rename_identifiers(order_by:[{i_need_a_column_with_a_long_name_to_test_rename_identifiers:asc, i_need_a_column_with_a_long_name_but_is_different:asc}]) {
+  #{schemaName}_i_need_a_table_with_a_long_name_to_test_rename_identifiers(order_by:[{i_need_a_column_with_a_long_name_to_test_rename_identifiers:asc, i_need_a_column_with_a_long_name_but_is_different:asc}]) {
     id
     regular_id
     i_need_a_column_with_a_long_name_to_test_rename_identifiers
@@ -159,9 +164,9 @@ query {
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 data:
-  hasura_i_need_a_table_with_a_long_name_to_test_rename_identifiers:
+  #{schemaName}_i_need_a_table_with_a_long_name_to_test_rename_identifiers:
   - id: 1
     regular_id: 1
     i_need_a_column_with_a_long_name_to_test_rename_identifiers: 1
@@ -170,14 +175,16 @@ data:
     i_need_a_column_with_a_long_name_to_test_rename_identifiers: 2
 |]
 
-  it "select long column via array relationship" $ \testEnvironment ->
+  it "select long column via array relationship" $ \testEnvironment -> do
+    let schemaName = getSchemaName testEnvironment
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
-          [yaml|
+          [interpolateYaml|
 query {
-  hasura_regular(order_by:[{id:asc}]) {
+  #{schemaName}_regular(order_by:[{id:asc}]) {
     id
     i_need_a_table_with_a_long_name_to_test_rename_identifierss_by_id_to_regular_id(order_by:[{i_need_a_column_with_a_long_name_to_test_rename_identifiers:asc, i_need_a_column_with_a_long_name_but_is_different:asc}]) {
       i_need_a_column_with_a_long_name_to_test_rename_identifiers
@@ -187,9 +194,9 @@ query {
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 data:
-  hasura_regular:
+  #{schemaName}_regular:
   - id: 1
     i_need_a_table_with_a_long_name_to_test_rename_identifierss_by_id_to_regular_id:
       - i_need_a_column_with_a_long_name_to_test_rename_identifiers: 1

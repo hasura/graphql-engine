@@ -5,6 +5,7 @@
 -- | Templating yaml files.
 module Harness.Quoter.Yaml.InterpolateYaml
   ( interpolateYaml,
+    ToYamlString (..),
   )
 where
 

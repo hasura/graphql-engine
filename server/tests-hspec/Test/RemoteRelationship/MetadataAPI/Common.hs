@@ -49,6 +49,7 @@ import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Hasura.Prelude
 
@@ -196,7 +197,7 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable albumTable
+  Postgres.createTable testEnvironment albumTable
   Postgres.insertTable albumTable
   Schema.trackTable Context.Postgres sourceName albumTable testEnvironment
 
@@ -218,13 +219,13 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable track
+  Postgres.createTable testEnvironment track
   Postgres.insertTable track
   Schema.trackTable Context.Postgres sourceName track testEnvironment
 
 createSourceRemoteRelationship :: TestEnvironment -> IO ()
 createSourceRemoteRelationship testEnvironment = do
-  let schemaName = Context.defaultSchema Context.Postgres
+  let schemaName = getSchemaName testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -259,7 +260,8 @@ lhsPostgresTeardown = Postgres.dropTable track
 
 createRemoteSchemaRemoteRelationship :: TestEnvironment -> IO ()
 createRemoteSchemaRemoteRelationship testEnvironment = do
-  let schemaName = Context.defaultSchema Context.Postgres
+  let schemaName = getSchemaName testEnvironment
+
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|

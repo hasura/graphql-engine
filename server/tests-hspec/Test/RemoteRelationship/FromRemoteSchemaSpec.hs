@@ -260,7 +260,7 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable track
+  Postgres.createTable testEnvironment track
   Postgres.insertTable track
   Schema.trackTable Context.Postgres sourceName track testEnvironment
 

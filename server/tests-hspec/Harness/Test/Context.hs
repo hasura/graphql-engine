@@ -13,7 +13,6 @@ module Harness.Test.Context
     BackendType (..),
     defaultSource,
     defaultBackendTypeString,
-    defaultSchema,
     schemaKeyword,
     noLocalTestEnvironment,
     Options (..),
@@ -23,11 +22,12 @@ module Harness.Test.Context
   )
 where
 
+import Data.UUID.V4 (nextRandom)
 import Harness.Exceptions
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.Hspec.Extended
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
 import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (mapSpecItem)
@@ -100,10 +100,22 @@ contextBracket ::
   ((TestEnvironment, a) -> IO ()) ->
   TestEnvironment ->
   IO ()
-contextBracket Context {mkLocalTestEnvironment, setup, teardown} actionWith globalTestEnvironment =
+contextBracket Context {name, mkLocalTestEnvironment, setup, teardown} actionWith globalTestEnvironment =
   mask \restore -> do
     localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
-    let testEnvironment = (globalTestEnvironment, localTestEnvironment)
+
+    -- create a unique id to differentiate this set of tests
+    uniqueTestId <- nextRandom
+
+    let globalTestEnvWithUnique =
+          globalTestEnvironment
+            { backendType = case name of
+                Backend db -> Just db
+                _ -> Nothing,
+              uniqueTestId = uniqueTestId
+            }
+
+    let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
 
     _ <-
       catchRethrow
@@ -115,6 +127,7 @@ contextBracket Context {mkLocalTestEnvironment, setup, teardown} actionWith glob
       catchRethrow
         (restore $ actionWith testEnvironment)
         (teardown testEnvironment)
+
     -- If no exception occurred, run the normal teardown function.
     teardown testEnvironment
 

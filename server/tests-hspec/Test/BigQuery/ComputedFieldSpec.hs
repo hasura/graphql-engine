@@ -6,14 +6,14 @@ module Test.BigQuery.ComputedFieldSpec (spec) where
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
-import Harness.Constants qualified as Constants
 import Harness.Exceptions (finally)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -41,12 +41,12 @@ spec =
 bigquerySetup :: (TestEnvironment, ()) -> IO ()
 bigquerySetup (testEnv, ()) = do
   BigQuery.setup [authorTable, articleTable] (testEnv, ())
+  let schemaName = getSchemaName testEnv
 
   -- Create functions in BigQuery
-  BigQuery.runSql_ createFunctionsSQL
+  BigQuery.runSql_ (createFunctionsSQL schemaName)
 
   -- Add computed fields and define select permissions
-  let dataset = Constants.bigqueryDataset
   GraphqlEngine.postMetadata_
     testEnv
     [yaml|
@@ -57,11 +57,11 @@ args:
     source: bigquery
     name: search_articles_1
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
     definition:
       function:
-        dataset: *dataset
+        dataset: *schemaName
         name: fetch_articles_returns_table
       argument_mapping:
         a_id: id
@@ -71,17 +71,17 @@ args:
     source: bigquery
     name: search_articles_2
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
     definition:
       function:
-        dataset: *dataset
+        dataset: *schemaName
         name: fetch_articles
       argument_mapping:
         a_id: id
       return_table:
         name: article
-        dataset: *dataset
+        dataset: *schemaName
 
 # Role user_1 has select permissions on author and article tables.
 # user_1 can query search_articles_1 computed field.
@@ -89,7 +89,7 @@ args:
   args:
     source: bigquery
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
     role: user_1
     permission:
@@ -102,7 +102,7 @@ args:
   args:
     source: bigquery
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: article
     role: user_1
     permission:
@@ -114,7 +114,7 @@ args:
   args:
     source: bigquery
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
     role: user_2
     permission:
@@ -125,8 +125,9 @@ args:
 bigqueryTeardown :: (TestEnvironment, ()) -> IO ()
 bigqueryTeardown (testEnv, ()) = do
   -- Drop permissions and computed fields metadata
-  let dataset = Constants.bigqueryDataset
-      dropComputedFieldsYaml =
+  let schemaName = getSchemaName testEnv
+
+  let dropComputedFieldsYaml =
         [yaml|
 type: bulk
 args:
@@ -134,7 +135,7 @@ args:
   args:
     source: bigquery
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
     role: user_1
 
@@ -142,7 +143,7 @@ args:
   args:
     source: bigquery
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: article
     role: user_1
 
@@ -150,7 +151,7 @@ args:
   args:
     source: bigquery
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
     role: user_2
 
@@ -159,7 +160,7 @@ args:
     source: bigquery
     name: search_articles_1
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
 
 - type: bigquery_drop_computed_field
@@ -167,14 +168,14 @@ args:
     source: bigquery
     name: search_articles_2
     table:
-      dataset: *dataset
+      dataset: *schemaName
       name: author
 |]
   finally
     (GraphqlEngine.postMetadata_ testEnv dropComputedFieldsYaml)
     ( finally
         -- Drop functions in BigQuery database
-        (BigQuery.runSql_ dropFunctionsSQL)
+        (BigQuery.runSql_ (dropFunctionsSQL schemaName))
         -- Teardown schema
         (BigQuery.teardown [authorTable, articleTable] (testEnv, ()))
     )
@@ -226,20 +227,20 @@ articleTable =
         ]
     }
 
-fetch_articles_returns_table :: T.Text
-fetch_articles_returns_table =
-  T.pack Constants.bigqueryDataset <> ".fetch_articles_returns_table"
+fetch_articles_returns_table :: SchemaName -> T.Text
+fetch_articles_returns_table schemaName =
+  unSchemaName schemaName <> ".fetch_articles_returns_table"
 
-fetch_articles :: T.Text
-fetch_articles =
-  T.pack Constants.bigqueryDataset <> ".fetch_articles"
+fetch_articles :: SchemaName -> T.Text
+fetch_articles schemaName =
+  unSchemaName schemaName <> ".fetch_articles"
 
-createFunctionsSQL :: String
-createFunctionsSQL =
+createFunctionsSQL :: SchemaName -> String
+createFunctionsSQL schemaName =
   T.unpack $
     T.unwords $
       [ "CREATE TABLE FUNCTION ",
-        fetch_articles_returns_table,
+        fetch_articles_returns_table schemaName,
         "(a_id INT64, search STRING)",
         "RETURNS TABLE<id INT64, title STRING, content STRING>",
         "AS (",
@@ -249,7 +250,7 @@ createFunctionsSQL =
         ");"
       ]
         <> [ "CREATE TABLE FUNCTION ",
-             fetch_articles,
+             fetch_articles schemaName,
              "(a_id INT64, search STRING)",
              "AS (",
              "SELECT t.* FROM",
@@ -258,28 +259,30 @@ createFunctionsSQL =
              ");"
            ]
   where
-    articleTableSQL = T.pack Constants.bigqueryDataset <> ".article"
+    articleTableSQL = unSchemaName schemaName <> ".article"
 
-dropFunctionsSQL :: String
-dropFunctionsSQL =
+dropFunctionsSQL :: SchemaName -> String
+dropFunctionsSQL schemaName =
   T.unpack $
     T.unwords $
-      [ "DROP TABLE FUNCTION " <> fetch_articles_returns_table <> ";",
-        "DROP TABLE FUNCTION " <> fetch_articles <> ";"
+      [ "DROP TABLE FUNCTION " <> fetch_articles_returns_table schemaName <> ";",
+        "DROP TABLE FUNCTION " <> fetch_articles schemaName <> ";"
       ]
 
 -- * Tests
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Query with computed fields" $ \testEnv ->
+  it "Query with computed fields" $ \testEnv -> do
+    let schemaName = getSchemaName testEnv
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
 query {
-  hasura_author(order_by: {id: asc}){
+  #{schemaName}_author(order_by: {id: asc}){
     id
     name
     search_articles_1(args: {search: "%1%"}){
@@ -297,9 +300,9 @@ query {
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 data:
-  hasura_author:
+  #{schemaName}_author:
   - id: '1'
     name: Author 1
     search_articles_1:
@@ -317,14 +320,16 @@ data:
       author_id: '2'
 |]
 
-  it "Query with computed fields using limit and order_by" $ \testEnv ->
+  it "Query with computed fields using limit and order_by" $ \testEnv -> do
+    let schemaName = getSchemaName testEnv
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
 query {
-  hasura_author(order_by: {id: asc}){
+  #{schemaName}_author(order_by: {id: asc}){
     id
     name
     search_articles_2(args: {search: "%by%"} limit: 1 order_by: {id: asc}){
@@ -337,9 +342,9 @@ query {
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 data:
-  hasura_author:
+  #{schemaName}_author:
   - id: '1'
     name: Author 1
     search_articles_2:
@@ -356,7 +361,9 @@ data:
       title: Article 2 Title
 |]
 
-  it "Query with computed fields as user_1 role" $ \testEnv ->
+  it "Query with computed fields as user_1 role" $ \testEnv -> do
+    let schemaName = getSchemaName testEnv
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -364,7 +371,7 @@ data:
           [("X-Hasura-Role", "user_1")]
           [graphql|
 query {
-  hasura_author(order_by: {id: asc}){
+  #{schemaName}_author(order_by: {id: asc}){
     id
     name
     search_articles_1(args: {search: "%1%"}){
@@ -382,9 +389,9 @@ query {
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 data:
-  hasura_author:
+  #{schemaName}_author:
   - id: '1'
     name: Author 1
     search_articles_1:
@@ -402,7 +409,9 @@ data:
       author_id: '2'
 |]
 
-  it "Query with computed field search_articles_1 as user_2 role" $ \testEnv ->
+  it "Query with computed field search_articles_1 as user_2 role" $ \testEnv -> do
+    let schemaName = getSchemaName testEnv
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -410,7 +419,7 @@ data:
           [("X-Hasura-Role", "user_2")]
           [graphql|
 query {
-  hasura_author(order_by: {id: asc}){
+  #{schemaName}_author(order_by: {id: asc}){
     id
     name
     search_articles_1(args: {search: "%1%"}){
@@ -422,16 +431,18 @@ query {
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 errors:
 - extensions:
-    path: "$.selectionSet.hasura_author.selectionSet.search_articles_1"
+    path: "$.selectionSet.#{schemaName}_author.selectionSet.search_articles_1"
     code: validation-failed
   message: |-
-    field 'search_articles_1' not found in type: 'hasura_author'
+    field 'search_articles_1' not found in type: '#{schemaName}_author'
 |]
 
-  it "Query with computed field search_articles_2 as user_2 role" $ \testEnv ->
+  it "Query with computed field search_articles_2 as user_2 role" $ \testEnv -> do
+    let schemaName = getSchemaName testEnv
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -439,7 +450,7 @@ errors:
           [("X-Hasura-Role", "user_2")]
           [graphql|
 query {
-  hasura_author(order_by: {id: asc}){
+  #{schemaName}_author(order_by: {id: asc}){
     id
     name
     search_articles_2(args: {search: "%keyword%"}){
@@ -452,11 +463,11 @@ query {
 }
 |]
       )
-      [yaml|
+      [interpolateYaml|
 errors:
 - extensions:
-    path: "$.selectionSet.hasura_author.selectionSet.search_articles_2"
+    path: "$.selectionSet.#{schemaName}_author.selectionSet.search_articles_2"
     code: validation-failed
   message: |-
-    field 'search_articles_2' not found in type: 'hasura_author'
+    field 'search_articles_2' not found in type: '#{schemaName}_author'
 |]

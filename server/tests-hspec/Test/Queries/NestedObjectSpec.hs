@@ -17,11 +17,12 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Context (Options (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -120,11 +121,13 @@ tests opts = do
 
   describe "Nested relationship queries" do
     it "Nests with 'where' clauses" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_author:
+                #{schemaName}_author:
                 - name: "Author 1"
                   articles_by_id_to_author_id:
                   - id: 2
@@ -136,7 +139,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author(
+                  #{schemaName}_author(
                     order_by: [{ id: asc }],
                     where: { id: { _eq: 1 } }
                   ) {
@@ -155,11 +158,13 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Nesting in the 'where' clause" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_article:
+                #{schemaName}_article:
                 - id: 1
                   author_id: 1
                 - id: 2
@@ -172,7 +177,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_article (
+                  #{schemaName}_article (
                     order_by: [{ id: asc }],
                     where: { author_by_author_id_to_id: { name: { _eq: "Author 1" } } }
                   ) {
@@ -185,11 +190,13 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Deep nesting" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_article:
+                #{schemaName}_article:
                 - id: 1
                   author_by_author_id_to_id:
                     id: 1
@@ -209,7 +216,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_article(where: {id: {_eq: 1}}) {
+                  #{schemaName}_article(where: {id: {_eq: 1}}) {
                     id
                     author_by_author_id_to_id {
                       id

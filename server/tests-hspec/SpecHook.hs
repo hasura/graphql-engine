@@ -6,6 +6,7 @@ module SpecHook
 where
 
 import Control.Exception.Safe (bracket)
+import Data.UUID.V4 (nextRandom)
 import Harness.GraphqlEngine (startServerThread)
 import Harness.TestEnvironment (TestEnvironment (..), stopServer)
 import Hasura.Prelude
@@ -20,7 +21,15 @@ setupTestEnvironment = do
   server <- startServerThread ((,) <$> murlPrefix <*> mport)
   let logType = FL.LogFileNoRotate "tests-hspec.log" 1024
   (logger, loggerCleanup) <- FL.newFastLogger logType
-  pure TestEnvironment {..}
+  uniqueTestId <- nextRandom
+  pure
+    TestEnvironment
+      { server = server,
+        uniqueTestId = uniqueTestId,
+        backendType = Nothing,
+        logger = logger,
+        loggerCleanup = loggerCleanup
+      }
 
 teardownTestEnvironment :: TestEnvironment -> IO ()
 teardownTestEnvironment TestEnvironment {..} = do

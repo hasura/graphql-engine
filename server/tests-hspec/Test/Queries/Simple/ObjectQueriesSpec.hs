@@ -17,11 +17,12 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Context (Options (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -106,11 +107,13 @@ tests opts = do
 
   describe "Simple object queries" do
     it "Fetch a list of authors" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_author:
+                #{schemaName}_author:
                 - id: 1
                   name: "Author 1"
                 - id: 2
@@ -125,7 +128,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author(order_by: [{ id: asc }]) {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
                     id
                     name
                   }
@@ -186,15 +189,17 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Fails on missing fields" \testEnvironment -> do
+      let schemaName = getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               errors:
               - extensions:
                   code: validation-failed
-                  path: $.selectionSet.hasura_author.selectionSet.notPresentCol
+                  path: $.selectionSet.#{schemaName}_author.selectionSet.notPresentCol
                 message: |-
-                  field 'notPresentCol' not found in type: 'hasura_author'
+                  field 'notPresentCol' not found in type: '#{schemaName}_author'
             |]
 
           actual :: IO Value
@@ -203,7 +208,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author {
+                  #{schemaName}_author {
                     id
                     name
                     notPresentCol

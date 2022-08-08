@@ -8,10 +8,11 @@ import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -93,6 +94,8 @@ bigquerySetup :: (TestEnvironment, ()) -> IO ()
 bigquerySetup (testEnvironment, ()) = do
   BigQuery.setup schema (testEnvironment, ())
 
+  let schemaName = getSchemaName testEnvironment
+
   -- also setup permissions
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -102,7 +105,7 @@ bigquerySetup (testEnvironment, ()) = do
         args:
           source: bigquery
           table:
-            dataset: hasura
+            dataset: *schemaName
             name: article
           role: author
           permission:
@@ -114,7 +117,7 @@ bigquerySetup (testEnvironment, ()) = do
         args:
           source: bigquery
           table:
-            dataset: hasura
+            dataset: *schemaName
             name: article
           role: user
           permission:
@@ -126,6 +129,8 @@ bigquerySetup (testEnvironment, ()) = do
 
 bigqueryTeardown :: (TestEnvironment, ()) -> IO ()
 bigqueryTeardown (testEnvironment, ()) = do
+  let schemaName = getSchemaName testEnvironment
+
   -- teardown permissions
   let teardownPermissions =
         GraphqlEngine.postMetadata_ testEnvironment $
@@ -134,7 +139,7 @@ bigqueryTeardown (testEnvironment, ()) = do
             args:
               table:
                 name: article
-                dataset: hasura
+                dataset: *schemaName
               role: user
               source: bigquery
           |]
@@ -152,6 +157,8 @@ tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Author role cannot select articles with mismatching author_id and X-Hasura-User-Id" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "author"), ("X-Hasura-User-Id", "0")]
+        schemaName = getSchemaName testEnvironment
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -159,20 +166,22 @@ tests opts = do
           userHeaders
           [graphql|
             query {
-              hasura_article {
+              #{schemaName}_article {
                 id
                 author_id
               }
             }
           |]
       )
-      [yaml|
+      [interpolateYaml|
         data:
-          hasura_article: []
+          #{schemaName}_article: []
       |]
 
   it "Author role can select articles with matching author_id and X-Hasura-User-Id" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "author"), ("X-Hasura-User-Id", "1")]
+        schemaName = getSchemaName testEnvironment
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -180,22 +189,24 @@ tests opts = do
           userHeaders
           [graphql|
             query {
-              hasura_article {
+              #{schemaName}_article {
                 id
                 author_id
               }
             }
           |]
       )
-      [yaml|
+      [interpolateYaml|
         data:
-          hasura_article:
+          #{schemaName}_article:
           - id: '1'
             author_id: '1'
       |]
 
   it "User role can select published articles only" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "2")]
+        schemaName = getSchemaName testEnvironment
+
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -203,7 +214,7 @@ tests opts = do
           userHeaders
           [graphql|
               query {
-                hasura_article {
+                #{schemaName}_article {
                   title
                   content
                   author_id
@@ -211,9 +222,9 @@ tests opts = do
               }
             |]
       )
-      [yaml|
+      [interpolateYaml|
         data:
-          hasura_article:
+          #{schemaName}_article:
           - author_id: '2'
             content: Sample article content 2
             title: Article 2

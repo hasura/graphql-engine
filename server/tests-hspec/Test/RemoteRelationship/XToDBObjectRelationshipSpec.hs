@@ -31,6 +31,7 @@ import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -217,7 +218,7 @@ lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.Postgres
+      schemaName = getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -228,7 +229,7 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable track
+  Postgres.createTable testEnvironment track
   Postgres.insertTable track
   Schema.trackTable Context.Postgres sourceName track testEnvironment
   GraphqlEngine.postMetadata_
@@ -285,7 +286,8 @@ lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.SQLServer
+      schemaName = getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -551,7 +553,8 @@ rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.Postgres
+      schemaName = getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -562,7 +565,7 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable album
+  Postgres.createTable testEnvironment album
   Postgres.insertTable album
   Schema.trackTable Context.Postgres sourceName album testEnvironment
 
@@ -611,7 +614,8 @@ rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
 rhsSQLServerSetup (testEnvironment, _) = do
   let sourceName = "target"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.SQLServer
+      schemaName = getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
