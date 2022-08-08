@@ -68,7 +68,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- modules.
 type MonadBuildSchema b r m n =
   ( BackendSchema b,
-    MonadBuildSchemaBase r m n
+    MonadBuildSourceSchema r m n
   )
 
 -- | This type class is responsible for generating the schema of a backend.
