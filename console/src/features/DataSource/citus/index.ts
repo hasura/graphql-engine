@@ -35,5 +35,8 @@ export const citus: Database = {
 
       return adaptIntrospectedTables(tables);
     },
+    getDatabaseHierarchy: async () => {
+      return ['schema', 'name'];
+    },
   },
 };

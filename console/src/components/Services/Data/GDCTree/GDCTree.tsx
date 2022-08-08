@@ -4,7 +4,6 @@ import { Key } from 'antd/lib/table/interface';
 import React from 'react';
 import { useTreeData } from './hooks/useTreeData';
 import '../../../../features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/index.css';
-import { GDCSource } from './types';
 
 const checkForGDCRoute = () => window.location.pathname.includes('data/v2');
 
@@ -35,14 +34,12 @@ type Props = {
   If you wish to test out this component, head over to src/utils/featureFlags.ts and edit the GDC_TREE_VIEW_DEV to enabled to view it the console with mock data
 */
 
-export const GDCTree = <TreeGDCSource extends GDCSource = GDCSource>(
-  props: Props
-) => {
+export const GDCTree = (props: Props) => {
   const isGDCRouteActive = checkForGDCRoute();
 
   const activeKey = isGDCRouteActive ? getCurrentActiveKeys() : [];
 
-  const { data: gdcDatabases } = useTreeData<TreeGDCSource>();
+  const { data: gdcDatabases } = useTreeData();
 
   if (!gdcDatabases || gdcDatabases.length === 0) return null;
 
