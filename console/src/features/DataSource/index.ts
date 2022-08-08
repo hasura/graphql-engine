@@ -5,6 +5,7 @@ import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { mssql } from './mssql';
 import { gdc } from './gdc';
+import * as utils from './common/utils';
 import type {
   Property,
   Ref,
@@ -13,7 +14,8 @@ import type {
   Table,
   SupportedDrivers,
 } from './types';
-import { getZodSchema } from './common/utils';
+
+import { createZodSchema } from './common/createZodSchema';
 import { exportMetadata } from './api';
 
 export enum Feature {
@@ -79,34 +81,23 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
       schemas.forEach(schema => {
         if (schema === Feature.NotImplemented || !schema) return;
 
+        const postgresSchema = z.object({
+          driver: z.literal('postgres'),
+          name: z.string().min(1, 'Name is a required field!'),
+          replace_configuration: z.preprocess(x => {
+            if (!x) return false;
+            return true;
+          }, z.boolean()),
+          configuration: createZodSchema(
+            schema.configSchema,
+            schema.otherSchemas
+          ),
+        });
+
         if (!res) {
-          res = z.object({
-            driver: z.literal('postgres'),
-            name: z.string().min(1, 'Name is a required field!'),
-            replace_configuration: z.preprocess(x => {
-              if (!x) return false;
-              return true;
-            }, z.boolean()),
-            configuration: getZodSchema(
-              schema.configSchema,
-              schema.otherSchemas
-            ),
-          });
+          res = postgresSchema;
         } else {
-          res = res.or(
-            z.object({
-              driver: z.literal('postgres'),
-              name: z.string().min(1, 'Name is a required field!'),
-              replace_configuration: z.preprocess(x => {
-                if (!x) return false;
-                return true;
-              }, z.boolean()),
-              configuration: getZodSchema(
-                schema.configSchema,
-                schema.otherSchemas
-              ),
-            })
-          );
+          res = res.or(postgresSchema);
         }
       });
 
@@ -169,7 +160,7 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
   },
 });
 
-export { exportMetadata };
+export { exportMetadata, utils };
 export type {
   Property,
   Ref,
