@@ -26,5 +26,8 @@ export const mssql: Database = {
 
       return adaptIntrospectedTables(tables);
     },
+    getDatabaseHierarchy: async () => {
+      return ['schema', 'name'];
+    },
   },
 };

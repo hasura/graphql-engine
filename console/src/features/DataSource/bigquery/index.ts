@@ -7,5 +7,8 @@ export const bigquery: Database = {
       return Feature.NotImplemented;
     },
     getTrackableTables,
+    getDatabaseHierarchy: async () => {
+      return ['dataset', 'name'];
+    },
   },
 };

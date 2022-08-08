@@ -20,13 +20,9 @@ export enum Feature {
   NotImplemented = 'Not Implemented',
 }
 
-export const supportedDrivers = [
-  'postgres',
-  'bigquery',
-  'mssql',
-  'citus',
-  'gdc',
-];
+const nativeDrivers = ['postgres', 'bigquery', 'mssql', 'citus'];
+
+export const supportedDrivers = [...nativeDrivers, 'gdc'];
 
 export type Database = {
   introspection?: {
@@ -40,6 +36,7 @@ export type Database = {
       dataSourceName: string,
       configuration: any
     ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
+    getDatabaseHierarchy: () => Promise<string[] | Feature.NotImplemented>;
   };
   query?: {
     getTableData: () => void;
@@ -60,6 +57,9 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
     getSupportedDrivers: async () => {
       return supportedDrivers;
     },
+  },
+  getNativeDrivers: async () => {
+    return nativeDrivers;
   },
   connectDB: {
     getConfigSchema: async (driver: SupportedDrivers) => {
@@ -138,6 +138,34 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
         (dataSource as any).configuration
       );
     return Feature.NotImplemented;
+  },
+  getDatabaseHierarchy: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const metadata = await exportMetadata();
+
+    const dataSource = metadata.sources.find(
+      source => source.name === dataSourceName
+    );
+
+    if (!dataSource) {
+      throw Error(
+        'DataSource.introspectTables data source not found in metadata'
+      );
+    }
+
+    const database = drivers[dataSource.kind];
+    if (!database) return [];
+
+    const introspection = database.introspection;
+    if (!introspection) return [];
+
+    const result = await introspection.getDatabaseHierarchy();
+    if (result === Feature.NotImplemented) return [];
+
+    return result;
   },
 });
 

@@ -1,85 +1,22 @@
 import React from 'react';
 import { FaTable, FaDatabase, FaFolder } from 'react-icons/fa';
+import { DataSource, exportMetadata } from '@/features/DataSource';
+// eslint-disable-next-line no-restricted-imports
+import { httpClient } from '@/features/DataSource/api';
 import { DataNode } from 'antd/lib/tree';
 import { GDC_TREE_VIEW_DEV } from '@/utils/featureFlags';
 import { GDCSource } from './types';
 
-const source_with_three_levels: GDCSource = {
-  name: 'gdc_demo_database',
-  kind: 'gdc-sample-reference-agent',
-  tables: [
-    {
-      table: {
-        name: 'Album',
-        schema: 'public',
-        anotherSchema: 'foo',
-      },
-    },
-    {
-      table: {
-        name: 'Artist',
-        schema: 'public1',
-        anotherSchema: 'foo',
-      },
-    },
-    {
-      table: {
-        name: 'ArtistView',
-        schema: 'public',
-        anotherSchema: 'bar',
-      },
-    },
-    {
-      table: {
-        name: 'Customer',
-        schema: 'baz',
-        anotherSchema: 'bar',
-      },
-    },
-    {
-      table: {
-        name: 'Employee',
-        schema: 'baz',
-        anotherSchema: 'bar',
-      },
-    },
-    {
-      table: {
-        name: 'Genre',
-        schema: 'public',
-        anotherSchema: 'foo',
-      },
-    },
-    {
-      table: {
-        name: 'InvoiceLine',
-        schema: 'public',
-        anotherSchema: 'foo',
-      },
-    },
-  ],
-};
-
-const getSources = async () => [source_with_three_levels];
-
-// This function needs to be moved to the DAL
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getTableSchema = async (_driver: string) => {
-  return {
-    table_schema: {
-      type: 'object',
-      properties: {
-        name: {
-          type: 'string',
-        },
-        schema: {
-          type: 'string',
-        },
-      },
-    },
-
-    hierarchy: ['schema', 'anotherSchema', 'name'],
-  };
+const getSources = async () => {
+  const metadata = await exportMetadata();
+  const nativeDrivers = await DataSource(httpClient).getNativeDrivers();
+  return metadata.sources
+    .filter(source => !nativeDrivers.includes(source.kind))
+    .map<GDCSource>(source => ({
+      name: source.name,
+      kind: source.kind,
+      tables: source.tables.map(({ table }) => ({ table })),
+    }));
 };
 
 const nest = (
@@ -129,13 +66,15 @@ const nest = (
   ];
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getTreeData = async <SourceType,>(): Promise<DataNode[]> => {
+export const getTreeData = async (): Promise<DataNode[]> => {
   const sources = await getSources();
 
   const tree = sources.map(async source => {
     const tables = source.tables;
-    const { hierarchy } = await getTableSchema(source.kind);
+
+    const hierarchy = await DataSource(httpClient).getDatabaseHierarchy({
+      dataSourceName: source.name,
+    });
 
     // return a node of the tree
     return {
