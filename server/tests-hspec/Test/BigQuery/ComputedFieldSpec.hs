@@ -11,9 +11,8 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Context qualified as Context
-import Harness.Test.Schema (Table (..), table)
+import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -41,7 +40,7 @@ spec =
 bigquerySetup :: (TestEnvironment, ()) -> IO ()
 bigquerySetup (testEnv, ()) = do
   BigQuery.setup [authorTable, articleTable] (testEnv, ())
-  let schemaName = getSchemaName testEnv
+  let schemaName = Schema.getSchemaName testEnv
 
   -- Create functions in BigQuery
   BigQuery.runSql_ (createFunctionsSQL schemaName)
@@ -125,7 +124,7 @@ args:
 bigqueryTeardown :: (TestEnvironment, ()) -> IO ()
 bigqueryTeardown (testEnv, ()) = do
   -- Drop permissions and computed fields metadata
-  let schemaName = getSchemaName testEnv
+  let schemaName = Schema.getSchemaName testEnv
 
   let dropComputedFieldsYaml =
         [yaml|
@@ -274,7 +273,7 @@ dropFunctionsSQL schemaName =
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Query with computed fields" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
       opts
@@ -321,7 +320,7 @@ data:
 |]
 
   it "Query with computed fields using limit and order_by" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
       opts
@@ -362,7 +361,7 @@ data:
 |]
 
   it "Query with computed fields as user_1 role" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
       opts
@@ -410,7 +409,7 @@ data:
 |]
 
   it "Query with computed field search_articles_1 as user_2 role" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
       opts
@@ -441,7 +440,7 @@ errors:
 |]
 
   it "Query with computed field search_articles_2 as user_2 role" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
       opts

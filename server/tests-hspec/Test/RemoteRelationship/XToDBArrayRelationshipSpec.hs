@@ -34,7 +34,6 @@ import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -214,7 +213,7 @@ lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
 lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = getSchemaName testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
 
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
@@ -284,7 +283,7 @@ lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
 lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = getSchemaName testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
 
   let sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration
@@ -539,7 +538,7 @@ lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
-  let schemaName = getSchemaName testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
   let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
   -- Add remote source
@@ -599,7 +598,7 @@ rhsPostgresTeardown _ = Postgres.dropTable album
 
 rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
 rhsSQLServerSetup (testEnvironment, _) = do
-  let schemaName = getSchemaName testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
 
   let sourceName = "target"
       sourceConfig = SQLServer.defaultSourceConfiguration

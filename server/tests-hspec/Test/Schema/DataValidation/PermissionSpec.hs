@@ -12,7 +12,6 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -94,7 +93,7 @@ bigquerySetup :: (TestEnvironment, ()) -> IO ()
 bigquerySetup (testEnvironment, ()) = do
   BigQuery.setup schema (testEnvironment, ())
 
-  let schemaName = getSchemaName testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
 
   -- also setup permissions
   GraphqlEngine.postMetadata_ testEnvironment $
@@ -129,7 +128,7 @@ bigquerySetup (testEnvironment, ()) = do
 
 bigqueryTeardown :: (TestEnvironment, ()) -> IO ()
 bigqueryTeardown (testEnvironment, ()) = do
-  let schemaName = getSchemaName testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
 
   -- teardown permissions
   let teardownPermissions =
@@ -157,7 +156,7 @@ tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Author role cannot select articles with mismatching author_id and X-Hasura-User-Id" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "author"), ("X-Hasura-User-Id", "0")]
-        schemaName = getSchemaName testEnvironment
+        schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
       opts
@@ -180,7 +179,7 @@ tests opts = do
 
   it "Author role can select articles with matching author_id and X-Hasura-User-Id" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "author"), ("X-Hasura-User-Id", "1")]
-        schemaName = getSchemaName testEnvironment
+        schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
       opts
@@ -205,7 +204,7 @@ tests opts = do
 
   it "User role can select published articles only" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "2")]
-        schemaName = getSchemaName testEnvironment
+        schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
       opts

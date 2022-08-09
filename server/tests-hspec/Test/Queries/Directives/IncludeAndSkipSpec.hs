@@ -21,7 +21,6 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -91,7 +90,7 @@ tests opts = do
 
   describe "Mixes @include and @skip directives" do
     it "Returns the field when @include(if: true) and @skip(if: false)" \testEnvironment -> do
-      let schemaName = getSchemaName testEnvironment
+      let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
@@ -120,7 +119,7 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Doesn't return the field when @include(if: false) and @skip(if: false)" \testEnvironment -> do
-      let schemaName = getSchemaName testEnvironment
+      let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
@@ -147,7 +146,7 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Doesn't return the field when @include(if: false) and @skip(if: true)" \testEnvironment -> do
-      let schemaName = getSchemaName testEnvironment
+      let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
@@ -174,7 +173,7 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Doesn't return the field when @include(if: true) and @skip(if: true)" \testEnvironment -> do
-      let schemaName = getSchemaName testEnvironment
+      let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
