@@ -1226,7 +1226,6 @@ test-suite tests-hspec
     Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.BigQuery.TypeInterpretationSpec
-    Test.CustomFieldNamesSpec
     Test.CustomRootFieldsSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
@@ -1279,6 +1278,8 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
+    Test.Schema.CustomFieldNames.MutationSpec
+    Test.Schema.CustomFieldNames.QuerySpec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DefaultValuesSpec
