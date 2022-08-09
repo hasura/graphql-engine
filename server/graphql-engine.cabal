@@ -1286,8 +1286,8 @@ test-suite tests-hspec
     Test.Schema.EnumSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
+    Test.Schema.ViewsSpec
     Test.ServiceLivenessSpec
-    Test.ViewsSpec
 
 test-suite tests-dc-api
   import: common-all, common-exe
