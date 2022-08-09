@@ -139,7 +139,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
           <ErrorComponentTemplate
             label={
               <>
-                <FaExclamationCircle className="fill-current h-4 w-4 mr-xs flex-shrink-0" />
+                <FaExclamationCircle className="fill-current h-4 w-4 mr-xs shrink-0" />
                 {props.error?.message}
               </>
             }
