@@ -7,6 +7,7 @@
 - server: accept a default extensions schema (`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`) for the metadata database where graphql-engine will install database extensions
 - server: add warning log for missing admin secret
 - server: add metadata API to enable Apollo Federation for a table
+- server: fix querying relationships defined using multiple columns on bigquery
 - console: add console support for Apollo Federation
 - console: add custom names for streaming subscriptions
 - console: add support for table query and subscription root fields visibility permissions

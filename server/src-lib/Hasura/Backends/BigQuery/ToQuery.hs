@@ -204,7 +204,7 @@ fromSelect Select {..} = finalExpression
                           <+> IndentPrinter
                             4
                             ( SepByPrinter
-                                (", " <+> NewlinePrinter)
+                                (" AND " <+> NewlinePrinter)
                                 (map fromOn joinOn)
                             )
                           <+> ")"
