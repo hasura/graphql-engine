@@ -5,12 +5,11 @@
 --   Test case for bug reported at https://github.com/hasura/graphql-engine/issues/7936
 module Test.ObjectRelationshipsLimitSpec (spec) where
 
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -24,17 +23,12 @@ import Test.Hspec
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
-            }
-        ]
-    )
+  Fixture.run
+    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [postgresSetupTeardown testEnv]
+        }
+    ]
     tests
 
 --------------------------------------------------------------------------------
@@ -76,6 +70,12 @@ article =
     }
 
 --------------------------------------------------------------------------------
+
+postgresSetupTeardown :: TestEnvironment -> Fixture.SetupAction
+postgresSetupTeardown testEnv =
+  Fixture.SetupAction
+    (postgresSetup (testEnv, ()))
+    (const $ postgresTeardown (testEnv, ()))
 
 -- ** Setup and teardown override
 
@@ -127,7 +127,7 @@ args:
 --
 --   Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible (valid)
 --   expected results.
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Query by id" $ \testEnvironment ->
     shouldReturnOneOfYaml

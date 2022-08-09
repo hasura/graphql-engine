@@ -4,12 +4,11 @@
 -- https://github.com/hasura/graphql-engine-mono/pull/4651
 module Test.ArrayParamPermissionSpec (spec) where
 
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -23,16 +22,12 @@ import Test.Hspec (SpecWith, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
-            }
-        ]
+  Fixture.run
+    ( [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          { Fixture.setupTeardown = \(testEnv, _) ->
+              [postgresSetupTeardown testEnv]
+          }
+      ]
     )
     tests
 
@@ -60,6 +55,12 @@ author =
 --------------------------------------------------------------------------------
 
 -- ** Setup and teardown
+
+postgresSetupTeardown :: TestEnvironment -> Fixture.SetupAction
+postgresSetupTeardown testEnv =
+  Fixture.SetupAction
+    (postgresSetup (testEnv, ()))
+    (const $ postgresTeardown (testEnv, ()))
 
 postgresSetup :: (TestEnvironment, ()) -> IO ()
 postgresSetup (testEnvironment, localTestEnvironment) = do
@@ -108,7 +109,7 @@ args:
 
 -- * Tests
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   it "non-matching X-Hasura-Allowed-Ids should return no data" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-Allowed-Ids", "{}")]
