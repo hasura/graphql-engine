@@ -41,6 +41,7 @@ import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
@@ -247,7 +248,8 @@ serveOptions =
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
-      soDefaultNamingConvention = Nothing
+      soDefaultNamingConvention = Nothing,
+      soExtensionsSchema = ExtensionsSchema "public"
     }
 
 -- | What log level should be used by the engine; this is not exported, and

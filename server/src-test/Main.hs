@@ -146,7 +146,7 @@ buildPostgresSpecs = do
           metadata <-
             snd
               <$> (liftEitherM . runExceptT . runTx pgContext Q.ReadWrite)
-                (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
+                (migrateCatalog (Just sourceConfig) (ExtensionsSchema "public") maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)
 

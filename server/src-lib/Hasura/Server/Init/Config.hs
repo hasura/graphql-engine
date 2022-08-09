@@ -67,6 +67,7 @@ import Data.Time (NominalDiffTime)
 import Data.URL.Template (URLTemplate)
 import Data.URL.Template qualified as Template
 import Database.PG.Query (ConnParams, TxIsolation)
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema)
 import Hasura.GraphQL.Execute.Subscription.Options (BatchSize, LiveQueriesOptions, RefetchInterval, StreamQueriesOptions)
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options (InferFunctionPermissions, RemoteSchemaPermissions, StringifyNumbers)
@@ -294,7 +295,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
     rsoEnableMetadataQueryLoggingEnv :: MetadataQueryLoggingMode,
     -- | stores global default naming convention
-    rsoDefaultNamingConvention :: Maybe NamingCase
+    rsoDefaultNamingConvention :: Maybe NamingCase,
+    rsoExtensionsSchema :: Maybe ExtensionsSchema
   }
 
 data API
@@ -441,7 +443,8 @@ data ServeOptions impl = ServeOptions
     -- | See note '$readOnlyMode'
     soReadOnlyMode :: ReadOnlyMode,
     soEnableMetadataQueryLogging :: MetadataQueryLoggingMode,
-    soDefaultNamingConvention :: Maybe NamingCase
+    soDefaultNamingConvention :: Maybe NamingCase,
+    soExtensionsSchema :: ExtensionsSchema
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

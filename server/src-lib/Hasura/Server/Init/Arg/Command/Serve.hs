@@ -52,6 +52,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     webSocketConnectionInitTimeoutOption,
     enableMetadataQueryLoggingOption,
     defaultNamingConventionOption,
+    metadataDBExtensionsSchemaOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -64,6 +65,7 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Time qualified as Time
 import Database.PG.Query qualified as Query
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options (RefetchInterval)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ESO
@@ -131,6 +133,7 @@ serveCommandParser =
     <*> parseWebSocketConnectionInitTimeout
     <*> parseEnableMetadataQueryLogging
     <*> parseDefaultNamingConvention
+    <*> parseExtensionsSchema
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1064,6 +1067,15 @@ parseDefaultNamingConvention =
           <> Opt.help (Config._helpMessage defaultNamingConventionOption)
       )
 
+parseExtensionsSchema :: Opt.Parser (Maybe ExtensionsSchema)
+parseExtensionsSchema =
+  Opt.optional $
+    Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "metadata-database-extensions-schema"
+          <> Opt.help (Config._helpMessage metadataDBExtensionsSchemaOption)
+      )
+
 -- NOTE: This should be 'Config.Option NC.NamingCase' with a default
 --of 'NC.HasuraCase' but 'ServeOptions' expects a 'Maybe
 --NC.NamingCase' and HGE handles the dafaulting explicitly. This
@@ -1077,6 +1089,15 @@ defaultNamingConventionOption =
         "Default naming convention for the auto generated graphql names. Possible values are"
           <> "hasura-default: Use snake_case for all names."
           <> "graphql-default: Use camelCase for field names and PascalCase for type names."
+    }
+
+metadataDBExtensionsSchemaOption :: Config.Option ExtensionsSchema
+metadataDBExtensionsSchemaOption =
+  Config.Option
+    { Config._default = ExtensionsSchema "public",
+      Config._envVar = "HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA",
+      Config._helpMessage =
+        "Name of the schema where Hasura can install database extensions. Default: public"
     }
 
 --------------------------------------------------------------------------------
