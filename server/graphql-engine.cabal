@@ -1260,6 +1260,7 @@ test-suite tests-hspec
     Test.Queries.Directives.SkipSpec
     Test.Queries.DirectivesSpec
     Test.Queries.FilterSearchSpec
+    Test.Queries.MultiColumnObjectRelationshipsSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
