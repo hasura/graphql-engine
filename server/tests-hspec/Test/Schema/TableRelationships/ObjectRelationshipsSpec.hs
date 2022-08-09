@@ -22,7 +22,6 @@ import Harness.Test.Context (Options (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -152,7 +151,7 @@ tests backend opts = describe "Object relationships" do
       shouldBe = shouldReturnYaml opts
 
   it "Select articles and their authors" \testEnvironment -> do
-    let schemaName = getSchemaName testEnvironment
+    let schemaName = Schema.getSchemaName testEnvironment
 
     let expected :: Value
         expected =
@@ -195,7 +194,7 @@ tests backend opts = describe "Object relationships" do
   unless (backend `elem` [MySQL, BigQuery]) do
     describe "Null relationships" do
       it "Select articles their (possibly null) co-authors" \testEnvironment -> do
-        let schemaName = getSchemaName testEnvironment
+        let schemaName = Schema.getSchemaName testEnvironment
 
         let expected :: Value
             expected =

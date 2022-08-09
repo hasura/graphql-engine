@@ -14,6 +14,7 @@ module Harness.Test.Schema
     BackendScalarValue (..),
     BackendScalarValueType (..),
     ManualRelationship (..),
+    SchemaName (..),
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -31,6 +32,7 @@ module Harness.Test.Schema
     untrackRelationships,
     mkObjectRelationshipName,
     mkArrayRelationshipName,
+    getSchemaName,
   )
 where
 

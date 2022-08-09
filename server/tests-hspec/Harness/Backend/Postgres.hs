@@ -39,9 +39,8 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
+import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
 import System.Process.Typed
@@ -111,7 +110,7 @@ connection_info:
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableUniqueConstraints} = do
-  let schemaName = getSchemaName testEnv
+  let schemaName = Schema.getSchemaName testEnv
   run_ $
     T.unpack $
       T.unwords

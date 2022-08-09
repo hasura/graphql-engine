@@ -9,9 +9,8 @@ import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Context qualified as Context
-import Harness.Test.Schema (Table (..), table)
+import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -40,14 +39,14 @@ bigquerySetup :: (TestEnvironment, ()) -> IO ()
 bigquerySetup (testEnv, ()) = do
   BigQuery.setup [authorTable, articleTable] (testEnv, ())
 
-  let schemaName = getSchemaName testEnv
+  let schemaName = Schema.getSchemaName testEnv
 
   -- Create functions in BigQuery
   BigQuery.runSql_ (createFunctionsSQL schemaName)
 
 bigqueryTeardown :: (TestEnvironment, ()) -> IO ()
 bigqueryTeardown (testEnv, ()) = do
-  let schemaName = getSchemaName testEnv
+  let schemaName = Schema.getSchemaName testEnv
 
   -- Drop functions in BigQuery database
   BigQuery.runSql_ (dropFunctionsSQL schemaName)
@@ -146,7 +145,7 @@ dropFunctionsSQL schemaName =
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Add computed field with non exist function - exception" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
       opts
@@ -195,7 +194,7 @@ code: invalid-configuration
 |]
 
   it "Add computed field without returning table - exception" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     -- The function 'fetch_articles' is not defined with 'RETURNS TABLE<>' clause,
     -- we need to provide `return_table` in the payload
@@ -253,7 +252,7 @@ code: invalid-configuration
 |]
 
   it "Add computed field with non exist returning table - exception" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     -- The function 'fetch_articles' is not defined with 'RETURNS TABLE<>' clause,
     -- we need to provide `return_table` in the payload
@@ -314,7 +313,7 @@ code: invalid-configuration
 |]
 
   it "Add computed field with returning table when it is not required - exception" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     -- The function 'fetch_articles_returns_table' is defined with 'RETURNS TABLE<>' clause,
     -- we don't need to provide 'return_table' in the payload as the returning fields are inferred
@@ -376,7 +375,7 @@ code: invalid-configuration
 |]
 
   it "Add computed field with a function that has no input arguments - exception" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     -- The function 'function_no_args' has no input arguments
     shouldReturnYaml
@@ -434,7 +433,7 @@ code: invalid-configuration
 |]
 
   it "Add computed field with a function that returns a scalar value - exception" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     -- The function 'add_int' returns a scalar value of type 'INT64', as of now we do not support
     -- scalar computed fields.
@@ -487,7 +486,7 @@ code: invalid-configuration
 |]
 
   it "Add computed field with invalid argument name in argument_mapping - exception" $ \testEnv -> do
-    let schemaName = getSchemaName testEnv
+    let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
       opts

@@ -42,10 +42,10 @@ import Harness.Test.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
     ScalarValue (..),
+    SchemaName (..),
     Table (..),
   )
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
@@ -245,7 +245,7 @@ setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables' (testEnvironment, _) = do
   let source = defaultSource BigQuery
       backendType = defaultBackendTypeString BigQuery
-      schemaName = getSchemaName testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
       tables =
         map
           ( \t ->
@@ -288,7 +288,7 @@ setup tables' (testEnvironment, _) = do
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 teardown (reverse -> tables) (testEnvironment, _) = do
-  let schemaName = getSchemaName testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
   finally
     -- Teardown relationships first
     ( forFinally_ tables $ \table ->

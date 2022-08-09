@@ -22,7 +22,6 @@ import Harness.Test.Context (Options (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -121,7 +120,7 @@ tests opts = do
 
   describe "Nested relationship queries" do
     it "Nests with 'where' clauses" \testEnvironment -> do
-      let schemaName = getSchemaName testEnvironment
+      let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
@@ -158,7 +157,7 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Nesting in the 'where' clause" \testEnvironment -> do
-      let schemaName = getSchemaName testEnvironment
+      let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
@@ -190,7 +189,7 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Deep nesting" \testEnvironment -> do
-      let schemaName = getSchemaName testEnvironment
+      let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =

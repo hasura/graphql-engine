@@ -15,7 +15,6 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -126,7 +125,7 @@ longtable =
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   it "select long table" $ \testEnvironment -> do
-    let schemaName = getSchemaName testEnvironment
+    let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
       opts
@@ -148,7 +147,7 @@ data:
 |]
 
   it "select long column" $ \testEnvironment -> do
-    let schemaName = getSchemaName testEnvironment
+    let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
       opts
@@ -176,7 +175,7 @@ data:
 |]
 
   it "select long column via array relationship" $ \testEnvironment -> do
-    let schemaName = getSchemaName testEnvironment
+    let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
       opts
