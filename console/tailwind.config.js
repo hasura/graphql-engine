@@ -1,17 +1,11 @@
 const colors = require('tailwindcss/colors');
 
 module.exports = {
-  purge: {
-    content: ['./src/**/*.{js,jsx,ts,tsx,html,md,mdx}'],
-    options: {
-      safelist: {
-        standard: [/background$/],
-      },
-    },
+  content: ['./src/**/*.{js,jsx,ts,tsx,html,md,mdx}'],
+  safelist: {
+    standard: /background$/,
   },
   darkMode: 'class',
-  // jit: true,
-  mode: 'jit',
   theme: {
     fontFamily: {
       sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
@@ -24,16 +18,12 @@ module.exports = {
       colors: {
         current: 'currentColor',
         yellow: colors.amber,
-        gray: colors.blueGray,
+        gray: colors.slate,
         primary: {
           light: '#fad170',
           DEFAULT: '#f9c548',
           dark: '#d5ae52',
           darker: '#ae8e3e',
-        },
-        // added this new colour from tailwindv3, can be removed on tailwind upgrade
-        slate: {
-          700: '#334155',
         },
         cloud: {
           DEFAULT: '#1eb4d4',

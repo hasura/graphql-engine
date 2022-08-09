@@ -117,7 +117,7 @@ export const TableRow: React.FC<TableRowProps> = ({
 
   return (
     <div className="items-center flex pb-xs">
-      <div className="w-2/12 overflow-hidden overflow-ellipsis" title={colName}>
+      <div className="w-2/12 overflow-hidden text-ellipsis" title={colName}>
         {colName}
       </div>
       <div>
