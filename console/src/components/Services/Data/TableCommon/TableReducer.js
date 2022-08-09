@@ -21,6 +21,9 @@ import {
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
+  TOGGLE_APOLLO_FEDERATION,
+  TOGGLE_APOLLO_FEDERATION_SUCCESS,
+  TOGGLE_APOLLO_FEDERATION_FAILURE,
   MODIFY_ROOT_FIELD,
   MODIFY_TABLE_CUSTOM_NAME,
   SET_CHECK_CONSTRAINTS,
@@ -621,6 +624,29 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         tableEnum: {
+          loading: false,
+        },
+      };
+
+    case TOGGLE_APOLLO_FEDERATION:
+      return {
+        ...modifyState,
+        tableApolloFederation: {
+          loading: true,
+        },
+      };
+    case TOGGLE_APOLLO_FEDERATION_FAILURE:
+      return {
+        ...modifyState,
+        tableApolloFederation: {
+          loading: false,
+          error: action.error,
+        },
+      };
+    case TOGGLE_APOLLO_FEDERATION_SUCCESS:
+      return {
+        ...modifyState,
+        tableApolloFederation: {
           loading: false,
         },
       };
