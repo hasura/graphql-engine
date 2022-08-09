@@ -183,6 +183,7 @@ mkServeOptions ServeOptionsRaw {..} = do
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption
     metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
   soDefaultNamingConvention <- withOption rsoDefaultNamingConvention defaultNamingConventionOption
+  soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption
 
   pure $
     ServeOptions {..}
@@ -210,9 +211,12 @@ mkServeOptions ServeOptionsRaw {..} = do
       -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
       -- TODO (from master):- drop this in next major update (2020-08-21)
       authMode <-
-        case mType of
-          Nothing -> fromMaybe (_default authHookModeOption) <$> considerEnvs [_envVar authHookModeOption, "HASURA_GRAPHQL_AUTH_HOOK_TYPE"]
-          Just ty -> pure ty
+        onNothing
+          mType
+          ( fromMaybe (_default authHookModeOption)
+              <$> considerEnvs
+                [_envVar authHookModeOption, "HASURA_GRAPHQL_AUTH_HOOK_TYPE"]
+          )
       pure $ (`Auth.AuthHook` authMode) <$> mUrlEnv
 
     mkCorsConfig mCfg = do

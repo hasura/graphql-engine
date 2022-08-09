@@ -321,6 +321,25 @@ CSV of list of domains, including scheme (http/https) and port, to allow for COR
 
 **Flag:**
 
+`--metadata-database-extensions-schema`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`
+
+</td>
+<td>
+
+The schema in which Hasura can install extensions in the metadata database. Default: `public`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
 `--dev-mode`
 
 **ENV variable:**
@@ -1188,7 +1207,7 @@ Used to set the default naming convention for all sources. See
 
 </td>
 </tr>
-  
+
 </tbody>
 </table>
 
@@ -1350,6 +1369,7 @@ The pro key that you have received.
 <tr>
 <td>
 
+
 **Flag:**
 
 `--rate-limit-redis-tls-hostname <HOSTNAME>`
@@ -1357,6 +1377,7 @@ The pro key that you have received.
 **ENV variable:**
 
 `HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME`
+
 
 </td>
 <td>

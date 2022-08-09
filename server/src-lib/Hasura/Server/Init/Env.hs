@@ -24,6 +24,7 @@ import Data.Text qualified as T
 import Data.Time (NominalDiffTime)
 import Data.URL.Template (URLTemplate, parseURLTemplate)
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase (NamingCase, parseNamingConventionFromText)
@@ -77,9 +78,8 @@ withOption parsed option =
 -- for that option, query the environment, and then merge the results
 -- from the parser, environment, and the default.
 withOptionDefault :: (Monad m, FromEnv option) => Maybe option -> Option option -> WithEnvT m option
-withOptionDefault parsed Option {..} = case parsed of
-  Nothing -> fromMaybe _default <$> considerEnv _envVar
-  Just option -> pure option
+withOptionDefault parsed Option {..} =
+  onNothing parsed (fromMaybe _default <$> considerEnv _envVar)
 
 -- | Switches in 'optparse-applicative' have different semantics then
 -- ordinary flags. They are always optional and produce a 'False' when
@@ -292,3 +292,6 @@ instance FromEnv NonNegativeInt where
 
 instance FromEnv Cache.CacheSize where
   fromEnv = Cache.parseCacheSize
+
+instance FromEnv ExtensionsSchema where
+  fromEnv = Right . ExtensionsSchema . T.pack

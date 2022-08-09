@@ -105,10 +105,11 @@ migrateCatalog ::
     MonadBaseControl IO m
   ) =>
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
+  ExtensionsSchema ->
   MaintenanceMode () ->
   UTCTime ->
   m (MigrationResult, Metadata)
-migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
+migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrationTime = do
   catalogSchemaExists <- doesSchemaExist (SchemaName "hdb_catalog")
   versionTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version")
   metadataTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_metadata")
@@ -139,7 +140,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
       liftTx $
         Q.catchE defaultTxErrorHandler $
           when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
-      enablePgcryptoExtension
+      enablePgcryptoExtension extensionsSchema
       multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= Q.sqlFromFile)
       updateCatalogVersion
 

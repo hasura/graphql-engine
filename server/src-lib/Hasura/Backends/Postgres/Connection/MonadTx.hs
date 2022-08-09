@@ -25,6 +25,7 @@ module Hasura.Backends.Postgres.Connection.MonadTx
     doesTableExist,
     enablePgcryptoExtension,
     dropHdbCatalogSchema,
+    ExtensionsSchema (..),
   )
 where
 
@@ -195,8 +196,12 @@ isExtensionAvailable extensionName =
         (Identity extensionName)
         False
 
-enablePgcryptoExtension :: forall m. MonadTx m => m ()
-enablePgcryptoExtension = do
+-- | The name of the schema in which the graphql-engine will install database extensions.
+newtype ExtensionsSchema = ExtensionsSchema {_unExtensionsSchema :: Text}
+  deriving (Eq, FromJSON, ToJSON)
+
+enablePgcryptoExtension :: forall m. MonadTx m => ExtensionsSchema -> m ()
+enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
   pgcryptoAvailable <- isExtensionAvailable "pgcrypto"
   if pgcryptoAvailable
     then createPgcryptoExtension
@@ -210,7 +215,7 @@ enablePgcryptoExtension = do
       liftTx $
         Q.unitQE
           needsPGCryptoError
-          "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public"
+          (Q.fromText $ "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA " <> extensionsSchema)
           ()
           False
       where
