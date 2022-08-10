@@ -16,6 +16,7 @@
 - console: add custom names for streaming subscriptions
 - console: add support for table query and subscription root fields visibility permissions
 - console: fix the BigQuery row-level restrictions on boolean columns
+- console: add support extensions_schema on postgres connect/edit DB form
 - console: add support for new database-to-remote schema metadata format in old table relationships UI
 
 ## v2.10.0
