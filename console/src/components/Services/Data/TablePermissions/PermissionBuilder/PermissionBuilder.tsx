@@ -26,6 +26,7 @@ import {
 import {
   addToPrefix,
   boolOperators,
+  deprecatedColumnOperators,
   existOperators,
   getOperatorInputType,
   getPermissionOperators,
@@ -800,7 +801,9 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
       const operatorSelect = renderSelect(
         dispatchColumnOperatorSelect,
         operator,
-        operators,
+        deprecatedColumnOperators.includes(operator)
+          ? operators.concat(operator)
+          : operators,
         prefix
       );
 
