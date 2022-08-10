@@ -1,5 +1,7 @@
 import { defineConfig } from 'cypress';
 
+import * as customTasks from './cypress/support/tasks';
+
 export default defineConfig({
   env: {
     BASE_URL: 'http://localhost:3000',
@@ -15,9 +17,16 @@ export default defineConfig({
     // We've imported your old cypress plugins here.
     // You may want to clean this up later by importing these.
     setupNodeEvents(on, config) {
-      return require('./cypress/plugins/index.js')(on, config);
+      on('task', {
+        ...customTasks,
+      });
+
+      return config;
     },
     baseUrl: 'http://localhost:3000',
-    specPattern: 'cypress/e2e/**/*test.{js,jsx,ts,tsx}',
+    specPattern: [
+      'cypress/e2e/**/*test.{js,jsx,ts,tsx}',
+      'cypress/support/**/*unit.test.{js,ts}',
+    ],
   },
 });
