@@ -37,10 +37,6 @@ const columnOperatorsInfo = {
     type: 'comparision',
     inputStructure: 'object',
   },
-  _ne: {
-    type: 'comparision',
-    inputStructure: 'object',
-  },
   _neq: {
     type: 'comparision',
     inputStructure: 'object',
@@ -249,6 +245,8 @@ export const allOperators = boolOperators
 export const TABLE_KEY = '_table';
 export const WHERE_KEY = '_where';
 
+export const deprecatedColumnOperators = ['_ne'];
+
 /* Util functions */
 
 export const isBoolOperator = operator => {
@@ -268,7 +266,10 @@ export const isArrayBoolOperator = operator => {
 };
 
 export const isColumnOperator = operator => {
-  return columnOperators.includes(operator);
+  return (
+    columnOperators.includes(operator) ||
+    deprecatedColumnOperators.includes(operator)
+  );
 };
 
 export const isArrayColumnOperator = operator => {
@@ -303,6 +304,7 @@ export function getLegacyOperator(operator) {
 
 export function addToPrefix(prefix, value) {
   let _newPrefix;
+
   if (prefix !== null && prefix.toString()) {
     if (
       prefix[prefix.length - 1] === '^' ||
