@@ -3,12 +3,11 @@
 -- | Tests related to request headers
 module Test.RequestHeadersSpec (spec) where
 
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema
   ( BackendScalarType (..),
     Table (..),
@@ -26,18 +25,15 @@ import Test.Hspec (SpecWith, it)
 -- * Preamble
 
 spec :: SpecWith TestEnvironment
-spec =
-  Context.run
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.SQLServer,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = sqlserverSetup,
-              teardown = sqlserverTeardown,
-              customOptions = Nothing
-            }
-        ]
-    )
+spec = do
+  Fixture.run
+    [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Sqlserver.setupTablesAction schema testEnv,
+              sqlserverPermissionsSetup testEnv
+            ]
+        }
+    ]
     tests
 
 --------------------------------------------------------------------------------
@@ -69,47 +65,43 @@ author =
 --------------------------------------------------------------------------------
 -- Setup and teardown override
 
-sqlserverSetup :: (TestEnvironment, ()) -> IO ()
-sqlserverSetup (testEnvironment, _) = do
-  Sqlserver.setup schema (testEnvironment, ())
-  -- create permissions
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: mssql_create_select_permission
-args:
-  source: mssql
-  table:
-    schema: hasura
-    name: author
-  role: user
-  permission:
-    filter:
-      uuid: X-Hasura-User-Id
-    columns: '*'
-|]
-
-sqlserverTeardown :: (TestEnvironment, ()) -> IO ()
-sqlserverTeardown (testEnvironment, _) = do
-  -- drop permissions
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: mssql_drop_select_permission
-args:
-  source: mssql
-  table:
-    schema: hasura
-    name: author
-  role: user
-|]
-  -- rest of the teardown
-  Sqlserver.teardown schema (testEnvironment, ())
+sqlserverPermissionsSetup :: TestEnvironment -> Fixture.SetupAction
+sqlserverPermissionsSetup testEnvironment =
+  Fixture.SetupAction
+    { setupAction =
+        GraphqlEngine.postMetadata_
+          testEnvironment
+          [yaml|
+          type: mssql_create_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+            permission:
+              filter:
+                uuid: X-Hasura-User-Id
+              columns: '*'
+          |],
+      teardownAction = \_ ->
+        GraphqlEngine.postMetadata_
+          testEnvironment
+          [yaml|
+          type: mssql_drop_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+          |]
+    }
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   -- See https://github.com/hasura/graphql-engine/issues/8158
   it "session variable string values are not truncated to default (30) length" $ \testEnvironment ->
@@ -121,17 +113,17 @@ tests opts = do
             ("X-Hasura-User-Id", "36a6257b-08bb-45ef-a5cf-c1b7a7997087")
           ]
           [graphql|
-query {
-  hasura_author {
-    name
-    uuid
-  }
-}
-|]
+          query {
+            hasura_author {
+              name
+              uuid
+            }
+          }
+          |]
       )
       [yaml|
-data:
-  hasura_author:
-  - name: 'Author 1'
-    uuid: '36a6257b-08bb-45ef-a5cf-c1b7a7997087'
-|]
+      data:
+        hasura_author:
+        - name: 'Author 1'
+          uuid: '36a6257b-08bb-45ef-a5cf-c1b7a7997087'
+      |]
