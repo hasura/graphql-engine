@@ -3,12 +3,11 @@
 -- | Test backend only permissions
 module Test.BackendOnlyPermissionsSpec (spec) where
 
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -22,17 +21,15 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
-            }
-        ]
-    )
+  -- Postgres
+  Fixture.run
+    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Postgres.setupTablesAction schema testEnv
+            ]
+              <> postgresPermissionsSetup testEnv
+        }
+    ]
     tests
 
 --------------------------------------------------------------------------------
@@ -73,112 +70,141 @@ article =
 
 -- ** Postgres Setup and teardown
 
-postgresSetup :: (TestEnvironment, ()) -> IO ()
-postgresSetup (testEnvironment, ()) = do
-  Postgres.setup schema (testEnvironment, ())
-
-  -- setup permissions
-
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-type: bulk
-args:
-- type: pg_create_update_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: backend_only_role
-    permission:
-      columns:
-        - name
-      filter:
-        id: x-hasura-user-id
-      check:
-        name:
-          _ne: ""
-      backend_only: true
-- type: pg_create_update_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: frontend_only_role
-    permission:
-      columns:
-        - name
-      filter:
-        id: x-hasura-user-id
-      check:
-        name:
-          _ne: ""
-- type: pg_create_delete_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: backend_only_role
-    permission:
-      filter:
-        id: x-hasura-user-id
-      backend_only: true
-- type: pg_create_delete_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: frontend_only_role
-    permission:
-      filter:
-        id: x-hasura-user-id
-         |]
-
-postgresTeardown :: (TestEnvironment, ()) -> IO ()
-postgresTeardown (testEnvironment, ()) = do
-  -- teardown permissions
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-type: bulk
-args:
-- type: pg_drop_update_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: backend_only_role
-- type: pg_drop_update_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: frontend_only_role
-- type: pg_drop_delete_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: backend_only_role
-- type: pg_drop_delete_permission
-  args:
-    table:
-      schema: hasura
-      name: author
-    source: postgres
-    role: frontend_only_role
-         |]
-
-  Postgres.teardown schema (testEnvironment, ())
+postgresPermissionsSetup :: TestEnvironment -> [Fixture.SetupAction]
+postgresPermissionsSetup testEnvironment =
+  [ Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+          type: pg_create_update_permission
+          args:
+            table:
+              schema: hasura
+              name: author
+            source: postgres
+            role: backend_only_role
+            permission:
+              columns:
+                - name
+              filter:
+                id: x-hasura-user-id
+              check:
+                name:
+                  _ne: ""
+              backend_only: true
+          |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+          type: pg_drop_update_permission
+          args:
+            table:
+              schema: hasura
+              name: author
+            source: postgres
+            role: backend_only_role
+          |]
+      },
+    Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+            type: pg_create_update_permission
+            args:
+              table:
+                schema: hasura
+                name: author
+              source: postgres
+              role: frontend_only_role
+              permission:
+                columns:
+                  - name
+                filter:
+                  id: x-hasura-user-id
+                check:
+                  name:
+                    _ne: ""
+            |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+            type: pg_drop_update_permission
+            args:
+              table:
+                schema: hasura
+                name: author
+              source: postgres
+              role: frontend_only_role
+            |]
+      },
+    Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+            type: pg_create_delete_permission
+            args:
+              table:
+                schema: hasura
+                name: author
+              source: postgres
+              role: backend_only_role
+              permission:
+                filter:
+                  id: x-hasura-user-id
+                backend_only: true
+            |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+            type: pg_drop_delete_permission
+            args:
+              table:
+                schema: hasura
+                name: author
+              source: postgres
+              role: backend_only_role
+            |]
+      },
+    Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+            type: pg_create_delete_permission
+            args:
+              table:
+                schema: hasura
+                name: author
+              source: postgres
+              role: frontend_only_role
+              permission:
+                filter:
+                  id: x-hasura-user-id
+            |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnvironment
+            [yaml|
+            type: pg_drop_delete_permission
+            args:
+              table:
+                schema: hasura
+                name: author
+              source: postgres
+              role: frontend_only_role
+            |]
+      }
+  ]
 
 -------------------------------------------------------------------------------
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   describe "backend-only fields should be exposed to a role with `backend_only` set to `true`" $ do
     let userHeaders = [("X-Hasura-Role", "backend_only_role"), ("X-Hasura-User-Id", "1"), ("X-Hasura-use-backend-only-permissions", "true")]
