@@ -12,6 +12,7 @@ The SQLite agent currently supports the following capabilities:
 * [ ] GraphQL Mutations
 * [x] Relationships
 * [x] Aggregations
+* [x] Prometheus Metrics
 * [ ] Exposing Foreign-Key Information
 * [ ] Subscriptions
 * [ ] Streaming Subscriptions
@@ -42,13 +43,19 @@ echo src/**/*.ts | xargs -n1 echo | DB_READONLY=y entr -r npm run start
 
 ## Options / Environment Variables
 
-* ENV: `PORT=[INT]` - Port for agent to listen on. 8100 by default.
-* ENV: `PERMISSIVE_CORS={1|true|yes}` - Allows all requests - Useful for testing with SwaggerUI. Turn off on production.
-* ENV: `DB_CREATE={1|true|yes}` - Allows new databases to be created, not permitted by default.
-* ENV: `DB_READONLY={1|true|yes}` - Makes databases readonly, they are read-write by default.
-* ENV: `DB_ALLOW_LIST=DB1[,DB2]*` - Restrict what databases can be connected to.
-* ENV: `DB_PRIVATECACHE` - Keep caches between connections private. Shared by default.
-* ENV: `DEBUGGING_TAGS` - Outputs xml style tags in query comments for deugging purposes.
+Note: Boolean flags `{FLAG}` can be provided as `1`, `true`, `yes`, or omitted and default to `false`.
+
+| ENV Variable Name | Format | Default | Info |
+| --- | --- | --- | --- |
+| `PORT` | `INT` | `8100` | Port for agent to listen on. |
+| `PERMISSIVE_CORS` | `{FLAG}` | `false` | Allows all requests - Useful for testing with SwaggerUI. Turn off on production. |
+| `DB_CREATE` | `{FLAG}` | `false` | Allows new databases to be created. |
+| `DB_READONLY` | `{FLAG}` | `false` | Makes databases readonly. |
+| `DB_ALLOW_LIST` | `DB1[,DB2]*` | Any Allowed | Restrict what databases can be connected to. |
+| `DB_PRIVATECACHE` | `{FLAG}` | Shared | Keep caches between connections private. |
+| `DEBUGGING_TAGS` | `{FLAG}` | `false` | Outputs xml style tags in query comments for deugging purposes. |
+| `PRETTY_PRINT_LOGS` | `{FLAG}` | `false` | Uses `pino-pretty` to pretty print request logs |
+| `METRICS` | `{FLAG}` | `false` | Enables a `/metrics` prometheus metrics endpoint.
 
 ## Agent usage
 
@@ -89,6 +96,7 @@ From the HGE repo.
 
 ## TODO
 
+* [x] Prometheus metrics hosted at `/metrics`
 * [ ] Pull reference types from a package rather than checked-in files
 * [x] Health Check
 * [x] DB Specific Health Checks
