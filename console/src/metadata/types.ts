@@ -1109,6 +1109,7 @@ export interface MetadataDataSource {
   kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
   configuration?: {
     connection_info?: SourceConnectionInfo;
+    extensions_schema?: string;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
     service_account?: BigQueryServiceAccount;

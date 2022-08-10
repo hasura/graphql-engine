@@ -41,6 +41,7 @@ describe('dataSourceIsEqual works', () => {
           use_prepared_statements: false,
           ssl_configuration: {},
         },
+        extensions_schema: null,
         read_replicas: null,
       },
       replace_configuration: true,

@@ -41,6 +41,7 @@ export type ConnectDBState = {
   envVarState: {
     envVar: string;
   };
+  extensionsSchema?: string;
   connectionSettings?: ConnectionPoolSettings;
   sslConfiguration?: SSLConfigOptions;
   isolationLevel?: IsolationLevelOptions;
@@ -183,6 +184,10 @@ export const connectDataSource = (
       ...(checkEmpty(currentState.sslConfiguration) && {
         sslConfiguration: currentState.sslConfiguration,
       }),
+      ...(currentState.extensionsSchema &&
+        currentState.extensionsSchema !== '' && {
+          extensionsSchema: currentState.extensionsSchema,
+        }),
       preparedStatements: currentState.preparedStatements,
       isolationLevel: currentState.isolationLevel,
       ...(checkEmpty(currentState.customization) && {
@@ -223,6 +228,7 @@ export type ConnectDBActions =
         driver: Driver;
         databaseUrl: string;
         connectionParamState?: ConnectionParams;
+        extensionsSchema?: string;
         connectionSettings?: ConnectionPoolSettings;
         preparedStatements: boolean;
         isolationLevel: IsolationLevelOptions;
@@ -233,6 +239,7 @@ export type ConnectDBActions =
   | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
   | { type: 'UPDATE_DISPLAY_NAME'; data: string }
   | { type: 'UPDATE_DB_URL'; data: string }
+  | { type: 'UPDATE_EXTENSIONS_SCHEMA'; data?: string }
   | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT'; data: number }
   | { type: 'UPDATE_DB_BIGQUERY_PROJECT_ID'; data: string }
@@ -289,6 +296,7 @@ export const connectDBReducer = (
         isolationLevel: action.data.isolationLevel,
         sslConfiguration: action.data.sslConfiguration,
         customization: action.data?.customization,
+        extensionsSchema: action.data?.extensionsSchema,
       };
     case 'UPDATE_PARAM_STATE':
       return {
@@ -474,6 +482,11 @@ export const connectDBReducer = (
           ...state.databaseURLState,
           global_select_limit: action.data,
         },
+      };
+    case 'UPDATE_EXTENSIONS_SCHEMA':
+      return {
+        ...state,
+        extensionsSchema: action.data,
       };
     case 'UPDATE_DB_BIGQUERY_DATASETS':
       return {
