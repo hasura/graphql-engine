@@ -1,6 +1,6 @@
 ﻿import { Config }  from "./config";
 import { connect } from "./db";
-import { coerceUndefinedOrNullToEmptyArray, coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, stringToBool, logDeep, isEmptyObject, tableNameEquals } from "./util";
+import { coerceUndefinedOrNullToEmptyArray, coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, logDeep, isEmptyObject, tableNameEquals } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -419,7 +419,7 @@ function output(rows: any): QueryResponse {
   return JSON.parse(rows[0].data);
 }
 
-const DEBUGGING_TAGS = stringToBool(process.env['DEBUGGING_TAGS']);
+const DEBUGGING_TAGS = envToBool('DEBUGGING_TAGS');
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
  *
  * comment('a','b') => '/*\<a>\*\/ b /*\</a>*\/'

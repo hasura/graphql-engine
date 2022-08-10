@@ -5,14 +5,39 @@ import { queryData }                                   from './query';
 import { getConfig }                                   from './config';
 import { CapabilitiesResponse, capabilitiesResponse}   from './capabilities';
 import { connect }                                     from './db';
-import { stringToBool }                                from './util';
+import { envToBool }                                   from './util';
 import { QueryResponse, SchemaResponse, QueryRequest } from './types';
+import metrics                                         from 'fastify-metrics';
+import prometheus                                      from 'prom-client';
 import * as fs                                         from 'fs'
 
 const port = Number(process.env.PORT) || 8100;
-const server = Fastify({ logger: { prettyPrint: true } });
 
-if(stringToBool(process.env['PERMISSIVE_CORS'])) {
+// NOTE: Pretty printing for logs is no longer supported out of the box.
+// See: https://github.com/pinojs/pino-pretty#integration
+// Pretty printed logs will be enabled if you have the `pino-pretty`
+// dev dependency installed as per the package.json settings.
+const server = Fastify({
+  logger:
+      (envToBool('PRETTY_PRINT_LOGS')) ?
+        { transport: { target: 'pino-pretty' } } :
+        true
+})
+
+const METRICS_ENABLED = envToBool('METRICS');
+
+if(METRICS_ENABLED) {
+  // See: https://www.npmjs.com/package/fastify-metrics
+  server.register(metrics, {
+    endpoint: '/metrics',
+    routeMetrics: {
+      enabled: true,
+      registeredRoutesOnly: false,
+    }
+  });
+}
+
+if(envToBool('PERMISSIVE_CORS')) {
   // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
   server.register(FastifyCors, {
     origin: true,
@@ -20,6 +45,38 @@ if(stringToBool(process.env['PERMISSIVE_CORS'])) {
     allowedHeaders: ["X-Hasura-DataConnector-Config", "X-Hasura-DataConnector-SourceName"]
   });
 }
+
+// Register request-hook metrics.
+// This is done in a closure so that the metrics are scoped here.
+(() => {
+  if(! METRICS_ENABLED) {
+    return;
+  }
+
+  const requestCounter = new prometheus.Counter({
+    name: 'http_request_count',
+    help: 'Number of requests',
+    labelNames: ['route'] as const,
+  });
+
+  // Register a global request counting metric
+  // See: https://www.fastify.io/docs/latest/Reference/Hooks/#onrequest
+  server.addHook('onRequest', async (request, reply) => {
+    requestCounter.inc({route: request.routerPath});
+  })
+})();
+
+// Serves as an example of a custom histogram
+// Not especially useful at present as this mirrors
+// http_request_duration_seconds_bucket but is less general
+// but the query endpoint will offer more statistics specific
+// to the database interactions in future.
+const queryHistogram = new prometheus.Histogram({
+  name: 'query_durations',
+  help: 'Histogram of the duration of query response times.',
+  buckets: prometheus.exponentialBuckets(0.0001, 10, 8),
+  labelNames: ['route'] as const,
+});
 
 server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
@@ -34,8 +91,11 @@ server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
 
 server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
+  const end = queryHistogram.startTimer()
   const config = getConfig(request);
-  return queryData(config, request.body);
+  const result = queryData(config, request.body);
+  end();
+  return result;
 });
 
 server.get("/health", async (request, response) => {
@@ -85,6 +145,7 @@ server.get("/", async (request, response) => {
           <li><a href="/query">POST /query - Query Handler</a>
           <li><a href="/health">GET /health - Healthcheck</a>
           <li><a href="/swagger.json">GET /swagger.json - Swagger JSON</a>
+          <li><a href="/metrics">GET /metrics - Prometheus formatted metrics</a>
         </ul>
       </body>
     </html>
@@ -98,7 +159,8 @@ process.on('SIGINT', () => {
 
 const start = async () => {
   try {
-    await server.listen(port, "0.0.0.0");
+    console.log(`STARTING on port ${port}`);
+    await server.listen({port: port, host: "0.0.0.0"});
   }
   catch (err) {
     server.log.fatal(err);

@@ -29,6 +29,14 @@ export function stringToBool(x: string | null | undefined): boolean {
   return (/1|true|t|yes|y/i).test(x || '');
 }
 
+export function envToBool(x: string | null | undefined): boolean {
+  if(x == null) {
+    throw new Error(`envToBool called on empty name`);
+  } else {
+    return (stringToBool(process.env[x]));
+  }
+}
+
 export function last<T>(x: Array<T>): T {
   return x[x.length - 1];
 }

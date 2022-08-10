@@ -21,16 +21,17 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@fastify/cors": "^7.0.0",
-    "fastify": "^3.29.0",
+    "@fastify/cors": "^8.1.0",
+    "fastify": "^4.4.0",
+    "fastify-metrics": "^9.2.1",
     "openapi3-ts": "^2.0.2",
-    "pino-pretty": "^8.0.0",
     "sequelize": "^6.21.2",
     "sqlite": "^4.1.1",
     "sqlite-parser": "^1.0.1",
     "sqlite3": "^5.0.8",
     "sqlstring-sqlite": "^0.1.1",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.4.23",
+    "pino-pretty": "^8.1.0"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.2",

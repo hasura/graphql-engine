@@ -1,7 +1,7 @@
 import { Config } from "./config";
 import { Sequelize } from 'sequelize';
 import { env } from "process";
-import { stringToBool } from "./util";
+import { envToBool } from "./util";
 import SQLite from 'sqlite3';
 
 export function connect(config: Config): Sequelize {
@@ -21,9 +21,9 @@ export function connect(config: Config): Sequelize {
   //   * OPEN_SHAREDCACHE
   //   * OPEN_PRIVATECACHE
   // The default value is OPEN_READWRITE | OPEN_CREATE | OPEN_FULLMUTEX.
-  const readMode   = stringToBool(process.env['DB_READONLY'])     ? SQLite.OPEN_READONLY     : SQLite.OPEN_READWRITE;
-  const createMode = stringToBool(process.env['DB_CREATE'])       ? SQLite.OPEN_CREATE       : 0; // Flag style means 0=off
-  const cacheMode  = stringToBool(process.env['DB_PRIVATECACHE']) ? SQLite.OPEN_PRIVATECACHE : SQLite.OPEN_SHAREDCACHE;
+  const readMode   = envToBool('DB_READONLY')     ? SQLite.OPEN_READONLY     : SQLite.OPEN_READWRITE;
+  const createMode = envToBool('DB_CREATE')       ? SQLite.OPEN_CREATE       : 0; // Flag style means 0=off
+  const cacheMode  = envToBool('DB_PRIVATECACHE') ? SQLite.OPEN_PRIVATECACHE : SQLite.OPEN_SHAREDCACHE;
   const mode       = readMode | createMode | cacheMode;
 
   const db = new Sequelize({
