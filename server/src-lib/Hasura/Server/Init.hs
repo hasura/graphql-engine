@@ -159,8 +159,8 @@ mkServeOptions ServeOptionsRaw {..} = do
   soLogLevel <- withOptionDefault rsoLogLevel logLevelOption
   soDevMode <- withOptionSwitch rsoDevMode graphqlDevModeOption
   soResponseInternalErrorsConfig <- mkResponseInternalErrorsConfig soDevMode
-  soEventsHttpPoolSize <- withOption rsoEventsHttpPoolSize graphqlEventsHttpPoolSizeOption
-  soEventsFetchInterval <- withOption rsoEventsFetchInterval graphqlEventsFetchIntervalOption
+  soEventsHttpPoolSize <- withOptionDefault rsoEventsHttpPoolSize graphqlEventsHttpPoolSizeOption
+  soEventsFetchInterval <- withOptionDefault rsoEventsFetchInterval graphqlEventsFetchIntervalOption
   soAsyncActionsFetchInterval <- withOptionDefault rsoAsyncActionsFetchInterval asyncActionsFetchIntervalOption
   soEnableRemoteSchemaPermissions <-
     case rsoEnableRemoteSchemaPermissions of

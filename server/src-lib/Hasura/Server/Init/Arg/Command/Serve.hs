@@ -798,16 +798,10 @@ parseGraphqlEventsHttpPoolSize =
           <> Opt.help (Config._helpMessage graphqlEventsHttpPoolSizeOption)
       )
 
--- TODO(SOLOMON): The default value for this option is set in App.hs:
--- https://github.com/hasura/graphql-engine-mono/blob/main/server/src-lib/Hasura/App.hs#L910
--- We should move the defaulting into the 'Option' term and
--- remove the 'Maybe' from 'soEventsHttpPoolSize' but this
--- should be done in an isolated PR to prevent potential
--- regressions.
-graphqlEventsHttpPoolSizeOption :: Config.Option ()
+graphqlEventsHttpPoolSizeOption :: Config.Option Int
 graphqlEventsHttpPoolSizeOption =
   Config.Option
-    { Config._default = (),
+    { Config._default = 100,
       Config._envVar = "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE",
       Config._helpMessage = "Max event processing threads (default: 100)"
     }
@@ -823,12 +817,12 @@ parseGraphqlEventsFetchInterval =
           <> Opt.help (Config._helpMessage graphqlEventsFetchIntervalOption)
       )
 
-graphqlEventsFetchIntervalOption :: Config.Option ()
+graphqlEventsFetchIntervalOption :: Config.Option Milliseconds
 graphqlEventsFetchIntervalOption =
   Config.Option
-    { Config._default = (),
+    { Config._default = Milliseconds (seconds 1),
       Config._envVar = "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL",
-      Config._helpMessage = "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+      Config._helpMessage = "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres (default: 1 second)."
     }
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
