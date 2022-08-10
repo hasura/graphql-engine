@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- cli-migrations: fix issue with overwriting the $PORT env var (fix #8770)
 
 ## v2.11.0-beta.1
 
