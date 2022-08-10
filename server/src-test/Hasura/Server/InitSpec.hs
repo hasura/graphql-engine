@@ -904,22 +904,15 @@ mkServeOptionsSpec =
         fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
 
     Hspec.describe "soEventsHttpPoolSize" $ do
-      -- TODO(SOLOMON): The default value for this option is set in App.hs:
-      -- https://github.com/hasura/graphql-engine-mono/blob/main/server/src-lib/Hasura/App.hs#L910
-      -- We should move the defaulting into the 'Option' term and
-      -- remove the 'Maybe' from 'soEventsHttpPoolSize' but this
-      -- should be done in an isolated PR to prevent potential
-      -- regressions.
-      --
-      --Hspec.it "Default == 100" $ do
-      --  let -- Given
-      --      rawServeOptions = emptyServeOptionsRaw
-      --      -- When
-      --      env = []
-      --      -- Then
-      --      result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
+      Hspec.it "Default == 100" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = []
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-      --  fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 100)
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right 100
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -929,7 +922,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 200)
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right 200
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -939,7 +932,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 300)
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right 300
 
     Hspec.describe "soEventsFetchInterval" $ do
       Hspec.it "Env > Nothing" $ do
@@ -950,7 +943,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Just 200)
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right 200
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -960,7 +953,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Just 300)
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right 300
 
     Hspec.describe "soAsyncActionsFetchInterval" $ do
       Hspec.it "Default == 1000" $ do

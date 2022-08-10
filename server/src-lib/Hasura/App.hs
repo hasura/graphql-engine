@@ -916,14 +916,13 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
 
     startEventTriggerPollerThread logger lockedEventsCtx cacheRef = do
-      let maxEvThrds = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
-          fetchI = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
+      let fetchI = milliseconds soEventsFetchInterval
           allSources = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
 
-      unless (getNonNegativeInt soEventsFetchBatchSize == 0 || soEventsFetchInterval == Just 0) $ do
+      unless (getNonNegativeInt soEventsFetchBatchSize == 0 || soEventsFetchInterval == 0) $ do
         -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
         -- prepare event triggers data
-        eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI soEventsFetchBatchSize
+        eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx soEventsHttpPoolSize fetchI soEventsFetchBatchSize
         let eventsGracefulShutdownAction =
               waitForProcessingAction
                 logger

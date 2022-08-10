@@ -31,8 +31,6 @@
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx,
     processEventQueue,
-    defaultMaxEventThreads,
-    defaultFetchInterval,
     Event (..),
     EventEngineCtx (..),
     -- Exported for testing
@@ -161,12 +159,6 @@ deriving instance Backend b => Eq (EventPayload b)
 
 instance Backend b => J.ToJSON (EventPayload b) where
   toJSON = J.genericToJSON hasuraJSON {omitNothingFields = True}
-
-defaultMaxEventThreads :: Int
-defaultMaxEventThreads = 100
-
-defaultFetchInterval :: DiffTime
-defaultFetchInterval = seconds 1
 
 initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
