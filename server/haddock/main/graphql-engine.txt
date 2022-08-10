@@ -22359,8 +22359,6 @@ EventPayload :: EventId -> TableName b -> TriggerMetadata -> Value -> DeliveryIn
 [epEvent] :: EventPayload (b :: BackendType) -> Value
 [epDeliveryInfo] :: EventPayload (b :: BackendType) -> DeliveryInfo
 [epCreatedAt] :: EventPayload (b :: BackendType) -> UTCTime
-defaultMaxEventThreads :: Int
-defaultFetchInterval :: DiffTime
 initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
 saveLockedEventTriggerEvents :: MonadIO m => SourceName -> [EventId] -> TVar (HashMap SourceName (Set EventId)) -> m ()
 removeEventTriggerEventFromLockedEvents :: MonadIO m => SourceName -> EventId -> TVar (HashMap SourceName (Set EventId)) -> m ()
@@ -25465,9 +25463,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axtLt. Lens' (QueryParametersInfo b_axtLt) (Seq (ColumnValue b_axtLt))
-qpiReusableVariableValues :: forall b_axtLt. Lens' (QueryParametersInfo b_axtLt) (HashMap Name (ColumnValue b_axtLt))
-qpiReferencedSessionVariables :: forall b_axtLt. Lens' (QueryParametersInfo b_axtLt) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axtJX. Lens' (QueryParametersInfo b_axtJX) (Seq (ColumnValue b_axtJX))
+qpiReusableVariableValues :: forall b_axtJX. Lens' (QueryParametersInfo b_axtJX) (HashMap Name (ColumnValue b_axtJX))
+qpiReferencedSessionVariables :: forall b_axtJX. Lens' (QueryParametersInfo b_axtJX) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -29174,7 +29172,7 @@ WSConnectionInitTimeout :: Seconds -> WSConnectionInitTimeout
 --   the Environment, fully processed and ready to apply when running the
 --   server.
 data ServeOptions impl
-ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Bool -> StringifyNumbers -> Bool -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Maybe Int -> Maybe Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> NonNegativeInt -> Bool -> Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> Maybe NamingCase -> ExtensionsSchema -> ServeOptions impl
+ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Bool -> StringifyNumbers -> Bool -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Int -> Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> NonNegativeInt -> Bool -> Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> Maybe NamingCase -> ExtensionsSchema -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Int
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -29196,8 +29194,8 @@ ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet Ad
 [soEnabledLogTypes] :: ServeOptions impl -> HashSet (EngineLogType impl)
 [soLogLevel] :: ServeOptions impl -> LogLevel
 [soResponseInternalErrorsConfig] :: ServeOptions impl -> ResponseInternalErrorsConfig
-[soEventsHttpPoolSize] :: ServeOptions impl -> Maybe Int
-[soEventsFetchInterval] :: ServeOptions impl -> Maybe Milliseconds
+[soEventsHttpPoolSize] :: ServeOptions impl -> Int
+[soEventsFetchInterval] :: ServeOptions impl -> Milliseconds
 [soAsyncActionsFetchInterval] :: ServeOptions impl -> OptionalInterval
 [soEnableRemoteSchemaPermissions] :: ServeOptions impl -> RemoteSchemaPermissions
 [soConnectionOptions] :: ServeOptions impl -> ConnectionOptions
@@ -29474,9 +29472,9 @@ graphqlDevModeOption :: Option Bool
 parseGraphqlAdminInternalErrors :: Parser (Maybe Bool)
 graphqlAdminInternalErrorsOption :: Option Bool
 parseGraphqlEventsHttpPoolSize :: Parser (Maybe Int)
-graphqlEventsHttpPoolSizeOption :: Option ()
+graphqlEventsHttpPoolSizeOption :: Option Int
 parseGraphqlEventsFetchInterval :: Parser (Maybe Milliseconds)
-graphqlEventsFetchIntervalOption :: Option ()
+graphqlEventsFetchIntervalOption :: Option Milliseconds
 parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe OptionalInterval)
 asyncActionsFetchIntervalOption :: Option OptionalInterval
 parseEnableRemoteSchemaPerms :: Parser RemoteSchemaPermissions
