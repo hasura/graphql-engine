@@ -1246,6 +1246,7 @@ test-suite tests-hspec
     Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
     Test.EventTrigger.EventTriggersRecreationSpec
     Test.EventTrigger.EventTriggersRunSQLSpec
+    Test.EventTrigger.EventTriggersExtensionSchemaSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec

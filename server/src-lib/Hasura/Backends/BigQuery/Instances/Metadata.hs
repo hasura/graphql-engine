@@ -10,7 +10,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
 
 instance BackendMetadata 'BigQuery where
-  prepareCatalog = const $ pure RETDoNothing
+  prepareCatalog _ = pure RETDoNothing
   buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
   resolveSourceConfig = BigQuery.resolveSourceConfig

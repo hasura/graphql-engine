@@ -150,7 +150,15 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
               -- insert metadata with default source
               let defaultSourceMetadata =
                     AB.mkAnyBackend $
-                      SourceMetadata @('Postgres 'Vanilla) defaultSource PostgresVanillaKind mempty mempty defaultSourceConfig Nothing emptySourceCustomization
+                      SourceMetadata
+                        @('Postgres 'Vanilla)
+                        defaultSource
+                        PostgresVanillaKind
+                        mempty
+                        mempty
+                        defaultSourceConfig
+                        Nothing
+                        emptySourceCustomization
                   sources = OMap.singleton defaultSource defaultSourceMetadata
                in emptyMetadata {_metaSources = sources}
 

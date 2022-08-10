@@ -105,7 +105,7 @@ buildPostgresSpecs = do
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
         PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True Q.ReadCommitted Nothing
-      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing
+      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
 
   pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams {Q.cpConns = 1} print
   let pgContext = mkPGExecCtx Q.Serializable pgPool
@@ -146,7 +146,7 @@ buildPostgresSpecs = do
           metadata <-
             snd
               <$> (liftEitherM . runExceptT . runTx pgContext Q.ReadWrite)
-                (migrateCatalog (Just sourceConfig) (ExtensionsSchema "public") maintenanceMode =<< liftIO getCurrentTime)
+                (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)
 
