@@ -31,33 +31,32 @@ module Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec (sp
 
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson.Lens (key, values, _String)
-import Data.List.NonEmpty qualified as NE
 import Data.Maybe qualified as Unsafe (fromJust)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..), remoteSchemaToDBRemoteRelationshipContext)
+import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..), remoteSchemaToDBRemoteRelationshipFixture)
 
 --------------------------------------------------------------------------------
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Context.runWithLocalTestEnvironment contexts tests
+spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    contexts = NE.fromList [remoteSchemaToDBRemoteRelationshipContext]
+    contexts = [remoteSchemaToDBRemoteRelationshipFixture]
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 tests opts = describe "drop-source-metadata-tests" do
   dropMetadataTests opts
 
-dropMetadataTests :: Context.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
+dropMetadataTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 dropMetadataTests opts = describe "drop_source on RHS source should remove remote relationship from LHS" do
   it "drops the RHS source 'target'" \(testEnvironment, _) -> do
     let query =
