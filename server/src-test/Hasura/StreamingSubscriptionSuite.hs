@@ -66,7 +66,7 @@ buildStreamingSubscriptionSuite = do
   pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams print
 
   let pgContext = mkPGExecCtx Q.ReadCommitted pgPool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ())
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $
     describe "Streaming subscriptions polling tests" $ streamingSubscriptionPollingSpec dbSourceConfig

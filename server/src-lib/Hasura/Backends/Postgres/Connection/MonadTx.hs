@@ -196,10 +196,6 @@ isExtensionAvailable extensionName =
         (Identity extensionName)
         False
 
--- | The name of the schema in which the graphql-engine will install database extensions.
-newtype ExtensionsSchema = ExtensionsSchema {_unExtensionsSchema :: Text}
-  deriving (Eq, FromJSON, ToJSON)
-
 enablePgcryptoExtension :: forall m. MonadTx m => ExtensionsSchema -> m ()
 enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
   pgcryptoAvailable <- isExtensionAvailable "pgcrypto"

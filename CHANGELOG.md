@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: accept `extensions_schema` while adding a postgres source for the graphql-engine to install database extensions in the specified schema.
 - server: accept a default extensions schema (`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`) for the metadata database where graphql-engine will install database extensions
 - server: add warning log for missing admin secret
 - server: add metadata API to enable Apollo Federation for a table

@@ -355,7 +355,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
                     _ppsConnectionLifetime = Q.cpMbLifetime soConnParams
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
-           in PostgresConnConfiguration sourceConnInfo Nothing
+           in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
       dangerouslyCollapseBooleans
         | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
         | otherwise = Options.Don'tDangerouslyCollapseBooleans
@@ -1236,7 +1236,7 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
           }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do

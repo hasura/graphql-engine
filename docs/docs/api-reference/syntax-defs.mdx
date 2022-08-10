@@ -87,11 +87,11 @@ keywords:
 
 ## PGConfiguration {#pgconfiguration}
 
-| Key             | Required | Schema                                                | Description                                                                                 |
-|-----------------|----------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| connection_info | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                        |
-| read_replicas   | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
-
+| Key               | Required | Schema                                                | Description                                                                                        |
+|-------------------|----------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| connection_info   | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                               |
+| read_replicas     | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)*        |
+| extensions_schema | false    | String                                                | Name of the schema where the graphql-engine will install database extensions (default: `public`)   |
 
 ## MsSQLConfiguration {#mssqlconfiguration}
 

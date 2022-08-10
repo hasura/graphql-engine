@@ -9,7 +9,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
 
 instance BackendMetadata 'MySQL where
-  prepareCatalog = const $ pure RETDoNothing
+  prepareCatalog _ = pure RETDoNothing
   buildComputedFieldInfo = error "buildComputedFieldInfo: MySQL backend does not support this operation yet."
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: MySQL backend does not support this operation yet."
   resolveSourceConfig = MySQL.resolveSourceConfig

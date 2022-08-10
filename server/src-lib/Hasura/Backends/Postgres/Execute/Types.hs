@@ -25,6 +25,7 @@ import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
+import Hasura.SQL.Types (ExtensionsSchema)
 
 -- See Note [Existentially Quantified Types]
 type RunTx =
@@ -108,14 +109,15 @@ data PGSourceConfig = PGSourceConfig
   { _pscExecCtx :: PGExecCtx,
     _pscConnInfo :: Q.ConnInfo,
     _pscReadReplicaConnInfos :: Maybe (NonEmpty Q.ConnInfo),
-    _pscPostDropHook :: IO ()
+    _pscPostDropHook :: IO (),
+    _pscExtensionsSchema :: ExtensionsSchema
   }
   deriving (Generic)
 
 instance Eq PGSourceConfig where
   lconf == rconf =
-    (_pscConnInfo lconf, _pscReadReplicaConnInfos lconf)
-      == (_pscConnInfo rconf, _pscReadReplicaConnInfos rconf)
+    (_pscConnInfo lconf, _pscReadReplicaConnInfos lconf, _pscExtensionsSchema lconf)
+      == (_pscConnInfo rconf, _pscReadReplicaConnInfos rconf, _pscExtensionsSchema rconf)
 
 instance Cacheable PGSourceConfig where
   unchanged _ = (==)

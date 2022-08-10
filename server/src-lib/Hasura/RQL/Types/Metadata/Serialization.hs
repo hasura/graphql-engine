@@ -115,7 +115,12 @@ sourcesToOrdJSONList sources =
             customizationPair =
               guard (_smCustomization /= emptySourceCustomization)
                 *> [("customization", AO.toOrdered _smCustomization)]
-         in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair <> queryTagsConfigPair <> customizationPair
+         in AO.object $
+              [sourceNamePair, sourceKindPair, tablesPair]
+                <> maybeToList functionsPair
+                <> configurationPair
+                <> queryTagsConfigPair
+                <> customizationPair
 
     tableMetaToOrdJSON :: (Backend b) => TableMetadata b -> AO.Value
     tableMetaToOrdJSON

@@ -418,7 +418,16 @@ mkSourceMetadata ::
   SourceCustomization ->
   BackendSourceMetadata
 mkSourceMetadata name backendSourceKind config customization =
-  AB.mkAnyBackend $ SourceMetadata @b name backendSourceKind mempty mempty config Nothing customization
+  AB.mkAnyBackend $
+    SourceMetadata
+      @b
+      name
+      backendSourceKind
+      mempty
+      mempty
+      config
+      Nothing
+      customization
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
