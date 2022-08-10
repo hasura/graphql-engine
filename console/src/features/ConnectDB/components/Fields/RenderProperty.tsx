@@ -1,5 +1,5 @@
 import React from 'react';
-import { Controller } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import { Property } from '@/features/DataSource';
 
 import { Switch } from '@/new-components/Switch';
@@ -18,6 +18,8 @@ export const RenderProperty = ({
   name,
   otherSchemas,
 }: RenderPropertyProps) => {
+  const { watch } = useFormContext();
+
   switch (property.type) {
     case 'string':
       if (property.enum) {
@@ -63,8 +65,15 @@ export const RenderProperty = ({
       );
     case 'object':
       if (property.nullable) {
+        // if any of the values are set when editing the form open the collapse
+        const existingValues = watch(name);
+        const open = Object.values(existingValues || {}).some(value => value);
+
         return (
-          <Collapse rootClassName="bg-white p-6 border border-gray-300 rounded space-y-4 mb-6 max-w-xl">
+          <Collapse
+            defaultOpen={open}
+            rootClassName="bg-white p-6 border border-gray-300 rounded space-y-4 mb-6 max-w-xl"
+          >
             <Collapse.Header>
               <span className="text-base text-gray-600 font-semibold">
                 {property.description}
@@ -72,10 +81,10 @@ export const RenderProperty = ({
             </Collapse.Header>
             <Collapse.Content>
               {Object.entries(property.properties).map(
-                ([key, _property], i) => (
+                ([key, objectProperty], i) => (
                   <div key={`${name}.${key}.${i}`}>
                     <Field
-                      property={_property}
+                      property={objectProperty}
                       otherSchemas={otherSchemas}
                       name={`${name}.${key}`}
                     />

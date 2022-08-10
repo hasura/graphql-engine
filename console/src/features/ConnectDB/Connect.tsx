@@ -1,18 +1,26 @@
 import React from 'react';
 
 import { Button } from '@/new-components/Button';
-import { Form, InputField, Select } from '@/new-components/Form';
+import { Form } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 
 import { Configuration } from './components/Configuration';
 import { useLoadSchema, useSubmit } from './hooks';
 
-export const Connect = () => {
+interface Props {
+  name: string;
+  driver: string;
+}
+
+export const Connect = ({ name, driver }: Props) => {
   const {
-    data: { schemas, drivers },
+    data: { schemas, drivers, defaultValues },
     isLoading,
     isError,
-  } = useLoadSchema();
+  } = useLoadSchema({
+    name,
+    driver,
+  });
 
   const { submit, isLoading: submitIsLoading } = useSubmit();
 
@@ -42,32 +50,16 @@ export const Connect = () => {
 
   return (
     <Form
+      key={defaultValues.name || 'new-connection'}
       schema={schemas}
       onSubmit={submit}
       options={{
-        defaultValues: {
-          name: '',
-          driver: 'postgres',
-        },
+        defaultValues,
       }}
     >
       {options => {
         return (
           <div>
-            <InputField
-              type="text"
-              placeholder="Enter a display name"
-              name="name"
-              label="Display Name"
-            />
-            <Select
-              name="driver"
-              label="Driver"
-              options={drivers.map(driver => ({
-                value: driver,
-                label: driver,
-              }))}
-            />
             <div className="max-w-xl">
               <p className="flex items-center font-semibold text-gray-600 mb-xs">
                 Configuration
