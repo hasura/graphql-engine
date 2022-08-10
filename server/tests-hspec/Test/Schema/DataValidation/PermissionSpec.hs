@@ -3,13 +3,11 @@
 -- | Test select permissions
 module Test.Schema.DataValidation.PermissionSpec (spec) where
 
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
-import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -23,17 +21,14 @@ import Test.Hspec (SpecWith, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.BigQuery,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = bigquerySetup,
-              teardown = bigqueryTeardown,
-              customOptions = Nothing
-            }
-        ]
-    )
+  Fixture.run
+    [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ BigQuery.setupTablesAction schema testEnv
+            ]
+              <> bigqueryPermissionsSetup testEnv
+        }
+    ]
     tests
 
 --------------------------------------------------------------------------------
@@ -89,51 +84,62 @@ article =
 
 -- ** Setup and teardown
 
-bigquerySetup :: (TestEnvironment, ()) -> IO ()
-bigquerySetup (testEnvironment, ()) = do
-  BigQuery.setup schema (testEnvironment, ())
-
+bigqueryPermissionsSetup :: TestEnvironment -> [Fixture.SetupAction]
+bigqueryPermissionsSetup testEnvironment =
   let schemaName = Schema.getSchemaName testEnvironment
-
-  -- also setup permissions
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-      type: bulk
-      args:
-      - type: bigquery_create_select_permission
-        args:
-          source: bigquery
-          table:
-            dataset: *schemaName
-            name: article
-          role: author
-          permission:
-            filter:
-              author_id:
-                _eq: X-Hasura-User-Id
-            columns: '*'
-      - type: bigquery_create_select_permission
-        args:
-          source: bigquery
-          table:
-            dataset: *schemaName
-            name: article
-          role: user
-          permission:
-            filter:
-              is_published:
-                _eq: true
-            columns: '*'
-    |]
-
-bigqueryTeardown :: (TestEnvironment, ()) -> IO ()
-bigqueryTeardown (testEnvironment, ()) = do
-  let schemaName = Schema.getSchemaName testEnvironment
-
-  -- teardown permissions
-  let teardownPermissions =
-        GraphqlEngine.postMetadata_ testEnvironment $
-          [yaml|
+   in [ Fixture.SetupAction
+          { setupAction =
+              GraphqlEngine.postMetadata_
+                testEnvironment
+                [yaml|
+            type: bigquery_create_select_permission
+            args:
+              source: bigquery
+              table:
+                dataset: *schemaName
+                name: article
+              role: author
+              permission:
+                filter:
+                  author_id:
+                    _eq: X-Hasura-User-Id
+                columns: '*'
+          |],
+            teardownAction = \_ ->
+              GraphqlEngine.postMetadata_
+                testEnvironment
+                [yaml|
+            type: bigquery_drop_select_permission
+            args:
+              table:
+                name: article
+                dataset: *schemaName
+              role: author
+              source: bigquery
+          |]
+          },
+        Fixture.SetupAction
+          { setupAction =
+              GraphqlEngine.postMetadata_
+                testEnvironment
+                [yaml|
+            type: bigquery_create_select_permission
+            args:
+              source: bigquery
+              table:
+                dataset: *schemaName
+                name: article
+              role: user
+              permission:
+                filter:
+                  is_published:
+                    _eq: true
+                columns: '*'
+            |],
+            teardownAction = \_ ->
+              GraphqlEngine.postMetadata_
+                testEnvironment
+                [yaml|
             type: bigquery_drop_select_permission
             args:
               table:
@@ -141,18 +147,15 @@ bigqueryTeardown (testEnvironment, ()) = do
                 dataset: *schemaName
               role: user
               source: bigquery
-          |]
-
-  finally
-    teardownPermissions
-    -- and then rest of the teardown
-    (BigQuery.teardown schema (testEnvironment, ()))
+            |]
+          }
+      ]
 
 --------------------------------------------------------------------------------
 
 -- * Tests
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Author role cannot select articles with mismatching author_id and X-Hasura-User-Id" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "author"), ("X-Hasura-User-Id", "0")]

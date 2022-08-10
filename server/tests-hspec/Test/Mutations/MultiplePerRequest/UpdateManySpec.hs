@@ -6,13 +6,12 @@
 module Test.Mutations.MultiplePerRequest.UpdateManySpec (spec) where
 
 import Data.Aeson (Value)
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -25,24 +24,18 @@ spec = do
   -- TODO: this test causes an internal server error for MySQL, even if we add
   -- "SERIAL" as the 'Schema.defaultSerialType' for MySQL.
 
-  Context.run
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = Postgres.setup schema,
-              teardown = Postgres.teardown schema,
-              customOptions = Nothing
-            },
-          Context.Context
-            { name = Context.Backend Context.Citus,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = Citus.setup schema,
-              teardown = Citus.teardown schema,
-              customOptions = Nothing
-            }
-        ]
-    )
+  Fixture.run
+    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Postgres.setupTablesAction schema testEnv
+            ]
+        },
+      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Citus.setupTablesAction schema testEnv
+            ]
+        }
+    ]
     tests
 
 --------------------------------------------------------------------------------
@@ -67,7 +60,7 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts

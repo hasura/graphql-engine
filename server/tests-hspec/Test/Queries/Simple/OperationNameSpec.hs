@@ -14,7 +14,6 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphqlYaml)
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.Context (Options (..))
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
