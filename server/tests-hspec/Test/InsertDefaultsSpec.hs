@@ -3,14 +3,13 @@
 -- | Test insert with default values
 module Test.InsertDefaultsSpec (spec) where
 
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -24,33 +23,24 @@ import Test.Hspec (SpecWith, it)
 
 spec :: SpecWith TestEnvironment
 spec = do
-  Context.run (NE.fromList [postgresContext, citusContext, mssqlContext]) commonTests
-  Context.run (NE.fromList [postgresContext, citusContext]) postgresTests
-  Context.run (NE.fromList [mssqlContext]) mssqlTests
+  Fixture.run ([postgresFixture, citusFixture, mssqlFixture]) commonTests
+  Fixture.run ([postgresFixture, citusFixture]) postgresTests
+  Fixture.run ([mssqlFixture]) mssqlTests
   where
-    postgresContext =
-      Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Postgres.setup schema,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
+    postgresFixture =
+      (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [Postgres.setupTablesAction schema testEnv]
         }
-    citusContext =
-      Context.Context
-        { name = Context.Backend Context.Citus,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Citus.setup schema,
-          teardown = Citus.teardown schema,
-          customOptions = Nothing
+    citusFixture =
+      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [Citus.setupTablesAction schema testEnv]
         }
-    mssqlContext =
-      Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Sqlserver.setup schema,
-          teardown = Sqlserver.teardown schema,
-          customOptions = Nothing
+    mssqlFixture =
+      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [Sqlserver.setupTablesAction schema testEnv]
         }
 
 --------------------------------------------------------------------------------
@@ -112,7 +102,7 @@ defaultDateTimeType =
 
 -- * Tests
 
-commonTests :: Context.Options -> SpecWith TestEnvironment
+commonTests :: Fixture.Options -> SpecWith TestEnvironment
 commonTests opts = do
   it "Insert empty object with default values" $ \testEnvironment ->
     shouldReturnYaml
@@ -184,7 +174,7 @@ data:
       name: "a"
 |]
 
-postgresTests :: Context.Options -> SpecWith TestEnvironment
+postgresTests :: Fixture.Options -> SpecWith TestEnvironment
 postgresTests opts = do
   it "Upsert simple object with default values - check empty constraints" $ \testEnvironment ->
     shouldReturnYaml
@@ -282,7 +272,7 @@ data:
         id: 1
 |]
 
-mssqlTests :: Context.Options -> SpecWith TestEnvironment
+mssqlTests :: Fixture.Options -> SpecWith TestEnvironment
 mssqlTests opts = do
   it "Upsert simple object with default values - check empty if_matched" $ \testEnvironment ->
     shouldReturnYaml
