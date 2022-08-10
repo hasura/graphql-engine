@@ -1,0 +1,770 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE ApplicativeDo #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- TODO(SOLOMON): Minimize Exports</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.Init.Arg</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Downgrade</span></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Serve</span></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier">parseHgeOpts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier">parsePostgresConnInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier">parseMetadataDbUrl</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Arg.html#mainCmdFooter"><span class="hs-identifier">mainCmdFooter</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Arg.html#metadataDbUrlEnv"><span class="hs-identifier">metadataDbUrlEnv</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Arg.html#retriesNumEnv"><span class="hs-identifier">retriesNumEnv</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Arg.html#databaseUrlEnv"><span class="hs-identifier">databaseUrlEnv</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.URL.Template.html"><span class="hs-identifier">Data.URL.Template</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Template</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Downgrade.html"><span class="hs-identifier">Hasura.Server.Init.Arg.Command.Downgrade</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Downgrade</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html"><span class="hs-identifier">Hasura.Server.Init.Arg.Command.Serve</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Serve</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Arg.PrettyPrinter.html"><span class="hs-identifier">Hasura.Server.Init.Arg.PrettyPrinter</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PP</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html"><span class="hs-identifier">Hasura.Server.Init.Config</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Config</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Env.html"><span class="hs-identifier">Hasura.Server.Init.Env</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Options.Applicative</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Opt</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- | The Main Arg Parser. It constructs a 'Config.HGEOptionsRaw' term:</span><span>
+</span><span id="line-32"></span><span class="hs-comment">--</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- 1. '(Config.PostgresConnInfo (Maybe PostgresRawConnInfo))' - The DB connection.</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- 2: 'Maybe String' - Representing the metadata connection.</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- 3: 'Config.HGECommand' @a@ - The result of the supplied Subcommand.</span><span>
+</span><span id="line-36"></span><span id="local-6989586621689525418"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-type">parseHgeOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689525418"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">Config.HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-type">Config.RawServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689525418"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-37"></span><span id="parseHgeOpts"><span class="annot"><span class="annottext">parseHgeOpts :: Parser (HGEOptionsRaw (RawServeOptions impl))
+</span><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-var hs-var">parseHgeOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresRawConnInfo)
+-&gt; Maybe String
+-&gt; HGECommand (RawServeOptions impl)
+-&gt; HGEOptionsRaw (RawServeOptions impl)
+forall impl.
+PostgresConnInfo (Maybe PostgresRawConnInfo)
+-&gt; Maybe String -&gt; HGECommand impl -&gt; HGEOptionsRaw impl
+</span><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-var">Config.HGEOptionsRaw</span></a></span><span> </span><span class="annot"><span class="annottext">(PostgresConnInfo (Maybe PostgresRawConnInfo)
+ -&gt; Maybe String
+ -&gt; HGECommand (RawServeOptions impl)
+ -&gt; HGEOptionsRaw (RawServeOptions impl))
+-&gt; Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
+-&gt; Parser
+     (Maybe String
+      -&gt; HGECommand (RawServeOptions impl)
+      -&gt; HGEOptionsRaw (RawServeOptions impl))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
+</span><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-var">parsePostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+  (Maybe String
+   -&gt; HGECommand (RawServeOptions impl)
+   -&gt; HGEOptionsRaw (RawServeOptions impl))
+-&gt; Parser (Maybe String)
+-&gt; Parser
+     (HGECommand (RawServeOptions impl)
+      -&gt; HGEOptionsRaw (RawServeOptions impl))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier hs-var">parseMetadataDbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+  (HGECommand (RawServeOptions impl)
+   -&gt; HGEOptionsRaw (RawServeOptions impl))
+-&gt; Parser (HGECommand (RawServeOptions impl))
+-&gt; Parser (HGEOptionsRaw (RawServeOptions impl))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
+forall impl.
+EnabledLogTypes impl =&gt;
+Parser (HGECommand (RawServeOptions impl))
+</span><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-var">parseHGECommand</span></a></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span id="local-6989586621689525482"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-type">parseHGECommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689525482"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">Config.HGECommand</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-type">Config.RawServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689525482"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-41"></span><span id="parseHGECommand"><span class="annot"><span class="annottext">parseHGECommand :: Parser (HGECommand (RawServeOptions impl))
+</span><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-var hs-var">parseHGECommand</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Parser (HGECommand (RawServeOptions impl))
+forall a. Mod CommandFields a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Opt.subparser</span></span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
+</span><span class="hs-identifier hs-var">Opt.command</span></span><span>
+</span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;serve&quot;</span></span><span>
+</span><span id="line-45"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
+-&gt; InfoMod (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
+</span><span class="hs-identifier hs-var">Opt.info</span></span><span>
+</span><span id="line-46"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser
+  (HGECommand (RawServeOptions impl)
+   -&gt; HGECommand (RawServeOptions impl))
+forall a. Parser (a -&gt; a)
+</span><span class="hs-identifier hs-var">Opt.helper</span></span><span> </span><span class="annot"><span class="annottext">Parser
+  (HGECommand (RawServeOptions impl)
+   -&gt; HGECommand (RawServeOptions impl))
+-&gt; Parser (HGECommand (RawServeOptions impl))
+-&gt; Parser (HGECommand (RawServeOptions impl))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RawServeOptions impl -&gt; HGECommand (RawServeOptions impl)
+forall a. a -&gt; HGECommand a
+</span><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-var">Config.HCServe</span></a></span><span> </span><span class="annot"><span class="annottext">(RawServeOptions impl -&gt; HGECommand (RawServeOptions impl))
+-&gt; Parser (RawServeOptions impl)
+-&gt; Parser (HGECommand (RawServeOptions impl))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (RawServeOptions impl)
+forall impl. EnabledLogTypes impl =&gt; Parser (RawServeOptions impl)
+</span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-var">serveCommandParser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+forall a. String -&gt; InfoMod a
+</span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Start the GraphQL Engine Server&quot;</span></span><span>
+</span><span id="line-48"></span><span>                </span><span class="annot"><span class="annottext">InfoMod (HGECommand (RawServeOptions impl))
+-&gt; InfoMod (HGECommand (RawServeOptions impl))
+-&gt; InfoMod (HGECommand (RawServeOptions impl))
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; InfoMod (HGECommand (RawServeOptions impl))
+forall a. Maybe Doc -&gt; InfoMod a
+</span><span class="hs-identifier hs-var">Opt.footerDoc</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc -&gt; Maybe Doc
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Doc
+</span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCmdFooter"><span class="hs-identifier hs-var">serveCmdFooter</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>            </span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
+</span><span class="hs-identifier hs-var">Opt.command</span></span><span>
+</span><span id="line-52"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;export&quot;</span></span><span>
+</span><span id="line-53"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
+-&gt; InfoMod (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
+</span><span class="hs-identifier hs-var">Opt.info</span></span><span>
+</span><span id="line-54"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+-&gt; Parser (HGECommand (RawServeOptions impl))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+forall a. HGECommand a
+</span><a href="Hasura.Server.Init.Config.html#HCExport"><span class="hs-identifier hs-var">Config.HCExport</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+forall a. String -&gt; InfoMod a
+</span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Export graphql-engine's metadata to stdout&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
+</span><span class="hs-identifier hs-var">Opt.command</span></span><span>
+</span><span id="line-58"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;clean&quot;</span></span><span>
+</span><span id="line-59"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
+-&gt; InfoMod (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
+</span><span class="hs-identifier hs-var">Opt.info</span></span><span>
+</span><span id="line-60"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+-&gt; Parser (HGECommand (RawServeOptions impl))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+forall a. HGECommand a
+</span><a href="Hasura.Server.Init.Config.html#HCClean"><span class="hs-identifier hs-var">Config.HCClean</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+forall a. String -&gt; InfoMod a
+</span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Clean graphql-engine's metadata to start afresh&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
+</span><span class="hs-identifier hs-var">Opt.command</span></span><span>
+</span><span id="line-64"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;downgrade&quot;</span></span><span>
+</span><span id="line-65"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
+-&gt; InfoMod (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
+</span><span class="hs-identifier hs-var">Opt.info</span></span><span>
+</span><span id="line-66"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; HGECommand (RawServeOptions impl)
+forall a. DowngradeOptions -&gt; HGECommand a
+</span><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-var">Config.HCDowngrade</span></a></span><span> </span><span class="annot"><span class="annottext">(DowngradeOptions -&gt; HGECommand (RawServeOptions impl))
+-&gt; Parser DowngradeOptions
+-&gt; Parser (HGECommand (RawServeOptions impl))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DowngradeOptions
+</span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeCommandParser"><span class="hs-identifier hs-var">downgradeCommandParser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+forall a. String -&gt; InfoMod a
+</span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Downgrade the GraphQL Engine schema to the specified version&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+-&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
+</span><span class="hs-identifier hs-var">Opt.command</span></span><span>
+</span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;version&quot;</span></span><span>
+</span><span id="line-71"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
+-&gt; InfoMod (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (RawServeOptions impl))
+forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
+</span><span class="hs-identifier hs-var">Opt.info</span></span><span>
+</span><span id="line-72"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+-&gt; Parser (HGECommand (RawServeOptions impl))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+forall a. HGECommand a
+</span><a href="Hasura.Server.Init.Config.html#HCVersion"><span class="hs-identifier hs-var">Config.HCVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+forall a. String -&gt; InfoMod a
+</span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Prints the version of GraphQL Engine&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-type">parsePostgresConnInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">Config.PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnInfo"><span class="hs-identifier hs-type">Config.PostgresRawConnInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span id="parsePostgresConnInfo"><span class="annot"><span class="annottext">parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
+</span><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-var hs-var">parsePostgresConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621689525400"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689525400"><span class="hs-identifier hs-var">retries'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
+</span><a href="#local-6989586621689525399"><span class="hs-identifier hs-var">retries</span></a></span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621689525398"><span class="annot"><span class="annottext">Maybe PostgresRawConnInfo
+</span><a href="#local-6989586621689525398"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(URLTemplate -&gt; PostgresRawConnInfo)
+-&gt; Maybe URLTemplate -&gt; Maybe PostgresRawConnInfo
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; PostgresRawConnInfo
+</span><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-var">Config.PGConnDatabaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe URLTemplate -&gt; Maybe PostgresRawConnInfo)
+-&gt; Parser (Maybe URLTemplate) -&gt; Parser (Maybe PostgresRawConnInfo)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe URLTemplate)
+</span><a href="Hasura.Server.Init.Arg.html#parseDatabaseUrl"><span class="hs-identifier hs-var">parseDatabaseUrl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe PostgresRawConnInfo)
+-&gt; Parser (Maybe PostgresRawConnInfo)
+-&gt; Parser (Maybe PostgresRawConnInfo)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(PostgresRawConnDetails -&gt; PostgresRawConnInfo)
+-&gt; Maybe PostgresRawConnDetails -&gt; Maybe PostgresRawConnInfo
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">PostgresRawConnDetails -&gt; PostgresRawConnInfo
+</span><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-var">Config.PGConnDetails</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe PostgresRawConnDetails -&gt; Maybe PostgresRawConnInfo)
+-&gt; Parser (Maybe PostgresRawConnDetails)
+-&gt; Parser (Maybe PostgresRawConnInfo)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe PostgresRawConnDetails)
+</span><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-var">parseRawConnDetails</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresRawConnInfo
+-&gt; Maybe Int -&gt; PostgresConnInfo (Maybe PostgresRawConnInfo)
+forall a. a -&gt; Maybe Int -&gt; PostgresConnInfo a
+</span><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">Config.PostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresRawConnInfo
+</span><a href="#local-6989586621689525398"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689525400"><span class="hs-identifier hs-var">retries'</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>    </span><span id="local-6989586621689525399"><span class="annot"><span class="annottext">retries :: Parser (Maybe Int)
+</span><a href="#local-6989586621689525399"><span class="hs-identifier hs-var hs-var">retries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">Parser Int -&gt; Parser (Maybe Int)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Int -&gt; Parser (Maybe Int))
+-&gt; Parser Int -&gt; Parser (Maybe Int)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">ReadM Int -&gt; Mod OptionFields Int -&gt; Parser Int
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Opt.option</span></span><span>
+</span><span id="line-90"></span><span>          </span><span class="annot"><span class="annottext">ReadM Int
+forall a. Read a =&gt; ReadM a
+</span><span class="hs-identifier hs-var">Opt.auto</span></span><span>
+</span><span id="line-91"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;retries&quot;</span></span><span>
+</span><span id="line-92"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
+-&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;NO OF RETRIES&quot;</span></span><span>
+</span><span id="line-93"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
+-&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String, String) -&gt; String
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(String, String)
+</span><a href="Hasura.Server.Init.Arg.html#retriesNumEnv"><span class="hs-identifier hs-var">retriesNumEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#retriesNumEnv"><span class="hs-identifier hs-type">retriesNumEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span id="retriesNumEnv"><span class="annot"><span class="annottext">retriesNumEnv :: (String, String)
+</span><a href="Hasura.Server.Init.Arg.html#retriesNumEnv"><span class="hs-identifier hs-var hs-var">retriesNumEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;HASURA_GRAPHQL_NO_OF_RETRIES&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;No.of retries if Postgres connection error occurs (default: 1)&quot;</span></span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseDatabaseUrl"><span class="hs-identifier hs-type">parseDatabaseUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">Template.URLTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span id="parseDatabaseUrl"><span class="annot"><span class="annottext">parseDatabaseUrl :: Parser (Maybe URLTemplate)
+</span><a href="Hasura.Server.Init.Arg.html#parseDatabaseUrl"><span class="hs-identifier hs-var hs-var">parseDatabaseUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><span class="annottext">Parser URLTemplate -&gt; Parser (Maybe URLTemplate)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser URLTemplate -&gt; Parser (Maybe URLTemplate))
+-&gt; Parser URLTemplate -&gt; Parser (Maybe URLTemplate)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><span class="annottext">ReadM URLTemplate
+-&gt; Mod OptionFields URLTemplate -&gt; Parser URLTemplate
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Opt.option</span></span><span>
+</span><span id="line-106"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String -&gt; Either String URLTemplate) -&gt; ReadM URLTemplate
+forall a. (String -&gt; Either String a) -&gt; ReadM a
+</span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String URLTemplate
+forall a. FromEnv a =&gt; String -&gt; Either String a
+</span><a href="Hasura.Server.Init.Env.html#fromEnv"><span class="hs-identifier hs-var">Env.fromEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields URLTemplate
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;database-url&quot;</span></span><span>
+</span><span id="line-108"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields URLTemplate
+-&gt; Mod OptionFields URLTemplate -&gt; Mod OptionFields URLTemplate
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields URLTemplate
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;DATABASE-URL&gt;&quot;</span></span><span>
+</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields URLTemplate
+-&gt; Mod OptionFields URLTemplate -&gt; Mod OptionFields URLTemplate
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields URLTemplate
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String, String) -&gt; String
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(String, String)
+</span><a href="Hasura.Server.Init.Arg.html#databaseUrlEnv"><span class="hs-identifier hs-var">databaseUrlEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#databaseUrlEnv"><span class="hs-identifier hs-type">databaseUrlEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span id="databaseUrlEnv"><span class="annot"><span class="annottext">databaseUrlEnv :: (String, String)
+</span><a href="Hasura.Server.Init.Arg.html#databaseUrlEnv"><span class="hs-identifier hs-var hs-var">databaseUrlEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;HASURA_GRAPHQL_DATABASE_URL&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Postgres database URL. Example postgres://foo:bar@example.com:2345/database&quot;</span></span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-type">parseRawConnDetails</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-type">Config.PostgresRawConnDetails</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span id="parseRawConnDetails"><span class="annot"><span class="annottext">parseRawConnDetails :: Parser (Maybe PostgresRawConnDetails)
+</span><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-var hs-var">parseRawConnDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621689525383"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525383"><span class="hs-identifier hs-var">host'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689525382"><span class="hs-identifier hs-var">host</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621689525381"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689525381"><span class="hs-identifier hs-var">port'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
+</span><a href="#local-6989586621689525380"><span class="hs-identifier hs-var">port</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621689525379"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525379"><span class="hs-identifier hs-var">user'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689525378"><span class="hs-identifier hs-var">user</span></a></span><span>
+</span><span id="line-123"></span><span>  </span><span id="local-6989586621689525377"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689525377"><span class="hs-identifier hs-var">password'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser String
+</span><a href="#local-6989586621689525376"><span class="hs-identifier hs-var">password</span></a></span><span>
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621689525375"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525375"><span class="hs-identifier hs-var">dbName'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689525374"><span class="hs-identifier hs-var">dbName</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621689525373"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525373"><span class="hs-identifier hs-var">options'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689525372"><span class="hs-identifier hs-var">options</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">String
+-&gt; Int
+-&gt; String
+-&gt; String
+-&gt; String
+-&gt; Maybe String
+-&gt; PostgresRawConnDetails
+</span><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-var">Config.PostgresRawConnDetails</span></a></span><span>
+</span><span id="line-128"></span><span>      </span><span class="annot"><span class="annottext">(String
+ -&gt; Int
+ -&gt; String
+ -&gt; String
+ -&gt; String
+ -&gt; Maybe String
+ -&gt; PostgresRawConnDetails)
+-&gt; Maybe String
+-&gt; Maybe
+     (Int
+      -&gt; String
+      -&gt; String
+      -&gt; String
+      -&gt; Maybe String
+      -&gt; PostgresRawConnDetails)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525383"><span class="hs-identifier hs-var">host'</span></a></span><span>
+</span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">Maybe
+  (Int
+   -&gt; String
+   -&gt; String
+   -&gt; String
+   -&gt; Maybe String
+   -&gt; PostgresRawConnDetails)
+-&gt; Maybe Int
+-&gt; Maybe
+     (String
+      -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689525381"><span class="hs-identifier hs-var">port'</span></a></span><span>
+</span><span id="line-130"></span><span>      </span><span class="annot"><span class="annottext">Maybe
+  (String
+   -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+-&gt; Maybe String
+-&gt; Maybe
+     (String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525379"><span class="hs-identifier hs-var">user'</span></a></span><span>
+</span><span id="line-131"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+-&gt; Maybe String
+-&gt; Maybe (String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689525377"><span class="hs-identifier hs-var">password'</span></a></span><span>
+</span><span id="line-132"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+-&gt; Maybe String -&gt; Maybe (Maybe String -&gt; PostgresRawConnDetails)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525375"><span class="hs-identifier hs-var">dbName'</span></a></span><span>
+</span><span id="line-133"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Maybe String -&gt; PostgresRawConnDetails)
+-&gt; Maybe (Maybe String) -&gt; Maybe PostgresRawConnDetails
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; Maybe (Maybe String)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689525373"><span class="hs-identifier hs-var">options'</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-135"></span><span>    </span><span id="local-6989586621689525382"><span class="annot"><span class="annottext">host :: Parser (Maybe String)
+</span><a href="#local-6989586621689525382"><span class="hs-identifier hs-var hs-var">host</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-136"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
+-&gt; Parser String -&gt; Parser (Maybe String)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-137"></span><span>        </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
+forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
+</span><span id="line-138"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;host&quot;</span></span><span>
+</span><span id="line-139"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;HOST&gt;&quot;</span></span><span>
+</span><span id="line-140"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Postgres server host&quot;</span></span><span>
+</span><span id="line-141"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>
+</span><span id="line-143"></span><span>    </span><span id="local-6989586621689525380"><span class="annot"><span class="annottext">port :: Parser (Maybe Int)
+</span><a href="#local-6989586621689525380"><span class="hs-identifier hs-var hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-144"></span><span>      </span><span class="annot"><span class="annottext">Parser Int -&gt; Parser (Maybe Int)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Int -&gt; Parser (Maybe Int))
+-&gt; Parser Int -&gt; Parser (Maybe Int)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-145"></span><span>        </span><span class="annot"><span class="annottext">ReadM Int -&gt; Mod OptionFields Int -&gt; Parser Int
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Opt.option</span></span><span>
+</span><span id="line-146"></span><span>          </span><span class="annot"><span class="annottext">ReadM Int
+forall a. Read a =&gt; ReadM a
+</span><span class="hs-identifier hs-var">Opt.auto</span></span><span>
+</span><span id="line-147"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;port&quot;</span></span><span>
+</span><span id="line-148"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
+-&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields Int
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.short</span></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'p'</span></span><span>
+</span><span id="line-149"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
+-&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;PORT&gt;&quot;</span></span><span>
+</span><span id="line-150"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
+-&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Postgres server port&quot;</span></span><span>
+</span><span id="line-151"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621689525378"><span class="annot"><span class="annottext">user :: Parser (Maybe String)
+</span><a href="#local-6989586621689525378"><span class="hs-identifier hs-var hs-var">user</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-154"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
+-&gt; Parser String -&gt; Parser (Maybe String)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-155"></span><span>        </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
+forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
+</span><span id="line-156"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;user&quot;</span></span><span>
+</span><span id="line-157"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.short</span></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'u'</span></span><span>
+</span><span id="line-158"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;USER&gt;&quot;</span></span><span>
+</span><span id="line-159"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Database user name&quot;</span></span><span>
+</span><span id="line-160"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span>    </span><span id="local-6989586621689525376"><span class="annot"><span class="annottext">password :: Parser String
+</span><a href="#local-6989586621689525376"><span class="hs-identifier hs-var hs-var">password</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
+forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
+</span><span id="line-164"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;password&quot;</span></span><span>
+</span><span id="line-165"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;PASSWORD&gt;&quot;</span></span><span>
+</span><span id="line-166"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasValue f =&gt; a -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.value</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-167"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Password of the user&quot;</span></span><span>
+</span><span id="line-168"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span>    </span><span id="local-6989586621689525374"><span class="annot"><span class="annottext">dbName :: Parser (Maybe String)
+</span><a href="#local-6989586621689525374"><span class="hs-identifier hs-var hs-var">dbName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-171"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
+-&gt; Parser String -&gt; Parser (Maybe String)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-172"></span><span>        </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
+forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
+</span><span id="line-173"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;dbname&quot;</span></span><span>
+</span><span id="line-174"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.short</span></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'d'</span></span><span>
+</span><span id="line-175"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;DBNAME&gt;&quot;</span></span><span>
+</span><span id="line-176"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Database name to connect to&quot;</span></span><span>
+</span><span id="line-177"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-178"></span><span>
+</span><span id="line-179"></span><span>    </span><span id="local-6989586621689525372"><span class="annot"><span class="annottext">options :: Parser (Maybe String)
+</span><a href="#local-6989586621689525372"><span class="hs-identifier hs-var hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-180"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
+-&gt; Parser String -&gt; Parser (Maybe String)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-181"></span><span>        </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
+forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
+</span><span id="line-182"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;pg-connection-options&quot;</span></span><span>
+</span><span id="line-183"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.short</span></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'o'</span></span><span>
+</span><span id="line-184"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;DATABASE-OPTIONS&gt;&quot;</span></span><span>
+</span><span id="line-185"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;PostgreSQL options&quot;</span></span><span>
+</span><span id="line-186"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span class="hs-comment">-- TODO(SOLOMON): Should we parse the URL here?</span><span>
+</span><span id="line-189"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier hs-type">parseMetadataDbUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span id="parseMetadataDbUrl"><span class="annot"><span class="annottext">parseMetadataDbUrl :: Parser (Maybe String)
+</span><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier hs-var hs-var">parseMetadataDbUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-191"></span><span>  </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
+-&gt; Parser String -&gt; Parser (Maybe String)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-192"></span><span>    </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
+forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
+</span><span id="line-193"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;metadata-database-url&quot;</span></span><span>
+</span><span id="line-194"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;METADATA-DATABASE-URL&gt;&quot;</span></span><span>
+</span><span id="line-195"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields String
+-&gt; Mod OptionFields String -&gt; Mod OptionFields String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String, String) -&gt; String
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(String, String)
+</span><a href="Hasura.Server.Init.Arg.html#metadataDbUrlEnv"><span class="hs-identifier hs-var">metadataDbUrlEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-196"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span>
+</span><span id="line-198"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#metadataDbUrlEnv"><span class="hs-identifier hs-type">metadataDbUrlEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
+</span><span id="line-199"></span><span id="metadataDbUrlEnv"><span class="annot"><span class="annottext">metadataDbUrlEnv :: (String, String)
+</span><a href="Hasura.Server.Init.Arg.html#metadataDbUrlEnv"><span class="hs-identifier hs-var hs-var">metadataDbUrlEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-200"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;HASURA_GRAPHQL_METADATA_DATABASE_URL&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-201"></span><span>    </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database&quot;</span></span><span>
+</span><span id="line-202"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-203"></span><span>
+</span><span id="line-204"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-205"></span><span class="hs-comment">-- Pretty Printer</span><span>
+</span><span id="line-206"></span><span>
+</span><span id="line-207"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#mainCmdFooter"><span class="hs-identifier hs-type">mainCmdFooter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PP.Doc</span></span><span>
+</span><span id="line-208"></span><span id="mainCmdFooter"><span class="annot"><span class="annottext">mainCmdFooter :: Doc
+</span><a href="Hasura.Server.Init.Arg.html#mainCmdFooter"><span class="hs-identifier hs-var hs-var">mainCmdFooter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-209"></span><span>  </span><span class="annot"><span class="annottext">Doc
+</span><a href="#local-6989586621689525367"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+</span><span class="hs-operator hs-var">PP.&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
+</span><span class="hs-identifier hs-var">PP.text</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+</span><span class="hs-operator hs-var">PP.&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc
+</span><a href="#local-6989586621689525364"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
+</span><span id="line-210"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-211"></span><span>    </span><span id="local-6989586621689525367"><span class="annot"><span class="annottext">examplesDoc :: Doc
+</span><a href="#local-6989586621689525367"><span class="hs-identifier hs-var hs-var">examplesDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[String]] -&gt; Doc
+</span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkExamplesDoc"><span class="hs-identifier hs-var">PP.mkExamplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">[[String]]
+</span><a href="#local-6989586621689525362"><span class="hs-identifier hs-var">examples</span></a></span><span>
+</span><span id="line-212"></span><span>    </span><span id="local-6989586621689525362"><span class="annot"><span class="annottext">examples :: [[String]]
+</span><a href="#local-6989586621689525362"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-213"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;# Serve GraphQL Engine on default port (8080) with console disabled&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-214"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;graphql-engine --database-url &lt;database-url&gt; serve&quot;</span></span><span>
+</span><span id="line-215"></span><span>        </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;# For more options, checkout&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-217"></span><span>          </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;graphql-engine serve --help&quot;</span></span><span>
+</span><span id="line-218"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-219"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-220"></span><span>
+</span><span id="line-221"></span><span>    </span><span id="local-6989586621689525364"><span class="annot"><span class="annottext">envVarDoc :: Doc
+</span><a href="#local-6989586621689525364"><span class="hs-identifier hs-var hs-var">envVarDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; Doc
+</span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkEnvVarDoc"><span class="hs-identifier hs-var">PP.mkEnvVarDoc</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">(String, String)
+</span><a href="Hasura.Server.Init.Arg.html#databaseUrlEnv"><span class="hs-identifier hs-var">databaseUrlEnv</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(String, String)
+</span><a href="Hasura.Server.Init.Arg.html#retriesNumEnv"><span class="hs-identifier hs-var">retriesNumEnv</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-222"></span></pre></body></html>

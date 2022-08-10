@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | TODO(SOLOMON):</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.Init.Arg.Command.Downgrade</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeCommandParser"><span class="hs-identifier">downgradeCommandParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.FileEmbed</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Embed</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">String</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html"><span class="hs-identifier">Hasura.Server.Init.Config</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Config</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Options.Applicative</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Opt</span></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- | This implements the mapping between application versions</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- and catalog schema versions.</span><span>
+</span><span id="line-22"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-type">downgradeShortcuts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-23"></span><span id="downgradeShortcuts"><span class="annot"><span class="annottext">downgradeShortcuts :: [(String, String)]
+</span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-var hs-var">downgradeShortcuts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">$(</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-25"></span><span>       </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">s</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">Embed.makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/catalog_versions.txt&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Embed.embedStringFile</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span>           </span><span class="hs-identifier">parseVersions</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">map</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">parseVersion</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">words</span><span class="hs-special">)</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">lines</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span>           </span><span class="hs-identifier">parseVersion</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">tag</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">version</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">tag</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">version</span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>           </span><span class="hs-identifier">parseVersion</span><span> </span><span class="hs-identifier">other</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">error</span><span> </span><span class="hs-special">(</span><span class="hs-string">&quot;unrecognized tag/catalog mapping &quot;</span><span> </span><span class="hs-operator">++</span><span> </span><span class="hs-identifier">show</span><span> </span><span class="hs-identifier">other</span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>       </span><span class="hs-identifier">TH.lift</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">parseVersions</span><span> </span><span class="hs-identifier">s</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>   </span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- TODO (SOLOMON): Since we are alreay using template haskell in this</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- module, catalog versions should only parse if they are in</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- 'catalog_versions.txt'.</span><span>
+</span><span id="line-39"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeCommandParser"><span class="hs-identifier hs-type">downgradeCommandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#DowngradeOptions"><span class="hs-identifier hs-type">Config.DowngradeOptions</span></a></span><span>
+</span><span id="line-40"></span><span id="downgradeCommandParser"><span class="annot"><span class="annottext">downgradeCommandParser :: Parser DowngradeOptions
+</span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeCommandParser"><span class="hs-identifier hs-var hs-var">downgradeCommandParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; DowngradeOptions
+</span><a href="Hasura.Server.Init.Config.html#DowngradeOptions"><span class="hs-identifier hs-var">Config.DowngradeOptions</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">(Text -&gt; Bool -&gt; DowngradeOptions)
+-&gt; Parser Text -&gt; Parser (Bool -&gt; DowngradeOptions)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Parser Text] -&gt; Parser Text
+forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
+</span><a href="Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Mod OptionFields Text -&gt; Parser Text
+forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
+</span><span id="line-44"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Text
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;to-catalog-version&quot;</span></span><span>
+</span><span id="line-45"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Text
+-&gt; Mod OptionFields Text -&gt; Mod OptionFields Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Text
+forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;VERSION&gt;&quot;</span></span><span>
+</span><span id="line-46"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Text
+-&gt; Mod OptionFields Text -&gt; Mod OptionFields Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Text
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;The target catalog schema version (e.g. 31)&quot;</span></span><span>
+</span><span id="line-47"></span><span>          </span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; [Parser Text] -&gt; [Parser Text]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span>
+</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">((String, String) -&gt; Parser Text)
+-&gt; [(String, String)] -&gt; [Parser Text]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String -&gt; String -&gt; Parser Text)
+-&gt; (String, String) -&gt; Parser Text
+forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><span class="hs-identifier hs-var">uncurry</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Parser Text
+forall a. IsString a =&gt; String -&gt; String -&gt; Parser a
+</span><a href="#local-6989586621689524981"><span class="hs-identifier hs-var">shortcut</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, String)]
+</span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-var">downgradeShortcuts</span></a></span><span>
+</span><span id="line-49"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">Parser (Bool -&gt; DowngradeOptions)
+-&gt; Parser Bool -&gt; Parser DowngradeOptions
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><span class="hs-identifier hs-var">Opt.switch</span></span><span>
+</span><span id="line-51"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;dryRun&quot;</span></span><span>
+</span><span id="line-52"></span><span>          </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Mod FlagFields Bool -&gt; Mod FlagFields Bool
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Don't run any migrations, just print out the SQL.&quot;</span></span><span>
+</span><span id="line-53"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621689524981"><span class="annot"><span class="annottext">shortcut :: String -&gt; String -&gt; Parser a
+</span><a href="#local-6989586621689524981"><span class="hs-identifier hs-var hs-var">shortcut</span></a></span></span><span> </span><span id="local-6989586621689524979"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689524979"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621689524978"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689524978"><span class="hs-identifier hs-var">catalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">a -&gt; Mod FlagFields a -&gt; Parser a
+forall a. a -&gt; Mod FlagFields a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Opt.flag'</span></span><span>
+</span><span id="line-57"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; a
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">String.fromString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689524978"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields a
+forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;to-&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689524979"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>            </span><span class="annot"><span class="annottext">Mod FlagFields a -&gt; Mod FlagFields a -&gt; Mod FlagFields a
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields a
+forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Downgrade to graphql-engine version &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689524979"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; (equivalent to --to-catalog-version &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689524978"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;)&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span></pre></body></html>

@@ -1,0 +1,1006 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_JcdWCqH8Nr7ILYfPfCCRrR"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataConnector.IR.Relationships</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipName"><span class="hs-identifier">RelationshipName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#mkRelationshipName"><span class="hs-identifier">mkRelationshipName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier">TableRelationships</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier">Relationship</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipType"><span class="hs-identifier">RelationshipType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#SourceColumnName"><span class="hs-identifier">SourceColumnName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TargetColumnName"><span class="hs-identifier">TargetColumnName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier">toTxt</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier">Hasura.Backends.DataConnector.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html"><span class="hs-identifier">Hasura.Backends.DataConnector.IR.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR.C</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html"><span class="hs-identifier">Hasura.Backends.DataConnector.IR.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR.N</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Table.html"><span class="hs-identifier">Hasura.Backends.DataConnector.IR.Table</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR.T</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier">RelName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Witch</span></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">type</span><span> </span><span id="RelationshipName"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipName"><span class="hs-identifier hs-var">RelationshipName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">IR.N.Name</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Relationship"><span class="hs-identifier hs-type">IR.N.Relationship</span></a></span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#mkRelationshipName"><span class="hs-identifier hs-type">mkRelationshipName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipName"><span class="hs-identifier hs-type">RelationshipName</span></a></span><span>
+</span><span id="line-27"></span><span id="mkRelationshipName"><span class="annot"><span class="annottext">mkRelationshipName :: RelName -&gt; RelationshipName
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#mkRelationshipName"><span class="hs-identifier hs-var hs-var">mkRelationshipName</span></a></span></span><span> </span><span id="local-6989586621689387795"><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689387795"><span class="hs-identifier hs-var">relName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; RelationshipName
+forall (ty :: NameType). Text -&gt; Name ty
+</span><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">IR.N.Name</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Relationship"><span class="hs-identifier hs-type">IR.N.Relationship</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; RelationshipName) -&gt; Text -&gt; RelationshipName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RelName -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689387795"><span class="hs-identifier hs-var">relName</span></a></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">type</span><span> </span><span id="SourceTableName"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#SourceTableName"><span class="hs-identifier hs-var">SourceTableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Table.html#Name"><span class="hs-identifier hs-type">IR.T.Name</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span id="local-6989586621689387791"><span id="local-6989586621689387792"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="TableRelationships"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-var">TableRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableRelationships"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-var">TableRelationships</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">{</span><span id="unTableRelationships"><span class="annot"><span class="annottext">TableRelationships
+-&gt; HashMap SourceTableName (HashMap RelationshipName Relationship)
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#unTableRelationships"><span class="hs-identifier hs-var hs-var">unTableRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#SourceTableName"><span class="hs-identifier hs-type">SourceTableName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipName"><span class="hs-identifier hs-type">RelationshipName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689387785"><span id="local-6989586621689387787"><span class="annot"><span class="annottext">TableRelationships -&gt; TableRelationships -&gt; Bool
+(TableRelationships -&gt; TableRelationships -&gt; Bool)
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; Bool)
+-&gt; Eq TableRelationships
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TableRelationships -&gt; TableRelationships -&gt; Bool
+$c/= :: TableRelationships -&gt; TableRelationships -&gt; Bool
+== :: TableRelationships -&gt; TableRelationships -&gt; Bool
+$c== :: TableRelationships -&gt; TableRelationships -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387769"><span id="local-6989586621689387771"><span id="local-6989586621689387773"><span id="local-6989586621689387775"><span id="local-6989586621689387777"><span id="local-6989586621689387779"><span id="local-6989586621689387781"><span class="annot"><span class="annottext">Eq TableRelationships
+Eq TableRelationships
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; Ordering)
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; Bool)
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; Bool)
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; Bool)
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; Bool)
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; TableRelationships)
+-&gt; (TableRelationships -&gt; TableRelationships -&gt; TableRelationships)
+-&gt; Ord TableRelationships
+TableRelationships -&gt; TableRelationships -&gt; Bool
+TableRelationships -&gt; TableRelationships -&gt; Ordering
+TableRelationships -&gt; TableRelationships -&gt; TableRelationships
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: TableRelationships -&gt; TableRelationships -&gt; TableRelationships
+$cmin :: TableRelationships -&gt; TableRelationships -&gt; TableRelationships
+max :: TableRelationships -&gt; TableRelationships -&gt; TableRelationships
+$cmax :: TableRelationships -&gt; TableRelationships -&gt; TableRelationships
+&gt;= :: TableRelationships -&gt; TableRelationships -&gt; Bool
+$c&gt;= :: TableRelationships -&gt; TableRelationships -&gt; Bool
+&gt; :: TableRelationships -&gt; TableRelationships -&gt; Bool
+$c&gt; :: TableRelationships -&gt; TableRelationships -&gt; Bool
+&lt;= :: TableRelationships -&gt; TableRelationships -&gt; Bool
+$c&lt;= :: TableRelationships -&gt; TableRelationships -&gt; Bool
+&lt; :: TableRelationships -&gt; TableRelationships -&gt; Bool
+$c&lt; :: TableRelationships -&gt; TableRelationships -&gt; Bool
+compare :: TableRelationships -&gt; TableRelationships -&gt; Ordering
+$ccompare :: TableRelationships -&gt; TableRelationships -&gt; Ordering
+$cp1Ord :: Eq TableRelationships
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387762"><span id="local-6989586621689387764"><span id="local-6989586621689387766"><span class="annot"><span class="annottext">Int -&gt; TableRelationships -&gt; ShowS
+[TableRelationships] -&gt; ShowS
+TableRelationships -&gt; String
+(Int -&gt; TableRelationships -&gt; ShowS)
+-&gt; (TableRelationships -&gt; String)
+-&gt; ([TableRelationships] -&gt; ShowS)
+-&gt; Show TableRelationships
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TableRelationships] -&gt; ShowS
+$cshowList :: [TableRelationships] -&gt; ShowS
+show :: TableRelationships -&gt; String
+$cshow :: TableRelationships -&gt; String
+showsPrec :: Int -&gt; TableRelationships -&gt; ShowS
+$cshowsPrec :: Int -&gt; TableRelationships -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cTableRelationships"><span id="%24tTableRelationships"><span id="local-6989586621689387732"><span id="local-6989586621689387734"><span id="local-6989586621689387736"><span id="local-6989586621689387738"><span id="local-6989586621689387740"><span id="local-6989586621689387742"><span id="local-6989586621689387744"><span id="local-6989586621689387746"><span id="local-6989586621689387748"><span id="local-6989586621689387750"><span id="local-6989586621689387752"><span id="local-6989586621689387754"><span id="local-6989586621689387756"><span id="local-6989586621689387758"><span class="annot"><span class="annottext">Typeable TableRelationships
+DataType
+Constr
+Typeable TableRelationships
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g)
+    -&gt; TableRelationships
+    -&gt; c TableRelationships)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableRelationships)
+-&gt; (TableRelationships -&gt; Constr)
+-&gt; (TableRelationships -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableRelationships))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c TableRelationships))
+-&gt; ((forall b. Data b =&gt; b -&gt; b)
+    -&gt; TableRelationships -&gt; TableRelationships)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r)
+-&gt; (forall u.
+    (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; TableRelationships -&gt; m TableRelationships)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; TableRelationships -&gt; m TableRelationships)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; TableRelationships -&gt; m TableRelationships)
+-&gt; Data TableRelationships
+TableRelationships -&gt; DataType
+TableRelationships -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; TableRelationships -&gt; TableRelationships
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; TableRelationships
+-&gt; c TableRelationships
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableRelationships
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableRelationships
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; TableRelationships
+-&gt; c TableRelationships
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableRelationships)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c TableRelationships)
+$cTableRelationships :: Constr
+$tTableRelationships :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; TableRelationships -&gt; m TableRelationships
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; u
+$cgmapQi :: forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableRelationships -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableRelationships -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; TableRelationships -&gt; TableRelationships
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; TableRelationships -&gt; TableRelationships
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c TableRelationships)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c TableRelationships)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableRelationships)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableRelationships)
+dataTypeOf :: TableRelationships -&gt; DataType
+$cdataTypeOf :: TableRelationships -&gt; DataType
+toConstr :: TableRelationships -&gt; Constr
+$ctoConstr :: TableRelationships -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableRelationships
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableRelationships
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; TableRelationships
+-&gt; c TableRelationships
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; TableRelationships
+-&gt; c TableRelationships
+$cp1Data :: Typeable TableRelationships
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TableRelationships -&gt; Rep TableRelationships x)
+-&gt; (forall x. Rep TableRelationships x -&gt; TableRelationships)
+-&gt; Generic TableRelationships
+forall x. Rep TableRelationships x -&gt; TableRelationships
+forall x. TableRelationships -&gt; Rep TableRelationships x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep TableRelationships x -&gt; TableRelationships
+$cfrom :: forall x. TableRelationships -&gt; Rep TableRelationships x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689387718"><span id="local-6989586621689387720"><span id="local-6989586621689387722"><span id="local-6989586621689387724"><span class="annot"><span class="annottext">[TableRelationships] -&gt; Value
+[TableRelationships] -&gt; Encoding
+TableRelationships -&gt; Value
+TableRelationships -&gt; Encoding
+(TableRelationships -&gt; Value)
+-&gt; (TableRelationships -&gt; Encoding)
+-&gt; ([TableRelationships] -&gt; Value)
+-&gt; ([TableRelationships] -&gt; Encoding)
+-&gt; ToJSON TableRelationships
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [TableRelationships] -&gt; Encoding
+$ctoEncodingList :: [TableRelationships] -&gt; Encoding
+toJSONList :: [TableRelationships] -&gt; Value
+$ctoJSONList :: [TableRelationships] -&gt; Value
+toEncoding :: TableRelationships -&gt; Encoding
+$ctoEncoding :: TableRelationships -&gt; Encoding
+toJSON :: TableRelationships -&gt; Value
+$ctoJSON :: TableRelationships -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689387712"><span id="local-6989586621689387714"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-type">TableRelationships</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-type">TableRelationships</span></a></span><span> </span><span id="local-6989586621689387710"><span class="annot"><span class="annottext">HashMap SourceTableName (HashMap RelationshipName Relationship)
+</span><a href="#local-6989586621689387710"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689387709"><span class="annot"><span class="annottext">&lt;&gt; :: TableRelationships -&gt; TableRelationships -&gt; TableRelationships
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-type">TableRelationships</span></a></span><span> </span><span id="local-6989586621689387708"><span class="annot"><span class="annottext">HashMap SourceTableName (HashMap RelationshipName Relationship)
+</span><a href="#local-6989586621689387708"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap SourceTableName (HashMap RelationshipName Relationship)
+-&gt; TableRelationships
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-var">TableRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap SourceTableName (HashMap RelationshipName Relationship)
+ -&gt; TableRelationships)
+-&gt; HashMap SourceTableName (HashMap RelationshipName Relationship)
+-&gt; TableRelationships
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(HashMap RelationshipName Relationship
+ -&gt; HashMap RelationshipName Relationship
+ -&gt; HashMap RelationshipName Relationship)
+-&gt; HashMap SourceTableName (HashMap RelationshipName Relationship)
+-&gt; HashMap SourceTableName (HashMap RelationshipName Relationship)
+-&gt; HashMap SourceTableName (HashMap RelationshipName Relationship)
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HashMap.unionWith</span></span><span> </span><span class="annot"><span class="annottext">HashMap RelationshipName Relationship
+-&gt; HashMap RelationshipName Relationship
+-&gt; HashMap RelationshipName Relationship
+forall k v.
+(Eq k, Hashable k) =&gt;
+HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HashMap.union</span></span><span> </span><span class="annot"><span class="annottext">HashMap SourceTableName (HashMap RelationshipName Relationship)
+</span><a href="#local-6989586621689387710"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap SourceTableName (HashMap RelationshipName Relationship)
+</span><a href="#local-6989586621689387708"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689387700"><span id="local-6989586621689387702"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-type">TableRelationships</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621689387698"><span class="annot"><span class="annottext">mempty :: TableRelationships
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap SourceTableName (HashMap RelationshipName Relationship)
+-&gt; TableRelationships
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TableRelationships"><span class="hs-identifier hs-var">TableRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap SourceTableName (HashMap RelationshipName Relationship)
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span id="local-6989586621689387696"><span id="local-6989586621689387697"></span></span><span class="hs-keyword">data</span><span> </span><span id="Relationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-var">Relationship</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Relationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-var">Relationship</span></a></span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rTargetTable"><span class="annot"><span class="annottext">Relationship -&gt; SourceTableName
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#_rTargetTable"><span class="hs-identifier hs-var hs-var">_rTargetTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Table.html#Name"><span class="hs-identifier hs-type">IR.T.Name</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span id="_rRelationshipType"><span class="annot"><span class="annottext">Relationship -&gt; RelationshipType
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#_rRelationshipType"><span class="hs-identifier hs-var hs-var">_rRelationshipType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipType"><span class="hs-identifier hs-type">RelationshipType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span id="_rColumnMapping"><span class="annot"><span class="annottext">Relationship -&gt; HashMap SourceColumnName SourceColumnName
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#_rColumnMapping"><span class="hs-identifier hs-var hs-var">_rColumnMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#SourceColumnName"><span class="hs-identifier hs-type">SourceColumnName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TargetColumnName"><span class="hs-identifier hs-type">TargetColumnName</span></a></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cRelationship"><span id="%24tRelationship"><span id="local-6989586621689387663"><span id="local-6989586621689387665"><span id="local-6989586621689387667"><span id="local-6989586621689387669"><span id="local-6989586621689387671"><span id="local-6989586621689387673"><span id="local-6989586621689387675"><span id="local-6989586621689387677"><span id="local-6989586621689387679"><span id="local-6989586621689387681"><span id="local-6989586621689387683"><span id="local-6989586621689387685"><span id="local-6989586621689387687"><span id="local-6989586621689387689"><span class="annot"><span class="annottext">Typeable Relationship
+DataType
+Constr
+Typeable Relationship
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; Relationship -&gt; c Relationship)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Relationship)
+-&gt; (Relationship -&gt; Constr)
+-&gt; (Relationship -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Relationship))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c Relationship))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; Relationship -&gt; Relationship)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship)
+-&gt; Data Relationship
+Relationship -&gt; DataType
+Relationship -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; Relationship -&gt; Relationship
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Relationship -&gt; c Relationship
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Relationship
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Relationship
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Relationship -&gt; c Relationship
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Relationship)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c Relationship)
+$cRelationship :: Constr
+$tRelationship :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Relationship -&gt; m Relationship
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Relationship -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Relationship -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Relationship -&gt; Relationship
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Relationship -&gt; Relationship
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c Relationship)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c Relationship)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Relationship)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Relationship)
+dataTypeOf :: Relationship -&gt; DataType
+$cdataTypeOf :: Relationship -&gt; DataType
+toConstr :: Relationship -&gt; Constr
+$ctoConstr :: Relationship -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Relationship
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Relationship
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Relationship -&gt; c Relationship
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Relationship -&gt; c Relationship
+$cp1Data :: Typeable Relationship
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387657"><span id="local-6989586621689387659"><span class="annot"><span class="annottext">Relationship -&gt; Relationship -&gt; Bool
+(Relationship -&gt; Relationship -&gt; Bool)
+-&gt; (Relationship -&gt; Relationship -&gt; Bool) -&gt; Eq Relationship
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Relationship -&gt; Relationship -&gt; Bool
+$c/= :: Relationship -&gt; Relationship -&gt; Bool
+== :: Relationship -&gt; Relationship -&gt; Bool
+$c== :: Relationship -&gt; Relationship -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Relationship -&gt; Rep Relationship x)
+-&gt; (forall x. Rep Relationship x -&gt; Relationship)
+-&gt; Generic Relationship
+forall x. Rep Relationship x -&gt; Relationship
+forall x. Relationship -&gt; Rep Relationship x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Relationship x -&gt; Relationship
+$cfrom :: forall x. Relationship -&gt; Rep Relationship x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387640"><span id="local-6989586621689387642"><span id="local-6989586621689387644"><span id="local-6989586621689387646"><span id="local-6989586621689387648"><span id="local-6989586621689387650"><span id="local-6989586621689387652"><span class="annot"><span class="annottext">Eq Relationship
+Eq Relationship
+-&gt; (Relationship -&gt; Relationship -&gt; Ordering)
+-&gt; (Relationship -&gt; Relationship -&gt; Bool)
+-&gt; (Relationship -&gt; Relationship -&gt; Bool)
+-&gt; (Relationship -&gt; Relationship -&gt; Bool)
+-&gt; (Relationship -&gt; Relationship -&gt; Bool)
+-&gt; (Relationship -&gt; Relationship -&gt; Relationship)
+-&gt; (Relationship -&gt; Relationship -&gt; Relationship)
+-&gt; Ord Relationship
+Relationship -&gt; Relationship -&gt; Bool
+Relationship -&gt; Relationship -&gt; Ordering
+Relationship -&gt; Relationship -&gt; Relationship
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Relationship -&gt; Relationship -&gt; Relationship
+$cmin :: Relationship -&gt; Relationship -&gt; Relationship
+max :: Relationship -&gt; Relationship -&gt; Relationship
+$cmax :: Relationship -&gt; Relationship -&gt; Relationship
+&gt;= :: Relationship -&gt; Relationship -&gt; Bool
+$c&gt;= :: Relationship -&gt; Relationship -&gt; Bool
+&gt; :: Relationship -&gt; Relationship -&gt; Bool
+$c&gt; :: Relationship -&gt; Relationship -&gt; Bool
+&lt;= :: Relationship -&gt; Relationship -&gt; Bool
+$c&lt;= :: Relationship -&gt; Relationship -&gt; Bool
+&lt; :: Relationship -&gt; Relationship -&gt; Bool
+$c&lt; :: Relationship -&gt; Relationship -&gt; Bool
+compare :: Relationship -&gt; Relationship -&gt; Ordering
+$ccompare :: Relationship -&gt; Relationship -&gt; Ordering
+$cp1Ord :: Eq Relationship
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387634"><span id="local-6989586621689387636"><span id="local-6989586621689387638"><span class="annot"><span class="annottext">Int -&gt; Relationship -&gt; ShowS
+[Relationship] -&gt; ShowS
+Relationship -&gt; String
+(Int -&gt; Relationship -&gt; ShowS)
+-&gt; (Relationship -&gt; String)
+-&gt; ([Relationship] -&gt; ShowS)
+-&gt; Show Relationship
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Relationship] -&gt; ShowS
+$cshowList :: [Relationship] -&gt; ShowS
+show :: Relationship -&gt; String
+$cshow :: Relationship -&gt; String
+showsPrec :: Int -&gt; Relationship -&gt; ShowS
+$cshowsPrec :: Int -&gt; Relationship -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689387627"><span id="local-6989586621689387629"><span id="local-6989586621689387631"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621689387626"><span class="annot"><span class="annottext">toJSON :: Relationship -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Relationship -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Relationship</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621689387620"><span class="annot"><span class="annottext">from :: Relationship -&gt; Relationship
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689387616"><span id="local-6989586621689387617"><span id="local-6989586621689387618"><span class="annot"><span class="annottext">HashMap SourceColumnName SourceColumnName
+SourceTableName
+RelationshipType
+_rColumnMapping :: HashMap SourceColumnName SourceColumnName
+_rRelationshipType :: RelationshipType
+_rTargetTable :: SourceTableName
+_rColumnMapping :: Relationship -&gt; HashMap SourceColumnName SourceColumnName
+_rRelationshipType :: Relationship -&gt; RelationshipType
+_rTargetTable :: Relationship -&gt; SourceTableName
+</span><a href="#local-6989586621689387616"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">Relationship :: TableName
+-&gt; RelationshipType
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; Relationship
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Relationship</span></a></span><span>
+</span><span id="line-55"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_rTargetTable :: TableName
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_rTargetTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceTableName -&gt; TableName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">SourceTableName
+</span><a href="#local-6989586621689387618"><span class="hs-identifier hs-var">_rTargetTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>        </span><span class="annot"><span class="annottext">_rRelationshipType :: RelationshipType
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_rRelationshipType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelationshipType -&gt; RelationshipType
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="#local-6989586621689387617"><span class="hs-identifier hs-var">_rRelationshipType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">_rColumnMapping :: HashMap SourceColumnName SourceColumnName
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_rColumnMapping</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SourceColumnName -&gt; SourceColumnName)
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; HashMap SourceColumnName SourceColumnName
+forall k2 k1 v.
+(Eq k2, Hashable k2) =&gt;
+(k1 -&gt; k2) -&gt; HashMap k1 v -&gt; HashMap k2 v
+</span><span class="hs-identifier hs-var">HashMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnName -&gt; SourceColumnName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(HashMap SourceColumnName SourceColumnName
+ -&gt; HashMap SourceColumnName SourceColumnName)
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; HashMap SourceColumnName SourceColumnName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnName -&gt; SourceColumnName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(SourceColumnName -&gt; SourceColumnName)
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; HashMap SourceColumnName SourceColumnName
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap SourceColumnName SourceColumnName
+</span><a href="#local-6989586621689387616"><span class="hs-identifier hs-var">_rColumnMapping</span></a></span><span>
+</span><span id="line-58"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Relationship</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621689387608"><span class="annot"><span class="annottext">from :: Relationship -&gt; Relationship
+</span><a href="#local-6989586621689387608"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Relationship</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689387605"><span id="local-6989586621689387606"><span id="local-6989586621689387607"><span class="annot"><span class="annottext">RelationshipType
+TableName
+HashMap SourceColumnName SourceColumnName
+_rColumnMapping :: HashMap SourceColumnName SourceColumnName
+_rRelationshipType :: RelationshipType
+_rTargetTable :: TableName
+_rColumnMapping :: Relationship -&gt; HashMap SourceColumnName SourceColumnName
+_rRelationshipType :: Relationship -&gt; RelationshipType
+_rTargetTable :: Relationship -&gt; TableName
+</span><a href="#local-6989586621689387605"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">Relationship :: SourceTableName
+-&gt; RelationshipType
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; Relationship
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span>
+</span><span id="line-63"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_rTargetTable :: SourceTableName
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#_rTargetTable"><span class="hs-identifier hs-var">_rTargetTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; SourceTableName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689387607"><span class="hs-identifier hs-var">_rTargetTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">_rRelationshipType :: RelationshipType
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#_rRelationshipType"><span class="hs-identifier hs-var">_rRelationshipType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelationshipType -&gt; RelationshipType
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="#local-6989586621689387606"><span class="hs-identifier hs-var">_rRelationshipType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">_rColumnMapping :: HashMap SourceColumnName SourceColumnName
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#_rColumnMapping"><span class="hs-identifier hs-var">_rColumnMapping</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SourceColumnName -&gt; SourceColumnName)
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; HashMap SourceColumnName SourceColumnName
+forall k2 k1 v.
+(Eq k2, Hashable k2) =&gt;
+(k1 -&gt; k2) -&gt; HashMap k1 v -&gt; HashMap k2 v
+</span><span class="hs-identifier hs-var">HashMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnName -&gt; SourceColumnName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(HashMap SourceColumnName SourceColumnName
+ -&gt; HashMap SourceColumnName SourceColumnName)
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; HashMap SourceColumnName SourceColumnName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnName -&gt; SourceColumnName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(SourceColumnName -&gt; SourceColumnName)
+-&gt; HashMap SourceColumnName SourceColumnName
+-&gt; HashMap SourceColumnName SourceColumnName
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap SourceColumnName SourceColumnName
+</span><a href="#local-6989586621689387605"><span class="hs-identifier hs-var">_rColumnMapping</span></a></span><span>
+</span><span id="line-66"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span id="local-6989586621689387603"><span id="local-6989586621689387604"></span></span><span class="hs-keyword">data</span><span> </span><span id="RelationshipType"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipType"><span class="hs-identifier hs-var">RelationshipType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ObjectRelationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#ObjectRelationship"><span class="hs-identifier hs-var">ObjectRelationship</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ArrayRelationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#ArrayRelationship"><span class="hs-identifier hs-var">ArrayRelationship</span></a></span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689387597"><span id="local-6989586621689387599"><span class="annot"><span class="annottext">RelationshipType -&gt; RelationshipType -&gt; Bool
+(RelationshipType -&gt; RelationshipType -&gt; Bool)
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; Bool)
+-&gt; Eq RelationshipType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RelationshipType -&gt; RelationshipType -&gt; Bool
+$c/= :: RelationshipType -&gt; RelationshipType -&gt; Bool
+== :: RelationshipType -&gt; RelationshipType -&gt; Bool
+$c== :: RelationshipType -&gt; RelationshipType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387582"><span id="local-6989586621689387584"><span id="local-6989586621689387586"><span id="local-6989586621689387588"><span id="local-6989586621689387590"><span id="local-6989586621689387592"><span id="local-6989586621689387594"><span class="annot"><span class="annottext">Eq RelationshipType
+Eq RelationshipType
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; Ordering)
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; Bool)
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; Bool)
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; Bool)
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; Bool)
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; RelationshipType)
+-&gt; (RelationshipType -&gt; RelationshipType -&gt; RelationshipType)
+-&gt; Ord RelationshipType
+RelationshipType -&gt; RelationshipType -&gt; Bool
+RelationshipType -&gt; RelationshipType -&gt; Ordering
+RelationshipType -&gt; RelationshipType -&gt; RelationshipType
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: RelationshipType -&gt; RelationshipType -&gt; RelationshipType
+$cmin :: RelationshipType -&gt; RelationshipType -&gt; RelationshipType
+max :: RelationshipType -&gt; RelationshipType -&gt; RelationshipType
+$cmax :: RelationshipType -&gt; RelationshipType -&gt; RelationshipType
+&gt;= :: RelationshipType -&gt; RelationshipType -&gt; Bool
+$c&gt;= :: RelationshipType -&gt; RelationshipType -&gt; Bool
+&gt; :: RelationshipType -&gt; RelationshipType -&gt; Bool
+$c&gt; :: RelationshipType -&gt; RelationshipType -&gt; Bool
+&lt;= :: RelationshipType -&gt; RelationshipType -&gt; Bool
+$c&lt;= :: RelationshipType -&gt; RelationshipType -&gt; Bool
+&lt; :: RelationshipType -&gt; RelationshipType -&gt; Bool
+$c&lt; :: RelationshipType -&gt; RelationshipType -&gt; Bool
+compare :: RelationshipType -&gt; RelationshipType -&gt; Ordering
+$ccompare :: RelationshipType -&gt; RelationshipType -&gt; Ordering
+$cp1Ord :: Eq RelationshipType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387576"><span id="local-6989586621689387578"><span id="local-6989586621689387580"><span class="annot"><span class="annottext">Int -&gt; RelationshipType -&gt; ShowS
+[RelationshipType] -&gt; ShowS
+RelationshipType -&gt; String
+(Int -&gt; RelationshipType -&gt; ShowS)
+-&gt; (RelationshipType -&gt; String)
+-&gt; ([RelationshipType] -&gt; ShowS)
+-&gt; Show RelationshipType
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RelationshipType] -&gt; ShowS
+$cshowList :: [RelationshipType] -&gt; ShowS
+show :: RelationshipType -&gt; String
+$cshow :: RelationshipType -&gt; String
+showsPrec :: Int -&gt; RelationshipType -&gt; ShowS
+$cshowsPrec :: Int -&gt; RelationshipType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RelationshipType -&gt; Rep RelationshipType x)
+-&gt; (forall x. Rep RelationshipType x -&gt; RelationshipType)
+-&gt; Generic RelationshipType
+forall x. Rep RelationshipType x -&gt; RelationshipType
+forall x. RelationshipType -&gt; Rep RelationshipType x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep RelationshipType x -&gt; RelationshipType
+$cfrom :: forall x. RelationshipType -&gt; Rep RelationshipType x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cArrayRelationship"><span id="%24cObjectRelationship"><span id="%24tRelationshipType"><span id="local-6989586621689387545"><span id="local-6989586621689387547"><span id="local-6989586621689387549"><span id="local-6989586621689387551"><span id="local-6989586621689387553"><span id="local-6989586621689387555"><span id="local-6989586621689387557"><span id="local-6989586621689387559"><span id="local-6989586621689387561"><span id="local-6989586621689387563"><span id="local-6989586621689387565"><span id="local-6989586621689387567"><span id="local-6989586621689387569"><span id="local-6989586621689387571"><span class="annot"><span class="annottext">Typeable RelationshipType
+DataType
+Constr
+Typeable RelationshipType
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; RelationshipType -&gt; c RelationshipType)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c RelationshipType)
+-&gt; (RelationshipType -&gt; Constr)
+-&gt; (RelationshipType -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c RelationshipType))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c RelationshipType))
+-&gt; ((forall b. Data b =&gt; b -&gt; b)
+    -&gt; RelationshipType -&gt; RelationshipType)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r)
+-&gt; (forall u.
+    (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; RelationshipType -&gt; m RelationshipType)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; RelationshipType -&gt; m RelationshipType)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; RelationshipType -&gt; m RelationshipType)
+-&gt; Data RelationshipType
+RelationshipType -&gt; DataType
+RelationshipType -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; RelationshipType -&gt; RelationshipType
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; RelationshipType -&gt; c RelationshipType
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c RelationshipType
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c RelationshipType
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; RelationshipType -&gt; c RelationshipType
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c RelationshipType)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c RelationshipType)
+$cArrayRelationship :: Constr
+$cObjectRelationship :: Constr
+$tRelationshipType :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; RelationshipType -&gt; m RelationshipType
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; u
+$cgmapQi :: forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; RelationshipType -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; RelationshipType -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; RelationshipType -&gt; RelationshipType
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; RelationshipType -&gt; RelationshipType
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c RelationshipType)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c RelationshipType)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c RelationshipType)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c RelationshipType)
+dataTypeOf :: RelationshipType -&gt; DataType
+$cdataTypeOf :: RelationshipType -&gt; DataType
+toConstr :: RelationshipType -&gt; Constr
+$ctoConstr :: RelationshipType -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c RelationshipType
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c RelationshipType
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; RelationshipType -&gt; c RelationshipType
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; RelationshipType -&gt; c RelationshipType
+$cp1Data :: Typeable RelationshipType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689387535"><span id="local-6989586621689387537"><span id="local-6989586621689387539"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipType"><span class="hs-identifier hs-type">RelationshipType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621689387534"><span class="annot"><span class="annottext">toJSON :: RelationshipType -&gt; Value
+</span><a href="#local-6989586621689387534"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RelationshipType -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipType"><span class="hs-identifier hs-type">RelationshipType</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621689387532"><span class="annot"><span class="annottext">from :: RelationshipType -&gt; RelationshipType
+</span><a href="#local-6989586621689387532"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#ObjectRelationship"><span class="hs-identifier hs-var">ObjectRelationship</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ObjectRelationship</span></a></span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#ArrayRelationship"><span class="hs-identifier hs-var">ArrayRelationship</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ArrayRelationship</span></a></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipType</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipType"><span class="hs-identifier hs-type">RelationshipType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621689387528"><span class="annot"><span class="annottext">from :: RelationshipType -&gt; RelationshipType
+</span><a href="#local-6989586621689387528"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ObjectRelationship</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#ObjectRelationship"><span class="hs-identifier hs-var">ObjectRelationship</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ArrayRelationship</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RelationshipType
+</span><a href="Hasura.Backends.DataConnector.IR.Relationships.html#ArrayRelationship"><span class="hs-identifier hs-var">ArrayRelationship</span></a></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-keyword">type</span><span> </span><span id="SourceColumnName"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#SourceColumnName"><span class="hs-identifier hs-var">SourceColumnName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">type</span><span> </span><span id="TargetColumnName"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#TargetColumnName"><span class="hs-identifier hs-var">TargetColumnName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
+</span><span id="line-87"></span></pre></body></html>

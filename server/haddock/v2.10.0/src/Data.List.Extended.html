@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.List.Extended</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Data.List.Extended.html#duplicates"><span class="hs-identifier">duplicates</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Data.List.Extended.html#uniques"><span class="hs-identifier">uniques</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Data.List.Extended.html#getDifference"><span class="hs-identifier">getDifference</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Data.List.Extended.html#getDifferenceOn"><span class="hs-identifier">getDifferenceOn</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Data.List.Extended.html#getOverlapWith"><span class="hs-identifier">getOverlapWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Data.List.Extended.html#longestCommonPrefix"><span class="hs-identifier">longestCommonPrefix</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Data.List.Extended.html#appendToNonEmpty"><span class="hs-identifier">appendToNonEmpty</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Function</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">on</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Extended.html"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Hashable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span id="local-6989586621689354019"><span class="annot"><a href="Data.List.Extended.html#duplicates"><span class="hs-identifier hs-type">duplicates</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689354019"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689354019"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354019"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689354019"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-23"></span><span id="duplicates"><span class="annot"><span class="annottext">duplicates :: [a] -&gt; HashSet a
+</span><a href="Data.List.Extended.html#duplicates"><span class="hs-identifier hs-var hs-var">duplicates</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="annottext">[a] -&gt; HashSet a
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">([a] -&gt; HashSet a) -&gt; ([a] -&gt; [a]) -&gt; [a] -&gt; HashSet a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HashMap a Int -&gt; [a]
+forall k v. HashMap k v -&gt; [k]
+</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">(HashMap a Int -&gt; [a]) -&gt; ([a] -&gt; HashMap a Int) -&gt; [a] -&gt; [a]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Bool) -&gt; HashMap a Int -&gt; HashMap a Int
+forall v k. (v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(HashMap a Int -&gt; HashMap a Int)
+-&gt; ([a] -&gt; HashMap a Int) -&gt; [a] -&gt; HashMap a Int
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Int -&gt; Int) -&gt; [(a, Int)] -&gt; HashMap a Int
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.fromListWith</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(+)</span></span><span> </span><span class="annot"><span class="annottext">([(a, Int)] -&gt; HashMap a Int)
+-&gt; ([a] -&gt; [(a, Int)]) -&gt; [a] -&gt; HashMap a Int
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; (a, Int)) -&gt; [a] -&gt; [(a, Int)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span id="local-6989586621689354011"><span class="annot"><a href="Data.List.Extended.html#uniques"><span class="hs-identifier hs-type">uniques</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689354011"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354011"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354011"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-27"></span><span id="uniques"><span class="annot"><span class="annottext">uniques :: [a] -&gt; [a]
+</span><a href="Data.List.Extended.html#uniques"><span class="hs-identifier hs-var hs-var">uniques</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set a -&gt; [a]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">S.toList</span></span><span> </span><span class="annot"><span class="annottext">(Set a -&gt; [a]) -&gt; ([a] -&gt; Set a) -&gt; [a] -&gt; [a]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[a] -&gt; Set a
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">S.fromList</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span id="local-6989586621689354008"><span class="annot"><a href="Data.List.Extended.html#getDifference"><span class="hs-identifier hs-type">getDifference</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689354008"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689354008"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354008"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354008"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689354008"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-30"></span><span id="getDifference"><span class="annot"><span class="annottext">getDifference :: [a] -&gt; [a] -&gt; HashSet a
+</span><a href="Data.List.Extended.html#getDifference"><span class="hs-identifier hs-var hs-var">getDifference</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet a -&gt; HashSet a -&gt; HashSet a
+forall a. (Eq a, Hashable a) =&gt; HashSet a -&gt; HashSet a -&gt; HashSet a
+</span><span class="hs-identifier hs-var">Set.difference</span></span><span> </span><span class="annot"><span class="annottext">(HashSet a -&gt; HashSet a -&gt; HashSet a)
+-&gt; ([a] -&gt; HashSet a) -&gt; [a] -&gt; [a] -&gt; HashSet a
+forall b c a. (b -&gt; b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">`on`</span></span><span> </span><span class="annot"><span class="annottext">[a] -&gt; HashSet a
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span id="local-6989586621689354005"><span id="local-6989586621689354006"><span class="annot"><a href="Data.List.Extended.html#getDifferenceOn"><span class="hs-identifier hs-type">getDifferenceOn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689354006"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689354006"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689354005"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689354006"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354005"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354005"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689354005"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-33"></span><span id="getDifferenceOn"><span class="annot"><span class="annottext">getDifferenceOn :: (v -&gt; k) -&gt; [v] -&gt; [v] -&gt; [v]
+</span><a href="Data.List.Extended.html#getDifferenceOn"><span class="hs-identifier hs-var hs-var">getDifferenceOn</span></a></span></span><span> </span><span id="local-6989586621689354004"><span class="annot"><span class="annottext">v -&gt; k
+</span><a href="#local-6989586621689354004"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689354003"><span class="annot"><span class="annottext">[v]
+</span><a href="#local-6989586621689354003"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k v -&gt; [v]
+forall k v. HashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">(HashMap k v -&gt; [v]) -&gt; ([v] -&gt; HashMap k v) -&gt; [v] -&gt; [v]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; k) -&gt; [v] -&gt; [v] -&gt; HashMap k v
+forall k (t :: * -&gt; *) v.
+(Eq k, Hashable k, Foldable t) =&gt;
+(v -&gt; k) -&gt; t v -&gt; t v -&gt; HashMap k v
+</span><a href="Data.HashMap.Strict.Extended.html#differenceOn"><span class="hs-identifier hs-var">Map.differenceOn</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; k
+</span><a href="#local-6989586621689354004"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">[v]
+</span><a href="#local-6989586621689354003"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span id="local-6989586621689353999"><span id="local-6989586621689354000"><span class="annot"><a href="Data.List.Extended.html#getOverlapWith"><span class="hs-identifier hs-type">getOverlapWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689354000"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689354000"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689353999"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689354000"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689353999"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689353999"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689353999"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621689353999"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-36"></span><span id="getOverlapWith"><span class="annot"><span class="annottext">getOverlapWith :: (v -&gt; k) -&gt; [v] -&gt; [v] -&gt; [(v, v)]
+</span><a href="Data.List.Extended.html#getOverlapWith"><span class="hs-identifier hs-var hs-var">getOverlapWith</span></a></span></span><span> </span><span id="local-6989586621689353998"><span class="annot"><span class="annottext">v -&gt; k
+</span><a href="#local-6989586621689353998"><span class="hs-identifier hs-var">getKey</span></a></span></span><span> </span><span id="local-6989586621689353997"><span class="annot"><span class="annottext">[v]
+</span><a href="#local-6989586621689353997"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span id="local-6989586621689353996"><span class="annot"><span class="annottext">[v]
+</span><a href="#local-6989586621689353996"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><span class="annottext">HashMap k (v, v) -&gt; [(v, v)]
+forall k v. HashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">(HashMap k (v, v) -&gt; [(v, v)]) -&gt; HashMap k (v, v) -&gt; [(v, v)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; v -&gt; (v, v))
+-&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k (v, v)
+forall k v1 v2 v3.
+(Eq k, Hashable k) =&gt;
+(v1 -&gt; v2 -&gt; v3) -&gt; HashMap k v1 -&gt; HashMap k v2 -&gt; HashMap k v3
+</span><span class="hs-identifier hs-var">Map.intersectionWith</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[v] -&gt; HashMap k v
+</span><a href="#local-6989586621689353994"><span class="hs-identifier hs-var">mkMap</span></a></span><span> </span><span class="annot"><span class="annottext">[v]
+</span><a href="#local-6989586621689353997"><span class="hs-identifier hs-var">left</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[v] -&gt; HashMap k v
+</span><a href="#local-6989586621689353994"><span class="hs-identifier hs-var">mkMap</span></a></span><span> </span><span class="annot"><span class="annottext">[v]
+</span><a href="#local-6989586621689353996"><span class="hs-identifier hs-var">right</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621689353994"><span class="annot"><span class="annottext">mkMap :: [v] -&gt; HashMap k v
+</span><a href="#local-6989586621689353994"><span class="hs-identifier hs-var hs-var">mkMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(k, v)] -&gt; HashMap k v
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(k, v)] -&gt; HashMap k v)
+-&gt; ([v] -&gt; [(k, v)]) -&gt; [v] -&gt; HashMap k v
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; (k, v)) -&gt; [v] -&gt; [(k, v)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689353992"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689353992"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">v -&gt; k
+</span><a href="#local-6989586621689353998"><span class="hs-identifier hs-var">getKey</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689353992"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689353992"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- | Returns the longest prefix common to all given lists. Returns an empty list on an empty list.</span><span>
+</span><span id="line-42"></span><span class="hs-comment">--</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- &gt;&gt;&gt; longestCommonPrefix [&quot;abcd&quot;, &quot;abce&quot;, &quot;abgh&quot;]</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- &quot;ab&quot;</span><span>
+</span><span id="line-45"></span><span class="hs-comment">--</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- &gt;&gt;&gt; longestCommonPrefix []</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- []</span><span>
+</span><span id="line-48"></span><span id="local-6989586621689353991"><span class="annot"><a href="Data.List.Extended.html#longestCommonPrefix"><span class="hs-identifier hs-type">longestCommonPrefix</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689353991"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689353991"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689353991"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-49"></span><span id="longestCommonPrefix"><span class="annot"><span class="annottext">longestCommonPrefix :: [[a]] -&gt; [a]
+</span><a href="Data.List.Extended.html#longestCommonPrefix"><span class="hs-identifier hs-var hs-var">longestCommonPrefix</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-50"></span><span class="annot"><a href="Data.List.Extended.html#longestCommonPrefix"><span class="hs-identifier hs-var">longestCommonPrefix</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689353990"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689353990"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689353989"><span class="annot"><span class="annottext">[[a]]
+</span><a href="#local-6989586621689353989"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([a] -&gt; [a] -&gt; [a]) -&gt; [a] -&gt; [[a]] -&gt; [a]
+forall (t :: * -&gt; *) a b.
+Foldable t =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldr</span></span><span> </span><span class="annot"><span class="annottext">[a] -&gt; [a] -&gt; [a]
+forall b. Eq b =&gt; [b] -&gt; [b] -&gt; [b]
+</span><a href="#local-6989586621689353987"><span class="hs-identifier hs-var">prefix</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689353990"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">[[a]]
+</span><a href="#local-6989586621689353989"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621689353987"><span class="annot"><span class="annottext">prefix :: [b] -&gt; [b] -&gt; [b]
+</span><a href="#local-6989586621689353987"><span class="hs-identifier hs-var hs-var">prefix</span></a></span></span><span> </span><span id="local-6989586621689353986"><span class="annot"><span class="annottext">[b]
+</span><a href="#local-6989586621689353986"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621689353985"><span class="annot"><span class="annottext">[b]
+</span><a href="#local-6989586621689353985"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((b, b) -&gt; b) -&gt; [(b, b)] -&gt; [b]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(b, b) -&gt; b
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">([(b, b)] -&gt; [b]) -&gt; [(b, b)] -&gt; [b]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((b, b) -&gt; Bool) -&gt; [(b, b)] -&gt; [(b, b)]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">takeWhile</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(b -&gt; b -&gt; Bool) -&gt; (b, b) -&gt; Bool
+forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><span class="hs-identifier hs-var">uncurry</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(==)</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(b, b)] -&gt; [(b, b)]) -&gt; [(b, b)] -&gt; [(b, b)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[b] -&gt; [b] -&gt; [(b, b)]
+forall a b. [a] -&gt; [b] -&gt; [(a, b)]
+</span><span class="hs-identifier hs-var">zip</span></span><span> </span><span class="annot"><span class="annottext">[b]
+</span><a href="#local-6989586621689353986"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">[b]
+</span><a href="#local-6989586621689353985"><span class="hs-identifier hs-var">l2</span></a></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span id="local-6989586621689353982"><span class="annot"><a href="Data.List.Extended.html#appendToNonEmpty"><span class="hs-identifier hs-type">appendToNonEmpty</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NE.NonEmpty</span></span><span> </span><span class="annot"><a href="#local-6989586621689353982"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689353982"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NE.NonEmpty</span></span><span> </span><span class="annot"><a href="#local-6989586621689353982"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-55"></span><span id="appendToNonEmpty"><span class="annot"><span class="annottext">appendToNonEmpty :: NonEmpty a -&gt; [a] -&gt; NonEmpty a
+</span><a href="Data.List.Extended.html#appendToNonEmpty"><span class="hs-identifier hs-var hs-var">appendToNonEmpty</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689353981"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689353981"><span class="hs-identifier hs-var">neHead</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">NE.:|</span></span><span> </span><span id="local-6989586621689353979"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689353979"><span class="hs-identifier hs-var">neList</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689353978"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689353978"><span class="hs-identifier hs-var">list</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689353981"><span class="hs-identifier hs-var">neHead</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; [a] -&gt; NonEmpty a
+forall a. a -&gt; [a] -&gt; NonEmpty a
+</span><span class="hs-operator hs-var">NE.:|</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689353979"><span class="hs-identifier hs-var">neList</span></a></span><span> </span><span class="annot"><span class="annottext">[a] -&gt; [a] -&gt; [a]
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689353978"><span class="hs-identifier hs-var">list</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span></pre></body></html>

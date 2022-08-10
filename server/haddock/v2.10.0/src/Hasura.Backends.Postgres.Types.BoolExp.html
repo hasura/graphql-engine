@@ -1,0 +1,497 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Postgres Types BoolExp</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Postgres-specific 'BooleanOperator' extensions.</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Types.BoolExp</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#BooleanOperators"><span class="hs-identifier">BooleanOperators</span></a></span><span>
+</span><span id="line-6"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AAncestor"><span class="hs-identifier">AAncestor</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AAncestorAny"><span class="hs-identifier">AAncestorAny</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AContainedIn"><span class="hs-identifier">AContainedIn</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AContains"><span class="hs-identifier">AContains</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ADescendant"><span class="hs-identifier">ADescendant</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ADescendantAny"><span class="hs-identifier">ADescendantAny</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKey"><span class="hs-identifier">AHasKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKeysAll"><span class="hs-identifier">AHasKeysAll</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKeysAny"><span class="hs-identifier">AHasKeysAny</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AILIKE"><span class="hs-identifier">AILIKE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AIREGEX"><span class="hs-identifier">AIREGEX</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatches"><span class="hs-identifier">AMatches</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatchesAny"><span class="hs-identifier">AMatchesAny</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatchesFulltext"><span class="hs-identifier">AMatchesFulltext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANILIKE"><span class="hs-identifier">ANILIKE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANIREGEX"><span class="hs-identifier">ANIREGEX</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANREGEX"><span class="hs-identifier">ANREGEX</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANSIMILAR"><span class="hs-identifier">ANSIMILAR</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AREGEX"><span class="hs-identifier">AREGEX</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASIMILAR"><span class="hs-identifier">ASIMILAR</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AST3DDWithinGeom"><span class="hs-identifier">AST3DDWithinGeom</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AST3DIntersects"><span class="hs-identifier">AST3DIntersects</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTContains"><span class="hs-identifier">ASTContains</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTCrosses"><span class="hs-identifier">ASTCrosses</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTDWithinGeog"><span class="hs-identifier">ASTDWithinGeog</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTDWithinGeom"><span class="hs-identifier">ASTDWithinGeom</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTEquals"><span class="hs-identifier">ASTEquals</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersects"><span class="hs-identifier">ASTIntersects</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsGeomNband"><span class="hs-identifier">ASTIntersectsGeomNband</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsNbandGeom"><span class="hs-identifier">ASTIntersectsNbandGeom</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsRast"><span class="hs-identifier">ASTIntersectsRast</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTOverlaps"><span class="hs-identifier">ASTOverlaps</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTTouches"><span class="hs-identifier">ASTTouches</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTWithin"><span class="hs-identifier">ASTWithin</span></a></span><span>
+</span><span id="line-40"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Aeson.Extended.html"><span class="hs-identifier">Data.Aeson.Extended</span></a></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span id="local-6989586621689408700"><span id="local-6989586621689408701"></span></span><span class="hs-keyword">data</span><span> </span><span id="BooleanOperators"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#BooleanOperators"><span class="hs-identifier hs-var">BooleanOperators</span></a></span></span><span> </span><span id="local-6989586621689408699"><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AILIKE"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AILIKE"><span class="hs-identifier hs-var">AILIKE</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">--     ILIKE, case insensitive</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ANILIKE"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANILIKE"><span class="hs-identifier hs-var">ANILIKE</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">-- NOT ILIKE, case insensitive</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASIMILAR"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASIMILAR"><span class="hs-identifier hs-var">ASIMILAR</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">--     similar, regex</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ANSIMILAR"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANSIMILAR"><span class="hs-identifier hs-var">ANSIMILAR</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">-- not similar, regex</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AREGEX"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AREGEX"><span class="hs-identifier hs-var">AREGEX</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">-- regex: match POSIX case sensitive</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AIREGEX"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AIREGEX"><span class="hs-identifier hs-var">AIREGEX</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">-- regex: match POSIX case insensitive</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ANREGEX"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANREGEX"><span class="hs-identifier hs-var">ANREGEX</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">-- regex: dont match POSIX case sensitive</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ANIREGEX"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANIREGEX"><span class="hs-identifier hs-var">ANIREGEX</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">-- regex: dont match POSIX case insensitive</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AContains"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AContains"><span class="hs-identifier hs-var">AContains</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AContainedIn"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AContainedIn"><span class="hs-identifier hs-var">AContainedIn</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AHasKey"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKey"><span class="hs-identifier hs-var">AHasKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AHasKeysAny"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKeysAny"><span class="hs-identifier hs-var">AHasKeysAny</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AHasKeysAll"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKeysAll"><span class="hs-identifier hs-var">AHasKeysAll</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTContains"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTContains"><span class="hs-identifier hs-var">ASTContains</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTCrosses"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTCrosses"><span class="hs-identifier hs-var">ASTCrosses</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTEquals"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTEquals"><span class="hs-identifier hs-var">ASTEquals</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTIntersects"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersects"><span class="hs-identifier hs-var">ASTIntersects</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AST3DIntersects"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AST3DIntersects"><span class="hs-identifier hs-var">AST3DIntersects</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTOverlaps"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTOverlaps"><span class="hs-identifier hs-var">ASTOverlaps</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTTouches"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTTouches"><span class="hs-identifier hs-var">ASTTouches</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTWithin"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTWithin"><span class="hs-identifier hs-var">ASTWithin</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTIntersectsRast"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsRast"><span class="hs-identifier hs-var">ASTIntersectsRast</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTDWithinGeom"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTDWithinGeom"><span class="hs-identifier hs-var">ASTDWithinGeom</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#DWithinGeomOp"><span class="hs-identifier hs-type">DWithinGeomOp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AST3DDWithinGeom"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AST3DDWithinGeom"><span class="hs-identifier hs-var">AST3DDWithinGeom</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#DWithinGeomOp"><span class="hs-identifier hs-type">DWithinGeomOp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTDWithinGeog"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTDWithinGeog"><span class="hs-identifier hs-var">ASTDWithinGeog</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#DWithinGeogOp"><span class="hs-identifier hs-type">DWithinGeogOp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTIntersectsGeomNband"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsGeomNband"><span class="hs-identifier hs-var">ASTIntersectsGeomNband</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#STIntersectsGeomminNband"><span class="hs-identifier hs-type">STIntersectsGeomminNband</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTIntersectsNbandGeom"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsNbandGeom"><span class="hs-identifier hs-var">ASTIntersectsNbandGeom</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#STIntersectsNbandGeommin"><span class="hs-identifier hs-type">STIntersectsNbandGeommin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AAncestor"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AAncestor"><span class="hs-identifier hs-var">AAncestor</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AAncestorAny"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AAncestorAny"><span class="hs-identifier hs-var">AAncestorAny</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ADescendant"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ADescendant"><span class="hs-identifier hs-var">ADescendant</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ADescendantAny"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ADescendantAny"><span class="hs-identifier hs-var">ADescendantAny</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AMatches"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatches"><span class="hs-identifier hs-var">AMatches</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AMatchesAny"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatchesAny"><span class="hs-identifier hs-var">AMatchesAny</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AMatchesFulltext"><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatchesFulltext"><span class="hs-identifier hs-var">AMatchesFulltext</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689408699"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689408695"><span id="local-6989586621689408697"><span class="annot"><span class="annottext">BooleanOperators a -&gt; BooleanOperators a -&gt; Bool
+(BooleanOperators a -&gt; BooleanOperators a -&gt; Bool)
+-&gt; (BooleanOperators a -&gt; BooleanOperators a -&gt; Bool)
+-&gt; Eq (BooleanOperators a)
+forall a. Eq a =&gt; BooleanOperators a -&gt; BooleanOperators a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: BooleanOperators a -&gt; BooleanOperators a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; BooleanOperators a -&gt; BooleanOperators a -&gt; Bool
+== :: BooleanOperators a -&gt; BooleanOperators a -&gt; Bool
+$c== :: forall a. Eq a =&gt; BooleanOperators a -&gt; BooleanOperators a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. BooleanOperators a -&gt; Rep (BooleanOperators a) x)
+-&gt; (forall x. Rep (BooleanOperators a) x -&gt; BooleanOperators a)
+-&gt; Generic (BooleanOperators a)
+forall x. Rep (BooleanOperators a) x -&gt; BooleanOperators a
+forall x. BooleanOperators a -&gt; Rep (BooleanOperators a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (BooleanOperators a) x -&gt; BooleanOperators a
+forall a x. BooleanOperators a -&gt; Rep (BooleanOperators a) x
+$cto :: forall a x. Rep (BooleanOperators a) x -&gt; BooleanOperators a
+$cfrom :: forall a x. BooleanOperators a -&gt; Rep (BooleanOperators a) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689408657"><span id="local-6989586621689408659"><span id="local-6989586621689408661"><span id="local-6989586621689408663"><span id="local-6989586621689408665"><span id="local-6989586621689408667"><span id="local-6989586621689408669"><span id="local-6989586621689408671"><span id="local-6989586621689408673"><span id="local-6989586621689408675"><span id="local-6989586621689408677"><span id="local-6989586621689408679"><span id="local-6989586621689408681"><span id="local-6989586621689408683"><span id="local-6989586621689408685"><span id="local-6989586621689408687"><span id="local-6989586621689408689"><span class="annot"><span class="annottext">BooleanOperators a -&gt; Bool
+(a -&gt; m) -&gt; BooleanOperators a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+(forall m. Monoid m =&gt; BooleanOperators m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BooleanOperators a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BooleanOperators a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; BooleanOperators a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; BooleanOperators a -&gt; a)
+-&gt; (forall a. BooleanOperators a -&gt; [a])
+-&gt; (forall a. BooleanOperators a -&gt; Bool)
+-&gt; (forall a. BooleanOperators a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; BooleanOperators a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; BooleanOperators a -&gt; a)
+-&gt; (forall a. Ord a =&gt; BooleanOperators a -&gt; a)
+-&gt; (forall a. Num a =&gt; BooleanOperators a -&gt; a)
+-&gt; (forall a. Num a =&gt; BooleanOperators a -&gt; a)
+-&gt; Foldable BooleanOperators
+forall a. Eq a =&gt; a -&gt; BooleanOperators a -&gt; Bool
+forall a. Num a =&gt; BooleanOperators a -&gt; a
+forall a. Ord a =&gt; BooleanOperators a -&gt; a
+forall m. Monoid m =&gt; BooleanOperators m -&gt; m
+forall a. BooleanOperators a -&gt; Bool
+forall a. BooleanOperators a -&gt; Int
+forall a. BooleanOperators a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; BooleanOperators a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BooleanOperators a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: BooleanOperators a -&gt; a
+$cproduct :: forall a. Num a =&gt; BooleanOperators a -&gt; a
+sum :: BooleanOperators a -&gt; a
+$csum :: forall a. Num a =&gt; BooleanOperators a -&gt; a
+minimum :: BooleanOperators a -&gt; a
+$cminimum :: forall a. Ord a =&gt; BooleanOperators a -&gt; a
+maximum :: BooleanOperators a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; BooleanOperators a -&gt; a
+elem :: a -&gt; BooleanOperators a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; BooleanOperators a -&gt; Bool
+length :: BooleanOperators a -&gt; Int
+$clength :: forall a. BooleanOperators a -&gt; Int
+null :: BooleanOperators a -&gt; Bool
+$cnull :: forall a. BooleanOperators a -&gt; Bool
+toList :: BooleanOperators a -&gt; [a]
+$ctoList :: forall a. BooleanOperators a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; BooleanOperators a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; BooleanOperators a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; BooleanOperators a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; BooleanOperators a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BooleanOperators a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; BooleanOperators a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BooleanOperators a -&gt; m
+foldMap :: (a -&gt; m) -&gt; BooleanOperators a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BooleanOperators a -&gt; m
+fold :: BooleanOperators m -&gt; m
+$cfold :: forall m. Monoid m =&gt; BooleanOperators m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689408652"><span id="local-6989586621689408654"><span class="annot"><span class="annottext">a -&gt; BooleanOperators b -&gt; BooleanOperators a
+(a -&gt; b) -&gt; BooleanOperators a -&gt; BooleanOperators b
+(forall a b. (a -&gt; b) -&gt; BooleanOperators a -&gt; BooleanOperators b)
+-&gt; (forall a b. a -&gt; BooleanOperators b -&gt; BooleanOperators a)
+-&gt; Functor BooleanOperators
+forall a b. a -&gt; BooleanOperators b -&gt; BooleanOperators a
+forall a b. (a -&gt; b) -&gt; BooleanOperators a -&gt; BooleanOperators b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; BooleanOperators b -&gt; BooleanOperators a
+$c&lt;$ :: forall a b. a -&gt; BooleanOperators b -&gt; BooleanOperators a
+fmap :: (a -&gt; b) -&gt; BooleanOperators a -&gt; BooleanOperators b
+$cfmap :: forall a b. (a -&gt; b) -&gt; BooleanOperators a -&gt; BooleanOperators b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689408641"><span id="local-6989586621689408643"><span id="local-6989586621689408645"><span id="local-6989586621689408647"><span class="annot"><span class="annottext">Functor BooleanOperators
+Foldable BooleanOperators
+Functor BooleanOperators
+-&gt; Foldable BooleanOperators
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; BooleanOperators a -&gt; f (BooleanOperators b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    BooleanOperators (f a) -&gt; f (BooleanOperators a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; BooleanOperators a -&gt; m (BooleanOperators b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    BooleanOperators (m a) -&gt; m (BooleanOperators a))
+-&gt; Traversable BooleanOperators
+(a -&gt; f b) -&gt; BooleanOperators a -&gt; f (BooleanOperators b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+BooleanOperators (m a) -&gt; m (BooleanOperators a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+BooleanOperators (f a) -&gt; f (BooleanOperators a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; BooleanOperators a -&gt; m (BooleanOperators b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; BooleanOperators a -&gt; f (BooleanOperators b)
+sequence :: BooleanOperators (m a) -&gt; m (BooleanOperators a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+BooleanOperators (m a) -&gt; m (BooleanOperators a)
+mapM :: (a -&gt; m b) -&gt; BooleanOperators a -&gt; m (BooleanOperators b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; BooleanOperators a -&gt; m (BooleanOperators b)
+sequenceA :: BooleanOperators (f a) -&gt; f (BooleanOperators a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+BooleanOperators (f a) -&gt; f (BooleanOperators a)
+traverse :: (a -&gt; f b) -&gt; BooleanOperators a -&gt; f (BooleanOperators b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; BooleanOperators a -&gt; f (BooleanOperators b)
+$cp2Traversable :: Foldable BooleanOperators
+$cp1Traversable :: Functor BooleanOperators
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689408634"><span id="local-6989586621689408636"><span id="local-6989586621689408638"><span class="annot"><span class="annottext">Int -&gt; BooleanOperators a -&gt; ShowS
+[BooleanOperators a] -&gt; ShowS
+BooleanOperators a -&gt; String
+(Int -&gt; BooleanOperators a -&gt; ShowS)
+-&gt; (BooleanOperators a -&gt; String)
+-&gt; ([BooleanOperators a] -&gt; ShowS)
+-&gt; Show (BooleanOperators a)
+forall a. Show a =&gt; Int -&gt; BooleanOperators a -&gt; ShowS
+forall a. Show a =&gt; [BooleanOperators a] -&gt; ShowS
+forall a. Show a =&gt; BooleanOperators a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [BooleanOperators a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [BooleanOperators a] -&gt; ShowS
+show :: BooleanOperators a -&gt; String
+$cshow :: forall a. Show a =&gt; BooleanOperators a -&gt; String
+showsPrec :: Int -&gt; BooleanOperators a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; BooleanOperators a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span id="local-6989586621689408632"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689408630"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689408632"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#BooleanOperators"><span class="hs-identifier hs-type">BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408632"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span id="local-6989586621689408628"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689408624"><span id="local-6989586621689408626"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689408628"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#BooleanOperators"><span class="hs-identifier hs-type">BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408628"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span id="local-6989586621689408622"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689408619"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408622"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#BooleanOperators"><span class="hs-identifier hs-type">BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408622"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span id="local-6989586621689408617"><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689408617"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Extended.html#ToJSONKeyValue"><span class="hs-identifier hs-type">ToJSONKeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#BooleanOperators"><span class="hs-identifier hs-type">BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689408617"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621689408614"><span class="annot"><span class="annottext">toJSONKeyValue :: BooleanOperators a -&gt; (Key, Value)
+</span><a href="Data.Aeson.Extended.html#toJSONKeyValue"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKeyValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AILIKE"><span class="hs-identifier hs-type">AILIKE</span></a></span><span> </span><span id="local-6989586621689408612"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408612"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_ilike&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408612"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANILIKE"><span class="hs-identifier hs-type">ANILIKE</span></a></span><span> </span><span id="local-6989586621689408610"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408610"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_nilike&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408610"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASIMILAR"><span class="hs-identifier hs-type">ASIMILAR</span></a></span><span> </span><span id="local-6989586621689408609"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408609"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_similar&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408609"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANSIMILAR"><span class="hs-identifier hs-type">ANSIMILAR</span></a></span><span> </span><span id="local-6989586621689408608"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408608"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_nsimilar&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408608"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AREGEX"><span class="hs-identifier hs-type">AREGEX</span></a></span><span> </span><span id="local-6989586621689408607"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408607"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_regex&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408607"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AIREGEX"><span class="hs-identifier hs-type">AIREGEX</span></a></span><span> </span><span id="local-6989586621689408606"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408606"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_iregex&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408606"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANREGEX"><span class="hs-identifier hs-type">ANREGEX</span></a></span><span> </span><span id="local-6989586621689408605"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408605"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_nregex&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408605"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ANIREGEX"><span class="hs-identifier hs-type">ANIREGEX</span></a></span><span> </span><span id="local-6989586621689408604"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408604"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_niregex&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408604"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AContains"><span class="hs-identifier hs-type">AContains</span></a></span><span> </span><span id="local-6989586621689408603"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408603"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_contains&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408603"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AContainedIn"><span class="hs-identifier hs-type">AContainedIn</span></a></span><span> </span><span id="local-6989586621689408602"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408602"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_contained_in&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408602"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKey"><span class="hs-identifier hs-type">AHasKey</span></a></span><span> </span><span id="local-6989586621689408601"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408601"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_has_key&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408601"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKeysAny"><span class="hs-identifier hs-type">AHasKeysAny</span></a></span><span> </span><span id="local-6989586621689408600"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408600"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_has_keys_any&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408600"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AHasKeysAll"><span class="hs-identifier hs-type">AHasKeysAll</span></a></span><span> </span><span id="local-6989586621689408599"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408599"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_has_keys_all&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408599"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTContains"><span class="hs-identifier hs-type">ASTContains</span></a></span><span> </span><span id="local-6989586621689408598"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408598"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_contains&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408598"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTCrosses"><span class="hs-identifier hs-type">ASTCrosses</span></a></span><span> </span><span id="local-6989586621689408597"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408597"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_crosses&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408597"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AST3DDWithinGeom"><span class="hs-identifier hs-type">AST3DDWithinGeom</span></a></span><span> </span><span id="local-6989586621689408596"><span class="annot"><span class="annottext">DWithinGeomOp a
+</span><a href="#local-6989586621689408596"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_3d_d_within&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DWithinGeomOp a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">DWithinGeomOp a
+</span><a href="#local-6989586621689408596"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTDWithinGeom"><span class="hs-identifier hs-type">ASTDWithinGeom</span></a></span><span> </span><span id="local-6989586621689408595"><span class="annot"><span class="annottext">DWithinGeomOp a
+</span><a href="#local-6989586621689408595"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_d_within&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DWithinGeomOp a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">DWithinGeomOp a
+</span><a href="#local-6989586621689408595"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTDWithinGeog"><span class="hs-identifier hs-type">ASTDWithinGeog</span></a></span><span> </span><span id="local-6989586621689408594"><span class="annot"><span class="annottext">DWithinGeogOp a
+</span><a href="#local-6989586621689408594"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_d_within&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DWithinGeogOp a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">DWithinGeogOp a
+</span><a href="#local-6989586621689408594"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTEquals"><span class="hs-identifier hs-type">ASTEquals</span></a></span><span> </span><span id="local-6989586621689408593"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408593"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_equals&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408593"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersects"><span class="hs-identifier hs-type">ASTIntersects</span></a></span><span> </span><span id="local-6989586621689408592"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408592"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_intersects&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408592"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-114"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AST3DIntersects"><span class="hs-identifier hs-type">AST3DIntersects</span></a></span><span> </span><span id="local-6989586621689408591"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408591"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_3d_intersects&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408591"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTOverlaps"><span class="hs-identifier hs-type">ASTOverlaps</span></a></span><span> </span><span id="local-6989586621689408590"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408590"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_overlaps&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408590"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTTouches"><span class="hs-identifier hs-type">ASTTouches</span></a></span><span> </span><span id="local-6989586621689408589"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408589"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_touches&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408589"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTWithin"><span class="hs-identifier hs-type">ASTWithin</span></a></span><span> </span><span id="local-6989586621689408588"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408588"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_within&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408588"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsRast"><span class="hs-identifier hs-type">ASTIntersectsRast</span></a></span><span> </span><span id="local-6989586621689408587"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408587"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_intersects_rast&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408587"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsNbandGeom"><span class="hs-identifier hs-type">ASTIntersectsNbandGeom</span></a></span><span> </span><span id="local-6989586621689408586"><span class="annot"><span class="annottext">STIntersectsNbandGeommin a
+</span><a href="#local-6989586621689408586"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_intersects_nband_geom&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">STIntersectsNbandGeommin a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">STIntersectsNbandGeommin a
+</span><a href="#local-6989586621689408586"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ASTIntersectsGeomNband"><span class="hs-identifier hs-type">ASTIntersectsGeomNband</span></a></span><span> </span><span id="local-6989586621689408585"><span class="annot"><span class="annottext">STIntersectsGeomminNband a
+</span><a href="#local-6989586621689408585"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_st_intersects_geom_nband&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">STIntersectsGeomminNband a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">STIntersectsGeomminNband a
+</span><a href="#local-6989586621689408585"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AAncestor"><span class="hs-identifier hs-type">AAncestor</span></a></span><span> </span><span id="local-6989586621689408584"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408584"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_ancestor&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408584"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AAncestorAny"><span class="hs-identifier hs-type">AAncestorAny</span></a></span><span> </span><span id="local-6989586621689408583"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408583"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_ancestor_any&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408583"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ADescendant"><span class="hs-identifier hs-type">ADescendant</span></a></span><span> </span><span id="local-6989586621689408582"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408582"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_descendant&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408582"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#ADescendantAny"><span class="hs-identifier hs-type">ADescendantAny</span></a></span><span> </span><span id="local-6989586621689408581"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408581"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_descendant_any&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408581"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatches"><span class="hs-identifier hs-type">AMatches</span></a></span><span> </span><span id="local-6989586621689408580"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408580"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_matches&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408580"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatchesAny"><span class="hs-identifier hs-type">AMatchesAny</span></a></span><span> </span><span id="local-6989586621689408579"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408579"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_matches_any&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408579"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html#AMatchesFulltext"><span class="hs-identifier hs-type">AMatchesFulltext</span></a></span><span> </span><span id="local-6989586621689408578"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408578"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;_matches_fulltext&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689408578"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-128"></span></pre></body></html>

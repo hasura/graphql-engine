@@ -1,0 +1,504 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataConnector.Agent.Client</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier">AgentClientContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier">AgentClientT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#runAgentClientT"><span class="hs-identifier">runAgentClientT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">try</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&amp;~)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier">logAgentRequest</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier">logClientError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.HTTP.html"><span class="hs-identifier">Hasura.HTTP</span></a></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier">Hasura</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier">Logger</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier">MonadTrace</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#tracedHttpRequest"><span class="hs-identifier">tracedHttpRequest</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Client</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Manager</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Client</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html"><span class="hs-identifier">Network.HTTP.Client.Transformable</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TransformableHTTP</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types.Status</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Status</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Servant.Client</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Servant.Client.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Request</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">RunClient</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Servant.Client.Internal.HttpClient</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">clientResponseToResponse</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">mkFailureResponse</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">data</span><span> </span><span id="AgentClientContext"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-var">AgentClientContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AgentClientContext"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-var">AgentClientContext</span></a></span></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_accLogger"><span class="annot"><span class="annottext">AgentClientContext -&gt; Logger Hasura
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accLogger"><span class="hs-identifier hs-var hs-var">_accLogger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span id="_accBaseUrl"><span class="annot"><span class="annottext">AgentClientContext -&gt; BaseUrl
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accBaseUrl"><span class="hs-identifier hs-var hs-var">_accBaseUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BaseUrl</span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span id="_accHttpManager"><span class="annot"><span class="annottext">AgentClientContext -&gt; Manager
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accHttpManager"><span class="hs-identifier hs-var hs-var">_accHttpManager</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Manager</span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span id="_accResponseTimeout"><span class="annot"><span class="annottext">AgentClientContext -&gt; Maybe Int
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accResponseTimeout"><span class="hs-identifier hs-var hs-var">_accResponseTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">newtype</span><span> </span><span id="AgentClientT"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-var">AgentClientT</span></a></span></span><span> </span><span id="local-6989586621689371954"><span class="annot"><a href="#local-6989586621689371954"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689371953"><span class="annot"><a href="#local-6989586621689371953"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AgentClientT"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-var">AgentClientT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371954"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371953"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621689371868"><span class="annot"><a href="#local-6989586621689371868"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689371864"><span id="local-6989586621689371866"><span class="annot"><span class="annottext">a -&gt; AgentClientT m b -&gt; AgentClientT m a
+(a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+(forall a b. (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b)
+-&gt; (forall a b. a -&gt; AgentClientT m b -&gt; AgentClientT m a)
+-&gt; Functor (AgentClientT m)
+forall a b. a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall a b. (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; AgentClientT m b -&gt; AgentClientT m a
+$c&lt;$ :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; AgentClientT m b -&gt; AgentClientT m a
+fmap :: (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+$cfmap :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689371852"><span id="local-6989586621689371854"><span id="local-6989586621689371856"><span id="local-6989586621689371858"><span id="local-6989586621689371860"><span class="annot"><span class="annottext">Functor (AgentClientT m)
+a -&gt; AgentClientT m a
+Functor (AgentClientT m)
+-&gt; (forall a. a -&gt; AgentClientT m a)
+-&gt; (forall a b.
+    AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c)
+    -&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c)
+-&gt; (forall a b.
+    AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b)
+-&gt; (forall a b.
+    AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a)
+-&gt; Applicative (AgentClientT m)
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+forall a. a -&gt; AgentClientT m a
+forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall a b.
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall a b c.
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+forall (m :: * -&gt; *). Applicative m =&gt; Functor (AgentClientT m)
+forall (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+&lt;* :: AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+$c&lt;* :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+*&gt; :: AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+$c*&gt; :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+liftA2 :: (a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+$cliftA2 :: forall (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+&lt;*&gt; :: AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+$c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+pure :: a -&gt; AgentClientT m a
+$cpure :: forall (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; AgentClientT m a
+$cp1Applicative :: forall (m :: * -&gt; *). Applicative m =&gt; Functor (AgentClientT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689371844"><span id="local-6989586621689371846"><span id="local-6989586621689371848"><span class="annot"><span class="annottext">Applicative (AgentClientT m)
+a -&gt; AgentClientT m a
+Applicative (AgentClientT m)
+-&gt; (forall a b.
+    AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b)
+-&gt; (forall a b.
+    AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b)
+-&gt; (forall a. a -&gt; AgentClientT m a)
+-&gt; Monad (AgentClientT m)
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall a. a -&gt; AgentClientT m a
+forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall a b.
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+forall (m :: * -&gt; *). Monad m =&gt; Applicative (AgentClientT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: a -&gt; AgentClientT m a
+$creturn :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; AgentClientT m a
+&gt;&gt; :: AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+$c&gt;&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+&gt;&gt;= :: AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+$c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+$cp1Monad :: forall (m :: * -&gt; *). Monad m =&gt; Applicative (AgentClientT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689371838"><span id="local-6989586621689371840"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="#local-6989586621689371868"><span class="hs-identifier hs-type">e</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689371828"><span id="local-6989586621689371830"><span id="local-6989586621689371832"><span id="local-6989586621689371834"><span class="annot"><span class="annottext">Monad (AgentClientT m)
+AgentClientT m TraceContext
+AgentClientT m Reporter
+Monad (AgentClientT m)
+-&gt; (forall a. Text -&gt; AgentClientT m a -&gt; AgentClientT m a)
+-&gt; AgentClientT m TraceContext
+-&gt; AgentClientT m Reporter
+-&gt; (TracingMetadata -&gt; AgentClientT m ())
+-&gt; MonadTrace (AgentClientT m)
+TracingMetadata -&gt; AgentClientT m ()
+Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+forall a. Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+forall (m :: * -&gt; *).
+Monad m
+-&gt; (forall a. Text -&gt; m a -&gt; m a)
+-&gt; m TraceContext
+-&gt; m Reporter
+-&gt; (TracingMetadata -&gt; m ())
+-&gt; MonadTrace m
+forall (m :: * -&gt; *). MonadTrace m =&gt; Monad (AgentClientT m)
+forall (m :: * -&gt; *). MonadTrace m =&gt; AgentClientT m TraceContext
+forall (m :: * -&gt; *). MonadTrace m =&gt; AgentClientT m Reporter
+forall (m :: * -&gt; *).
+MonadTrace m =&gt;
+TracingMetadata -&gt; AgentClientT m ()
+forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+attachMetadata :: TracingMetadata -&gt; AgentClientT m ()
+$cattachMetadata :: forall (m :: * -&gt; *).
+MonadTrace m =&gt;
+TracingMetadata -&gt; AgentClientT m ()
+currentReporter :: AgentClientT m Reporter
+$ccurrentReporter :: forall (m :: * -&gt; *). MonadTrace m =&gt; AgentClientT m Reporter
+currentContext :: AgentClientT m TraceContext
+$ccurrentContext :: forall (m :: * -&gt; *). MonadTrace m =&gt; AgentClientT m TraceContext
+trace :: Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+$ctrace :: forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+$cp1MonadTrace :: forall (m :: * -&gt; *). MonadTrace m =&gt; Monad (AgentClientT m)
+</span><a href="Hasura.Tracing.html#C%3AMonadTrace"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadTrace</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689371824"><span class="annot"><span class="annottext">Monad (AgentClientT m)
+Monad (AgentClientT m)
+-&gt; (forall a. IO a -&gt; AgentClientT m a) -&gt; MonadIO (AgentClientT m)
+IO a -&gt; AgentClientT m a
+forall a. IO a -&gt; AgentClientT m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+forall (m :: * -&gt; *). MonadIO m =&gt; Monad (AgentClientT m)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; AgentClientT m a
+liftIO :: IO a -&gt; AgentClientT m a
+$cliftIO :: forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; AgentClientT m a
+$cp1MonadIO :: forall (m :: * -&gt; *). MonadIO m =&gt; Monad (AgentClientT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span id="local-6989586621689371821"><span id="local-6989586621689371822"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#runAgentClientT"><span class="hs-identifier hs-type">runAgentClientT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371822"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371821"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689371822"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371821"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-37"></span><span id="runAgentClientT"><span class="annot"><span class="annottext">runAgentClientT :: AgentClientT m a -&gt; AgentClientContext -&gt; m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#runAgentClientT"><span class="hs-identifier hs-var hs-var">runAgentClientT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span id="local-6989586621689371820"><span class="annot"><span class="annottext">ReaderT AgentClientContext m a
+</span><a href="#local-6989586621689371820"><span class="hs-identifier hs-var">action</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689371819"><span class="annot"><span class="annottext">AgentClientContext
+</span><a href="#local-6989586621689371819"><span class="hs-identifier hs-var">ctx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT AgentClientContext m a -&gt; AgentClientContext -&gt; m a
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT AgentClientContext m a
+</span><a href="#local-6989586621689371820"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">AgentClientContext
+</span><a href="#local-6989586621689371819"><span class="hs-identifier hs-var">ctx</span></a></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="local-6989586621689371936"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-type">askClientContext</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689371936"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371936"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span></span><span>
+</span><span id="line-40"></span><span id="askClientContext"><span class="annot"><span class="annottext">askClientContext :: AgentClientT m AgentClientContext
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-var hs-var">askClientContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT AgentClientContext m AgentClientContext
+-&gt; AgentClientT m AgentClientContext
+forall (m :: * -&gt; *) a.
+ReaderT AgentClientContext m a -&gt; AgentClientT m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-var">AgentClientT</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT AgentClientContext m AgentClientContext
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span id="local-6989586621689371815"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689371815"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371815"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371815"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">RunClient</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371815"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621689371810"><span class="annot"><span class="annottext">runRequestAcceptStatus :: Maybe [Status] -&gt; Request -&gt; AgentClientT m Response
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">runRequestAcceptStatus</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe [Status] -&gt; Request -&gt; AgentClientT m Response
+forall (m :: * -&gt; *).
+(MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
+Maybe [Status] -&gt; Request -&gt; AgentClientT m Response
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#runRequestAcceptStatus%27"><span class="hs-identifier hs-var">runRequestAcceptStatus'</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621689371807"><span class="annot"><span class="annottext">throwClientError :: ClientError -&gt; AgentClientT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">throwClientError</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
+ClientError -&gt; AgentClientT m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#throwClientError%27"><span class="hs-identifier hs-var">throwClientError'</span></a></span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span id="local-6989586621689371804"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#runRequestAcceptStatus%27"><span class="hs-identifier hs-type">runRequestAcceptStatus'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689371804"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371804"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371804"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Status</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371804"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span></span><span>
+</span><span id="line-47"></span><span id="runRequestAcceptStatus%27"><span class="annot"><span class="annottext">runRequestAcceptStatus' :: Maybe [Status] -&gt; Request -&gt; AgentClientT m Response
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#runRequestAcceptStatus%27"><span class="hs-identifier hs-var hs-var">runRequestAcceptStatus'</span></a></span></span><span> </span><span id="local-6989586621689371803"><span class="annot"><span class="annottext">Maybe [Status]
+</span><a href="#local-6989586621689371803"><span class="hs-identifier hs-var">acceptStatus</span></a></span></span><span> </span><span id="local-6989586621689371802"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371802"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689371798"><span id="local-6989586621689371799"><span id="local-6989586621689371800"><span id="local-6989586621689371801"><span class="annot"><span class="annottext">Maybe Int
+Logger Hasura
+Manager
+BaseUrl
+_accResponseTimeout :: Maybe Int
+_accHttpManager :: Manager
+_accBaseUrl :: BaseUrl
+_accLogger :: Logger Hasura
+_accResponseTimeout :: AgentClientContext -&gt; Maybe Int
+_accHttpManager :: AgentClientContext -&gt; Manager
+_accBaseUrl :: AgentClientContext -&gt; BaseUrl
+_accLogger :: AgentClientContext -&gt; Logger Hasura
+</span><a href="#local-6989586621689371798"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">AgentClientT m AgentClientContext
+forall (m :: * -&gt; *). Monad m =&gt; AgentClientT m AgentClientContext
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-var">askClientContext</span></a></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689371797"><span class="annot"><span class="annottext">req' :: Request
+</span><a href="#local-6989586621689371797"><span class="hs-identifier hs-var hs-var">req'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BaseUrl -&gt; Request -&gt; Request
+</span><span class="hs-identifier hs-var">defaultMakeClientRequest</span></span><span> </span><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621689371800"><span class="hs-identifier hs-var">_accBaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371802"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621689371795"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371795"><span class="hs-identifier hs-var">transformableReq</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">Request -&gt; Either Text Request
+</span><a href="Network.HTTP.Client.Transformable.html#tryFromClientRequest"><span class="hs-identifier hs-var">TransformableHTTP.tryFromClientRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371797"><span class="hs-identifier hs-var">req'</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Either Text Request
+-&gt; (Text -&gt; AgentClientT m Request) -&gt; AgentClientT m Request
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; (e -&gt; m a) -&gt; m a
+</span><a href="Hasura.Prelude.html#onLeft"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689371792"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689371792"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; AgentClientT m Request
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; AgentClientT m Request) -&gt; Text -&gt; AgentClientT m Request
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error in Data Connector backend: Could not create request. &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689371792"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-comment">-- Set the response timeout explicitly if it is provided</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689371790"><span class="annot"><span class="annottext">transformableReq' :: Request
+</span><a href="#local-6989586621689371790"><span class="hs-identifier hs-var hs-var">transformableReq'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371795"><span class="hs-identifier hs-var">transformableReq</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; State Request (Maybe ()) -&gt; Request
+forall s a. s -&gt; State s a -&gt; s
+</span><span class="hs-operator hs-var">&amp;~</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-58"></span><span>          </span><span class="annot"><span class="annottext">Maybe Int
+-&gt; (Int -&gt; StateT Request Identity ()) -&gt; State Request (Maybe ())
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f (t b)
+</span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689371798"><span class="hs-identifier hs-var">_accResponseTimeout</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689371788"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689371788"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(ResponseTimeout -&gt; Identity ResponseTimeout)
+-&gt; Request -&gt; Identity Request
+Lens' Request ResponseTimeout
+</span><a href="Network.HTTP.Client.Transformable.html#timeout"><span class="hs-identifier hs-var">TransformableHTTP.timeout</span></a></span><span> </span><span class="annot"><span class="annottext">((ResponseTimeout -&gt; Identity ResponseTimeout)
+ -&gt; Request -&gt; Identity Request)
+-&gt; ResponseTimeout -&gt; StateT Request Identity ()
+forall s (m :: * -&gt; *) a b.
+MonadState s m =&gt;
+ASetter s s a b -&gt; b -&gt; m ()
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ResponseTimeout
+</span><span class="hs-identifier hs-var">HTTP.responseTimeoutMicro</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689371788"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621689371785"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371785"><span class="hs-identifier hs-var">tracedReq</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689371784"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689371784"><span class="hs-identifier hs-var">responseOrException</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Request
+-&gt; (Request
+    -&gt; AgentClientT
+         m (Request, Either HttpException (Response ByteString)))
+-&gt; AgentClientT
+     m (Request, Either HttpException (Response ByteString))
+forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+Request -&gt; (Request -&gt; m a) -&gt; m a
+</span><a href="Hasura.Tracing.html#tracedHttpRequest"><span class="hs-identifier hs-var">tracedHttpRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371790"><span class="hs-identifier hs-var">transformableReq'</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689371783"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371783"><span class="hs-identifier hs-var">tracedReq</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Either HttpException (Response ByteString)
+ -&gt; (Request, Either HttpException (Response ByteString)))
+-&gt; AgentClientT m (Either HttpException (Response ByteString))
+-&gt; AgentClientT
+     m (Request, Either HttpException (Response ByteString))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371783"><span class="hs-identifier hs-var">tracedReq</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(AgentClientT m (Either HttpException (Response ByteString))
+ -&gt; AgentClientT
+      m (Request, Either HttpException (Response ByteString)))
+-&gt; (IO (Response ByteString)
+    -&gt; AgentClientT m (Either HttpException (Response ByteString)))
+-&gt; IO (Response ByteString)
+-&gt; AgentClientT
+     m (Request, Either HttpException (Response ByteString))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IO (Either HttpException (Response ByteString))
+-&gt; AgentClientT m (Either HttpException (Response ByteString))
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either HttpException (Response ByteString))
+ -&gt; AgentClientT m (Either HttpException (Response ByteString)))
+-&gt; (IO (Response ByteString)
+    -&gt; IO (Either HttpException (Response ByteString)))
+-&gt; IO (Response ByteString)
+-&gt; AgentClientT m (Either HttpException (Response ByteString))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">forall a.
+Exception HttpException =&gt;
+IO a -&gt; IO (Either HttpException a)
+forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
+</span><span class="hs-identifier hs-var">try</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="annot"><span class="annottext">(IO (Response ByteString)
+ -&gt; AgentClientT
+      m (Request, Either HttpException (Response ByteString)))
+-&gt; IO (Response ByteString)
+-&gt; AgentClientT
+     m (Request, Either HttpException (Response ByteString))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Manager -&gt; IO (Response ByteString)
+</span><a href="Network.HTTP.Client.Transformable.html#performRequest"><span class="hs-identifier hs-var">TransformableHTTP.performRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371783"><span class="hs-identifier hs-var">tracedReq</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689371799"><span class="hs-identifier hs-var">_accHttpManager</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; Request
+-&gt; Either HttpException (Response ByteString)
+-&gt; AgentClientT m ()
+forall (m :: * -&gt; *).
+(MonadIO m, MonadTrace m) =&gt;
+Logger Hasura
+-&gt; Request -&gt; Either HttpException (Response ByteString) -&gt; m ()
+</span><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier hs-var">logAgentRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689371801"><span class="hs-identifier hs-var">_accLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371785"><span class="hs-identifier hs-var">tracedReq</span></a></span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689371784"><span class="hs-identifier hs-var">responseOrException</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689371784"><span class="hs-identifier hs-var">responseOrException</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689371779"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689371779"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; AgentClientT m Response
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; AgentClientT m Response)
+-&gt; Text -&gt; AgentClientT m Response
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error in Data Connector backend: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Text
+</span><a href="Hasura.HTTP.html#serializeHTTPExceptionMessage"><span class="hs-identifier hs-var">Hasura.HTTP.serializeHTTPExceptionMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HttpException -&gt; HttpException
+</span><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-var">Hasura.HTTP.HttpException</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689371779"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689371776"><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689371776"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-66"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689371775"><span class="annot"><span class="annottext">status :: Status
+</span><a href="#local-6989586621689371775"><span class="hs-identifier hs-var hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Response ByteString -&gt; Status
+forall body. Response body -&gt; Status
+</span><span class="hs-identifier hs-var hs-var">TransformableHTTP.responseStatus</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689371776"><span class="hs-identifier hs-var">response</span></a></span><span>
+</span><span id="line-67"></span><span>          </span><span id="local-6989586621689371773"><span class="annot"><span class="annottext">servantResponse :: Response
+</span><a href="#local-6989586621689371773"><span class="hs-identifier hs-var hs-var">servantResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString) -&gt; Response ByteString -&gt; Response
+forall a b. (a -&gt; b) -&gt; Response a -&gt; ResponseF b
+</span><span class="hs-identifier hs-var">clientResponseToResponse</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689371776"><span class="hs-identifier hs-var">response</span></a></span><span>
+</span><span id="line-68"></span><span>          </span><span id="local-6989586621689371771"><span class="annot"><span class="annottext">goodStatus :: Bool
+</span><a href="#local-6989586621689371771"><span class="hs-identifier hs-var hs-var">goodStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe [Status]
+</span><a href="#local-6989586621689371803"><span class="hs-identifier hs-var">acceptStatus</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-69"></span><span>            </span><span class="annot"><span class="annottext">Maybe [Status]
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Status -&gt; Bool
+</span><span class="hs-identifier hs-var">TransformableHTTP.statusIsSuccessful</span></span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689371775"><span class="hs-identifier hs-var">status</span></a></span><span>
+</span><span id="line-70"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689371769"><span class="annot"><span class="annottext">[Status]
+</span><a href="#local-6989586621689371769"><span class="hs-identifier hs-var">good</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689371775"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="annot"><span class="annottext">Status -&gt; [Status] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[Status]
+</span><a href="#local-6989586621689371769"><span class="hs-identifier hs-var">good</span></a></span><span>
+</span><span id="line-71"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689371771"><span class="hs-identifier hs-var">goodStatus</span></a></span><span>
+</span><span id="line-72"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Response -&gt; AgentClientT m Response
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Response -&gt; AgentClientT m Response)
+-&gt; Response -&gt; AgentClientT m Response
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621689371773"><span class="hs-identifier hs-var">servantResponse</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; AgentClientT m Response
+forall (m :: * -&gt; *) a. RunClient m =&gt; ClientError -&gt; m a
+</span><span class="hs-identifier hs-var">throwClientError</span></span><span> </span><span class="annot"><span class="annottext">(ClientError -&gt; AgentClientT m Response)
+-&gt; ClientError -&gt; AgentClientT m Response
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BaseUrl -&gt; Request -&gt; Response -&gt; ClientError
+</span><span class="hs-identifier hs-var">mkFailureResponse</span></span><span> </span><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621689371800"><span class="hs-identifier hs-var">_accBaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689371802"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621689371773"><span class="hs-identifier hs-var">servantResponse</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621689371938"><span id="local-6989586621689371939"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#throwClientError%27"><span class="hs-identifier hs-type">throwClientError'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689371939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ClientError</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689371939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689371938"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-76"></span><span id="throwClientError%27"><span class="annot"><span class="annottext">throwClientError' :: ClientError -&gt; AgentClientT m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#throwClientError%27"><span class="hs-identifier hs-var hs-var">throwClientError'</span></a></span></span><span> </span><span id="local-6989586621689371767"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621689371767"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689371763"><span id="local-6989586621689371764"><span id="local-6989586621689371765"><span id="local-6989586621689371766"><span class="annot"><span class="annottext">Maybe Int
+Logger Hasura
+Manager
+BaseUrl
+_accResponseTimeout :: Maybe Int
+_accHttpManager :: Manager
+_accBaseUrl :: BaseUrl
+_accLogger :: Logger Hasura
+_accResponseTimeout :: AgentClientContext -&gt; Maybe Int
+_accHttpManager :: AgentClientContext -&gt; Manager
+_accBaseUrl :: AgentClientContext -&gt; BaseUrl
+_accLogger :: AgentClientContext -&gt; Logger Hasura
+</span><a href="#local-6989586621689371763"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">AgentClientT m AgentClientContext
+forall (m :: * -&gt; *). Monad m =&gt; AgentClientT m AgentClientContext
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-var">askClientContext</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ClientError -&gt; AgentClientT m ()
+forall (m :: * -&gt; *).
+(MonadIO m, MonadTrace m) =&gt;
+Logger Hasura -&gt; ClientError -&gt; m ()
+</span><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier hs-var">logClientError</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689371766"><span class="hs-identifier hs-var">_accLogger</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621689371767"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; AgentClientT m a) -&gt; Text -&gt; AgentClientT m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error in Data Connector backend: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Text
+</span><a href="Hasura.HTTP.html#serializeServantClientErrorMessage"><span class="hs-identifier hs-var">Hasura.HTTP.serializeServantClientErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621689371767"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-80"></span></pre></body></html>
