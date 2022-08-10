@@ -8,13 +8,12 @@ where
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
@@ -22,16 +21,14 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.DataConnector,
-              mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
-              setup = DataConnector.setupMock sourceMetadata DataConnector.mockBackendConfig,
-              teardown = DataConnector.teardownMock,
-              customOptions = Nothing
-            }
-        ]
+  Fixture.runWithLocalTestEnvironment
+    ( [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+          { Fixture.mkLocalTestEnvironment =
+              DataConnector.mkLocalTestEnvironmentMock,
+            Fixture.setupTeardown = \(testEnv, mockEnv) ->
+              [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
+          }
+      ]
     )
     tests
 
@@ -80,7 +77,7 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Context.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
 tests opts = describe "Aggregate Query Tests" $ do
   it "works with multiple nodes fields and through array relations" $
     DataConnector.runMockedTest opts $

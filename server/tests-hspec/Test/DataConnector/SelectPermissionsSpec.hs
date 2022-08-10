@@ -8,14 +8,13 @@ where
 
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (defaultBackendConfig)
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -26,16 +25,12 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.DataConnector,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = DataConnector.setupFixture sourceMetadata defaultBackendConfig,
-              teardown = DataConnector.teardown,
-              customOptions = Nothing
-            }
-        ]
+  Fixture.runWithLocalTestEnvironment
+    ( [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+          { Fixture.setupTeardown = \(testEnv, _) ->
+              [DataConnector.setupFixtureAction sourceMetadata defaultBackendConfig testEnv]
+          }
+      ]
     )
     tests
 
@@ -94,7 +89,7 @@ sourceMetadata =
         configuration: {}
 |]
 
-tests :: Context.Options -> SpecWith (TestEnvironment, a)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "SelectPermissionsSpec" $ do
   it "permissions filter using _ceq that traverses an object relationship" $ \(testEnvironment, _) ->
     shouldReturnYaml
