@@ -42,10 +42,10 @@
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Builder</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Builder</span></span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- | Internal parser function for entities field</span><span>
-</span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="ApolloFederationParserFunction"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-var">ApolloFederationParserFunction</span></a></span></span><span> </span><span id="local-6989586621689378915"><span class="annot"><a href="#local-6989586621689378915"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ApolloFederationParserFunction"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-var">ApolloFederationParserFunction</span></a></span></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="ApolloFederationParserFunction"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-var">ApolloFederationParserFunction</span></a></span></span><span> </span><span id="local-6989586621689379059"><span class="annot"><a href="#local-6989586621689379059"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ApolloFederationParserFunction"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-var">ApolloFederationParserFunction</span></a></span></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="aafuGetRootField"><span class="annot"><span class="annottext">ApolloFederationParserFunction n
 -&gt; ApolloFederationAnyType -&gt; n (QueryRootField UnpreparedValue)
-</span><a href="Hasura.GraphQL.ApolloFederation.html#aafuGetRootField"><span class="hs-identifier hs-var hs-var">aafuGetRootField</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationAnyType"><span class="hs-identifier hs-type">ApolloFederationAnyType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689378915"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.GraphQL.ApolloFederation.html#aafuGetRootField"><span class="hs-identifier hs-var hs-var">aafuGetRootField</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationAnyType"><span class="hs-identifier hs-type">ApolloFederationAnyType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689379059"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-comment">-- | Haskell representation of _Any scalar</span><span>
@@ -55,7 +55,7 @@
 </span><span id="line-52"></span><span>    </span><span id="afPKValues"><span class="annot"><span class="annottext">ApolloFederationAnyType -&gt; Object
 </span><a href="Hasura.GraphQL.ApolloFederation.html#afPKValues"><span class="hs-identifier hs-var hs-var">afPKValues</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378703"><span id="local-6989586621689378705"><span id="local-6989586621689378707"><span class="annot"><span class="annottext">Int -&gt; ApolloFederationAnyType -&gt; ShowS
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378847"><span id="local-6989586621689378849"><span id="local-6989586621689378851"><span class="annot"><span class="annottext">Int -&gt; ApolloFederationAnyType -&gt; ShowS
 [ApolloFederationAnyType] -&gt; ShowS
 ApolloFederationAnyType -&gt; String
 (Int -&gt; ApolloFederationAnyType -&gt; ShowS)
@@ -73,7 +73,7 @@ $cshowsPrec :: Int -&gt; ApolloFederationAnyType -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span class="hs-comment">-- | Parser for _Any scalar</span><span>
-</span><span id="line-57"></span><span id="local-6989586621689378729"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#anyParser"><span class="hs-identifier hs-type">anyParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378729"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Parse</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationAnyType"><span class="hs-identifier hs-type">ApolloFederationAnyType</span></a></span></span><span>
+</span><span id="line-57"></span><span id="local-6989586621689378873"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#anyParser"><span class="hs-identifier hs-type">anyParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378873"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Parse</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationAnyType"><span class="hs-identifier hs-type">ApolloFederationAnyType</span></a></span></span><span>
 </span><span id="line-58"></span><span id="anyParser"><span class="annot"><span class="annottext">anyParser :: Parser origin 'Both Parse ApolloFederationAnyType
 </span><a href="Hasura.GraphQL.ApolloFederation.html#anyParser"><span class="hs-identifier hs-var hs-var">anyParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>  </span><span class="annot"><span class="annottext">Name -&gt; Maybe Description -&gt; Parser origin 'Both Parse Value
@@ -90,26 +90,26 @@ forall a. a -&gt; Maybe a
 forall (m :: * -&gt; *) origin (k :: Kind) a b.
 Monad m =&gt;
 Parser origin k m a -&gt; (a -&gt; m b) -&gt; Parser origin k m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`bind`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378697"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378697"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-60"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378696"><span class="annot"><span class="annottext">typenameKey :: Key
-</span><a href="#local-6989586621689378696"><span class="hs-identifier hs-var hs-var">typenameKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Key
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`bind`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378841"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689378841"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378840"><span class="annot"><span class="annottext">typenameKey :: Key
+</span><a href="#local-6989586621689378840"><span class="hs-identifier hs-var hs-var">typenameKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;__typename&quot;</span></span><span>
 </span><span id="line-61"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378697"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-62"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689378693"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689378693"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
+</span><a href="#local-6989586621689378841"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689378837"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689378837"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
 forall v. Key -&gt; KeyMap v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">KMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621689378696"><span class="hs-identifier hs-var">typenameKey</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689378693"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-63"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689378690"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378690"><span class="hs-identifier hs-var">txt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="#local-6989586621689378840"><span class="hs-identifier hs-var">typenameKey</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689378837"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689378834"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689378834"><span class="hs-identifier hs-var">txt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378690"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-64"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689378688"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378688"><span class="hs-identifier hs-var">tName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689378834"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-64"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689378832"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378832"><span class="hs-identifier hs-var">tName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-65"></span><span>            </span><span class="annot"><span class="annottext">ApolloFederationAnyType -&gt; Parse ApolloFederationAnyType
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ApolloFederationAnyType -&gt; Parse ApolloFederationAnyType)
@@ -120,13 +120,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationAnyType"><span class="hs-identifier hs-type">ApolloFederationAnyType</span></a></span><span>
 </span><span id="line-67"></span><span>                </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">afTypename :: Name
 </span><a href="Hasura.GraphQL.ApolloFederation.html#afTypename"><span class="hs-identifier hs-var">afTypename</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378688"><span class="hs-identifier hs-var">tName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689378832"><span class="hs-identifier hs-var">tName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-68"></span><span>                  </span><span class="annot"><span class="annottext">afPKValues :: Object
 </span><a href="Hasura.GraphQL.ApolloFederation.html#afPKValues"><span class="hs-identifier hs-var">afPKValues</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Object
 forall v. Key -&gt; KeyMap v -&gt; KeyMap v
 </span><span class="hs-identifier hs-var">KMap.delete</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621689378696"><span class="hs-identifier hs-var">typenameKey</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689378693"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621689378840"><span class="hs-identifier hs-var">typenameKey</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689378837"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-69"></span><span>                </span><span class="hs-special">}</span><span>
 </span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; Parse ApolloFederationAnyType
@@ -138,7 +138,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage) -&gt; Text -&gt; ErrorMessage
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378690"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689378834"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is not a valid graphql name&quot;</span></span><span>
@@ -170,16 +170,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;representations is expecting a list of objects only&quot;</span></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span id="local-6989586621689378684"><span id="local-6989586621689378685"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#convertToApolloFedParserFunc"><span class="hs-identifier hs-type">convertToApolloFedParserFunc</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689378685"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378685"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378684"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378684"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378684"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378684"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378684"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-75"></span><span id="local-6989586621689378828"><span id="local-6989586621689378829"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#convertToApolloFedParserFunc"><span class="hs-identifier hs-type">convertToApolloFedParserFunc</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689378829"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378829"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378828"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378828"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378828"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378828"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378828"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-80"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-81"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NESeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378684"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378685"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378684"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378685"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-type">ApolloFederationParserFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378685"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NESeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378828"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378829"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378828"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378829"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-type">ApolloFederationParserFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378829"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-85"></span><span id="convertToApolloFedParserFunc"><span class="annot"><span class="annottext">convertToApolloFedParserFunc :: SourceInfo b
 -&gt; TableInfo b
 -&gt; TablePermG b (UnpreparedValue b)
@@ -188,13 +188,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; NESeq (ColumnInfo b)
 -&gt; Parser 'Output n (AnnotatedFields b)
 -&gt; Parser 'Output n (ApolloFederationParserFunction n)
-</span><a href="Hasura.GraphQL.ApolloFederation.html#convertToApolloFedParserFunc"><span class="hs-identifier hs-var hs-var">convertToApolloFedParserFunc</span></a></span></span><span> </span><span id="local-6989586621689378683"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689378683"><span class="hs-identifier hs-var">sInfo</span></a></span></span><span> </span><span id="local-6989586621689378682"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689378682"><span class="hs-identifier hs-var">tInfo</span></a></span></span><span> </span><span id="local-6989586621689378681"><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
-</span><a href="#local-6989586621689378681"><span class="hs-identifier hs-var">selPerm</span></a></span></span><span> </span><span id="local-6989586621689378680"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689378680"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span></span><span> </span><span id="local-6989586621689378679"><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621689378679"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span id="local-6989586621689378678"><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
-</span><a href="#local-6989586621689378678"><span class="hs-identifier hs-var">pKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.ApolloFederation.html#convertToApolloFedParserFunc"><span class="hs-identifier hs-var hs-var">convertToApolloFedParserFunc</span></a></span></span><span> </span><span id="local-6989586621689378827"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689378827"><span class="hs-identifier hs-var">sInfo</span></a></span></span><span> </span><span id="local-6989586621689378826"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689378826"><span class="hs-identifier hs-var">tInfo</span></a></span></span><span> </span><span id="local-6989586621689378825"><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
+</span><a href="#local-6989586621689378825"><span class="hs-identifier hs-var">selPerm</span></a></span></span><span> </span><span id="local-6989586621689378824"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689378824"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span></span><span> </span><span id="local-6989586621689378823"><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="#local-6989586621689378823"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span id="local-6989586621689378822"><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
+</span><a href="#local-6989586621689378822"><span class="hs-identifier hs-var">pKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-86"></span><span>  </span><span class="annot"><span class="annottext">(AnnotatedFields b -&gt; ApolloFederationParserFunction n)
 -&gt; Parser 'Output n (AnnotatedFields b)
 -&gt; Parser 'Output n (ApolloFederationParserFunction n)
@@ -218,23 +218,23 @@ SourceInfo b
 -&gt; AnnotatedFields b
 -&gt; ApolloFederationParserFunction n
 </span><a href="Hasura.GraphQL.ApolloFederation.html#modifyApolloFedParserFunc"><span class="hs-identifier hs-var">modifyApolloFedParserFunc</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689378683"><span class="hs-identifier hs-var">sInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689378682"><span class="hs-identifier hs-var">tInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
-</span><a href="#local-6989586621689378681"><span class="hs-identifier hs-var">selPerm</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689378680"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621689378679"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
-</span><a href="#local-6989586621689378678"><span class="hs-identifier hs-var">pKeys</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689378827"><span class="hs-identifier hs-var">sInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689378826"><span class="hs-identifier hs-var">tInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
+</span><a href="#local-6989586621689378825"><span class="hs-identifier hs-var">selPerm</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689378824"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="#local-6989586621689378823"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
+</span><a href="#local-6989586621689378822"><span class="hs-identifier hs-var">pKeys</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span>
-</span><span id="line-88"></span><span id="local-6989586621689378931"><span id="local-6989586621689378932"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#modifyApolloFedParserFunc"><span class="hs-identifier hs-type">modifyApolloFedParserFunc</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-89"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378932"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378931"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-90"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378931"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-91"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378931"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-92"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378931"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378931"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-88"></span><span id="local-6989586621689379075"><span id="local-6989586621689379076"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#modifyApolloFedParserFunc"><span class="hs-identifier hs-type">modifyApolloFedParserFunc</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379076"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-93"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-94"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-95"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NESeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378931"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-96"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378931"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-97"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-type">ApolloFederationParserFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378932"><span class="hs-identifier hs-type">n</span></a></span></span></span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NESeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-96"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationParserFunction"><span class="hs-identifier hs-type">ApolloFederationParserFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379076"><span class="hs-identifier hs-type">n</span></a></span></span></span><span>
 </span><span id="line-98"></span><span id="modifyApolloFedParserFunc"><span class="annot"><span class="annottext">modifyApolloFedParserFunc :: SourceInfo b
 -&gt; TableInfo b
 -&gt; TablePermG b (UnpreparedValue b)
@@ -244,7 +244,7 @@ SourceInfo b
 -&gt; AnnotatedFields b
 -&gt; ApolloFederationParserFunction n
 </span><a href="Hasura.GraphQL.ApolloFederation.html#modifyApolloFedParserFunc"><span class="hs-identifier hs-var hs-var">modifyApolloFedParserFunc</span></a></span></span><span>
-</span><span id="line-99"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378670"><span id="local-6989586621689378671"><span id="local-6989586621689378672"><span id="local-6989586621689378673"><span id="local-6989586621689378674"><span id="local-6989586621689378675"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><span id="line-99"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378814"><span id="local-6989586621689378815"><span id="local-6989586621689378816"><span id="local-6989586621689378817"><span id="local-6989586621689378818"><span id="local-6989586621689378819"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 TableCache b
 FunctionCache b
 SourceName
@@ -263,7 +263,7 @@ _siFunctions :: FunctionCache b
 _siTables :: TableCache b
 _siName :: SourceName
 </span><a href="Hasura.RQL.Types.Source.html#_siCustomization"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span>
-</span><span id="line-100"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378659"><span id="local-6989586621689378660"><span id="local-6989586621689378661"><span id="local-6989586621689378662"><span class="annot"><span class="annottext">RolePermInfoMap b
+</span><span id="line-100"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378803"><span id="local-6989586621689378804"><span id="local-6989586621689378805"><span id="local-6989586621689378806"><span class="annot"><span class="annottext">RolePermInfoMap b
 EventTriggerInfoMap b
 RolePermInfo b
 TableCoreInfo b
@@ -276,16 +276,16 @@ _tiEventTriggerInfoMap :: EventTriggerInfoMap b
 _tiRolePermInfoMap :: RolePermInfoMap b
 _tiCoreInfo :: TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiAdminRolePermInfo"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621689378654"><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
-</span><a href="#local-6989586621689378654"><span class="hs-identifier hs-var">selectPermissions</span></a></span></span><span>
-</span><span id="line-102"></span><span>  </span><span id="local-6989586621689378653"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689378653"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span></span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621689378652"><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621689378652"><span class="hs-identifier hs-var">tCase</span></a></span></span><span>
-</span><span id="line-104"></span><span>  </span><span id="local-6989586621689378651"><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
-</span><a href="#local-6989586621689378651"><span class="hs-identifier hs-var">primaryKeys</span></a></span></span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621689378650"><span class="annot"><span class="annottext">AnnotatedFields b
-</span><a href="#local-6989586621689378650"><span class="hs-identifier hs-var">annField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ApolloFederationAnyType -&gt; n (QueryRootField UnpreparedValue))
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621689378798"><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
+</span><a href="#local-6989586621689378798"><span class="hs-identifier hs-var">selectPermissions</span></a></span></span><span>
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621689378797"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689378797"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span></span><span>
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621689378796"><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="#local-6989586621689378796"><span class="hs-identifier hs-var">tCase</span></a></span></span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621689378795"><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
+</span><a href="#local-6989586621689378795"><span class="hs-identifier hs-var">primaryKeys</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621689378794"><span class="annot"><span class="annottext">AnnotatedFields b
+</span><a href="#local-6989586621689378794"><span class="hs-identifier hs-var">annField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ApolloFederationAnyType -&gt; n (QueryRootField UnpreparedValue))
 -&gt; ApolloFederationParserFunction n
 forall (n :: * -&gt; *).
 (ApolloFederationAnyType -&gt; n (QueryRootField UnpreparedValue))
@@ -295,15 +295,15 @@ forall (n :: * -&gt; *).
 -&gt; (ApolloFederationAnyType -&gt; n (QueryRootField UnpreparedValue))
 -&gt; ApolloFederationParserFunction n
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationAnyType"><span class="hs-identifier hs-type">ApolloFederationAnyType</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378648"><span id="local-6989586621689378649"><span class="annot"><span class="annottext">Object
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#ApolloFederationAnyType"><span class="hs-identifier hs-type">ApolloFederationAnyType</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689378792"><span id="local-6989586621689378793"><span class="annot"><span class="annottext">Object
 Name
 afPKValues :: Object
 afTypename :: Name
 afPKValues :: ApolloFederationAnyType -&gt; Object
 afTypename :: ApolloFederationAnyType -&gt; Name
-</span><a href="#local-6989586621689378648"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-106"></span><span>    </span><span id="local-6989586621689378647"><span class="annot"><span class="annottext">NESeq (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
-</span><a href="#local-6989586621689378647"><span class="hs-identifier hs-var">allConstraints</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689378792"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-106"></span><span>    </span><span id="local-6989586621689378791"><span class="annot"><span class="annottext">NESeq (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
+</span><a href="#local-6989586621689378791"><span class="hs-identifier hs-var">allConstraints</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
 -&gt; (ColumnInfo b
     -&gt; n (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b))))
@@ -312,28 +312,28 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">NESeq (ColumnInfo b)
-</span><a href="#local-6989586621689378651"><span class="hs-identifier hs-var">primaryKeys</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378645"><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689378645"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-108"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378644"><span class="annot"><span class="annottext">colName :: Text
-</span><a href="#local-6989586621689378644"><span class="hs-identifier hs-var hs-var">colName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><a href="#local-6989586621689378795"><span class="hs-identifier hs-var">primaryKeys</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378789"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-108"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378788"><span class="annot"><span class="annottext">colName :: Text
+</span><a href="#local-6989586621689378788"><span class="hs-identifier hs-var hs-var">colName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Text) -&gt; Name -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Name
 forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689378645"><span class="hs-identifier hs-var">columnInfo</span></a></span><span>
-</span><span id="line-109"></span><span>            </span><span id="local-6989586621689378641"><span class="annot"><span class="annottext">cvType :: ColumnType b
-</span><a href="#local-6989586621689378641"><span class="hs-identifier hs-var hs-var">cvType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnType b
+</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">columnInfo</span></a></span><span>
+</span><span id="line-109"></span><span>            </span><span id="local-6989586621689378785"><span class="annot"><span class="annottext">cvType :: ColumnType b
+</span><a href="#local-6989586621689378785"><span class="hs-identifier hs-var hs-var">cvType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnType b
 forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689378645"><span class="hs-identifier hs-var">columnInfo</span></a></span><span>
-</span><span id="line-110"></span><span>        </span><span id="local-6989586621689378639"><span class="annot"><span class="annottext">ScalarValue b
-</span><a href="#local-6989586621689378639"><span class="hs-identifier hs-var">cvValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
+</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">columnInfo</span></a></span><span>
+</span><span id="line-110"></span><span>        </span><span id="local-6989586621689378783"><span class="annot"><span class="annottext">ScalarValue b
+</span><a href="#local-6989586621689378783"><span class="hs-identifier hs-var">cvValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
 forall v. Key -&gt; KeyMap v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">KMap.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378644"><span class="hs-identifier hs-var">colName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689378648"><span class="hs-identifier hs-var">afPKValues</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689378788"><span class="hs-identifier hs-var">colName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689378792"><span class="hs-identifier hs-var">afPKValues</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-111"></span><span>          </span><span class="annot"><span class="annottext">Maybe Value
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; n (ScalarValue b)
 forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
@@ -347,14 +347,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;cannot find &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378644"><span class="hs-identifier hs-var">colName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689378788"><span class="hs-identifier hs-var">colName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; in _Any type&quot;</span></span><span>
-</span><span id="line-112"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689378637"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378637"><span class="hs-identifier hs-var">va</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Except QErr (ScalarValue b) -&gt; n (ScalarValue b)
+</span><span id="line-112"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689378781"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689378781"><span class="hs-identifier hs-var">va</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Except QErr (ScalarValue b) -&gt; n (ScalarValue b)
 forall a. Except QErr a -&gt; n a
-</span><a href="#local-6989586621689378636"><span class="hs-identifier hs-var">liftQErr</span></a></span><span> </span><span class="annot"><span class="annottext">(Except QErr (ScalarValue b) -&gt; n (ScalarValue b))
+</span><a href="#local-6989586621689378780"><span class="hs-identifier hs-var">liftQErr</span></a></span><span> </span><span class="annot"><span class="annottext">(Except QErr (ScalarValue b) -&gt; n (ScalarValue b))
 -&gt; Except QErr (ScalarValue b) -&gt; n (ScalarValue b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnType b -&gt; Value -&gt; Except QErr (ScalarValue b)
@@ -364,8 +364,8 @@ ColumnType b -&gt; Value -&gt; m (ScalarValue b)
 </span><a href="Hasura.RQL.Types.Column.html#parseScalarValueColumnType"><span class="hs-identifier hs-var">parseScalarValueColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnType b
 forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689378645"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689378637"><span class="hs-identifier hs-var">va</span></a></span><span>
+</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689378781"><span class="hs-identifier hs-var">va</span></a></span><span>
 </span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">GBoolExp b (AnnBoolExpFld b (UnpreparedValue b))
 -&gt; n (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -393,7 +393,7 @@ forall (backend :: BackendType) leaf.
 ColumnInfo backend
 -&gt; [OpExpG backend leaf] -&gt; AnnBoolExpFld backend leaf
 </span><a href="Hasura.RQL.IR.BoolExp.html#AVColumn"><span class="hs-identifier hs-var">IR.AVColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689378645"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">([OpExpG b (UnpreparedValue b)]
+</span><a href="#local-6989586621689378789"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">([OpExpG b (UnpreparedValue b)]
  -&gt; AnnBoolExpFld b (UnpreparedValue b))
 -&gt; (ValueWithOrigin (ColumnValue b)
     -&gt; [OpExpG b (UnpreparedValue b)])
@@ -440,8 +440,8 @@ cvType :: ColumnType b
 cvValue :: ScalarValue b
 cvType :: ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#cvValue"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-116"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378627"><span class="annot"><span class="annottext">whereExpr :: Maybe (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
-</span><a href="#local-6989586621689378627"><span class="hs-identifier hs-var hs-var">whereExpr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GBoolExp b (AnnBoolExpFld b (UnpreparedValue b))
+</span><span id="line-116"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378771"><span class="annot"><span class="annottext">whereExpr :: Maybe (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
+</span><a href="#local-6989586621689378771"><span class="hs-identifier hs-var hs-var">whereExpr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GBoolExp b (AnnBoolExpFld b (UnpreparedValue b))
 -&gt; Maybe (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(GBoolExp b (AnnBoolExpFld b (UnpreparedValue b))
@@ -462,22 +462,22 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [GBoolExp b (AnnBoolExpFld b (UnpreparedValue b))]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">NESeq (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
-</span><a href="#local-6989586621689378647"><span class="hs-identifier hs-var">allConstraints</span></a></span><span>
-</span><span id="line-117"></span><span>        </span><span id="local-6989586621689378624"><span class="annot"><span class="annottext">sourceName :: SourceName
-</span><a href="#local-6989586621689378624"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689378675"><span class="hs-identifier hs-var">_siName</span></a></span><span>
-</span><span id="line-118"></span><span>        </span><span id="local-6989586621689378623"><span class="annot"><span class="annottext">sourceConfig :: SourceConfig b
-</span><a href="#local-6989586621689378623"><span class="hs-identifier hs-var hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621689378672"><span class="hs-identifier hs-var">_siConfiguration</span></a></span><span>
-</span><span id="line-119"></span><span>        </span><span id="local-6989586621689378622"><span class="annot"><span class="annottext">tableName :: TableName b
-</span><a href="#local-6989586621689378622"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; TableName b
+</span><a href="#local-6989586621689378791"><span class="hs-identifier hs-var">allConstraints</span></a></span><span>
+</span><span id="line-117"></span><span>        </span><span id="local-6989586621689378768"><span class="annot"><span class="annottext">sourceName :: SourceName
+</span><a href="#local-6989586621689378768"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689378819"><span class="hs-identifier hs-var">_siName</span></a></span><span>
+</span><span id="line-118"></span><span>        </span><span id="local-6989586621689378767"><span class="annot"><span class="annottext">sourceConfig :: SourceConfig b
+</span><a href="#local-6989586621689378767"><span class="hs-identifier hs-var hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621689378816"><span class="hs-identifier hs-var">_siConfiguration</span></a></span><span>
+</span><span id="line-119"></span><span>        </span><span id="local-6989586621689378766"><span class="annot"><span class="annottext">tableName :: TableName b
+</span><a href="#local-6989586621689378766"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; TableName b
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#_tciName"><span class="hs-identifier hs-var hs-var">_tciName</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689378662"><span class="hs-identifier hs-var">_tiCoreInfo</span></a></span><span>
-</span><span id="line-120"></span><span>        </span><span id="local-6989586621689378620"><span class="annot"><span class="annottext">queryDBRoot :: QueryDBRoot
+</span><a href="#local-6989586621689378806"><span class="hs-identifier hs-var">_tiCoreInfo</span></a></span><span>
+</span><span id="line-120"></span><span>        </span><span id="local-6989586621689378764"><span class="annot"><span class="annottext">queryDBRoot :: QueryDBRoot
   (RemoteRelationshipField UnpreparedValue) UnpreparedValue b
-</span><a href="#local-6989586621689378620"><span class="hs-identifier hs-var hs-var">queryDBRoot</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689378764"><span class="hs-identifier hs-var hs-var">queryDBRoot</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">QueryDB
   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 -&gt; QueryDBRoot
@@ -521,27 +521,27 @@ Fields (f v)
 </span><a href="Hasura.RQL.IR.Select.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
 </span><span id="line-124"></span><span>                </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields b
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedFields b
-</span><a href="#local-6989586621689378650"><span class="hs-identifier hs-var">annField</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689378794"><span class="hs-identifier hs-var">annField</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-125"></span><span>                  </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG b (UnpreparedValue b)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnFrom%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; SelectFromG b (UnpreparedValue b)
 forall (b :: BackendType) v. TableName b -&gt; SelectFromG b v
 </span><a href="Hasura.RQL.IR.Select.html#FromTable"><span class="hs-identifier hs-var">IR.FromTable</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689378622"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689378766"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-126"></span><span>                  </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG b (UnpreparedValue b)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnPerm%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnPerm</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
-</span><a href="#local-6989586621689378654"><span class="hs-identifier hs-var">selectPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689378798"><span class="hs-identifier hs-var">selectPermissions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-127"></span><span>                  </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG b (UnpreparedValue b)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnArgs%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectArgsG b (UnpreparedValue b)
 forall (backend :: BackendType) v. SelectArgsG backend v
 </span><a href="Hasura.RQL.IR.Select.html#noSelectArgs"><span class="hs-identifier hs-var">IR.noSelectArgs</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:_saWhere:SelectArgs :: Maybe (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_saWhere%3ASelectArgs"><span class="hs-identifier hs-var">IR._saWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (GBoolExp b (AnnBoolExpFld b (UnpreparedValue b)))
-</span><a href="#local-6989586621689378627"><span class="hs-identifier hs-var">whereExpr</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689378771"><span class="hs-identifier hs-var">whereExpr</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
 </span><span id="line-128"></span><span>                  </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnStrfyNum</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689378653"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689378797"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-129"></span><span>                  </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621689378652"><span class="hs-identifier hs-var">tCase</span></a></span><span>
+</span><a href="#local-6989586621689378796"><span class="hs-identifier hs-var">tCase</span></a></span><span>
 </span><span id="line-130"></span><span>                </span><span class="hs-special">}</span><span>
 </span><span id="line-131"></span><span>    </span><span class="annot"><span class="annottext">QueryRootField UnpreparedValue
 -&gt; n (QueryRootField UnpreparedValue)
@@ -563,7 +563,7 @@ SourceName
 -&gt; AnyBackend (SourceConfigWith db)
 -&gt; RootField db remote action raw
 </span><a href="Hasura.RQL.IR.Root.html#RFDB"><span class="hs-identifier hs-var">IR.RFDB</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689378624"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend
+</span><a href="#local-6989586621689378768"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend
    (SourceConfigWith
       (QueryDBRoot
          (RemoteRelationshipField UnpreparedValue) UnpreparedValue))
@@ -616,7 +616,7 @@ forall (db :: BackendType -&gt; *) (b :: BackendType).
 SourceConfig b
 -&gt; Maybe QueryTagsConfig -&gt; db b -&gt; SourceConfigWith db b
 </span><a href="Hasura.RQL.IR.Root.html#SourceConfigWith"><span class="hs-identifier hs-var">IR.SourceConfigWith</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621689378623"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621689378767"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(QueryDBRoot
    (RemoteRelationshipField UnpreparedValue) UnpreparedValue b
@@ -634,10 +634,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-135"></span><span>            </span><span class="annot"><span class="annottext">QueryDBRoot
   (RemoteRelationshipField UnpreparedValue) UnpreparedValue b
-</span><a href="#local-6989586621689378620"><span class="hs-identifier hs-var">queryDBRoot</span></a></span><span>
+</span><a href="#local-6989586621689378764"><span class="hs-identifier hs-var">queryDBRoot</span></a></span><span>
 </span><span id="line-136"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-137"></span><span>      </span><span id="local-6989586621689378636"><span class="annot"><span class="annottext">liftQErr :: Except QErr a -&gt; n a
-</span><a href="#local-6989586621689378636"><span class="hs-identifier hs-var hs-var">liftQErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(QErr -&gt; n a) -&gt; (a -&gt; n a) -&gt; Either QErr a -&gt; n a
+</span><span id="line-137"></span><span>      </span><span id="local-6989586621689378780"><span class="annot"><span class="annottext">liftQErr :: Except QErr a -&gt; n a
+</span><a href="#local-6989586621689378780"><span class="hs-identifier hs-var hs-var">liftQErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(QErr -&gt; n a) -&gt; (a -&gt; n a) -&gt; Either QErr a -&gt; n a
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorMessage -&gt; n a
 forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
@@ -675,10 +675,10 @@ forall e a. Except e a -&gt; Either e a
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
 </span><a href="Hasura.GraphQL.ApolloFederation.html#mkServiceField"><span class="hs-identifier hs-var hs-var">mkServiceField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378601"><span class="hs-identifier hs-var">serviceFieldParser</span></a></span><span>
+</span><a href="#local-6989586621689378745"><span class="hs-identifier hs-var">serviceFieldParser</span></a></span><span>
 </span><span id="line-155"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-156"></span><span>    </span><span id="local-6989586621689378600"><span class="annot"><span class="annottext">sdlField :: FieldParser origin Parse (SchemaIntrospection -&gt; Value)
-</span><a href="#local-6989586621689378600"><span class="hs-identifier hs-var hs-var">sdlField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-156"></span><span>    </span><span id="local-6989586621689378744"><span class="annot"><span class="annottext">sdlField :: FieldParser origin Parse (SchemaIntrospection -&gt; Value)
+</span><a href="#local-6989586621689378744"><span class="hs-identifier hs-var hs-var">sdlField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; (SchemaIntrospection -&gt; Text) -&gt; SchemaIntrospection -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -706,13 +706,13 @@ forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
-</span><span id="line-157"></span><span>    </span><span id="local-6989586621689378593"><span class="annot"><span class="annottext">serviceParser :: Parser
+</span><span id="line-157"></span><span>    </span><span id="local-6989586621689378737"><span class="annot"><span class="annottext">serviceParser :: Parser
   MetadataObjId
   'Output
   Parse
   (InsOrdHashMap
      Name (ParsedSelection (SchemaIntrospection -&gt; Value)))
-</span><a href="#local-6989586621689378593"><span class="hs-identifier hs-var hs-var">serviceParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621689378737"><span class="hs-identifier hs-var hs-var">serviceParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser
   MetadataObjId
   'Output
   Parse
@@ -772,10 +772,10 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FieldParser MetadataObjId Parse (SchemaIntrospection -&gt; Value)
 forall origin.
 FieldParser origin Parse (SchemaIntrospection -&gt; Value)
-</span><a href="#local-6989586621689378600"><span class="hs-identifier hs-var">sdlField</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-158"></span><span>    </span><span id="local-6989586621689378601"><span class="annot"><span class="annottext">serviceFieldParser :: FieldParser
+</span><a href="#local-6989586621689378744"><span class="hs-identifier hs-var">sdlField</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-158"></span><span>    </span><span id="local-6989586621689378745"><span class="annot"><span class="annottext">serviceFieldParser :: FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378601"><span class="hs-identifier hs-var hs-var">serviceFieldParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689378745"><span class="hs-identifier hs-var hs-var">serviceFieldParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-159"></span><span>      </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Parser
@@ -804,7 +804,7 @@ forall a. Maybe a
   Parse
   (InsOrdHashMap
      Name (ParsedSelection (SchemaIntrospection -&gt; Value)))
-</span><a href="#local-6989586621689378593"><span class="hs-identifier hs-var">serviceParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldParser
+</span><a href="#local-6989586621689378737"><span class="hs-identifier hs-var">serviceParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldParser
   MetadataObjId
   Parse
   (InsOrdHashMap
@@ -817,29 +817,29 @@ forall a. Maybe a
 forall (m :: * -&gt; *) origin a b.
 Monad m =&gt;
 FieldParser origin m a -&gt; (a -&gt; m b) -&gt; FieldParser origin m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`bindField`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378586"><span class="annot"><span class="annottext">InsOrdHashMap Name (ParsedSelection (SchemaIntrospection -&gt; Value))
-</span><a href="#local-6989586621689378586"><span class="hs-identifier hs-var">selSet</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-160"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378585"><span class="annot"><span class="annottext">partialValue :: InsOrdHashMap Text (SchemaIntrospection -&gt; Value)
-</span><a href="#local-6989586621689378585"><span class="hs-identifier hs-var hs-var">partialValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ParsedSelection (SchemaIntrospection -&gt; Value)
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`bindField`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378730"><span class="annot"><span class="annottext">InsOrdHashMap Name (ParsedSelection (SchemaIntrospection -&gt; Value))
+</span><a href="#local-6989586621689378730"><span class="hs-identifier hs-var">selSet</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-160"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378729"><span class="annot"><span class="annottext">partialValue :: InsOrdHashMap Text (SchemaIntrospection -&gt; Value)
+</span><a href="#local-6989586621689378729"><span class="hs-identifier hs-var hs-var">partialValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ParsedSelection (SchemaIntrospection -&gt; Value)
  -&gt; SchemaIntrospection -&gt; Value)
 -&gt; InsOrdHashMap
      Text (ParsedSelection (SchemaIntrospection -&gt; Value))
 -&gt; InsOrdHashMap Text (SchemaIntrospection -&gt; Value)
 forall v1 v2 k.
 (v1 -&gt; v2) -&gt; InsOrdHashMap k v1 -&gt; InsOrdHashMap k v2
-</span><span class="hs-identifier hs-var">OMap.map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689378583"><span class="annot"><span class="annottext">ParsedSelection (SchemaIntrospection -&gt; Value)
-</span><a href="#local-6989586621689378583"><span class="hs-identifier hs-var">ps</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; SchemaIntrospection -&gt; Value)
+</span><span class="hs-identifier hs-var">OMap.map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689378727"><span class="annot"><span class="annottext">ParsedSelection (SchemaIntrospection -&gt; Value)
+</span><a href="#local-6989586621689378727"><span class="hs-identifier hs-var">ps</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; SchemaIntrospection -&gt; Value)
 -&gt; ParsedSelection (SchemaIntrospection -&gt; Value)
 -&gt; SchemaIntrospection
 -&gt; Value
 forall a. (Name -&gt; a) -&gt; ParsedSelection a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">handleTypename</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689378581"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378581"><span class="hs-identifier hs-var">tName</span></a></span></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">handleTypename</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689378725"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378725"><span class="hs-identifier hs-var">tName</span></a></span></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.toOrdered</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378581"><span class="hs-identifier hs-var">tName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ParsedSelection (SchemaIntrospection -&gt; Value)
-</span><a href="#local-6989586621689378583"><span class="hs-identifier hs-var">ps</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Name -&gt; Text)
+</span><a href="#local-6989586621689378725"><span class="hs-identifier hs-var">tName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ParsedSelection (SchemaIntrospection -&gt; Value)
+</span><a href="#local-6989586621689378727"><span class="hs-identifier hs-var">ps</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Name -&gt; Text)
 -&gt; InsOrdHashMap
      Name (ParsedSelection (SchemaIntrospection -&gt; Value))
 -&gt; InsOrdHashMap
@@ -849,12 +849,12 @@ forall k' k v.
 (k -&gt; k') -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k' v
 </span><span class="hs-identifier hs-var">OMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (ParsedSelection (SchemaIntrospection -&gt; Value))
-</span><a href="#local-6989586621689378586"><span class="hs-identifier hs-var">selSet</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689378730"><span class="hs-identifier hs-var">selSet</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-161"></span><span>        </span><span class="annot"><span class="annottext">(SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
 -&gt; Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378578"><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621689378578"><span class="hs-identifier hs-var">schemaIntrospection</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; QueryRootField UnpreparedValue
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378722"><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="#local-6989586621689378722"><span class="hs-identifier hs-var">schemaIntrospection</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; QueryRootField UnpreparedValue
 forall raw (db :: BackendType -&gt; *) remote action.
 raw -&gt; RootField db remote action raw
 </span><a href="Hasura.RQL.IR.Root.html#RFRaw"><span class="hs-identifier hs-var">RFRaw</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; QueryRootField UnpreparedValue)
@@ -867,11 +867,11 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; InsOrdHashMap Text Value -&gt; QueryRootField UnpreparedValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap Text (SchemaIntrospection -&gt; Value)
-</span><a href="#local-6989586621689378585"><span class="hs-identifier hs-var">partialValue</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text (SchemaIntrospection -&gt; Value)
+</span><a href="#local-6989586621689378729"><span class="hs-identifier hs-var">partialValue</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text (SchemaIntrospection -&gt; Value)
 -&gt; SchemaIntrospection -&gt; InsOrdHashMap Text Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; f (a -&gt; b) -&gt; a -&gt; f b
 </span><span class="hs-operator hs-var">??</span></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621689378578"><span class="hs-identifier hs-var">schemaIntrospection</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689378722"><span class="hs-identifier hs-var">schemaIntrospection</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-162"></span><span>
 </span><span id="line-163"></span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#apolloRootFields"><span class="hs-identifier hs-type">apolloRootFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-164"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -882,21 +882,21 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f (a -&gt; b) -&gt; a -&gt; f b
      Parser 'Output Parse (ApolloFederationParserFunction Parse))]
 -&gt; [FieldParser
       Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)]
-</span><a href="Hasura.GraphQL.ApolloFederation.html#apolloRootFields"><span class="hs-identifier hs-var hs-var">apolloRootFields</span></a></span></span><span> </span><span id="local-6989586621689378575"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
-</span><a href="#local-6989586621689378575"><span class="hs-identifier hs-var">expFeatures</span></a></span></span><span> </span><span id="local-6989586621689378574"><span class="annot"><span class="annottext">[(Name,
+</span><a href="Hasura.GraphQL.ApolloFederation.html#apolloRootFields"><span class="hs-identifier hs-var hs-var">apolloRootFields</span></a></span></span><span> </span><span id="local-6989586621689378719"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621689378719"><span class="hs-identifier hs-var">expFeatures</span></a></span></span><span> </span><span id="local-6989586621689378718"><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
-</span><a href="#local-6989586621689378574"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689378718"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-168"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-comment">-- generate the `_service` field parser</span><span>
-</span><span id="line-169"></span><span>      </span><span id="local-6989586621689378573"><span class="annot"><span class="annottext">serviceField :: FieldParser
+</span><span id="line-169"></span><span>      </span><span id="local-6989586621689378717"><span class="annot"><span class="annottext">serviceField :: FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378573"><span class="hs-identifier hs-var hs-var">serviceField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldParser
+</span><a href="#local-6989586621689378717"><span class="hs-identifier hs-var hs-var">serviceField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
 </span><a href="Hasura.GraphQL.ApolloFederation.html#mkServiceField"><span class="hs-identifier hs-var">mkServiceField</span></a></span><span>
 </span><span id="line-170"></span><span>
 </span><span id="line-171"></span><span>      </span><span class="hs-comment">-- generate the `_entities` field parser</span><span>
-</span><span id="line-172"></span><span>      </span><span id="local-6989586621689378572"><span class="annot"><span class="annottext">entityField :: FieldParser
+</span><span id="line-172"></span><span>      </span><span id="local-6989586621689378716"><span class="annot"><span class="annottext">entityField :: FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378572"><span class="hs-identifier hs-var hs-var">entityField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryRootField UnpreparedValue
+</span><a href="#local-6989586621689378716"><span class="hs-identifier hs-var hs-var">entityField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryRootField UnpreparedValue
 -&gt; SchemaIntrospection -&gt; QueryRootField UnpreparedValue
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">(QueryRootField UnpreparedValue
@@ -910,7 +910,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; FieldParser MetadataObjId Parse (QueryRootField UnpreparedValue)
 </span><a href="Hasura.GraphQL.ApolloFederation.html#mkEntityUnionFieldParser"><span class="hs-identifier hs-var">mkEntityUnionFieldParser</span></a></span><span> </span><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
-</span><a href="#local-6989586621689378574"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span><span>
+</span><a href="#local-6989586621689378718"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span><span>
 </span><span id="line-173"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-comment">-- we would want to expose these fields inorder to support apollo federation</span><span>
 </span><span id="line-174"></span><span>      </span><span class="hs-comment">-- refer https://www.apollographql.com/docs/federation/federation-spec</span><span>
 </span><span id="line-175"></span><span>      </span><span class="hs-comment">-- `serviceField` is essential to connect hasura to gateway, `entityField`</span><span>
@@ -920,7 +920,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="Hasura.Server.Types.html#EFApolloFederation"><span class="hs-identifier hs-var">EFApolloFederation</span></a></span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature -&gt; HashSet ExperimentalFeature -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
-</span><a href="#local-6989586621689378575"><span class="hs-identifier hs-var">expFeatures</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689378719"><span class="hs-identifier hs-var">expFeatures</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
@@ -928,20 +928,20 @@ forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
-</span><a href="#local-6989586621689378574"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689378718"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-179"></span><span>            </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378573"><span class="hs-identifier hs-var">serviceField</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldParser
+</span><a href="#local-6989586621689378717"><span class="hs-identifier hs-var">serviceField</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378572"><span class="hs-identifier hs-var">entityField</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689378716"><span class="hs-identifier hs-var">entityField</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-180"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature
 </span><a href="Hasura.Server.Types.html#EFApolloFederation"><span class="hs-identifier hs-var">EFApolloFederation</span></a></span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature -&gt; HashSet ExperimentalFeature -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
-</span><a href="#local-6989586621689378575"><span class="hs-identifier hs-var">expFeatures</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689378719"><span class="hs-identifier hs-var">expFeatures</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-181"></span><span>            </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FieldParser
   Parse (SchemaIntrospection -&gt; QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378573"><span class="hs-identifier hs-var">serviceField</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689378717"><span class="hs-identifier hs-var">serviceField</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-182"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-183"></span><span>
@@ -950,20 +950,20 @@ forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span id="line-186"></span><span class="hs-comment">-- | Generate sdl from the schema introspection</span><span>
 </span><span id="line-187"></span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#generateSDL"><span class="hs-identifier hs-type">generateSDL</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-188"></span><span id="generateSDL"><span class="annot"><span class="annottext">generateSDL :: SchemaIntrospection -&gt; Text
-</span><a href="Hasura.GraphQL.ApolloFederation.html#generateSDL"><span class="hs-identifier hs-var hs-var">generateSDL</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span> </span><span id="local-6989586621689378563"><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
-</span><a href="#local-6989586621689378563"><span class="hs-identifier hs-var">sIntro</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689378562"><span class="hs-identifier hs-var">sdl</span></a></span><span>
+</span><a href="Hasura.GraphQL.ApolloFederation.html#generateSDL"><span class="hs-identifier hs-var hs-var">generateSDL</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span> </span><span id="local-6989586621689378707"><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
+</span><a href="#local-6989586621689378707"><span class="hs-identifier hs-var">sIntro</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689378706"><span class="hs-identifier hs-var">sdl</span></a></span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-190"></span><span>    </span><span class="hs-comment">-- NOTE:  add this to the sdl to support apollo v2 directive</span><span>
-</span><span id="line-191"></span><span>    </span><span class="annot"><a href="#local-6989586621689378561"><span class="hs-identifier hs-type">_supportV2</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-192"></span><span>    </span><span id="local-6989586621689378561"><span class="annot"><span class="annottext">_supportV2 :: Text
-</span><a href="#local-6989586621689378561"><span class="hs-identifier hs-var hs-var">_supportV2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-191"></span><span>    </span><span class="annot"><a href="#local-6989586621689378705"><span class="hs-identifier hs-type">_supportV2</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-192"></span><span>    </span><span id="local-6989586621689378705"><span class="annot"><span class="annottext">_supportV2 :: Text
+</span><a href="#local-6989586621689378705"><span class="hs-identifier hs-var hs-var">_supportV2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\n\nextend schema\n@link(url: \&quot;https://specs.apollo.dev/federation/v2.0\&quot;,\nimport: [\&quot;@key\&quot;, \&quot;@shareable\&quot;])&quot;</span></span><span>
 </span><span id="line-193"></span><span>
 </span><span id="line-194"></span><span>    </span><span class="hs-comment">-- first we filter out the type definitions which are not relevent such as</span><span>
 </span><span id="line-195"></span><span>    </span><span class="hs-comment">-- schema fields and types (starts with `__`)</span><span>
-</span><span id="line-196"></span><span>    </span><span id="local-6989586621689378560"><span class="annot"><span class="annottext">typeDefns :: [TypeSystemDefinition]
-</span><a href="#local-6989586621689378560"><span class="hs-identifier hs-var hs-var">typeDefns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TypeDefinition [Name] InputValueDefinition
+</span><span id="line-196"></span><span>    </span><span id="local-6989586621689378704"><span class="annot"><span class="annottext">typeDefns :: [TypeSystemDefinition]
+</span><a href="#local-6989586621689378704"><span class="hs-identifier hs-var hs-var">typeDefns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TypeDefinition [Name] InputValueDefinition
  -&gt; Maybe TypeSystemDefinition)
 -&gt; [TypeDefinition [Name] InputValueDefinition]
 -&gt; [TypeSystemDefinition]
@@ -976,34 +976,34 @@ Filterable f =&gt;
 -&gt; [TypeDefinition [Name] InputValueDefinition]
 forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
-</span><a href="#local-6989586621689378563"><span class="hs-identifier hs-var">sIntro</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689378707"><span class="hs-identifier hs-var">sIntro</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-197"></span><span>
 </span><span id="line-198"></span><span>    </span><span class="hs-comment">-- next we get the root operation type definitions</span><span>
-</span><span id="line-199"></span><span>    </span><span id="local-6989586621689378556"><span class="annot"><span class="annottext">rootOpTypeDefns :: [RootOperationTypeDefinition]
-</span><a href="#local-6989586621689378556"><span class="hs-identifier hs-var hs-var">rootOpTypeDefns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-199"></span><span>    </span><span id="local-6989586621689378700"><span class="annot"><span class="annottext">rootOpTypeDefns :: [RootOperationTypeDefinition]
+</span><a href="#local-6989586621689378700"><span class="hs-identifier hs-var hs-var">rootOpTypeDefns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-200"></span><span>      </span><span class="annot"><span class="annottext">((Name, OperationType) -&gt; Maybe RootOperationTypeDefinition)
 -&gt; [(Name, OperationType)] -&gt; [RootOperationTypeDefinition]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span>
-</span><span id="line-201"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689378555"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378555"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378554"><span class="annot"><span class="annottext">OperationType
-</span><a href="#local-6989586621689378554"><span class="hs-identifier hs-var">operationType</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-201"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689378699"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378699"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378698"><span class="annot"><span class="annottext">OperationType
+</span><a href="#local-6989586621689378698"><span class="hs-identifier hs-var">operationType</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-202"></span><span>            </span><span class="annot"><span class="annottext">Name
 -&gt; HashMap Name (TypeDefinition [Name] InputValueDefinition)
 -&gt; Maybe (TypeDefinition [Name] InputValueDefinition)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378555"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
-</span><a href="#local-6989586621689378563"><span class="hs-identifier hs-var">sIntro</span></a></span><span>
+</span><a href="#local-6989586621689378699"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
+</span><a href="#local-6989586621689378707"><span class="hs-identifier hs-var">sIntro</span></a></span><span>
 </span><span id="line-203"></span><span>              </span><span class="annot"><span class="annottext">Maybe (TypeDefinition [Name] InputValueDefinition)
 -&gt; RootOperationTypeDefinition -&gt; Maybe RootOperationTypeDefinition
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">OperationType -&gt; Name -&gt; RootOperationTypeDefinition
 </span><span class="hs-identifier hs-var">G.RootOperationTypeDefinition</span></span><span> </span><span class="annot"><span class="annottext">OperationType
-</span><a href="#local-6989586621689378554"><span class="hs-identifier hs-var">operationType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378555"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621689378698"><span class="hs-identifier hs-var">operationType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378699"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-204"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-205"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_query_root"><span class="hs-identifier hs-var">Name._query_root</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OperationType
@@ -1017,18 +1017,18 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><span id="line-208"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-209"></span><span>
 </span><span id="line-210"></span><span>    </span><span class="hs-comment">-- finally we gather everything, run the printer and generate full sdl in `Text`</span><span>
-</span><span id="line-211"></span><span>    </span><span id="local-6989586621689378562"><span class="annot"><span class="annottext">sdl :: Text
-</span><a href="#local-6989586621689378562"><span class="hs-identifier hs-var hs-var">sdl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Text
+</span><span id="line-211"></span><span>    </span><span id="local-6989586621689378706"><span class="annot"><span class="annottext">sdl :: Text
+</span><a href="#local-6989586621689378706"><span class="hs-identifier hs-var hs-var">sdl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Text
 </span><span class="hs-identifier hs-var">Builder.run</span></span><span> </span><span class="annot"><span class="annottext">(Builder -&gt; Text) -&gt; Builder -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SchemaDocument -&gt; Builder
 forall a. Printer a =&gt; SchemaDocument -&gt; a
 </span><span class="hs-identifier hs-var">Printer.schemaDocument</span></span><span> </span><span class="annot"><span class="annottext">SchemaDocument
-</span><a href="#local-6989586621689378542"><span class="hs-identifier hs-var">getSchemaDocument</span></a></span><span>
+</span><a href="#local-6989586621689378686"><span class="hs-identifier hs-var">getSchemaDocument</span></a></span><span>
 </span><span id="line-212"></span><span>
-</span><span id="line-213"></span><span>    </span><span class="annot"><a href="#local-6989586621689378542"><span class="hs-identifier hs-type">getSchemaDocument</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaDocument</span></span><span>
-</span><span id="line-214"></span><span>    </span><span id="local-6989586621689378542"><span class="annot"><span class="annottext">getSchemaDocument :: SchemaDocument
-</span><a href="#local-6989586621689378542"><span class="hs-identifier hs-var hs-var">getSchemaDocument</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-213"></span><span>    </span><span class="annot"><a href="#local-6989586621689378686"><span class="hs-identifier hs-type">getSchemaDocument</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaDocument</span></span><span>
+</span><span id="line-214"></span><span>    </span><span id="local-6989586621689378686"><span class="annot"><span class="annottext">getSchemaDocument :: SchemaDocument
+</span><a href="#local-6989586621689378686"><span class="hs-identifier hs-var hs-var">getSchemaDocument</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-215"></span><span>      </span><span class="annot"><span class="annottext">[TypeSystemDefinition] -&gt; SchemaDocument
 </span><span class="hs-identifier hs-var">G.SchemaDocument</span></span><span> </span><span class="annot"><span class="annottext">([TypeSystemDefinition] -&gt; SchemaDocument)
 -&gt; [TypeSystemDefinition] -&gt; SchemaDocument
@@ -1040,11 +1040,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">G.SchemaDefinition</span></span><span> </span><span class="annot"><span class="annottext">Maybe [Directive Void]
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[RootOperationTypeDefinition]
-</span><a href="#local-6989586621689378556"><span class="hs-identifier hs-var">rootOpTypeDefns</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition
+</span><a href="#local-6989586621689378700"><span class="hs-identifier hs-var">rootOpTypeDefns</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition
 -&gt; [TypeSystemDefinition] -&gt; [TypeSystemDefinition]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[TypeSystemDefinition]
-</span><a href="#local-6989586621689378560"><span class="hs-identifier hs-var">typeDefns</span></a></span><span>
+</span><a href="#local-6989586621689378704"><span class="hs-identifier hs-var">typeDefns</span></a></span><span>
 </span><span id="line-217"></span><span>
 </span><span id="line-218"></span><span class="hs-comment">-- | Filter out schema components from sdl which are not required by apollo federation and</span><span>
 </span><span id="line-219"></span><span class="hs-comment">-- wraps it in `TypeSystemDefinition`</span><span>
@@ -1055,11 +1055,11 @@ forall a. a -&gt; [a] -&gt; [a]
 </span><span id="line-222"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionScalar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.ScalarTypeDefinition</span></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe TypeSystemDefinition
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-223"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInterface</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.InterfaceTypeDefinition</span></span><span> </span><span id="local-6989586621689378534"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689378534"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689378533"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378533"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689378532"><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689378532"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689378531"><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
-</span><a href="#local-6989586621689378531"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="annot"><span class="annottext">[Name]
+</span><span id="line-223"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInterface</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.InterfaceTypeDefinition</span></span><span> </span><span id="local-6989586621689378678"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689378678"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689378677"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378677"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689378676"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="#local-6989586621689378676"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689378675"><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
+</span><a href="#local-6989586621689378675"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="annot"><span class="annottext">[Name]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-224"></span><span>    </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
 forall a. a -&gt; Maybe a
@@ -1086,16 +1086,16 @@ Maybe Description
 -&gt; possibleTypes
 -&gt; InterfaceTypeDefinition possibleTypes inputType
 </span><span class="hs-identifier hs-var">G.InterfaceTypeDefinition</span></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689378534"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378533"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689378532"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
-</span><a href="#local-6989586621689378531"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-225"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionObject</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span> </span><span id="local-6989586621689378527"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689378527"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689378526"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378526"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689378525"><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621689378525"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689378524"><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689378524"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621689378523"><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
-</span><a href="#local-6989586621689378523"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689378678"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378677"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="#local-6989586621689378676"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
+</span><a href="#local-6989586621689378675"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-225"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionObject</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span> </span><span id="local-6989586621689378671"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689378671"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689378670"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378670"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689378669"><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621689378669"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689378668"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="#local-6989586621689378668"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621689378667"><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
+</span><a href="#local-6989586621689378667"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-226"></span><span>    </span><span class="hs-comment">-- We are skipping the schema types here</span><span>
 </span><span id="line-227"></span><span>    </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
 forall a. a -&gt; Maybe a
@@ -1137,10 +1137,10 @@ Maybe Description
 -&gt; [FieldDefinition inputType]
 -&gt; ObjectTypeDefinition inputType
 </span><span class="hs-identifier hs-var">G.ObjectTypeDefinition</span></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689378527"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378526"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621689378525"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689378524"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(FieldDefinition InputValueDefinition -&gt; Bool)
+</span><a href="#local-6989586621689378671"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378670"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621689378669"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="#local-6989586621689378668"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(FieldDefinition InputValueDefinition -&gt; Bool)
 -&gt; [FieldDefinition InputValueDefinition]
 -&gt; [FieldDefinition InputValueDefinition]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
@@ -1166,9 +1166,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FieldDefinition InputValueDefinition -&gt; Name
 forall inputType. FieldDefinition inputType -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">G._fldName</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
-</span><a href="#local-6989586621689378523"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-229"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionUnion</span></span><span> </span><span id="local-6989586621689378519"><span class="annot"><span class="annottext">UnionTypeDefinition
-</span><a href="#local-6989586621689378519"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
+</span><a href="#local-6989586621689378667"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-229"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionUnion</span></span><span> </span><span id="local-6989586621689378663"><span class="annot"><span class="annottext">UnionTypeDefinition
+</span><a href="#local-6989586621689378663"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(TypeSystemDefinition -&gt; Maybe TypeSystemDefinition)
 -&gt; TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
@@ -1178,9 +1178,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall possibleTypes inputType.
 UnionTypeDefinition -&gt; TypeDefinition possibleTypes inputType
 </span><span class="hs-identifier hs-var">G.TypeDefinitionUnion</span></span><span> </span><span class="annot"><span class="annottext">UnionTypeDefinition
-</span><a href="#local-6989586621689378519"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-230"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionEnum</span></span><span> </span><span id="local-6989586621689378517"><span class="annot"><span class="annottext">EnumTypeDefinition
-</span><a href="#local-6989586621689378517"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
+</span><a href="#local-6989586621689378663"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-230"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionEnum</span></span><span> </span><span id="local-6989586621689378661"><span class="annot"><span class="annottext">EnumTypeDefinition
+</span><a href="#local-6989586621689378661"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(TypeSystemDefinition -&gt; Maybe TypeSystemDefinition)
 -&gt; TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
@@ -1190,9 +1190,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall possibleTypes inputType.
 EnumTypeDefinition -&gt; TypeDefinition possibleTypes inputType
 </span><span class="hs-identifier hs-var">G.TypeDefinitionEnum</span></span><span> </span><span class="annot"><span class="annottext">EnumTypeDefinition
-</span><a href="#local-6989586621689378517"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-231"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInputObject</span></span><span> </span><span id="local-6989586621689378515"><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
-</span><a href="#local-6989586621689378515"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
+</span><a href="#local-6989586621689378661"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-231"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInputObject</span></span><span> </span><span id="local-6989586621689378659"><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
+</span><a href="#local-6989586621689378659"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(TypeSystemDefinition -&gt; Maybe TypeSystemDefinition)
 -&gt; TypeSystemDefinition -&gt; Maybe TypeSystemDefinition
@@ -1204,7 +1204,7 @@ forall possibleTypes inputType.
 InputObjectTypeDefinition inputType
 -&gt; TypeDefinition possibleTypes inputType
 </span><span class="hs-identifier hs-var">G.TypeDefinitionInputObject</span></span><span> </span><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
-</span><a href="#local-6989586621689378515"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689378659"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-232"></span><span>
 </span><span id="line-233"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-234"></span><span class="hs-comment">-- Related to @_entities@ field</span><span>
@@ -1229,27 +1229,27 @@ InputObjectTypeDefinition inputType
 </span><span id="line-253"></span><span id="mkEntityUnionFieldParser"><span class="annot"><span class="annottext">mkEntityUnionFieldParser :: [(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
 -&gt; FieldParser MetadataObjId Parse (QueryRootField UnpreparedValue)
-</span><a href="Hasura.GraphQL.ApolloFederation.html#mkEntityUnionFieldParser"><span class="hs-identifier hs-var hs-var">mkEntityUnionFieldParser</span></a></span></span><span> </span><span id="local-6989586621689378514"><span class="annot"><span class="annottext">[(Name,
+</span><a href="Hasura.GraphQL.ApolloFederation.html#mkEntityUnionFieldParser"><span class="hs-identifier hs-var hs-var">mkEntityUnionFieldParser</span></a></span></span><span> </span><span id="local-6989586621689378658"><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
-</span><a href="#local-6989586621689378514"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-254"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378513"><span class="annot"><span class="annottext">entityParserMap :: HashMap
+</span><a href="#local-6989586621689378658"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-254"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689378657"><span class="annot"><span class="annottext">entityParserMap :: HashMap
   Name (Parser 'Output Parse (ApolloFederationParserFunction Parse))
-</span><a href="#local-6989586621689378513"><span class="hs-identifier hs-var hs-var">entityParserMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name,
+</span><a href="#local-6989586621689378657"><span class="hs-identifier hs-var hs-var">entityParserMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
 -&gt; HashMap
      Name (Parser 'Output Parse (ApolloFederationParserFunction Parse))
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
-</span><a href="#local-6989586621689378514"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span><span>
+</span><a href="#local-6989586621689378658"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span><span>
 </span><span id="line-255"></span><span>
 </span><span id="line-256"></span><span>      </span><span class="hs-comment">-- the Union `Entities`</span><span>
-</span><span id="line-257"></span><span>      </span><span id="local-6989586621689378511"><span class="annot"><span class="annottext">bodyParser :: Parser
+</span><span id="line-257"></span><span>      </span><span id="local-6989586621689378655"><span class="annot"><span class="annottext">bodyParser :: Parser
   MetadataObjId
   'Output
   Parse
   (HashMap Name (ApolloFederationParserFunction Parse))
-</span><a href="#local-6989586621689378511"><span class="hs-identifier hs-var hs-var">bodyParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689378655"><span class="hs-identifier hs-var hs-var">bodyParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; HashMap
      Name (Parser 'Output Parse (ApolloFederationParserFunction Parse))
@@ -1270,22 +1270,22 @@ forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;A union of all types that use the @key directive&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (Parser 'Output Parse (ApolloFederationParserFunction Parse))
-</span><a href="#local-6989586621689378513"><span class="hs-identifier hs-var">entityParserMap</span></a></span><span>
+</span><a href="#local-6989586621689378657"><span class="hs-identifier hs-var">entityParserMap</span></a></span><span>
 </span><span id="line-258"></span><span>
 </span><span id="line-259"></span><span>      </span><span class="hs-comment">-- name of the field</span><span>
-</span><span id="line-260"></span><span>      </span><span id="local-6989586621689378508"><span class="annot"><span class="annottext">name :: Name
-</span><a href="#local-6989586621689378508"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-260"></span><span>      </span><span id="local-6989586621689378652"><span class="annot"><span class="annottext">name :: Name
+</span><a href="#local-6989586621689378652"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__entities"><span class="hs-identifier hs-var">Name.__entities</span></a></span><span>
 </span><span id="line-261"></span><span>
 </span><span id="line-262"></span><span>      </span><span class="hs-comment">-- description of the field</span><span>
-</span><span id="line-263"></span><span>      </span><span id="local-6989586621689378506"><span class="annot"><span class="annottext">description :: Maybe Description
-</span><a href="#local-6989586621689378506"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><span id="line-263"></span><span>      </span><span id="local-6989586621689378650"><span class="annot"><span class="annottext">description :: Maybe Description
+</span><a href="#local-6989586621689378650"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;query _Entity union&quot;</span></span><span>
 </span><span id="line-264"></span><span>
-</span><span id="line-265"></span><span>      </span><span id="local-6989586621689378505"><span class="annot"><span class="annottext">representationParser :: InputFieldsParser origin Parse [ApolloFederationAnyType]
-</span><a href="#local-6989586621689378505"><span class="hs-identifier hs-var hs-var">representationParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-265"></span><span>      </span><span id="local-6989586621689378649"><span class="annot"><span class="annottext">representationParser :: InputFieldsParser origin Parse [ApolloFederationAnyType]
+</span><a href="#local-6989586621689378649"><span class="hs-identifier hs-var hs-var">representationParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-266"></span><span>        </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both Parse [ApolloFederationAnyType]
@@ -1318,8 +1318,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall origin. Parser origin 'Both Parse ApolloFederationAnyType
 </span><a href="Hasura.GraphQL.ApolloFederation.html#anyParser"><span class="hs-identifier hs-var">anyParser</span></a></span><span>
 </span><span id="line-267"></span><span>
-</span><span id="line-268"></span><span>      </span><span id="local-6989586621689378501"><span class="annot"><span class="annottext">entityParser :: FieldParser MetadataObjId Parse (QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378501"><span class="hs-identifier hs-var hs-var">entityParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-268"></span><span>      </span><span id="local-6989586621689378645"><span class="annot"><span class="annottext">entityParser :: FieldParser MetadataObjId Parse (QueryRootField UnpreparedValue)
+</span><a href="#local-6989586621689378645"><span class="hs-identifier hs-var hs-var">entityParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-269"></span><span>        </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; InputFieldsParser MetadataObjId Parse [ApolloFederationAnyType]
@@ -1341,16 +1341,16 @@ Name
 -&gt; Parser origin 'Output m b
 -&gt; FieldParser origin m (a, b)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378508"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689378506"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId Parse [ApolloFederationAnyType]
+</span><a href="#local-6989586621689378652"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689378650"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId Parse [ApolloFederationAnyType]
 forall origin.
 InputFieldsParser origin Parse [ApolloFederationAnyType]
-</span><a href="#local-6989586621689378505"><span class="hs-identifier hs-var">representationParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621689378649"><span class="hs-identifier hs-var">representationParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   MetadataObjId
   'Output
   Parse
   (HashMap Name (ApolloFederationParserFunction Parse))
-</span><a href="#local-6989586621689378511"><span class="hs-identifier hs-var">bodyParser</span></a></span><span>
+</span><a href="#local-6989586621689378655"><span class="hs-identifier hs-var">bodyParser</span></a></span><span>
 </span><span id="line-270"></span><span>          </span><span class="annot"><span class="annottext">FieldParser
   MetadataObjId
   Parse
@@ -1363,11 +1363,11 @@ InputFieldsParser origin Parse [ApolloFederationAnyType]
 forall (m :: * -&gt; *) origin a b.
 Monad m =&gt;
 FieldParser origin m a -&gt; (a -&gt; m b) -&gt; FieldParser origin m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`bindField`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689378499"><span class="annot"><span class="annottext">[ApolloFederationAnyType]
-</span><a href="#local-6989586621689378499"><span class="hs-identifier hs-var">parsedArgs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378498"><span class="annot"><span class="annottext">HashMap Name (ApolloFederationParserFunction Parse)
-</span><a href="#local-6989586621689378498"><span class="hs-identifier hs-var">parsedBody</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-271"></span><span>            </span><span id="local-6989586621689378497"><span class="annot"><span class="annottext">[QueryRootField UnpreparedValue]
-</span><a href="#local-6989586621689378497"><span class="hs-identifier hs-var">rootFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`bindField`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689378643"><span class="annot"><span class="annottext">[ApolloFederationAnyType]
+</span><a href="#local-6989586621689378643"><span class="hs-identifier hs-var">parsedArgs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378642"><span class="annot"><span class="annottext">HashMap Name (ApolloFederationParserFunction Parse)
+</span><a href="#local-6989586621689378642"><span class="hs-identifier hs-var">parsedBody</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-271"></span><span>            </span><span id="local-6989586621689378641"><span class="annot"><span class="annottext">[QueryRootField UnpreparedValue]
+</span><a href="#local-6989586621689378641"><span class="hs-identifier hs-var">rootFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-272"></span><span>              </span><span class="annot"><span class="annottext">[ApolloFederationAnyType]
 -&gt; (ApolloFederationAnyType
     -&gt; Parse (QueryRootField UnpreparedValue))
@@ -1377,17 +1377,17 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span>
 </span><span id="line-273"></span><span>                </span><span class="annot"><span class="annottext">[ApolloFederationAnyType]
-</span><a href="#local-6989586621689378499"><span class="hs-identifier hs-var">parsedArgs</span></a></span><span>
-</span><span id="line-274"></span><span>                </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378496"><span class="annot"><span class="annottext">ApolloFederationAnyType
-</span><a href="#local-6989586621689378496"><span class="hs-identifier hs-var">anyArg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689378643"><span class="hs-identifier hs-var">parsedArgs</span></a></span><span>
+</span><span id="line-274"></span><span>                </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689378640"><span class="annot"><span class="annottext">ApolloFederationAnyType
+</span><a href="#local-6989586621689378640"><span class="hs-identifier hs-var">anyArg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-275"></span><span>                    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; HashMap Name (ApolloFederationParserFunction Parse)
 -&gt; Maybe (ApolloFederationParserFunction Parse)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ApolloFederationAnyType -&gt; Name
 </span><a href="Hasura.GraphQL.ApolloFederation.html#afTypename"><span class="hs-identifier hs-var hs-var">afTypename</span></a></span><span> </span><span class="annot"><span class="annottext">ApolloFederationAnyType
-</span><a href="#local-6989586621689378496"><span class="hs-identifier hs-var">anyArg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap Name (ApolloFederationParserFunction Parse)
-</span><a href="#local-6989586621689378498"><span class="hs-identifier hs-var">parsedBody</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689378640"><span class="hs-identifier hs-var">anyArg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap Name (ApolloFederationParserFunction Parse)
+</span><a href="#local-6989586621689378642"><span class="hs-identifier hs-var">parsedBody</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-276"></span><span>                      </span><span class="annot"><span class="annottext">Maybe (ApolloFederationParserFunction Parse)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorMessage -&gt; Parse (QueryRootField UnpreparedValue)
 forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
@@ -1403,20 +1403,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ApolloFederationAnyType -&gt; Name
 </span><a href="Hasura.GraphQL.ApolloFederation.html#afTypename"><span class="hs-identifier hs-var hs-var">afTypename</span></a></span><span> </span><span class="annot"><span class="annottext">ApolloFederationAnyType
-</span><a href="#local-6989586621689378496"><span class="hs-identifier hs-var">anyArg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689378640"><span class="hs-identifier hs-var">anyArg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is not found in selection set or apollo federation is not enabled for the type&quot;</span></span><span>
-</span><span id="line-277"></span><span>                      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689378495"><span class="annot"><span class="annottext">ApolloFederationParserFunction Parse
-</span><a href="#local-6989586621689378495"><span class="hs-identifier hs-var">aafus</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ApolloFederationParserFunction Parse
+</span><span id="line-277"></span><span>                      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689378639"><span class="annot"><span class="annottext">ApolloFederationParserFunction Parse
+</span><a href="#local-6989586621689378639"><span class="hs-identifier hs-var">aafus</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ApolloFederationParserFunction Parse
 -&gt; ApolloFederationAnyType
 -&gt; Parse (QueryRootField UnpreparedValue)
 forall (n :: * -&gt; *).
 ApolloFederationParserFunction n
 -&gt; ApolloFederationAnyType -&gt; n (QueryRootField UnpreparedValue)
 </span><a href="Hasura.GraphQL.ApolloFederation.html#aafuGetRootField"><span class="hs-identifier hs-var hs-var">aafuGetRootField</span></a></span><span> </span><span class="annot"><span class="annottext">ApolloFederationParserFunction Parse
-</span><a href="#local-6989586621689378495"><span class="hs-identifier hs-var">aafus</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ApolloFederationAnyType
-</span><a href="#local-6989586621689378496"><span class="hs-identifier hs-var">anyArg</span></a></span><span>
+</span><a href="#local-6989586621689378639"><span class="hs-identifier hs-var">aafus</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ApolloFederationAnyType
+</span><a href="#local-6989586621689378640"><span class="hs-identifier hs-var">anyArg</span></a></span><span>
 </span><span id="line-278"></span><span>                </span><span class="hs-special">)</span><span>
 </span><span id="line-279"></span><span>            </span><span class="annot"><span class="annottext">QueryRootField UnpreparedValue
 -&gt; Parse (QueryRootField UnpreparedValue)
@@ -1428,9 +1428,9 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[QueryRootField UnpreparedValue] -&gt; QueryRootField UnpreparedValue
 </span><a href="Hasura.GraphQL.ApolloFederation.html#concatQueryRootFields"><span class="hs-identifier hs-var">concatQueryRootFields</span></a></span><span> </span><span class="annot"><span class="annottext">[QueryRootField UnpreparedValue]
-</span><a href="#local-6989586621689378497"><span class="hs-identifier hs-var">rootFields</span></a></span><span>
+</span><a href="#local-6989586621689378641"><span class="hs-identifier hs-var">rootFields</span></a></span><span>
 </span><span id="line-280"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">FieldParser MetadataObjId Parse (QueryRootField UnpreparedValue)
-</span><a href="#local-6989586621689378501"><span class="hs-identifier hs-var">entityParser</span></a></span><span>
+</span><a href="#local-6989586621689378645"><span class="hs-identifier hs-var">entityParser</span></a></span><span>
 </span><span id="line-281"></span><span>
 </span><span id="line-282"></span><span class="hs-comment">-- | concatenates multiple fields</span><span>
 </span><span id="line-283"></span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#concatQueryRootFields"><span class="hs-identifier hs-type">concatQueryRootFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span>
