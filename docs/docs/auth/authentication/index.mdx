@@ -25,6 +25,9 @@ like `X-Hasura-User-Id`, to build permission rules.
 You can also configure Hasura to allow access to unauthenticated users by configuring a specific role which will be set
 for all unauthenticated requests.
 
+For information about making requests using the Admin Secret header please
+[see here](/auth/authentication/index.mdx#admin-secret-header).
+
 ## Authentication options
 
 Hasura supports two modes of authentication configuration:
@@ -59,3 +62,12 @@ Enterprise Grade Authorization -
 [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
 :::
+
+## Using the Admin Secret header {#admin-secret-header}
+
+Hasura will allow all queries, mutations and subscriptions when you include your `X-Hasura-Admin-Secret` header on
+your request. If you also include the `X-Hasura-User-Id` and `X-Hasura-Role` headers along with the
+`X-Hasura-Admin-Secret` header you can "pretend" to be that user and role.
+
+Without the `X-Hasura-Admin-Secret` header you will need to authenticate your requests as a user and role with one
+of the options below.
