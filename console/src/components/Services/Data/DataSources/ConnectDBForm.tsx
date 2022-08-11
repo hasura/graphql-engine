@@ -72,7 +72,6 @@ const driverToLabel: Record<
     defaultConnection: 'CONNECTION_PARAMETERS',
     info:
       'Only Connection Parameters and Environment Variables are available for BigQuery',
-    beta: true,
   },
   citus: {
     label: 'Citus',
