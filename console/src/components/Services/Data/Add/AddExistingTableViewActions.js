@@ -212,9 +212,8 @@ const addAllUntrackedTablesSql = tableList => {
             {
               table: {
                 name: tableList[i].table_name,
-                [currentDriver === 'bigquery'
-                  ? 'dataset'
-                  : 'schema']: currentSchema,
+                [currentDriver === 'bigquery' ? 'dataset' : 'schema']:
+                  currentSchema,
               },
             },
             currentDataSource

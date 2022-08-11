@@ -4,7 +4,7 @@ import { NormalizedTable } from '@/dataSources/types';
 import { Dispatch } from '@/types';
 import { currentDriver } from '@/dataSources';
 
-import styles from '../../TableModify/ModifyTable.scss';
+import styles from '../../TableModify/ModifyTable.module.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
@@ -36,12 +36,8 @@ export const RemoteDbRelationships: React.FC<Props> = ({
     };
   }, [currentSource, tableSchema]);
 
-  const {
-    isLoading,
-    isError,
-    isSuccess,
-    data,
-  } = useRemoteDatabaseRelationships(target); // get data from hook
+  const { isLoading, isError, isSuccess, data } =
+    useRemoteDatabaseRelationships(target); // get data from hook
 
   if (isLoading) {
     return <p>Loading</p>;

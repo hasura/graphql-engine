@@ -5,7 +5,7 @@ import { FaCompressAlt, FaExpandAlt } from 'react-icons/fa';
 import 'brace/mode/markdown';
 import 'brace/theme/github';
 
-const styles = require('./CustomInput.scss');
+const styles = require('./CustomInput.module.scss');
 
 const NORMALKEY = 'normal';
 const JSONKEY = 'json';

@@ -23,9 +23,8 @@ export const ApolloFederationSupport = ({
     return <div>Loading...</div>;
   }
 
-  const isSupportForApolloFederationEnabled = configData?.experimental_features.includes(
-    'apollo_federation'
-  );
+  const isSupportForApolloFederationEnabled =
+    configData?.experimental_features.includes('apollo_federation');
   return (
     <div className="mb-lg">
       <div className="flex items-center mb-formlabel">

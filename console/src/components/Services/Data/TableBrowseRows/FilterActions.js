@@ -82,8 +82,9 @@ const runQuery = tableSchema => {
         return w;
       }
 
-      const colType = tableSchema.columns.find(c => c.column_name === colName)
-        .data_type;
+      const colType = tableSchema.columns.find(
+        c => c.column_name === colName
+      ).data_type;
       if (Integers.indexOf(colType) > 0) {
         w[colName][opName] = parseInt(val, 10);
         return w;
@@ -154,8 +155,9 @@ const exportDataQuery = (tableSchema, type) => {
         return w;
       }
 
-      const colType = tableSchema.columns.find(c => c.column_name === colName)
-        .data_type;
+      const colType = tableSchema.columns.find(
+        c => c.column_name === colName
+      ).data_type;
       if (Integers.indexOf(colType) > 0) {
         w[colName][opName] = parseInt(val, 10);
         return w;

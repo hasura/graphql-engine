@@ -14,9 +14,10 @@ const queryClient = new QueryClient({
     },
   },
 });
-const createWrapper = () => ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-);
+const createWrapper =
+  () =>
+  ({ children }: { children: React.ReactNode }) =>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 
 const metadataStub: Metadata = {
   version: 3,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TreeArgElement, ArgValueKind } from '../utils';
-import styles from '../SchemaExplorer.scss';
+import styles from '../SchemaExplorer.module.scss';
 import ArgValueElement from './ArgValue';
 import { HasuraColumn } from './Explorer';
 

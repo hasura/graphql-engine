@@ -40,7 +40,7 @@ import { Help, ProPopup } from './components/';
 import { UpdateVersion } from './components/UpdateVersion';
 import logo from './images/white-logo.svg';
 import LoveSection from './LoveSection';
-import styles from './Main.scss';
+import styles from './Main.module.scss';
 import NotificationSection from './NotificationSection';
 import * as tooltips from './Tooltips';
 import {

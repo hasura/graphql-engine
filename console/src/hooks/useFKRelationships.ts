@@ -26,41 +26,42 @@ type FKQueryOptions<T, N> = RunSQLQueryOptions<
   ForeignKeyConstraint[]
 >;
 
-const transformData = (driver: Driver, metadataTables: TableEntry[] = []) => (
-  data: RunSQLResponse
-): ForeignKeyConstraint[] => {
-  let fkConstraints: PartialFKConstraint[] = [];
-  if (driver === 'mssql') {
-    const parsed: MSSqlFk[] = JSON.parse(data.result?.[1]?.[0] ?? '[]');
-    fkConstraints = parsed.map(fk => {
-      const mapping: Record<string, string> = {};
-      fk.column_mapping.forEach(cols => {
-        mapping[cols.column] = cols.referenced_column;
+const transformData =
+  (driver: Driver, metadataTables: TableEntry[] = []) =>
+  (data: RunSQLResponse): ForeignKeyConstraint[] => {
+    let fkConstraints: PartialFKConstraint[] = [];
+    if (driver === 'mssql') {
+      const parsed: MSSqlFk[] = JSON.parse(data.result?.[1]?.[0] ?? '[]');
+      fkConstraints = parsed.map(fk => {
+        const mapping: Record<string, string> = {};
+        fk.column_mapping.forEach(cols => {
+          mapping[cols.column] = cols.referenced_column;
+        });
+        return {
+          ...fk,
+          column_mapping: mapping,
+          ref_table_table_schema: fk.ref_table_schema,
+          on_delete: modifyViolationType(fk.on_delete),
+          on_update: modifyViolationType(fk.on_update),
+        };
       });
-      return {
-        ...fk,
-        column_mapping: mapping,
-        ref_table_table_schema: fk.ref_table_schema,
-        on_delete: modifyViolationType(fk.on_delete),
-        on_update: modifyViolationType(fk.on_update),
-      };
-    });
-  } else {
-    fkConstraints = JSON.parse(data.result?.[1]?.[0] ?? '[]');
-  }
+    } else {
+      fkConstraints = JSON.parse(data.result?.[1]?.[0] ?? '[]');
+    }
 
-  return fkConstraints.map(fk => ({
-    ...fk,
-    is_table_tracked: !!metadataTables.some(
-      t => t.table.name === fk.table_name && t.table.schema === fk.table_schema
-    ),
-    is_ref_table_tracked: !!metadataTables.some(
-      t =>
-        t.table.name === fk.ref_table &&
-        t.table.schema === fk.ref_table_table_schema
-    ),
-  }));
-};
+    return fkConstraints.map(fk => ({
+      ...fk,
+      is_table_tracked: !!metadataTables.some(
+        t =>
+          t.table.name === fk.table_name && t.table.schema === fk.table_schema
+      ),
+      is_ref_table_tracked: !!metadataTables.some(
+        t =>
+          t.table.name === fk.ref_table &&
+          t.table.schema === fk.ref_table_table_schema
+      ),
+    }));
+  };
 
 function useFKRelationshipsBase<T extends string[] | QualifiedTable, N>(
   schemasOrTable: T,

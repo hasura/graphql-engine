@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { ProgressState } from './types';
-import styles from '../styles.scss';
+import styles from '../styles.module.scss';
 import StatusIcon from './StatusIcon';
 
 type Props = {

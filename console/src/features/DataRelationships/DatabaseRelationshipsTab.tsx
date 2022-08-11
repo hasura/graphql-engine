@@ -51,10 +51,8 @@ const createTable = (target?: DataTarget) => {
 
 const useFormState = (currentSource: string) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [
-    existingRelationship,
-    setExistingRelationship,
-  ] = React.useState<RowData>();
+  const [existingRelationship, setExistingRelationship] =
+    React.useState<RowData>();
 
   const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({

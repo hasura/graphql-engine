@@ -1,6 +1,6 @@
 import React from 'react';
 
-import styles from './PermissionBuilder.scss';
+import styles from './PermissionBuilder.module.scss';
 import { addToPrefix } from './utils';
 
 export type OptGroup = { optGroupTitle: string; options: string[] };

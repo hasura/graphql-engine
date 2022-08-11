@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import { FaAngleRight } from 'react-icons/fa';
 import { Link } from 'react-router';
-import styles from '../../TableCommon/Table.scss';
+import styles from '../../TableCommon/Table.module.scss';
 
 export type BreadCrumb = {
   url: string;

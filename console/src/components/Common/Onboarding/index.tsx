@@ -10,7 +10,7 @@ import { setOnboardingCompletedInDB } from '../../../telemetry/Actions';
 import { Dispatch, ReduxState } from '../../../types';
 import { getLSItem, LS_KEYS, setLSItem } from '../../../utils/localStorage';
 import hasuraDarkIcon from './hasura_icon_dark.svg';
-import styles from './Onboarding.scss';
+import styles from './Onboarding.module.scss';
 
 type PopupLinkProps = {
   title: string;
@@ -95,10 +95,8 @@ const onboardingList = [
     id: 'getting-started-docs',
     title: 'Read the Getting Started Docs',
     link: {
-      pro:
-        'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=pro&plcmt=onboarding-checklist#create-a-table',
-      oss:
-        'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=oss-console&plcmt=onboarding#create-a-table',
+      pro: 'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=pro&plcmt=onboarding-checklist#create-a-table',
+      oss: 'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=oss-console&plcmt=onboarding#create-a-table',
       cloud:
         'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=cloud&plcmt=onboarding-checklist#create-a-table',
     },
@@ -112,10 +110,8 @@ const onboardingList = [
     id: 'learn-courses',
     title: 'Bookmark Our Course',
     link: {
-      pro:
-        'https://hasura.io/learn/graphql/hasura-advanced/introduction/?pg=pro&plcmt=onboarding-checklist',
-      oss:
-        'https://hasura.io/learn/graphql/hasura/introduction/?pg=oss-console&plcmt=onboarding-checklist',
+      pro: 'https://hasura.io/learn/graphql/hasura-advanced/introduction/?pg=pro&plcmt=onboarding-checklist',
+      oss: 'https://hasura.io/learn/graphql/hasura/introduction/?pg=oss-console&plcmt=onboarding-checklist',
       cloud:
         'https://hasura.io/learn/graphql/hasura/introduction/?pg=cloud&plcmt=onboarding-checklist',
     },

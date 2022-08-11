@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Button } from '../../../../Common';
 import { TableFormProps } from '../../../../Common/Table';
-import styles from '../Security.scss';
+import styles from '../Security.module.scss';
 import { updateIntrospectionOptions } from '../actions';
 
 const IntrospectionForm: React.FC<

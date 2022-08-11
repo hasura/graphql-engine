@@ -11,7 +11,7 @@ import {
 import { Key } from 'antd/lib/table/interface';
 import { Link } from 'react-router';
 import './custom.css';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import {
   getFunctionModifyRoute,
   getTableBrowseRoute,

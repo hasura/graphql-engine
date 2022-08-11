@@ -1,6 +1,6 @@
 import React from 'react';
 
-import styles from '../Common.scss';
+import styles from '../Common.module.scss';
 
 import { GlobalContext } from '../../App/App';
 import { trackRuntimeError } from '../../../telemetry';

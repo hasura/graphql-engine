@@ -60,10 +60,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     readReplicaReducer,
     []
   );
-  const [
-    connectDBStateForReadReplica,
-    connectDBReadReplicaDispatch,
-  ] = useReducer(connectDBReducer, defaultState);
+  const [connectDBStateForReadReplica, connectDBReadReplicaDispatch] =
+    useReducer(connectDBReducer, defaultState);
   const [readReplicaConnectionType, updateReadReplicaConnectionType] = useState(
     connectionTypes.DATABASE_URL
   );
@@ -346,12 +344,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
 
     // construct the connection string from connection params and
     // make the same call as done for connection of type DATABASE_URL
-    const {
-      host,
-      port,
-      username,
-      database,
-    } = connectDBInputState.connectionParamState;
+    const { host, port, username, database } =
+      connectDBInputState.connectionParamState;
 
     if (connectDBInputState.dbType !== 'bigquery') {
       if (!host || !port || !username || !database) {

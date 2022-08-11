@@ -12,7 +12,7 @@ import {
 import { LoadingSkeleton, NoRemoteSchemaPlaceholder } from './PlaceHolder';
 import ArgElement from './ArgElement';
 import FieldElement from './FieldElement';
-import styles from '../SchemaExplorer.scss';
+import styles from '../SchemaExplorer.module.scss';
 import { ReduxState, ReduxAction } from '../../../../../../types';
 
 type Props = {

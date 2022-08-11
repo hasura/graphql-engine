@@ -25,7 +25,11 @@ type Props = {
 
 const CronTriggersForm = (props: Props) => {
   const { onSuccess, cronTriggerName } = props;
-  const { data: defaultValues, isLoading, isError } = useDefaultValues({
+  const {
+    data: defaultValues,
+    isLoading,
+    isError,
+  } = useDefaultValues({
     cronTriggerName,
   });
   const { mutation } = useCronMetadataMigration({ onSuccess });

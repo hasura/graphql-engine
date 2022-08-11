@@ -7,7 +7,7 @@ import {
   schemaSharingSelectors,
 } from './Actions';
 import Modal from '../../../../Common/Modal/Modal';
-import styles from './TemplateGallery.scss';
+import styles from './TemplateGallery.module.scss';
 import { ModalType } from './types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { showErrorNotification } from '../../../Common/Notification';

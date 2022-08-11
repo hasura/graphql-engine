@@ -1,6 +1,6 @@
 import React, { ReactElement } from 'react';
 import { Link } from 'react-router';
-import styles from './LeftSubSidebar.scss';
+import styles from './LeftSubSidebar.module.scss';
 
 interface LeftSidebarItem {
   name: string;

@@ -36,7 +36,7 @@ class CollapsibleToggle extends React.Component<
     };
   }
 
-  componentWillReceiveProps(nextProps: CollapsibleToggleProps) {
+  override componentWillReceiveProps(nextProps: CollapsibleToggleProps) {
     const { isOpen, toggleHandler } = nextProps;
 
     if (toggleHandler) {
@@ -48,7 +48,7 @@ class CollapsibleToggle extends React.Component<
     this.setState({ isOpen: !this.state.isOpen });
   }
 
-  render() {
+  override render() {
     const { title, children, testId, useDefaultTitleStyle } = this.props;
 
     const { isOpen, toggleHandler } = this.state;

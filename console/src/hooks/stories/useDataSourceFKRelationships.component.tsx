@@ -27,7 +27,11 @@ export const AllFKRelationships = ({
 
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
-  const { data: schemas, isError, error } = useSchemaList(
+  const {
+    data: schemas,
+    isError,
+    error,
+  } = useSchemaList(
     {
       source,
       driver: currentDriver,
@@ -49,9 +53,10 @@ export const AllFKRelationships = ({
     },
     { enabled: !!schemas, retry: 0 }
   );
-  const keys = React.useMemo(() => Object.keys(foreignKeys?.[0] ?? {}), [
-    foreignKeys,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(foreignKeys?.[0] ?? {}),
+    [foreignKeys]
+  );
 
   if (isError || isError2) {
     return (

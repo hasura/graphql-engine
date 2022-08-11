@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../Actions.scss';
+import styles from '../Actions.module.scss';
 import ActionContainer from '../Containers/ActionContainer';
 import { findAction } from '../utils';
 import { getScalarOutputType } from './utils';
@@ -20,8 +20,9 @@ const Relationships = ({
 
   const action = findAction(allActions, actionName);
 
-  const actionOutputTypeName = unwrapType(action.definition.output_type)
-    .typename;
+  const actionOutputTypeName = unwrapType(
+    action.definition.output_type
+  ).typename;
 
   const actionOutputType =
     allTypes.find(t => t.name === actionOutputTypeName) ??

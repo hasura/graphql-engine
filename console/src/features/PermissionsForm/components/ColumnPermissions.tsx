@@ -54,82 +54,80 @@ const useStatus = (disabled: boolean) => {
 
 // @todo
 // this hasn't been fully implemented, it still needs computed columns adding
-export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> = ({
-  roleName,
-  queryType,
-  columns,
-}) => {
-  const { register, setValue } = useFormContext();
+export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> =
+  ({ roleName, queryType, columns }) => {
+    const { register, setValue } = useFormContext();
 
-  // if no row permissions are selected selection should be disabled
-  const disabled = useIsDisabled(queryType);
+    // if no row permissions are selected selection should be disabled
+    const disabled = useIsDisabled(queryType);
 
-  const { data: status, isError } = useStatus(disabled);
+    const { data: status, isError } = useStatus(disabled);
 
-  const onClick = () => {
-    columns?.forEach(column => {
-      const toggleAllOn = status !== 'All columns';
-      // if status is not all columns: toggle all on
-      // otherwise toggle all off
-      setValue(`columns.${column}`, toggleAllOn);
-    });
-  };
+    const onClick = () => {
+      columns?.forEach(column => {
+        const toggleAllOn = status !== 'All columns';
+        // if status is not all columns: toggle all on
+        // otherwise toggle all off
+        setValue(`columns.${column}`, toggleAllOn);
+      });
+    };
 
-  if (isError) {
-    return <div>Error loading column permission data</div>;
-  }
+    if (isError) {
+      return <div>Error loading column permission data</div>;
+    }
 
-  return (
-    <Collapse defaultOpen={!disabled}>
-      <Collapse.Header
-        title={`Column ${queryType} permissions`}
-        tooltip={`Choose columns allowed to be ${getEdForm(queryType)}`}
-        status={status}
-        disabled={disabled}
-        disabledMessage="Set row permissions first"
-      />
-      <Collapse.Content>
-        <div
-          title={disabled ? 'Set row permissions first' : ''}
-          className="grid gap-2"
-        >
-          <div className="flex gap-2 items-center">
-            <p>
-              Allow role <strong>{roleName}</strong> {getAccessText(queryType)}
-              &nbsp;
-              <strong>columns</strong>:
-            </p>
+    return (
+      <Collapse defaultOpen={!disabled}>
+        <Collapse.Header
+          title={`Column ${queryType} permissions`}
+          tooltip={`Choose columns allowed to be ${getEdForm(queryType)}`}
+          status={status}
+          disabled={disabled}
+          disabledMessage="Set row permissions first"
+        />
+        <Collapse.Content>
+          <div
+            title={disabled ? 'Set row permissions first' : ''}
+            className="grid gap-2"
+          >
+            <div className="flex gap-2 items-center">
+              <p>
+                Allow role <strong>{roleName}</strong>{' '}
+                {getAccessText(queryType)}
+                &nbsp;
+                <strong>columns</strong>:
+              </p>
+            </div>
+
+            <fieldset className="flex gap-4">
+              {columns?.map(fieldName => (
+                <label key={fieldName} className="flex gap-2 items-center">
+                  <input
+                    type="checkbox"
+                    title={disabled ? 'Set a row permission first' : ''}
+                    disabled={disabled}
+                    className="mt-0 rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
+                    {...register(`columns.${fieldName}`)}
+                  />
+                  <i>{fieldName}</i>
+                </label>
+              ))}
+              <Button
+                type="button"
+                size="sm"
+                title={disabled ? 'Set a row permission first' : ''}
+                disabled={disabled}
+                onClick={onClick}
+                data-test="toggle-all-col-btn"
+              >
+                Toggle All
+              </Button>
+            </fieldset>
           </div>
-
-          <fieldset className="flex gap-4">
-            {columns?.map(fieldName => (
-              <label key={fieldName} className="flex gap-2 items-center">
-                <input
-                  type="checkbox"
-                  title={disabled ? 'Set a row permission first' : ''}
-                  disabled={disabled}
-                  className="mt-0 rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
-                  {...register(`columns.${fieldName}`)}
-                />
-                <i>{fieldName}</i>
-              </label>
-            ))}
-            <Button
-              type="button"
-              size="sm"
-              title={disabled ? 'Set a row permission first' : ''}
-              disabled={disabled}
-              onClick={onClick}
-              data-test="toggle-all-col-btn"
-            >
-              Toggle All
-            </Button>
-          </fieldset>
-        </div>
-        {/* {getExternalTablePermissionsMsg()} */}
-      </Collapse.Content>
-    </Collapse>
-  );
-};
+          {/* {getExternalTablePermissionsMsg()} */}
+        </Collapse.Content>
+      </Collapse>
+    );
+  };
 
 export default ColumnPermissionsSection;

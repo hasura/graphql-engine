@@ -28,12 +28,8 @@ export const ActionContext = React.createContext<RoleActionsInterface | null>(
 let lastinconsistency: any[];
 
 const InheritedRoles: React.FC<Props> = props => {
-  const {
-    allRoles,
-    inheritedRoles,
-    inconsistentInheritedRoles,
-    dispatch,
-  } = props;
+  const { allRoles, inheritedRoles, inconsistentInheritedRoles, dispatch } =
+    props;
   const [inheritedRoleName, setInheritedRoleName] = useState('');
   const [inheritedRole, setInheritedRole] = useState<InheritedRole | null>(
     null

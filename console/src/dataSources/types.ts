@@ -11,7 +11,7 @@ import {
   getSelectQuery,
   getRunSqlQuery,
   WhereClause,
-} from '../../src/components/Common/utils/v1QueryUtils';
+} from '../components/Common/utils/v1QueryUtils';
 import { Driver } from '.';
 import { PostgresTrigger } from './services/postgresql/types';
 

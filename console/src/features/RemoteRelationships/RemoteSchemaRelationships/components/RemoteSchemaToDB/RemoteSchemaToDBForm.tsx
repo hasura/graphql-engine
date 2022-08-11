@@ -39,7 +39,11 @@ const SetDefaults = ({
   typeName,
   existingRelationshipName,
 }: ResetterProps) => {
-  const { data: defaultValues, isLoading, isError } = useDefaultValues({
+  const {
+    data: defaultValues,
+    isLoading,
+    isError,
+  } = useDefaultValues({
     sourceRemoteSchema,
     typeName,
     remoteRelationshipName: existingRelationshipName,
@@ -90,10 +94,9 @@ export const RemoteSchemaToDbForm = ({
   });
 
   const submit = (values: Record<string, unknown>) => {
-    const field_mapping: Record<
-      string,
-      string
-    > = (values as Schema).mapping.reduce((acc, new_value) => {
+    const field_mapping: Record<string, string> = (
+      values as Schema
+    ).mapping.reduce((acc, new_value) => {
       acc[new_value.field] = new_value.column;
       return acc;
     }, {} as Record<string, string>);

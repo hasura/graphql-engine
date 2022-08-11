@@ -19,15 +19,8 @@ interface Props {
 }
 
 export const DatabaseSelector = (props: Props) => {
-  const {
-    value,
-    onChange,
-    name,
-    errors,
-    disabledKeys,
-    hiddenKeys,
-    labels,
-  } = props;
+  const { value, onChange, name, errors, disabledKeys, hiddenKeys, labels } =
+    props;
   const maybeError = get(errors, name) as
     | { database?: FieldError; schema?: FieldError; table?: FieldError }
     | undefined;

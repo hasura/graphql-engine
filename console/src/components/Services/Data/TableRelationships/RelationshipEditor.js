@@ -6,8 +6,8 @@ import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
-import styles from '../TableModify/ModifyTable.scss';
-import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+import styles from '../TableModify/ModifyTable.module.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.module.scss';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 

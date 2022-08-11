@@ -4,7 +4,7 @@ import { ValueFilter, Operator } from './types';
 import { allOperators } from './utils';
 
 import { isNotDefined } from '../utils/jsUtils';
-import styles from './FilterQuery.scss';
+import styles from './FilterQuery.module.scss';
 import { BaseTable } from '../../../dataSources/types';
 
 type Props = {

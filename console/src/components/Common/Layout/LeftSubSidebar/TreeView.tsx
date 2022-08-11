@@ -3,7 +3,7 @@ import React, { ReactElement, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { FaDatabase } from 'react-icons/fa';
 
-import styles from './LeftSubSidebar.scss';
+import styles from './LeftSubSidebar.module.scss';
 
 type CollapsibleItemsProps = {
   source: string;

@@ -6,7 +6,7 @@ import { checkStableVersion } from '../../../helpers/versionUtils';
 import { setPreReleaseNotificationOptOutInDB } from '../../../telemetry/Actions';
 import { Dispatch } from '../../../types';
 import ToolTip from '../../Common/Tooltip/Tooltip';
-import styles from '../Main.scss';
+import styles from '../Main.module.scss';
 
 type PreReleaseNoteProps = {
   onPreRelNotifOptOut: (e: React.MouseEvent) => void;

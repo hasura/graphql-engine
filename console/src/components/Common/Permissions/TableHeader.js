@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './PermissionStyles.scss';
+import styles from './PermissionStyles.module.scss';
 
 const TableHeader = ({ headings }) => {
   return (

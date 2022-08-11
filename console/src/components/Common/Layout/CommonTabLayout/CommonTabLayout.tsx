@@ -4,7 +4,7 @@ import BreadCrumb, {
   BreadCrumb as BreadCrumbType,
 } from '../BreadCrumb/BreadCrumb';
 import Tabs, { Tabs as TabsType } from '../ReusableTabs/ReusableTabs';
-import styles from './CommonTabLayout.scss';
+import styles from './CommonTabLayout.module.scss';
 
 type Props = {
   breadCrumbs: BreadCrumbType[];

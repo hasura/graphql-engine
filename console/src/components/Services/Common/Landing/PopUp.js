@@ -3,7 +3,7 @@ import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy'
 import RemoteSchemaContent from './RemoteSchemaContent';
 import EventTriggerContent from './EventTriggerContent';
 
-const styles = require('./Popup.scss');
+const styles = require('./Popup.module.scss');
 
 import PropTypes from 'prop-types';
 

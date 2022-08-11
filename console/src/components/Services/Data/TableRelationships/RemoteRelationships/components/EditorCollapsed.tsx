@@ -1,6 +1,6 @@
 import React from 'react';
 import { RemoteRelationshipServer, parseRemoteRelationship } from '../utils';
-import styles from '../SchemaExplorer.scss';
+import styles from '../SchemaExplorer.module.scss';
 
 type Props = {
   relationship?: RemoteRelationshipServer;

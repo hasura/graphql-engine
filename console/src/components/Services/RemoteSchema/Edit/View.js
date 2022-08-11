@@ -97,13 +97,8 @@ class ViewStitchedSchema extends React.Component {
 
   render() {
     const { remoteSchemaName } = this.props.params;
-    const {
-      manualUrl,
-      envName,
-      headers,
-      readOnlyMode,
-      inconsistentObjects,
-    } = this.props;
+    const { manualUrl, envName, headers, readOnlyMode, inconsistentObjects } =
+      this.props;
 
     const filterHeaders = headers.filter(h => !!h.name);
 

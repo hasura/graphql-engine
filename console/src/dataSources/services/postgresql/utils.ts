@@ -303,8 +303,9 @@ const getBulkDeleteRowRequestBody = ({
 const processBulkDeleteRowData = (data: any) =>
   data.reduce((acc: any, d: any) => acc + d.affected_rows, 0);
 
-export const generateBulkDeleteRowRequest = (): GenerateBulkDeleteRowRequest => ({
-  endpoint: Endpoints.query,
-  getBulkDeleteRowRequestBody,
-  processBulkDeleteRowData,
-});
+export const generateBulkDeleteRowRequest =
+  (): GenerateBulkDeleteRowRequest => ({
+    endpoint: Endpoints.query,
+    getBulkDeleteRowRequestBody,
+    processBulkDeleteRowData,
+  });

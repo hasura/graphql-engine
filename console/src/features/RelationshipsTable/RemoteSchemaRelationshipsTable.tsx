@@ -54,9 +54,8 @@ export const RemoteSchemaRelationshipTable = ({
         const { type_name } = remoteRel;
 
         remoteRel.relationships.forEach(relationship => {
-          const [name, sourceType, type] = getRemoteSchemaRelationType(
-            relationship
-          );
+          const [name, sourceType, type] =
+            getRemoteSchemaRelationType(relationship);
           const relType =
             'to_source' in relationship.definition
               ? 'to_source'

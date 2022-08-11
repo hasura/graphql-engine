@@ -23,7 +23,7 @@ import {
 } from '../../../../../../metadata/types';
 import Tooltip from '../../../../../Common/Tooltip/Tooltip';
 
-import styles from '../../../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../../../Common/Permissions/PermissionStyles.module.scss';
 
 const getFunctionPermissions = (
   allFunctions: InjectedProps['allFunctions'],

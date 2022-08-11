@@ -100,7 +100,7 @@ class Header extends React.Component {
   }
 
   render() {
-    const styles = require('./Header.scss');
+    const styles = require('./Header.module.scss');
     const { isDisabled } = this.props;
     const generateHeaderHtml = this.props.headers.map((h, i) => {
       const getTitle = this.getTitle(this.props.typeOptions, h.type);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-import styles from '../Main.scss';
+import styles from '../Main.module.scss';
 
 export const Help = ({ isSelected }: { isSelected: boolean }) => {
   return (

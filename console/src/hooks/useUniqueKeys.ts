@@ -15,22 +15,22 @@ type UniqueQueryOptions<T, N> = RunSQLQueryOptions<
   UniqueKey[]
 >;
 
-const transformUniqueKeys = (driver: Driver) => (
-  data: RunSQLResponse
-): UniqueKey[] => {
-  const parsedPKs: MSSqlConstraint[] | UniqueKey[] = JSON.parse(
-    data.result?.[1]?.[0] ?? '[]'
-  );
-  if (driver === 'mssql') return transformMssqlConstraint(data);
-  return parsedPKs as UniqueKey[];
-};
-const transformFilterUniqueKeys = (table: QualifiedTable, driver: Driver) => (
-  data: RunSQLResponse
-): UniqueKey[] => {
-  return transformUniqueKeys(driver)(data).filter(
-    key => key.table_name === table.name && key.table_schema === table.schema
-  );
-};
+const transformUniqueKeys =
+  (driver: Driver) =>
+  (data: RunSQLResponse): UniqueKey[] => {
+    const parsedPKs: MSSqlConstraint[] | UniqueKey[] = JSON.parse(
+      data.result?.[1]?.[0] ?? '[]'
+    );
+    if (driver === 'mssql') return transformMssqlConstraint(data);
+    return parsedPKs as UniqueKey[];
+  };
+const transformFilterUniqueKeys =
+  (table: QualifiedTable, driver: Driver) =>
+  (data: RunSQLResponse): UniqueKey[] => {
+    return transformUniqueKeys(driver)(data).filter(
+      key => key.table_name === table.name && key.table_schema === table.schema
+    );
+  };
 
 export function useDataSourceUniqueKeys(
   args: { schemas: string[] } & QualifiedDataSource,

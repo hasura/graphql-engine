@@ -465,7 +465,8 @@ export const mergeLoadSchemaDataPostgres = (
         name: field.name,
         table_name: tableName,
         table_schema: tableSchema,
-        definition: field.definition as Table['computed_fields'][0]['definition'],
+        definition:
+          field.definition as Table['computed_fields'][0]['definition'],
       }));
 
       metadataTable?.array_relationships?.forEach(rel => {
@@ -777,7 +778,8 @@ export const mergeDataCitus = (
         name: field.name,
         table_name: tableName,
         table_schema: tableSchema,
-        definition: field.definition as Table['computed_fields'][0]['definition'],
+        definition:
+          field.definition as Table['computed_fields'][0]['definition'],
       }));
 
       metadataTable?.array_relationships?.forEach(rel => {

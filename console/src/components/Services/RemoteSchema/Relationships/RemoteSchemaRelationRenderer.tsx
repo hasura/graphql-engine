@@ -35,13 +35,11 @@ export const RemoteSchemaRelationRenderer = ({
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const [
-    existingRelationship,
-    setExistingRelationship,
-  ] = useState<ExistingRelationshipMeta>({
-    relationshipName: '',
-    rsType: '',
-  });
+  const [existingRelationship, setExistingRelationship] =
+    useState<ExistingRelationshipMeta>({
+      relationshipName: '',
+      rsType: '',
+    });
   const [formState, setFormState] = useState<RemoteRelOption>('remoteSchema');
 
   const { fireNotification } = useFireNotification();

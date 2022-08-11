@@ -11,7 +11,7 @@ import {
 import { EVENTS_SERVICE_HEADING } from '../../constants';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
-  const styles = require('./EventTable.scss');
+  const styles = require('./EventTable.module.scss');
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';

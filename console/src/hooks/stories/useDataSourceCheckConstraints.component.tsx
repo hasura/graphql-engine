@@ -25,7 +25,11 @@ export const AllCheckConstraints = ({
     }
   }, [currentDatasource, dispatch, driver]);
   const source: string = useAppSelector(s => s.tables.currentDataSource);
-  const { data: schemas, isError, error } = useSchemaList(
+  const {
+    data: schemas,
+    isError,
+    error,
+  } = useSchemaList(
     {
       source,
       driver: currentDriver,
@@ -50,9 +54,10 @@ export const AllCheckConstraints = ({
       retry: 0,
     }
   );
-  const keys = React.useMemo(() => Object.keys(checkConstraints?.[0] ?? {}), [
-    checkConstraints,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(checkConstraints?.[0] ?? {}),
+    [checkConstraints]
+  );
 
   if (isError || isError2) {
     return (

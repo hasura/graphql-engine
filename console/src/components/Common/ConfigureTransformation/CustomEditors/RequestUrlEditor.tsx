@@ -24,12 +24,10 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   requestQueryParamsOnChange,
 }) => {
   const [localUrl, setLocalUrl] = useState<string>(requestUrl);
-  const [localError, setLocalError] = useState<Nullable<string>>(
-    requestUrlError
-  );
-  const [localQueryParams, setLocalQueryParams] = useState<KeyValuePair[]>(
-    requestQueryParams
-  );
+  const [localError, setLocalError] =
+    useState<Nullable<string>>(requestUrlError);
+  const [localQueryParams, setLocalQueryParams] =
+    useState<KeyValuePair[]>(requestQueryParams);
 
   useEffect(() => {
     setLocalUrl(requestUrl);

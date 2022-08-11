@@ -30,58 +30,59 @@ type ConsoleStateResponse = {
   id: string;
 };
 
-const setConsoleOptsInDB = (
-  opts: Partial<ConsoleState['console_opts']>,
-  successCb: (arg: Record<string, any>) => void,
-  errorCb: (arg: Error) => void
-) => (
-  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
-  getState: GetReduxState
-) => {
-  const { hasura_uuid, console_opts } = getState().telemetry;
+const setConsoleOptsInDB =
+  (
+    opts: Partial<ConsoleState['console_opts']>,
+    successCb: (arg: Record<string, any>) => void,
+    errorCb: (arg: Error) => void
+  ) =>
+  (
+    dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
+    getState: GetReduxState
+  ) => {
+    const { hasura_uuid, console_opts } = getState().telemetry;
 
-  const consoleState: ConsoleState['console_opts'] = {
-    ...console_opts,
-    ...opts,
-  };
+    const consoleState: ConsoleState['console_opts'] = {
+      ...console_opts,
+      ...opts,
+    };
 
-  if (!hasura_uuid) {
-    dispatch(
-      showErrorNotification(
-        'Opt out of pre-release notifications failed',
-        'Internal error: missing hasura_uuid'
-      )
-    );
-    return;
-  }
-
-  const options: RequestInit = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(getSetConsoleStateQuery(consoleState)),
-  };
-
-  // eslint-disable-next-line consistent-return
-  return dispatch(requestAction(Endpoints.metadata, options)).then(
-    (data: Record<string, unknown>) => {
-      if (successCb) {
-        successCb(data);
-      }
-    },
-    (error: Error) => {
-      if (errorCb) {
-        errorCb(error);
-      }
+    if (!hasura_uuid) {
+      dispatch(
+        showErrorNotification(
+          'Opt out of pre-release notifications failed',
+          'Internal error: missing hasura_uuid'
+        )
+      );
+      return;
     }
-  );
-};
 
-const telemetryNotificationShown = () => (
-  dispatch: Dispatch<TelemetryActionTypes>
-) => {
-  dispatch({ type: SET_NOTIFICATION_SHOWN });
-};
+    const options: RequestInit = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(getSetConsoleStateQuery(consoleState)),
+    };
+
+    // eslint-disable-next-line consistent-return
+    return dispatch(requestAction(Endpoints.metadata, options)).then(
+      (data: Record<string, unknown>) => {
+        if (successCb) {
+          successCb(data);
+        }
+      },
+      (error: Error) => {
+        if (errorCb) {
+          errorCb(error);
+        }
+      }
+    );
+  };
+
+const telemetryNotificationShown =
+  () => (dispatch: Dispatch<TelemetryActionTypes>) => {
+    dispatch({ type: SET_NOTIFICATION_SHOWN });
+  };
 
 const setTelemetryNotificationShownInDB = () => {
   const successCb = (data: Record<string, unknown>) => {
@@ -142,37 +143,39 @@ const setOnboardingCompletedInDB = (
   );
 };
 
-const setPreReleaseNotificationOptOutInDB = () => (
-  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
-  getState: () => ReduxState
-) => {
-  const successCb = () => {
-    dispatch(
-      showSuccessNotification(
-        'Success',
-        'Opted out of pre-release version release notifications'
-      )
-    );
-  };
+const setPreReleaseNotificationOptOutInDB =
+  () =>
+  (
+    dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
+    getState: () => ReduxState
+  ) => {
+    const successCb = () => {
+      dispatch(
+        showSuccessNotification(
+          'Success',
+          'Opted out of pre-release version release notifications'
+        )
+      );
+    };
 
-  const errorCb = (error: Error) => {
-    dispatch(showErrorNotification('Failed to opt out', null, error));
-  };
+    const errorCb = (error: Error) => {
+      dispatch(showErrorNotification('Failed to opt out', null, error));
+    };
 
-  const options = {
-    disablePreReleaseUpdateNotifications: true,
-  };
-
-  dispatch({
-    type: SET_CONSOLE_OPTS,
-    data: {
-      ...getState().telemetry.console_opts,
+    const options = {
       disablePreReleaseUpdateNotifications: true,
-    },
-  });
+    };
 
-  return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
-};
+    dispatch({
+      type: SET_CONSOLE_OPTS,
+      data: {
+        ...getState().telemetry.console_opts,
+        disablePreReleaseUpdateNotifications: true,
+      },
+    });
+
+    return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
+  };
 
 // TODO: We could fetch the latest `read` state from the DB everytime we
 // open the notifications dropdown. That way we can reach a more consistent behavior on notifications.
@@ -305,9 +308,8 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
             }
           }
 
-          const updatedReadNotifications = getSetConsoleStateQuery(
-            composedUpdatedState
-          );
+          const updatedReadNotifications =
+            getSetConsoleStateQuery(composedUpdatedState);
           const options: RequestInit = {
             credentials: globalCookiePolicy,
             method: 'POST',
@@ -338,70 +340,75 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
   };
 };
 
-const loadConsoleOpts = () => (
-  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
-  getState: GetReduxState
-) => {
-  const options: RequestInit = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(getConsoleStateQuery),
-  };
-  const headers = dataHeaders(getState);
-  let userType = 'admin';
+const loadConsoleOpts =
+  () =>
+  (
+    dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
+    getState: GetReduxState
+  ) => {
+    const options: RequestInit = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(getConsoleStateQuery),
+    };
+    const headers = dataHeaders(getState);
+    let userType = 'admin';
 
-  const headerHasAdminToken = Object.keys(headers).find(
-    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
-  );
-  if (headerHasAdminToken) {
-    const collabToken = headers[headerHasAdminToken];
-    userType = getUserType(collabToken);
-  }
-
-  return dispatch(requestAction(Endpoints.metadata, options)).then(
-    (data: ConsoleStateResponse) => {
-      if (data) {
-        const { id, console_state } = data;
-
-        dispatch({
-          type: SET_HASURA_UUID,
-          data: id,
-        });
-        globals.hasuraUUID = id;
-
-        dispatch({
-          type: SET_CONSOLE_OPTS,
-          data: console_state,
-        });
-
-        globals.telemetryNotificationShown = !!console_state?.telemetryNotificationShown;
-
-        if (
-          !console_state?.console_notifications ||
-          (console_state.console_notifications &&
-            !console_state.console_notifications[userType])
-        ) {
-          dispatch({
-            type: UPDATE_CONSOLE_NOTIFICATIONS,
-            data: {
-              [userType]: {
-                read: [],
-                date: null,
-                showBadge: true,
-              },
-            },
-          });
-        }
-        return Promise.resolve();
-      }
-    },
-    (error: Error) => {
-      console.error(`Failed to load console options: ${JSON.stringify(error)}`);
-      return Promise.reject();
+    const headerHasAdminToken = Object.keys(headers).find(
+      header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+    );
+    if (headerHasAdminToken) {
+      const collabToken = headers[headerHasAdminToken];
+      userType = getUserType(collabToken);
     }
-  );
-};
+
+    return dispatch(requestAction(Endpoints.metadata, options)).then(
+      (data: ConsoleStateResponse) => {
+        if (data) {
+          const { id, console_state } = data;
+
+          dispatch({
+            type: SET_HASURA_UUID,
+            data: id,
+          });
+          globals.hasuraUUID = id;
+
+          dispatch({
+            type: SET_CONSOLE_OPTS,
+            data: console_state,
+          });
+
+          globals.telemetryNotificationShown =
+            !!console_state?.telemetryNotificationShown;
+
+          if (
+            !console_state?.console_notifications ||
+            (console_state.console_notifications &&
+              !console_state.console_notifications[userType])
+          ) {
+            dispatch({
+              type: UPDATE_CONSOLE_NOTIFICATIONS,
+              data: {
+                [userType]: {
+                  read: [],
+                  date: null,
+                  showBadge: true,
+                },
+              },
+            });
+          }
+          return Promise.resolve();
+        }
+      },
+      (error: Error) => {
+        console.error(
+          `Failed to load console options: ${JSON.stringify(error)}`
+        );
+        return Promise.reject();
+      }
+    );
+  };
 
 interface SetConsoleOptsAction {
   type: typeof SET_CONSOLE_OPTS;
@@ -427,13 +434,11 @@ type TelemetryActionTypes =
   | SetHasuraUuid
   | UpdateConsoleNotifications;
 
-export const requireConsoleOpts = ({
-  dispatch,
-}: {
-  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>;
-}) => (nextState: ReduxState, replaceState: ReduxState, callback: any) => {
-  dispatch(loadConsoleOpts()).finally(callback);
-};
+export const requireConsoleOpts =
+  ({ dispatch }: { dispatch: ThunkDispatch<ReduxState, unknown, AnyAction> }) =>
+  (nextState: ReduxState, replaceState: ReduxState, callback: any) => {
+    dispatch(loadConsoleOpts()).finally(callback);
+  };
 
 const telemetryReducer = (
   state = defaultConsoleState,

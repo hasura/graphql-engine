@@ -4,7 +4,7 @@ import Helmet from 'react-helmet';
 import { FaDatabase, FaTrash } from 'react-icons/fa';
 import { Dispatch, ReduxState } from '../../../types';
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
-import styles from '../../Common/Common.scss';
+import styles from '../../Common/Common.module.scss';
 import Button from '../../Common/Button/Button';
 import { createNewSchema, deleteSchema } from './Schema/Actions';
 import { updateCurrentSchema } from './DataActions';

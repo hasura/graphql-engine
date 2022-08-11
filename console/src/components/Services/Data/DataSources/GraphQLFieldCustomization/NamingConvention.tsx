@@ -52,9 +52,8 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
     return <div>Loading...</div>;
   }
 
-  const isNamingConventionEnabled = configData?.experimental_features.includes(
-    'naming_convention'
-  );
+  const isNamingConventionEnabled =
+    configData?.experimental_features.includes('naming_convention');
 
   const isNamingConventionSupported =
     connectionDBState?.dbType &&

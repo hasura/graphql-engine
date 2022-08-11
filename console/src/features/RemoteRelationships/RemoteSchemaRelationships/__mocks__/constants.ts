@@ -89,8 +89,7 @@ export const relationship_fields: RelationshipFields[] = [
     type: 'field',
   },
   {
-    key:
-      '__query.testUser_aggregate.field.aggregate.field.count.arguments.distinct',
+    key: '__query.testUser_aggregate.field.aggregate.field.count.arguments.distinct',
     depth: 3,
     checkable: true,
     argValue: {

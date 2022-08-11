@@ -176,16 +176,14 @@ export const getTablesInfoSelector = createSelector(
 
 export const getTableInformation = createSelector(
   getTables,
-  tables => (tableName: string, tableSchema: string) => <
-    T extends keyof TableEntry
-  >(
-    property: T
-  ): TableEntry[T] | null => {
-    const table = tables?.find(
-      t => tableName === t.table.name && tableSchema === t.table.schema
-    );
-    return table ? table[property] : null;
-  }
+  tables =>
+    (tableName: string, tableSchema: string) =>
+    <T extends keyof TableEntry>(property: T): TableEntry[T] | null => {
+      const table = tables?.find(
+        t => tableName === t.table.name && tableSchema === t.table.schema
+      );
+      return table ? table[property] : null;
+    }
 );
 
 export const getCurrentTableInformation = createSelector(

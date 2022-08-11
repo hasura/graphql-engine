@@ -1,7 +1,7 @@
 import React, { useMemo, ReactElement, ReactText } from 'react';
 import ReactTable from 'react-table';
 import { getColWidth } from '../../../Common/TableCommon/DragFoldTable';
-import styles from '../../../Common/TableCommon/Table.scss';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 
 interface ResultTableProps {
   headers: string[];
@@ -54,10 +54,10 @@ const getTableConfig = (headers: string[], rows: Array<string[]>) => {
 };
 
 const ResultTable: React.FC<ResultTableProps> = ({ headers, rows }) => {
-  const tableConfig = useMemo(() => getTableConfig(headers, rows), [
-    headers,
-    rows,
-  ]);
+  const tableConfig = useMemo(
+    () => getTableConfig(headers, rows),
+    [headers, rows]
+  );
   return (
     <div className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}>
       <h4 className={styles.subheading_text}>SQL Result:</h4>

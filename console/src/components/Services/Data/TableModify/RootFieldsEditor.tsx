@@ -94,12 +94,11 @@ const RootFieldsEditor = ({
       ? [renderCustomRootFieldLabel('custom_table_name', existingCustomName)]
       : [];
 
-    const existingRootFieldLabels = Object.entries(
-      existingRootFields
-    ).map(([rootField, customRootField]) =>
-      customRootField === null
-        ? []
-        : [renderCustomRootFieldLabel(rootField, customRootField)]
+    const existingRootFieldLabels = Object.entries(existingRootFields).map(
+      ([rootField, customRootField]) =>
+        customRootField === null
+          ? []
+          : [renderCustomRootFieldLabel(rootField, customRootField)]
     );
 
     const allLabels = customNameLabel.concat(...existingRootFieldLabels);

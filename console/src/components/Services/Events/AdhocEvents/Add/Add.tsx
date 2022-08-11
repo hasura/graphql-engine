@@ -18,15 +18,8 @@ type Props = {
 
 const Add: React.FC<Props> = ({ dispatch }) => {
   const { state, setState } = useAdhocEventAdd();
-  const {
-    webhook,
-    time,
-    payload,
-    headers,
-    retryConf,
-    comment,
-    loading,
-  } = state;
+  const { webhook, time, payload, headers, retryConf, comment, loading } =
+    state;
 
   const setWebhookValue = (e: React.ChangeEvent<HTMLInputElement>) =>
     setState.webhook(e.target.value);

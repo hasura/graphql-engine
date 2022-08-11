@@ -54,9 +54,8 @@ Primary.parameters = {
   chromatic: { disableSnapshot: true },
 };
 
-export const RemoteSchemaWidgetWithExistingRelationship: Story<RemoteSchemaWidgetProps> = args => (
-  <RemoteSchemaWidget {...args} />
-);
+export const RemoteSchemaWidgetWithExistingRelationship: Story<RemoteSchemaWidgetProps> =
+  args => <RemoteSchemaWidget {...args} />;
 RemoteSchemaWidgetWithExistingRelationship.args = {
   schemaName: 'remoteSchema1',
   fields: customer_columns,

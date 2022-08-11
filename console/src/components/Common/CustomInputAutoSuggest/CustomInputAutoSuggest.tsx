@@ -8,7 +8,7 @@ import type {
   RenderSuggestion,
   SuggestionsFetchRequested,
 } from 'react-autosuggest';
-import styles from './Theme.scss';
+import styles from './Theme.module.scss';
 
 export interface AutoSuggestOption {
   label: string;
@@ -55,8 +55,8 @@ const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggestProps> = ({
     setSuggestions(getSuggestions(value));
   };
 
-  const getSuggestionValue: GetSuggestionValue<AutoSuggestOption> = suggestion =>
-    suggestion.value;
+  const getSuggestionValue: GetSuggestionValue<AutoSuggestOption> =
+    suggestion => suggestion.value;
 
   const onSuggestionsClearRequested = () => {
     setSuggestions([]);

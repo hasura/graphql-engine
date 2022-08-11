@@ -6,7 +6,7 @@ import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const Migrations = ({ dispatch, migrationMode }) => {
-  const styles = require('./Migrations.scss');
+  const styles = require('./Migrations.module.scss');
 
   const handleMigrationModeToggle = () => {
     const isOk = getConfirmation();

@@ -2,7 +2,7 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
 
 const appPrefix = '/data';
 const breadCrumbs = [

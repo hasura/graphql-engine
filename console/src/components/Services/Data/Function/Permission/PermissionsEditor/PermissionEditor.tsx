@@ -3,7 +3,7 @@ import React from 'react';
 import Button from '../../../../../Common/Button';
 import { ButtonProps } from '../../../../../Common/Button/Button';
 
-import styles from '../../../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../../../Common/Permissions/PermissionStyles.module.scss';
 
 type PermissionsActionButtonProps = {
   onClick: () => void;

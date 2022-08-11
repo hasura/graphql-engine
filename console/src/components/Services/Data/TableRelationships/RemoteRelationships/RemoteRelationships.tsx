@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../TableModify/ModifyTable.scss';
+import styles from '../../TableModify/ModifyTable.module.scss';
 import { RemoteRelationshipServer } from './utils';
 import RemoteRelationshipList from './components/RemoteRelationshipList';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';

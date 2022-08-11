@@ -13,66 +13,68 @@ import {
 
 const HEROKU_OAUTH_CLIENT_ID = Globals.herokuOAuthClientId;
 
-export const openPopup = (
-  setCode: (code: string | null) => void,
-  setLoading: (loading: boolean) => void,
-  setError: (message: string | null) => void
-) => () => {
-  if (!HEROKU_OAUTH_CLIENT_ID) {
-    setError(
-      'Could not login with Heroku. Heroku OAuth Client ID not configured.'
-    );
-    return;
-  }
-
-  // generat a random anti-forgery token
-  const requestState = generateRandomString();
-
-  let received = false;
-
-  // update heroku code value after fetching the callback search value from local storage
-  const updateToken = (token: string) => {
-    received = true;
-    const searchParams = new URLSearchParams(token);
-    const responseState = searchParams.get('state');
-    if (responseState !== requestState) {
-      setLoading(false);
+export const openPopup =
+  (
+    setCode: (code: string | null) => void,
+    setLoading: (loading: boolean) => void,
+    setError: (message: string | null) => void
+  ) =>
+  () => {
+    if (!HEROKU_OAUTH_CLIENT_ID) {
+      setError(
+        'Could not login with Heroku. Heroku OAuth Client ID not configured.'
+      );
       return;
     }
-    setCode(searchParams.get('code'));
-    // clear heroku callback search value from local storage after integration
-    clearPersistedHerokuCallbackSearch();
-    setLoading(false);
-  };
 
-  // open popup
-  setLoading(true);
-  setError(null);
-  const popup = window.open(
-    `https://id.heroku.com/oauth/authorize?client_id=${HEROKU_OAUTH_CLIENT_ID}&response_type=code&scope=global&state=${requestState}`,
-    'heroku-auth',
-    'menubar=no,toolbar=no,location=no,width=800,height=600'
-  );
+    // generat a random anti-forgery token
+    const requestState = generateRandomString();
 
-  if (popup) {
-    const intervalId = setInterval(() => {
-      if (popup.closed) {
+    let received = false;
+
+    // update heroku code value after fetching the callback search value from local storage
+    const updateToken = (token: string) => {
+      received = true;
+      const searchParams = new URLSearchParams(token);
+      const responseState = searchParams.get('state');
+      if (responseState !== requestState) {
         setLoading(false);
-        setTimeout(() => {
-          // fetch heroku callback search value from local storage
-          const token = getPersistedHerokuCallbackSearch();
-          if (token) {
-            updateToken(token);
-          }
-          if (!received) {
-            setError('Unexpected error. Please try again.');
-          }
-        }, 500);
-        clearInterval(intervalId);
+        return;
       }
-    }, 500);
-  }
-};
+      setCode(searchParams.get('code'));
+      // clear heroku callback search value from local storage after integration
+      clearPersistedHerokuCallbackSearch();
+      setLoading(false);
+    };
+
+    // open popup
+    setLoading(true);
+    setError(null);
+    const popup = window.open(
+      `https://id.heroku.com/oauth/authorize?client_id=${HEROKU_OAUTH_CLIENT_ID}&response_type=code&scope=global&state=${requestState}`,
+      'heroku-auth',
+      'menubar=no,toolbar=no,location=no,width=800,height=600'
+    );
+
+    if (popup) {
+      const intervalId = setInterval(() => {
+        if (popup.closed) {
+          setLoading(false);
+          setTimeout(() => {
+            // fetch heroku callback search value from local storage
+            const token = getPersistedHerokuCallbackSearch();
+            if (token) {
+              updateToken(token);
+            }
+            if (!received) {
+              setError('Unexpected error. Please try again.');
+            }
+          }, 500);
+          clearInterval(intervalId);
+        }
+      }, 500);
+    }
+  };
 
 type Props = {
   dispatch: Dispatch;

@@ -26,7 +26,11 @@ export const AllPrimaryKeys = ({
   }, [currentDatasource, dispatch, driver]);
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
-  const { data: schemas, isError, error } = useSchemaList(
+  const {
+    data: schemas,
+    isError,
+    error,
+  } = useSchemaList(
     {
       source,
       driver: currentDriver,
@@ -51,9 +55,10 @@ export const AllPrimaryKeys = ({
       retry: 0,
     }
   );
-  const keys = React.useMemo(() => Object.keys(primaryKeys?.[0] ?? {}), [
-    primaryKeys,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(primaryKeys?.[0] ?? {}),
+    [primaryKeys]
+  );
 
   if (isError || isError2) {
     return (

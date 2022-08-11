@@ -20,7 +20,11 @@ export const useDefaultValues = ({
   sourceTableInfo,
   existingRelationshipName,
 }: UseDefaultValuesProps) => {
-  const { data: metadataTable, isLoading, isError } = useMetadata(
+  const {
+    data: metadataTable,
+    isLoading,
+    isError,
+  } = useMetadata(
     MetadataSelector.getTable(sourceTableInfo.database, {
       name: sourceTableInfo.table,
       [getSchemaKey(sourceTableInfo)]:

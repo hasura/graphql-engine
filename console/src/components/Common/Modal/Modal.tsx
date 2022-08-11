@@ -3,7 +3,7 @@ import {
   Modal as BootstrapModal,
   Button as BootstrapModalButton,
 } from 'react-bootstrap';
-import styles from './Modal.scss';
+import styles from './Modal.module.scss';
 
 export interface ModalProps {
   show?: boolean;

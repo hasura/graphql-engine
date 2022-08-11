@@ -258,38 +258,35 @@ const getStatus = (rowPermissions: string) => {
   return 'With custom checks';
 };
 
-export const RowPermissionsSectionWrapper: React.FC<RowPermissionsWrapperProps> = ({
-  children,
-  queryType,
-  roleName,
-  defaultOpen,
-}) => {
-  const { watch } = useFormContext();
+export const RowPermissionsSectionWrapper: React.FC<RowPermissionsWrapperProps> =
+  ({ children, queryType, roleName, defaultOpen }) => {
+    const { watch } = useFormContext();
 
-  const rowPermissions = watch('rowPermissions');
-  const status = React.useMemo(() => getStatus(rowPermissions), [
-    rowPermissions,
-  ]);
+    const rowPermissions = watch('rowPermissions');
+    const status = React.useMemo(
+      () => getStatus(rowPermissions),
+      [rowPermissions]
+    );
 
-  return (
-    <Collapse
-      title={`Row ${queryType} permissions`}
-      tooltip={`Set permission rule for ${getIngForm(queryType)} rows`}
-      status={status}
-      defaultOpen={defaultOpen}
-      data-test="toggle-row-permission"
-    >
-      <Collapse.Content>
-        <div className="mb-2">
-          <p>
-            Allow role <strong>{roleName}</strong> to {queryType}&nbsp;
-            <strong>rows</strong>:
-          </p>
-        </div>
-        {children}
-      </Collapse.Content>
-    </Collapse>
-  );
-};
+    return (
+      <Collapse
+        title={`Row ${queryType} permissions`}
+        tooltip={`Set permission rule for ${getIngForm(queryType)} rows`}
+        status={status}
+        defaultOpen={defaultOpen}
+        data-test="toggle-row-permission"
+      >
+        <Collapse.Content>
+          <div className="mb-2">
+            <p>
+              Allow role <strong>{roleName}</strong> to {queryType}&nbsp;
+              <strong>rows</strong>:
+            </p>
+          </div>
+          {children}
+        </Collapse.Content>
+      </Collapse>
+    );
+  };
 
 export default RowPermissionsSection;

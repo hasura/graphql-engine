@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './RightContainer.scss';
+import styles from './RightContainer.module.scss';
 
 const RightContainer: React.FC = ({ children }) => {
   return (

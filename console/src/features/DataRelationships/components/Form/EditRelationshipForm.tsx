@@ -69,11 +69,8 @@ export const EditRelationshipForm = ({
       // asserting type because here RS relationship is the only possibility, DB relationships are filtered out above with the help of `option`
       // existing relationship would handle the legacy/ new shape,
       // ie. lhs_fields will always be present (legacy hasura_field is already translated to the new format)
-      const {
-        lhs_fields,
-        remote_field,
-        remoteSchemaName,
-      } = existingRelationship.relationship as DbToRemoteSchemaRelationship;
+      const { lhs_fields, remote_field, remoteSchemaName } =
+        existingRelationship.relationship as DbToRemoteSchemaRelationship;
 
       return (
         <DbToRsForm

@@ -8,7 +8,7 @@ import { ConnectDBActions, ConnectDBState } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
 import { getSupportedDrivers } from '../../../../dataSources';
 
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
 import {
   SSLModeOptions,
   IsolationLevelOptions,
@@ -24,9 +24,8 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
   connectionDBState,
   connectionDBStateDispatch,
 }) => {
-  const [certificateSettingsState, setCertificateSettingsState] = useState(
-    false
-  );
+  const [certificateSettingsState, setCertificateSettingsState] =
+    useState(false);
 
   return (
     <>

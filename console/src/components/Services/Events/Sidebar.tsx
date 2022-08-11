@@ -12,7 +12,7 @@ import {
 } from '../../Common/utils/routesUtils';
 import { TreeView } from '../../Common/Layout/LeftSubSidebar/TreeView';
 
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 
 interface Props {
   triggers: ScheduledTrigger[] | EventTrigger[];

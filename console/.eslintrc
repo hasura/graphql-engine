@@ -11,6 +11,7 @@
   },
   "parser": "babel-eslint",
   "rules": {
+    "no-useless-escape": 0,
     "allowForLoopAfterthoughts": 0,
     "react/no-multi-comp": 0,
     "import/order": 0,
@@ -143,6 +144,7 @@
         "*.tsx"
       ],
       "rules": {
+        "no-useless-escape": 0,
         "no-restricted-imports": [
           "error",
           {

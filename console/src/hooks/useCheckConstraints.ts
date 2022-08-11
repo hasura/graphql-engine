@@ -12,13 +12,13 @@ type CheckQueryOptions<T, N> = RunSQLQueryOptions<
 const transformCheckKeys = (data: RunSQLResponse): CheckConstraint[] => {
   return JSON.parse(data.result?.[1]?.[0] ?? '[]');
 };
-const transformFilterCheckKeys = (table: QualifiedTable) => (
-  data: RunSQLResponse
-): CheckConstraint[] => {
-  return transformCheckKeys(data).filter(
-    key => key.table_name === table.name && key.table_schema === table.schema
-  );
-};
+const transformFilterCheckKeys =
+  (table: QualifiedTable) =>
+  (data: RunSQLResponse): CheckConstraint[] => {
+    return transformCheckKeys(data).filter(
+      key => key.table_name === table.name && key.table_schema === table.schema
+    );
+  };
 
 function useCheckConstraintKeysBase<T extends string[] | QualifiedTable, N>(
   schemasOrTable: T,

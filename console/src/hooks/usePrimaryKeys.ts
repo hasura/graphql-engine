@@ -15,25 +15,27 @@ type PKQueryOptions<T, N, D> = RunSQLQueryOptions<
   D
 >;
 
-const transformPK = (driver: Driver) => (
-  data: RunSQLResponse
-): PrimaryKey[] => {
-  const parsedPKs: MSSqlConstraint[] | PrimaryKey[] = JSON.parse(
-    data.result?.[1]?.[0] ?? '[]'
-  );
-  if (driver === 'mssql') return transformMssqlConstraint(data);
-  return parsedPKs as PrimaryKey[];
-};
+const transformPK =
+  (driver: Driver) =>
+  (data: RunSQLResponse): PrimaryKey[] => {
+    const parsedPKs: MSSqlConstraint[] | PrimaryKey[] = JSON.parse(
+      data.result?.[1]?.[0] ?? '[]'
+    );
+    if (driver === 'mssql') return transformMssqlConstraint(data);
+    return parsedPKs as PrimaryKey[];
+  };
 
-const transformSinglePK = (table: QualifiedTable) => (driver: Driver) => (
-  data: RunSQLResponse
-): PrimaryKey | null => {
-  const res =
-    transformPK(driver)(data).find(
-      key => key.table_name === table.name && key.table_schema === table.schema
-    ) ?? null;
-  return res;
-};
+const transformSinglePK =
+  (table: QualifiedTable) =>
+  (driver: Driver) =>
+  (data: RunSQLResponse): PrimaryKey | null => {
+    const res =
+      transformPK(driver)(data).find(
+        key =>
+          key.table_name === table.name && key.table_schema === table.schema
+      ) ?? null;
+    return res;
+  };
 
 function usePrimaryKeysBase<T extends string[] | QualifiedTable, N, D>(
   schemasOrTable: T,

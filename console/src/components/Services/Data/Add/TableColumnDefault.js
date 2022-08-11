@@ -13,7 +13,6 @@ const TableColumnDefault = ({
   testId,
   colIndex: i,
 }) => {
-  // const styles = require('../../../Common/TableCommon/Table.scss');
   const handleColDefaultValueChange = (e, data) => {
     const { newValue } = data;
     onChange(i, column.nullable || false, newValue);

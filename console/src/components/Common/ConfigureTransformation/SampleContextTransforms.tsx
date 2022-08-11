@@ -21,9 +21,8 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
   sessionVarsOnChange,
 }) => {
   const [localEnvVars, setLocalEnvVars] = useState<KeyValuePair[]>(envVars);
-  const [localSessionVars, setLocalSessionVars] = useState<KeyValuePair[]>(
-    sessionVars
-  );
+  const [localSessionVars, setLocalSessionVars] =
+    useState<KeyValuePair[]>(sessionVars);
 
   useEffect(() => {
     setLocalEnvVars(envVars);

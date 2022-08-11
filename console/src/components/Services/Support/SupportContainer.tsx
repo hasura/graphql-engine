@@ -4,7 +4,7 @@ import { RightContainer } from '../../Common/Layout/RightContainer';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
-import styles from '../../Common/TableCommon/Table.scss';
+import styles from '../../Common/TableCommon/Table.module.scss';
 
 const helmetTitle = 'Support Forums | Hasura';
 

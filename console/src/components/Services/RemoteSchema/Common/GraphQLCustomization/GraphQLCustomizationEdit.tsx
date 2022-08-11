@@ -80,9 +80,8 @@ const GraphQLCustomizationEdit = ({
   >(null);
   const [typeNames, setTypesNames] = useState<null | TypeNamesType>(null);
   const [fieldNames, setFieldNames] = useState<null | FieldNamesType[]>(null);
-  const [showFieldCustomizationBtn, updateShowFieldCustomizationBtn] = useState(
-    true
-  );
+  const [showFieldCustomizationBtn, updateShowFieldCustomizationBtn] =
+    useState(true);
   const [tempFieldName, setTempFieldName] = useState<
     FieldNamesType | undefined
   >(undefined);

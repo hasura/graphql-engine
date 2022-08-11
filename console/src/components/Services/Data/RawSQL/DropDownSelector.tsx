@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../../Common/TableCommon/Table.scss';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 
 interface Props {
   options: string[];

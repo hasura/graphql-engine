@@ -92,8 +92,9 @@ export const generateWhereClauseQueryString = (
     const columnName = Object.keys(i)[0];
     const RqlOperator = Object.keys(i[columnName])[0];
     const value = i[columnName][RqlOperator];
-    const type = columnTypeInfo?.find(c => c.column_name === columnName)
-      ?.data_type_name;
+    const type = columnTypeInfo?.find(
+      c => c.column_name === columnName
+    )?.data_type_name;
     return `${
       columnConfig[columnName]?.custom_name ?? columnName
     }: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(
@@ -171,24 +172,26 @@ export const getGraphQLQueryBase = ({
   return queryBody({ clauses, relationshipInfo });
 };
 
-export const getFullQueryNameBase = (defaultSchema: string) => ({
-  tableName,
-  schema,
-  tableConfiguration,
-  operation,
-}: GetFullQueryName): string => {
-  const customRootFields = tableConfiguration?.custom_root_fields ?? {};
-  const customRootField = customRootFields[operation];
-  if (typeof customRootField === 'string') return customRootField;
-  else if (customRootField?.name) return customRootField.name;
-  const withUpdate = operation === 'update' ? 'update_' : '';
-  const withSchema =
-    schema === defaultSchema || tableConfiguration?.custom_name
-      ? ''
-      : `${schema}_`;
-  const withAgg = operation === 'select_aggregate' ? `_aggregate` : '';
-  const withDelete = operation === 'delete' ? 'delete_' : '';
-  const withInsert = operation === 'insert' ? 'insert_' : '';
-  const trackedTableName = tableConfiguration?.custom_name || tableName;
-  return `${withDelete}${withUpdate}${withInsert}${withSchema}${trackedTableName}${withAgg}`;
-};
+export const getFullQueryNameBase =
+  (defaultSchema: string) =>
+  ({
+    tableName,
+    schema,
+    tableConfiguration,
+    operation,
+  }: GetFullQueryName): string => {
+    const customRootFields = tableConfiguration?.custom_root_fields ?? {};
+    const customRootField = customRootFields[operation];
+    if (typeof customRootField === 'string') return customRootField;
+    else if (customRootField?.name) return customRootField.name;
+    const withUpdate = operation === 'update' ? 'update_' : '';
+    const withSchema =
+      schema === defaultSchema || tableConfiguration?.custom_name
+        ? ''
+        : `${schema}_`;
+    const withAgg = operation === 'select_aggregate' ? `_aggregate` : '';
+    const withDelete = operation === 'delete' ? 'delete_' : '';
+    const withInsert = operation === 'insert' ? 'insert_' : '';
+    const trackedTableName = tableConfiguration?.custom_name || tableName;
+    return `${withDelete}${withUpdate}${withInsert}${withSchema}${trackedTableName}${withAgg}`;
+  };

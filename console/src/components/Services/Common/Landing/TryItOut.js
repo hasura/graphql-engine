@@ -14,7 +14,7 @@ class TryItOut extends React.Component {
   }
   render() {
     const Rectangle = require('./images/Rectangle.svg');
-    const styles = require('../../RemoteSchema/RemoteSchema.scss');
+    const styles = require('../../RemoteSchema/RemoteSchema.module.scss');
     const glitch = require('./images/glitch.png');
     const googleCloud = require('./images/google_cloud.svg');
     const MicrosoftAzure = require('./images/Microsoft_Azure_Logo.svg');

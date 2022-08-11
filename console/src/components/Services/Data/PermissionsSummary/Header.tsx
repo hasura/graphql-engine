@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import styles from './PermissionsSummary.scss';
+import styles from './PermissionsSummary.module.scss';
 
 type HeaderContentProps = {
   content: string;

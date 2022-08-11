@@ -3,7 +3,7 @@ import { FaBook, FaEdit, FaWrench } from 'react-icons/fa';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import { inputStyles } from '../constants';
 
 const LeftSidebar = ({

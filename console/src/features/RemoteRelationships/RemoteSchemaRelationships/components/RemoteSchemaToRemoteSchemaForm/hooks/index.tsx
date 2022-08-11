@@ -15,9 +15,8 @@ export const useDefaultValues = ({
   typeName = '',
   remoteRelationshipName = '',
 }: UseDefaultValuesProps) => {
-  const { data, isLoading, isError } = useGetRemoteSchemaRelationship(
-    sourceRemoteSchema
-  );
+  const { data, isLoading, isError } =
+    useGetRemoteSchemaRelationship(sourceRemoteSchema);
 
   const rsToRsRelationship = data?.remote_relationships?.find(
     ({ type_name: existingTypeName }) => typeName === existingTypeName

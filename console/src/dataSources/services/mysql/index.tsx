@@ -132,7 +132,8 @@ const operators = [
   { name: '<=', value: '$lte', graphqlOp: '_lte' },
 ];
 
-const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/g; // eslint-disable-line
+const createSQLRegex =
+  /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/g; // eslint-disable-line
 
 const violationActions: ViolationActions[] = [
   'restrict',

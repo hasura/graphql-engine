@@ -26,7 +26,7 @@ async function fetchApi<T = unknown, V = T>(
     const isResponseJson = `${contentType}`.includes('application/json');
     if (response.ok) {
       if (!isResponseJson) {
-        return ((await response.text()) as unknown) as V;
+        return (await response.text()) as unknown as V;
       }
       const data = await response.json();
       if (dataTransform) return dataTransform(data);

@@ -2,7 +2,7 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
-import styles from '../../../Common/Common.scss';
+import styles from '../../../Common/Common.module.scss';
 
 const appPrefix = `/api`;
 

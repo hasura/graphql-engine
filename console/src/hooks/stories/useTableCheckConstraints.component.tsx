@@ -36,9 +36,10 @@ export const CheckConstaints = ({
     isError,
     error,
   } = useTableCheckConstraints({ table, source, driver: currentDriver });
-  const keys = React.useMemo(() => Object.keys(checkConstraints?.[0] ?? {}), [
-    checkConstraints,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(checkConstraints?.[0] ?? {}),
+    [checkConstraints]
+  );
 
   if (isError) {
     return <p className="text-red-500">Error: {error?.message}</p>;

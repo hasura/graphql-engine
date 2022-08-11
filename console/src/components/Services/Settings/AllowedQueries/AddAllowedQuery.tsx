@@ -27,9 +27,8 @@ type AddAllowedQueryProps = {
 const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
   const { dispatch, allowedQueries } = props;
 
-  const [manualQuery, setManualQuery] = useState<AllowedQueriesCollection>(
-    defaultManualQuery
-  );
+  const [manualQuery, setManualQuery] =
+    useState<AllowedQueriesCollection>(defaultManualQuery);
   const [graphqlFile, setGraphqlFile] = useState<File | null>(null);
 
   const handleManualCollapse = () => {

@@ -9,7 +9,7 @@ import regression from '../images/regression.svg';
 import management from '../images/management.svg';
 import allow from '../images/allow-listing.svg';
 import dataCaching from '../images/data-caching.svg';
-import styles from '../Main.scss';
+import styles from '../Main.module.scss';
 
 type ProPopupProps = {
   toggleOpen: () => void;

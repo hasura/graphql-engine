@@ -55,28 +55,29 @@ const prepareApiLimits = (
   return res;
 };
 
-export const getLimitsforRole = (metadata: HasuraMetadataV3) => (
-  role: string
-) => {
-  const limits = prepareApiLimits(getApiLimits(metadata));
-  return Object.values(limits).map(value => {
-    if (role !== 'global') {
+export const getLimitsforRole =
+  (metadata: HasuraMetadataV3) => (role: string) => {
+    const limits = prepareApiLimits(getApiLimits(metadata));
+    return Object.values(limits).map(value => {
+      if (role !== 'global') {
+        const global = value.global;
+        const per_role = value?.per_role?.[role];
+        const state =
+          isEmpty(global) || global === -1
+            ? RoleState.disabled
+            : isEmpty(per_role)
+            ? RoleState.global
+            : RoleState.enabled;
+        return { global, per_role: { [role]: per_role }, state };
+      }
       const global = value.global;
-      const per_role = value?.per_role?.[role];
       const state =
         isEmpty(global) || global === -1
           ? RoleState.disabled
-          : isEmpty(per_role)
-          ? RoleState.global
           : RoleState.enabled;
-      return { global, per_role: { [role]: per_role }, state };
-    }
-    const global = value.global;
-    const state =
-      isEmpty(global) || global === -1 ? RoleState.disabled : RoleState.enabled;
-    return { global, state };
-  });
-};
+      return { global, state };
+    });
+  };
 
 export const getLimitsforUnknownRole = (metadata: HasuraMetadataV3) => {
   const limits = prepareApiLimits(getApiLimits(metadata));

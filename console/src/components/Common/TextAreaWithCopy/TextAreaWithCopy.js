@@ -56,15 +56,10 @@ class TextAreaWithCopy extends React.Component {
   }
 
   render() {
-    const style = require('./TextAreaWithCopy.scss');
+    const style = require('./TextAreaWithCopy.module.scss');
 
-    const {
-      copyText,
-      toolTipClass,
-      id,
-      containerId,
-      textLanguage,
-    } = this.props;
+    const { copyText, toolTipClass, id, containerId, textLanguage } =
+      this.props;
 
     const renderSimpleValue = () => {
       return (

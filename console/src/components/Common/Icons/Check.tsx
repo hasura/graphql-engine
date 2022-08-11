@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaCheck } from 'react-icons/fa';
-import styles from '../Common.scss';
+import styles from '../Common.module.scss';
 
 const Check = ({ className = '', title = '' }) => {
   return (
