@@ -7,12 +7,11 @@ module Test.EventTrigger.EventTriggersRunSQLSpec (spec) where
 import Control.Concurrent.Chan qualified as Chan
 import Data.Aeson (eitherDecode)
 import Data.ByteString.Lazy.Char8 qualified as L8
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
 import Harness.Quoter.Yaml
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server (..), TestEnvironment, getServer, stopServer)
@@ -29,18 +28,19 @@ import Test.Hspec (SpecWith, it, shouldBe)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              -- setup the webhook server as the local test environment,
-              -- so that the server can be referenced while testing
-              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
-            }
-        ]
+  Fixture.runWithLocalTestEnvironment
+    ( [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          { -- setup the webhook server as the local test environment,
+            -- so that the server can be referenced while testing
+            Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
+              [ Fixture.SetupAction
+                  { Fixture.setupAction = postgresSetup testEnv,
+                    Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                  }
+              ]
+          }
+      ]
     )
     tests
 
@@ -81,14 +81,14 @@ schema authorTableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
   triggerListeningToAllColumnTests opts
   triggerListeningToSpecificColumnsTests opts
   dropTableContainingTriggerTest opts
   renameTableContainingTriggerTests opts
 
-triggerListeningToAllColumnTests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+triggerListeningToAllColumnTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 triggerListeningToAllColumnTests opts = do
   it
     ( "when a run_sql query drops a column of a table,"
@@ -144,7 +144,7 @@ new:
   id: '1'
                                         |]
 
-triggerListeningToSpecificColumnsTests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+triggerListeningToSpecificColumnsTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 triggerListeningToSpecificColumnsTests _ = do
   it
     ( "when a run_sql query drops a column of a table"
@@ -183,7 +183,7 @@ error: 'cannot drop due to the following dependent objects : event-trigger hasur
 code: dependency-error
                                         |]
 
-dropTableContainingTriggerTest :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+dropTableContainingTriggerTest :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 dropTableContainingTriggerTest opts = do
   it
     ( "when a run_sql query drops a table"
@@ -208,7 +208,7 @@ result_type: CommandOk
 result: null
          |]
 
-renameTableContainingTriggerTests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+renameTableContainingTriggerTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 renameTableContainingTriggerTests opts = do
   it
     ( "when a run_sql query drops a column of a table"
