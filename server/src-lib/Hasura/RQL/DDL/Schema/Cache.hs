@@ -525,8 +525,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             )
           |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
 
-      defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
-      isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
+      !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+      !isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
 
       -- sql functions
       functionCache <-
@@ -642,8 +642,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, OMap.elems remoteSchemas)
       let remoteSchemaCtxMap = M.map (fst . fst) remoteSchemaMap
 
-      defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
-      isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
+      !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+      !isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
 
       -- sources are build in two steps
       -- first we resolve them, and build the table cache

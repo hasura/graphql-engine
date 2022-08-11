@@ -202,7 +202,7 @@ getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
 
 getNamingConvention :: SourceCustomization -> Maybe NamingCase -> NamingCase
-getNamingConvention sc defaultNC = defaultNC `seq` fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
+getNamingConvention sc defaultNC = fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
 
 -- | Function to apply root field name customizations.
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
