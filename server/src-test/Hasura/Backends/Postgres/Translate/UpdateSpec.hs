@@ -29,10 +29,10 @@ spec =
         { name = "set field where id",
           table = Expect.mkTable "test",
           columns = [idColumn, nameColumn],
-          output = MOutMultirowFields [("affected_rows", MCount)],
+          mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           where_ = [(idColumn, [AEQ True integerOne])],
           update = Expect.UpdateTable [(nameColumn, UpdateSet newValue)],
-          expected =
+          expectedSQL =
             [QQ.sql|
 UPDATE "public"."test"
   SET "name" = $1
@@ -47,10 +47,10 @@ UPDATE "public"."test"
         { name = "set multiple field where id",
           table = Expect.mkTable "test",
           columns = [idColumn, nameColumn, descColumn],
-          output = MOutMultirowFields [("affected_rows", MCount)],
+          mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           where_ = [(idColumn, [AEQ True integerOne])],
           update = Expect.UpdateTable [(nameColumn, UpdateSet newValue), (descColumn, UpdateSet newValue)],
-          expected =
+          expectedSQL =
             [QQ.sql|
 UPDATE "public"."test"
   SET "name" = $1, "description" = $2
@@ -65,10 +65,10 @@ UPDATE "public"."test"
         { name = "set field where id and old value",
           table = Expect.mkTable "test",
           columns = [idColumn, nameColumn, descColumn],
-          output = MOutMultirowFields [("affected_rows", MCount)],
+          mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           where_ = [(idColumn, [AEQ True integerOne]), (nameColumn, [AEQ False oldValue])],
           update = Expect.UpdateTable [(nameColumn, UpdateSet newValue)],
-          expected =
+          expectedSQL =
             [QQ.sql|
 UPDATE "public"."test"
   SET "name" = $2
@@ -89,7 +89,7 @@ UPDATE "public"."test"
         { name = "update_many with two updates",
           table = Expect.mkTable "test",
           columns = [idColumn, nameColumn, descColumn],
-          output = MOutMultirowFields [("affected_rows", MCount)],
+          mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           where_ = [],
           update =
             Expect.UpdateMany $
@@ -102,7 +102,7 @@ UPDATE "public"."test"
                     mrubUpdate = [(descColumn, UpdateSet oldValue)]
                   }
               ],
-          expected =
+          expectedSQL =
             [ [QQ.sql|
 UPDATE "public"."test"
   SET "name" = $2

@@ -38,13 +38,13 @@ data TestBuilder e = TestBuilder
     -- | table columnd
     columns :: [ColumnInfo PG],
     -- | expected output fields
-    output :: MutationOutputG PG Void (UnpreparedValue PG),
+    mutationOutput :: MutationOutputG PG Void (UnpreparedValue PG),
     -- | where clause for the query (usually empty for /update_many/)
     where_ :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])],
     -- | update clause
     update :: Expect.BackendUpdateBuilder (ColumnInfo PG),
     -- | expected result; this is either 'Text' or '[Text]'
-    expected :: e
+    expectedSQL :: e
   }
 
 -- | Runs a test for single updates.
@@ -57,13 +57,14 @@ runTest TestBuilder {..} =
               Expect.mkAnnotatedUpdate @Void
                 Expect.AnnotatedUpdateBuilder
                   { Expect.aubTable = table,
-                    Expect.aubOutput = output,
+                    Expect.aubOutput = mutationOutput,
                     Expect.aubColumns = columns,
                     Expect.aubWhere = where_,
                     Expect.aubUpdate = update
                   }
     case Update.mkUpdateCTE @'Vanilla upd of
-      (Update.Update cte) -> (SI.fromText $ toSQLTxt cte) `shouldBe` SI.fromText expected
+      (Update.Update cte) ->
+        (SI.fromText $ toSQLTxt cte) `shouldBe` SI.fromText expectedSQL
       _ -> assertFailure "expected single update, got multiple updates"
   where
     go :: UnpreparedValue PG -> State Int S.SQLExp
@@ -85,13 +86,15 @@ runMultipleUpdates TestBuilder {..} =
               Expect.mkAnnotatedUpdate @Void
                 Expect.AnnotatedUpdateBuilder
                   { Expect.aubTable = table,
-                    Expect.aubOutput = output,
+                    Expect.aubOutput = mutationOutput,
                     Expect.aubColumns = columns,
                     Expect.aubWhere = where_,
                     Expect.aubUpdate = update
                   }
     case Update.mkUpdateCTE @'Vanilla upd of
-      (Update.MultiUpdate ctes) -> SI.fromText . toSQLTxt <$> ctes `shouldBe` SI.fromText <$> expected
+      (Update.MultiUpdate ctes) ->
+        SI.fromText . toSQLTxt <$> ctes
+          `shouldBe` SI.fromText <$> expectedSQL
       _ -> assertFailure "expedted update_many, got single update"
   where
     go :: UnpreparedValue PG -> State Int S.SQLExp
