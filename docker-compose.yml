@@ -86,7 +86,7 @@ services:
   dc-sqlite-agent:
     build: ./dc-agents/sqlite/
     ports:
-      - "65006:8100"
+      - "65007:8100"
     volumes:
       - "./dc-agents/sqlite/test/db.chinook.sqlite:/db.chinook.sqlite"
 
