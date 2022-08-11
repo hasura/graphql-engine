@@ -6,12 +6,11 @@
 module Test.EventTrigger.EventTriggersExtensionSchemaSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants (postgresqlConnectionString)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment, stopServer)
@@ -27,18 +26,19 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              -- setup the webhook server as the local test environment,
-              -- so that the server can be referenced while testing
-              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
-            }
-        ]
+  Fixture.runWithLocalTestEnvironment
+    ( [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          { -- setup the webhook server as the local test environment,
+            -- so that the server can be referenced while testing
+            Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
+              [ Fixture.SetupAction
+                  { Fixture.setupAction = postgresSetup testEnv,
+                    Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                  }
+              ]
+          }
+      ]
     )
     tests
 
@@ -65,11 +65,11 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
   checkEventTriggerWhenExtensionInDifferentSchema opts
 
-checkEventTriggerWhenExtensionInDifferentSchema :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+checkEventTriggerWhenExtensionInDifferentSchema :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 checkEventTriggerWhenExtensionInDifferentSchema opts =
   describe "event triggers should work when extensions are created in different schema using 'extensions_schema'" do
     it "check: inserting a new row invokes a event trigger" $
@@ -187,7 +187,7 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
   -- setup tables
   Postgres.createTable testEnvironment (authorsTable "authors")
   Postgres.insertTable (authorsTable "authors")
-  Schema.trackTable Context.Postgres sourceName (authorsTable "authors") testEnvironment
+  Schema.trackTable Fixture.Postgres sourceName (authorsTable "authors") testEnvironment
 
   -- create the event trigger
   GraphqlEngine.postMetadata_ testEnvironment $

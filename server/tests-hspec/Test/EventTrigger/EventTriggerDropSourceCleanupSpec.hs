@@ -7,11 +7,10 @@
 module Test.EventTrigger.EventTriggerDropSourceCleanupSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment, stopServer)
@@ -27,18 +26,19 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.SQLServer,
-              -- setup the webhook server as the local test environment,
-              -- so that the server can be referenced while testing
-              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              setup = mssqlSetupWithEventTriggers,
-              teardown = mssqlTeardown,
-              customOptions = Nothing
-            }
-        ]
+  Fixture.runWithLocalTestEnvironment
+    ( [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          { -- setup the webhook server as the local test environment,
+            -- so that the server can be referenced while testing
+            Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
+              [ Fixture.SetupAction
+                  { Fixture.setupAction = mssqlSetupWithEventTriggers testEnv,
+                    Fixture.teardownAction = \_ -> mssqlTeardown testEnv
+                  }
+              ]
+          }
+      ]
     )
     tests
 
@@ -68,11 +68,11 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
   cleanupEventTriggersWhenSourceDropped opts
 
-cleanupEventTriggersWhenSourceDropped :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+cleanupEventTriggersWhenSourceDropped :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 cleanupEventTriggersWhenSourceDropped opts =
   describe "dropping a source with event triggers should remove 'hdb_catalog' schema and the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $
