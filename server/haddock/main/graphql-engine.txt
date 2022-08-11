@@ -25670,16 +25670,8 @@ decodeEncJSON :: (FromJSON a, QErrM m) => EncJSON -> m a
 
 module Hasura.Backends.MySQL.Instances.Schema
 mysqlTableArgs :: forall r m n. MonadBuildSchema 'MySQL r m n => SourceInfo 'MySQL -> TableInfo 'MySQL -> m (InputFieldsParser n (SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
-buildTableRelayQueryFields' :: MonadBuildSchema 'MySQL r m n => MkRootFieldName -> SourceInfo 'MySQL -> TableName 'MySQL -> TableInfo 'MySQL -> GQLNameIdentifier -> NESeq (ColumnInfo 'MySQL) -> m [FieldParser n a]
-buildTableInsertMutationFields' :: MonadBuildSchema 'MySQL r m n => MkRootFieldName -> Scenario -> SourceInfo 'MySQL -> TableName 'MySQL -> TableInfo 'MySQL -> GQLNameIdentifier -> m [FieldParser n a]
-buildTableUpdateMutationFields' :: MonadBuildSchema 'MySQL r m n => MkRootFieldName -> Scenario -> SourceInfo 'MySQL -> TableName 'MySQL -> TableInfo 'MySQL -> GQLNameIdentifier -> m [FieldParser n a]
-buildTableDeleteMutationFields' :: MonadBuildSchema 'MySQL r m n => MkRootFieldName -> Scenario -> SourceInfo 'MySQL -> TableName 'MySQL -> TableInfo 'MySQL -> GQLNameIdentifier -> m [FieldParser n a]
-buildFunctionQueryFields' :: MonadBuildSchema 'MySQL r m n => MkRootFieldName -> SourceInfo 'MySQL -> FunctionName 'MySQL -> FunctionInfo 'MySQL -> TableName 'MySQL -> m [FieldParser n a]
-buildFunctionRelayQueryFields' :: MonadBuildSchema 'MySQL r m n => MkRootFieldName -> SourceInfo 'MySQL -> FunctionName 'MySQL -> FunctionInfo 'MySQL -> TableName 'MySQL -> NESeq (ColumnInfo 'MySQL) -> m [FieldParser n a]
-buildFunctionMutationFields' :: MonadBuildSchema 'MySQL r m n => MkRootFieldName -> SourceInfo 'MySQL -> FunctionName 'MySQL -> FunctionInfo 'MySQL -> TableName 'MySQL -> m [FieldParser n a]
 bsParser :: MonadParse m => Parser 'Both m ByteString
 columnParser' :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) => ColumnType 'MySQL -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
-scalarSelectionArgumentsParser' :: MonadParse n => ColumnType 'MySQL -> InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
 orderByOperators' :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
@@ -25693,22 +25685,13 @@ instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Back
 --   
 --   Defines a <a>BackendSchema</a> type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema
-msBuildTableRelayQueryFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> SourceInfo 'MSSQL -> TableName 'MSSQL -> TableInfo 'MSSQL -> GQLNameIdentifier -> NESeq (ColumnInfo 'MSSQL) -> m [FieldParser n a]
 backendInsertParser :: forall m r n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
 msBuildTableUpdateMutationFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> Scenario -> SourceInfo 'MSSQL -> TableName 'MSSQL -> TableInfo 'MSSQL -> GQLNameIdentifier -> m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildFunctionQueryFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> SourceInfo 'MSSQL -> FunctionName 'MSSQL -> FunctionInfo 'MSSQL -> TableName 'MSSQL -> m [FieldParser n a]
-msBuildFunctionRelayQueryFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> SourceInfo 'MSSQL -> FunctionName 'MSSQL -> FunctionInfo 'MSSQL -> TableName 'MSSQL -> NESeq (ColumnInfo 'MSSQL) -> m [FieldParser n a]
-msBuildFunctionMutationFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> SourceInfo 'MSSQL -> FunctionName 'MSSQL -> FunctionInfo 'MSSQL -> TableName 'MSSQL -> m [FieldParser n a]
 msTableArgs :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> m (InputFieldsParser n (SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
-msMkRelationshipParser :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> RelInfo 'MSSQL -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 msColumnParser :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) => ColumnType 'MSSQL -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
-msScalarSelectionArgumentsParser :: MonadParse n => ColumnType 'MSSQL -> InputFieldsParser n (Maybe (ScalarSelectionArguments 'MSSQL))
 msOrderByOperators :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)))
 msComparisonExps :: forall m n r. (BackendSchema 'MSSQL, MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has SchemaOptions r, Has MkTypename r, Has NamingCase r) => ColumnType 'MSSQL -> m (Parser 'Input n [ComparisonExp 'MSSQL])
 msCountTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column 'MSSQL)) -> InputFieldsParser n (CountDistinct -> CountType 'MSSQL)
-
--- | Computed field parser. Currently unsupported: returns Nothing for now.
-msComputedField :: MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> ComputedFieldInfo 'MSSQL -> TableName 'MSSQL -> TableInfo 'MSSQL -> m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.MSSQL
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.MSSQL
 
@@ -25769,15 +25752,7 @@ instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.DataCon
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.DataConnector
 
 module Hasura.Backends.BigQuery.Instances.Schema
-bqBuildTableRelayQueryFields :: MonadBuildSchema 'BigQuery r m n => MkRootFieldName -> SourceInfo 'BigQuery -> TableName 'BigQuery -> TableInfo 'BigQuery -> GQLNameIdentifier -> NESeq (ColumnInfo 'BigQuery) -> m [FieldParser n a]
-bqBuildTableInsertMutationFields :: MonadBuildSchema 'BigQuery r m n => MkRootFieldName -> Scenario -> SourceInfo 'BigQuery -> TableName 'BigQuery -> TableInfo 'BigQuery -> GQLNameIdentifier -> m [FieldParser n a]
-bqBuildTableUpdateMutationFields :: MonadBuildSchema 'BigQuery r m n => MkRootFieldName -> Scenario -> SourceInfo 'BigQuery -> TableName 'BigQuery -> TableInfo 'BigQuery -> GQLNameIdentifier -> m [FieldParser n a]
-bqBuildTableDeleteMutationFields :: MonadBuildSchema 'BigQuery r m n => MkRootFieldName -> Scenario -> SourceInfo 'BigQuery -> TableName 'BigQuery -> TableInfo 'BigQuery -> GQLNameIdentifier -> m [FieldParser n a]
-bqBuildFunctionQueryFields :: MonadBuildSchema 'BigQuery r m n => MkRootFieldName -> SourceInfo 'BigQuery -> FunctionName 'BigQuery -> FunctionInfo 'BigQuery -> TableName 'BigQuery -> m [FieldParser n a]
-bqBuildFunctionRelayQueryFields :: MonadBuildSchema 'BigQuery r m n => MkRootFieldName -> SourceInfo 'BigQuery -> FunctionName 'BigQuery -> FunctionInfo 'BigQuery -> TableName 'BigQuery -> NESeq (ColumnInfo 'BigQuery) -> m [FieldParser n a]
-bqBuildFunctionMutationFields :: MonadBuildSchema 'BigQuery r m n => MkRootFieldName -> SourceInfo 'BigQuery -> FunctionName 'BigQuery -> FunctionInfo 'BigQuery -> TableName 'BigQuery -> m [FieldParser n a]
 bqColumnParser :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) => ColumnType 'BigQuery -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery)))
-bqScalarSelectionArgumentsParser :: MonadParse n => ColumnType 'BigQuery -> InputFieldsParser n (Maybe (ScalarSelectionArguments 'BigQuery))
 bqOrderByOperators :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)))
 bqComparisonExps :: forall m n r. MonadBuildSchema 'BigQuery r m n => ColumnType 'BigQuery -> m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqCountTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column 'BigQuery)) -> InputFieldsParser n (CountDistinct -> CountType 'BigQuery)
