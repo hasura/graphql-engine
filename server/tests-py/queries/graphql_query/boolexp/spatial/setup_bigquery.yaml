@@ -1,9 +1,0 @@
-type: bulk
-args:
-
-- type: bigquery_track_table
-  args:
-    source: bigquery
-    table:
-      dataset: hasura
-      name: spatial_types_geog

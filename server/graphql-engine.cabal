@@ -1226,6 +1226,7 @@ test-suite tests-hspec
     Test.BackendOnlyPermissionsSpec
     Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
+    Test.BigQuery.Queries.SpatialTypesSpec
     Test.BigQuery.TypeInterpretationSpec
     Test.CustomRootFieldsSpec
     Test.DataConnector.AggregateQuerySpec

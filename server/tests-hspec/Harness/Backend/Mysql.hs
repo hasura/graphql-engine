@@ -120,6 +120,7 @@ scalarType = \case
   Schema.TStr -> "TEXT"
   Schema.TUTCTime -> "DATETIME"
   Schema.TBool -> "BIT"
+  Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstMysql
 
 mkColumn :: Schema.Column -> Text
@@ -181,6 +182,7 @@ serialize = \case
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
+  VGeography (Schema.WKT wkt) -> T.concat ["st_geogfromtext(\'", wkt, "\')"]
   VNull -> "NULL"
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvMysql
 

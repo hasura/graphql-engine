@@ -1,8 +1,0 @@
-type: bulk
-args:
-- type: bigquery_run_sql
-  args:
-    source: bigquery
-    cascade: true
-    sql: |
-      DROP TABLE IF EXISTS `hasura.spatial_types_geog`;
