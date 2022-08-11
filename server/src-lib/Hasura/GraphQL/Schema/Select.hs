@@ -368,8 +368,7 @@ defaultTableSelectionSet ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b,
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (AnnBoolExp b (IR.UnpreparedValue b))
   ) =>
   SourceInfo b ->
   TableInfo b ->
@@ -968,8 +967,7 @@ fieldSelection ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b,
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (AnnBoolExp b (IR.UnpreparedValue b))
   ) =>
   SourceInfo b ->
   TableName b ->
@@ -1122,8 +1120,7 @@ relationshipField ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b,
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (AnnBoolExp b (IR.UnpreparedValue b))
   ) =>
   SourceInfo b ->
   TableName b ->

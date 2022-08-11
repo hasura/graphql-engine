@@ -327,36 +327,33 @@ data InsPermInfo (b :: BackendType) = InsPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (InsPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (InsPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (PreSetColsPartial b)
   ) =>
   NFData (InsPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b),
+    Cacheable (PreSetColsPartial b)
   ) =>
   Cacheable (InsPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (InsPermInfo b)
   where
@@ -455,36 +452,36 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b),
+    Eq (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Eq (SelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b),
+    Show (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Show (SelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   NFData (SelPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b),
+    Cacheable (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Cacheable (SelPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b),
+    ToJSON (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   ToJSON (SelPermInfo b)
   where
@@ -503,36 +500,33 @@ data UpdPermInfo (b :: BackendType) = UpdPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (UpdPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (UpdPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (PreSetColsPartial b)
   ) =>
   NFData (UpdPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b),
+    Cacheable (PreSetColsPartial b)
   ) =>
   Cacheable (UpdPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (UpdPermInfo b)
   where
@@ -548,36 +542,31 @@ data DelPermInfo (b :: BackendType) = DelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (DelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (DelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b)
   ) =>
   NFData (DelPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b)
   ) =>
   Cacheable (DelPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (DelPermInfo b)
   where
@@ -593,14 +582,19 @@ data RolePermInfo (b :: BackendType) = RolePermInfo
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (InsPermInfo b),
+    NFData (SelPermInfo b),
+    NFData (UpdPermInfo b),
+    NFData (DelPermInfo b)
   ) =>
   NFData (RolePermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (InsPermInfo b),
+    ToJSON (SelPermInfo b),
+    ToJSON (UpdPermInfo b),
+    ToJSON (DelPermInfo b)
   ) =>
   ToJSON (RolePermInfo b)
   where
@@ -918,7 +912,10 @@ data TableInfo (b :: BackendType) = TableInfo
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (EventTriggerInfoMap b),
+    ToJSON (RolePermInfo b),
+    ToJSON (RolePermInfoMap b),
+    ToJSON (TableCoreInfo b)
   ) =>
   ToJSON (TableInfo b)
   where

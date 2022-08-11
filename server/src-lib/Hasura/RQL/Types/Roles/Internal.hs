@@ -41,7 +41,10 @@ instance
     | d1 `relevantEq` d2 = CPDefined d1
     | otherwise = CPInconsistent
 
-instance (OnlyRelevantEq permissionType) => Monoid (CheckPermission permissionType) where
+instance
+  (OnlyRelevantEq permissionType) =>
+  Monoid (CheckPermission permissionType)
+  where
   mempty = CPUndefined
 
 -- | CombineRolePermInfo acts as an intermediate type to be able to
@@ -57,10 +60,10 @@ data CombineRolePermInfo (b :: BackendType) = CombineRolePermInfo
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Hashable (FunctionArgumentExp b (PartialSQLExp b))
+    Semigroup (CheckPermission (DelPermInfo b)),
+    Semigroup (CheckPermission (InsPermInfo b)),
+    Semigroup (CheckPermission (UpdPermInfo b)),
+    Semigroup (CombinedSelPermInfo b)
   ) =>
   Semigroup (CombineRolePermInfo b)
   where
@@ -74,10 +77,10 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Hashable (FunctionArgumentExp b (PartialSQLExp b))
+    Monoid (CheckPermission (DelPermInfo b)),
+    Monoid (CheckPermission (InsPermInfo b)),
+    Monoid (CheckPermission (UpdPermInfo b)),
+    Monoid (Maybe (CombinedSelPermInfo b))
   ) =>
   Monoid (CombineRolePermInfo b)
   where
@@ -136,10 +139,7 @@ instance (Backend b, Eq a, Hashable a) => OnlyRelevantEq (GBoolExp b a) where
   _ `relevantEq` _ = False
 
 instance
-  ( Backend b,
-    Eq a,
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a)
+  ( Eq (AnnComputedFieldBoolExp b a)
   ) =>
   OnlyRelevantEq (AnnComputedFieldBoolExp b a)
   where
@@ -147,12 +147,10 @@ instance
 
 instance
   ( Backend b,
-    Hashable a,
-    Eq a,
-    Hashable (BooleanOperators b a),
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
-    Hashable (FunctionArgumentExp b a)
+    Eq (OpExpG b a),
+    Hashable (OpExpG b a),
+    OnlyRelevantEq (AnnBoolExp b a),
+    OnlyRelevantEq (AnnComputedFieldBoolExp b a)
   ) =>
   OnlyRelevantEq (AnnBoolExpFld b a)
   where
@@ -168,10 +166,7 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Hashable (FunctionArgumentExp b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    OnlyRelevantEq (AnnBoolExpPartialSQL b)
   ) =>
   OnlyRelevantEq (InsPermInfo b)
   where
@@ -185,10 +180,7 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Hashable (FunctionArgumentExp b (PartialSQLExp b))
+    OnlyRelevantEq (AnnBoolExpPartialSQL b)
   ) =>
   OnlyRelevantEq (UpdPermInfo b)
   where
@@ -204,10 +196,7 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Hashable (FunctionArgumentExp b (PartialSQLExp b))
+    OnlyRelevantEq (AnnBoolExpPartialSQL b)
   ) =>
   OnlyRelevantEq (DelPermInfo b)
   where

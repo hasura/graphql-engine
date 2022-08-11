@@ -19,7 +19,7 @@ import Data.Typeable (Typeable)
 import Hasura.Backends.Postgres.SQL.Types (PGCol)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, AnnBoolExpFld)
-import Hasura.RQL.Types.Backend (Backend (BooleanOperators, FunctionArgumentExp))
+import Hasura.RQL.Types.Backend (Backend)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind)
 
 -- | Represents an entry in an /update_table_many/ update.
@@ -51,17 +51,15 @@ deriving instance
   Data (MultiRowUpdate pgKind v)
 
 deriving instance
-  ( Show v,
-    Show (BooleanOperators ('Postgres pgKind) v),
-    Show (FunctionArgumentExp ('Postgres pgKind) v),
+  ( Show (AnnBoolExpFld ('Postgres pgKind) v),
+    Show (UpdateOpExpression v),
     Backend ('Postgres pgKind)
   ) =>
   Show (MultiRowUpdate pgKind v)
 
 deriving instance
-  ( Eq v,
-    Eq (BooleanOperators ('Postgres pgKind) v),
-    Eq (FunctionArgumentExp ('Postgres pgKind) v),
+  ( Eq (AnnBoolExpFld ('Postgres pgKind) v),
+    Eq (UpdateOpExpression v),
     Backend ('Postgres pgKind)
   ) =>
   Eq (MultiRowUpdate pgKind v)
@@ -95,18 +93,16 @@ deriving instance
   Data (BackendUpdate pgKind v)
 
 deriving instance
-  ( Show v,
-    Show (BooleanOperators ('Postgres pgKind) v),
-    Show (FunctionArgumentExp ('Postgres pgKind) v),
-    Backend ('Postgres pgKind)
+  ( Backend ('Postgres pgKind),
+    Show (MultiRowUpdate pgKind v),
+    Show (UpdateOpExpression v)
   ) =>
   Show (BackendUpdate pgKind v)
 
 deriving instance
-  ( Eq v,
-    Eq (BooleanOperators ('Postgres pgKind) v),
-    Eq (FunctionArgumentExp ('Postgres pgKind) v),
-    Backend ('Postgres pgKind)
+  ( Backend ('Postgres pgKind),
+    Eq (MultiRowUpdate pgKind v),
+    Eq (UpdateOpExpression v)
   ) =>
   Eq (BackendUpdate pgKind v)
 
