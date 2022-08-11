@@ -44,7 +44,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Source (SourceInfo)
-import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -55,14 +54,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'BigQuery where
   -- top level parsers
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields = bqBuildTableRelayQueryFields
+  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields = bqBuildTableInsertMutationFields
-  buildTableUpdateMutationFields = bqBuildTableUpdateMutationFields
-  buildTableDeleteMutationFields = bqBuildTableDeleteMutationFields
-  buildFunctionQueryFields = bqBuildFunctionQueryFields
-  buildFunctionRelayQueryFields = bqBuildFunctionRelayQueryFields
-  buildFunctionMutationFields = bqBuildFunctionMutationFields
+  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -71,7 +70,7 @@ instance BackendSchema 'BigQuery where
 
   -- individual components
   columnParser = bqColumnParser
-  scalarSelectionArgumentsParser = bqScalarSelectionArgumentsParser
+  scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = bqOrderByOperators
   comparisonExps = bqComparisonExps
   countTypeInput = bqCountTypeInput
@@ -83,91 +82,6 @@ instance BackendTableSelectSchema 'BigQuery where
   selectTable = defaultSelectTable
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
-
-----------------------------------------------------------------
--- Top level parsers
-
-bqBuildTableRelayQueryFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  NESeq (ColumnInfo 'BigQuery) ->
-  m [P.FieldParser n a]
-bqBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
-  pure []
-
-bqBuildTableInsertMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  Scenario ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-bqBuildTableInsertMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
-  pure []
-
-bqBuildTableUpdateMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  Scenario ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-bqBuildTableUpdateMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
-  pure []
-
-bqBuildTableDeleteMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  Scenario ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-bqBuildTableDeleteMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
-  pure []
-
-bqBuildFunctionQueryFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  FunctionName 'BigQuery ->
-  FunctionInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  m [P.FieldParser n a]
-bqBuildFunctionQueryFields _ _ _ _ _ =
-  pure []
-
-bqBuildFunctionRelayQueryFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  FunctionName 'BigQuery ->
-  FunctionInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  NESeq (ColumnInfo 'BigQuery) ->
-  m [P.FieldParser n a]
-bqBuildFunctionRelayQueryFields _mkRootFieldName _sourceName _functionName _functionInfo _tableName _pkeyColumns =
-  pure []
-
-bqBuildFunctionMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  FunctionName 'BigQuery ->
-  FunctionInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  m [P.FieldParser n a]
-bqBuildFunctionMutationFields _ _ _ _ _ =
-  pure []
 
 ----------------------------------------------------------------
 -- Individual components
@@ -230,12 +144,6 @@ bqColumnParser columnType (G.Nullability isNullable) =
     stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
     stringBased scalarName =
       P.string {P.pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar}
-
-bqScalarSelectionArgumentsParser ::
-  MonadParse n =>
-  ColumnType 'BigQuery ->
-  InputFieldsParser n (Maybe (ScalarSelectionArguments 'BigQuery))
-bqScalarSelectionArgumentsParser _columnType = pure Nothing
 
 bqOrderByOperators ::
   NamingCase ->
@@ -524,14 +432,3 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       fieldName <- textToName argumentName
       let argParser = P.field fieldName Nothing typedParser
       pure $ argParser `P.bindFields` \inputValue -> pure ((argumentName, BigQuery.AEInput $ IR.mkParameter inputValue))
-
-{-
-NOTE: Unused. Should we remove?
--- | Remote join field parser.
--- Currently unsupported: returns Nothing for now.
-bqRemoteRelationshipField ::
-  MonadBuildSchema 'BigQuery r m n =>
-  RemoteFieldInfo (DBJoinField 'BigQuery) ->
-  m (Maybe [FieldParser n (AnnotatedField 'BigQuery)])
-bqRemoteRelationshipField _remoteFieldInfo = pure Nothing
--}
