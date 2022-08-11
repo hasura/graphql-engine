@@ -30,7 +30,7 @@ const TableHeader = ({
   source,
   dispatch,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.module.scss');
 
   const tableName = table.table_name;
   const tableSchema = table.table_schema;

@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { GraphQLSchema } from 'graphql';
 import { FaPencilAlt } from 'react-icons/fa';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.module.scss';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';

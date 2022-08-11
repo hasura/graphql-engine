@@ -16,7 +16,7 @@ import {
   toggleField,
 } from '../state';
 
-import styles from '../SchemaExplorer.scss';
+import styles from '../SchemaExplorer.module.scss';
 import {
   RelName as RelNameTooltip,
   RemoteSchema as RemoteSchemaTooltip,

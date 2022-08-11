@@ -69,9 +69,8 @@ const useLoadData = (sources?: MetadataDataSource[]) => {
 
 export const RemoteDatabaseWidget = () => {
   const { data: sources, isError: sourcesError } = useSources();
-  const { sourceOptions, schemaOptions, tableOptions, driver } = useLoadData(
-    sources
-  );
+  const { sourceOptions, schemaOptions, tableOptions, driver } =
+    useLoadData(sources);
 
   if (sourcesError) {
     return (

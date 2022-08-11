@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaHeart, FaStar, FaTimes, FaTwitter } from 'react-icons/fa';
-import styles from './Main.scss';
+import styles from './Main.module.scss';
 import PixelHeart from './images/components/PixelHeart';
 import globals from '../../Globals';
 

@@ -26,7 +26,11 @@ export const NonTrackableFunctions = ({
   }, [currentDatasource, dispatch, driver]);
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
-  const { data: schemas, isError, error } = useSchemaList(
+  const {
+    data: schemas,
+    isError,
+    error,
+  } = useSchemaList(
     {
       source,
       driver: currentDriver,
@@ -52,9 +56,10 @@ export const NonTrackableFunctions = ({
       retry: 0,
     }
   );
-  const keys = React.useMemo(() => Object.keys(functions?.[0] ?? {}), [
-    functions,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(functions?.[0] ?? {}),
+    [functions]
+  );
 
   if (isError || isError2) {
     return (

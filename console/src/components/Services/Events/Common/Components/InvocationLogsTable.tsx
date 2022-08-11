@@ -46,9 +46,8 @@ interface Props extends FilterTableProps {
 
 const InvocationLogsTable: React.FC<Props> = props => {
   const { rows, filterState, runQuery, columns, count, dispatch } = props;
-  const [redeliveredEventId, setRedeliveredEventId] = React.useState<
-    Nullable<string>
-  >(null);
+  const [redeliveredEventId, setRedeliveredEventId] =
+    React.useState<Nullable<string>>(null);
   const [isRedelivering, setIsRedelivering] = React.useState(false);
   const [currentPage, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(10);

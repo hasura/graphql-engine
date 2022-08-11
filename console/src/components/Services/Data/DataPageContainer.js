@@ -6,7 +6,7 @@ import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 import { CLI_CONSOLE_MODE } from '../../../constants';
-import styles from '../../Common/TableCommon/Table.scss';
+import styles from '../../Common/TableCommon/Table.module.scss';
 import { isFeatureSupported } from '../../../dataSources';
 import { fetchPostgresVersion } from '../../Main/Actions';
 

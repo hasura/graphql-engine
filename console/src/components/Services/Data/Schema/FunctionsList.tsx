@@ -6,7 +6,7 @@ import { addExistingFunction } from '../Add/AddExistingTableViewActions';
 import Button from '../../../Common/Button';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import { Note } from '../../../Common/Note';
-import styles from './styles.scss';
+import styles from './styles.module.scss';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 import { isTrackableAndComputedField } from './utils';
 import _push from '../push';

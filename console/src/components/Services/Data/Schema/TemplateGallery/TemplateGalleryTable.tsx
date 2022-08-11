@@ -6,8 +6,8 @@ import {
   schemaSharingSelectors,
 } from './Actions';
 import { currentDriver } from '../../../../../dataSources';
-import styles from './TemplateGallery.scss';
-import globalStyles from '../../../../Common/Common.scss';
+import styles from './TemplateGallery.module.scss';
+import globalStyles from '../../../../Common/Common.module.scss';
 import { modalOpenFn, TemplateGalleryTemplateItem } from './types';
 
 export const TemplateGalleryContentRow: React.VFC<{

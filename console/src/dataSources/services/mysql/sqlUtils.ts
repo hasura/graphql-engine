@@ -180,36 +180,29 @@ export const getDropNotNullSql = (
   return sql;
 };
 
-export const getAlterTableCommentSql: DataSourcesAPI['getAlterTableCommentSql'] = ({
-  tableName,
-  schemaName,
-  comment,
-}) => {
-  const commentStr = sqlEscapeText(comment);
-  return `alter table ${getMySQLNameString(
-    schemaName,
-    tableName
-  )} comment = ${commentStr};`;
-};
+export const getAlterTableCommentSql: DataSourcesAPI['getAlterTableCommentSql'] =
+  ({ tableName, schemaName, comment }) => {
+    const commentStr = sqlEscapeText(comment);
+    return `alter table ${getMySQLNameString(
+      schemaName,
+      tableName
+    )} comment = ${commentStr};`;
+  };
 
-export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'] = ({
-  tableName,
-  schemaName,
-  columnName,
-  columnType,
-  comment,
-}) => {
-  const commentStr = sqlEscapeText(comment);
+export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'] =
+  ({ tableName, schemaName, columnName, columnType, comment }) => {
+    const commentStr = sqlEscapeText(comment);
 
-  return `alter table ${getMySQLNameString(
-    schemaName,
-    tableName
-  )} modify column \`${columnName}\` ${columnType} comment ${commentStr};`;
-};
+    return `alter table ${getMySQLNameString(
+      schemaName,
+      tableName
+    )} modify column \`${columnName}\` ${columnType} comment ${commentStr};`;
+  };
 
-export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] = () => {
-  return '';
-};
+export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] =
+  () => {
+    return '';
+  };
 
 export const getSetColumnDefaultSql = (
   tableName: string,

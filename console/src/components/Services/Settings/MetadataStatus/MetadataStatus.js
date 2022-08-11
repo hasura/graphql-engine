@@ -24,18 +24,16 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const resolveInconsistentInheritedRole = inconsistentInheritedRoleObj => {
-    const {
-      table,
-      source,
-      permission_type,
-    } = inconsistentInheritedRoleObj.entity;
+    const { table, source, permission_type } =
+      inconsistentInheritedRoleObj.entity;
     const role = inconsistentInheritedRoleObj.name;
     const schema = metadata.metadataObject.sources
       .find(s => s.name === source)
       .tables.find(t => t.table.name === table).table.schema;
 
-    const driver = metadata.metadataObject.sources.find(s => s.name === source)
-      .kind;
+    const driver = metadata.metadataObject.sources.find(
+      s => s.name === source
+    ).kind;
 
     /* 
       Load up the database details and schema details

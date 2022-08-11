@@ -5,7 +5,7 @@ import { push } from 'react-router-redux';
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
 
-import styles from './PermissionsSummary.scss';
+import styles from './PermissionsSummary.module.scss';
 
 import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArgValue } from '../utils';
-import styles from '../SchemaExplorer.scss';
+import styles from '../SchemaExplorer.module.scss';
 import { HasuraColumn } from './Explorer';
 
 type Props = {

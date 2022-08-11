@@ -162,7 +162,8 @@ const currentVersion = 2;
 export const requestBodyActionState = {
   remove: 'remove' as RequestTransformBodyActions,
   transformApplicationJson: 'transform' as RequestTransformBodyActions,
-  transformFormUrlEncoded: 'x_www_form_urlencoded' as RequestTransformBodyActions,
+  transformFormUrlEncoded:
+    'x_www_form_urlencoded' as RequestTransformBodyActions,
 };
 
 export const requestTransformState: RequestTransformState = {
@@ -185,37 +186,39 @@ export const requestTransformState: RequestTransformState = {
   templatingEngine: 'Kriti',
 };
 
-export const getActionRequestTransformDefaultState = (): RequestTransformState => {
-  return {
-    ...requestTransformState,
-    envVars: getEnvVarsFromLS(),
-    sessionVars: getSessionVarsFromLS(),
-    requestQueryParams: [{ name: '', value: '' }],
-    requestAddHeaders: [{ name: '', value: '' }],
-    requestBody: {
-      action: requestBodyActionState.transformApplicationJson,
-      template: defaultActionRequestBody,
-      form_template: [{ name: 'name', value: '{{$body.action.name}}' }],
-    },
-    requestSampleInput: defaultActionRequestSampleInput,
+export const getActionRequestTransformDefaultState =
+  (): RequestTransformState => {
+    return {
+      ...requestTransformState,
+      envVars: getEnvVarsFromLS(),
+      sessionVars: getSessionVarsFromLS(),
+      requestQueryParams: [{ name: '', value: '' }],
+      requestAddHeaders: [{ name: '', value: '' }],
+      requestBody: {
+        action: requestBodyActionState.transformApplicationJson,
+        template: defaultActionRequestBody,
+        form_template: [{ name: 'name', value: '{{$body.action.name}}' }],
+      },
+      requestSampleInput: defaultActionRequestSampleInput,
+    };
   };
-};
 
-export const getEventRequestTransformDefaultState = (): RequestTransformState => {
-  return {
-    ...requestTransformState,
-    envVars: getEnvVarsFromLS(),
-    sessionVars: getSessionVarsFromLS(),
-    requestQueryParams: [{ name: '', value: '' }],
-    requestAddHeaders: [{ name: '', value: '' }],
-    requestBody: {
-      action: requestBodyActionState.transformApplicationJson,
-      template: defaultEventRequestBody,
-      form_template: [{ name: 'name', value: '{{$body.table.name}}' }],
-    },
-    requestSampleInput: defaultEventRequestSampleInput,
+export const getEventRequestTransformDefaultState =
+  (): RequestTransformState => {
+    return {
+      ...requestTransformState,
+      envVars: getEnvVarsFromLS(),
+      sessionVars: getSessionVarsFromLS(),
+      requestQueryParams: [{ name: '', value: '' }],
+      requestAddHeaders: [{ name: '', value: '' }],
+      requestBody: {
+        action: requestBodyActionState.transformApplicationJson,
+        template: defaultEventRequestBody,
+        form_template: [{ name: 'name', value: '{{$body.table.name}}' }],
+      },
+      requestSampleInput: defaultEventRequestSampleInput,
+    };
   };
-};
 
 export const requestTransformReducer = (
   state = requestTransformState,

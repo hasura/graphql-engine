@@ -29,8 +29,7 @@ export const inconsistentRelationshipObject = [
       source: 'default',
       Comment: null,
     },
-    name:
-      'object_relation relationshipName in table TestSchema.Table1 in source default',
+    name: 'object_relation relationshipName in table TestSchema.Table1 in source default',
     reason: 'Inconsistent object: table "TestSchema.Table2" is not tracked',
     type: 'object_relation',
   },
@@ -58,8 +57,7 @@ export const inconsistentObject = [
       source: 'default',
       Comment: null,
     },
-    name:
-      'object_relation relationshipName in table TestSchema.Table1 in source default',
+    name: 'object_relation relationshipName in table TestSchema.Table1 in source default',
     reason: 'Inconsistent object: table "TestSchema.Table2" is not tracked',
     type: 'object_relation',
   },

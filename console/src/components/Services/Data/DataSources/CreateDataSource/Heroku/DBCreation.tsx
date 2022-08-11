@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { FaCircleNotch } from 'react-icons/fa';
-import styles from '../styles.scss';
+import styles from '../styles.module.scss';
 import { HerokuSession } from './types';
 import {
   useHerokuDBCreation,
@@ -40,9 +40,8 @@ const DBCreation: React.FC<Props> = ({
   );
   const [isSettingEnvVar, setIsSettingEnvVar] = React.useState(false);
   const [createdEnvVar, setCreatedEnvVar] = React.useState('');
-  const [isConnectingDataSource, setIsConnectingDataSource] = React.useState(
-    false
-  );
+  const [isConnectingDataSource, setIsConnectingDataSource] =
+    React.useState(false);
   const loading = inProgress || isSettingEnvVar || isConnectingDataSource;
   const herokuButtonClassName = loading
     ? `${styles.herokuButtonBoxDisabled} ${styles.add_mar_bottom}`

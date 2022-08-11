@@ -4,7 +4,7 @@ import tabInfo from './customTypesTabs';
 import { appPrefix } from '../constants';
 
 const CustomTypesContainer = ({ children, tabName }) => {
-  const styles = require('../Actions.scss');
+  const styles = require('../Actions.module.scss');
 
   const breadCrumbs = [
     {

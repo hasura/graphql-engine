@@ -58,11 +58,10 @@ export const validateOperation = (operationString, clientSchema) => {
   }
 
   // filter schema specific fields from the operation
-  operationAst.definitions[0].selectionSet.selections = operationAst.definitions[0].selectionSet.selections.filter(
-    s => {
+  operationAst.definitions[0].selectionSet.selections =
+    operationAst.definitions[0].selectionSet.selections.filter(s => {
       return s.name.value.indexOf('__') !== 0;
-    }
-  );
+    });
 
   // throw error if no operation is being made
   if (!operationAst.definitions[0].selectionSet.selections.length) {
@@ -155,10 +154,8 @@ const deriveAction = (
       newTypes[typename] = true;
       Object.values(typeFields).forEach(tf => {
         const _tf = { name: tf.name };
-        const {
-          type: underLyingType,
-          wraps: fieldTypeWraps,
-        } = getUnderlyingType(tf.type);
+        const { type: underLyingType, wraps: fieldTypeWraps } =
+          getUnderlyingType(tf.type);
         if (
           inbuiltTypes[underLyingType.name] ||
           isHasuraScalar(underLyingType.name)

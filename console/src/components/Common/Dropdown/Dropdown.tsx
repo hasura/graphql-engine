@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { getParentNodeByAttribute } from '../../../utils/domFunctions';
-import styles from './Dropdown.scss';
+import styles from './Dropdown.module.scss';
 
 export type DropdownPosition = 'bottom' | 'right';
 export type DropdownOption = {

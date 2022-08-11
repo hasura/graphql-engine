@@ -81,8 +81,9 @@ const generateWhereClauseQueryString = (
     const columnName = Object.keys(i)[0];
     const RqlOperator = Object.keys(i[columnName])[0];
     const value = i[columnName][RqlOperator];
-    const type = columnTypeInfo?.find(c => c.column_name === columnName)
-      ?.data_type_name;
+    const type = columnTypeInfo?.find(
+      c => c.column_name === columnName
+    )?.data_type_name;
     return `${
       columnConfig[columnName]?.custom_name ?? columnName
     }: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(

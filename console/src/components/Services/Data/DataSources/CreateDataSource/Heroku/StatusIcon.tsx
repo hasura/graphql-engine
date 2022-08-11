@@ -2,7 +2,7 @@ import * as React from 'react';
 import { FaCheck, FaCircleNotch, FaTimes } from 'react-icons/fa';
 
 import { ProgressState } from './types';
-import styles from '../styles.scss';
+import styles from '../styles.module.scss';
 
 const Pending: React.FC = () => {
   return (

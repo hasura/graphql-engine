@@ -75,23 +75,23 @@ const collectHeaders = (allHeaders: HeaderState[]) =>
   }, {});
 
 // in the spirit of DRY
-const updateHeaderTextValues = (
-  type: HeaderStateAction['type'],
-  dispatch: Dispatch<HeaderStateAction>
-) => (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
-  if (
-    type !== 'RequestHeaders/SET_HEADER_KEY_TEXT' &&
-    type !== 'RequestHeaders/SET_HEADER_VALUE_TEXT'
-  ) {
-    return;
-  }
+const updateHeaderTextValues =
+  (type: HeaderStateAction['type'], dispatch: Dispatch<HeaderStateAction>) =>
+  (index: number) =>
+  (e: ChangeEvent<HTMLInputElement>) => {
+    if (
+      type !== 'RequestHeaders/SET_HEADER_KEY_TEXT' &&
+      type !== 'RequestHeaders/SET_HEADER_VALUE_TEXT'
+    ) {
+      return;
+    }
 
-  dispatch({
-    type,
-    index,
-    data: e.target.value,
-  });
-};
+    dispatch({
+      type,
+      index,
+      data: e.target.value,
+    });
+  };
 
 const getRequestMethod = (supportedMethods: AllowedRESTMethods[]) => {
   const filteredMethods = supportedMethods.filter(method => method !== 'GET');
@@ -148,15 +148,14 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     });
   };
 
-  const updateVariableText = (name: string) => (
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
-    variableDispatch({
-      type: 'RequestVariables/SET_HEADER_VALUE_TEXT',
-      data: e.target.value,
-      name,
-    });
-  };
+  const updateVariableText =
+    (name: string) => (e: ChangeEvent<HTMLInputElement>) => {
+      variableDispatch({
+        type: 'RequestVariables/SET_HEADER_VALUE_TEXT',
+        data: e.target.value,
+        name,
+      });
+    };
 
   const onClickAddHeader = () => {
     headerDispatch({

@@ -53,17 +53,15 @@ const RelationshipsView = ({
     });
   }, [tableName, currentSchema, dispatch]);
 
-  const styles = require('../TableModify/ModifyTable.scss');
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+  const styles = require('../TableModify/ModifyTable.module.scss');
+  const tableStyles = require('../../../Common/TableCommon/TableStyles.module.scss');
 
   const tableSchema = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const {
-    data: featureFlagsData,
-    isLoading: isFeatureFlagsLoading,
-  } = useFeatureFlags();
+  const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
+    useFeatureFlags();
   if (isFeatureFlagsLoading) return <div>Loading...</div>;
 
   const newRelationshipsTabIsEnabled =

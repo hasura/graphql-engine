@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from './ModifyCustomFunction.scss';
+import styles from './ModifyCustomFunction.module.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import Button from '../../../../Common/Button';
 import EditorInput from './EditorInput';
@@ -36,9 +36,10 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   const onSessVarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSessVar(e.target.value);
   };
-  const closeEditPopUp = React.useCallback(() => setIsEditing(false), [
-    setIsEditing,
-  ]);
+  const closeEditPopUp = React.useCallback(
+    () => setIsEditing(false),
+    [setIsEditing]
+  );
   const onSave = () => {
     if (sessVar !== (configuration?.session_argument || ''))
       onSessVarUpdate(sessVar).then(closeEditPopUp);

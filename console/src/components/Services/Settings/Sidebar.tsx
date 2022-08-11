@@ -8,7 +8,7 @@ import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
 
-import styles from '../../Common/TableCommon/Table.scss';
+import styles from '../../Common/TableCommon/Table.module.scss';
 import {
   checkFeatureSupport,
   INSECURE_TLS_ALLOW_LIST,

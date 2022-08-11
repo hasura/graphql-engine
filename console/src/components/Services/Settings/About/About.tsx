@@ -13,11 +13,11 @@ type AboutState = {
 
 class About extends Component<ConnectInjectedProps & StateProps> {
   // had to add this here as the state type is not being read properly if added above.
-  state: AboutState = {
+  override state: AboutState = {
     consoleAssetVersion: globals.consoleAssetVersion,
   };
 
-  render() {
+  override render() {
     const { consoleAssetVersion } = this.state;
 
     const { serverVersion } = this.props;

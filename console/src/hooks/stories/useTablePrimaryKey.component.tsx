@@ -44,9 +44,10 @@ export const PrimaryKeys = ({
     }
   );
   const keys = React.useMemo(() => Object.keys(primaryKey ?? {}), [primaryKey]);
-  const entries = React.useMemo(() => Object.values(primaryKey ?? {}), [
-    primaryKey,
-  ]);
+  const entries = React.useMemo(
+    () => Object.values(primaryKey ?? {}),
+    [primaryKey]
+  );
 
   if (isError) {
     return <p className="text-red-500">Error: {error?.message}</p>;

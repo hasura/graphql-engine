@@ -22,12 +22,8 @@ export const queryRootPermissionFields: QueryRootPermissionType[] = [
   'select_aggregate',
 ];
 
-export const subscriptionRootPermissionFields: SubscriptionRootPermissionType[] = [
-  'select',
-  'select_by_pk',
-  'select_aggregate',
-  'select_stream',
-];
+export const subscriptionRootPermissionFields: SubscriptionRootPermissionType[] =
+  ['select', 'select_by_pk', 'select_aggregate', 'select_stream'];
 
 export const QUERY_ROOT_VALUES = 'query_root_values';
 export const SUBSCRIPTION_ROOT_VALUES = 'subscription_root_values';

@@ -4,7 +4,7 @@ import { isJsonString, getConfirmation } from '../../../Common/utils/jsUtils';
 import { FilterState } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { permChangePermissions, permChangeTypes } from './Actions';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.module.scss';
 import { Dispatch } from '../../../../types';
 
 interface PermButtonSectionProps {

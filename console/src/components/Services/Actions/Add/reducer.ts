@@ -84,9 +84,10 @@ export const setDerivedActionParentOperation = (
   operationString,
 });
 
-export const resetDerivedActionParentOperation = (): ResetDerivedActionParentOperation => ({
-  type: RESET_DERIVED_ACTION_PARENT_OPERATION,
-});
+export const resetDerivedActionParentOperation =
+  (): ResetDerivedActionParentOperation => ({
+    type: RESET_DERIVED_ACTION_PARENT_OPERATION,
+  });
 
 export const setFetching = (): SetFetching => ({ type: SET_FETCHING });
 export const unsetFetching = (): UnsetFetching => ({ type: UNSET_FETCHING });

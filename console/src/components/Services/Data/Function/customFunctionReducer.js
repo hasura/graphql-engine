@@ -325,99 +325,95 @@ const saveFunctionComment = updatedComment => (dispatch, getState) => {
   );
 };
 
-const setFunctionPermission = (userRole, onSuccessCb) => (
-  dispatch,
-  getState
-) => {
-  const { currentDataSource, currentSchema } = getState().tables;
-  const { functionName } = getState().functions;
-  const currentFunction = { schema: currentSchema, name: functionName };
+const setFunctionPermission =
+  (userRole, onSuccessCb) => (dispatch, getState) => {
+    const { currentDataSource, currentSchema } = getState().tables;
+    const { functionName } = getState().functions;
+    const currentFunction = { schema: currentSchema, name: functionName };
 
-  const upQuery = createFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
-  );
-  const downQuery = dropFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
-  );
+    const upQuery = createFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
+    const downQuery = dropFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
 
-  const migrationName = `set_permission_role_${userRole}_function_${functionName}`;
-  const requestMsg = `Setting permisions for ${userRole} role on ${functionName}`;
-  const successMsg = `Successfully set permissions for ${userRole}`;
-  const errorMsg = `Failed to set permissions for ${userRole}`;
+    const migrationName = `set_permission_role_${userRole}_function_${functionName}`;
+    const requestMsg = `Setting permisions for ${userRole} role on ${functionName}`;
+    const successMsg = `Successfully set permissions for ${userRole}`;
+    const errorMsg = `Failed to set permissions for ${userRole}`;
 
-  const customOnSuccess = () => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS });
-    dispatch(exportMetadata(onSuccessCb));
+    const customOnSuccess = () => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS });
+      dispatch(exportMetadata(onSuccessCb));
+    };
+
+    const customOnError = err => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_FAIL, data: err });
+    };
+
+    return dispatch(
+      makeRequest(
+        [upQuery],
+        [downQuery],
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg
+      )
+    );
   };
 
-  const customOnError = err => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_FAIL, data: err });
+const dropFunctionPermission =
+  (userRole, onSuccessCb) => (dispatch, getState) => {
+    const { currentDataSource, currentSchema } = getState().tables;
+    const { functionName } = getState().functions;
+    const currentFunction = { schema: currentSchema, name: functionName };
+
+    const upQuery = dropFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
+    const downQuery = createFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
+
+    const migrationName = `drop_permission_role_${userRole}_function_${functionName}`;
+    const requestMsg = `Dropping permisions for ${userRole} role on ${functionName}`;
+    const successMsg = `Successfully dropped permissions for ${userRole}`;
+    const errorMsg = `Failed to drop permissions for ${userRole}`;
+
+    const customOnSuccess = () => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS });
+      dispatch(exportMetadata(onSuccessCb));
+    };
+
+    const customOnError = err => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_FAIL, data: err });
+    };
+
+    return dispatch(
+      makeRequest(
+        [upQuery],
+        [downQuery],
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg
+      )
+    );
   };
-
-  return dispatch(
-    makeRequest(
-      [upQuery],
-      [downQuery],
-      migrationName,
-      customOnSuccess,
-      customOnError,
-      requestMsg,
-      successMsg,
-      errorMsg
-    )
-  );
-};
-
-const dropFunctionPermission = (userRole, onSuccessCb) => (
-  dispatch,
-  getState
-) => {
-  const { currentDataSource, currentSchema } = getState().tables;
-  const { functionName } = getState().functions;
-  const currentFunction = { schema: currentSchema, name: functionName };
-
-  const upQuery = dropFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
-  );
-  const downQuery = createFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
-  );
-
-  const migrationName = `drop_permission_role_${userRole}_function_${functionName}`;
-  const requestMsg = `Dropping permisions for ${userRole} role on ${functionName}`;
-  const successMsg = `Successfully dropped permissions for ${userRole}`;
-  const errorMsg = `Failed to drop permissions for ${userRole}`;
-
-  const customOnSuccess = () => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS });
-    dispatch(exportMetadata(onSuccessCb));
-  };
-
-  const customOnError = err => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_FAIL, data: err });
-  };
-
-  return dispatch(
-    makeRequest(
-      [upQuery],
-      [downQuery],
-      migrationName,
-      customOnSuccess,
-      customOnError,
-      requestMsg,
-      successMsg,
-      errorMsg
-    )
-  );
-};
 
 /* Reducer */
 const customFunctionReducer = (state = functionData, action) => {

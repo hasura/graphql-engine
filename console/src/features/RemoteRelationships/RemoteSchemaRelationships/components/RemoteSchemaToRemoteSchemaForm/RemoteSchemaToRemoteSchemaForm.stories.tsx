@@ -31,9 +31,8 @@ Primary.args = {
   closeHandler: () => {},
 };
 
-export const PrimaryWithTest: Story<RemoteSchemaToRemoteSchemaFormProps> = args => (
-  <RemoteSchemaToRemoteSchemaForm {...args} />
-);
+export const PrimaryWithTest: Story<RemoteSchemaToRemoteSchemaFormProps> =
+  args => <RemoteSchemaToRemoteSchemaForm {...args} />;
 
 PrimaryWithTest.args = Primary.args;
 
@@ -72,9 +71,8 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   userEvent.click(submitButton);
 };
 
-export const WithExistingRelationship: Story<RemoteSchemaToRemoteSchemaFormProps> = args => (
-  <RemoteSchemaToRemoteSchemaForm {...args} />
-);
+export const WithExistingRelationship: Story<RemoteSchemaToRemoteSchemaFormProps> =
+  args => <RemoteSchemaToRemoteSchemaForm {...args} />;
 WithExistingRelationship.args = {
   ...Primary.args,
   sourceRemoteSchema: 'with_default_values',

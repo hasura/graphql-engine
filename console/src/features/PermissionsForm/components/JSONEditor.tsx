@@ -49,9 +49,10 @@ export const JSONEditor: React.FC<JSONEditorProps> = ({
     if (isJsonString(data)) setValue(data);
   }, [data]);
 
-  const onEditorValueChange = useCallback(newVal => setValue(newVal), [
-    setValue,
-  ]);
+  const onEditorValueChange = useCallback(
+    newVal => setValue(newVal),
+    [setValue]
+  );
 
   return (
     <AceEditor

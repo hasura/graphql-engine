@@ -11,7 +11,7 @@ import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL, removeCommentsSQL } from './utils';
-import styles from '../../../Common/TableCommon/Table.scss';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 import {
   executeSQL,
   SET_SQL,

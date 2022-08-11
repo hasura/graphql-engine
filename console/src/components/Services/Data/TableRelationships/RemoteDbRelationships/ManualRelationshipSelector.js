@@ -1,6 +1,6 @@
 import React from 'react';
 import { getSupportedDrivers } from '@/dataSources';
-import styles from '../../../../Common/TableCommon/Table.scss';
+import styles from '../../../../Common/TableCommon/Table.module.scss';
 import {
   relSetDriver,
   relSetName,

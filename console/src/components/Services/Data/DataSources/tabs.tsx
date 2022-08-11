@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from '../../../Common/Layout/ReusableTabs/ReusableTabs';
 import Globals from '../../../../Globals';
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
 
 const tabs: Tabs = {
   connect: {

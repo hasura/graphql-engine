@@ -26,7 +26,11 @@ export const AllUniqueKeys = ({
   }, [currentDatasource, dispatch, driver]);
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
-  const { data: schemas, isError, error } = useSchemaList(
+  const {
+    data: schemas,
+    isError,
+    error,
+  } = useSchemaList(
     {
       source,
       driver: currentDriver,
@@ -47,9 +51,10 @@ export const AllUniqueKeys = ({
       retry: 0,
     }
   );
-  const keys = React.useMemo(() => Object.keys(uniqueKeys?.[0] ?? {}), [
-    uniqueKeys,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(uniqueKeys?.[0] ?? {}),
+    [uniqueKeys]
+  );
 
   if (isError || isError2) {
     return (

@@ -30,9 +30,8 @@ Primary.args = {
   },
 };
 
-export const WithExistingRelationship: Story<RemoteDBRelationshipWidgetProps> = args => (
-  <RemoteDBRelationshipWidget {...args} />
-);
+export const WithExistingRelationship: Story<RemoteDBRelationshipWidgetProps> =
+  args => <RemoteDBRelationshipWidget {...args} />;
 WithExistingRelationship.args = {
   ...Primary.args,
   existingRelationshipName: 'AlbumToResident',
@@ -92,14 +91,15 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   );
 };
 
-export const ExistingRelationshipWithTest: Story<RemoteDBRelationshipWidgetProps> = args => (
-  <RemoteDBRelationshipWidget
-    {...args}
-    onComplete={d => {
-      callbackResponse = d;
-    }}
-  />
-);
+export const ExistingRelationshipWithTest: Story<RemoteDBRelationshipWidgetProps> =
+  args => (
+    <RemoteDBRelationshipWidget
+      {...args}
+      onComplete={d => {
+        callbackResponse = d;
+      }}
+    />
+  );
 ExistingRelationshipWithTest.args = {
   ...Primary.args,
   existingRelationshipName: 'AlbumToResident',

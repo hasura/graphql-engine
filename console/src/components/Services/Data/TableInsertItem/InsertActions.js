@@ -36,55 +36,51 @@ const I_FETCH_ENUM_OPTIONS_ERROR = 'InsertItem/I_FETCH_ENUM_ERROR';
 const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
 
-const insertItemAsMigration = (
-  tableInfo,
-  insertedData,
-  primaryKeyInfo,
-  columns,
-  callback
-) => (dispatch, getState) => {
-  const source = getState().tables.currentDataSource;
+const insertItemAsMigration =
+  (tableInfo, insertedData, primaryKeyInfo, columns, callback) =>
+  (dispatch, getState) => {
+    const source = getState().tables.currentDataSource;
 
-  const upQuery = getInsertUpQuery(
-    { name: tableInfo.name, schema: tableInfo.schema },
-    insertedData,
-    columns,
-    source
-  );
-  const downQuery = getInsertDownQuery(
-    { name: tableInfo.name, schema: tableInfo.schema },
-    insertedData,
-    primaryKeyInfo,
-    columns,
-    source
-  );
+    const upQuery = getInsertUpQuery(
+      { name: tableInfo.name, schema: tableInfo.schema },
+      insertedData,
+      columns,
+      source
+    );
+    const downQuery = getInsertDownQuery(
+      { name: tableInfo.name, schema: tableInfo.schema },
+      insertedData,
+      primaryKeyInfo,
+      columns,
+      source
+    );
 
-  const migrationName = `insert_into_${tableInfo.schema}_${tableInfo.name}`;
-  const customOnSuccess = () => {
-    if (callback) {
-      callback();
-    }
+    const migrationName = `insert_into_${tableInfo.schema}_${tableInfo.name}`;
+    const customOnSuccess = () => {
+      if (callback) {
+        callback();
+      }
+    };
+    const customOnError = () => {};
+    const requestMessage = 'Creating migration...';
+    const successMessage = 'Migration created';
+    const errorMessage = 'Creating migration failed';
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      [downQuery],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMessage,
+      successMessage,
+      errorMessage,
+      true,
+      true
+    );
   };
-  const customOnError = () => {};
-  const requestMessage = 'Creating migration...';
-  const successMessage = 'Migration created';
-  const errorMessage = 'Creating migration failed';
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    [upQuery],
-    [downQuery],
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMessage,
-    successMessage,
-    errorMessage,
-    true,
-    true
-  );
-};
 
 /* ****************** insert action creators ************ */
 const insertItem = (tableName, colValues, isMigration = false) => {

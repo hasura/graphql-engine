@@ -26,7 +26,13 @@ export const SchemaList = ({
 
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
-  const { data: schemas, isError, error, isLoading, isSuccess } = useSchemaList(
+  const {
+    data: schemas,
+    isError,
+    error,
+    isLoading,
+    isSuccess,
+  } = useSchemaList(
     {
       source,
       driver: currentDriver,

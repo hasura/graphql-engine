@@ -27,9 +27,8 @@ export const Field: React.FC<FieldProps> = ({
   expanded,
 }) => {
   const [inputPresetMode, setInputPresetMode] = useState<boolean>(false);
-  const [autoExpandInputPresets, setAutoExpandInputPresets] = useState<boolean>(
-    false
-  );
+  const [autoExpandInputPresets, setAutoExpandInputPresets] =
+    useState<boolean>(false);
   const context: any = useContext(PermissionEditorContext);
   let initState;
   if (i.parentName) {

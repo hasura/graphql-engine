@@ -43,11 +43,9 @@ export const mergeFlagWithState = (
 
 export function useFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
   return useQuery(['featureFlags', 'all'], () =>
-    Promise.all([
-      getAvailableFeatureFlags(),
-      getFeatureFlagStore(),
-    ]).then(([flags, state]) =>
-      mergeFlagWithState([...(additionalFlags ?? []), ...flags], state)
+    Promise.all([getAvailableFeatureFlags(), getFeatureFlagStore()]).then(
+      ([flags, state]) =>
+        mergeFlagWithState([...(additionalFlags ?? []), ...flags], state)
     )
   );
 }

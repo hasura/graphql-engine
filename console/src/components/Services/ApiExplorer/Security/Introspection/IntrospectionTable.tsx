@@ -7,7 +7,7 @@ import {
   TableRow,
   TableSideBar,
 } from '../../../../Common/Table';
-import styles from '../Security.scss';
+import styles from '../Security.module.scss';
 import { Legends } from '../utils';
 import IntrospectionForm from './IntrospectionForm';
 

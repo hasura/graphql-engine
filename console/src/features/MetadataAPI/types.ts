@@ -79,7 +79,8 @@ export interface TableRelationship {
   };
 }
 
-export type AllMetadataQueries = `${SupportedDataSourcesPrefix}${MetadataQueryType}`;
+export type AllMetadataQueries =
+  `${SupportedDataSourcesPrefix}${MetadataQueryType}`;
 
 // TODO: these could be more strongly typed
 export type allowedMetadataTypes =

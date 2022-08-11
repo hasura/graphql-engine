@@ -8,7 +8,7 @@ import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTab
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
-import styles from './ModifyCustomFunction.scss';
+import styles from './ModifyCustomFunction.module.scss';
 import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import FunctionCommentEditor from './FunctionCommentEditor';
 import {
@@ -39,12 +39,10 @@ class ModifyCustomFunction extends React.Component {
       funcFetchCompleted: false,
     };
 
-    this.handleUntrackCustomFunction = this.handleUntrackCustomFunction.bind(
-      this
-    );
-    this.handleDeleteCustomFunction = this.handleDeleteCustomFunction.bind(
-      this
-    );
+    this.handleUntrackCustomFunction =
+      this.handleUntrackCustomFunction.bind(this);
+    this.handleDeleteCustomFunction =
+      this.handleDeleteCustomFunction.bind(this);
     this.urlWithSource = `/data/${props.currentSource}`;
     this.prefixUrl = globals.urlPrefix + this.urlWithSource;
     this.urlWithSchema = `/data/${props.currentSource}/schema/${props.currentSchema}`;
@@ -238,7 +236,6 @@ class ModifyCustomFunction extends React.Component {
               defaultValue={functionComment}
               dispatch={dispatch}
               readOnly={!isFeatureSupported('functions.modify.comments.edit')}
-              dispatch={dispatch}
             />
           </div>
         )}
@@ -292,8 +289,7 @@ const mapStateToProps = state => ({
 });
 
 const modifyCustomFnConnector = connect(mapStateToProps);
-const ConnectedModifyCustomFunction = modifyCustomFnConnector(
-  ModifyCustomFunction
-);
+const ConnectedModifyCustomFunction =
+  modifyCustomFnConnector(ModifyCustomFunction);
 
 export default ConnectedModifyCustomFunction;

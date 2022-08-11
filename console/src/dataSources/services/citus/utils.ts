@@ -250,9 +250,8 @@ export const processTableRowData = (
       : results?.map((row: Record<string, any>) =>
           Object.entries(row).reduce(
             (acc: Record<string, any>, [maybeCustomCol, col]) => {
-              acc[
-                reversedCustomColumns[maybeCustomCol] ?? maybeCustomCol
-              ] = col;
+              acc[reversedCustomColumns[maybeCustomCol] ?? maybeCustomCol] =
+                col;
               return acc;
             },
             {}
@@ -333,9 +332,11 @@ const processInsertData = (
     tableConfiguration,
     operation: 'insert',
   });
-  const returnedFields = (result as {
-    data: Record<string, Record<string, any>>;
-  })?.data?.[index]?.returning;
+  const returnedFields = (
+    result as {
+      data: Record<string, Record<string, any>>;
+    }
+  )?.data?.[index]?.returning;
   return {
     affectedRows: 1,
     returnedFields:
@@ -576,8 +577,9 @@ const processBulkDeleteRowData = (data: Record<string, any>) => {
   }
 };
 
-export const generateBulkDeleteRowRequest = (): GenerateBulkDeleteRowRequest => ({
-  endpoint: Endpoints.graphQLUrl,
-  getBulkDeleteRowRequestBody,
-  processBulkDeleteRowData,
-});
+export const generateBulkDeleteRowRequest =
+  (): GenerateBulkDeleteRowRequest => ({
+    endpoint: Endpoints.graphQLUrl,
+    getBulkDeleteRowRequestBody,
+    processBulkDeleteRowData,
+  });

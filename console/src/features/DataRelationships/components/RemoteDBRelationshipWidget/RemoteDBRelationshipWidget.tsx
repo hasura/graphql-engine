@@ -53,7 +53,11 @@ export const RemoteDBRelationshipWidget = ({
   onComplete,
 }: RemoteDBRelationshipWidgetProps) => {
   // hook to fetch data for existing relationship
-  const { data: defaultValues, isLoading, isError } = useDefaultValues({
+  const {
+    data: defaultValues,
+    isLoading,
+    isError,
+  } = useDefaultValues({
     sourceTableInfo,
     existingRelationshipName,
   });

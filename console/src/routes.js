@@ -3,10 +3,10 @@ import { Route, IndexRedirect, IndexRoute } from 'react-router';
 import { connect } from 'react-redux';
 
 import globals from './Globals';
-import { App, Main, PageNotFound } from 'components';
+import { App, Main, PageNotFound } from './components';
 import validateLogin from './utils/validateLogin';
 import { requireAsyncGlobals } from './components/App/Actions';
-import { composeOnEnterHooks } from 'utils/router';
+import { composeOnEnterHooks } from './utils/router';
 import { loadMigrationStatus } from './components/Main/Actions';
 import { dataRouterUtils } from './components/Services/Data';
 import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';

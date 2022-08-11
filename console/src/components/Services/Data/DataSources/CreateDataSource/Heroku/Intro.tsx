@@ -1,5 +1,5 @@
 import * as React from 'react';
-import styles from '../styles.scss';
+import styles from '../styles.module.scss';
 import Button from '../../../../../Common/Button';
 import { HerokuSession } from './types';
 import { Dispatch } from '../../../../../../types';

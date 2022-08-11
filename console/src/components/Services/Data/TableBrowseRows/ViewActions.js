@@ -72,11 +72,8 @@ const vMakeRowsRequest = () => {
     const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
-    const {
-      endpoint,
-      getTableRowRequestBody,
-      processTableRowData,
-    } = dataSource.generateTableRowRequest();
+    const { endpoint, getTableRowRequestBody, processTableRowData } =
+      dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
       body: JSON.stringify(
@@ -124,11 +121,8 @@ const vMakeExportRequest = () => {
     const headers = dataHeaders(getState);
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getConfiguration(tables, sources);
-    const {
-      endpoint,
-      getTableRowRequestBody,
-      processTableRowData,
-    } = dataSource.generateTableRowRequest();
+    const { endpoint, getTableRowRequestBody, processTableRowData } =
+      dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
       body: JSON.stringify(
@@ -170,11 +164,8 @@ const vMakeCountRequest = () => {
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getConfiguration(tables, sources);
 
-    const {
-      endpoint,
-      getRowsCountRequestBody,
-      processCount,
-    } = dataSource.generateRowsCountRequest();
+    const { endpoint, getRowsCountRequestBody, processCount } =
+      dataSource.generateRowsCountRequest();
     const requestBody = getRowsCountRequestBody({ tables, tableConfiguration });
 
     const options = {
@@ -259,11 +250,8 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getTableConfiguration(tables, sources);
 
-    const {
-      endpoint,
-      getDeleteRowRequestBody,
-      processDeleteRowData,
-    } = dataSource.generateDeleteRowRequest();
+    const { endpoint, getDeleteRowRequestBody, processDeleteRowData } =
+      dataSource.generateDeleteRowRequest();
     const reqBody = getDeleteRowRequestBody({
       pkClause,
       tableName,
@@ -313,11 +301,8 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
       return;
     }
     const source = getState().tables.currentDataSource;
-    const {
-      endpoint,
-      getBulkDeleteRowRequestBody,
-      processBulkDeleteRowData,
-    } = dataSource.generateBulkDeleteRowRequest();
+    const { endpoint, getBulkDeleteRowRequestBody, processBulkDeleteRowData } =
+      dataSource.generateBulkDeleteRowRequest();
 
     const { tables, metadata } = getState();
     const { currentTable: originalTable, allSchemas, currentSchema } = tables;

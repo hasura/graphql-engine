@@ -6,7 +6,7 @@ import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
 
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
 import JSONEditor from '../TablePermissions/JSONEditor';
 import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
@@ -64,14 +64,12 @@ const driverToLabel: Record<
   mssql: {
     label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
-    info:
-      'Only Database URLs and Environment Variables are available for MS SQL Server',
+    info: 'Only Database URLs and Environment Variables are available for MS SQL Server',
   },
   bigquery: {
     label: 'BigQuery',
     defaultConnection: 'CONNECTION_PARAMETERS',
-    info:
-      'Only Connection Parameters and Environment Variables are available for BigQuery',
+    info: 'Only Connection Parameters and Environment Variables are available for BigQuery',
   },
   citus: {
     label: 'Citus',

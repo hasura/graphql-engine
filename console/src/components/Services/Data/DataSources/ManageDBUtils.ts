@@ -2,7 +2,8 @@ import { Driver } from '../../../../dataSources';
 
 export const parseURI = (url: string) => {
   try {
-    const pattern = /^(?:([^:/?#\s]+):\/{2})?(?:([^@/?#\s]+)@)?([^/?#\s]+)?(?:\/([^?#\s]*))?(?:[?]([^#\s]+))?\S*$/;
+    const pattern =
+      /^(?:([^:/?#\s]+):\/{2})?(?:([^@/?#\s]+)@)?([^/?#\s]+)?(?:\/([^?#\s]*))?(?:[?]([^#\s]+))?\S*$/;
     const matches = url.match(pattern);
     if (!matches) return {};
 

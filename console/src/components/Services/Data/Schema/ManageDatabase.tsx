@@ -4,7 +4,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import { FaExclamationTriangle, FaEye, FaTimes } from 'react-icons/fa';
 
 import Button from '../../../Common/Button/Button';
-import styles from './styles.scss';
+import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { DataSource } from '../../../../metadata/types';
@@ -212,10 +212,8 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
     }
   }, [location, dataSources, dispatch]);
 
-  const {
-    show: shouldShowVPCBanner,
-    dismiss: dismissVPCBanner,
-  } = useVPCBannerVisibility();
+  const { show: shouldShowVPCBanner, dismiss: dismissVPCBanner } =
+    useVPCBannerVisibility();
 
   const crumbs = [
     {

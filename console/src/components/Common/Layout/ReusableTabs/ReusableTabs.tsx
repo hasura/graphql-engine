@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { FaSpinner } from 'react-icons/fa';
-import styles from './ReusableTabs.scss';
+import styles from './ReusableTabs.module.scss';
 
 export type Tabs = Record<
   string,

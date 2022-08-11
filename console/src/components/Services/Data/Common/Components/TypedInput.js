@@ -3,7 +3,7 @@ import React from 'react';
 import { getPlaceholder } from '../../utils';
 import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../../Common/CustomInputTypes/TextInput';
-import styles from '../../../../Common/TableCommon/Table.scss';
+import styles from '../../../../Common/TableCommon/Table.module.scss';
 import { dataSource } from '../../../../../dataSources';
 
 export const TypedInput = ({

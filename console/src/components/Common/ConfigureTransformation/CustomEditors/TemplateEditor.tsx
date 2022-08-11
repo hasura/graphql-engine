@@ -27,9 +27,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [localValue, setLocalValue] = useState<string>(
     requestBody.template ?? ''
   );
-  const [localError, setLocalError] = useState<Nullable<string>>(
-    requestBodyError
-  );
+  const [localError, setLocalError] =
+    useState<Nullable<string>>(requestBodyError);
 
   useEffect(() => {
     setLocalValue(requestBody.template ?? '');
@@ -44,9 +43,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   }, [requestBodyError]);
 
   useEffect(() => {
-    const sampleInputWordCompleter = getAceCompleterFromString(
-      requestSampleInput
-    );
+    const sampleInputWordCompleter =
+      getAceCompleterFromString(requestSampleInput);
     if (
       editorRef?.current?.editor?.completers &&
       Array.isArray(editorRef?.current?.editor?.completers)

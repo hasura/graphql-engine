@@ -14,7 +14,7 @@ import { appPrefix, EVENTS_SERVICE_HEADING } from '../constants';
 import { setCurrentTrigger } from '../reducer';
 import { Triggers } from '../types';
 import { Dispatch } from '../../../../types';
-import styles from '../Events.scss';
+import styles from '../Events.module.scss';
 
 interface Props {
   triggerName: string;
@@ -36,9 +36,8 @@ const STContainer: React.FC<Props> = ({
   dispatch,
   eventsLoading,
 }) => {
-  const [triggerPresence, setTriggerPresence] = useState<TriggerPresence>(
-    'not-missing'
-  );
+  const [triggerPresence, setTriggerPresence] =
+    useState<TriggerPresence>('not-missing');
   React.useEffect(() => {
     dispatch(setCurrentTrigger(triggerName));
     return () => {

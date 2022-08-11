@@ -303,22 +303,21 @@ const Modify: React.FC<Props> = props => {
     }
   }, [transformState.requestTransformedBody]);
 
-  const saveWrapper = (property?: EventTriggerProperty) => (
-    successCb?: () => void,
-    errorCb?: () => void
-  ) => {
-    dispatch(
-      modifyEventTrigger(
-        state,
-        transformState,
-        currentTrigger,
-        databaseInfo,
-        property,
-        successCb,
-        errorCb
-      )
-    );
-  };
+  const saveWrapper =
+    (property?: EventTriggerProperty) =>
+    (successCb?: () => void, errorCb?: () => void) => {
+      dispatch(
+        modifyEventTrigger(
+          state,
+          transformState,
+          currentTrigger,
+          databaseInfo,
+          property,
+          successCb,
+          errorCb
+        )
+      );
+    };
 
   const deleteWrapper = () => {
     dispatch(deleteEventTrigger(currentTrigger));

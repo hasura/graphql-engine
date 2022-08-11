@@ -116,14 +116,8 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
 
   const isLoading = loadingFormData || defaultValuesLoading;
 
-  const {
-    allFunctions,
-    roles,
-    tables,
-    tableNames,
-    supportedQueries,
-    columns,
-  } = data;
+  const { allFunctions, roles, tables, tableNames, supportedQueries, columns } =
+    data;
 
   // allRowChecks relates to other queries and is for duplicating from others
   // therefore it shouldn't be passed to the form as a default value

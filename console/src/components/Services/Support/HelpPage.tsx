@@ -1,6 +1,6 @@
 import React from 'react';
 
-import styles from './Support.scss';
+import styles from './Support.module.scss';
 import discord from './images/discord.svg';
 import docs from './images/docs.svg';
 import stackOverflow from './images/stack-overflow.svg';

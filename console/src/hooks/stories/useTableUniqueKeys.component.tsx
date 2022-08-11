@@ -36,9 +36,10 @@ export const UniqueKeys = ({
     isError,
     error,
   } = useTableUniqueKeys({ table, source, driver: currentDriver });
-  const keys = React.useMemo(() => Object.keys(uniqueKeys?.[0] ?? {}), [
-    uniqueKeys,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(uniqueKeys?.[0] ?? {}),
+    [uniqueKeys]
+  );
 
   if (isError) {
     return <p className="text-red-500">Error: {error?.message}</p>;

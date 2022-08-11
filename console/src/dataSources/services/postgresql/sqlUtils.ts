@@ -664,40 +664,30 @@ export const getSetColumnDefaultSql = (
   return sql;
 };
 
-export const getAlterTableCommentSql: DataSourcesAPI['getAlterTableCommentSql'] = ({
-  tableName,
-  schemaName,
-  comment,
-}) => {
-  return `comment on table "${schemaName}"."${tableName}" is ${
-    comment ? sqlEscapeText(comment) : 'NULL'
-  }`;
-};
+export const getAlterTableCommentSql: DataSourcesAPI['getAlterTableCommentSql'] =
+  ({ tableName, schemaName, comment }) => {
+    return `comment on table "${schemaName}"."${tableName}" is ${
+      comment ? sqlEscapeText(comment) : 'NULL'
+    }`;
+  };
 
-export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'] = ({
-  tableName,
-  schemaName,
-  columnName,
-  comment,
-}) => {
-  return `
+export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'] =
+  ({ tableName, schemaName, columnName, comment }) => {
+    return `
   comment on column "${schemaName}"."${tableName}"."${columnName}" is ${
-    comment ? sqlEscapeText(comment) : 'NULL'
-  }
+      comment ? sqlEscapeText(comment) : 'NULL'
+    }
 `;
-};
+  };
 
-export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] = ({
-  functionName,
-  schemaName,
-  comment,
-}) => {
-  return `
+export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] =
+  ({ functionName, schemaName, comment }) => {
+    return `
 comment on function "${schemaName}"."${functionName}" is ${
-    comment ? sqlEscapeText(comment) : 'NULL'
-  }
+      comment ? sqlEscapeText(comment) : 'NULL'
+    }
 `;
-};
+  };
 
 export const getAlterColumnTypeSql = (
   tableName: string,

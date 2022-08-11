@@ -853,9 +853,8 @@ export const getArgTreeFromPermissionSDL = (
           i.fields.forEach(field => {
             if (field.directives && field.directives.length > 0) {
               res[type][field.name?.value] = {};
-              res[type][field.name?.value][field.name?.value] = getDirectives(
-                field
-              );
+              res[type][field.name?.value][field.name?.value] =
+                getDirectives(field);
             }
           });
           return { ...acc, ...res };

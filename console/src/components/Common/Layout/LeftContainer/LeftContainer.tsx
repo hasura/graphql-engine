@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../TableCommon/Table.scss';
+import styles from '../../TableCommon/Table.module.scss';
 
 const LeftContainer: React.FC = ({ children }) => {
   return (

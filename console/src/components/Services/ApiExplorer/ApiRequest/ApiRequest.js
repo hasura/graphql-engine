@@ -232,10 +232,8 @@ class ApiRequest extends Component {
 
     const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
 
-    const {
-      error: tokenAnalyzeError,
-      serverResp: tokenAnalyzeResp,
-    } = tokenInfo;
+    const { error: tokenAnalyzeError, serverResp: tokenAnalyzeResp } =
+      tokenInfo;
 
     const getGraphQLEndpointBar = () => {
       const { endpointSectionIsOpen } = this.state;

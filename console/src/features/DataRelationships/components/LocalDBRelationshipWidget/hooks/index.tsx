@@ -20,7 +20,11 @@ export const useDefaultValues = ({
   sourceTableInfo,
   existingRelationshipName,
 }: UseDefaultValuesProps) => {
-  const { data: metadataTable, isLoading, isError } = useMetadata(
+  const {
+    data: metadataTable,
+    isLoading,
+    isError,
+  } = useMetadata(
     MetadataSelector.getTable(sourceTableInfo.database, {
       name: sourceTableInfo.table,
       schema:
@@ -55,11 +59,15 @@ export const useDefaultValues = ({
     destination: {
       database: sourceTableInfo.database,
       [getSchemaKey(sourceTableInfo)]:
-        (relationship?.using?.manual_configuration
-          ?.remote_table as QualifiedTable)?.schema ?? '',
+        (
+          relationship?.using?.manual_configuration
+            ?.remote_table as QualifiedTable
+        )?.schema ?? '',
       table:
-        (relationship?.using?.manual_configuration
-          ?.remote_table as QualifiedTable)?.name ?? '',
+        (
+          relationship?.using?.manual_configuration
+            ?.remote_table as QualifiedTable
+        )?.name ?? '',
     },
     mapping: relationship?.using.manual_configuration?.column_mapping ?? {},
   };

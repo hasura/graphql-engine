@@ -4,7 +4,7 @@ import { OrderBy } from '../utils/v1QueryUtils';
 import { useFilterQuery, TriggerOperation } from './state';
 import { Filter, FilterRenderProp } from './types';
 import { Nullable } from '../utils/tsUtils';
-import styles from './FilterQuery.scss';
+import styles from './FilterQuery.module.scss';
 import { BaseTable } from '../../../dataSources/types';
 import { generateTableDef } from '../../../dataSources';
 import { Dispatch } from '../../../types';

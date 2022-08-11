@@ -36,7 +36,7 @@ export function useServerConfig<T = ServerConfig>(
   // Hooks warning disabled cos of: https://tkdodo.eu/blog/react-query-data-transformations
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const select = React.useCallback(
-    transformFn || ((d: ServerConfig) => (d as unknown) as T),
+    transformFn || ((d: ServerConfig) => d as unknown as T),
     []
   );
 

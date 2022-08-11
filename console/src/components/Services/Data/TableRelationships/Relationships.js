@@ -31,8 +31,8 @@ import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import styles from '../TableModify/ModifyTable.scss';
-import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+import styles from '../TableModify/ModifyTable.module.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.module.scss';
 import {
   currentDriver,
   findAllFromRel,
@@ -336,10 +336,8 @@ const Relationships = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const {
-    data: featureFlagsData,
-    isLoading: isFeatureFlagsLoading,
-  } = useFeatureFlags();
+  const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
+    useFeatureFlags();
   if (isFeatureFlagsLoading) return <div>Loading...</div>;
 
   if (!isFeatureSupported('tables.relationships.enabled')) {

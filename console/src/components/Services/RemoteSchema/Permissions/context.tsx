@@ -6,6 +6,5 @@ interface PermissionEditorContextType {
   setArgTree?: React.Dispatch<React.SetStateAction<ArgTreeType>>;
   scrollToElement?: (s: string) => void;
 }
-export const PermissionEditorContext = React.createContext<PermissionEditorContextType>(
-  {}
-);
+export const PermissionEditorContext =
+  React.createContext<PermissionEditorContextType>({});

@@ -7,7 +7,7 @@ import 'brace/mode/markdown';
 import 'brace/theme/github';
 import 'brace/theme/chrome';
 
-const styles = require('./CustomInput.scss');
+const styles = require('./CustomInput.module.scss');
 
 // editorType is what sort of editor. All are ACE Editor
 // modes except 0, which is text input

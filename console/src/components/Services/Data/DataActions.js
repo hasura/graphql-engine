@@ -394,83 +394,82 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
 /**
  * @param {string| string[]} [schema=null]
  */
-const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
-  const url = Endpoints.query;
-  const source = getState().tables.currentDataSource;
+const fetchFunctionInit =
+  (schema = null) =>
+  (dispatch, getState) => {
+    const url = Endpoints.query;
+    const source = getState().tables.currentDataSource;
 
-  const { schemaFilter } = getState().tables;
-  let fnSchema = schema || getState().tables.currentSchema;
-  if (schemaFilter && schemaFilter.length) {
-    fnSchema = schemaFilter[0]; // todo: fix me
-  }
-
-  if (!source || !dataSource.getFunctionDefinitionSql) return;
-  const body = {
-    type: 'bulk',
-    source,
-    args: [
-      getRunSqlQuery(
-        dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable'),
-        source,
-        false,
-        true
-      ),
-      getRunSqlQuery(
-        dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable'),
-        source,
-        false,
-        true
-      ),
-    ],
-  };
-
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(body),
-  };
-
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      let trackable = [];
-      let nonTrackable = [];
-      try {
-        trackable = JSON.parse(data[0].result[1]);
-        nonTrackable = JSON.parse(data[1].result[1]);
-      } catch (err) {
-        console.error('Failed to fetch schema ' + JSON.stringify(err));
-      }
-      dispatch({ type: LOAD_FUNCTIONS, data: trackable });
-      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: nonTrackable });
-    },
-    error => {
-      console.error('Failed to fetch schema ' + JSON.stringify(error));
+    const { schemaFilter } = getState().tables;
+    let fnSchema = schema || getState().tables.currentSchema;
+    if (schemaFilter && schemaFilter.length) {
+      fnSchema = schemaFilter[0]; // todo: fix me
     }
-  );
-};
 
-const updateCurrentSchema = (
-  schemaName,
-  sourceName,
-  redirect = true,
-  schemaList = []
-) => dispatch => {
-  if (schemaList.length && !schemaList.find(s => s === schemaName)) {
-    schemaName = schemaList[0];
-  }
+    if (!source || !dataSource.getFunctionDefinitionSql) return;
+    const body = {
+      type: 'bulk',
+      source,
+      args: [
+        getRunSqlQuery(
+          dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable'),
+          source,
+          false,
+          true
+        ),
+        getRunSqlQuery(
+          dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable'),
+          source,
+          false,
+          true
+        ),
+      ],
+    };
 
-  if (redirect) {
-    dispatch(_push(getSchemaBaseRoute(schemaName, sourceName)));
-  }
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(body),
+    };
 
-  return Promise.all([
-    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
-    dispatch(setUntrackedRelations()),
-    dispatch(fetchFunctionInit()),
-    dispatch(updateSchemaInfo()),
-  ]);
-};
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        let trackable = [];
+        let nonTrackable = [];
+        try {
+          trackable = JSON.parse(data[0].result[1]);
+          nonTrackable = JSON.parse(data[1].result[1]);
+        } catch (err) {
+          console.error('Failed to fetch schema ' + JSON.stringify(err));
+        }
+        dispatch({ type: LOAD_FUNCTIONS, data: trackable });
+        dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: nonTrackable });
+      },
+      error => {
+        console.error('Failed to fetch schema ' + JSON.stringify(error));
+      }
+    );
+  };
+
+const updateCurrentSchema =
+  (schemaName, sourceName, redirect = true, schemaList = []) =>
+  dispatch => {
+    if (schemaList.length && !schemaList.find(s => s === schemaName)) {
+      schemaName = schemaList[0];
+    }
+
+    if (redirect) {
+      dispatch(_push(getSchemaBaseRoute(schemaName, sourceName)));
+    }
+
+    return Promise.all([
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
+      dispatch(setUntrackedRelations()),
+      dispatch(fetchFunctionInit()),
+      dispatch(updateSchemaInfo()),
+    ]);
+  };
 
 /* ************ action creators *********************** */
 const fetchSchemaList = () => (dispatch, getState) => {
@@ -511,200 +510,199 @@ const fetchSchemaList = () => (dispatch, getState) => {
   );
 };
 
-export const getSchemaList = (sourceType, sourceName) => (
-  dispatch,
-  getState
-) => {
-  const url = Endpoints.query;
-  const sql = services[sourceType].schemaListSql();
-  const query = getRunSqlQuery(sql, sourceName, false, true);
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(query),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => data,
-    error => {
-      console.error('Failed to fetch schema ' + JSON.stringify(error));
-      return error;
-    }
-  );
-};
-
-export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
-  dispatch,
-  getState
-) => {
-  const url = Endpoints.query;
-  const sql = services[sourceType].getDatabaseInfo;
-  const query = getRunSqlQuery(sql, sourceName, false, true, sourceType);
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(query),
-  };
-  return dispatch(requestAction(url, options)).then(
-    ({ result }) => {
-      if (!result.length > 1) {
-        return {};
+export const getSchemaList =
+  (sourceType, sourceName) => (dispatch, getState) => {
+    const url = Endpoints.query;
+    const sql = services[sourceType].schemaListSql();
+    const query = getRunSqlQuery(sql, sourceName, false, true);
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => data,
+      error => {
+        console.error('Failed to fetch schema ' + JSON.stringify(error));
+        return error;
       }
-
-      const trackedTables = getTablesFromAllSources(getState()).filter(
-        ({ source }) => source === sourceName
-      );
-      const schemasInfo = {};
-      if (sourceType === 'mssql') {
-        const resultString = result
-          .slice(1)
-          .reduce((acc, str) => acc + str, '');
-        JSON.parse(resultString).forEach(i => {
-          if (
-            !trackedTables.some(
-              t =>
-                t.table.name === i.table_name &&
-                t.table.schema === i.table_schema
-            )
-          ) {
-            return;
-          }
-          schemasInfo[i.table_schema] = {
-            ...schemasInfo?.[i.table_schema],
-            [i.table_name]: schemasInfo?.[i.table_schema]?.[i.table_name]
-              ? [...schemasInfo?.[i.table_schema]?.[i.table_name], i.column]
-              : [i.column],
-          };
-        });
-      }
-
-      if (sourceType === 'postgres') {
-        JSON.parse(result[1]).forEach(i => {
-          if (
-            !trackedTables.some(
-              t =>
-                t.table.name === i.table_name &&
-                t.table.schema === i.table_schema
-            )
-          ) {
-            return;
-          }
-          schemasInfo[i.table_schema] = {
-            ...schemasInfo[i.table_schema],
-            [i.table_name]: i.columns?.map((col, index) => ({
-              columnName: col,
-              columnType: i.column_types?.[index] ?? '',
-            })),
-          };
-        });
-      }
-      return schemasInfo;
-    },
-    error => {
-      console.error('Failed to fetch schemas info ' + JSON.stringify(error));
-      return error;
-    }
-  );
-};
-
-export const getDatabaseTableTypeInfoForAllSources = schemaRequests => (
-  dispatch,
-  getState
-) => {
-  if (!schemaRequests.length) {
-    return new Promise(resolve => {
-      resolve([]);
-    });
-  }
-  const url = Endpoints.query;
-
-  const bulkQueries = [];
-  schemaRequests.forEach(({ sourceType = 'postgres', sourceName, tables }) => {
-    if (!tables.length) return;
-    const sql = services[sourceType].getTableInfo(tables);
-    bulkQueries.push(getRunSqlQuery(sql, sourceName, false, true, sourceType));
-  });
-  const query = { type: 'bulk', version: 1, args: bulkQueries };
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(query),
+    );
   };
-  return dispatch(requestAction(url, options)).then(
-    results => {
-      const schemas = results.map(({ result }, index) => {
+
+export const getDatabaseSchemasInfo =
+  (sourceType = 'postgres', sourceName) =>
+  (dispatch, getState) => {
+    const url = Endpoints.query;
+    const sql = services[sourceType].getDatabaseInfo;
+    const query = getRunSqlQuery(sql, sourceName, false, true, sourceType);
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      ({ result }) => {
         if (!result.length > 1) {
           return {};
         }
+
         const trackedTables = getTablesFromAllSources(getState()).filter(
-          ({ source }) => source === bulkQueries[index]?.args?.source
+          ({ source }) => source === sourceName
         );
         const schemasInfo = {};
-
-        let res;
-        try {
-          if (currentDriver === 'mssql') {
-            res = JSON.parse(result.slice(1).join(''));
-          } else if (currentDriver === 'bigquery') {
-            res = result.slice(1).map(t => ({
-              table_name: t[0],
-              table_schema: t[1],
-              table_type: t[2],
-            }));
-          } else {
-            res = JSON.parse(result[1]);
-          }
-        } catch {
-          res = [];
+        if (sourceType === 'mssql') {
+          const resultString = result
+            .slice(1)
+            .reduce((acc, str) => acc + str, '');
+          JSON.parse(resultString).forEach(i => {
+            if (
+              !trackedTables.some(
+                t =>
+                  t.table.name === i.table_name &&
+                  t.table.schema === i.table_schema
+              )
+            ) {
+              return;
+            }
+            schemasInfo[i.table_schema] = {
+              ...schemasInfo?.[i.table_schema],
+              [i.table_name]: schemasInfo?.[i.table_schema]?.[i.table_name]
+                ? [...schemasInfo?.[i.table_schema]?.[i.table_name], i.column]
+                : [i.column],
+            };
+          });
         }
 
-        res.forEach(i => {
-          if (
-            !trackedTables.some(
-              t =>
-                t.table.name === i.table_name &&
-                t.table.schema === i.table_schema
-            )
-          ) {
-            return;
+        if (sourceType === 'postgres') {
+          JSON.parse(result[1]).forEach(i => {
+            if (
+              !trackedTables.some(
+                t =>
+                  t.table.name === i.table_name &&
+                  t.table.schema === i.table_schema
+              )
+            ) {
+              return;
+            }
+            schemasInfo[i.table_schema] = {
+              ...schemasInfo[i.table_schema],
+              [i.table_name]: i.columns?.map((col, index) => ({
+                columnName: col,
+                columnType: i.column_types?.[index] ?? '',
+              })),
+            };
+          });
+        }
+        return schemasInfo;
+      },
+      error => {
+        console.error('Failed to fetch schemas info ' + JSON.stringify(error));
+        return error;
+      }
+    );
+  };
+
+export const getDatabaseTableTypeInfoForAllSources =
+  schemaRequests => (dispatch, getState) => {
+    if (!schemaRequests.length) {
+      return new Promise(resolve => {
+        resolve([]);
+      });
+    }
+    const url = Endpoints.query;
+
+    const bulkQueries = [];
+    schemaRequests.forEach(
+      ({ sourceType = 'postgres', sourceName, tables }) => {
+        if (!tables.length) return;
+        const sql = services[sourceType].getTableInfo(tables);
+        bulkQueries.push(
+          getRunSqlQuery(sql, sourceName, false, true, sourceType)
+        );
+      }
+    );
+    const query = { type: 'bulk', version: 1, args: bulkQueries };
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      results => {
+        const schemas = results.map(({ result }, index) => {
+          if (!result.length > 1) {
+            return {};
           }
-          schemasInfo[i.table_schema] = {
-            ...schemasInfo[i.table_schema],
-            [i.table_name]: { table_type: i.table_type },
+          const trackedTables = getTablesFromAllSources(getState()).filter(
+            ({ source }) => source === bulkQueries[index]?.args?.source
+          );
+          const schemasInfo = {};
+
+          let res;
+          try {
+            if (currentDriver === 'mssql') {
+              res = JSON.parse(result.slice(1).join(''));
+            } else if (currentDriver === 'bigquery') {
+              res = result.slice(1).map(t => ({
+                table_name: t[0],
+                table_schema: t[1],
+                table_type: t[2],
+              }));
+            } else {
+              res = JSON.parse(result[1]);
+            }
+          } catch {
+            res = [];
+          }
+
+          res.forEach(i => {
+            if (
+              !trackedTables.some(
+                t =>
+                  t.table.name === i.table_name &&
+                  t.table.schema === i.table_schema
+              )
+            ) {
+              return;
+            }
+            schemasInfo[i.table_schema] = {
+              ...schemasInfo[i.table_schema],
+              [i.table_name]: { table_type: i.table_type },
+            };
+          });
+          return {
+            source: bulkQueries[index]?.args?.source,
+            schemaInfo: schemasInfo,
           };
         });
-        return {
-          source: bulkQueries[index]?.args?.source,
-          schemaInfo: schemasInfo,
-        };
-      });
-      let allSourceSchemas = {};
-      if (schemas?.length > 0) {
-        schemas.forEach(item => {
-          allSourceSchemas[item.source] = item.schemaInfo;
-        });
-        const {
-          tables: { allSourcesSchemas: existingSourcesSchemas = {} } = {},
-        } = getState();
-        allSourceSchemas = {
-          ...existingSourcesSchemas,
-          ...allSourceSchemas,
-        };
-        dispatch({
-          type: SET_ALL_SOURCES_SCHEMAS,
-          data: allSourceSchemas,
-        });
+        let allSourceSchemas = {};
+        if (schemas?.length > 0) {
+          schemas.forEach(item => {
+            allSourceSchemas[item.source] = item.schemaInfo;
+          });
+          const {
+            tables: { allSourcesSchemas: existingSourcesSchemas = {} } = {},
+          } = getState();
+          allSourceSchemas = {
+            ...existingSourcesSchemas,
+            ...allSourceSchemas,
+          };
+          dispatch({
+            type: SET_ALL_SOURCES_SCHEMAS,
+            data: allSourceSchemas,
+          });
+        }
+        return allSourceSchemas;
+      },
+      error => {
+        console.error('Failed to fetch schemas info ' + JSON.stringify(error));
+        return error;
       }
-      return allSourceSchemas;
-    },
-    error => {
-      console.error('Failed to fetch schemas info ' + JSON.stringify(error));
-      return error;
-    }
-  );
-};
+    );
+  };
 
 const setTable = tableName => ({ type: SET_TABLE, tableName });
 

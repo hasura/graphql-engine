@@ -30,10 +30,8 @@ const useTableData = (target: DataTarget) => {
     isError: dbToRsIsError,
   } = useDbToRemoteSchemaRelationships(target);
 
-  const {
-    data: localrelationships,
-    isLoading: localRelnsIsLoading,
-  } = useLocalRelationships(target);
+  const { data: localrelationships, isLoading: localRelnsIsLoading } =
+    useLocalRelationships(target);
 
   const {
     data: dbToDbData,

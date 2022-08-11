@@ -5,7 +5,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from './Sidebar';
-import styles from '../../Common/TableCommon/Table.scss';
+import styles from '../../Common/TableCommon/Table.module.scss';
 import {
   ADHOC_EVENTS_HEADING,
   DATA_EVENTS_HEADING,

@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 import { FaCopy, FaTrash } from 'react-icons/fa';
 import Button from '../../../Common/Button/Button';
 import Header from './Header';
-import styles from './PermissionsSummary.scss';
+import styles from './PermissionsSummary.module.scss';
 
 type IconButtonProps = {
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;

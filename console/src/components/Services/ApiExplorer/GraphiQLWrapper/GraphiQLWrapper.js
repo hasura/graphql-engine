@@ -76,22 +76,12 @@ class GraphiQLWrapper extends Component {
   };
 
   render() {
-    const {
-      numberOfTables,
-      urlParams,
-      headerFocus,
-      dispatch,
-      mode,
-      loading,
-    } = this.props;
+    const { numberOfTables, urlParams, headerFocus, dispatch, mode, loading } =
+      this.props;
     const { codeExporterOpen, requestTrackingId } = this.state;
     const graphqlNetworkData = this.props.data;
-    const {
-      responseTime,
-      responseSize,
-      isResponseCached,
-      responseTrackingId,
-    } = this.props.response;
+    const { responseTime, responseSize, isResponseCached, responseTrackingId } =
+      this.props.response;
 
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -317,7 +307,6 @@ class GraphiQLWrapper extends Component {
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
             endpoint={getGraphQLEndpoint(mode)}
-            dispatch={dispatch}
             headers={graphqlNetworkData.headers}
             headersInitialised={graphqlNetworkData.headersInitialised}
             headerFocus={headerFocus}

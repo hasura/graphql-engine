@@ -79,13 +79,8 @@ class InvokeManualTrigger extends React.PureComponent {
   render() {
     const { isModalOpen } = this.state;
     const { name, invokeEventTrigger } = this.props;
-    const {
-      isCreatingManualTrigger,
-      success,
-      status,
-      err,
-      identifier,
-    } = invokeEventTrigger;
+    const { isCreatingManualTrigger, success, status, err, identifier } =
+      invokeEventTrigger;
     const loader = () => <FaSpinner className="animate-spin" />;
     const getEventId = () =>
       (isCreatingManualTrigger && loader()) || success.event_id;

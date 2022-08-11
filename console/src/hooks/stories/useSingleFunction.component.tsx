@@ -29,7 +29,11 @@ export const SingleFunction = ({
   }, [currentDatasource, dispatch, driver]);
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
-  const { data: schemas, isError, error } = useSchemaList(
+  const {
+    data: schemas,
+    isError,
+    error,
+  } = useSchemaList(
     {
       source,
       driver: currentDriver,
@@ -56,9 +60,10 @@ export const SingleFunction = ({
     }
   );
   const keys = React.useMemo(() => Object.keys(singleFn ?? {}), [singleFn]);
-  const entries = React.useMemo(() => Object.values(singleFn ?? {}), [
-    singleFn,
-  ]);
+  const entries = React.useMemo(
+    () => Object.values(singleFn ?? {}),
+    [singleFn]
+  );
 
   if (isError || isError2) {
     return (

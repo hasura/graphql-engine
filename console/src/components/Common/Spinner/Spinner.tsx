@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './Spinner.scss';
+import styles from './Spinner.module.scss';
 
 type Props = {
   className?: string;

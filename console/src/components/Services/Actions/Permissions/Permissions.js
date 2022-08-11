@@ -6,7 +6,7 @@ import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import { permOpenEdit, permCloseEdit, permSetRoleName } from './reducer';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.module.scss';
 import PermissionEditor from './PermissionEditor';
 import { setDefaults } from './reducer';
 

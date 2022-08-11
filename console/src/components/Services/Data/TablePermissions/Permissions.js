@@ -41,7 +41,7 @@ import {
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.module.scss';
 
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
@@ -965,12 +965,14 @@ class Permissions extends Component {
           this.props
         );
 
-        const isSelectByPkSelectedInQueryRoots = this.props.permissionsState?.select?.query_root_fields?.includes(
-          'select_by_pk'
-        );
-        const isSelectByPkSelectedInSubscriptionRoots = this.props.permissionsState?.select?.subscription_root_fields?.includes(
-          'select_by_pk'
-        );
+        const isSelectByPkSelectedInQueryRoots =
+          this.props.permissionsState?.select?.query_root_fields?.includes(
+            'select_by_pk'
+          );
+        const isSelectByPkSelectedInSubscriptionRoots =
+          this.props.permissionsState?.select?.subscription_root_fields?.includes(
+            'select_by_pk'
+          );
         if (
           isPermissionsConfirmationModalEnabled &&
           primaryKeys.includes(columnName) &&
@@ -1091,16 +1093,17 @@ class Permissions extends Component {
           const dispatchToggleAllColumns = () => {
             const allFields = getAllFields();
 
-            const allPrimaryKeysSelected = hasSelectedTablePrimaryKeyFromMetadata(
-              this.props
-            );
+            const allPrimaryKeysSelected =
+              hasSelectedTablePrimaryKeyFromMetadata(this.props);
 
-            const isSelectByPkSelectedInQueryRoots = this.props.permissionsState?.select?.query_root_fields?.includes(
-              'select_by_pk'
-            );
-            const isSelectByPkSelectedInSubscriptionRoots = this.props.permissionsState?.select?.subscription_root_fields?.includes(
-              'select_by_pk'
-            );
+            const isSelectByPkSelectedInQueryRoots =
+              this.props.permissionsState?.select?.query_root_fields?.includes(
+                'select_by_pk'
+              );
+            const isSelectByPkSelectedInSubscriptionRoots =
+              this.props.permissionsState?.select?.subscription_root_fields?.includes(
+                'select_by_pk'
+              );
 
             if (
               isPermissionsConfirmationModalEnabled &&
@@ -1583,12 +1586,14 @@ class Permissions extends Component {
         }
 
         const handleClick = e => {
-          const isAggregateSelectedInQueryRoots = this.props.permissionsState?.select?.query_root_fields?.includes(
-            'select_aggregate'
-          );
-          const isAggregateSelectedInSubscriptionRoots = this.props.permissionsState?.select?.subscription_root_fields?.includes(
-            'select_aggregate'
-          );
+          const isAggregateSelectedInQueryRoots =
+            this.props.permissionsState?.select?.query_root_fields?.includes(
+              'select_aggregate'
+            );
+          const isAggregateSelectedInSubscriptionRoots =
+            this.props.permissionsState?.select?.subscription_root_fields?.includes(
+              'select_aggregate'
+            );
           if (
             isPermissionsConfirmationModalEnabled &&
             !e.target.checked &&
@@ -1950,9 +1955,8 @@ class Permissions extends Component {
 
     /********************/
 
-    const supportedQueryTypes = dataSource.getTableSupportedQueries(
-      currentTableSchema
-    );
+    const supportedQueryTypes =
+      dataSource.getTableSupportedQueries(currentTableSchema);
 
     return (
       <RightContainer>

@@ -1,6 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import styles from '../../Common.scss';
+import styles from '../../Common.module.scss';
 
 interface PageContainerProps extends React.ComponentProps<'div'> {
   helmet: string;

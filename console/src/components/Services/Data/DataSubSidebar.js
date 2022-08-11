@@ -20,7 +20,7 @@ import {
 } from './DataActions';
 import _push from './push';
 import Button from '../../Common/Button/Button';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
 import { useGDCTreeClick } from './GDCTree/hooks/useGDCTreeClick';
 

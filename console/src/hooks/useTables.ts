@@ -91,37 +91,40 @@ const parseBigQueryMssqlTableResponse = (
   return tables;
 };
 
-const transformTables = (driver: Driver) => (
-  metadataTables: TableEntry[] = []
-) => (data: RunSQLResponse | BigQueryMssqlTableResponse): NormalizedTable[] => {
-  let tables: Omit<NormalizedTable, 'is_table_tracked'>[] = [];
-  if (driver === 'bigquery' || driver === 'mssql') {
-    tables = parseBigQueryMssqlTableResponse(
-      data as BigQueryMssqlTableResponse,
-      driver
-    );
-  } else {
-    tables = JSON.parse(data.result?.[1]?.[0] ?? '[]');
-  }
-  return tables.map(table => ({
-    ...table,
-    is_table_tracked: metadataTables?.some(
-      t =>
-        t.table.name === table.table_name &&
-        t.table.schema === table.table_schema
-    ),
-  }));
-};
+const transformTables =
+  (driver: Driver) =>
+  (metadataTables: TableEntry[] = []) =>
+  (data: RunSQLResponse | BigQueryMssqlTableResponse): NormalizedTable[] => {
+    let tables: Omit<NormalizedTable, 'is_table_tracked'>[] = [];
+    if (driver === 'bigquery' || driver === 'mssql') {
+      tables = parseBigQueryMssqlTableResponse(
+        data as BigQueryMssqlTableResponse,
+        driver
+      );
+    } else {
+      tables = JSON.parse(data.result?.[1]?.[0] ?? '[]');
+    }
+    return tables.map(table => ({
+      ...table,
+      is_table_tracked: metadataTables?.some(
+        t =>
+          t.table.name === table.table_name &&
+          t.table.schema === table.table_schema
+      ),
+    }));
+  };
 
-const transformFindTables = (table: QualifiedTable) => (driver: Driver) => (
-  metadataTables: TableEntry[] = []
-) => (data: RunSQLResponse): NormalizedTable | null => {
-  return (
-    transformTables(driver)(metadataTables)(data).find(
-      t => t.table_name === table.name && t.table_schema === table.schema
-    ) ?? null
-  );
-};
+const transformFindTables =
+  (table: QualifiedTable) =>
+  (driver: Driver) =>
+  (metadataTables: TableEntry[] = []) =>
+  (data: RunSQLResponse): NormalizedTable | null => {
+    return (
+      transformTables(driver)(metadataTables)(data).find(
+        t => t.table_name === table.name && t.table_schema === table.schema
+      ) ?? null
+    );
+  };
 
 export function useDataSourceTables(
   args: { schemas: string[] } & QualifiedDataSource,

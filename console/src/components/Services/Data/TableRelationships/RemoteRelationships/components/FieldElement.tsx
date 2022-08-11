@@ -1,7 +1,7 @@
 import React from 'react';
 import { TreeFieldElement } from '../utils';
 import OverlayMessage from '../../../../../Common/OverlayMessage';
-import styles from '../SchemaExplorer.scss';
+import styles from '../SchemaExplorer.module.scss';
 
 type Props = {
   field: TreeFieldElement;

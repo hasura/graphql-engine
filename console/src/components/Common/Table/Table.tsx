@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect } from 'react';
 import { TableProvider, useTable } from './hooks';
-import styles from './Table.scss';
+import styles from './Table.module.scss';
 
 /**
  * In the future, this component can be extended to be able to have a table without

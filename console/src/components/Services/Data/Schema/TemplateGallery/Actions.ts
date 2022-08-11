@@ -29,43 +29,41 @@ const mapRootJsonFromServerToState = (
   data: ServerJsonRootConfig,
   metadataVersion: number
 ): Required<TemplateGalleryStore['templates']> => {
-  const sectionsGroups: Record<
-    string,
-    TemplateGalleryTemplateItem[]
-  > = Object.entries(data)
-    .map(([key, value]) => ({
-      ...value,
-      key,
-    }))
-    .filter(
-      value =>
-        value.metadata_version === `${metadataVersion}` &&
-        value.template_version === '1'
-    )
-    .reduce<Record<string, TemplateGalleryTemplateItem[]>>(
-      (previousValue, currentValue) => {
-        const item: TemplateGalleryTemplateItem = {
-          type: 'database',
-          isPartialData: true,
-          fetchingStatus: 'none',
-          key: currentValue.key,
-          description: currentValue.description,
-          dialect: currentValue.dialect,
-          title: currentValue.title,
-          relativeFolderPath: currentValue.relativeFolderPath,
-          metadataVersion: +currentValue.metadata_version,
-          templateVersion: +currentValue.template_version,
-        };
-        return {
-          ...previousValue,
-          [currentValue.category]: [
-            ...(previousValue[currentValue.category] ?? []),
-            item,
-          ],
-        };
-      },
-      {}
-    );
+  const sectionsGroups: Record<string, TemplateGalleryTemplateItem[]> =
+    Object.entries(data)
+      .map(([key, value]) => ({
+        ...value,
+        key,
+      }))
+      .filter(
+        value =>
+          value.metadata_version === `${metadataVersion}` &&
+          value.template_version === '1'
+      )
+      .reduce<Record<string, TemplateGalleryTemplateItem[]>>(
+        (previousValue, currentValue) => {
+          const item: TemplateGalleryTemplateItem = {
+            type: 'database',
+            isPartialData: true,
+            fetchingStatus: 'none',
+            key: currentValue.key,
+            description: currentValue.description,
+            dialect: currentValue.dialect,
+            title: currentValue.title,
+            relativeFolderPath: currentValue.relativeFolderPath,
+            metadataVersion: +currentValue.metadata_version,
+            templateVersion: +currentValue.template_version,
+          };
+          return {
+            ...previousValue,
+            [currentValue.category]: [
+              ...(previousValue[currentValue.category] ?? []),
+              item,
+            ],
+          };
+        },
+        {}
+      );
 
   const sections: TemplateGallerySection[] = Object.entries(sectionsGroups).map(
     ([name, templates]) => ({
@@ -87,27 +85,23 @@ const initialStoreState: TemplateGalleryStore = {
 export const schemaSharingSelectors = {
   getGlobalConfigState: (state: ReduxState) =>
     state.templateGallery.globalConfigState,
-  getTemplateBySectionAndKey: ({
-    key,
-    section,
-  }: {
-    key: string;
-    section: string;
-  }) => (state: ReduxState) => {
-    const maybeSection = state.templateGallery.templates?.sections?.find(
-      block => block.name === section
-    );
-    if (!maybeSection) {
-      return undefined;
-    }
-    const maybeTemplate = maybeSection.templates.find(
-      template => template.key === key
-    );
-    if (!maybeTemplate) {
-      return undefined;
-    }
-    return maybeTemplate;
-  },
+  getTemplateBySectionAndKey:
+    ({ key, section }: { key: string; section: string }) =>
+    (state: ReduxState) => {
+      const maybeSection = state.templateGallery.templates?.sections?.find(
+        block => block.name === section
+      );
+      if (!maybeSection) {
+        return undefined;
+      }
+      const maybeTemplate = maybeSection.templates.find(
+        template => template.key === key
+      );
+      if (!maybeTemplate) {
+        return undefined;
+      }
+      return maybeTemplate;
+    },
   getSchemasForDb: (driver: Driver) => (state: ReduxState) =>
     state.templateGallery.templates?.sections
       .map(section => ({

@@ -16,9 +16,8 @@ export const useDefaultValues = ({
   typeName = '',
   remoteRelationshipName = '',
 }: UseDefaultValuesProps) => {
-  const { data, isLoading, isError } = useGetRemoteSchemaRelationship(
-    sourceRemoteSchema
-  );
+  const { data, isLoading, isError } =
+    useGetRemoteSchemaRelationship(sourceRemoteSchema);
 
   const rsToDbRelationship = data?.remote_relationships?.find(
     ({ type_name: existingTypeName }) => typeName === existingTypeName
@@ -39,9 +38,9 @@ export const useDefaultValues = ({
         (relationshipInfo?.table as any)?.dataset ??
         '',
       table: relationshipInfo?.table.name || '',
-      mapping: Object.entries(
-        relationshipInfo?.field_mapping ?? {}
-      ).map(([field, column]) => ({ field, column: column as string })),
+      mapping: Object.entries(relationshipInfo?.field_mapping ?? {}).map(
+        ([field, column]) => ({ field, column: column as string })
+      ),
       typeName: rsToDbRelationship?.type_name || '',
       sourceRemoteSchema: sourceRemoteSchema || '',
       relationshipType: relationshipInfo?.relationship_type || 'array',

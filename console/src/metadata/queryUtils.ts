@@ -962,24 +962,21 @@ export const dropRESTEndpointQuery = (name: string) => ({
   args: { name },
 });
 
-const getMetadataQueryForRemoteSchema = (queryName: 'add' | 'update') => (
-  name: string,
-  definition: RemoteSchemaDef,
-  comment?: string
-) => ({
-  type: `${queryName}_remote_schema` as MetadataQueryType,
-  args: {
-    name,
-    definition,
-    comment: comment ?? null,
-  },
-});
+const getMetadataQueryForRemoteSchema =
+  (queryName: 'add' | 'update') =>
+  (name: string, definition: RemoteSchemaDef, comment?: string) => ({
+    type: `${queryName}_remote_schema` as MetadataQueryType,
+    args: {
+      name,
+      definition,
+      comment: comment ?? null,
+    },
+  });
 
 export const addRemoteSchemaQuery = getMetadataQueryForRemoteSchema('add');
 
-export const updateRemoteSchemaQuery = getMetadataQueryForRemoteSchema(
-  'update'
-);
+export const updateRemoteSchemaQuery =
+  getMetadataQueryForRemoteSchema('update');
 
 export const removeRemoteSchemaQuery = (name: string) => ({
   type: 'remove_remote_schema',

@@ -9,7 +9,7 @@ import {
   NotificationScope,
   ConsoleScope,
 } from './ConsoleNotification';
-import styles from './Main.scss';
+import styles from './Main.module.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
@@ -504,9 +504,8 @@ const HasuraNotifications: React.FC<
 
   const pagination = useNotificationsPagination(consoleNotifications.length);
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
-  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] = React.useState(
-    false
-  );
+  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] =
+    React.useState(false);
 
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);

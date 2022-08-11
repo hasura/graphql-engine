@@ -188,120 +188,115 @@ const resetPrimaryKeys = () => ({
   type: RESET_PRIMARY_KEY,
 });
 
-export const saveComputedField = (
-  computedField,
-  table,
-  originalComputedField,
-  successCb
-) => (dispatch, getState) => {
-  const migrationUp = [];
-  const migrationDown = [];
-  const { currentDataSource } = getState().tables;
+export const saveComputedField =
+  (computedField, table, originalComputedField, successCb) =>
+  (dispatch, getState) => {
+    const migrationUp = [];
+    const migrationDown = [];
+    const { currentDataSource } = getState().tables;
 
-  const tableDef = getTableDef(table);
+    const tableDef = getTableDef(table);
 
-  const computedFieldName = computedField.computed_field_name;
+    const computedFieldName = computedField.computed_field_name;
 
-  if (originalComputedField) {
+    if (originalComputedField) {
+      migrationUp.push(
+        getDropComputedFieldQuery(
+          tableDef,
+          originalComputedField.computed_field_name,
+          currentDataSource
+        )
+      );
+    }
+
     migrationUp.push(
-      getDropComputedFieldQuery(
-        tableDef,
-        originalComputedField.computed_field_name,
-        currentDataSource
-      )
-    );
-  }
-
-  migrationUp.push(
-    getAddComputedFieldQuery(
-      tableDef,
-      computedFieldName,
-      computedField.definition,
-      computedField.comment,
-      currentDataSource
-    )
-  );
-
-  migrationDown.push(
-    getDropComputedFieldQuery(tableDef, computedFieldName, currentDataSource)
-  );
-
-  if (originalComputedField) {
-    migrationDown.push(
       getAddComputedFieldQuery(
         tableDef,
-        originalComputedField.computed_field_name,
-        originalComputedField.definition,
-        originalComputedField.comment,
+        computedFieldName,
+        computedField.definition,
+        computedField.comment,
         currentDataSource
       )
     );
-  }
 
-  const migrationName = `save_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
-  const requestMsg = 'Saving computed field...';
-  const successMsg = 'Saving computed field successful';
-  const errorMsg = 'Saving computed field failed';
-  const customOnSuccess = () => {
-    successCb();
+    migrationDown.push(
+      getDropComputedFieldQuery(tableDef, computedFieldName, currentDataSource)
+    );
+
+    if (originalComputedField) {
+      migrationDown.push(
+        getAddComputedFieldQuery(
+          tableDef,
+          originalComputedField.computed_field_name,
+          originalComputedField.definition,
+          originalComputedField.comment,
+          currentDataSource
+        )
+      );
+    }
+
+    const migrationName = `save_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
+    const requestMsg = 'Saving computed field...';
+    const successMsg = 'Saving computed field successful';
+    const errorMsg = 'Saving computed field failed';
+    const customOnSuccess = () => {
+      successCb();
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrationUp,
+      migrationDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
-  const customOnError = () => {};
 
-  makeMigrationCall(
-    dispatch,
-    getState,
-    migrationUp,
-    migrationDown,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
+export const deleteComputedField =
+  (computedField, table) => (dispatch, getState) => {
+    const { currentDataSource } = getState().tables;
 
-export const deleteComputedField = (computedField, table) => (
-  dispatch,
-  getState
-) => {
-  const { currentDataSource } = getState().tables;
+    const tableDef = getTableDef(table);
+    const computedFieldName = computedField.computed_field_name;
 
-  const tableDef = getTableDef(table);
-  const computedFieldName = computedField.computed_field_name;
+    const migration = new Migration();
+    migration.add(
+      getDropComputedFieldQuery(tableDef, computedFieldName, currentDataSource),
+      getAddComputedFieldQuery(
+        tableDef,
+        computedFieldName,
+        computedFieldName.definition,
+        computedField.comment,
+        currentDataSource
+      )
+    );
 
-  const migration = new Migration();
-  migration.add(
-    getDropComputedFieldQuery(tableDef, computedFieldName, currentDataSource),
-    getAddComputedFieldQuery(
-      tableDef,
-      computedFieldName,
-      computedFieldName.definition,
-      computedField.comment,
-      currentDataSource
-    )
-  );
+    const migrationName = `delete_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
+    const requestMsg = 'Deleting computed field...';
+    const successMsg = 'Deleting computed field successful';
+    const errorMsg = 'Deleting computed field failed';
+    const customOnSuccess = () => {};
+    const customOnError = () => {};
 
-  const migrationName = `delete_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
-  const requestMsg = 'Deleting computed field...';
-  const successMsg = 'Deleting computed field successful';
-  const errorMsg = 'Deleting computed field failed';
-  const customOnSuccess = () => {};
-  const customOnError = () => {};
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    migration.upMigration,
-    migration.downMigration,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
 
 export const setCustomRootFields = successCb => (dispatch, getState) => {
   const {
@@ -367,74 +362,76 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
   );
 };
 
-export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
-  dispatch,
-  getState
-) => {
-  const confirmMessage = `This will permanently delete the check constraint "${constraintName}" from this table`;
-  const isOk = getConfirmation(confirmMessage, true, constraintName);
-  if (!isOk) return;
+export const removeCheckConstraint =
+  (constraintName, successCb, errorCb) => (dispatch, getState) => {
+    const confirmMessage = `This will permanently delete the check constraint "${constraintName}" from this table`;
+    const isOk = getConfirmation(confirmMessage, true, constraintName);
+    if (!isOk) return;
 
-  const {
-    currentTable: tableName,
-    currentSchema,
-    currentDataSource,
-  } = getState().tables;
+    const {
+      currentTable: tableName,
+      currentSchema,
+      currentDataSource,
+    } = getState().tables;
 
-  const table = findTable(
-    getState().tables.allSchemas,
-    generateTableDef(tableName, currentSchema)
-  );
+    const table = findTable(
+      getState().tables.allSchemas,
+      generateTableDef(tableName, currentSchema)
+    );
 
-  const constraint = findTableCheckConstraint(
-    table.check_constraints,
-    constraintName
-  );
-  const migration = new Migration();
-  migration.add(
-    getRunSqlQuery(
-      dataSource.getDropConstraintSql(tableName, currentSchema, constraintName),
-      currentDataSource
-    ),
-    getRunSqlQuery(
-      dataSource.getCreateCheckConstraintSql(
-        tableName,
-        currentSchema,
-        constraintName,
-        constraint.check
+    const constraint = findTableCheckConstraint(
+      table.check_constraints,
+      constraintName
+    );
+    const migration = new Migration();
+    migration.add(
+      getRunSqlQuery(
+        dataSource.getDropConstraintSql(
+          tableName,
+          currentSchema,
+          constraintName
+        ),
+        currentDataSource
       ),
-      currentDataSource
-    )
-  );
+      getRunSqlQuery(
+        dataSource.getCreateCheckConstraintSql(
+          tableName,
+          currentSchema,
+          constraintName,
+          constraint.check
+        ),
+        currentDataSource
+      )
+    );
 
-  const migrationName = `drop_check_constraint_${currentSchema}_${tableName}_${constraintName}`;
-  const requestMsg = 'Deleting check constraint...';
-  const successMsg = 'Check constraint deleted';
-  const errorMsg = 'Deleting check constraint failed';
-  const customOnSuccess = () => {
-    if (successCb) {
-      successCb();
-    }
+    const migrationName = `drop_check_constraint_${currentSchema}_${tableName}_${constraintName}`;
+    const requestMsg = 'Deleting check constraint...';
+    const successMsg = 'Check constraint deleted';
+    const errorMsg = 'Deleting check constraint failed';
+    const customOnSuccess = () => {
+      if (successCb) {
+        successCb();
+      }
+    };
+    const customOnError = err => {
+      if (errorCb) {
+        errorCb();
+      }
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+    };
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
-  const customOnError = err => {
-    if (errorCb) {
-      errorCb();
-    }
-    dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-  };
-  makeMigrationCall(
-    dispatch,
-    getState,
-    migration.upMigration,
-    migration.downMigration,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
 
 const savePrimaryKeys = (tableName, schemaName, constraintName) => {
   return (dispatch, getState) => {
@@ -1148,12 +1145,11 @@ const deleteColumnSql = (column, tableSchema) => {
         return columnKeys.includes(name);
       }
     );
-    const opp_foreign_key_constraints = tableSchema.opp_foreign_key_constraints.filter(
-      fkc => {
+    const opp_foreign_key_constraints =
+      tableSchema.opp_foreign_key_constraints.filter(fkc => {
         const columnKeys = Object.values(fkc.column_mapping);
         return columnKeys.includes(name);
-      }
-    );
+      });
     const unique_constraints = tableSchema.unique_constraints.filter(uc =>
       uc.columns.includes(name)
     );
@@ -1437,8 +1433,8 @@ const deleteConstraintSql = (tableName, cName) => {
 const saveTableCommentSql = () => {
   return (dispatch, getState) => {
     const source = getState().tables.currentDataSource;
-    const updatedComment = getState().tables.modify.tableCommentEdit
-      .editedValue;
+    const updatedComment =
+      getState().tables.modify.tableCommentEdit.editedValue;
 
     const currentSchema = getState().tables.currentSchema;
     const tableName = getState().tables.currentTable;
@@ -1532,18 +1528,15 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
           gqlColumnErrorNotif[2]
         )
       );
-    const {
-      migrationName,
-      migration,
-      metadataMigration,
-    } = getColumnUpdateMigration(
-      column,
-      columnEdit,
-      allSchemas,
-      colName,
-      onInvalidGqlColName,
-      currentDataSource
-    );
+    const { migrationName, migration, metadataMigration } =
+      getColumnUpdateMigration(
+        column,
+        columnEdit,
+        allSchemas,
+        colName,
+        onInvalidGqlColName,
+        currentDataSource
+      );
     // Apply migrations
 
     const requestMsg = 'Saving column changes...';
@@ -1712,279 +1705,275 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
   };
 };
 
-export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
-  dispatch,
-  getState
-) => {
-  const confirmMessage = `This will ${
-    isEnum ? 'un' : ''
-  }set this table as an enum`;
-  const isOk = getConfirmation(confirmMessage);
-  if (!isOk) {
-    return;
-  }
-
-  dispatch({ type: TOGGLE_ENUM });
-
-  const { currentTable, currentSchema, currentDataSource } = getState().tables;
-  const { allSchemas } = getState().tables;
-  const migration = new Migration();
-  migration.add(
-    getSetTableEnumQuery(
-      generateTableDef(currentTable, currentSchema),
-      !isEnum,
-      currentDataSource
-    ),
-    getSetTableEnumQuery(
-      generateTableDef(currentTable, currentSchema),
-      isEnum,
-      currentDataSource
-    )
-  );
-
-  const migrationName =
-    'alter_table_' +
-    currentSchema +
-    '_' +
-    currentTable +
-    '_set_enum_' +
-    !isEnum;
-
-  const action = !isEnum ? 'Setting' : 'Unsetting';
-
-  const requestMsg = `${action} table as enum...`;
-  const successMsg = `${action} table as enum successful`;
-  const errorMsg = `${action} table as enum failed`;
-
-  const customOnSuccess = () => {
-    if (successCallback) {
-      successCallback();
+export const toggleTableAsEnum =
+  (isEnum, successCallback, failureCallback) => (dispatch, getState) => {
+    const confirmMessage = `This will ${
+      isEnum ? 'un' : ''
+    }set this table as an enum`;
+    const isOk = getConfirmation(confirmMessage);
+    if (!isOk) {
+      return;
     }
 
-    dispatch(toggleEnumSuccess());
+    dispatch({ type: TOGGLE_ENUM });
 
-    const newAllSchemas = allSchemas.map(schema => {
-      if (
-        schema.table_name === currentTable &&
-        schema.table_schema === currentSchema
-      ) {
-        return {
-          ...schema,
-          is_enum: !isEnum,
-        };
-      }
-      return schema;
-    });
-
-    dispatch({ type: LOAD_SCHEMA, allSchemas: newAllSchemas });
-  };
-
-  const customOnError = () => {
-    dispatch(toggleEnumFailure());
-
-    if (failureCallback) {
-      failureCallback();
-    }
-  };
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    migration.upMigration,
-    migration.downMigration,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
-
-export const toggleAsApollofederation = (
-  isApolloFederationSupported,
-  successCallback,
-  failureCallback
-) => (dispatch, getState) => {
-  const confirmMessage = `This will ${
-    isApolloFederationSupported ? 'disable' : 'add'
-  } the apollo federation support for the table`;
-  const isOk = getConfirmation(confirmMessage);
-  if (!isOk) {
-    return;
-  }
-
-  dispatch({ type: TOGGLE_APOLLO_FEDERATION });
-
-  const { currentTable, currentSchema, currentDataSource } = getState().tables;
-  const migration = new Migration();
-  migration.add(
-    getSetTableApolloFederationQuery(
-      generateTableDef(currentTable, currentSchema),
-      !isApolloFederationSupported,
-      currentDataSource
-    ),
-    getSetTableApolloFederationQuery(
-      generateTableDef(currentTable, currentSchema),
-      isApolloFederationSupported,
-      currentDataSource
-    )
-  );
-
-  const migrationName =
-    'alter_table_' +
-    currentSchema +
-    '_' +
-    currentTable +
-    '_set_apollo_federation_' +
-    !isApolloFederationSupported;
-
-  const action = !isApolloFederationSupported ? 'enabled' : 'disabled';
-  const requestMsg = `Enabling apollo federation support...`;
-  const successMsg = `Apollo federation support is successful ${action}`;
-  const errorMsg = `Enabling apollo federation support failed`;
-
-  const customOnSuccess = () => {
-    if (successCallback) {
-      successCallback();
-    }
-
-    dispatch(toggleApolloFederationSuccess());
-  };
-
-  const customOnError = () => {
-    dispatch(toggleApolloFederationFailure());
-
-    if (failureCallback) {
-      failureCallback();
-    }
-  };
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    migration.upMigration,
-    migration.downMigration,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
-
-export const saveCheckConstraint = (index, successCb, errorCb) => (
-  dispatch,
-  getState
-) => {
-  const {
-    currentTable,
-    currentSchema,
-    allSchemas: allTables,
-  } = getState().tables;
-  const source = getState().tables.currentDataSource;
-  const { checkConstraintsModify } = getState().tables.modify;
-
-  const allConstraints = findTable(
-    allTables,
-    generateTableDef(currentTable, currentSchema)
-  ).check_constraints;
-
-  const newConstraint = checkConstraintsModify[index];
-
-  const isNew = index === allConstraints.length;
-
-  const existingConstraint = allConstraints[index];
-
-  const upQueries = [];
-  const downQueries = [];
-
-  if (!isNew) {
-    upQueries.push(
-      getRunSqlQuery(
-        dataSource.getDropConstraintSql(
-          existingConstraint.table_name,
-          existingConstraint.table_schema,
-          existingConstraint.constraint_name
-        ),
-        source
+    const { currentTable, currentSchema, currentDataSource } =
+      getState().tables;
+    const { allSchemas } = getState().tables;
+    const migration = new Migration();
+    migration.add(
+      getSetTableEnumQuery(
+        generateTableDef(currentTable, currentSchema),
+        !isEnum,
+        currentDataSource
+      ),
+      getSetTableEnumQuery(
+        generateTableDef(currentTable, currentSchema),
+        isEnum,
+        currentDataSource
       )
     );
-  }
-  upQueries.push(
-    getRunSqlQuery(
-      dataSource.getCreateCheckConstraintSql(
-        currentTable,
-        currentSchema,
-        newConstraint.name,
-        newConstraint.check
-      ),
-      source
-    )
-  );
 
-  downQueries.push(
-    getRunSqlQuery(
-      dataSource.getDropConstraintSql(
-        currentTable,
-        currentSchema,
-        newConstraint.name
-      ),
-      source
-    )
-  );
+    const migrationName =
+      'alter_table_' +
+      currentSchema +
+      '_' +
+      currentTable +
+      '_set_enum_' +
+      !isEnum;
 
-  if (!isNew) {
-    downQueries.push(
+    const action = !isEnum ? 'Setting' : 'Unsetting';
+
+    const requestMsg = `${action} table as enum...`;
+    const successMsg = `${action} table as enum successful`;
+    const errorMsg = `${action} table as enum failed`;
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+
+      dispatch(toggleEnumSuccess());
+
+      const newAllSchemas = allSchemas.map(schema => {
+        if (
+          schema.table_name === currentTable &&
+          schema.table_schema === currentSchema
+        ) {
+          return {
+            ...schema,
+            is_enum: !isEnum,
+          };
+        }
+        return schema;
+      });
+
+      dispatch({ type: LOAD_SCHEMA, allSchemas: newAllSchemas });
+    };
+
+    const customOnError = () => {
+      dispatch(toggleEnumFailure());
+
+      if (failureCallback) {
+        failureCallback();
+      }
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+
+export const toggleAsApollofederation =
+  (isApolloFederationSupported, successCallback, failureCallback) =>
+  (dispatch, getState) => {
+    const confirmMessage = `This will ${
+      isApolloFederationSupported ? 'disable' : 'add'
+    } the apollo federation support for the table`;
+    const isOk = getConfirmation(confirmMessage);
+    if (!isOk) {
+      return;
+    }
+
+    dispatch({ type: TOGGLE_APOLLO_FEDERATION });
+
+    const { currentTable, currentSchema, currentDataSource } =
+      getState().tables;
+    const migration = new Migration();
+    migration.add(
+      getSetTableApolloFederationQuery(
+        generateTableDef(currentTable, currentSchema),
+        !isApolloFederationSupported,
+        currentDataSource
+      ),
+      getSetTableApolloFederationQuery(
+        generateTableDef(currentTable, currentSchema),
+        isApolloFederationSupported,
+        currentDataSource
+      )
+    );
+
+    const migrationName =
+      'alter_table_' +
+      currentSchema +
+      '_' +
+      currentTable +
+      '_set_apollo_federation_' +
+      !isApolloFederationSupported;
+
+    const action = !isApolloFederationSupported ? 'enabled' : 'disabled';
+    const requestMsg = `Enabling apollo federation support...`;
+    const successMsg = `Apollo federation support is successful ${action}`;
+    const errorMsg = `Enabling apollo federation support failed`;
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+
+      dispatch(toggleApolloFederationSuccess());
+    };
+
+    const customOnError = () => {
+      dispatch(toggleApolloFederationFailure());
+
+      if (failureCallback) {
+        failureCallback();
+      }
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+
+export const saveCheckConstraint =
+  (index, successCb, errorCb) => (dispatch, getState) => {
+    const {
+      currentTable,
+      currentSchema,
+      allSchemas: allTables,
+    } = getState().tables;
+    const source = getState().tables.currentDataSource;
+    const { checkConstraintsModify } = getState().tables.modify;
+
+    const allConstraints = findTable(
+      allTables,
+      generateTableDef(currentTable, currentSchema)
+    ).check_constraints;
+
+    const newConstraint = checkConstraintsModify[index];
+
+    const isNew = index === allConstraints.length;
+
+    const existingConstraint = allConstraints[index];
+
+    const upQueries = [];
+    const downQueries = [];
+
+    if (!isNew) {
+      upQueries.push(
+        getRunSqlQuery(
+          dataSource.getDropConstraintSql(
+            existingConstraint.table_name,
+            existingConstraint.table_schema,
+            existingConstraint.constraint_name
+          ),
+          source
+        )
+      );
+    }
+    upQueries.push(
       getRunSqlQuery(
         dataSource.getCreateCheckConstraintSql(
           currentTable,
           currentSchema,
-          existingConstraint.constraint_name,
-          existingConstraint.check
+          newConstraint.name,
+          newConstraint.check
         ),
         source
       )
     );
-  }
 
-  const migrationName =
-    'alter_table_' +
-    currentSchema +
-    '_' +
-    currentTable +
-    '_add_check_constraint_' +
-    newConstraint.name;
-  const requestMsg = 'Saving check constraint...';
-  const successMsg = 'Check constraint saved';
-  const errorMsg = 'Saving check constraint failed';
+    downQueries.push(
+      getRunSqlQuery(
+        dataSource.getDropConstraintSql(
+          currentTable,
+          currentSchema,
+          newConstraint.name
+        ),
+        source
+      )
+    );
 
-  const customOnSuccess = () => {
-    if (successCb) {
-      successCb();
+    if (!isNew) {
+      downQueries.push(
+        getRunSqlQuery(
+          dataSource.getCreateCheckConstraintSql(
+            currentTable,
+            currentSchema,
+            existingConstraint.constraint_name,
+            existingConstraint.check
+          ),
+          source
+        )
+      );
     }
-  };
 
-  const customOnError = () => {
-    if (errorCb) {
-      errorCb();
-    }
-  };
+    const migrationName =
+      'alter_table_' +
+      currentSchema +
+      '_' +
+      currentTable +
+      '_add_check_constraint_' +
+      newConstraint.name;
+    const requestMsg = 'Saving check constraint...';
+    const successMsg = 'Check constraint saved';
+    const errorMsg = 'Saving check constraint failed';
 
-  makeMigrationCall(
-    dispatch,
-    getState,
-    upQueries,
-    downQueries,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
+    const customOnSuccess = () => {
+      if (successCb) {
+        successCb();
+      }
+    };
+
+    const customOnError = () => {
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQueries,
+      downQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
 
 const saveUniqueKey = (
   index,
@@ -2097,75 +2086,71 @@ const saveUniqueKey = (
   };
 };
 
-export const setViewCustomColumnNames = (
-  customColumnNames,
-  viewName,
-  schemaName,
-  successCb,
-  errorCb
-) => (dispatch, getState) => {
-  const source = getState().tables.currentDataSource;
-  const viewDef = generateTableDef(viewName, schemaName);
-  const view = findTable(getState().tables.allSchemas, viewDef);
+export const setViewCustomColumnNames =
+  (customColumnNames, viewName, schemaName, successCb, errorCb) =>
+  (dispatch, getState) => {
+    const source = getState().tables.currentDataSource;
+    const viewDef = generateTableDef(viewName, schemaName);
+    const view = findTable(getState().tables.allSchemas, viewDef);
 
-  const existingCustomName = getTableCustomName(view);
-  const existingCustomRootFields = getTableCustomRootFields(view);
-  const existingColumnConfig = getTableColumnConfig(view);
+    const existingCustomName = getTableCustomName(view);
+    const existingCustomRootFields = getTableCustomRootFields(view);
+    const existingColumnConfig = getTableColumnConfig(view);
 
-  const newColumnConfig = setCustomColumnNamesOnColumnConfig(
-    existingColumnConfig,
-    sanitiseColumnNames(customColumnNames)
-  );
-
-  const migration = new Migration();
-
-  migration.add(
-    getSetCustomRootFieldsQuery(
-      viewDef,
-      existingCustomRootFields,
-      newColumnConfig,
-      existingCustomName || null,
-      source
-    ),
-    getSetCustomRootFieldsQuery(
-      viewDef,
-      existingCustomRootFields,
+    const newColumnConfig = setCustomColumnNamesOnColumnConfig(
       existingColumnConfig,
-      existingCustomName,
-      source
-    )
-  );
+      sanitiseColumnNames(customColumnNames)
+    );
 
-  const migrationName = 'alter_view_custom_column_names';
-  const requestMsg = 'Saving column metadata...';
-  const successMsg = 'Saved column metadata successfully';
-  const errorMsg = 'Saving column metadata failed';
+    const migration = new Migration();
 
-  const customOnSuccess = () => {
-    if (successCb) {
-      successCb();
-    }
+    migration.add(
+      getSetCustomRootFieldsQuery(
+        viewDef,
+        existingCustomRootFields,
+        newColumnConfig,
+        existingCustomName || null,
+        source
+      ),
+      getSetCustomRootFieldsQuery(
+        viewDef,
+        existingCustomRootFields,
+        existingColumnConfig,
+        existingCustomName,
+        source
+      )
+    );
+
+    const migrationName = 'alter_view_custom_column_names';
+    const requestMsg = 'Saving column metadata...';
+    const successMsg = 'Saved column metadata successfully';
+    const errorMsg = 'Saving column metadata failed';
+
+    const customOnSuccess = () => {
+      if (successCb) {
+        successCb();
+      }
+    };
+
+    const customOnError = () => {
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
-
-  const customOnError = () => {
-    if (errorCb) {
-      errorCb();
-    }
-  };
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    migration.upMigration,
-    migration.downMigration,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
 
 const saveIndex = (indexInfo, successCb, errorCb) => (dispatch, getState) => {
   if (!indexInfo) {

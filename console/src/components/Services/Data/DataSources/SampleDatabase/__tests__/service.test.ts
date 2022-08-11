@@ -575,8 +575,7 @@ describe('maskPostgresError tests', () => {
       output: maskedErrorMessage,
     },
     {
-      name:
-        'valid cohort config, connected source, nested pg permissions error',
+      name: 'valid cohort config, connected source, nested pg permissions error',
       input: {
         getState: () => ({
           main: {
@@ -620,8 +619,7 @@ describe('maskPostgresError tests', () => {
       output: maskedErrorMessage,
     },
     {
-      name:
-        'valid cohort config, connected source, nested pg permissions error, consoleType !== cloud',
+      name: 'valid cohort config, connected source, nested pg permissions error, consoleType !== cloud',
       input: {
         getState: () => ({
           main: {

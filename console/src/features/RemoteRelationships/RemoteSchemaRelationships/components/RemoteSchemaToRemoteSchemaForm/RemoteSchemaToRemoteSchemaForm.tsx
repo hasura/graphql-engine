@@ -40,7 +40,11 @@ const SetDefaults = ({
   typeName,
   existingRelationshipName,
 }: ResetterProps) => {
-  const { data: defaultValues, isLoading, isError } = useDefaultValues({
+  const {
+    data: defaultValues,
+    isLoading,
+    isError,
+  } = useDefaultValues({
     sourceRemoteSchema,
     typeName,
     remoteRelationshipName: existingRelationshipName,

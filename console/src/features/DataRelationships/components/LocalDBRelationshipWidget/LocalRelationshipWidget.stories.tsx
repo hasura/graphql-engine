@@ -30,17 +30,15 @@ Primary.args = {
   },
 };
 
-export const WithExistingObjectRelationship: Story<LocalRelationshipWidgetProps> = args => (
-  <LocalRelationshipWidget {...args} />
-);
+export const WithExistingObjectRelationship: Story<LocalRelationshipWidgetProps> =
+  args => <LocalRelationshipWidget {...args} />;
 WithExistingObjectRelationship.args = {
   ...Primary.args,
   existingRelationshipName: 'relt1obj',
 };
 
-export const WithExistingArrayRelationship: Story<LocalRelationshipWidgetProps> = args => (
-  <LocalRelationshipWidget {...args} />
-);
+export const WithExistingArrayRelationship: Story<LocalRelationshipWidgetProps> =
+  args => <LocalRelationshipWidget {...args} />;
 WithExistingArrayRelationship.args = {
   ...Primary.args,
   existingRelationshipName: 'relt1array',

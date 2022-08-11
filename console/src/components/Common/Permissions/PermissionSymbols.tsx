@@ -5,7 +5,7 @@ import {
   FaFilter,
   FaExclamationTriangle,
 } from 'react-icons/fa';
-import styles from './PermissionStyles.scss';
+import styles from './PermissionStyles.module.scss';
 
 export const permissionsSymbols = {
   fullAccess: (

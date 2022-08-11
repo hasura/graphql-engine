@@ -264,7 +264,7 @@
     "optimize-css-assets-webpack-plugin": "5.0.3",
     "postcss": "8.4.14",
     "postcss-loader": "4.2.0",
-    "prettier": "2.2.1",
+    "prettier": "2.3.2",
     "react-hot-loader": "4.13.0",
     "redux-devtools": "3.7.0",
     "redux-mock-store": "1.5.4",

@@ -36,9 +36,10 @@ export const FKRelationships = ({
     isError,
     error,
   } = useTableFKRelationships({ table, source, driver: currentDriver });
-  const keys = React.useMemo(() => Object.keys(foreignKeys?.[0] ?? {}), [
-    foreignKeys,
-  ]);
+  const keys = React.useMemo(
+    () => Object.keys(foreignKeys?.[0] ?? {}),
+    [foreignKeys]
+  );
 
   if (isError) {
     return <p className="text-red-500">Error: {error?.message}</p>;

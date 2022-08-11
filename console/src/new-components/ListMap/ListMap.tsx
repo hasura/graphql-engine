@@ -74,10 +74,10 @@ export const ListMap = (props: Props) => {
   const formContext = useFormContext();
 
   const mapping = formContext.watch(name);
-  const initValue = React.useMemo(() => props.value ?? mapping ?? {}, [
-    props,
-    mapping,
-  ]);
+  const initValue = React.useMemo(
+    () => props.value ?? mapping ?? {},
+    [props, mapping]
+  );
 
   const [localMaps, setLocalMaps] = useState<{ from: string; to: string }[]>(
     initLocalMaps(initValue)

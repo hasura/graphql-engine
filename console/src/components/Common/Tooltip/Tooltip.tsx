@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
 import { Tooltip } from '@/new-components/Tooltip';
-import styles from './Tooltip.scss';
+import styles from './Tooltip.module.scss';
 
 export interface TooltipProps extends React.ComponentProps<'i'> {
   message: string;

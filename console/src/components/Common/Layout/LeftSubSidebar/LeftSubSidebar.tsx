@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { FaSearch } from 'react-icons/fa';
 
 import Button from '../../Button/Button';
-import styles from './LeftSubSidebar.scss';
+import styles from './LeftSubSidebar.module.scss';
 
 interface Props extends React.ComponentProps<'div'> {
   showAddBtn: boolean;

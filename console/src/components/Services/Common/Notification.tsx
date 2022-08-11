@@ -14,7 +14,7 @@ import { Json } from '../../Common/utils/tsUtils';
 import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
-import styles from './Notification/Notification.scss';
+import styles from './Notification/Notification.module.scss';
 
 export interface Notification {
   title?: string | JSX.Element;

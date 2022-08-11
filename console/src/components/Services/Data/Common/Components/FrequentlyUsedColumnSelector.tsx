@@ -33,50 +33,46 @@ interface FrequentlyUsedColumnSelectorProps {
   dispatch?: Dispatch | null;
 }
 
-const FrequentlyUsedColumnSelector: React.VFC<FrequentlyUsedColumnSelectorProps> = ({
-  onSelect,
-  postgresVersion,
-  action = null,
-  dispatch = null,
-}) => {
-  const frequentlyUsedColumnsOptions = frequentlyUsedColumns
-    .filter(fuc => !action || fuc.validFor.includes(action))
-    .filter(col =>
-      postgresVersion && col.minPGVersion
-        ? parseFloat(postgresVersion) >= col.minPGVersion
-        : true
-    )
-    .map(fuc => {
-      const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
-      return {
-        content: (
-          <div>
+const FrequentlyUsedColumnSelector: React.VFC<FrequentlyUsedColumnSelectorProps> =
+  ({ onSelect, postgresVersion, action = null, dispatch = null }) => {
+    const frequentlyUsedColumnsOptions = frequentlyUsedColumns
+      .filter(fuc => !action || fuc.validFor.includes(action))
+      .filter(col =>
+        postgresVersion && col.minPGVersion
+          ? parseFloat(postgresVersion) >= col.minPGVersion
+          : true
+      )
+      .map(fuc => {
+        const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
+        return {
+          content: (
             <div>
-              <b>{title}</b>
+              <div>
+                <b>{title}</b>
+              </div>
+              <div>{subTitle}</div>
             </div>
-            <div>{subTitle}</div>
-          </div>
-        ),
-        onClick: () => (dispatch ? dispatch(onSelect(fuc)) : onSelect(fuc)),
-      };
-    });
+          ),
+          onClick: () => (dispatch ? dispatch(onSelect(fuc)) : onSelect(fuc)),
+        };
+      });
 
-  return (
-    <Dropdown
-      testId="frequently-used-columns"
-      options={frequentlyUsedColumnsOptions}
-      data-test="frequently-used-columns"
-      position="bottom"
-      key="frequently-used-columns"
-      keyPrefix="frequently-used-columns"
-    >
-      {({ onClick }) => (
-        <Button color="white" size="xs" onClick={onClick}>
-          + Frequently used columns
-        </Button>
-      )}
-    </Dropdown>
-  );
-};
+    return (
+      <Dropdown
+        testId="frequently-used-columns"
+        options={frequentlyUsedColumnsOptions}
+        data-test="frequently-used-columns"
+        position="bottom"
+        key="frequently-used-columns"
+        keyPrefix="frequently-used-columns"
+      >
+        {({ onClick }) => (
+          <Button color="white" size="xs" onClick={onClick}>
+            + Frequently used columns
+          </Button>
+        )}
+      </Dropdown>
+    );
+  };
 
 export default FrequentlyUsedColumnSelector;

@@ -1,7 +1,7 @@
 import React, { FormEvent } from 'react';
 import { Button } from '../../../Common';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
 
 interface DataSourceFormWrapperProps extends ConnectDatabaseFormProps {
   loading: boolean;

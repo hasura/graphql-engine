@@ -16,7 +16,7 @@ const AddManualRelationship = ({
   relAdd,
   dispatch,
 }) => {
-  const styles = require('../TableModify/ModifyTable.scss');
+  const styles = require('../TableModify/ModifyTable.module.scss');
 
   const columns = tableSchema.columns.sort(ordinalColSort);
 

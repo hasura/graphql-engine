@@ -24,7 +24,7 @@ import { fetchCustomFunction } from '../customFunctionReducer';
 import tabInfo from '../Modify/tabInfo';
 import PermissionsEditor from './PermissionsEditor';
 
-import styles from '../Modify/ModifyCustomFunction.scss';
+import styles from '../Modify/ModifyCustomFunction.module.scss';
 import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
 import { getFunctionSelector } from '../../../../../metadata/selector';
 

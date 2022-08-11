@@ -39,11 +39,8 @@ class ReloadMetadata extends Component {
       tooltipStyle,
       showReloadRemoteSchemas = true,
     } = this.props;
-    const {
-      isReloading,
-      shouldReloadRemoteSchemas,
-      shouldReloadAllSources,
-    } = this.state;
+    const { isReloading, shouldReloadRemoteSchemas, shouldReloadAllSources } =
+      this.state;
 
     const reloadMetadataAndLoadInconsistentMetadata = e => {
       e.preventDefault();

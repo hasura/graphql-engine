@@ -17,7 +17,7 @@ import {
   parseURI,
 } from './ManageDBUtils';
 
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
 
 const checkIfFieldsAreEmpty = (
   currentReadReplicaConnectionType: string,

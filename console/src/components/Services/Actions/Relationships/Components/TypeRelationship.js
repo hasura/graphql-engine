@@ -402,14 +402,8 @@ const RelationshipEditor = ({
 };
 
 const RelEditor = props => {
-  const {
-    dispatch,
-    relConfig,
-    objectType,
-    isNew,
-    readOnlyMode,
-    dataSources,
-  } = props;
+  const { dispatch, relConfig, objectType, isNew, readOnlyMode, dataSources } =
+    props;
 
   const [relConfigState, setRelConfigState] = React.useState(null);
 
@@ -488,7 +482,6 @@ const RelEditor = props => {
     <ExpandableEditor
       collapseCallback={collapseCallback}
       editorExpanded={expandedContent}
-      expandButtonText={expandButtonText}
       collapsedLabel={collapsedLabel}
       property={'relationship'}
       service="actions"

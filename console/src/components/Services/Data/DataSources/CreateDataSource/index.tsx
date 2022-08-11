@@ -4,7 +4,7 @@ import Globals from '../../../../../Globals';
 import Heroku from './Heroku';
 import { HerokuSession } from './Heroku/types';
 import { ReduxState } from '../../../../../types';
-import styles from './styles.scss';
+import styles from './styles.module.scss';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';

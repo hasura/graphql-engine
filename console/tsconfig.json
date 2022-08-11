@@ -8,6 +8,7 @@
     "strict": true,
     "esModuleInterop": true,
     "noEmitOnError": false,
+    "noImplicitOverride": true,
     "noEmit": true,
     "types": ["react"],
     "typeRoots": ["./src/types", "node_modules/@types"],

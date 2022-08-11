@@ -222,13 +222,8 @@ class OneGraphExplorer extends React.Component {
   };
 
   render() {
-    const {
-      schema,
-      explorerOpen,
-      query,
-      explorerWidth,
-      isResizing,
-    } = this.state;
+    const { schema, explorerOpen, query, explorerWidth, isResizing } =
+      this.state;
 
     const { renderGraphiql } = this.props;
 

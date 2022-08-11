@@ -93,8 +93,8 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
   }
 
   if (changedHeaderDetails.keyName === 'isActive') {
-    newHeaders[changedHeaderIndex].isActive = !newHeaders[changedHeaderIndex]
-      .isActive;
+    newHeaders[changedHeaderIndex].isActive =
+      !newHeaders[changedHeaderIndex].isActive;
   } else {
     newHeaders[changedHeaderIndex][changedHeaderDetails.keyName] =
       changedHeaderDetails.newValue;
@@ -478,17 +478,19 @@ const getRemoteQueries = (queryUrl, cb, dispatch) => {
     .catch(e => console.error('Invalid query file URL: ', e));
 };
 
-const processResponseDetails = (
-  responseTime,
-  responseSize,
-  isResponseCached,
-  responseTrackingId
-) => dispatch => {
-  dispatch({
-    type: TRACK_RESPONSE_DETAILS,
-    data: { responseTime, responseSize, isResponseCached, responseTrackingId },
-  });
-};
+const processResponseDetails =
+  (responseTime, responseSize, isResponseCached, responseTrackingId) =>
+  dispatch => {
+    dispatch({
+      type: TRACK_RESPONSE_DETAILS,
+      data: {
+        responseTime,
+        responseSize,
+        isResponseCached,
+        responseTrackingId,
+      },
+    });
+  };
 
 const apiExplorerReducer = (state = defaultState, action) => {
   switch (action.type) {

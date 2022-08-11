@@ -51,7 +51,7 @@ import {
 import SelectGroup, { OptGroup, QuotedSelectGroup } from './SelectGroup';
 import { Nullable } from '../../../components/Common/utils/tsUtils';
 
-import styles from './PermissionBuilder.scss';
+import styles from './PermissionBuilder.module.scss';
 
 interface PermissionBuilderProps {
   allTableSchemas: Table[];
@@ -65,11 +65,11 @@ interface PermissionBuilderProps {
 }
 
 class PermissionBuilder extends React.Component<PermissionBuilderProps> {
-  componentDidMount() {
+  override componentDidMount() {
     this.loadMissingSchemas();
   }
 
-  componentDidUpdate(prevProps: PermissionBuilderProps) {
+  override componentDidUpdate(prevProps: PermissionBuilderProps) {
     // check for and fetch any missing schemas if
     // either permission filter or available table schemas have changed
     if (
@@ -181,7 +181,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
     }
   }
 
-  render() {
+  override render() {
     const wrapDoubleQuotes = (value: JSX.Element) => {
       return (
         <span>
@@ -795,10 +795,12 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
 
       const currentTypeMap = dataSource.permissionColumnDataTypes;
       const rootValueType = getRootType(valueType, currentTypeMap);
-      const operators = (getPermissionOperators(
-        dataSource.supportedColumnOperators as ColumnOperators[],
-        currentTypeMap
-      ) as Record<string, string[]>)[rootValueType];
+      const operators = (
+        getPermissionOperators(
+          dataSource.supportedColumnOperators as ColumnOperators[],
+          currentTypeMap
+        ) as Record<string, string[]>
+      )[rootValueType];
 
       const operatorSelect = renderSelect(
         dispatchColumnOperatorSelect,

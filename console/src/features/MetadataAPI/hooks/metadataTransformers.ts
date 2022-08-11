@@ -103,11 +103,8 @@ export namespace MetadataTransformer {
           };
         }
 
-        const {
-          remote_schema,
-          lhs_fields,
-          remote_field,
-        } = definition.to_remote_schema as ToRemoteSchema;
+        const { remote_schema, lhs_fields, remote_field } =
+          definition.to_remote_schema as ToRemoteSchema;
 
         // otherwise it's the new format
         return {

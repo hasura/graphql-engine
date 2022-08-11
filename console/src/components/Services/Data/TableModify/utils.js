@@ -23,10 +23,8 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
   };
 
   if (alterTypeOptions.length > 3) {
-    const {
-      typInfo: validOptions,
-      typValueMap: validOptionsMap,
-    } = getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
+    const { typInfo: validOptions, typValueMap: validOptionsMap } =
+      getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
 
     allInfo = allInfo.concat(validOptions);
     // const allInfo = [...currentInfo, ...validOptions];

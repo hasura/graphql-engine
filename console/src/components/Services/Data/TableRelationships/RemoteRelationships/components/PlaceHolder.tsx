@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../SchemaExplorer.scss';
+import styles from '../SchemaExplorer.module.scss';
 
 export const NoRemoteSchemaPlaceholder: React.FC = () => {
   return (

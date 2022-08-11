@@ -45,7 +45,7 @@ class ErrorBoundary extends React.Component<
     this.state = initialState;
   }
 
-  componentDidCatch(error: Error) {
+  override componentDidCatch(error: Error) {
     const { dispatch } = this.props;
 
     // for invalid path segment errors
@@ -80,7 +80,7 @@ class ErrorBoundary extends React.Component<
     this.setState(initialState);
   };
 
-  render() {
+  override render() {
     const { metadata } = this.props;
     const { hasError, type, error } = this.state;
 

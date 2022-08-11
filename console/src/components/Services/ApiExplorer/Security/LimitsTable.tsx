@@ -12,7 +12,7 @@ import {
 } from '../../../Common/Table';
 import { updateAPILimits } from './actions';
 import LimitsForm from './LimitsFormWrapper';
-import styles from './Security.scss';
+import styles from './Security.module.scss';
 
 import {
   getLimitsforRole,

@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
-import styles from '../../../Common/TableCommon/Table.scss';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 

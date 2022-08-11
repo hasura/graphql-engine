@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaEdit } from 'react-icons/fa';
-import styles from '../Common.scss';
+import styles from '../Common.module.scss';
 
 class Heading extends React.Component {
   state = {

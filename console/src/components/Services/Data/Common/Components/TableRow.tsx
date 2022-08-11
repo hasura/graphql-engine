@@ -88,13 +88,8 @@ export const TableRow: React.FC<TableRowProps> = ({
   clone,
   prevValue,
 }) => {
-  const {
-    colName,
-    isDisabled,
-    isNullable,
-    hasDefault,
-    columnValueType,
-  } = getColumnInfo(column, prevValue, clone);
+  const { colName, isDisabled, isNullable, hasDefault, columnValueType } =
+    getColumnInfo(column, prevValue, clone);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,

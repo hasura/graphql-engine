@@ -50,13 +50,15 @@ export const RemoteSchemaTree = ({
     [relationshipFields, schema, rootFields, fields]
   );
 
-  const expandedKeys = useMemo(() => getExpandedKeys(relationshipFields), [
-    relationshipFields,
-  ]);
+  const expandedKeys = useMemo(
+    () => getExpandedKeys(relationshipFields),
+    [relationshipFields]
+  );
 
-  const checkedKeys = useMemo(() => getCheckedKeys(relationshipFields), [
-    relationshipFields,
-  ]);
+  const checkedKeys = useMemo(
+    () => getCheckedKeys(relationshipFields),
+    [relationshipFields]
+  );
 
   const onCheck = (
     // onCheck props expects checked param

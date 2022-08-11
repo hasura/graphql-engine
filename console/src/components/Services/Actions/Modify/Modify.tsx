@@ -81,14 +81,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
   readOnlyMode,
   ...modifyProps
 }) => {
-  const {
-    handler,
-    kind,
-    actionDefinition,
-    typeDefinition,
-    comment,
-    timeout,
-  } = modifyProps;
+  const { handler, kind, actionDefinition, typeDefinition, comment, timeout } =
+    modifyProps;
 
   const {
     sdl: typeDefinitionSdl,
