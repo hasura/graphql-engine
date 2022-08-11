@@ -1398,32 +1398,3 @@ class TestGraphQLQueryBoolExpSpatialMSSQL:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/spatial'
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.backend('bigquery')
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpSpatialBigquery:
-    def test_select_spatial_bigquery_types(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_equals(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_contains(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_intersects(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_within(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_d_within(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_d_within_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_touches(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_bigquery.yaml', transport)
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/boolexp/spatial'

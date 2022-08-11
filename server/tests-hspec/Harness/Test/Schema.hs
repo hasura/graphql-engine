@@ -9,6 +9,7 @@ module Harness.Test.Schema
     ScalarType (..),
     defaultSerialType,
     ScalarValue (..),
+    WKT (..),
     UniqueConstraint (..),
     BackendScalarType (..),
     BackendScalarValue (..),
@@ -215,6 +216,7 @@ data ScalarType
   | TStr
   | TUTCTime
   | TBool
+  | TGeography
   | TCustomType BackendScalarType
   deriving (Show, Eq)
 
@@ -225,9 +227,16 @@ data ScalarValue
   | VStr Text
   | VUTCTime UTCTime
   | VBool Bool
+  | VGeography WKT
   | VNull
   | VCustomValue BackendScalarValue
   deriving (Show, Eq)
+
+-- | Describe Geography values using the WKT representation
+-- https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+-- https://cloud.google.com/bigquery/docs/geospatial-data#loading_wkt_or_wkb_data
+newtype WKT = WKT Text
+  deriving (Eq, Show, IsString)
 
 backendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe BackendScalarValueType) -> BackendScalarValueType
 backendScalarValue bsv fn = case fn bsv of

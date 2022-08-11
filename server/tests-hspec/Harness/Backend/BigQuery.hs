@@ -170,6 +170,7 @@ scalarType = \case
   Schema.TStr -> "STRING"
   Schema.TUTCTime -> "DATETIME"
   Schema.TBool -> "BOOLEAN"
+  Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstBigQuery
 
 -- | Create column. BigQuery doesn't support default values. Also,
@@ -188,6 +189,7 @@ serialize = \case
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "DATETIME '%F %T'" t
   VBool b -> tshow b
+  VGeography (Schema.WKT wkt) -> T.concat ["st_geogfromtext(\'", wkt, "\')"]
   VNull -> "NULL"
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvBigQuery
 
