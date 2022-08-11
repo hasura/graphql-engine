@@ -47,9 +47,9 @@ data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
 
 deriving stock instance
   ( Backend b,
-    Eq (BooleanOperators b v),
+    Eq (AnnBoolExp b v),
+    Eq (MutationOutputG b r v),
     Eq (BackendUpdate b v),
-    Eq (FunctionArgumentExp b v),
     Eq r,
     Eq v
   ) =>
@@ -57,9 +57,9 @@ deriving stock instance
 
 deriving stock instance
   ( Backend b,
-    Show (BooleanOperators b v),
+    Show (AnnBoolExp b v),
+    Show (MutationOutputG b r v),
     Show (BackendUpdate b v),
-    Show (FunctionArgumentExp b v),
     Show r,
     Show v
   ) =>
