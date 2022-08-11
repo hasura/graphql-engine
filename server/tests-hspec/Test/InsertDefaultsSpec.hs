@@ -3,6 +3,7 @@
 -- | Test insert with default values
 module Test.InsertDefaultsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -23,9 +24,9 @@ import Test.Hspec (SpecWith, it)
 
 spec :: SpecWith TestEnvironment
 spec = do
-  Fixture.run ([postgresFixture, citusFixture, mssqlFixture]) commonTests
-  Fixture.run ([postgresFixture, citusFixture]) postgresTests
-  Fixture.run ([mssqlFixture]) mssqlTests
+  Fixture.run (NE.fromList $ [postgresFixture, citusFixture, mssqlFixture]) commonTests
+  Fixture.run (NE.fromList $ [postgresFixture, citusFixture]) postgresTests
+  Fixture.run (NE.fromList $ [mssqlFixture]) mssqlTests
   where
     postgresFixture =
       (Fixture.fixture $ Fixture.Backend Fixture.Postgres)

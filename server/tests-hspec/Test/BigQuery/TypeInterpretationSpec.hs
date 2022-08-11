@@ -6,6 +6,7 @@
 module Test.BigQuery.TypeInterpretationSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
@@ -21,12 +22,14 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ BigQuery.setupTablesAction schema testEnv
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ BigQuery.setupTablesAction schema testEnv
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

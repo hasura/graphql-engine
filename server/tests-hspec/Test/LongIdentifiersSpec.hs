@@ -5,6 +5,7 @@
 --   See "Hasura.Backend.Postgres.SQL.RenameIdentifiers" for more details.
 module Test.LongIdentifiersSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -25,43 +26,45 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
-    [ -- Create table fails currently becasuse we postfix table names for some reason
-      -- which makes the valid table name go over the limit
-      --
-      -- (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-      --   { Fixture.setupTeardown = \(testEnv, _) ->
-      --       [ Mysql.setupTablesAction schema testEnv
-      --       ]
-      --   },
-      (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv
-            ]
-        },
-      -- Create table fails currently on a weird error:
-      -- > relation "i_need_a_table_with_a_long_na_i_need_a_column_with_a_long_n_seq" already exists
-      --
-      -- (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-      --   { Fixture.setupTeardown = \(testEnv, _) ->
-      --       [ Citus.setupTablesAction schema testEnv
-      --       ]
-      --   },
-      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Sqlserver.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ BigQuery.setupTablesAction schema testEnv
-            ],
-          Fixture.customOptions =
-            Just $
-              Fixture.Options
-                { stringifyNumbers = True
-                }
-        }
-    ]
+    ( NE.fromList
+        [ -- Create table fails currently becasuse we postfix table names for some reason
+          -- which makes the valid table name go over the limit
+          --
+          -- (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
+          --   { Fixture.setupTeardown = \(testEnv, _) ->
+          --       [ Mysql.setupTablesAction schema testEnv
+          --       ]
+          --   },
+          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+            },
+          -- Create table fails currently on a weird error:
+          -- > relation "i_need_a_table_with_a_long_na_i_need_a_column_with_a_long_n_seq" already exists
+          --
+          -- (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          --   { Fixture.setupTeardown = \(testEnv, _) ->
+          --       [ Citus.setupTablesAction schema testEnv
+          --       ]
+          --   },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlserver.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ BigQuery.setupTablesAction schema testEnv
+                ],
+              Fixture.customOptions =
+                Just $
+                  Fixture.Options
+                    { stringifyNumbers = True
+                    }
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

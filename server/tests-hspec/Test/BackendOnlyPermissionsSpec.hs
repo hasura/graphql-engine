@@ -3,6 +3,7 @@
 -- | Test backend only permissions
 module Test.BackendOnlyPermissionsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -23,13 +24,15 @@ spec :: SpecWith TestEnvironment
 spec =
   -- Postgres
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv
-            ]
-              <> postgresPermissionsSetup testEnv
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+                  <> postgresPermissionsSetup testEnv
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

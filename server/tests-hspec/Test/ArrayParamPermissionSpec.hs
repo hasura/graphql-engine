@@ -4,6 +4,7 @@
 -- https://github.com/hasura/graphql-engine-mono/pull/4651
 module Test.ArrayParamPermissionSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -23,11 +24,12 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    ( [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-          { Fixture.setupTeardown = \(testEnv, _) ->
-              [postgresSetupTeardown testEnv]
-          }
-      ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [postgresSetupTeardown testEnv]
+            }
+        ]
     )
     tests
 

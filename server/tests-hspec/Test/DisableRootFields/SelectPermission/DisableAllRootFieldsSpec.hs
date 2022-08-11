@@ -3,6 +3,7 @@
 -- | Test if all root fields are disabled
 module Test.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
@@ -21,13 +22,15 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv,
-              postgresSetupPermissions testEnv
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv,
+                  postgresSetupPermissions testEnv
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 --   Test case for bug reported at https://github.com/hasura/graphql-engine/issues/7936
 module Test.ObjectRelationshipsLimitSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
@@ -24,11 +25,13 @@ import Test.Hspec
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [postgresSetupTeardown testEnv]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [postgresSetupTeardown testEnv]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

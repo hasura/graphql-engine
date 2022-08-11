@@ -3,6 +3,7 @@
 module Test.Schema.TableRelationships.ArrayRelationshipsSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql qualified as Mysql
@@ -22,32 +23,33 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
-    ( [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-          { Fixture.setupTeardown = \(testEnv, _) ->
-              [Mysql.setupTablesAction schema testEnv]
-          },
-        (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-          { Fixture.setupTeardown = \(testEnv, _) ->
-              [Postgres.setupTablesAction schema testEnv]
-          },
-        (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-          { Fixture.setupTeardown = \(testEnv, _) ->
-              [Citus.setupTablesAction schema testEnv]
-          },
-        (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-          { Fixture.setupTeardown = \(testEnv, _) ->
-              [Sqlserver.setupTablesAction schema testEnv]
-          },
-        (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
-          { Fixture.setupTeardown = \(testEnv, _) ->
-              [BigQuery.setupTablesAction schema testEnv],
-            Fixture.customOptions =
-              Just $
-                Fixture.Options
-                  { stringifyNumbers = True
-                  }
-          }
-      ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Mysql.setupTablesAction schema testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Postgres.setupTablesAction schema testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Citus.setupTablesAction schema testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Sqlserver.setupTablesAction schema testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [BigQuery.setupTablesAction schema testEnv],
+              Fixture.customOptions =
+                Just $
+                  Fixture.Options
+                    { stringifyNumbers = True
+                    }
+            }
+        ]
     )
     tests
 

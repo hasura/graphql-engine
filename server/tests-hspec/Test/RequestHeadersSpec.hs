@@ -3,6 +3,7 @@
 -- | Tests related to request headers
 module Test.RequestHeadersSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -27,13 +28,15 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Sqlserver.setupTablesAction schema testEnv,
-              sqlserverPermissionsSetup testEnv
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlserver.setupTablesAction schema testEnv,
+                  sqlserverPermissionsSetup testEnv
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

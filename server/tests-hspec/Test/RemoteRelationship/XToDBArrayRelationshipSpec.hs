@@ -17,6 +17,7 @@ import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value)
 import Data.Aeson.Lens (key, values, _String)
 import Data.Char (isUpper, toLower)
+import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Maybe qualified as Unsafe (fromJust)
 import Data.Morpheus.Document (gqlDocument)
@@ -46,7 +47,7 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
     lhsFixtures = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     rhsFixtures = [rhsPostgres, rhsSQLServer]
-    contexts = combine <$> lhsFixtures <*> rhsFixtures
+    contexts = NE.fromList $ combine <$> lhsFixtures <*> rhsFixtures
 
 -- | Combines a lhs and a rhs.
 --

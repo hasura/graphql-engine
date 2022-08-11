@@ -4,6 +4,7 @@
 -- | Tests of the Postgres-specific upsert feature.
 module Test.InsertOnConflictSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Data.Text
 import Data.Text.Encoding (encodeUtf8)
 import Harness.Backend.Citus qualified as Citus
@@ -24,7 +25,7 @@ import Test.Hspec
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = run [postgresFixture, citusFixture] tests
+spec = run (NE.fromList [postgresFixture, citusFixture]) tests
 
 postgresFixture :: Fixture ()
 postgresFixture =

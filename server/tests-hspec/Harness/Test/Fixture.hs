@@ -43,14 +43,14 @@ import Test.Hspec.Core.Spec (mapSpecItem)
 --
 -- For a more general version that can run tests for any 'Fixture'@ a@, see
 -- 'runWithLocalTestEnvironment'.
-run :: [Fixture ()] -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
-run contexts tests = do
+run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
+run fixtures tests = do
   let mappedTests opts =
         mapSpecItem
           actionWithTestEnvironmentMapping
           (mapItemAction actionWithTestEnvironmentMapping)
           (tests opts)
-  runWithLocalTestEnvironment contexts mappedTests
+  runWithLocalTestEnvironment fixtures mappedTests
 
 -- | Observe that there is a direct correspondance (i.e. an isomorphism) from
 -- @TestEnvironment@ to @(TestEnvironment, ())@ within 'ActionWith'.
@@ -77,7 +77,7 @@ actionWithTestEnvironmentMapping actionWith (testEnvironment, _) = actionWith te
 -- See 'Fixture' for details.
 runWithLocalTestEnvironment ::
   forall a.
-  [Fixture a] ->
+  NonEmpty (Fixture a) ->
   (Options -> SpecWith (TestEnvironment, a)) ->
   SpecWith TestEnvironment
 runWithLocalTestEnvironment fixtures tests =

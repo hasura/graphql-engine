@@ -6,6 +6,7 @@
 --   - Postgres: https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/custom-field-names/#expose-table-root-fields-with-a-different-name-in-the-graphql-api
 module Test.CustomRootFieldsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -25,13 +26,15 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv
-            ]
-              <> postgresCreateCustomNames testEnv
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+                  <> postgresCreateCustomNames testEnv
+            }
+        ]
+    )
     streamingSubscriptionCustomRootFieldTests
 
 --------------------------------------------------------------------------------

@@ -31,6 +31,7 @@ module Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec (sp
 
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson.Lens (key, values, _String)
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe qualified as Unsafe (fromJust)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
@@ -47,7 +48,7 @@ import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..)
 spec :: SpecWith TestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    contexts = [remoteSchemaToDBRemoteRelationshipFixture]
+    contexts = NE.fromList [remoteSchemaToDBRemoteRelationshipFixture]
 
 --------------------------------------------------------------------------------
 -- Tests

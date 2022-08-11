@@ -9,6 +9,7 @@
 module Test.Schema.CustomFieldNames.QuerySpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
@@ -27,31 +28,33 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Mysql.setupTablesAction schema testEnv,
-              setupTeardown testEnv Fixture.MySQL
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv,
-              setupTeardown testEnv Fixture.Postgres
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Citus.setupTablesAction schema testEnv,
-              setupTeardown testEnv Fixture.Citus
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Sqlserver.setupTablesAction schema testEnv,
-              setupTeardown testEnv Fixture.SQLServer
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Mysql.setupTablesAction schema testEnv,
+                  setupTeardown testEnv Fixture.MySQL
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv,
+                  setupTeardown testEnv Fixture.Postgres
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Citus.setupTablesAction schema testEnv,
+                  setupTeardown testEnv Fixture.Citus
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlserver.setupTablesAction schema testEnv,
+                  setupTeardown testEnv Fixture.SQLServer
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

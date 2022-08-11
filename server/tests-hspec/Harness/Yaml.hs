@@ -25,7 +25,7 @@ import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as V
 import Data.Vector qualified as Vector
 import Data.Yaml qualified
-import Harness.Test.Context qualified as Context (Options (..))
+import Harness.Test.Fixture qualified as Fixture (Options (..))
 import Hasura.Prelude
 import Instances.TH.Lift ()
 import Test.Hspec (HasCallStack, shouldBe, shouldContain)
@@ -62,11 +62,11 @@ combinationsObjectUsingValue fn variants = combinationsObject fn (map fromObject
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnYaml :: HasCallStack => Context.Options -> IO Value -> Value -> IO ()
+shouldReturnYaml :: HasCallStack => Fixture.Options -> IO Value -> Value -> IO ()
 shouldReturnYaml options actualIO rawExpected = do
   actual <- actualIO
 
-  let Context.Options {stringifyNumbers} = options
+  let Fixture.Options {stringifyNumbers} = options
       expected =
         if stringifyNumbers
           then stringifyExpectedToActual rawExpected actual
@@ -93,11 +93,11 @@ stringifyExpectedToActual expected _ = expected
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnOneOfYaml :: HasCallStack => Context.Options -> IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml :: HasCallStack => Fixture.Options -> IO Value -> [Value] -> IO ()
 shouldReturnOneOfYaml options actualIO expecteds = do
   actual <- actualIO
 
-  let Context.Options {stringifyNumbers} = options
+  let Fixture.Options {stringifyNumbers} = options
       fixNumbers expected =
         if stringifyNumbers
           then stringifyExpectedToActual expected actual

@@ -6,6 +6,7 @@
 module Test.Mutations.MultiplePerRequest.UpdateManySpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
@@ -25,17 +26,19 @@ spec = do
   -- "SERIAL" as the 'Schema.defaultSerialType' for MySQL.
 
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Citus.setupTablesAction schema testEnv
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Citus.setupTablesAction schema testEnv
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

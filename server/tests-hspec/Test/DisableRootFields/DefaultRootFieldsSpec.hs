@@ -3,6 +3,7 @@
 -- | Test if all root fields (list, pk and aggregate) are enabled by default
 module Test.DisableRootFields.DefaultRootFieldsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -22,19 +23,21 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv,
-              postgresSetupPermissions testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ SQLServer.setupTablesAction schema testEnv,
-              sqlserverSetupPermissions testEnv
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv,
+                  postgresSetupPermissions testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ SQLServer.setupTablesAction schema testEnv,
+                  sqlserverSetupPermissions testEnv
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------
