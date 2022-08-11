@@ -3,6 +3,7 @@
 -- | Test insert check permissions
 module Test.InsertCheckPermissionSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -23,11 +24,13 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [mssqlSetupTeardown testEnv]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [mssqlSetupTeardown testEnv]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

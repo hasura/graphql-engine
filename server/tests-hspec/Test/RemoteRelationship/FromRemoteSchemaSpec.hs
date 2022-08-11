@@ -8,6 +8,7 @@
 --     making joins against them.
 module Test.RemoteRelationship.FromRemoteSchemaSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Harness.Backend.Postgres qualified as Postgres
@@ -28,7 +29,7 @@ import Test.Hspec (SpecWith, describe, it)
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Fixture.runWithLocalTestEnvironment [context] tests
+spec = Fixture.runWithLocalTestEnvironment (NE.fromList [context]) tests
   where
     context =
       (Fixture.fixture $ Fixture.RemoteGraphQLServer)

@@ -3,6 +3,7 @@
 -- | Test *_run_sql query API
 module Test.RunSQLSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants qualified as Constants
@@ -23,23 +24,27 @@ spec :: SpecWith TestEnvironment
 spec = do
   -- Postgres
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv,
-              Postgres.setupPermissionsAction [updatePermission] testEnv
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv,
+                  Postgres.setupPermissionsAction [updatePermission] testEnv
+                ]
+            }
+        ]
+    )
     postgresTests
 
   -- BigQuery
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ BigQuery.setupTablesAction [] testEnv
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ BigQuery.setupTablesAction [] testEnv
+                ]
+            }
+        ]
+    )
     bigqueryTests
 
 --------------------------------------------------------------------------------

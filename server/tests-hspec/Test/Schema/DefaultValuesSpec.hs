@@ -8,6 +8,7 @@
 module Test.Schema.DefaultValuesSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -25,19 +26,21 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnvironment, _) ->
-            [ Postgres.setupTablesAction schema testEnvironment
-            ]
-              <> setupMetadata Fixture.Postgres testEnvironment
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnvironment, _) ->
-            [ Sqlserver.setupTablesAction schema testEnvironment
-            ]
-              <> setupMetadata Fixture.SQLServer testEnvironment
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Postgres.setupTablesAction schema testEnvironment
+                ]
+                  <> setupMetadata Fixture.Postgres testEnvironment
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlserver.setupTablesAction schema testEnvironment
+                ]
+                  <> setupMetadata Fixture.SQLServer testEnvironment
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

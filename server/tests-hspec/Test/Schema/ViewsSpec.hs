@@ -3,6 +3,7 @@
 module Test.Schema.ViewsSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Database.PG.Query.Pool (sql)
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
@@ -20,21 +21,23 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-        { Fixture.setupTeardown = \(testEnvironment, _) ->
-            [ Mysql.setupTablesAction schema testEnvironment,
-              setupMysql,
-              setupMetadata Fixture.MySQL testEnvironment
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnvironment, _) ->
-            [ Postgres.setupTablesAction schema testEnvironment,
-              setupPostgres,
-              setupMetadata Fixture.Postgres testEnvironment
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Mysql.setupTablesAction schema testEnvironment,
+                  setupMysql,
+                  setupMetadata Fixture.MySQL testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Postgres.setupTablesAction schema testEnvironment,
+                  setupPostgres,
+                  setupMetadata Fixture.Postgres testEnvironment
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

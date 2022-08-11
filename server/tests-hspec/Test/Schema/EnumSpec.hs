@@ -7,6 +7,7 @@
 module Test.Schema.EnumSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
@@ -23,29 +24,31 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnvironment, _) ->
-            [ Fixture.SetupAction
-                { Fixture.setupAction =
-                    Postgres.run_ setup,
-                  Fixture.teardownAction = \_ ->
-                    Postgres.run_ teardown
-                },
-              Postgres.setupTablesAction schema testEnvironment
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-        { Fixture.setupTeardown = \(testEnvironment, _) ->
-            [ Fixture.SetupAction
-                { Fixture.setupAction =
-                    Citus.run_ setup,
-                  Fixture.teardownAction = \_ ->
-                    Citus.run_ teardown
-                },
-              Citus.setupTablesAction schema testEnvironment
-            ]
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Postgres.run_ setup,
+                      Fixture.teardownAction = \_ ->
+                        Postgres.run_ teardown
+                    },
+                  Postgres.setupTablesAction schema testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Citus.run_ setup,
+                      Fixture.teardownAction = \_ ->
+                        Citus.run_ teardown
+                    },
+                  Citus.setupTablesAction schema testEnvironment
+                ]
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

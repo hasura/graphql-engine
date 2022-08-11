@@ -25,6 +25,7 @@
 -- The LHS source in the below tests have the source name as "source"
 module Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
@@ -40,11 +41,12 @@ spec :: SpecWith TestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
     contexts =
-      [ Common.dbTodbRemoteRelationshipFixture,
-        Common.dbToRemoteSchemaRemoteRelationshipFixture,
-        Common.remoteSchemaToDBRemoteRelationshipFixture,
-        Common.remoteSchemaToremoteSchemaRemoteRelationshipFixture
-      ]
+      NE.fromList
+        [ Common.dbTodbRemoteRelationshipFixture,
+          Common.dbToRemoteSchemaRemoteRelationshipFixture,
+          Common.remoteSchemaToDBRemoteRelationshipFixture,
+          Common.remoteSchemaToremoteSchemaRemoteRelationshipFixture
+        ]
 
 --------------------------------------------------------------------------------
 -- Tests

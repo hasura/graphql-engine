@@ -9,6 +9,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as Aeson
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -26,15 +27,16 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
-          { Fixture.setupTeardown = \(testEnv, _) ->
-              [ DataConnector.setupFixtureAction
-                  sourceMetadata
-                  DataConnector.defaultBackendConfig
-                  testEnv
-              ]
-          }
-      ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ DataConnector.setupFixtureAction
+                    sourceMetadata
+                    DataConnector.defaultBackendConfig
+                    testEnv
+                ]
+            }
+        ]
     )
     tests
 

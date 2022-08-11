@@ -7,6 +7,7 @@ module Test.EventTrigger.EventTriggersRunSQLSpec (spec) where
 import Control.Concurrent.Chan qualified as Chan
 import Data.Aeson (eitherDecode)
 import Data.ByteString.Lazy.Char8 qualified as L8
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
@@ -29,18 +30,19 @@ import Test.Hspec (SpecWith, it, shouldBe)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-          { -- setup the webhook server as the local test environment,
-            -- so that the server can be referenced while testing
-            Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-            Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = postgresSetup testEnv,
-                    Fixture.teardownAction = \_ -> postgresTeardown testEnv
-                  }
-              ]
-          }
-      ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { -- setup the webhook server as the local test environment,
+              -- so that the server can be referenced while testing
+              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+              Fixture.setupTeardown = \testEnv ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnv,
+                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    }
+                ]
+            }
+        ]
     )
     tests
 

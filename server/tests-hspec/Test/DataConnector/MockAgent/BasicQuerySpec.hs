@@ -27,12 +27,13 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
-          { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
-            Fixture.setupTeardown = \(testEnv, mockEnv) ->
-              [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
-          }
-      ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+            { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
+              Fixture.setupTeardown = \(testEnv, mockEnv) ->
+                [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
+            }
+        ]
     )
     tests
 

@@ -3,6 +3,7 @@
 -- | All tests related to metadata API for computed fields in a BigQuery source
 module Test.BigQuery.Metadata.ComputedFieldSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -20,13 +21,15 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ BigQuery.setupTablesAction schema testEnv
-            ]
-              <> setupFunctions testEnv
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ BigQuery.setupTablesAction schema testEnv
+                ]
+                  <> setupFunctions testEnv
+            }
+        ]
+    )
     tests
 
 -- ** Schema

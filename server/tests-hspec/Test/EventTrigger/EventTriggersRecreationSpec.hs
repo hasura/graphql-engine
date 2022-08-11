@@ -2,6 +2,7 @@
 
 module Test.EventTrigger.EventTriggersRecreationSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postV2Query_)
 import Harness.GraphqlEngine qualified as GraphQLEngine
@@ -22,16 +23,17 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-          { Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-            Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = postgresSetup testEnv,
-                    Fixture.teardownAction = \_ -> postgresTeardown testEnv
-                  }
-              ]
-          }
-      ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+              Fixture.setupTeardown = \testEnv ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnv,
+                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    }
+                ]
+            }
+        ]
     )
     tests
 

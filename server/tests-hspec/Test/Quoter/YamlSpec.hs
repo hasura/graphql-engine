@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE QuasiQuotes #-}
 
--- who tests the test franework?
+-- who tests the test framework?
 module Test.Quoter.YamlSpec (spec) where
 
 import Data.Aeson qualified as Aeson

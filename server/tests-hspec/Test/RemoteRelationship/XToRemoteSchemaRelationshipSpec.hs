@@ -14,6 +14,7 @@ module Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
 where
 
 import Data.Char (isUpper, toLower)
+import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
@@ -39,7 +40,7 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    contexts = map mkFixture [lhsPostgres, lhsSQLServer, lhsRemoteServer]
+    contexts = NE.fromList $ map mkFixture [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     lhsPostgres =
       (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
         { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,

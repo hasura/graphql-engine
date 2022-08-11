@@ -3,6 +3,7 @@
 -- | Test if only list root field is accessible
 module Test.DisableRootFields.SelectPermission.EnablePKSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -37,14 +38,18 @@ spec = do
           }
 
   Fixture.run
-    [ pgFixture,
-      sqlServerFixture
-    ]
+    ( NE.fromList
+        [ pgFixture,
+          sqlServerFixture
+        ]
+    )
     graphQLTests
 
   Fixture.run
-    [ pgFixture
-    ]
+    ( NE.fromList
+        [ pgFixture
+        ]
+    )
     metadataValidationTests
 
 --------------------------------------------------------------------------------
