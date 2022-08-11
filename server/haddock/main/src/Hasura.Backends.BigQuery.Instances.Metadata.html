@@ -9,14 +9,14 @@
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-11"></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689397965"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-13"></span><span>  </span><span id="local-6989586621689397961"><span class="annot"><span class="annottext">prepareCatalog :: SourceConfig 'BigQuery -&gt; ExceptT QErr m RecreateEventTriggers
+</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689398013"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>  </span><span id="local-6989586621689398009"><span class="annot"><span class="annottext">prepareCatalog :: SourceConfig 'BigQuery -&gt; ExceptT QErr m RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#prepareCatalog"><span class="hs-identifier hs-var hs-var hs-var hs-var">prepareCatalog</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; ExceptT QErr m RecreateEventTriggers
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span>
-</span><span id="line-14"></span><span>  </span><span id="local-6989586621689397959"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'BigQuery)
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621689398007"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'BigQuery)
 -&gt; TableName 'BigQuery
 -&gt; HashSet (Column 'BigQuery)
 -&gt; ComputedFieldName
@@ -43,7 +43,7 @@ HashSet TableName
 -&gt; Comment
 -&gt; m (ComputedFieldInfo 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#buildComputedFieldInfo"><span class="hs-identifier hs-var">BigQuery.buildComputedFieldInfo</span></a></span><span>
-</span><span id="line-15"></span><span>  </span><span id="local-6989586621689397956"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'BigQuery
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621689398004"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'BigQuery
 -&gt; TableName 'BigQuery
 -&gt; Maybe (PrimaryKey 'BigQuery (RawColumnInfo 'BigQuery))
 -&gt; [RawColumnInfo 'BigQuery]
@@ -61,7 +61,7 @@ SourceConfig 'BigQuery
 -&gt; [RawColumnInfo 'BigQuery]
 -&gt; m (Either QErr EnumValues)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var">BigQuery.fetchAndValidateEnumValues</span></a></span><span>
-</span><span id="line-16"></span><span>  </span><span id="local-6989586621689397953"><span class="annot"><span class="annottext">resolveSourceConfig :: Logger Hasura
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621689398001"><span class="annot"><span class="annottext">resolveSourceConfig :: Logger Hasura
 -&gt; SourceName
 -&gt; SourceConnConfiguration 'BigQuery
 -&gt; BackendSourceKind 'BigQuery
@@ -88,7 +88,7 @@ Logger Hasura
 -&gt; manager
 -&gt; m (Either QErr BigQuerySourceConfig)
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var">BigQuery.resolveSourceConfig</span></a></span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621689397950"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata 'BigQuery
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621689397998"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata 'BigQuery
 -&gt; SourceConfig 'BigQuery
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'BigQuery))
@@ -102,7 +102,7 @@ BigQuerySourceConfig
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'BigQuery))
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSource"><span class="hs-identifier hs-var">BigQuery.resolveSource</span></a></span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621689397947"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'BigQuery m v
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621689397995"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'BigQuery m v
 -&gt; TableName 'BigQuery
 -&gt; FieldInfoMap (FieldInfo 'BigQuery)
 -&gt; ColumnReference 'BigQuery
@@ -123,7 +123,7 @@ ValueParser 'BigQuery m v
 -&gt; Value
 -&gt; m [OpExpG 'BigQuery v]
 </span><a href="Hasura.Backends.BigQuery.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var">BigQuery.parseBoolExpOperations</span></a></span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621689397944"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621689397992"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
 -&gt; FunctionName 'BigQuery
 -&gt; SystemDefined
 -&gt; FunctionConfig
@@ -153,7 +153,7 @@ SourceName
 -&gt; NamingCase
 -&gt; m (FunctionInfo 'BigQuery, SchemaDependency)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#buildFunctionInfo"><span class="hs-identifier hs-var">BigQuery.buildFunctionInfo</span></a></span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621689397941"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'BigQuery
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621689397989"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'BigQuery
 -&gt; Column 'BigQuery
 -&gt; Column 'BigQuery
 -&gt; TableName 'BigQuery
@@ -166,7 +166,7 @@ SourceName
 -&gt; EventTriggerConf 'BigQuery
 -&gt; EventTriggerConf 'BigQuery
 </span><a href="Hasura.Backends.BigQuery.DDL.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var">BigQuery.updateColumnInEventTrigger</span></a></span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621689397938"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'BigQuery)
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621689397986"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
@@ -175,13 +175,13 @@ MonadError QErr m =&gt;
 CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#parseCollectableType"><span class="hs-identifier hs-var">BigQuery.parseCollectableType</span></a></span><span>
-</span><span id="line-22"></span><span>  </span><span id="local-6989586621689397935"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'BigQuery -&gt; TableEventTriggers 'BigQuery -&gt; m ()
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621689397983"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'BigQuery -&gt; TableEventTriggers 'BigQuery -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery -&gt; TableEventTriggers 'BigQuery -&gt; m ()
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 BigQuerySourceConfig -&gt; TableEventTriggers 'BigQuery -&gt; m ()
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var">BigQuery.postDropSourceHook</span></a></span><span>
-</span><span id="line-23"></span><span>  </span><span id="local-6989586621689397932"><span class="annot"><span class="annottext">buildComputedFieldBooleanExp :: BoolExpResolver 'BigQuery m v
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621689397980"><span class="annot"><span class="annottext">buildComputedFieldBooleanExp :: BoolExpResolver 'BigQuery m v
 -&gt; BoolExpRHSParser 'BigQuery m v
 -&gt; TableName 'BigQuery
 -&gt; FieldInfoMap (FieldInfo 'BigQuery)
