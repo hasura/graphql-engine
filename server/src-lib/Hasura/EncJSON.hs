@@ -27,27 +27,25 @@ import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Encoding qualified as TE
 import Data.Vector qualified as V
-import Database.PG.Query qualified as Q
 import Hasura.Prelude
 
--- encoded json
--- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
--- and builder
 newtype EncJSON = EncJSON {unEncJSON :: BB.Builder}
 
-(<.>) :: EncJSON -> EncJSON -> EncJSON
-EncJSON a <.> EncJSON b = EncJSON (a <> b)
-
-instance Show EncJSON where
-  showsPrec d x =
-    showParen (d > 10) $
-      showString "encJFromBS " . showsPrec 11 (encJToLBS x)
-
-instance Eq EncJSON where
-  (==) = (==) `on` encJToLBS
-
-instance Q.FromCol EncJSON where
-  fromCol = fmap encJFromBS . Q.fromCol
+-- No instances for `EncJSON`. In particular, because:
+--
+-- - Having a `Semigroup` or `Monoid` instance allows constructing semantically
+--   illegal values of type `EncJSON`. To drive this point home: the derived
+--   `Semigroup` and `Monoid` instances always produce illegal JSON. It is
+--   merely through an abuse of these APIs that legal JSON can be created.
+--
+-- - `IsString` would be a footgun because it's not clear what its expected
+--   behavior is: does it construct serialized JSON from a serialized `String`,
+--   or does it serialize a given `String` into a JSON-encoded string value?
+--
+-- - `Eq` would also be a footgun: does it compare two serialized values, or
+--   does it compare values semantically?
+--
+-- - `Show`: unused.
 
 encJToLBS :: EncJSON -> BL.ByteString
 encJToLBS = BB.toLazyByteString . unEncJSON
@@ -82,28 +80,23 @@ encJFromText = encJFromBuilder . TE.encodeUtf8Builder
 {-# INLINE encJFromText #-}
 
 encJFromList :: [EncJSON] -> EncJSON
-encJFromList = \case
-  [] -> encJFromBuilder "[]"
-  x : xs ->
-    encJFromChar '['
-      <.> x
-      <.> foldr go (encJFromChar ']') xs
-    where
-      go v b = encJFromChar ',' <.> v <.> b
+encJFromList =
+  encJFromBuilder . \case
+    [] -> "[]"
+    x : xs -> "[" <> unEncJSON x <> foldr go "]" xs
+      where
+        go v b = "," <> unEncJSON v <> b
 
 -- from association list
 encJFromAssocList :: [(Text, EncJSON)] -> EncJSON
-encJFromAssocList = \case
-  [] -> encJFromBuilder "{}"
-  x : xs ->
-    encJFromChar '{'
-      <.> builder' x
-      <.> foldr go (encJFromChar '}') xs
-  where
-    go v b = encJFromChar ',' <.> builder' v <.> b
-    -- builds "key":value from (key,value)
-    builder' (t, v) =
-      encJFromBuilder (J.fromEncoding (J.text t)) <.> encJFromBuilder ":" <.> v
+encJFromAssocList =
+  encJFromBuilder . \case
+    [] -> "{}"
+    x : xs -> "{" <> builder' x <> foldr go "}" xs
+      where
+        go v b = "," <> builder' v <> b
+        -- builds "key":value from (key,value)
+        builder' (t, v) = J.fromEncoding (J.text t) <> ":" <> unEncJSON v
 
 encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
 encJFromInsOrdHashMap = encJFromAssocList . OMap.toList

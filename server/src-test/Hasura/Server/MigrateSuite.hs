@@ -13,6 +13,7 @@ import Data.Time.Clock (getCurrentTime)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
+import Hasura.EncJSON
 import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
@@ -184,7 +185,7 @@ suite srcConfig pgExecCtx pgConnInfo = do
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
-      transact (flip runReaderT logger $ runClearMetadata ClearMetadata) `shouldReturn` successMsg
+      encJToBS <$> transact (flip runReaderT logger $ runClearMetadata ClearMetadata) `shouldReturn` encJToBS successMsg
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 

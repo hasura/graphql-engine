@@ -242,8 +242,8 @@ executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase
         liftTx (Q.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
 
   if checkPermissionRequired cte
-    then withCheckPermission $ Q.getRow <$> queryTx
-    else (runIdentity . Q.getRow) <$> queryTx
+    then withCheckPermission $ first encJFromBS . Q.getRow <$> queryTx
+    else encJFromBS . runIdentity . Q.getRow <$> queryTx
 
 mutateAndFetchCols ::
   forall pgKind.
