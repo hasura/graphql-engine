@@ -11,6 +11,7 @@ module Test.Parser.Expectation
     module I,
     AnnotatedUpdateBuilder (..),
     mkAnnotatedUpdate,
+    toBoolExp,
   )
 where
 
@@ -161,14 +162,11 @@ mkAnnotatedUpdate ::
   AnnotatedUpdateG PG r (UnpreparedValue PG)
 mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
   where
-    toBoolExp :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])] -> BoolExp
-    toBoolExp = BoolAnd . fmap (\(c, ops) -> BoolField $ AVColumn c ops)
-
     _auTable :: QualifiedTable
     _auTable = aubTable
 
     _auWhere :: (BoolExp, BoolExp)
-    _auWhere = (column [], toBoolExp aubWhere)
+    _auWhere = (column, toBoolExp aubWhere)
 
     _auCheck :: BoolExp
     _auCheck = BoolAnd []
@@ -196,11 +194,14 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     _auAllCols :: [ColumnInfo PG]
     _auAllCols = aubColumns
 
-    column :: [OpExpG PG (UnpreparedValue PG)] -> BoolExp
-    column stuff =
+    column :: BoolExp
+    column =
       BoolAnd
-        . fmap (\c -> BoolField . AVColumn c $ stuff)
+        . fmap (\c -> BoolField . AVColumn c $ [])
         $ aubColumns
 
     _auNamingConvention :: Maybe NamingCase
     _auNamingConvention = Just HasuraCase
+
+toBoolExp :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])] -> BoolExp
+toBoolExp = BoolAnd . fmap (\(c, ops) -> BoolField $ AVColumn c ops)

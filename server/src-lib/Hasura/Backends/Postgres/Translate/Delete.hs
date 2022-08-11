@@ -24,6 +24,8 @@ mkDelete (AnnDel tn (fltr, wc) _ _ _) =
   S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
   where
     tableFltr =
-      Just $
-        S.WhereFrag $
-          toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
+      Just
+        . S.WhereFrag
+        . S.simplifyBoolExp
+        . toSQLBoolExp (S.QualTable tn)
+        $ andAnnBoolExps fltr wc
