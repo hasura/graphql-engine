@@ -150,64 +150,82 @@ modules in the `Test` namespace, for more guidance. As well as this, the module
 [Test.HelloWorldSpec](Test/HelloWorldSpec.hs) contains a skeleton for writing
 new tests.
 
-### Specifying contexts
+### Specifying fixtures 
 
 We often want to run the same tests several times with slightly different
 configuration. Most commonly, we want to assert that a given behaviour works
 consistently across different backends.
 
-[Harness.Test.Context](Harness/Test/Context.hs) defines two functions for
-running test trees in terms of a list of `Context a`s.
+[Harness.Test.Fixture](Harness/Test/Fixture.hs) defines two functions for
+running test trees in terms of a list of `Fixture a`s.
 
-Each `Context a` requires:
+Each `Fixture a` requires:
 
-- a unique `name`, of type `ContextName`
+- a unique `name`, of type `FixtureName`
 - a `mkLocalTestEnvironment` action, of type `TestEnvironment -> IO a`
-- a `setup` action, of type `(TestEnvironment, a) -> IO ()`
-- a `teardown` action, of type `(TestEnvironment, a) -> IO ()`
+- a `setupTeardown` action, of type `(TestEnvironment, a) -> [SetupAction]`
 - an `customOptions` parameter, which will be threaded through the
-  tests themselves to modify behavior for a particular `Context`
+  tests themselves to modify behavior for a particular `Fixture`
 
-Of these two functions, whether one wishes to use `Harness.Test.Context.run` or
-`Harness.Test.Context.runWithLocalTestEnvironment` will depend on if their test can be
+Of these two functions, whether one wishes to use `Harness.Test.Fixture.run` or
+`Harness.Test.Fixture.runWithLocalTestEnvironment` will depend on if their test can be
 written in terms of information provided by the global `TestEnvironment` type or if it
 depends on some additional "local" state.
 
-More often than not, test authors should use `Harness.Test.Context.run`, which
-is written in terms of `Context ()`. This uses `()` for the local test which
+More often than not, test authors should use `Harness.Test.Fixture.run`, which
+is written in terms of `Fixture ()`. This uses `()` for the local test which
 does not carry any "useful" state information, and is therefore omitted from
 the body of the tests themselves.
 
-In the rare cases where some local state is necessary (either for the test
-itself, or as an argument to the `teardown` action for some `Context`), test
-authors should use `Harness.Test.Context.runWithLocalTestEnvironment`. This function
-takes a type parameter for its local testEnvironment, which will be provided to both
-the `teardown` action specified in `Context` as well as the body of tests
-themselves.
+In the rare cases where some local state is necessary, test authors should use 
+`Harness.Test.Fixture.runWithLocalTestEnvironment`. This function
+takes a type parameter for its local testEnvironment, which will be provided to 
+the body of tests themselves.
 
 #### Make local testEnvironment action
 
-This refers to the function `mkLocalTestEnvironment` defined for `Context`:
+This refers to the function `mkLocalTestEnvironment` defined for `Fixture`:
 
 ```hs
 mkLocalTestEnvironment :: TestEnvironment -> IO a
 ```
 
-Its return value, `IO a`, matches the `a` of `Context a`: it is the
+Its return value, `IO a`, matches the `a` of `Fixture a`: it is the
 additional local state that is required throughout the tests, in
 addition to the global `TestEnvironment`. Some tests, such as tests
 which check remote relationships, need to keep some state which is
 local to the context, but most tests do not need additional state, and
 define `mkLocalTestEnvironment` to be
-`Harness.Test.Context.noLocalTestEnvironment`.
+`Harness.Test.Fixture.noLocalTestEnvironment`.
 
-This local state will be pass to the `setup` function and the `teardown` function.
-The `teardown` function is responsible to destroy the local state as well, if needed.
+#### Setup / teardown actions
 
-#### Setup action
+To ensure things are cleaned up properly in the event of errors in setting up
+and tearing down tests, test setup is defined in terms of `SetupAction`s.
 
-A setup action is a function of type `(TestEnvironment, a) -> IO ()` which is responsible for
-creating the environment for the test. It needs to:
+These look like this:
+
+```haskell
+data SetupAction = forall a.
+  SetupAction
+    { setupAction :: IO a,
+      teardownAction :: Maybe a -> IO ()
+    }
+```
+
+A `SetupAction` encodes how to setup and tear down a single piece of test
+system state.
+
+The value produced by a `setupAction` is to be input into the corresponding
+`teardownAction`, if the `setupAction` completed without throwing an exception.
+
+Therefore one `SetupAction` could create the DB tables, and the matching
+teardown removes them. Pairing setup / teardown in this way makes it easier to
+remove everything in the right order.
+
+##### Setup
+
+The setup actions are responsible for creating the environment for the test. They need to:
 
 1. Clear and reconfigure the metadata
 2. Setup tables and insert values
@@ -219,15 +237,9 @@ These actions can be created by running POST requests against graphql-engine
 using `Harness.GraphqlEngine.post_`, or by running SQL requests against the
 backend using `Backend.<backend>.run_`.
 
-#### Teardown action
+##### Teardown 
 
-The teardown action is another function of type `(TestEnvironment, a) -> IO ()` which is
-responsible for removing the environment created by the test or setup, so that
-other tests can have a "clean slate" with no artifacts. The `(TestEnvironment, a)`
-parameter is constructed from the `a` parameter of the `Context a`: it is the
-local state that is passed throughout the tests.
-
-This action is responsible for freeing acquired resources, and reverting all
+These actions are responsible for freeing acquired resources, and reverting all
 local modifications: dropping newly created tables, deleting custom functions,
 removing the changes made to the metadata, and so on.
 
@@ -247,20 +259,20 @@ A typical test will look similar to this:
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
-query {
-  hasura_author(where: {id: {_eq: 1}}) {
-    name
-    id
-  }
-}
-|]
+            query {
+              hasura_author(where: {id: {_eq: 1}}) {
+                name
+                id
+              }
+            }
+          |]
       )
       [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-    id: 1
-|]
+        data:
+          hasura_author:
+          - name: Author 1
+            id: 1
+      |]
 ```
 
 - `it` specifies the name of the test
@@ -283,14 +295,16 @@ you can modify your test module to prevent teardown. Example:
 ```diff
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
-    [ Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = SqlServer.setup schema,
--         teardown = SqlServer.teardown schema,
-+         teardown = const $ pure (),
-          customOptions = Nothing
+  Fixture.run
+    [ Fixture.fixture (Fixture.Backend Fixture.SQLServer)
+        { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
+          setupTeardown = \testEnv ->
+            [ Fixture.SetupAction 
+               { Fixture.setupAction = SqlServer.setup schema testEnv,
+-                Fixture.teardownAction = \_ -> SqlServer.teardown schema testEnv
++                Fixture.teardownAction = \_ -> pure () 
+               }
+            ]
         }]
 ```
 
@@ -317,8 +331,8 @@ Ok, 59 modules loaded.
 *Main *SpecHook *Test.SomeSpecImDeveloping> te <- SpecHook.setupTestEnvironment
 *Main *SpecHook *Test.SomeSpecImDeveloping> te
 <TestEnvironment: http://127.0.0.1:35975 >
-*Main *SpecHook *Test.SomeSpecImDeveloping> -- Setup the instance according to the Context
-*Main *SpecHook *Test.SomeSpecImDeveloping> cleanupPG <- Context.contextRepl Test.SomeSpecImDeveloping.postgresContext te
+*Main *SpecHook *Test.SomeSpecImDeveloping> -- Setup the instance according to the Fixture
+*Main *SpecHook *Test.SomeSpecImDeveloping> cleanupPG <- Fixture.fixtureRepl Test.SomeSpecImDeveloping.postgresFixture te
 *Main *SpecHook *Test.SomeSpecImDeveloping>
 *Main *SpecHook *Test.SomeSpecImDeveloping> -- run tests or parts of tests manually here
 *Main *SpecHook *Test.SomeSpecImDeveloping> Test.SomeSpecImDeveloping.someExample te
@@ -346,13 +360,13 @@ Points to note:
 - `SpecHook.teardownTestEnvironment` stops it again.
   - This is a good idea to do before issuing the `:reload` command, because
     reloading loses the `te` reference but leaves the thread running!
-- `Context.contextRepl` runs the setup action of a given `Context` and returns a
+- `Fixture.fixtureRepl` runs the setup action of a given `Fixture` and returns a
   corresponding teardown action.
   - After running this you can interact with the HGE console in the same state
     as when the tests are run.
   - Or you can run individual test `Example`s or `Spec`s.
 - To successfully debug/develop a test in the GHCI repl, the test module should:
-  - define its `Context`s as toplevel values,
+  - define its `Fixture`s as toplevel values,
   - define its `Example`s as toplevel values,
   - ... such that they can be used directly in the repl.
 
