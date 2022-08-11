@@ -8,7 +8,6 @@ import Data.ByteString (ByteString)
 import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
-import Data.Text.Casing qualified as C
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.MySQL.Base.Types qualified as MySQL
@@ -35,28 +34,26 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend as RQL
 import Hasura.RQL.Types.Column as RQL
-import Hasura.RQL.Types.Function as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
 import Hasura.RQL.Types.Source as RQL
-import Hasura.RQL.Types.SourceCustomization as RQL
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 instance BackendSchema 'MySQL where
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields = buildTableRelayQueryFields'
+  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields = buildTableInsertMutationFields'
-  buildTableUpdateMutationFields = buildTableUpdateMutationFields'
-  buildTableDeleteMutationFields = buildTableDeleteMutationFields'
-  buildFunctionQueryFields = buildFunctionQueryFields'
-  buildFunctionRelayQueryFields = buildFunctionRelayQueryFields'
-  buildFunctionMutationFields = buildFunctionMutationFields'
+  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
   relayExtension = Nothing
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
   columnParser = columnParser'
-  scalarSelectionArgumentsParser = scalarSelectionArgumentsParser'
+  scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = orderByOperators'
   comparisonExps = comparisonExps'
   countTypeInput = mysqlCountTypeInput
@@ -91,88 +88,6 @@ mysqlTableArgs sourceInfo tableInfo = do
           IR._saOffset = offsetArg,
           IR._saDistinct = Nothing
         }
-
-buildTableRelayQueryFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.MkRootFieldName ->
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  NESeq (ColumnInfo 'MySQL) ->
-  m [P.FieldParser n a]
-buildTableRelayQueryFields' _mkRootFieldName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns =
-  pure []
-
-buildTableInsertMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.MkRootFieldName ->
-  Scenario ->
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-buildTableInsertMutationFields' _mkRootFieldName _scenario _sourceInfo _tableName _tableInfo _gqlName =
-  pure []
-
-buildTableUpdateMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.MkRootFieldName ->
-  Scenario ->
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-buildTableUpdateMutationFields' _mkRootFieldName _scenario _sourceInfo _tableName _tableInfo _gqlName =
-  pure []
-
-buildTableDeleteMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.MkRootFieldName ->
-  Scenario ->
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-buildTableDeleteMutationFields' _mkRootFieldName _scenario _sourceInfo _tableName _tableInfo _gqlName =
-  pure []
-
-buildFunctionQueryFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.MkRootFieldName ->
-  RQL.SourceInfo 'MySQL ->
-  FunctionName 'MySQL ->
-  FunctionInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  m [P.FieldParser n a]
-buildFunctionQueryFields' _ _ _ _ _ =
-  pure []
-
-buildFunctionRelayQueryFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.MkRootFieldName ->
-  RQL.SourceInfo 'MySQL ->
-  FunctionName 'MySQL ->
-  FunctionInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  NESeq (ColumnInfo 'MySQL) ->
-  m [P.FieldParser n a]
-buildFunctionRelayQueryFields' _mkRootFieldName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns =
-  pure []
-
-buildFunctionMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.MkRootFieldName ->
-  RQL.SourceInfo 'MySQL ->
-  FunctionName 'MySQL ->
-  FunctionInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  m [P.FieldParser n a]
-buildFunctionMutationFields' _ _ _ _ _ =
-  pure []
 
 bsParser :: MonadParse m => Parser 'Both m ByteString
 bsParser = encodeUtf8 <$> P.string
@@ -229,12 +144,6 @@ columnParser' columnType (GQL.Nullability isNullable) =
         MySQL.VarcharValue $ GQL.unName value
       )
 
-scalarSelectionArgumentsParser' ::
-  MonadParse n =>
-  ColumnType 'MySQL ->
-  InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
-scalarSelectionArgumentsParser' _columnType = pure Nothing
-
 orderByOperators' :: NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 orderByOperators' _tCase =
   (Name._order_by,) $
@@ -289,13 +198,6 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
             P.fieldOptional Name.__gte Nothing (AGTE . mkParameter <$> typedParser),
             P.fieldOptional Name.__lte Nothing (ALTE . mkParameter <$> typedParser)
           ]
-
-{-
-NOTE: Should this be removed?
-offsetParser' :: MonadParse n => Parser 'Both n (SQLExpression 'MySQL)
-offsetParser' =
-  MySQL.ValueExpression . MySQL.BigValue . fromIntegral <$> P.int
--}
 
 mysqlCountTypeInput ::
   MonadParse n =>
