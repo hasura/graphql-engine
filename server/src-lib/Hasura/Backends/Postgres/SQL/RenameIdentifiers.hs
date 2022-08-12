@@ -145,13 +145,13 @@ addAliasAndPrefixHash (S.TableAlias identifier) = do
 -- | Search for the identifier in the table names set and return
 --   a prefixed identifier if found, or the original identifier
 --   if not found in the set.
-getIdentifierAndPrefixHash :: Identifier -> MyState Identifier
-getIdentifierAndPrefixHash identifier = do
+getTableNameAndPrefixHash :: Identifier -> MyState Identifier
+getTableNameAndPrefixHash identifier = do
   tables <- _tables <$> get
   pure $
     if Set.member identifier tables
       then mkPrefixedName identifier
-      else prefixHash identifier
+      else identifier
 
 -- | Run an action that might change the tables names set
 --   and discard the changes made to the set.
@@ -181,15 +181,15 @@ uSelectWith (S.SelectWith ctes baseSelect) =
 --   We return a transformed 'Select' (with the table names).
 uSelect :: S.Select -> MyState S.Select
 uSelect (S.Select ctes distinctM extrs fromM whereM groupByM havingM orderByM limitM offsetM) = do
-  -- Potentially introduces a new alias so it should go before the rest.
-  newFromM <- mapM uFromExp fromM
-
   -- Potentially introduces a new alias in subsequent CTEs and the main select,
   -- so it should go first.
   newCTEs <- for ctes $ \(alias, cte) ->
     (,)
       <$> addAliasAndPrefixHash alias
       <*> uSelect cte
+
+  -- Potentially introduces a new alias so it should go before the rest.
+  newFromM <- mapM uFromExp fromM
 
   newWhereM <- forM whereM $
     \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
@@ -238,7 +238,7 @@ uFromItem fromItem = case fromItem of
   S.FISimple qualifiedTable maybeAlias ->
     S.FISimple qualifiedTable <$> mapM addAliasAndPrefixHash maybeAlias
   S.FIIdentifier identifier ->
-    pure $ S.FIIdentifier $ prefixHash identifier
+    S.FIIdentifier <$> getTableNameAndPrefixHash identifier
   S.FIFunc funcExp ->
     S.FIFunc <$> uFunctionExp funcExp
   -- We transform the arguments and result table alias
@@ -350,7 +350,7 @@ uSqlExp =
     S.SEStar qual -> S.SEStar <$> traverse uQual qual
     S.SEIdentifier identifier -> pure $ S.SEIdentifier $ prefixHash identifier
     -- this is for row expressions
-    S.SERowIdentifier identifier -> S.SERowIdentifier <$> getIdentifierAndPrefixHash identifier
+    S.SERowIdentifier identifier -> S.SERowIdentifier <$> getTableNameAndPrefixHash identifier
     -- we rename the table alias if needed
     S.SEQIdentifier (S.QIdentifier qualifier identifier) -> do
       newQualifier <- uQual qualifier
@@ -387,7 +387,7 @@ uSqlExp =
     -- rename the table alias if needed
     uQual = \case
       S.QualifiedIdentifier identifier typeAnnotation ->
-        S.QualifiedIdentifier <$> getIdentifierAndPrefixHash identifier <*> pure typeAnnotation
+        S.QualifiedIdentifier <$> getTableNameAndPrefixHash identifier <*> pure typeAnnotation
       -- refers to a database table
       S.QualTable t -> pure $ S.QualTable t
       S.QualVar t -> pure $ S.QualVar t
