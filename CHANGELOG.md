@@ -1,6 +1,7 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+- server: fix long identifiers in insert with parameters (fix #8741)
 
 ### Bug fixes and improvements
 
