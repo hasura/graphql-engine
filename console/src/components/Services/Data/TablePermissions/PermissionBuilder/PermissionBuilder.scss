@@ -1,0 +1,30 @@
+@import "../../../../Common/Common.scss";
+
+.qb_select, .qb_input {
+  border: none;
+  background-color: transparent;
+  border-bottom: 2px dotted;
+  border-radius: 0;
+  //color: #CB3837
+}
+
+.qb_select {
+  cursor: pointer;
+}
+
+.qb_select:focus, .qb_input:focus {
+  outline: none;
+}
+
+.qb_container {
+  // display: inline-block;
+  min-width: 50%;
+}
+
+.qb_input_suggestion {
+  margin-left: 10px;
+  color: #080;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}

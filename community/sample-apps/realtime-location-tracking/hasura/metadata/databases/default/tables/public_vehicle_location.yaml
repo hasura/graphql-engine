@@ -1,0 +1,3 @@
+table:
+  name: vehicle_location
+  schema: public

@@ -1,25 +1,25 @@
 ---
-sidebar_label: RESTified GraphQL endpoints
-sidebar_position: 17
-description: Manage RESTified endpoints with the Hasura Metadata API
+sidebar_label: RESTified GraphQL Endpoints
+sidebar_position: 14
+description: Manage RESTified endpoints with the Hasura metadata API
 keywords:
-  - hasura
-  - docs
-  - Metadata API
-  - API reference
-  - RESTified endpoints
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - RESTified endpoints
 ---
 
 # Metadata API Reference: RESTified GraphQL Endpoints
 
 ## Introduction
 
-Add/Remove a RESTified GraphQL endpoint to Hasura GraphQL Engine.
+Add/Remove a RESTified GraphQL endpoint to Hasura GraphQL engine.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
@@ -53,13 +53,13 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-create-rest-endpoint-syntax}
 
-| Key        | Required | Schema                                                            | Description                                             |
-| ---------- | -------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
-| name       | true     | Text                                                              | A unique identifier for the endpoint                    |
-| url        | true     | [EndpointUrl](/api-reference/syntax-defs.mdx#endpointurl)         | URL of the REST endpoint                                |
+| Key        | Required | Schema            | Description                                             |
+|------------|----------|-------------------|---------------------------------------------------------|
+| name       | true     | Text              | A unique identifier for the endpoint                    |
+| url        | true     | [EndpointUrl](/api-reference/syntax-defs.mdx#endpointurl)     | URL of the REST endpoint                                |
 | methods    | true     | [EndpointMethods](/api-reference/syntax-defs.mdx#endpointmethods) | Non-Empty case sensitive list of supported HTTP Methods |
-| definition | true     | [EndpointDef](/api-reference/syntax-defs.mdx#endpointdef)         | Definition for the REST endpoint                        |
-| comment    | false    | Text                                                              | comment                                                 |
+| definition | true     | [EndpointDef](/api-reference/syntax-defs.mdx#endpointdef)     | Definition for the REST endpoint                        |
+| comment    | false    | Text              | comment                                                 |
 
 :::tip Supported from
 
@@ -89,7 +89,7 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-drop-rest-endpoint-syntax}
 
 | Key  | Required | Schema | Description                   |
-| ---- | -------- | ------ | ----------------------------- |
+|------|----------|--------|-------------------------------|
 | name | true     | Text   | URL of the RESTified endpoint |
 
 :::tip Supported from

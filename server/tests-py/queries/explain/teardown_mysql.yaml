@@ -1,0 +1,6 @@
+type: mysql_untrack_table
+args:
+  source: mysql
+  table:
+    name: user
+    schema: hasura

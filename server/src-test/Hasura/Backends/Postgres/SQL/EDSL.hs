@@ -119,7 +119,7 @@ selectIdentifiers_ alias table columns =
                                 Extractor
                                   ( SEQIdentifier
                                       ( QIdentifier
-                                          (QualifiedIdentifier (TableIdentifier table) Nothing)
+                                          (QualifiedIdentifier (Identifier table) Nothing)
                                           (Identifier column)
                                       )
                                   )
@@ -175,7 +175,12 @@ tcolumn_ :: Text -> Text -> SQLExp
 tcolumn_ table column =
   SEQIdentifier
     ( QIdentifier
-        ( QualifiedIdentifier (TableIdentifier table) Nothing
+        ( QualifiedIdentifier
+            ( Identifier
+                { getIdenTxt = table
+                }
+            )
+            Nothing
         )
         ( Identifier
             { getIdenTxt = column

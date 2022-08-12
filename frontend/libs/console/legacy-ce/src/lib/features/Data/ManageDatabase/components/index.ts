@@ -1,1 +1,0 @@
-export { TrackableResourceTabs } from './TrackableResourceTabs';

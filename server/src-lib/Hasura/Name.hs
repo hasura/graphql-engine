@@ -103,6 +103,9 @@ __BigQuery_comparison_exp = [G.name|_BigQuery_comparison_exp|]
 __MSSQL_comparison_exp :: G.Name
 __MSSQL_comparison_exp = [G.name|_MSSQL_comparison_exp|]
 
+__MySQL_comparison_exp :: G.Name
+__MySQL_comparison_exp = [G.name|_MySQL_comparison_exp|]
+
 __cast :: G.Name
 __cast = [G.name|_cast|]
 
@@ -192,9 +195,6 @@ __or = [G.name|_or|]
 _aggregate :: G.Name
 _aggregate = [G.name|aggregate|]
 
-_aggregate_bool_exp :: G.Name
-_aggregate_bool_exp = [G.name|aggregate_bool_exp|]
-
 _column :: G.Name
 _column = [G.name|column|]
 
@@ -239,17 +239,6 @@ __aggregate_fields = [G.name|_aggregate_fields|]
 
 __fields :: G.Name
 __fields = [G.name|_fields|]
-
--- ** Group By
-
-_group_by :: G.Name
-_group_by = [G.name|group_by|]
-
-_keys :: G.Name
-_keys = [G.name|keys|]
-
-_group_key :: G.Name
-_group_key = [G.name|group_key|]
 
 -- * JSON
 
@@ -617,19 +606,3 @@ __Entity = [G.name|_Entity|]
 
 __entities :: G.Name
 __entities = [G.name|_entities|]
-
--- * Aggregation Predicates
-
-_arguments :: G.Name
-_arguments = [G.name|arguments|]
-
-_predicate :: G.Name
-_predicate = [G.name|predicate|]
-
-_filter :: G.Name
-_filter = [G.name|filter|]
-
--- * Arrays
-
-__array :: G.Name
-__array = [G.name|_array|]

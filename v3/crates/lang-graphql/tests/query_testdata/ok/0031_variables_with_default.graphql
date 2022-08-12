@@ -1,3 +1,0 @@
-query getOutput($input: Int = 5 $config: String = "Config") {
-    animal
-}

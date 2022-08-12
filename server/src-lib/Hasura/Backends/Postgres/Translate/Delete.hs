@@ -10,24 +10,20 @@ where
 
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.Translate.BoolExp
-import Hasura.Base.Error (QErr)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
-import Hasura.RQL.Types.Session (UserInfo)
+import Hasura.SQL.Backend
 
 mkDelete ::
-  (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>
-  UserInfo ->
+  Backend ('Postgres pgKind) =>
   AnnDel ('Postgres pgKind) ->
-  m S.SQLDelete
-mkDelete userInfo (AnnDel tn (fltr, wc) _ _ _ _ _) = do
-  boolExp <- toSQLBoolExp userInfo (S.QualTable tn) $ andAnnBoolExps fltr wc
-  let tableFltr =
-        Just
-          . S.WhereFrag
-          . S.simplifyBoolExp
-          $ boolExp
-  pure $ S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
+  S.SQLDelete
+mkDelete (AnnDel tn (fltr, wc) _ _ _) =
+  S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
+  where
+    tableFltr =
+      Just $
+        S.WhereFrag $
+          toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc

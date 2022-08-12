@@ -6,7 +6,6 @@ module Hasura.Backends.BigQuery.FromIr
     Error (..),
     runFromIr,
     FromIr,
-    FromIrWriter (..),
     FromIrConfig (..),
     defaultFromIrConfig,
     bigQuerySourceConfigToFromIrConfig,
@@ -15,7 +14,7 @@ module Hasura.Backends.BigQuery.FromIr
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as HM
 import Data.Int qualified as Int
 import Data.List.Extended (appendToNonEmpty)
 import Data.List.NonEmpty qualified as NE
@@ -25,18 +24,13 @@ import Data.Text qualified as T
 import Hasura.Backends.BigQuery.Instances.Types ()
 import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
 import Hasura.Backends.BigQuery.Types as BigQuery
-import Hasura.Function.Cache qualified as Functions
-import Hasura.NativeQuery.IR (NativeQuery (..))
-import Hasura.NativeQuery.Metadata (InterpolatedQuery)
-import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as Ir
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as Rql
 import Hasura.RQL.Types.Common qualified as Rql
-import Hasura.RQL.Types.Relationships.Local (Nullable (..))
+import Hasura.RQL.Types.Function qualified as Rql
 import Hasura.RQL.Types.Relationships.Local qualified as Rql
-import Language.GraphQL.Draft.Syntax qualified as G
+import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 -- Types
@@ -106,27 +100,9 @@ instance Show Error where
 -- setting the current entity that a given field name refers to. See
 -- @fromColumn@.
 newtype FromIr a = FromIr
-  { unFromIr ::
-      ReaderT
-        FromIrReader
-        ( StateT
-            FromIrState
-            ( WriterT
-                FromIrWriter
-                ( Validate (NonEmpty Error)
-                )
-            )
-        )
-        a
+  { unFromIr :: ReaderT FromIrReader (StateT FromIrState (Validate (NonEmpty Error))) a
   }
-  deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error), MonadWriter FromIrWriter)
-
--- | Collected from using a native query in a query.
---   Each entry here because a CTE to be prepended to the query.
-newtype FromIrWriter = FromIrWriter
-  { fromIrWriterNativeQueries :: Map (Aliased NativeQueryName) (InterpolatedQuery Expression)
-  }
-  deriving newtype (Semigroup, Monoid)
+  deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
 data FromIrState = FromIrState
   { indices :: Map Text Int
@@ -184,12 +160,11 @@ data ParentSelectFromEntity
 --------------------------------------------------------------------------------
 -- Runners
 
-runFromIr :: FromIrConfig -> FromIr a -> Validate (NonEmpty Error) (a, FromIrWriter)
+runFromIr :: FromIrConfig -> FromIr a -> Validate (NonEmpty Error) a
 runFromIr config fromIr =
-  runWriterT
-    $ evalStateT
-      (runReaderT (unFromIr fromIr) (FromIrReader {config}))
-      (FromIrState {indices = mempty})
+  evalStateT
+    (runReaderT (unFromIr fromIr) (FromIrReader {config}))
+    (FromIrState {indices = mempty})
 
 bigQuerySourceConfigToFromIrConfig :: BigQuerySourceConfig -> FromIrConfig
 bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
@@ -258,11 +233,10 @@ fromSelectRows parentSelectFromEntity annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      Ir.FromFunction nm (Functions.FunctionArgsExp [BigQuery.AEInput json] _) (Just columns)
+      Ir.FromFunction nm (Rql.FunctionArgsExp [BigQuery.AEInput json] _) (Just columns)
         | functionName nm == "unnest" -> fromUnnestedJSON json columns (map fst fields)
-      Ir.FromFunction functionName (Functions.FunctionArgsExp positionalArgs namedArgs) Nothing ->
+      Ir.FromFunction functionName (Rql.FunctionArgsExp positionalArgs namedArgs) Nothing ->
         fromFunction parentSelectFromEntity functionName positionalArgs namedArgs
-      Ir.FromNativeQuery nativeQuery -> fromNativeQuery nativeQuery
       _ -> refute (pure (FromTypeUnsupported from))
   Args
     { argsOrderBy,
@@ -284,8 +258,7 @@ fromSelectRows parentSelectFromEntity annSelectG = do
   globalTop <- getGlobalTop
   let select =
         Select
-          { selectWith = Nothing,
-            selectCardinality = Many,
+          { selectCardinality = Many,
             selectAsStruct = NoAsStruct,
             selectFinalWantedFields = pure (fieldTextNames fields),
             selectGroupBy = mempty,
@@ -346,7 +319,7 @@ simulateDistinctOn select distinctOnColumns orderByColumns = do
               finalDistinctFields = case mExtraPartitionField of
                 Just extraFields
                   | Just neExtraFields <- nonEmpty extraFields ->
-                      neExtraFields <> distinctFields
+                    neExtraFields <> distinctFields
                 _ -> distinctFields
               (distinctOnOrderBy, innerOrderBy) =
                 case orderByColumns of
@@ -461,15 +434,14 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                   )
               ]
       indexColumn =
-        ColumnExpression
-          $ FieldName
+        ColumnExpression $
+          FieldName
             { fieldNameEntity = innerSelectAlias,
               fieldName = unEntityAlias indexAlias
             }
   pure
     Select
-      { selectWith = Nothing,
-        selectCardinality = One,
+      { selectCardinality = One,
         selectAsStruct = NoAsStruct,
         selectFinalWantedFields = Nothing,
         selectGroupBy = mempty,
@@ -480,8 +452,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
             ( Aliased
                 { aliasedThing =
                     Select
-                      { selectWith = Nothing,
-                        selectProjections = innerProjections,
+                      { selectProjections = innerProjections,
                         selectAsStruct = NoAsStruct,
                         selectFrom,
                         selectJoins = argsJoins,
@@ -591,8 +562,7 @@ fromSelectArgsG selectArgsG = do
     Args
       { argsJoins = toList (fmap unfurledJoin joins),
         argsOrderBy = NE.nonEmpty argsOrderBy,
-        -- TODO(redactionExp): Deal with the redaction expressions in distinct
-        argsDistinct = fmap Ir._adcColumn <$> mdistinct,
+        argsDistinct = mdistinct,
         ..
       }
   where
@@ -609,7 +579,7 @@ fromSelectArgsG selectArgsG = do
 fromAnnotatedOrderByItemG ::
   Ir.AnnotatedOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnotatedOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
-  (orderByFieldName, orderByExpression) <- unfurlAnnotatedOrderByElement obiColumn
+  orderByFieldName <- unfurlAnnotatedOrderByElement obiColumn
   let morderByOrder =
         obiType
   let orderByNullsOrder =
@@ -622,17 +592,11 @@ fromAnnotatedOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- that are terminated by field name (Ir.AOCColumn and
 -- Ir.AOCArrayAggregation).
 unfurlAnnotatedOrderByElement ::
-  Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Expression)
+  Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnotatedOrderByElement =
   \case
-    Ir.AOCColumn columnInfo redactionExp -> lift do
-      fieldName <- fromColumnInfo columnInfo
-      expression <- applyRedaction (Rql.ciColumn columnInfo) redactionExp
-
-      pure (fieldName, expression)
-    Ir.AOCObjectRelation Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _annBoolExp _annOrderByElementG ->
-      error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
-    Ir.AOCObjectRelation Rql.RelInfo {riMapping = Rql.RelMapping mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annOrderByElementG -> do
+    Ir.AOCColumn columnInfo -> lift (fromColumnInfo columnInfo)
+    Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       joinAliasEntity <-
         lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
@@ -647,8 +611,7 @@ unfurlAnnotatedOrderByElement =
                     { joinSource =
                         JoinSelect
                           Select
-                            { selectWith = Nothing,
-                              selectCardinality = One,
+                            { selectCardinality = One,
                               selectAsStruct = NoAsStruct,
                               selectFinalWantedFields = Nothing,
                               selectGroupBy = mempty,
@@ -665,16 +628,13 @@ unfurlAnnotatedOrderByElement =
                       joinOn,
                       joinProvenance = OrderByJoinProvenance,
                       joinFieldName = tableNameText tableName, -- TODO: not needed.
-                      joinExtractPath = Nothing,
-                      joinType = LeftOuter
+                      joinExtractPath = Nothing
                     },
                 unfurledObjectTableAlias = Just (tableName, joinAliasEntity)
               }
         )
       local (const joinAliasEntity) (unfurlAnnotatedOrderByElement annOrderByElementG)
-    Ir.AOCArrayAggregation Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _annBoolExp _annAggregateOrderBy ->
-      error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
-    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = Rql.RelMapping mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annAggregateOrderBy -> do
+    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAlias <-
@@ -690,8 +650,7 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   Ir.AAOCount -> pure (CountAggregate StarCountable)
-                  -- TODO(redactionExp): Deal with the redaction expression
-                  Ir.AAOOp (Ir.AggregateOrderByColumn text _resultType columnInfo _redactionExp) -> do
+                  Ir.AAOOp text columnInfo -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (ColumnExpression fieldName))
               )
@@ -704,8 +663,7 @@ unfurlAnnotatedOrderByElement =
                       { joinSource =
                           JoinSelect
                             Select
-                              { selectWith = Nothing,
-                                selectCardinality = One,
+                              { selectCardinality = One,
                                 selectAsStruct = NoAsStruct,
                                 selectFinalWantedFields = Nothing,
                                 selectTop = NoTop,
@@ -739,19 +697,17 @@ unfurlAnnotatedOrderByElement =
                         joinAlias = joinAlias,
                         joinOn,
                         joinFieldName = tableNameText tableName, -- TODO: not needed.
-                        joinExtractPath = Nothing,
-                        joinType = LeftOuter
+                        joinExtractPath = Nothing
                       },
                   unfurledObjectTableAlias = Nothing
                 }
             )
         )
-      let fieldName =
-            FieldName
-              { fieldNameEntity = entityAliasText joinAlias,
-                fieldName = alias
-              }
-      pure (fieldName, ColumnExpression fieldName)
+      pure
+        FieldName
+          { fieldNameEntity = entityAliasText joinAlias,
+            fieldName = alias
+          }
     Ir.AOCComputedField {} -> refute $ pure ComputedFieldsOrderByNotSupported
 
 --------------------------------------------------------------------------------
@@ -784,12 +740,12 @@ fromFunction ::
   -- | List of positional Arguments
   [ArgumentExp Expression] ->
   -- | List of named arguments
-  HashMap.HashMap Text (ArgumentExp Expression) ->
+  HM.HashMap Text (ArgumentExp Expression) ->
   FromIr From
 fromFunction parentEntityAlias functionName positionalArgs namedArgs = do
   alias <- generateEntityAlias (FunctionTemplate functionName)
   positionalArgExps <- mapM fromArgumentExp positionalArgs
-  namedArgExps <- for (HashMap.toList namedArgs) $ \(argName, argValue) -> FunctionNamedArgument argName <$> fromArgumentExp argValue
+  namedArgExps <- for (HM.toList namedArgs) $ \(argName, argValue) -> FunctionNamedArgument argName <$> fromArgumentExp argValue
   pure
     ( FromFunction
         ( Aliased
@@ -806,45 +762,32 @@ fromFunction parentEntityAlias functionName positionalArgs namedArgs = do
         case parentEntityAlias of
           NoParentEntity -> refute $ pure NoParentEntityInternalError
           ParentEntityAlias entityAlias ->
-            pure
-              $ ColumnExpression
-              $ FieldName columnName (entityAliasText entityAlias)
+            pure $
+              ColumnExpression $
+                FieldName columnName (entityAliasText entityAlias)
 
 fromAnnBoolExp ::
   Ir.GBoolExp 'BigQuery (Ir.AnnBoolExpFld 'BigQuery Expression) ->
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
-fromNativeQuery :: NativeQuery 'BigQuery Expression -> FromIr From
-fromNativeQuery NativeQuery {..} = do
-  alias <- generateEntityAlias (NativeQueryTemplate nqRootFieldName)
-  let nqAlias = Aliased nqRootFieldName (entityAliasText alias)
-  tell (FromIrWriter (M.singleton nqAlias nqInterpolatedQuery))
-  pure (FromNativeQuery nqAlias)
-
 fromAnnBoolExpFld ::
   Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVColumn columnInfo redactionExp opExpGs -> do
-      expression <- applyRedaction (Rql.ciColumn columnInfo) redactionExp
+    Ir.AVColumn columnInfo opExpGs -> do
+      expression <- fmap ColumnExpression (fromColumnInfo columnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
-
       pure (AndExpression expressions)
-    Ir.AVRelationship Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _ ->
-      error "fromAnnBoolExpFld RelTargetNativeQuery"
-    Ir.AVRemoteRelationship _ ->
-      error "fromAnnBoolExpFld RemoteRelationship"
-    Ir.AVRelationship Rql.RelInfo {riMapping = Rql.RelMapping mapping, riTarget = Rql.RelTargetTable table} (Ir.RelationshipFilters tablePerms annBoolExp) -> do
+    Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
-        local (const (fromAlias selectFrom)) (fromAnnBoolExp (Ir.BoolAnd [tablePerms, annBoolExp]))
+        local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
       pure
         ( ExistsExpression
             Select
-              { selectWith = Nothing,
-                selectCardinality = One,
+              { selectCardinality = One,
                 selectAsStruct = NoAsStruct,
                 selectFinalWantedFields = Nothing,
                 selectGroupBy = mempty,
@@ -883,8 +826,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
     local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
   pure
     Select
-      { selectWith = Nothing,
-        selectCardinality = One,
+      { selectCardinality = One,
         selectAsStruct = NoAsStruct,
         selectFinalWantedFields = Nothing,
         selectGroupBy = mempty,
@@ -948,9 +890,9 @@ data FieldSource
 --            { _aoOp = "max"
 --            , _aoFields =
 --                [ ( FieldName {getFieldNameTxt = "AlbumId"}
---                  , SFCol (ColumnName {columnName = "AlbumId"} (ColumnScalar IntegerScalarType)))
+--                  , CFCol (ColumnName {columnName = "AlbumId"} (ColumnScalar IntegerScalarType)))
 --                , ( FieldName {getFieldNameTxt = "TrackId"}
---                  , SFCol (ColumnName {columnName = "TrackId"} (ColumnScalar IntegerScalarType)))
+--                  , CFCol (ColumnName {columnName = "TrackId"} (ColumnScalar IntegerScalarType)))
 --                ]
 --            }))
 --   ]
@@ -970,7 +912,7 @@ fromTableAggregateFieldG ::
   ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG args permissionBasedTop (Rql.FieldName name, field) =
   case field of
-    Ir.TAFAgg (aggregateFields :: [(Rql.FieldName, Ir.AggregateField 'BigQuery Expression)]) ->
+    Ir.TAFAgg (aggregateFields :: [(Rql.FieldName, Ir.AggregateField 'BigQuery)]) ->
       case NE.nonEmpty aggregateFields of
         Nothing -> refute (pure NoAggregatesMustBeABug)
         Just fields -> do
@@ -989,7 +931,7 @@ fromTableAggregateFieldG args permissionBasedTop (Rql.FieldName name, field) =
       pure
         ( ExpressionFieldSource
             Aliased
-              { aliasedThing = BigQuery.ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)),
+              { aliasedThing = BigQuery.ValueExpression (StringValue text),
                 aliasedAlias = name
               }
         )
@@ -1012,15 +954,15 @@ fromTableAggregateFieldG args permissionBasedTop (Rql.FieldName name, field) =
               }
       pure (ArrayAggFieldSource arrayAgg (Just fieldSources))
 
-fromAggregateField :: Ir.AggregateField 'BigQuery Expression -> ReaderT EntityAlias FromIr Aggregate
+fromAggregateField :: Ir.AggregateField 'BigQuery -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
   case aggregateField of
     Ir.AFExp text -> pure (TextAggregate text)
-    Ir.AFCount (CountType countType) ->
+    Ir.AFCount countType ->
       CountAggregate <$> case countType of
         StarCountable -> pure StarCountable
-        NonNullFieldCountable names -> NonNullFieldCountable <$> traverse (uncurry applyRedaction) names
-        DistinctCountable names -> DistinctCountable <$> traverse (uncurry applyRedaction) names
+        NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromColumn names
+        DistinctCountable names -> DistinctCountable <$> traverse fromColumn names
     Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
       fs <- NE.nonEmpty fields `onNothing` refute (pure MalformedAgg)
       args <-
@@ -1028,10 +970,8 @@ fromAggregateField aggregateField =
           ( \(Rql.FieldName fieldName, columnField) -> do
               expression' <-
                 case columnField of
-                  Ir.SFCol column _columnType redactionExp -> applyRedaction column redactionExp
-                  Ir.SFExp text -> pure (ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)))
-                  -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
-                  Ir.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for BigQuery!"
+                  Ir.CFCol column _columnType -> fmap ColumnExpression (fromColumn column)
+                  Ir.CFExp text -> pure (ValueExpression (StringValue text))
               pure (fieldName, expression')
           )
           fs
@@ -1054,7 +994,7 @@ fromAnnFieldsG existingJoins (Rql.FieldName name, field) =
       pure
         ( ExpressionFieldSource
             Aliased
-              { aliasedThing = BigQuery.ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)),
+              { aliasedThing = BigQuery.ValueExpression (StringValue text),
                 aliasedAlias = name
               }
         )
@@ -1087,9 +1027,9 @@ fromAnnColumnField annColumnField = do
   fieldName <- fromColumn column
   if asText || False -- TODO: (Rql.isScalarColumnWhere Psql.isBigNum typ && stringifyNumbers == Rql.StringifyNumbers)
     then pure (ToStringExpression (ColumnExpression fieldName))
-    else case redactionExp of
-      Ir.NoRedaction -> pure (ColumnExpression fieldName)
-      Ir.RedactIfFalse ex -> do
+    else case caseBoolExpMaybe of
+      Nothing -> pure (ColumnExpression fieldName)
+      Just ex -> do
         ex' <- (traverse fromAnnBoolExpFld >=> fromGBoolExp) (coerce ex)
         pure (ConditionalProjection ex' fieldName)
   where
@@ -1097,7 +1037,7 @@ fromAnnColumnField annColumnField = do
       { _acfColumn = column,
         _acfAsText = asText :: Bool,
         _acfArguments = _ :: Maybe Void,
-        _acfRedactionExpression = redactionExp :: Ir.AnnRedactionExp 'BigQuery Expression
+        _acfCaseBoolExpression = caseBoolExpMaybe :: Maybe (Ir.AnnColumnCaseBoolExp 'BigQuery Expression)
       } = annColumnField
 
 -- | This is where a field name "foo" is resolved to a fully qualified
@@ -1241,10 +1181,7 @@ fromObjectRelationSelectG ::
 -- We're not using existingJoins at the moment, which was used to
 -- avoid re-joining on the same table twice.
 fromObjectRelationSelectG _existingJoins annRelationSelectG = do
-  selectFrom <- case target of
-    Ir.FromTable t -> lift $ fromQualifiedTable t
-    Ir.FromNativeQuery nq -> lift $ fromNativeQuery nq
-    other -> error $ "fromObjectRelationSelectG: " <> show other
+  selectFrom <- lift (fromQualifiedTable tableFrom)
   let entityAlias :: EntityAlias = fromAlias selectFrom
   fieldSources <-
     local
@@ -1282,8 +1219,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
         joinSource =
           JoinSelect
             Select
-              { selectWith = Nothing,
-                selectCardinality = One,
+              { selectCardinality = One,
                 selectAsStruct = NoAsStruct,
                 selectFinalWantedFields,
                 selectGroupBy = mempty,
@@ -1303,20 +1239,18 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
             -- Above: Needed by DataLoader to determine the type of
             -- Haskell-native join to perform.
         joinFieldName,
-        joinExtractPath = Nothing,
-        joinType = case nullable of Nullable -> LeftOuter; NotNullable -> Inner
+        joinExtractPath = Nothing
       }
   where
     Ir.AnnObjectSelectG
       { _aosFields = fields :: Ir.AnnFieldsG 'BigQuery Void Expression,
-        _aosTarget = target :: Ir.SelectFromG 'BigQuery Expression,
-        _aosTargetFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
+        _aosTableFrom = tableFrom :: TableName,
+        _aosTableFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
       } = annObjectSelectG
     Ir.AnnRelationSelectG
       { _aarRelationshipName,
         _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        _aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression,
-        _aarNullable = nullable
+        _aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression
       } = annRelationSelectG
 
 -- We're not using existingJoins at the moment, which was used to
@@ -1390,8 +1324,7 @@ fromComputedFieldSelect = \case
     wrapUnnest from =
       let starSelect =
             Select
-              { selectWith = Nothing,
-                selectTop = NoTop,
+              { selectTop = NoTop,
                 selectAsStruct = AsStruct,
                 selectProjections = pure StarProjection,
                 selectFrom = from,
@@ -1444,23 +1377,18 @@ fromArrayAggregateSelectG annRelationSelectG = do
         joinRightTable = fromAlias (selectFrom select),
         joinOn,
         joinProvenance =
-          ArrayAggregateJoinProvenance
-            $ mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p)
-            . toList
-            . selectProjections
-            $ select,
+          ArrayAggregateJoinProvenance $
+            mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p) . toList . selectProjections $ select,
         -- Above: Needed by DataLoader to determine the type of
         -- Haskell-native join to perform.
         joinFieldName,
-        joinExtractPath = Nothing,
-        joinType = case nullable of Nullable -> LeftOuter; NotNullable -> Inner
+        joinExtractPath = Nothing
       }
   where
     Ir.AnnRelationSelectG
       { _aarRelationshipName,
         _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        _aarAnnSelect = annSelectG,
-        _aarNullable = nullable
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 -- | Produce a join for an array relation.
@@ -1539,8 +1467,7 @@ fromArrayRelationSelectG annRelationSelectG = do
 
   let joinSelect =
         Select
-          { selectWith = Nothing,
-            selectCardinality = One,
+          { selectCardinality = One,
             selectAsStruct = NoAsStruct,
             selectFinalWantedFields = selectFinalWantedFields select,
             selectTop = NoTop,
@@ -1570,15 +1497,14 @@ fromArrayRelationSelectG annRelationSelectG = do
                     { aliasedAlias = coerce (fromAlias (selectFrom select)),
                       aliasedThing =
                         Select
-                          { selectWith = Nothing,
-                            selectProjections =
+                          { selectProjections =
                               selectProjections select
                                 <> joinFieldProjections
                                 `appendToNonEmpty` foldMap @Maybe
-                                  ( map \OrderBy {orderByExpression, orderByFieldName} ->
-                                      ExpressionProjection
+                                  ( map \OrderBy {orderByFieldName} ->
+                                      FieldNameProjection
                                         Aliased
-                                          { aliasedThing = orderByExpression,
+                                          { aliasedThing = orderByFieldName,
                                             aliasedAlias = fieldName orderByFieldName
                                           }
                                   )
@@ -1658,15 +1584,13 @@ fromArrayRelationSelectG annRelationSelectG = do
         -- Above: Needed by DataLoader to determine the type of
         -- Haskell-native join to perform.
         joinFieldName,
-        joinExtractPath = Just aggFieldName,
-        joinType = case nullable of Nullable -> LeftOuter; NotNullable -> Inner
+        joinExtractPath = Just aggFieldName
       }
   where
     Ir.AnnRelationSelectG
       { _aarRelationshipName,
         _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        _aarAnnSelect = annSelectG,
-        _aarNullable = nullable
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 -- | For entity projections, convert any entity aliases to their field
@@ -1728,7 +1652,7 @@ fromMapping localFrom =
               (ColumnExpression remoteFieldName)
           )
     )
-    . HashMap.toList
+    . HM.toList
 
 -- | Given an alias for the remote table, and a map of local-to-remote column
 -- name pairings, produce 'FieldName' pairings (column names paired with their
@@ -1763,7 +1687,7 @@ fromMappingFieldNames ::
   EntityAlias ->
   HashMap ColumnName ColumnName ->
   ReaderT EntityAlias FromIr [(FieldName, FieldName)]
-fromMappingFieldNames remoteFrom = traverse go . HashMap.toList
+fromMappingFieldNames remoteFrom = traverse go . HM.toList
   where
     go (localColumn, remoteColumn) = do
       remoteFieldName <- local (const remoteFrom) (fromColumn remoteColumn)
@@ -1778,26 +1702,27 @@ fromOpExpG expression op =
   case op of
     Ir.ANISNULL -> pure (IsNullExpression expression)
     Ir.ANISNOTNULL -> pure (IsNotNullExpression expression)
-    Ir.AEQ Ir.NullableComparison val -> pure (nullableBoolEquality expression val)
-    Ir.AEQ Ir.NonNullableComparison val -> pure (EqualExpression expression val)
-    Ir.ANE Ir.NullableComparison val -> pure (nullableBoolInequality expression val)
-    Ir.ANE Ir.NonNullableComparison val -> pure (NotEqualExpression expression val)
+    Ir.AEQ False val -> pure (nullableBoolEquality expression val)
+    Ir.AEQ True val -> pure (EqualExpression expression val)
+    Ir.ANE False val -> pure (nullableBoolInequality expression val)
+    Ir.ANE True val -> pure (NotEqualExpression expression val)
     Ir.AIN val -> pure (OpExpression InOp expression val)
     Ir.ANIN val -> pure (OpExpression NotInOp expression val)
     Ir.AGT val -> pure (OpExpression MoreOp expression val)
     Ir.ALT val -> pure (OpExpression LessOp expression val)
     Ir.AGTE val -> pure (OpExpression MoreOrEqualOp expression val)
     Ir.ALTE val -> pure (OpExpression LessOrEqualOp expression val)
-    Ir.ACast _casts -> refute (pure (UnsupportedOpExpG op))
+    Ir.ACast _casts -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
     Ir.ALIKE val -> pure (OpExpression LikeOp expression val)
     Ir.ANLIKE val -> pure (OpExpression NotLikeOp expression val)
     Ir.ABackendSpecific op' -> pure (fromBackendSpecificOpExpG expression op')
-    Ir.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    Ir.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    Ir.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    Ir.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    Ir.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    Ir.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    Ir.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    Ir.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    Ir.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    Ir.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    Ir.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    Ir.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    -- These are new as of 2021-02-18 to this API. Not sure what to do with them at present, marking as unsupported.
 
 fromBackendSpecificOpExpG :: Expression -> BigQuery.BooleanOperators Expression -> Expression
 fromBackendSpecificOpExpG expression op =
@@ -1810,10 +1735,6 @@ fromBackendSpecificOpExpG expression op =
         BigQuery.ASTIntersects v -> func "ST_INTERSECTS" v
         BigQuery.ASTDWithin (Ir.DWithinGeogOp r v sph) ->
           FunctionExpression (FunctionName "ST_DWITHIN" Nothing) [expression, v, r, sph]
-        BigQuery.ASTILike v ->
-          OpExpression ILikeOp (FunctionExpression (FunctionName "LOWER" Nothing) [expression]) v
-        BigQuery.ASTNILike v ->
-          OpExpression NotILikeOp (FunctionExpression (FunctionName "LOWER" Nothing) [expression]) v
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =
@@ -1845,7 +1766,7 @@ fromGBoolExp =
 
 -- | Attempt to refine a list into a 'NonEmpty'. If the given list is empty,
 -- this will 'refute' the computation with an 'UnexpectedEmptyList' error.
-toNonEmpty :: (MonadValidate (NonEmpty Error) m) => [x] -> m (NonEmpty x)
+toNonEmpty :: MonadValidate (NonEmpty Error) m => [x] -> m (NonEmpty x)
 toNonEmpty = \case
   [] -> refute (UnexpectedEmptyList :| [])
   x : xs -> pure (x :| xs)
@@ -1871,17 +1792,7 @@ selectProjectionsFromFieldSources keepJoinField fieldSources = do
     Nothing -> refute (pure NoProjectionFields)
 
 trueExpression :: Expression
-trueExpression = ValueExpression (TypedValue BoolScalarType (BoolValue True))
-
-applyRedaction :: ColumnName -> Ir.AnnRedactionExp 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
-applyRedaction columnName redaction = do
-  fieldName <- fromColumn columnName
-
-  case redaction of
-    Ir.NoRedaction -> pure (ColumnExpression fieldName)
-    Ir.RedactIfFalse predicate -> do
-      p <- fromAnnBoolExp predicate
-      pure (ConditionalProjection p fieldName)
+trueExpression = ValueExpression (BoolValue True)
 
 --------------------------------------------------------------------------------
 -- Constants
@@ -1904,7 +1815,6 @@ data NameTemplate
   | IndexTemplate
   | UnnestTemplate
   | FunctionTemplate FunctionName
-  | NativeQueryTemplate NativeQueryName
 
 generateEntityAlias :: NameTemplate -> FromIr EntityAlias
 generateEntityAlias template = do
@@ -1929,14 +1839,12 @@ generateEntityAlias template = do
         IndexTemplate -> "idx"
         UnnestTemplate -> "unnest"
         FunctionTemplate FunctionName {..} -> functionName
-        NativeQueryTemplate NativeQueryName {..} -> G.unName getNativeQueryName
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelectJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromFunction Aliased {aliasedAlias}) = EntityAlias aliasedAlias
-fromAlias (FromNativeQuery Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 
 fieldTextNames :: Ir.AnnFieldsG 'BigQuery Void Expression -> [Text]
 fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)

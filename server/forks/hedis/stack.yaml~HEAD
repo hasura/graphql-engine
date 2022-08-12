@@ -1,7 +1,0 @@
-resolver: lts-15.15
-packages:
-  - "."
-flags:
-  hedis:
-    dev: true
-extra-package-dbs: []

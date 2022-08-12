@@ -1,37 +1,38 @@
 ---
-sidebar_label: Remote relationships
-sidebar_position: 11
-description: Manage remote relationships with the Hasura schema/Metadata API
+sidebar_label: Remote Relationships
+sidebar_position: 11 
+description: Manage remote relationships with the Hasura schema/metadata API
 keywords:
-  - hasura
-  - docs
-  - schema/Metadata API
-  - API reference
-  - remote joins
-  - remote relationships
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - remote joins
+   - remote relationships
 ---
 
 # Schema/Metadata API Reference: Remote Relationships (Deprecated)
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/Metadata API is deprecated in
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/api-reference/schema-api/index.mdx) and the
-[Metadata API](/api-reference/metadata-api/index.mdx).
+[metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/Metadata APIs will
+Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
 :::
 
+
 ## Introduction
 
-Remote Relationships allow you to join tables with Remote Schemas.
+Remote Relationships allow you to join tables with remote schemas.
 
 ## create_remote_relationship {#schema-metadata-create-remote-relationship}
 
 `create_remote_relationship` is used to create a new remote relationship
-with an existing Remote Schema.
+with an existing remote schema.
 
 ```http
 POST /v1/query HTTP/1.1
@@ -58,13 +59,13 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-create-remote-relationship-syntax}
 
-| Key           | Required | Schema                                                                                                                          | Description                                                                                                                                |
-| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| name          | true     | [RemoteRelationshipName](/api-reference/syntax-defs.mdx#remoterelationshipname)                                                 | Name of the remote relationship                                                                                                            |
-| table         | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                 | Object with table name and schema                                                                                                          |
-| hasura_fields | true     | \[[PGColumn](/api-reference/syntax-defs.mdx#pgcolumn) \| [ComputedFieldName](/api-reference/syntax-defs.mdx#computedfieldname)] | Column/Computed field(s) in the table that is used for joining with Remote Schema field. All join keys in `remote_field` must appear here. |
-| remote_schema | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname)                                                             | Name of the Remote Schema to join with                                                                                                     |
-| remote_field  | true     | [RemoteField](/api-reference/syntax-defs.mdx#remotefield)                                                                       | The schema tree ending at the field in Remote Schema which needs to be joined with.                                                        |
+| Key           | Required | Schema                                                                                                                                                       | Description                                                                                                                                |
+|---------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| name          | true     | [RemoteRelationshipName](/api-reference/syntax-defs.mdx#remoterelationshipname)                                                                 | Name of the remote relationship                                                                                                            |
+| table         | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                                 | Object with table name and schema                                                                                                          |
+| hasura_fields | true     | \[[PGColumn](/api-reference/syntax-defs.mdx#pgcolumn) \| [ComputedFieldName](/api-reference/syntax-defs.mdx#computedfieldname)]    | Column/Computed field(s) in the table that is used for joining with remote schema field. All join keys in `remote_field` must appear here. |
+| remote_schema | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname)                                                                             | Name of the remote schema to join with                                                                                                     |
+| remote_field  | true     | [RemoteField](/api-reference/syntax-defs.mdx#remotefield)                                                                                       | The schema tree ending at the field in remote schema which needs to be joined with.                                                        |
 
 ## update_remote_relationship {#schema-metadata-update-remote-relationship}
 
@@ -98,13 +99,13 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-update-remote-relationship-syntax}
 
-| Key           | Required | Schema                                                                          | Description                                                                                                                 |
-| ------------- | -------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| name          | true     | [RemoteRelationshipName](/api-reference/syntax-defs.mdx#remoterelationshipname) | Name of the remote relationship                                                                                             |
-| table         | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                 | Object with table name and schema                                                                                           |
-| hasura_fields | true     | \[[PGColumn](/api-reference/syntax-defs.mdx#pgcolumn)\]                         | Column(s) in the table that is used for joining with Remote Schema field. All join keys in `remote_field` must appear here. |
-| remote_schema | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname)             | Name of the Remote Schema to join with                                                                                      |
-| remote_field  | true     | [RemoteField](/api-reference/syntax-defs.mdx#remotefield)                       | The schema tree ending at the field in Remote Schema which needs to be joined with.                                         |
+| Key           | Required | Schema                                                                                        | Description                                                                                                                 |
+|---------------|----------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| name          | true     | [RemoteRelationshipName](/api-reference/syntax-defs.mdx#remoterelationshipname)  | Name of the remote relationship                                                                                             |
+| table         | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                  | Object with table name and schema                                                                                           |
+| hasura_fields | true     | \[[PGColumn](/api-reference/syntax-defs.mdx#pgcolumn)\]                          | Column(s) in the table that is used for joining with remote schema field. All join keys in `remote_field` must appear here. |
+| remote_schema | true     | [RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname)              | Name of the remote schema to join with                                                                                      |
+| remote_field  | true     | [RemoteField](/api-reference/syntax-defs.mdx#remotefield)                        | The schema tree ending at the field in remote schema which needs to be joined with.                                         |
 
 ## delete_remote_relationship {#schema-metadata-delete-remote-relationship}
 
@@ -129,7 +130,7 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-delete-remote-relationship-syntax}
 
-| Key   | Required | Schema                                                                          | Description                       |
-| ----- | -------- | ------------------------------------------------------------------------------- | --------------------------------- |
-| table | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                 | Object with table name and schema |
-| name  | true     | [RemoteRelationshipName](/api-reference/syntax-defs.mdx#remoterelationshipname) | Name of the remote relationship   |
+| Key   | Required | Schema                                                                                                | Description                       |
+|-------|----------|-------------------------------------------------------------------------------------------------------|-----------------------------------|
+| table | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                          | Object with table name and schema |
+| name  | true     | [RemoteRelationshipName](/api-reference/syntax-defs.mdx#remoterelationshipname)          | Name of the remote relationship   |

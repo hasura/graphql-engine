@@ -1,24 +1,20 @@
-import { SchemaRequest, SchemaResponse, TableInfo, TableName } from "@hasura/dc-api-types"
-import { Casing, Config } from "../config";
+import { SchemaResponse, TableName } from "../types"
+import { Config } from "../config";
 import xml2js from "xml2js"
 import fs from "fs"
 import stream from "stream"
 import zlib from "zlib"
 import { parseNumbers } from "xml2js/lib/processors";
-import { mapObject, mapObjectValues, nameEquals, unreachable } from "../util";
-import { defaultDbStoreName, getDbStoreName } from "../datasets";
+import { tableNameEquals } from "../util";
 
 export type StaticData = {
-  schema: SchemaResponse,
-  data: {
-    [tableName: string]: Record<string, string | number | boolean | null>[]
-  }
+  [tableName: string]: Record<string, string | number | boolean | null>[]
 }
 
-const streamToBuffer = async (stream: stream.Readable): Promise<Buffer> => {
+const streamToBuffer = async (stream : stream.Readable) : Promise<Buffer> => {
   const chunks = [];
   for await (const chunk of stream) {
-    chunks.push(Buffer.from(chunk));
+      chunks.push(Buffer.from(chunk));
   }
   return Buffer.concat(chunks);
 }
@@ -26,7 +22,7 @@ const streamToBuffer = async (stream: stream.Readable): Promise<Buffer> => {
 // Only parse numeric columns as numbers, otherwise you get "number-like" columns like BillingPostCode
 // getting partially parsed as a number or a string depending on the individual postcode
 const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
-  const numericColumns = new Set(schema.tables.flatMap(table => (table.columns ?? []).filter(c => c.type === "number").map(c => c.name)));
+  const numericColumns = new Set(schema.tables.flatMap(table => table.columns.filter(c => c.type === "number").map(c => c.name)));
 
   return (value: string, name: string): any => {
     return numericColumns.has(name)
@@ -35,192 +31,517 @@ const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
   };
 }
 
-export const staticDataExists = async(name: string): Promise<boolean> => {
-  const dataOK = await new Promise((resolve) => {
-    const dataPath = mkDataPath(name);
-    fs.access(dataPath, fs.constants.R_OK, err => err ? resolve(false) : resolve(true));
-  });
-  const schemaOK = await new Promise((resolve) => {
-    const schemaPath = mkSchemaPath(name);
-    fs.access(schemaPath, fs.constants.R_OK, err => err ? resolve(false) : resolve(true));
-  });
-  return dataOK as boolean && schemaOK as boolean;
-}
-
-const mkDataPath = (name: string): string => {
-  return `${__dirname}/${name}.xml.gz`;
-}
-
-const mkSchemaPath = (name: string): string => {
-  return `${__dirname}/${name}.schema.json`;
-}
-
-export const loadStaticData = async (name: string): Promise<StaticData> => {
-  // Schema
-  const schemaPath = `${__dirname}/${name}.schema.json`;
-  const schema: SchemaResponse = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
-
-  // Data
-  const dataPath = mkDataPath(name);
-  const gzipReadStream = fs.createReadStream(dataPath);
-  const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => { });
+export const loadStaticData = async (): Promise<StaticData> => {
+  const gzipReadStream = fs.createReadStream(__dirname + "/ChinookData.xml.gz");
+  const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => {});
   const xmlStr = (await streamToBuffer(unzipStream)).toString("utf16le");
   const xml = await xml2js.parseStringPromise(xmlStr, { explicitArray: false, emptyTag: () => null, valueProcessors: [parseNumbersInNumericColumns(schema)] });
-  const data = xml[`${name}DataSet`];
+  const data = xml.ChinookDataSet;
   delete data["$"]; // Remove XML namespace property
-  // return await data as StaticData;
-  return {
-    data,
-    schema
-  } as StaticData;
+  return await data as StaticData;
 }
 
 export const filterAvailableTables = (staticData: StaticData, config: Config): StaticData => {
-  const data = Object.fromEntries(
-    Object.entries(staticData.data).filter(([name, _]) => config.tables === null ? true : config.tables.indexOf(name) >= 0)
+  return Object.fromEntries(
+    Object.entries(staticData).filter(([name, _]) => config.tables === null ? true : config.tables.indexOf(name) >= 0)
   );
-  return { ...staticData, data };
 }
 
-export const getTable = (staticData: StaticData, config: Config): ((tableName: TableName) => Record<string, string | number | boolean | null>[] | undefined) => {
-  const cachedTransformedData: { [tableName: string]: Record<string, string | number | boolean | null>[]; } = {};
-
-  const lookupOriginalTable = (tableName: string): Record<string, string | number | boolean | null>[] => {
-    switch (config.table_name_casing) {
-      case "pascal_case":
-        return staticData.data[tableName];
-      case "lowercase":
-        const name = Object.keys(staticData).find(originalTableName => originalTableName.toLowerCase() === tableName);
-        if (name == undefined) throw new Error(`Unknown table name: ${tableName}`);
-        return staticData.data[name];
-      default:
-        return unreachable(config.table_name_casing);
-    }
-  };
-
-  const transformData = (tableData: Record<string, string | number | boolean | null>[]): Record<string, string | number | boolean | null>[] => {
-    switch (config.column_name_casing) {
-      case "pascal_case":
-        return tableData;
-      case "lowercase":
-        return tableData.map(row => mapObject(row, ([column, value]) => [column.toLowerCase(), value]));
-      default:
-        return unreachable(config.column_name_casing);
-    }
-  };
-
-  const lookupTable = (tableName: string): Record<string, string | number | boolean | null>[] => {
-    const cachedData = cachedTransformedData[tableName];
-    if (cachedData !== undefined)
-      return cachedData;
-
-    cachedTransformedData[tableName] = transformData(lookupOriginalTable(tableName));
-    return cachedTransformedData[tableName];
-  };
-
-  return (tableName) => {
-    if (config.schema) {
-      return tableName.length === 2 && tableName[0] === config.schema
-        ? lookupTable(tableName[1])
-        : undefined;
-    } else {
-      return tableName.length === 1
-        ? lookupTable(tableName[0])
-        : undefined;
-    }
-  };
-}
-
-const applyCasing = (casing: Casing) => (str: string): string => {
-  switch (casing) {
-    case "pascal_case": return str;
-    case "lowercase": return str.toLowerCase();
-    default: return unreachable(casing);
+export const getTable = (staticData: StaticData, config: Config) => (tableName: TableName): Record<string, string | number | boolean | null>[] | undefined => {
+  if (config.schema) {
+    return tableName.length === 2 && tableName[0] === config.schema
+      ? staticData[tableName[1]]
+      : undefined;
+  } else {
+    return tableName.length === 1
+      ? staticData[tableName[0]]
+      : undefined;
   }
 }
 
-export const getSchema = (store: Record<string, StaticData>, config: Config, request: SchemaRequest = {}): SchemaResponse => {
-  const applyTableNameCasing = applyCasing(config.table_name_casing);
-  const applyColumnNameCasing = applyCasing(config.column_name_casing);
+const schema: SchemaResponse = {
+  tables: [
+    {
+      name: ["Artist"],
+      primary_key: ["ArtistId"],
+      description: "Collection of artists of music",
+      columns: [
+        {
+          name: "ArtistId",
+          type: "number",
+          nullable: false,
+          description: "Artist primary key identifier"
+        },
+        {
+          name: "Name",
+          type: "string",
+          nullable: true,
+          description: "The name of the artist"
+        }
+      ]
+    },
+    {
+      name: ["Album"],
+      primary_key: ["AlbumId"],
+      description: "Collection of music albums created by artists",
+      columns: [
+        {
+          name: "AlbumId",
+          type: "number",
+          nullable: false,
+          description: "Album primary key identifier"
+        },
+        {
+          name: "Title",
+          type: "string",
+          nullable: false,
+          description: "The title of the album"
+        },
+        {
+          name: "ArtistId",
+          type: "number",
+          nullable: false,
+          description: "The ID of the artist that created this album"
+        }
+      ]
+    },
+    {
+      name: ["Customer"],
+      primary_key: ["CustomerId"],
+      description: "Collection of customers who can buy tracks",
+      columns: [
+        {
+          name: "CustomerId",
+          type: "number",
+          nullable: false,
+          description: "Customer primary key identifier"
+        },
+        {
+          name: "FirstName",
+          type: "string",
+          nullable: false,
+          description: "The customer's first name"
+        },
+        {
+          name: "LastName",
+          type: "string",
+          nullable: false,
+          description: "The customer's last name"
+        },
+        {
+          name: "Company",
+          type: "string",
+          nullable: true,
+          description: "The customer's company name"
+        },
+        {
+          name: "Address",
+          type: "string",
+          nullable: true,
+          description: "The customer's address line (street number, street)"
+        },
+        {
+          name: "City",
+          type: "string",
+          nullable: true,
+          description: "The customer's address city"
+        },
+        {
+          name: "State",
+          type: "string",
+          nullable: true,
+          description: "The customer's address state"
+        },
+        {
+          name: "Country",
+          type: "string",
+          nullable: true,
+          description: "The customer's address country"
+        },
+        {
+          name: "PostalCode",
+          type: "string",
+          nullable: true,
+          description: "The customer's address postal code"
+        },
+        {
+          name: "Phone",
+          type: "string",
+          nullable: true,
+          description: "The customer's phone number"
+        },
+        {
+          name: "Fax",
+          type: "string",
+          nullable: true,
+          description: "The customer's fax number"
+        },
+        {
+          name: "Email",
+          type: "string",
+          nullable: false,
+          description: "The customer's email address"
+        },
+        {
+          name: "SupportRepId",
+          type: "number",
+          nullable: true,
+          description: "The ID of the Employee who is this customer's support representative"
+        }
+      ]
+    },
+    {
+      name: ["Employee"],
+      primary_key: ["EmployeeId"],
+      description: "Collection of employees who work for the business",
+      columns: [
+        {
+          name: "EmployeeId",
+          type: "number",
+          nullable: false,
+          description: "Employee primary key identifier"
+        },
+        {
+          name: "LastName",
+          type: "string",
+          nullable: false,
+          description: "The employee's last name"
+        },
+        {
+          name: "FirstName",
+          type: "string",
+          nullable: false,
+          description: "The employee's first name"
+        },
+        {
+          name: "Title",
+          type: "string",
+          nullable: true,
+          description: "The employee's job title"
+        },
+        {
+          name: "ReportsTo",
+          type: "number",
+          nullable: true,
+          description: "The employee's manager"
+        },
+        {
+          name: "BirthDate",
+          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          nullable: true,
+          description: "The employee's birth date"
+        },
+        {
+          name: "HireDate",
+          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          nullable: true,
+          description: "The employee's hire date"
+        },
+        {
+          name: "Address",
+          type: "string",
+          nullable: true,
+          description: "The employee's address line (street number, street)"
+        },
+        {
+          name: "City",
+          type: "string",
+          nullable: true,
+          description: "The employee's address city"
+        },
+        {
+          name: "State",
+          type: "string",
+          nullable: true,
+          description: "The employee's address state"
+        },
+        {
+          name: "Country",
+          type: "string",
+          nullable: true,
+          description: "The employee's address country"
+        },
+        {
+          name: "PostalCode",
+          type: "string",
+          nullable: true,
+          description: "The employee's address postal code"
+        },
+        {
+          name: "Phone",
+          type: "string",
+          nullable: true,
+          description: "The employee's phone number"
+        },
+        {
+          name: "Fax",
+          type: "string",
+          nullable: true,
+          description: "The employee's fax number"
+        },
+        {
+          name: "Email",
+          type: "string",
+          nullable: true,
+          description: "The employee's email address"
+        },
+      ]
+    },
+    {
+      name: ["Genre"],
+      primary_key: ["GenreId"],
+      description: "Genres of music",
+      columns: [
+        {
+          name: "GenreId",
+          type: "number",
+          nullable: false,
+          description: "Genre primary key identifier"
+        },
+        {
+          name: "Name",
+          type: "string",
+          nullable: true,
+          description: "The name of the genre"
+        }
+      ]
+    },
+    {
+      name: ["Invoice"],
+      primary_key: ["InvoiceId"],
+      description: "Collection of invoices of music purchases by a customer",
+      columns: [
+        {
+          name: "InvoiceId",
+          type: "number",
+          nullable: false,
+          description: "Invoice primary key identifier"
+        },
+        {
+          name: "CustomerId",
+          type: "number",
+          nullable: false,
+          description: "ID of the customer who bought the music"
+        },
+        {
+          name: "InvoiceDate",
+          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          nullable: false,
+          description: "Date of the invoice"
+        },
+        {
+          name: "BillingAddress",
+          type: "string",
+          nullable: true,
+          description: "The invoice's billing address line (street number, street)"
+        },
+        {
+          name: "BillingCity",
+          type: "string",
+          nullable: true,
+          description: "The invoice's billing address city"
+        },
+        {
+          name: "BillingState",
+          type: "string",
+          nullable: true,
+          description: "The invoice's billing address state"
+        },
+        {
+          name: "BillingCountry",
+          type: "string",
+          nullable: true,
+          description: "The invoice's billing address country"
+        },
+        {
+          name: "BillingPostalCode",
+          type: "string",
+          nullable: true,
+          description: "The invoice's billing address postal code"
+        },
+        {
+          name: "Total",
+          type: "number",
+          nullable: false,
+          description: "The total amount due on the invoice"
+        },
+      ]
+    },
+    {
+      name: ["InvoiceLine"],
+      primary_key: ["InvoiceLineId"],
+      description: "Collection of track purchasing line items of invoices",
+      columns: [
+        {
+          name: "InvoiceLineId",
+          type: "number",
+          nullable: false,
+          description: "Invoice Line primary key identifier"
+        },
+        {
+          name: "InvoiceId",
+          type: "number",
+          nullable: false,
+          description: "ID of the invoice the line belongs to"
+        },
+        {
+          name: "TrackId",
+          type: "number",
+          nullable: false,
+          description: "ID of the music track being purchased"
+        },
+        {
+          name: "UnitPrice",
+          type: "number",
+          nullable: false,
+          description: "Price of each individual track unit"
+        },
+        {
+          name: "Quantity",
+          type: "number",
+          nullable: false,
+          description: "Quantity of the track purchased"
+        },
+      ]
+    },
+    {
+      name: ["MediaType"],
+      primary_key: ["MediaTypeId"],
+      description: "Collection of media types that tracks can be encoded in",
+      columns: [
+        {
+          name: "MediaTypeId",
+          type: "number",
+          nullable: false,
+          description: "Media Type primary key identifier"
+        },
+        {
+          name: "Name",
+          type: "string",
+          nullable: true,
+          description: "The name of the media type format"
+        },
+      ]
+    },
+    {
+      name: ["Playlist"],
+      primary_key: ["PlaylistId"],
+      description: "Collection of playlists",
+      columns: [
+        {
+          name: "PlaylistId",
+          type: "number",
+          nullable: false,
+          description: "Playlist primary key identifier"
+        },
+        {
+          name: "Name",
+          type: "string",
+          nullable: true,
+          description: "The name of the playlist"
+        },
+      ]
+    },
+    {
+      name: ["PlaylistTrack"],
+      primary_key: ["PlaylistId", "TrackId"],
+      description: "Associations between playlists and tracks",
+      columns: [
+        {
+          name: "PlaylistId",
+          type: "number",
+          nullable: false,
+          description: "The ID of the playlist"
+        },
+        {
+          name: "TrackId",
+          type: "number",
+          nullable: false,
+          description: "The ID of the track"
+        },
+      ]
+    },
+    {
+      name: ["Track"],
+      primary_key: ["TrackId"],
+      description: "Collection of music tracks",
+      columns: [
+        {
+          name: "TrackId",
+          type: "number",
+          nullable: false,
+          description: "The ID of the track"
+        },
+        {
+          name: "Name",
+          type: "string",
+          nullable: false,
+          description: "The name of the track"
+        },
+        {
+          name: "AlbumId",
+          type: "number",
+          nullable: true,
+          description: "The ID of the album the track belongs to"
+        },
+        {
+          name: "MediaTypeId",
+          type: "number",
+          nullable: false,
+          description: "The ID of the media type the track is encoded with"
+        },
+        {
+          name: "GenreId",
+          type: "number",
+          nullable: true,
+          description: "The ID of the genre of the track"
+        },
+        {
+          name: "Composer",
+          type: "string",
+          nullable: true,
+          description: "The name of the composer of the track"
+        },
+        {
+          name: "Milliseconds",
+          type: "number",
+          nullable: false,
+          description: "The length of the track in milliseconds"
+        },
+        {
+          name: "Bytes",
+          type: "number",
+          nullable: true,
+          description: "The size of the track in bytes"
+        },
+        {
+          name: "UnitPrice",
+          type: "number",
+          nullable: false,
+          description: "The price of the track"
+        },
+      ]
+    },
+  ]
+};
 
+export const getSchema = (config: Config): SchemaResponse => {
   const prefixSchemaToTableName = (tableName: TableName) =>
     config.schema
       ? [config.schema, ...tableName]
       : tableName;
 
-  const dbName = config.db ? getDbStoreName(config.db) : defaultDbStoreName;
-  const schema = store[dbName]?.schema;
-
-  if(!schema) {
-    throw new Error(`Couldn't find db store for ${dbName}`);
-  }
-
-  const filterForOnlyTheseTables = request.filters?.only_tables
-    // If we're using a schema, only use those table names that belong to that schema
-    ?.filter(n => config.schema ? n.length === 2 && n[0] === config.schema : true)
-    // But the schema is fake, so just keep the actual table name
-    ?.map(n => n[n.length - 1])
-
   const filteredTables = schema.tables.filter(table =>
-    config.tables || filterForOnlyTheseTables
-      ? (config.tables ?? []).concat(filterForOnlyTheseTables ?? []).map(n => [n]).find(nameEquals(table.name)) !== undefined
-      : true
+    config.tables === null ? true : config.tables.map(n => [n]).find(tableNameEquals(table.name)) !== undefined
   );
 
-  const prefixedTables: TableInfo[] = filteredTables.map(table => ({
+  const prefixedTables = filteredTables.map(table => ({
     ...table,
-    name: prefixSchemaToTableName(table.name.map(applyTableNameCasing)),
-    primary_key: table.primary_key?.map(applyColumnNameCasing),
-    foreign_keys: table.foreign_keys
-      ? mapObjectValues(table.foreign_keys, constraint => ({
-        ...constraint,
-        foreign_table: prefixSchemaToTableName(constraint.foreign_table.map(applyTableNameCasing)),
-        column_mapping: mapObject(constraint.column_mapping as Record<string, string>, ([outer, inner]) => [applyColumnNameCasing(outer), applyColumnNameCasing(inner)])
-      }))
-      : table.foreign_keys,
-    columns: table.columns?.map(column => ({
-      ...column,
-      name: applyColumnNameCasing(column.name),
-    }))
+    name: prefixSchemaToTableName(table.name),
   }));
 
-  const filterForOnlyTheseFunctions = request.filters?.only_functions
-    // If we're using a schema, only use those function names that belong to that schema
-    ?.filter(n => config.schema ? n.length === 2 && n[0] === config.schema : true)
-    // But the schema is fake, so just keep the actual function name
-    ?.map(n => n[n.length - 1])
-
-  const filteredFunctions = (schema.functions ?? []).filter(func =>
-    filterForOnlyTheseFunctions
-      ? filterForOnlyTheseFunctions.map(n => [n]).find(nameEquals(func.name)) !== undefined
-      : true
-  )
-
-  const prefixedFunctions = filteredFunctions; // TODO: Put some real prefixes here
-
-  const detailLevel = request?.detail_level ?? "everything";
-  switch (detailLevel) {
-    case "everything":
-      return {
-        tables: prefixedTables,
-        functions: prefixedFunctions,
-      };
-
-    case "basic_info":
-      return {
-        tables: prefixedTables.map(table => ({
-          name: table.name,
-          type: table.type
-        })),
-        functions: prefixedFunctions.map(func => ({
-          name: func.name,
-          type: func.type,
-        })),
-      };
-
-    default:
-      return unreachable(detailLevel);
-  }
-
-
+  return {
+    ...schema,
+    tables: prefixedTables
+  };
 };

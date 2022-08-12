@@ -14,24 +14,24 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Action to Database Relationships
+# Postgres: Action to database relationships
 
 ## Introduction
 
 Action relationships allow you to join data across tables and actions. Once you create relationships between types from
 your database and types created from actions, you can then "join" them by running GraphQL queries.
 
-[Actions](/actions/overview.mdx) are a way to extend Hasura’s schema with custom business logic using custom queries and
+[Actions](/actions/index.mdx) are a way to extend Hasura’s schema with custom business logic using custom queries and
 mutations. The resolvers for these custom fields are written in REST endpoints. They are especially useful for setting
 up serverless functions as resolvers.
 
 ## Create an action relationship
 
-### Step 1: Create an action
+### Step 0: Create an action
 
 Create an action either [from scratch](/actions/create.mdx) or [derived from an existing mutation](/actions/derive.mdx).
 
-### Step 2: Define and create the relationship
+### Step 1: Define and create the relationship
 
 The following values can be defined for an action relationship:
 
@@ -47,21 +47,21 @@ The following values can be defined for an action relationship:
 In this example, we're creating a relationship for the `createUser` action. We're creating a relationship called `user`,
 from the `id` field returned in the action response, to the `id` column of the `users` table.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 - Head to the `Actions -> [action-name] -> Relationships` tab.
 - Click `Add a relationship`.
 
   <Thumbnail
-    src="/img/schema/add-action-relationship.png"
-    alt="Opening the action relationship section"
-    width="600px"
+    src='/img/schema/add-action-relationship.png'
+    alt='Opening the action relationship section'
+    width='600px'
   />
 
 - In the section opened by the above step, fill out the following fields and hit `Save`.
 
-  <Thumbnail src="/img/schema/define-action-relationship.png" alt="Defining the relationship" width="700px" />
+  <Thumbnail src='/img/schema/define-action-relationship.png' alt='Defining the relationship' width='700px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -83,7 +83,7 @@ You can add an action relationship by adding it to the respective custom type in
           id: id
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -93,7 +93,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can create an action relationship when defining custom types via the
-[set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) Metadata API:
+[set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
 ```http {20-29}
 POST /v1/metadata HTTP/1.1
@@ -134,7 +134,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 3: Explore with GraphiQL
+### Step 2: Explore with GraphiQL
 
 In the `API` tab, test out your action relationship.
 
@@ -163,7 +163,7 @@ In the `API` tab, test out your action relationship.
 
 If your table has an existing
 [remote relationship](/schema/postgres/remote-relationships/remote-schema-relationships.mdx), you can also query the
-fields from the Remote Schema.
+fields from the remote schema.
 
 <GraphiQLIDE
   query={`mutation {
@@ -198,6 +198,6 @@ fields from the Remote Schema.
 }`}
 />
 
-In the [Remote Schema relationships](/schema/postgres/remote-relationships/remote-schema-relationships.mdx) section, we
+In the [Remote schema relationships](/schema/postgres/remote-relationships/remote-schema-relationships.mdx) section, we
 joined our `users` table with a remote [Auth0](https://auth0.com/) schema. Here, we're able to get the Auth0 profile
 data of the user returned from our action.

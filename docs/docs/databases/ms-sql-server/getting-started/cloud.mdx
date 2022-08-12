@@ -15,46 +15,42 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Get Started with Hasura Cloud & MS SQL Server
 
-## Introduction
+## Try it out
 
 ### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
 
 Navigate to
-[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default&skip_onboarding=true),
-and create a new Hasura Cloud account.
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
 
 Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
 
-<Thumbnail src="/img/getting-started/create-project.png" alt="Connect new or existing database" width="556px" />
+<Thumbnail src='/img/getting-started/create-project.png' alt='Connect new or existing database' width='556px' />
 
 ### Step 2: Add your SQL Server database as a source to Hasura
 
-Head to the `Data > Manage databases` section on the Console to add your MS SQL Server as a source to Hasura. You'll
+Head to the `Data > Manage databases` section on the console to add your MS SQL Server as a source to Hasura. You'll
 need your ODBC connection string. Make sure that your ODBC driver is set to version 17.
 
 Here's an example of what your connection strings might look like with a SQL server database on Azure SQL Serverless:
 
 ```
-Driver={ODBC Driver 18 for SQL Server};Server=tcp:hasura-test.database.windows.net,1433;Database=db-name;Uid=username;Pwd=password;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;
+Driver={ODBC Driver 17 for SQL Server};Server=tcp:<b>hasura-test.database.windows.net</b>,<b>1433</b>;Database=<b>db-name</b>;Uid=<b>username</b>;Pwd=<b>password</b>;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;
 ```
 
 :::info Make sure your SQL server database is reachable by Hasura Cloud:
 
-1.  Allow public connections or
-    [whitelist the Hasura Cloud IP](/hasura-cloud/projects/create.mdx#cloud-projects-create-allow-nat-ip) on your SQL
-    Server firewall: This is good for testing and will allow you to try Hasura out with your database quickly!
+1.  Allow public connections or [whitelist the Hasura Cloud IP](/projects/create.mdx#cloud-projects-create-allow-nat-ip)
+    on your SQL Server firewall: This is good for testing and will allow you to try Hasura out with your database
+    quickly!
 2.  VPC peering: VPC peering and private network access is available on Hasura Cloud paid tiers: Recommended for
     production. Get in touch with us if you'd like to try this out against your existing databases!
 
 :::
 
-<Thumbnail
-  src="/img/databases/ms-sql-server/manage-databases_console_2.10.1.png"
-  alt="Manage databases"
-  width="1000px"
-/>
+<Thumbnail src='/img/databases/ms-sql-server/1-manage-databases.png' alt='Manage databases' width='1000px' />
 
-<Thumbnail src="/img/databases/ms-sql-server/connect-ms-sql-db_console_2.10.1.png" alt="Add source" width="1000px" />
+<Thumbnail src='/img/databases/ms-sql-server/2-add-source.png' alt='Add source' width='1000px' />
 
 Once you add the database, you'll see your database pop up on the sidebar.
 
@@ -63,25 +59,17 @@ Once you add the database, you'll see your database pop up on the sidebar.
 If you have existing tables, head to the database page by clicking on the database name on the sidebar. You should see a
 list of tables.
 
-<Thumbnail src="/img/databases/ms-sql-server/manage-db_step-3_console_2.10.1.png" alt="Manage my-db" width="1000px" />
+<Thumbnail src='/img/databases/ms-sql-server/3-manage-mydb.png' alt='Manage my-db' width='1000px' />
 
 Track tables selectively or all of them so that Hasura can introspect the tables and create the corresponding GraphQL
 schema.
 
-<Thumbnail
-  src="/img/databases/ms-sql-server/track-tables_step-3_console_2.10.1.png"
-  alt="Track tables"
-  width="1000px"
-/>
+<Thumbnail src='/img/databases/ms-sql-server/4-track-tables.png' alt='Track tables' width='1000px' />
 
 If you have foreign keys, you'll also see suggested relationships. Again, you can choose to track them selectively or
 all at once.
 
-<Thumbnail
-  src="/img/databases/ms-sql-server/track-foreign-key-rel_step-3_console_2.10.1.png"
-  alt="Track relationships"
-  width="1000px"
-/>
+<Thumbnail src='/img/databases/ms-sql-server/5-track-rels.png' alt='Track relationships' width='1000px' />
 
 ### Step 3: Option 2: Create new tables
 
@@ -91,25 +79,21 @@ tables or hit the Create Table button to create a table.
 If you're running raw SQL queries to create your tables, Don't forget to check "track metadata" at the bottom of the Run
 SQL window to make sure Hasura tracks your new database objects in its GraphQL schema.
 
-<Thumbnail
-  src="/img/databases/ms-sql-server/run-sql_step-3_console_2.10.1.png"
-  alt="Run SQL to create table"
-  width="1000px"
-/>
+<Thumbnail src='/img/databases/ms-sql-server/7-run-sql.png' alt='Run SQL to create table' width='1000px' />
 
 ### Step 4: Try out a GraphQL query
 
-Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+Head to the `API` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
 creating a GraphQL query.
 
-<Thumbnail src="/img/databases/api-explorer_step-4_console_2.10.1.png" alt="Make GraphQL query" width="1000px" />
+<Thumbnail src='/img/databases/ms-sql-server/6-make-graphql-query.png' alt='Make GraphQL query' width='1000px' />
 
 ## Keep up to date
 
 Hasura supports queries, subscriptions, relationships and permissions on MS SQL Server.
 
-Please watch this space to get the latest docs on how you can try these features out via the Console or by manipulating
-Metadata in JSON/YAML directly.
+Please watch this space to get the latest docs on how you can try these features out via the console or by manipulating
+metadata in JSON/YAML directly.
 
 If you'd like to stay informed about the status of SQL Server support, subscribe to our newsletter and join our discord!
 

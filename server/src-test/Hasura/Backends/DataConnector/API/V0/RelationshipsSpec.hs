@@ -4,7 +4,6 @@
 module Hasura.Backends.DataConnector.API.V0.RelationshipsSpec
   ( spec,
     genRelationshipName,
-    genRelationships,
     genTableRelationships,
   )
 where
@@ -12,9 +11,8 @@ where
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnSelector)
-import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName, genTableTarget)
-import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -28,22 +26,22 @@ spec = do
     testToFromJSONToSchema (RelationshipName "relationship_name") [aesonQQ|"relationship_name"|]
     jsonOpenApiProperties genRelationshipName
   describe "RelationshipType" $ do
-    describe "ObjectRelationship"
-      $ testToFromJSONToSchema ObjectRelationship [aesonQQ|"object"|]
-    describe "ArrayRelationship"
-      $ testToFromJSONToSchema ArrayRelationship [aesonQQ|"array"|]
+    describe "ObjectRelationship" $
+      testToFromJSONToSchema ObjectRelationship [aesonQQ|"object"|]
+    describe "ArrayRelationship" $
+      testToFromJSONToSchema ArrayRelationship [aesonQQ|"array"|]
     jsonOpenApiProperties genRelationshipType
   describe "Relationship" $ do
     let relationship =
           Relationship
-            { _rTarget = TTable (TargetTable (TableName ["target_table_name"])),
+            { _rTargetTable = TableName ["target_table_name"],
               _rRelationshipType = ObjectRelationship,
-              _rColumnMapping = ColumnPathMapping [(mkColumnSelector $ ColumnName "outer_column", mkColumnSelector $ ColumnName "inner_column")]
+              _rColumnMapping = [(ColumnName "outer_column", ColumnName "inner_column")]
             }
     testToFromJSONToSchema
       relationship
       [aesonQQ|
-        { "target": {"type": "table", "name": ["target_table_name"]},
+        { "target_table": ["target_table_name"],
           "relationship_type": "object",
           "column_mapping": {
             "outer_column": "inner_column"
@@ -51,44 +49,41 @@ spec = do
         }
       |]
     jsonOpenApiProperties genRelationship
-  describe "ColumnPathMapping"
-    $ jsonOpenApiProperties genColumnPathMapping
   describe "TableRelationships" $ do
     let relationshipA =
           Relationship
-            { _rTarget = TTable (TargetTable (TableName ["target_table_name_a"])),
+            { _rTargetTable = TableName ["target_table_name_a"],
               _rRelationshipType = ObjectRelationship,
-              _rColumnMapping = ColumnPathMapping [(mkColumnSelector $ ColumnName "outer_column_a", mkColumnSelector $ ColumnName "inner_column_a")]
+              _rColumnMapping = [(ColumnName "outer_column_a", ColumnName "inner_column_a")]
             }
     let relationshipB =
           Relationship
-            { _rTarget = TTable (TargetTable (TableName ["target_table_name_b"])),
+            { _rTargetTable = TableName ["target_table_name_b"],
               _rRelationshipType = ArrayRelationship,
-              _rColumnMapping = ColumnPathMapping [(mkColumnSelector $ ColumnName "outer_column_b", mkColumnSelector $ ColumnName "inner_column_b")]
+              _rColumnMapping = [(ColumnName "outer_column_b", ColumnName "inner_column_b")]
             }
     let tableRelationships =
           TableRelationships
-            { _trelSourceTable = TableName ["source_table_name"],
-              _trelRelationships =
+            { _trSourceTable = TableName ["source_table_name"],
+              _trRelationships =
                 [ (RelationshipName "relationship_a", relationshipA),
                   (RelationshipName "relationship_b", relationshipB)
                 ]
             }
     testToFromJSONToSchema
-      (RTable tableRelationships)
+      tableRelationships
       [aesonQQ|
         { "source_table": ["source_table_name"],
-          "type": "table",
           "relationships": {
             "relationship_a": {
-              "target": {"type": "table", "name": ["target_table_name_a"]},
+              "target_table": ["target_table_name_a"],
               "relationship_type": "object",
               "column_mapping": {
                 "outer_column_a": "inner_column_a"
               }
             },
             "relationship_b": {
-              "target": {"type": "table", "name":["target_table_name_b"]},
+              "target_table": ["target_table_name_b"],
               "relationship_type": "array",
               "column_mapping": {
                 "outer_column_b": "inner_column_b"
@@ -97,39 +92,24 @@ spec = do
           }
         }
       |]
-    jsonOpenApiProperties (RTable <$> genTableRelationships)
+    jsonOpenApiProperties genTableRelationships
 
-genRelationshipName :: (MonadGen m) => m RelationshipName
+genRelationshipName :: MonadGen m => m RelationshipName
 genRelationshipName =
-  RelationshipName <$> genArbitraryAlphaNumText defaultRange
+  RelationshipName <$> Gen.text (linear 0 10) Gen.unicode
 
-genRelationshipType :: (MonadGen m) => m RelationshipType
+genRelationshipType :: MonadGen m => m RelationshipType
 genRelationshipType = Gen.enumBounded
 
-genRelationship :: (MonadGen m) => m Relationship
+genRelationship :: MonadGen m => m Relationship
 genRelationship =
   Relationship
-    <$> genTableTarget
+    <$> genTableName
     <*> genRelationshipType
-    <*> genColumnPathMapping
+    <*> (HashMap.fromList <$> Gen.list (linear 0 5) ((,) <$> genColumnName <*> genColumnName))
 
-genRelationships :: Gen Relationships
-genRelationships = (RTable <$> genTableRelationships) <|> (RFunction <$> genFunctionRelationships)
-
-genTableRelationships :: (MonadGen m) => m TableRelationships
+genTableRelationships :: MonadGen m => m TableRelationships
 genTableRelationships =
   TableRelationships
     <$> genTableName
-    <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))
-
-genFunctionRelationships :: (MonadGen m) => m FunctionRelationships
-genFunctionRelationships =
-  FunctionRelationships
-    <$> genFunctionName
-    <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))
-
-genFunctionName :: (MonadGen m) => m FunctionName
-genFunctionName = FunctionName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
-
-genColumnPathMapping :: (MonadGen m) => m ColumnPathMapping
-genColumnPathMapping = ColumnPathMapping . HashMap.fromList <$> Gen.list defaultRange ((,) <$> genColumnSelector <*> genColumnSelector)
+    <*> fmap HashMap.fromList (Gen.list (linear 0 5) ((,) <$> genRelationshipName <*> genRelationship))

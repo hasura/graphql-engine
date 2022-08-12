@@ -69,8 +69,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString qualified as B
-import Data.HashMap.Strict qualified as HashMap
-import Data.Hashable (Hashable (hashWithSalt))
+import Data.HashMap.Strict qualified as Map
 import Hasura.GraphQL.Parser (InputValue (..), Variable (..))
 import Hasura.Prelude
 import Hasura.Server.Utils (cryptoHash)
@@ -122,10 +121,7 @@ parameterizedQueryHashListToObject =
       [("parameterized_query_hash", J.toJSON queryHashes)]
 
 newtype ParameterizedQueryHash = ParameterizedQueryHash {unParamQueryHash :: B.ByteString}
-  deriving (Show, Eq, Ord)
-
-instance Hashable ParameterizedQueryHash where
-  hashWithSalt salt = hashWithSalt salt . unParamQueryHash
+  deriving (Show, Eq)
 
 instance J.ToJSON ParameterizedQueryHash where
   toJSON = J.String . bsToTxt . unParamQueryHash
@@ -139,7 +135,7 @@ normalizeSelectionSet = (normalizeSelection =<<)
       normalizeSelectionSet selSet
 
     normalizeField (G.Field _alias name args _directives selSet) =
-      G.Field Nothing name (HashMap.map normalizeValue args) mempty $ normalizeSelectionSet selSet
+      G.Field Nothing name (Map.map normalizeValue args) mempty $ normalizeSelectionSet selSet
 
     normalizeConstValue :: G.Value Void -> G.Value Void
     normalizeConstValue = \case
@@ -150,7 +146,7 @@ normalizeSelectionSet = (normalizeSelection =<<)
       G.VBoolean _ -> G.VNull
       G.VEnum _ -> G.VNull
       G.VList l -> G.VList $ map normalizeConstValue l
-      G.VObject obj -> G.VObject $ HashMap.map normalizeConstValue obj
+      G.VObject obj -> G.VObject $ Map.map normalizeConstValue obj
 
     jsonToNormalizedGQLVal :: J.Value -> G.Value Void
     jsonToNormalizedGQLVal = \case
@@ -160,10 +156,9 @@ normalizeSelectionSet = (normalizeSelection =<<)
       J.Number _ -> G.VNull
       J.Array l -> G.VList $ jsonToNormalizedGQLVal <$> toList l
       J.Object vals ->
-        G.VObject
-          $
+        G.VObject $
           -- FIXME(#3479): THIS WILL CREATE INVALID GRAPHQL OBJECTS
-          HashMap.fromList
+          Map.fromList
             [ (name, jsonToNormalizedGQLVal val)
               | (key, val) <- KM.toList vals,
                 name <- maybeToList (G.mkName (K.toText key))
@@ -178,10 +173,8 @@ normalizeSelectionSet = (normalizeSelection =<<)
       G.VBoolean _ -> G.VNull
       G.VEnum _ -> G.VNull
       G.VList l -> G.VList $ map normalizeValue l
-      G.VObject obj -> G.VObject $ HashMap.map normalizeValue obj
-      -- Pretend that variables without values are just nulls.
-      G.VVariable (Variable _info _type Nothing) -> G.VNull
-      G.VVariable (Variable _info _type (Just value)) ->
+      G.VObject obj -> G.VObject $ Map.map normalizeValue obj
+      G.VVariable (Variable _info _type value) ->
         case value of
           GraphQLValue val -> normalizeConstValue val
           JSONValue v -> jsonToNormalizedGQLVal v

@@ -22,13 +22,11 @@ import Data.Functor.Barbie (FunctorB (bmap), btraverseC)
 import Data.Functor.Compose (Compose (..))
 import Data.Kind
 import Data.Validation (Validation, toEither)
-import Hasura.Base.Error (Code (..), QErr (..), QErrExtra (..), err400)
-import Hasura.EncJSON (EncJSON)
+import Hasura.Base.Error (QErr)
+import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.DDL.Webhook.Transform.Body (validateBodyTransformFn)
 import Hasura.RQL.DDL.Webhook.Transform.Class
-import Hasura.RQL.Types.Webhook.Transform.Class
 
 -------------------------------------------------------------------------------
 
@@ -62,11 +60,11 @@ transformFns = lens getter setter
 
 -- | Validate all 'TransformFn a' fields in the 'RequestTransform'.
 validateRequestTransform ::
-  (MonadError QErr m) =>
+  MonadError TransformErrorBundle m =>
   RequestTransform ->
   m RequestTransform
 validateRequestTransform reqTransform =
-  liftEither $ mapLeft mkRequestQErr $ toEither $ transformFns (btraverseC @Transform validate') reqTransform
+  liftEither $ toEither $ transformFns (btraverseC @Transform validate') reqTransform
   where
     validate' ::
       (Transform a) =>
@@ -76,12 +74,6 @@ validateRequestTransform reqTransform =
       fn@(WithOptional (Just (Compose (engine, transformFn)))) ->
         fn <$ validate engine transformFn
       fn -> pure fn
-
-    mkRequestQErr :: TransformErrorBundle -> QErr
-    mkRequestQErr errBundle = (err400 ValidationFailed errMsg) {qeInternal = Just $ ExtraInternal internalErr}
-      where
-        internalErr = J.toJSON errBundle
-        errMsg = "request transform validation failed"
 
 -------------------------------------------------------------------------------
 
@@ -110,25 +102,11 @@ unUnvalidate1 = lens _unUnvalidate1 (\_ a -> Unvalidated1 a)
 -- 'RequestTransform' terms present.
 validateTransforms ::
   (MonadError QErr m) =>
-  LensLike m api api RequestTransform RequestTransform ->
-  LensLike m api api MetadataResponseTransform MetadataResponseTransform ->
+  LensLike (Either TransformErrorBundle) api api RequestTransform RequestTransform ->
   (api -> m EncJSON) ->
   api ->
   m EncJSON
-validateTransforms focusRequestTransform focusResponseTransform f q =
-  (validateResponseTransformTemplate q) >>= validateRequestTransformTemplate >>= f
-  where
-    validateRequestTransformTemplate = traverseOf focusRequestTransform validateRequestTransform
-    validateResponseTransformTemplate = traverseOf focusResponseTransform validateResponseTransform
-
-validateResponseTransform :: (MonadError QErr m) => MetadataResponseTransform -> m MetadataResponseTransform
-validateResponseTransform mrt@MetadataResponseTransform {..} =
-  case mrtBodyTransform of
-    Just bodyTransform -> liftEither $ mapLeft mkResponseQErr $ toEither $ mrt <$ validateBodyTransformFn mrtTemplatingEngine bodyTransform
-    Nothing -> pure mrt
-  where
-    mkResponseQErr :: TransformErrorBundle -> QErr
-    mkResponseQErr errBundle = (err400 ValidationFailed errMsg) {qeInternal = Just $ ExtraInternal internalErr}
-      where
-        internalErr = J.toJSON errBundle
-        errMsg = "response transform validation failed"
+validateTransforms focus f q =
+  case traverseOf focus validateRequestTransform q of
+    Left error' -> pure $ encJFromJValue $ J.toJSON error'
+    Right q' -> f q'

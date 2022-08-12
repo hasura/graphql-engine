@@ -11,7 +11,7 @@ module Data.Aeson.Kriti.Functions (runKriti, runKritiWith, basicFunctions, envir
 import Control.Arrow (left)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as M
 import Data.Text qualified as T
 import Hasura.Prelude
 import Hasura.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
@@ -32,13 +32,13 @@ runKritiWith :: Text -> [(Text, J.Value)] -> HashMap Text KritiFunc -> Either Se
 runKritiWith t m f = left serialize $ Kriti.runKritiWith t m (basicFunctions <> f)
 
 -- | Re-Export of the Kriti 'stdlib'
-basicFunctions :: HashMap.HashMap Text KritiFunc
+basicFunctions :: M.HashMap Text KritiFunc
 basicFunctions = Kriti.basicFuncMap
 
 -- | Functions that interact with environment variables
-environmentFunctions :: Env.Environment -> HashMap.HashMap Text KritiFunc
+environmentFunctions :: Env.Environment -> M.HashMap Text KritiFunc
 environmentFunctions env =
-  HashMap.fromList
+  M.fromList
     [ ("getEnvironmentVariable", getEnvVar)
     ]
   where
@@ -49,8 +49,8 @@ environmentFunctions env =
       _ -> Left $ Kriti.CustomFunctionError "Environment variable name should be a string"
 
 -- | Functions that interact with HGE session during requests
-sessionFunctions :: Maybe SessionVariables -> HashMap.HashMap Text KritiFunc
-sessionFunctions sessionVars = HashMap.singleton "getSessionVariable" getSessionVar
+sessionFunctions :: Maybe SessionVariables -> M.HashMap Text KritiFunc
+sessionFunctions sessionVars = M.singleton "getSessionVariable" getSessionVar
   where
     -- Returns Null if session-variables aren't passed in
     -- Throws an error if session variable isn't found. Perhaps a version that returns null would also be useful.

@@ -1,0 +1,65 @@
+Authorization modes
+===================
+
+You can run Hasura's GraphQL engine in three modes:
+
+1. No Authentication mode
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- When ``--admin-secret`` and ``--auth-hook`` are not set
+
+- It is useful when you're developing . It is not recommended to use in production but however you can have proxy gateway that will set (``X-Hasura-Admin-Secret``) header and other required ``X-Hasura-*`` headers.
+
+Run server in this mode using following docker command.
+
+.. code-block:: bash
+
+   docker run --name hasura-graphql-engine -p 9000:9000 \
+              --link hasura-postgres:postgres \
+              -d hasura/graphql-engine:latest graphql-engine \
+              --database-url \
+                postgres://postgres:mysecretpassword@postgres:5432/postgres \
+                serve --server-port 9000 --cors-domain "*"
+
+
+2. Admin secret mode
+^^^^^^^^^^^^^^^^^^^^
+
+- When only ``--admin-secret`` is set. See :doc:`GraphQL Server Options <../deployment/options>`
+
+- Server authenticates based on ``X-Hasura-Admin-Secret`` header and expects all other required ``X-Hasura-*`` headers.
+
+Run server in this mode using following docker command.
+
+.. code-block:: bash
+
+   docker run --name hasura-graphql-engine -p 9000:9000 \
+              --link hasura-postgres:postgres \
+              -d hasura/graphql-engine:latest graphql-engine \
+              --database-url \
+                postgres://postgres:mysecretpassword@postgres:5432/postgres \
+                serve --server-port 9000 --admin-secret myAdminSecretKey \
+                  --cors-domain "*"
+
+
+3. Admin secret key and Authorization webhook mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- When both ``--admin-secret`` and ``--auth-hook`` are set
+
+- This mode is useful in production. When server founds ``X-Hasura-Admin-Secret`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
+
+- If ``X-Hasura-Admin-Secret`` header not found then server authenticaters through webhook. See :doc:`Authorization
+  Webhook <webhook>`
+
+Run server in this mode using following docker command.
+
+.. code-block:: bash
+
+   docker run --name hasura-graphql-engine -p 9000:9000 \
+              --link hasura-postgres:postgres \
+              -d hasura/graphql-engine:latest graphql-engine \
+              --database-url \
+                postgres://postgres:mysecretpassword@postgres:5432/postgres \
+                serve --server-port 9000 --admin-secret myAdminSecretKey \
+                  --auth-hook http://myAuthhook/ --cors-domain "*"

@@ -1,6 +1,6 @@
 ---
 sidebar_label: Apollo Federation
-sidebar_position: 5
+sidebar_position: 3
 description: Use Hasura as a subgraph in an Apollo gateway
 keywords:
   - hasura
@@ -10,34 +10,29 @@ keywords:
   - subgraph
   - data federation
 ---
-
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Apollo Federation Support
+# Apollo Federation support
 
 ## Introduction
 
-Hasura GraphQL Engine supports the Apollo Federation v1 spec, so you can add Hasura as a subgraph in your Apollo
-federated gateway. You can also use Hasura generated table types in your other subgraphs by enabling tables for Apollo
-Federation explicitly.
+Hasura GraphQL engine supports the Apollo Federation v1 spec, so you can add Hasura as a subgraph in your Apollo
+federated gateway. You can also use Hasura generated table types in your other subgraphs by enabling tables for
+Apollo Federation explicitly.
 
-:::tip Supported from
+:::caution Experimental
 
-Apollo Federation is available from Hasura version `v2.10.0` and above.
+Apollo Federation is an experimental feature and can be enabled by adding `apollo_federation` to the
+`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` [environment variable array](/deployment/graphql-engine-flags/reference.mdx)
+or with the server flag `--experimental-feature`.
 
 :::
 
-:::caution Enabling apollo-federation
+:::note Supported from
 
-Apollo Federation can be enabled using
-[the server configuration](deployment/graphql-engine-flags/reference.mdx#enable-apollo-federation)
-(`--enable-apollo-federation` flag or setting `HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION` to `true`).
-
-For backwards compatibility, the feature can also be enabled by adding `apollo_federation` to the
-`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` [environment variable array](/deployment/graphql-engine-flags/reference.mdx) or
-with the server flag `--experimental-feature`.
+Apollo Federation is available from Hasura version `v2.10.0` and above.
 
 :::
 
@@ -60,37 +55,29 @@ extending Hasura types with other subgraphs is not possible currently. We recomm
 [remote relationships](/remote-schemas/remote-relationships/index.mdx) for extending types from other subgraphs in
 Hasura.
 
-:::info Supported types
+:::note Note
 
-Other types such as action types, Remote Schema types, etc. cannot be extended to other subgraphs.
+Other types such as action types, remote schema types, etc. cannot be extended to other subgraphs.
 
 :::
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
   <TabItem value="console" label="Console">
 
-:::info Prerequisite before enabling Apollo Federation on the Hasura Console
-
-To enable Apollo Federation using the Hasura Console, you'll first need to add `apollo_federation` to the list of
-experimental features using the
-[`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` environment variable](/deployment/graphql-engine-flags/reference.mdx/#experimental-features)
-array or with the
-[server flag `--experimental-feature`](/deployment/graphql-engine-flags/reference.mdx/#experimental-features). You can
-learn more about setting these [here](/deployment/graphql-engine-flags/index.mdx/#setting-server-configurations).
-
-:::
-
-Head to the `Data -> [table-name] -> Modify` tab in the Console and toggle the switch in the `Enable Apollo Federation`
+Head to the `Data -> [table-name] -> Modify` tab in the console and toggle the switch in the `Enable Apollo Federation`
 section:
 
-<Thumbnail src="/img/graphql/core/data-federation/apollo-federation-enable.png" alt="Set table as enum" />
+<Thumbnail
+  src="/img/graphql/core/data-federation/apollo-federation-enable.png"
+  alt="Set table as enum"
+/>
 
   </TabItem>
   <TabItem value="cli" label="CLI">
 
 To enable Apollo Federation using the Hasura CLI head to the particular
-`/metadata/databases/<schema_name>/tables/<schema_name>_<table_name>.yaml` file and add the database configuration as
-below:
+`/metadata/databases/<schema_name>/tables/<schema_name>_<table_name>.yaml` file and add the database configuration
+as below:
 
 ```yaml {6-7}
 table:
@@ -100,7 +87,7 @@ apollo_federation_config:
   enable: v1
 ```
 
-Apply the Metadata using the Hasura CLI by running:
+Apply the metadata using the Hasura CLI by running:
 
 ```bash
 hasura metadata apply
@@ -109,8 +96,8 @@ hasura metadata apply
   </TabItem>
   <TabItem value="api" label="API">
 
-To extend the types using the [Hasura Metadata API](/api-reference/metadata-api/table-view.mdx), you can to enable it
-with the particular `*_set_apollo_federation_config` call:
+To extend the types using the [Hasura Metadata API](/api-reference/metadata-api/table-view.mdx), you can to enable
+it with the particular `*_set_apollo_federation_config` call:
 
 ```http {16-18}
 POST /v1/metadata HTTP/1.1

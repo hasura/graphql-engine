@@ -6,6 +6,7 @@
 -- during development (although that might break certain things).
 
 package *
+  documentation: true
   -- build with DWARF support. This may not be very useful yet, but we want
   -- to be able to experiment with it, and turning it from off to on requires
   -- a massive rebuild. To start, see:
@@ -14,84 +15,36 @@ package *
 
   -- For compile-time performance (see cabal.project.ci.local):
   ghc-options:
-    -- We compile with package-level parallelism, so just use a small amount
+    -- We compile with package-level parallelism, so just use a small amount 
     -- of module-level parallelism for dependencies:
     -j2
     +RTS -A64m -n2m -RTS
-
-  -- This guarantees that -Wredundant-contraints will properly fire, even with
-  -- optimizations disabled. See https://gitlab.haskell.org/ghc/ghc/-/issues/16932
-  ghc-options: -fsolve-constant-dicts
-
--- Set common options for local libraries
-program-options
-  ghc-options: -j -Werror
-
+  
+-- Modify this to '+optimize-hasura' to enable optimizations. Be sure also to comment
+-- 'coverage: true' below for full prod performance.
+--
 -- NOTE: new-build may report a misleading 'Build profile: -O1'
 -- See:https://github.com/haskell/cabal/issues/6221
 flags: -optimize-hasura
 
 package graphql-engine
+  documentation: false
   -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
   coverage: true
-
-package graphql-engine-pro
-  -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
-  -- which is not what we originally wanted. But building the test modules
-  -- themselves with coverage is actually nice for validation.
-  coverage: true
-
--- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
--- libraries. But, also by default, cabal links executables statically, which requires static
--- versions of the libraries. Therefore, by default, cabal builds with -dynamic-too to generate
--- static and dynamic versions of all object files.
--- Setting executable-dynamic: True forces cabal to build a dynamic executable; but it's not
--- enough on its own: since library-vanilla defaults to True, cabal would still build a static
--- library. With those two flags together, we can finally only build one version of the library,
--- which substentially improves compilation time.
-executable-dynamic: True
-library-vanilla: False
-
--- These packages link back into our fork of resource-pool, hence we need to
--- disable a statically linked library build
-package hedis
+  -- to match CI:
+  ghc-options: -Werror
+  -- For compile-time performance (see cabal.project.ci.local):
+  ghc-options: -j
+  -- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
+  -- libraries. But, also by default, cabal links executables statically, which requires static
+  -- versions of the libraries. Therefore, by default, cabal builds with -dynamic-too to generate
+  -- static and dynamic versions of all object files.
+  -- Setting executable-dynamic: True forces cabal to build a dynamic executable; but it's not
+  -- enough on its own: since library-vanilla defaults to True, cabal would still build a static
+  -- library. With those two flags together, we can finally only build one version of the library,
+  -- which substentially improves compilation time.
+  executable-dynamic: True
   library-vanilla: False
-package Spock
-  library-vanilla: False
-package hasql-pool
-  library-vanilla: False
-
-package mysql
-  extra-include-dirs:
-    /opt/homebrew/opt/openssl/include
-    /opt/homebrew/opt/mysql-client@5.7/include
-  extra-lib-dirs:
-    /opt/homebrew/opt/openssl/lib
-    /opt/homebrew/opt/mysql-client@5.7/lib
-
-package odbc
-  extra-include-dirs: /opt/homebrew/opt/unixodbc/include
-  extra-lib-dirs: /opt/homebrew/opt/unixodbc/lib
-
-package pcre-light
-  extra-include-dirs: /opt/homebrew/opt/pcre/include
-  extra-lib-dirs: /opt/homebrew/opt/pcre/lib
-
-package postgresql-libpq
-  extra-include-dirs:
-    /opt/homebrew/opt/libpq/include
-    /opt/homebrew/opt/openssl/include
-  extra-lib-dirs:
-    /opt/homebrew/opt/libpq/lib
-    /opt/homebrew/opt/openssl/lib
-
-package pg-client
-  extra-include-dirs:
-    /opt/homebrew/opt/libpq/include
-    /opt/homebrew/opt/openssl/include
-  extra-lib-dirs:
-    /opt/homebrew/opt/libpq/lib
-    /opt/homebrew/opt/openssl/lib
 

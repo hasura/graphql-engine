@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This file contains types for both the websocket protocols (Apollo) and (graphql-ws)
 -- | See Apollo: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
 -- | See graphql-ws: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
@@ -34,6 +36,7 @@ import Control.Concurrent
 import Control.Concurrent.Extended (sleep)
 import Control.Concurrent.STM
 import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Text (pack)
 import Hasura.EncJSON
@@ -101,52 +104,32 @@ instance J.ToJSON ServerMsgType where
 
 data ConnParams = ConnParams
   {_cpHeaders :: Maybe (HashMap Text Text)}
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq)
 
-instance J.FromJSON ConnParams where
-  parseJSON = J.genericParseJSON hasuraJSON
-
-instance J.ToJSON ConnParams where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(J.deriveJSON hasuraJSON ''ConnParams)
 
 data StartMsg = StartMsg
   { _smId :: !OperationId,
     _smPayload :: !GQLReqUnparsed
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance J.FromJSON StartMsg where
-  parseJSON = J.genericParseJSON hasuraJSON
-
-instance J.ToJSON StartMsg where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(J.deriveJSON hasuraJSON ''StartMsg)
 
 data StopMsg = StopMsg
   { _stId :: OperationId
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance J.FromJSON StopMsg where
-  parseJSON = J.genericParseJSON hasuraJSON
-
-instance J.ToJSON StopMsg where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(J.deriveJSON hasuraJSON ''StopMsg)
 
 -- Specific to graphql-ws
 data PingPongPayload = PingPongPayload
   { _smMessage :: !(Maybe Text) -- NOTE: this is not within the spec, but is specific to our usecase
   }
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq)
 
-instance J.FromJSON PingPongPayload where
-  parseJSON = J.genericParseJSON hasuraJSON
-
-instance J.ToJSON PingPongPayload where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(J.deriveJSON hasuraJSON ''PingPongPayload)
 
 -- Specific to graphql-ws
 keepAliveMessage :: PingPongPayload
@@ -157,14 +140,9 @@ data SubscribeMsg = SubscribeMsg
   { _subId :: !OperationId,
     _subPayload :: !GQLReqUnparsed
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance J.FromJSON SubscribeMsg where
-  parseJSON = J.genericParseJSON hasuraJSON
-
-instance J.ToJSON SubscribeMsg where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(J.deriveJSON hasuraJSON ''SubscribeMsg)
 
 data ClientMsg
   = CMConnInit !(Maybe ConnParams)
@@ -203,7 +181,7 @@ data DataMsg = DataMsg
 
 data ErrorMsg = ErrorMsg
   { _emId :: !OperationId,
-    _emPayload :: !J.Encoding
+    _emPayload :: !J.Value
   }
   deriving (Show, Eq)
 
@@ -221,14 +199,9 @@ newtype ConnErrMsg = ConnErrMsg {unConnErrMsg :: Text}
   deriving (Show, Eq, J.ToJSON, J.FromJSON, IsString)
 
 data ServerErrorMsg = ServerErrorMsg {unServerErrorMsg :: Text}
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq)
 
-instance J.FromJSON ServerErrorMsg where
-  parseJSON = J.genericParseJSON hasuraJSON
-
-instance J.ToJSON ServerErrorMsg where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(J.deriveJSON hasuraJSON ''ServerErrorMsg)
 
 data ServerMsg
   = SMConnAck
@@ -268,9 +241,8 @@ encodeServerErrorMsg ecode = encJToLBS . encJFromJValue $ case ecode of
 
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
-  encJToLBS
-    $ encJFromAssocList
-    $ case msg of
+  encJToLBS $
+    encJFromAssocList $ case msg of
       SMConnAck ->
         [encTy SMT_GQL_CONNECTION_ACK]
       SMConnKeepAlive ->
@@ -287,7 +259,7 @@ encodeServerMsg msg =
       SMErr (ErrorMsg opId payload) ->
         [ encTy SMT_GQL_ERROR,
           ("id", encJFromJValue opId),
-          ("payload", encJFromJEncoding payload)
+          ("payload", encJFromJValue payload)
         ]
       SMComplete compMsg ->
         [ encTy SMT_GQL_COMPLETE,
@@ -322,15 +294,12 @@ type WSConnInitTimer = (TVar WSConnInitTimerStatus, TMVar ())
 getWSTimerState :: WSConnInitTimer -> IO WSConnInitTimerStatus
 getWSTimerState (timerState, _) = readTVarIO timerState
 
-{-# ANN getNewWSTimer ("HLint: ignore Use withAsync" :: String) #-}
 getNewWSTimer :: Seconds -> IO WSConnInitTimer
 getNewWSTimer timeout = do
   timerState <- newTVarIO Running
   timer <- newEmptyTMVarIO
-  void
-    $ forkIO
-    $ do
-      labelMe "getNewWSTimer"
+  void $
+    forkIO $ do
       sleep (seconds timeout)
       atomically $ do
         runTimerState <- readTVar timerState

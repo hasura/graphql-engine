@@ -1,0 +1,115 @@
+.sqlBlock {
+  position: relative;
+  width: 80%;
+}
+
+.codeBlockCustom {
+  /* position: relative;
+  padding: 10px 20px; */
+  /* background-color: white; */
+  background-color: rgb(253, 249, 237);
+  /* margin: 20px;
+  width: 100%; */
+  width: auto;
+  border-radius: 5px;
+  // max-height: calc(100% - 60px);
+  // overflow: auto;
+  margin-top: 0px;
+  // min-height: calc(100% - 60px);
+  position: relative;
+}
+
+.codeBlockCustom pre {
+  display: block;
+  padding: 10px 20px;
+  margin: 0px;
+  font-size: 13px;
+  line-height: unset;
+  word-break: unset;
+  word-wrap: unset;
+  color: #000;
+  background: none;
+  border: none;
+  border-radius: 0;
+  overflow: unset;
+  padding-bottom: 10px;
+}
+
+.codeBlockCustom code {
+  color: #000;
+  background: none;
+}
+
+.codeBlockCustom .formattedCode {
+  padding: 0px 0px !important;
+}
+
+.schemaPreWrapper {
+  position: relative;
+  min-height: 40px;
+}
+
+.copyGenerated {
+  position: absolute;
+  bottom: 10px;
+  right: 30px;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.copyGenerated img, .copyExecution img {
+  width: 20px;
+  opacity: .6;
+}
+
+.copyGenerated img:hover, .copyExecution img:hover {
+  opacity: 1;
+}
+
+.copyGenerated:focus, .copyExecution:focus {
+  outline: none;
+}
+
+.copyTooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.copyTooltip i {
+  color: #505050;
+}
+
+.copyTooltip .tooltiptext {
+	background-color: #555;
+	color: #fff;
+	text-align: center;
+	border-radius: 6px;
+	padding: 4px 0px;
+	font-size: 14px;
+	position: absolute;
+	z-index: 1000000000;
+	right: -21px;
+	bottom: 30px;
+	opacity: 0;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+  display: none;
+  width: 57px;
+}
+
+.copyTooltip .tooltiptext::after {
+	content: "";
+	position: absolute;
+	top: 26px;
+	right: 22px;
+	margin-left: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: #555 transparent transparent transparent;
+}
+
+.copyTooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+    display: block;
+}

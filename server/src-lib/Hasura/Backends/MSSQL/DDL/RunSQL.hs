@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | MSSQL DDL RunSQL
 --
@@ -13,7 +14,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.String (fromString)
 import Data.Text qualified as T
@@ -29,17 +30,17 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata hiding (tmTable)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Utils (quoteRegex)
-import Hasura.Table.Cache
 import Text.Regex.TDFA qualified as TDFA
 
 data MSSQLRunSQL = MSSQLRunSQL
@@ -73,17 +74,17 @@ runSQL ::
   MSSQLRunSQL ->
   m EncJSON
 runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
-  SourceInfo {..} <- askSourceInfo @'MSSQL _mrsSource
+  SourceInfo _ tableCache _ sourceConfig _ _ <- askSourceInfo @'MSSQL _mrsSource
   results <-
     -- If the SQL modifies the schema of the database then check for any metadata changes
     if isSchemaCacheBuildRequiredRunSQL mssqlRunSQL
       then do
-        (results, metadataUpdater) <- runTx _siConfiguration $ withMetadataCheck _siTables
+        (results, metadataUpdater) <- runTx sourceConfig $ withMetadataCheck tableCache
         -- Build schema cache with updated metadata
-        withNewInconsistentObjsCheck
-          $ buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
+        withNewInconsistentObjsCheck $
+          buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
         pure results
-      else runTx _siConfiguration sqlQueryTx
+      else runTx sourceConfig sqlQueryTx
   pure $ encJFromJValue $ toResult results
   where
     runTx :: SourceConfig 'MSSQL -> Tx.TxET QErr m a -> m a
@@ -109,7 +110,7 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
       preActionTablesMeta <- toTableMeta <$> loadDBMetadata
       results <- sqlQueryTx
       postActionTablesMeta <- toTableMeta <$> loadDBMetadata
-      let trackedTablesMeta = filter (flip HashMap.member tableCache . tmTable) preActionTablesMeta
+      let trackedTablesMeta = filter (flip M.member tableCache . tmTable) preActionTablesMeta
           tablesDiff = getTablesDiff trackedTablesMeta postActionTablesMeta
 
       -- Get indirect dependencies
@@ -130,7 +131,7 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
       where
         toTableMeta :: DBTablesMetadata 'MSSQL -> [TableMeta 'MSSQL]
         toTableMeta dbTablesMeta =
-          HashMap.toList dbTablesMeta <&> \(table, dbTableMeta) ->
+          M.toList dbTablesMeta <&> \(table, dbTableMeta) ->
             TableMeta table dbTableMeta [] -- No computed fields
 
 isSchemaCacheBuildRequiredRunSQL :: MSSQLRunSQL -> Bool

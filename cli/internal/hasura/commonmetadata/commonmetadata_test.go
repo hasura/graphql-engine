@@ -14,7 +14,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
@@ -35,7 +34,6 @@ func TestClient_ExportMetadata(t *testing.T) {
 		fields        fields
 		wantMetadata  string
 		wantErr       bool
-		assertErr     require.ErrorAssertionFunc
 		hasuraVersion string
 	}{
 		{
@@ -50,7 +48,6 @@ func TestClient_ExportMetadata(t *testing.T) {
 			},
 			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 		{
 			name: "can export metadata v3",
@@ -85,7 +82,6 @@ func TestClient_ExportMetadata(t *testing.T) {
 			},
 			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 	}
 
@@ -96,12 +92,14 @@ func TestClient_ExportMetadata(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			gotMetadata, err := c.ExportMetadata()
-			tt.assertErr(t, err)
-			if !tt.wantErr {
-				b, err := ioutil.ReadAll(gotMetadata)
-				assert.NoError(t, err)
-				assert.JSONEq(t, tt.wantMetadata, string(b))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ExportMetadata() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
+			b, err := ioutil.ReadAll(gotMetadata)
+			assert.NoError(t, err)
+			assert.JSONEq(t, tt.wantMetadata, string(b))
+
 		})
 	}
 }
@@ -120,7 +118,6 @@ func TestClient_ReloadMetadata(t *testing.T) {
 		fields        fields
 		want          string
 		wantErr       bool
-		assertErr     require.ErrorAssertionFunc
 		hasuraVersion string
 	}{
 		{
@@ -134,7 +131,6 @@ func TestClient_ReloadMetadata(t *testing.T) {
 			},
 			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 		{
 			name: "can reload metadata v3",
@@ -148,7 +144,6 @@ func TestClient_ReloadMetadata(t *testing.T) {
 			},
 			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -158,12 +153,13 @@ func TestClient_ReloadMetadata(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			gotMetadata, err := c.ReloadMetadata()
-			tt.assertErr(t, err)
-			if !tt.wantErr {
-				b, err := ioutil.ReadAll(gotMetadata)
-				assert.NoError(t, err)
-				assert.JSONEq(t, tt.want, string(b))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ReloadMetadata() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
+			b, err := ioutil.ReadAll(gotMetadata)
+			assert.NoError(t, err)
+			assert.JSONEq(t, tt.want, string(b))
 		})
 	}
 }
@@ -182,7 +178,6 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 		fields        fields
 		want          string
 		wantErr       bool
-		assertErr     require.ErrorAssertionFunc
 		hasuraVersion string
 	}{
 		{
@@ -196,7 +191,6 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 			},
 			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 		{
 			name: "can drop inconsistent metadata v3",
@@ -209,7 +203,6 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 			},
 			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -219,12 +212,13 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			gotMetadata, err := c.DropInconsistentMetadata()
-			tt.assertErr(t, err)
-			if !tt.wantErr {
-				b, err := ioutil.ReadAll(gotMetadata)
-				assert.NoError(t, err)
-				assert.JSONEq(t, tt.want, string(b))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DropInconsistentMetadata() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
+			b, err := ioutil.ReadAll(gotMetadata)
+			assert.NoError(t, err)
+			assert.JSONEq(t, tt.want, string(b))
 		})
 	}
 }
@@ -243,7 +237,6 @@ func TestClient_ResetMetadata(t *testing.T) {
 		fields        fields
 		want          string
 		wantErr       bool
-		assertErr     require.ErrorAssertionFunc
 		hasuraVersion string
 	}{
 		{
@@ -257,7 +250,6 @@ func TestClient_ResetMetadata(t *testing.T) {
 			},
 			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 		{
 			name: "can reset metadata",
@@ -270,7 +262,6 @@ func TestClient_ResetMetadata(t *testing.T) {
 			},
 			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -281,12 +272,13 @@ func TestClient_ResetMetadata(t *testing.T) {
 					path:   tt.fields.path,
 				}
 				got, err := c.ClearMetadata()
-				tt.assertErr(t, err)
-				if !tt.wantErr {
-					b, err := ioutil.ReadAll(got)
-					assert.NoError(t, err)
-					assert.JSONEq(t, tt.want, string(b))
+				if (err != nil) != tt.wantErr {
+					t.Errorf("ClearMetadata() error = %v, wantErr %v", err, tt.wantErr)
+					return
 				}
+				b, err := ioutil.ReadAll(got)
+				assert.NoError(t, err)
+				assert.JSONEq(t, tt.want, string(b))
 			})
 		})
 	}
@@ -371,7 +363,6 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 		fields        fields
 		want          io.Reader
 		wantErr       bool
-		assertErr     require.ErrorAssertionFunc
 		hasuraVersion string
 	}{
 		{
@@ -383,7 +374,6 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 			},
 			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -393,14 +383,15 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.GetInconsistentMetadata()
-			tt.assertErr(t, err)
-			if !tt.wantErr {
-				var wantStruct = new(hasura.GetInconsistentMetadataResponse)
-				err = json.NewDecoder(tt.want).Decode(wantStruct)
-				assert.NoError(t, err)
-				assert.NoError(t, err)
-				assert.Equal(t, wantStruct, got)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ClearMetadata() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
+			var wantStruct = new(hasura.GetInconsistentMetadataResponse)
+			err = json.NewDecoder(tt.want).Decode(wantStruct)
+			assert.NoError(t, err)
+			assert.NoError(t, err)
+			assert.Equal(t, wantStruct, got)
 		})
 	}
 }
@@ -423,7 +414,6 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 		fields        fields
 		want          string
 		wantErr       bool
-		assertErr     require.ErrorAssertionFunc
 		hasuraVersion string
 	}{
 		{
@@ -440,7 +430,6 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 			},
 			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 		{
 			name: "can replace metadata V3",
@@ -456,7 +445,6 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 			},
 			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
-			assertErr:     require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -467,12 +455,13 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 					path:   tt.fields.path,
 				}
 				got, err := c.ReplaceMetadata(tt.args.metadata)
-				tt.assertErr(t, err)
-				if !tt.wantErr {
-					b, err := ioutil.ReadAll(got)
-					assert.NoError(t, err)
-					assert.JSONEq(t, tt.want, string(b))
+				if (err != nil) != tt.wantErr {
+					t.Errorf("ReplaceMetadata() error = %v, wantErr %v", err, tt.wantErr)
+					return
 				}
+				b, err := ioutil.ReadAll(got)
+				assert.NoError(t, err)
+				assert.JSONEq(t, tt.want, string(b))
 			})
 		})
 	}

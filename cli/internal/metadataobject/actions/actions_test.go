@@ -1,8 +1,6 @@
 package actions
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -44,13 +42,12 @@ func TestActionConfig_Export(t *testing.T) {
 		metadata map[string]yaml.Node
 	}
 	tests := []struct {
-		id        string
-		name      string
-		fields    fields
-		args      args
-		want      map[string][]byte
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		id      string
+		name    string
+		fields  fields
+		args    args
+		want    map[string][]byte
+		wantErr bool
 	}{
 		{
 			"t1",
@@ -94,7 +91,6 @@ func TestActionConfig_Export(t *testing.T) {
 				}(),
 			},
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -109,15 +105,16 @@ func TestActionConfig_Export(t *testing.T) {
 				logger:             tt.fields.logger,
 			}
 			got, err := a.Export(tt.args.metadata)
-			tt.assertErr(t, err)
 			if tt.wantErr {
-				return
-			}
-			for k, v := range got {
-				assert.Contains(t, tt.want, k)
-				// uncomment to update golden files
-				// assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
-				assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				for k, v := range got {
+					assert.Contains(t, tt.want, k)
+					// uncomment to update golden files
+					// assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
+				}
 			}
 		})
 	}
@@ -144,7 +141,6 @@ func TestActionConfig_Build(t *testing.T) {
 		fields     fields
 		wantGolden string
 		wantErr    bool
-		assertErr  require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -166,7 +162,6 @@ func TestActionConfig_Build(t *testing.T) {
 			},
 			"testdata/build/t1/want.json",
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -181,24 +176,22 @@ func TestActionConfig_Build(t *testing.T) {
 				logger:             tt.fields.logger,
 			}
 			got, err := a.Build()
-			tt.assertErr(t, err)
 			if tt.wantErr {
-				return
-			}
-			gotbs, err := yaml.Marshal(got)
-			require.NoError(t, err)
-			gotjson, err := goyaml.YAMLToJSON(gotbs)
-			require.NoError(t, err)
-			goldenFile := fmt.Sprintf("testdata/build/%v/want.json", tt.id)
-			var pretty_json bytes.Buffer
-			err = json.Indent(&pretty_json, gotjson, "", " ")
-			assert.NoError(t, err)
-			// uncomment to update golden file
-			// assert.NoError(t, ioutil.WriteFile(goldenFile, pretty_json.Bytes(), os.ModePerm))
+				assert.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				gotbs, err := yaml.Marshal(got)
+				require.NoError(t, err)
+				gotjson, err := goyaml.YAMLToJSON(gotbs)
+				require.NoError(t, err)
+				goldenFile := fmt.Sprintf("testdata/build/%v/want.json", tt.id)
+				// uncomment to update golden file
+				//assert.NoError(t, ioutil.WriteFile(goldenFile, gotjson, os.ModePerm))
 
-			want, err := ioutil.ReadFile(goldenFile)
-			assert.NoError(t, err)
-			assert.Equal(t, string(want), pretty_json.String())
+				want, err := ioutil.ReadFile(goldenFile)
+				assert.NoError(t, err)
+				assert.Equal(t, string(want), string(gotjson))
+			}
 		})
 	}
 }

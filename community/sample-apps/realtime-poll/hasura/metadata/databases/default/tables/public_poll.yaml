@@ -1,0 +1,11 @@
+array_relationships:
+- name: options
+  using:
+    foreign_key_constraint_on:
+      column: poll_id
+      table:
+        name: option
+        schema: public
+table:
+  name: poll
+  schema: public

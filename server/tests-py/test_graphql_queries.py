@@ -1,13 +1,28 @@
-import json
 import pytest
-import ruamel.yaml as yaml
+from validate import assert_response_code, check_query_f, check_query, get_conf_f
+from context import PytestConf
+
+import json
 import textwrap
+import ruamel.yaml as yaml
 import warnings
 
-from context import PytestConf
-from validate import assert_response_code, check_query_f, get_conf_f
+# Mark that all tests in this module can be run as server upgrade tests
+pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLEmpty:
+    def test_select_placeholder(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_placeholder.yaml', transport)
+
+    def test_no_empty_roots(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/check_no_empty_roots.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/empty'
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
@@ -127,6 +142,9 @@ class TestGraphQLQueryBasicMSSQL:
     def test_select_various_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_mssql.yaml', transport)
 
+    def test_select_query_user(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_mssql.yaml", transport)
+
     def test_select_query_user_col_change(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_mssql.yaml")
 
@@ -148,6 +166,8 @@ class TestGraphQLQueryBasicMSSQL:
 @pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicPostgres:
+    # Can't run server upgrade tests, as this test has a schema change
+    @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_postgres.yaml', transport)
 
@@ -158,6 +178,9 @@ class TestGraphQLQueryBasicPostgres:
     def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
+
+    def test_select_query_user(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_postgres.yaml", transport)
 
     def test_select_query_user_col_change(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_postgres.yaml")
@@ -180,14 +203,47 @@ class TestGraphQLQueryBasicPostgres:
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
         resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
         assert resp['error'] == "Expecting object { table, columns }."
-    
-    def test_select_query_with_extensions(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/select_query_with_extensions.yaml", transport)
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.backend('citus')
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBasicCitus:
+    def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter_citus.yaml", transport)
+
+    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
+    def test_select_query_user_col_change(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_citus.yaml")
+
+    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
+    def test_select_query_person_citext(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_person_citext.yaml", transport)
+
+    # relationships test cases described at
+    # https://github.com/hasura/graphql-engine-mono/blob/vamshi/rfc/citus-support/rfcs/citus-support.md
+    def test_select_relationships_distributed(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_distributed.yaml", transport)
+
+    def test_select_relationships_reference(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_reference.yaml", transport)
+
+    def test_select_functions(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_functions.yaml", transport)
+
+    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
+        resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
+        assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/citus'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.backend('citus', 'postgres')
@@ -433,7 +489,7 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
         return 'queries/graphql_query/boolexp/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('postgis', 'per_class_tests_db_state')
+@usefixtures('per_class_tests_db_state')
 class TestGraphqlQueryPermissions:
 
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
@@ -704,7 +760,7 @@ class TestGraphQLQueryBoolExpJsonB:
         return 'queries/graphql_query/boolexp/jsonb'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@usefixtures('postgis', 'per_class_tests_db_state')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpPostGIS:
 
     def test_query_using_point(self, hge_ctx, transport):
@@ -736,7 +792,7 @@ class TestGraphQLQueryBoolExpPostGIS:
         return 'queries/graphql_query/boolexp/postgis'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('postgis', 'per_class_tests_db_state')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpRaster:
 
     def test_query_st_intersects_geom_nband(self, hge_ctx, transport):
@@ -807,6 +863,67 @@ class TestGraphQLQueryOrderBy:
     def dir(cls):
         return 'queries/graphql_query/order_by'
 
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryFunctions:
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_search_posts(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_search_posts_aggregate(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_users(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/query_get_users.yaml", transport)
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_users_arguments_error(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/query_get_users_arguments_error.yaml", transport)
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_users_default_arguments_error(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/query_get_users_default_arguments_error.yaml", transport)
+
+    def test_alter_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
+
+    def test_overloading_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
+
+    def test_query_get_test_uuid(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml')
+
+    def test_query_my_add(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml')
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_session_var(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_session_var.yaml', transport)
+
+    def test_track_function_v2_errors(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_test_session_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_search_author_mview(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_search_author_mview.yaml')
+
+    def test_tracking_function_with_composite_type_argument(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
+
+    @pytest.mark.skip(reason="FIXME: https://github.com/hasura/graphql-engine-mono/issues/2595")
+    def test_tracking_function_with_customized_names(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_customised_names.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions'
+
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCustomSchema:
@@ -867,7 +984,7 @@ class TestGraphQLQueryEnums:
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@usefixtures('postgis', 'per_class_tests_db_state')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryComputedFields:
     @classmethod
     def dir(cls):
@@ -913,10 +1030,12 @@ class TestGraphQLQueryCaching:
     def test_introspection(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
 
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-unauthorized-role"),
+    reason="--test-unauthorized-role missing"
+)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
-@pytest.mark.admin_secret
-@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestUnauthorizedRolePermission:
     @classmethod
     def dir(cls):
@@ -925,39 +1044,33 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-unauthorized-role"),
+    reason="--test-unauthorized-role missing"
+)
+@pytest.mark.parametrize('transport', ['http'])
 @usefixtures('per_class_tests_db_state')
-@pytest.mark.admin_secret
-@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestFallbackUnauthorizedRoleCookie:
     @classmethod
     def dir(cls):
         return 'queries/unauthorized_role'
 
-    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', add_auth=False)
+    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', transport, add_auth=False)
 
-@usefixtures('per_class_tests_db_state', 'jwt_configuration')
-@pytest.mark.admin_secret
-@pytest.mark.jwt('rsa')
-@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
-class TestFallbackUnauthorizedRoleCookieWithJwt:
-    @classmethod
-    def dir(cls):
-        return 'queries/unauthorized_role'
-
-    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', add_auth=False)
-
-@usefixtures('per_class_tests_db_state', 'jwt_configuration')
-@pytest.mark.admin_secret
-@pytest.mark.jwt('rsa')
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-no-cookie-and-unauth-role"),
+    reason="--test-no-cookie-and-unauth-role missing"
+)
+@pytest.mark.parametrize('transport', ['http'])
+@usefixtures('per_class_tests_db_state')
 class TestMissingUnauthorizedRoleAndCookie:
     @classmethod
     def dir(cls):
         return 'queries/unauthorized_role'
 
-    def test_error_unauth_role_not_set_jwt_cookie_not_set(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', add_auth=False)
+    def test_error_unauth_role_not_set_jwt_cookie_not_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', transport, add_auth=False)
 
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLExplainPostgresMSSQL:
@@ -987,9 +1100,13 @@ class TestGraphQLExplainPostgresMSSQL:
     def test_limit_orderby_column_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
 
+    @pytest.mark.skip_server_upgrade_test
+    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
 
+    @pytest.mark.skip_server_upgrade_test
+    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_offset_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
 
@@ -1185,10 +1302,10 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
 )
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@pytest.mark.usefixtures('per_method_tests_db_state')
-@pytest.mark.admin_secret
-@pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
+@use_function_permission_fixtures
 class TestGraphQLQueryFunctionPermissions:
+    # These tests are skipped unless the test-suite is run with '--test-function-permissions'
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions/permissions/'
@@ -1235,6 +1352,7 @@ class TestGraphQLQueryBoolExpLtree:
 @pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSpatialMSSQL:
+    @pytest.mark.skip_server_upgrade_test
     def test_select_spatial_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_mssql.yaml', transport)
 
@@ -1276,6 +1394,35 @@ class TestGraphQLQueryBoolExpSpatialMSSQL:
 
     def test_select_spatial_mssql_types_where_st_within_geojson(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_geojson_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/spatial'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.backend('bigquery')
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpSpatialBigquery:
+    def test_select_spatial_bigquery_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_equals(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_contains(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_intersects(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_d_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_d_within_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_touches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_bigquery.yaml', transport)
 
     @classmethod
     def dir(cls):

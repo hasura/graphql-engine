@@ -2,25 +2,22 @@
 
 import pytest
 import time
+import subprocess
 
-from conftest import use_action_fixtures, extract_server_address_from
-from remote_server import NodeGraphQL
 from validate import check_query_f, check_query, get_conf_f
+from remote_server import NodeGraphQL
+from conftest import use_action_fixtures
 
 """
 TODO:- Test Actions metadata
 """
 
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def graphql_service(worker_id: str, hge_fixture_env: dict[str, str]):
-    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_HANDLER')
-    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/actions_remote_join_schema.js', port=port)
-    server.start()
-    print(f'{graphql_service.__name__} server started on {server.url}')
-    hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = server.url
-    yield server
-    server.stop()
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/actions_remote_join_schema.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
 
 use_action_fixtures_with_remote_joins = pytest.mark.usefixtures(
@@ -80,9 +77,6 @@ class TestActionsSync:
 
     def test_null_response(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/null_response.yaml')
-    
-    def test_omitted_field_response_for_nullable_field(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/omitted_field_response_for_nullable_field.yaml')
 
     def test_expecting_object_response_got_null(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_null.yaml')
@@ -95,8 +89,8 @@ class TestActionsSync:
 
     def test_expecting_array_response_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
-
-    # Scalar webhook response tests.
+    
+    # Scalar webhook response tests.    
     def test_expecting_scalar_output_type_success(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_scalar_action_output_type_success.yaml')
 
@@ -111,29 +105,29 @@ class TestActionsSync:
 
     def test_object_response_action_transformed_output(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/object_response_action_transformed_output.yaml')
-
+    
     # Scalar array tests
     def test_expecting_string_scalar_array_output_type_success(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_string_scalar_array_action_output_type_success.yaml')
-
+    
     def test_expecting_number_scalar_array_output_type_got_string_array(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_string_scalar_array_action_output_type_expecting_number_array.yaml')
-
+    
     def test_scalar_array_field_nullability_check(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_null_field_expecting_non_nullable_field_array.yaml')
 
     def test_expecting_object_response_with_nested_null(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_object_response_with_nested_null.yaml')
-
+    
     def test_expecting_jsonb_response_success(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_jsonb_response_success.yaml')
-
+       
     def test_expecting_custom_scalar_response_success(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_custom_scalar_response_success.yaml')
-
+    
     def test_expecting_custom_scalar_array_response_success(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_custom_scalar_array_response_success.yaml')
-
+    
     def test_expecting_custom_scalar_array_response_got_different_type(self, hge_ctx):
         query_obj = {
             "query": """
@@ -508,100 +502,7 @@ class TestActionsAsync:
             'response': response
         }
         check_query_timeout(hge_ctx, conf, True, 10)
-    
-    def test_async_actions_error_response_user_role(self, hge_ctx):
-        graphql_mutation = '''
-        mutation {
-          test_async_action_error_response
-        }
-        '''
-        query = {
-            'query': graphql_mutation,
-            'variables': {}
-        }
-        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx, {'x-hasura-role': 'user'}))
-        assert status == 200, resp
-        assert 'data' in resp
-        action_id = resp['data']['test_async_action_error_response']
-        query_async = '''
-        query ($action_id: uuid!){
-          test_async_action_error_response(id: $action_id){
-            id
-            errors
-          }
-        }
-        '''
-        query = {
-            'query': query_async,
-            'variables': {
-                'action_id': action_id
-            }
-        }
-        response = {
-            'data': {
-                'test_async_action_error_response': {
-                    'id': action_id,
-                    'errors': {
-                        'code': 'unexpected',
-                        'path': '$',
-                        'error': 'not a valid json response from webhook'
-                    }
-                }
-            }
-        }
-        conf = {
-            'url': '/v1/graphql',
-            'headers': {
-                'x-hasura-role': 'user',
-            },
-            'query': query,
-            'status': 200,
-            'response': response
-        }
-        check_query_timeout(hge_ctx, conf, True, 10)
-    
-    def test_async_actions_error_response_admin_role(self, hge_ctx):
-        graphql_mutation = '''
-        mutation {
-          test_async_action_error_response
-        }
-        '''
-        query = {
-            'query': graphql_mutation,
-            'variables': {}
-        }
-        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx, {'x-hasura-role': 'admin'}))
-        assert status == 200, resp
-        assert 'data' in resp
-        action_id = resp['data']['test_async_action_error_response']
-        query_async = '''
-        query ($action_id: uuid!){
-          test_async_action_error_response(id: $action_id){
-            id
-            errors
-          }
-        }
-        '''
-        query = {
-            'query': query_async,
-            'variables': {
-                'action_id': action_id
-            }
-        }
-        conf = {
-            'url': '/v1/graphql',
-            'headers': {
-                'x-hasura-role': 'admin',
-            },
-            'query': query,
-            'status': 200,
-        }
-        time.sleep(10)
-        response, _ = check_query(hge_ctx, conf)
 
-        assert 'errors' in response['data']['test_async_action_error_response']
-        assert 'internal' in response['data']['test_async_action_error_response']['errors']
-    
     def test_create_user_success(self, hge_ctx):
         graphql_mutation = '''
         mutation {
@@ -897,7 +798,7 @@ class TestCreateActionNestedTypeWithRelation:
     def test_create_sync_action_with_nested_output_and_nested_relation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')
 
-@pytest.mark.usefixtures('postgis', 'actions_fixture', 'per_class_tests_db_state')
+@pytest.mark.usefixtures('per_class_tests_db_state')
 class TestSetCustomTypes:
 
     @classmethod
@@ -919,7 +820,7 @@ class TestSetCustomTypes:
     def test_drop_relationship(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/drop_relationship.yaml')
 
-@pytest.mark.usefixtures('actions_fixture', 'per_class_tests_db_state')
+@pytest.mark.usefixtures('per_class_tests_db_state')
 class TestActionsMetadata:
 
     @classmethod
@@ -1011,9 +912,9 @@ class TestActionTimeout:
         # of the handler's execution. So, total time taken for this test will be 4 seconds.
         time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
-
+                
         assert 'errors' in response['data']['create_user']
         assert 'Response timeout' == response['data']['create_user']['errors']['internal']['error']['message']
-
+        
         # tests that actions webhook url environment variable template did not serialize in the error message
         assert "{{ACTION_WEBHOOK_HANDLER}}/create-user-timeout" == response['data']['create_user']['errors']['internal']['request']['url']

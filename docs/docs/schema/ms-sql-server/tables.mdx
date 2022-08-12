@@ -15,7 +15,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# MS SQL Server: Tables Basics
+# MS SQL Server: Tables basics
 
 ## Introduction
 
@@ -40,15 +40,15 @@ articles (
 )
 ```
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Open the Hasura Console and head to the `Data` tab and click on the button on the left side bar to open up an interface
+Open the Hasura console and head to the `Data` tab and click on the button on the left side bar to open up an interface
 to create tables.
 
 For example, here is the schema for the `articles` table in this interface:
 
-<Thumbnail src="/img/schema/create-table-graphql-mssql.png" alt="Schema for an article table" width="1100px" />
+<Thumbnail src='/img/schema/create-table-graphql-mssql.png' alt='Schema for an article table' width='1100px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -77,7 +77,7 @@ For example, here is the schema for the `articles` table in this interface:
 <TabItem value="api" label="API">
 
 You can create a table by making an API call to the
-[schema_run_sql Metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
+[schema_run_sql metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
 
 ```http
 POST /v2/query HTTP/1.1
@@ -101,14 +101,14 @@ X-Hasura-Role: admin
 Tables can be present in the underlying MS SQL Server database without being exposed over the GraphQL API. In order to
 expose a table over the GraphQL API, it needs to be **tracked**.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-When a table is created via the Hasura Console, it gets tracked by default.
+When a table is created via the Hasura console, it gets tracked by default.
 
 You can track any existing tables in your database from the `Data -> Schema` page:
 
-<Thumbnail src="/img/schema/schema-track-tables-mssql.png" alt="Track table" width="700px" />
+<Thumbnail src='/img/schema/schema-track-tables-mssql.png' alt='Track table' width='700px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -125,7 +125,7 @@ You can track any existing tables in your database from the `Data -> Schema` pag
         name: articles
     ```
 
-2.  Apply the Metadata by running:
+2.  Apply the metadata by running:
 
     ```bash
     hasura metadata apply
@@ -135,7 +135,7 @@ You can track any existing tables in your database from the `Data -> Schema` pag
 <TabItem value="api" label="API">
 
 To track the table and expose it over the GraphQL API, make the following API call to the
-[mssql_track_table Metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
+[mssql_track_table metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1

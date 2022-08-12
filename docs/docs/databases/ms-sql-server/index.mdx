@@ -17,7 +17,7 @@ Hasura allows connecting to a SQL Server database and build a GraphQL API based 
 
 :::tip Supported versions:
 
-1.  Hasura GraphQL Engine `v2.0.0-alpha.2` onwards
+1.  Hasura GraphQL engine `v2.0.0-alpha.2` onwards
 2.  SQL Server 2016 and upwards
 
 :::
@@ -35,34 +35,15 @@ Here are 2 ways you can get started with Hasura and SQL Server:
 
 ## Supported features
 
-Hasura currently supports queries, subscriptions, mutations, relationships, permissions, and Event Triggers on MS SQL
-Server.
+Hasura currently supports queries, subscriptions, mutations, relationships and permissions on MS SQL Server.
 
-## Managing data with the Hasura Console
+Next up on our roadmap for Hasura + SQL Server:
 
-The Hasura Console is a web UI that allows you to manage your data and metadata. It is available at
-`http://localhost:8080/console` when you run Hasura locally, or from your project's Console endpoint when you use
-[Hasura Cloud](https://cloud.hasura.io).
-
-The data-management features (such as creating tables) are available in the `Data` tab. You can access your GraphQL API
-in the `API` tab and interact with it using the GraphiQL interface.
-
-:::info Console support
-
-We recommend using your preferred MS SQL Server client instead. The Hasura Console is designed to be a tool for managing
-your GraphQL API, and not a full-fledged database management tool.
-
-:::
-
-## Required permissions
-
-Assuming a `CONNECT` permission already exists, the following permissions are required for Hasura to function
-completely. Note that missing permissions may cause the corresponding features to work incorrectly:
-
-- To use the Hasura Console to alter your schema, you will need appropriate schema permissions, such as `CREATE TABLE`,
-  `CREATE VIEW`, `CREATE FUNCTION`, and `CREATE PROCEDURE`, depending on what you want to do.
-- To perform queries and mutations, Hasura will need permission to `DELETE`, `INSERT`, `SELECT`, and `UPDATE`.
-- To call MSSQL stored procedures via Hasura, the `EXECUTE` permission is also required.
+- Support for stored procedures & functions ([#7073](https://github.com/hasura/graphql-engine/issues/7073))
+- Event triggers: Trigger HTTP webhooks with atomic capture and atleast once guarantee whenever data changes inside the
+  database ([#7075](https://github.com/hasura/graphql-engine/issues/7075))
+- Remote Joins: Join models in SQL Server to models from other API services (GraphQL or REST)
+  ([#7076](https://github.com/hasura/graphql-engine/issues/7076))
 
 ## Keep up to date
 
@@ -76,15 +57,11 @@ If you'd like to stay informed about the status of SQL Server support, subscribe
 This Hands-on Demo walks you through Getting Started with Hasura on SQL Server & common use cases. -
 [View Recording here](https://hasura.io/events/webinar/hasura-sql-server/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
-We also have a tutorial available on our Learn site -
-[check out the Microsoft SQL Server tutorial](https://hasura.io/learn/database/microsoft-sql-server/introduction/).
-
 :::
 
 ## Know more
 
-- [Get Started](/databases/ms-sql-server/getting-started/index.mdx)
-- [Connect a Google Cloud SQL for MS SQL Server database](/databases/ms-sql-server/gcp.mdx)
+- [Getting Started](/databases/ms-sql-server/getting-started/index.mdx)
 - [Schema](/schema/ms-sql-server/index.mdx)
 - [Queries](/queries/ms-sql-server/index.mdx)
 - [Mutations](/mutations/ms-sql-server/index.mdx)

@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Setting Default Values for Fields Using Postgres Defaults
+# Postgres: Setting default values for fields using Postgres defaults
 
 ## Introduction
 
@@ -37,14 +37,14 @@ whenever a new row is added to the table:
 
 Edit the `created_at` field and set its default value as the SQL function `now()`.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Open the Console and head to `Data -> [article] -> Modify`.
+Open the console and head to `Data -> [article] -> Modify`.
 
 Click the `Edit` button next to the `created_at` field and add `now()` as a default value.
 
-<Thumbnail src="/img/schema/add-default-value.png" alt="Modify the table in the Console" width="1000px" />
+<Thumbnail src='/img/schema/add-default-value.png' alt='Modify the table in the console' width='1000px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">

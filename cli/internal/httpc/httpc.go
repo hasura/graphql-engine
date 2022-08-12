@@ -15,7 +15,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/pkg/errors"
 )
 
 type Client struct {
@@ -28,10 +28,9 @@ type Client struct {
 }
 
 func New(httpClient *http.Client, baseUrl string, headers map[string]string) (*Client, error) {
-	var op errors.Op = "httpc.New"
 	u, err := url.ParseRequestURI(baseUrl)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	if httpClient == nil {
 		httpClient = new(http.Client)
@@ -50,10 +49,9 @@ func (c *Client) SetHeaders(headers map[string]string) {
 }
 
 func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
-	var op errors.Op = "httpc.Client.NewRequest"
 	u, err := c.BaseURL.Parse(urlStr)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 
 	var buf io.ReadWriter
@@ -63,13 +61,13 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 		enc.SetEscapeHTML(false)
 		err := enc.Encode(body)
 		if err != nil {
-			return nil, errors.E(op, err)
+			return nil, err
 		}
 	}
 
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 
 	if body != nil {
@@ -82,9 +80,8 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 }
 
 func (c *Client) BareDo(ctx context.Context, req *http.Request) (*Response, error) {
-	var op errors.Op = "httpc.Client.BareDo"
 	if ctx == nil {
-		return nil, errors.E(op, "context must be non-nil")
+		return nil, errors.New("context must be non-nil")
 	}
 	req = req.WithContext(ctx)
 
@@ -94,10 +91,10 @@ func (c *Client) BareDo(ctx context.Context, req *http.Request) (*Response, erro
 		// the context's error is probably more useful.
 		select {
 		case <-ctx.Done():
-			return nil, errors.E(op, errors.KindNetwork, ctx.Err())
+			return nil, ctx.Err()
 		default:
 		}
-		return nil, errors.E(op, errors.KindNetwork, err)
+		return nil, err
 	}
 
 	response := &Response{resp}
@@ -124,10 +121,9 @@ func hasJSONContentType(headers http.Header) bool {
 }
 
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Response, error) {
-	var op errors.Op = "httpc.Client.Do"
 	resp, err := c.BareDo(ctx, req)
 	if err != nil {
-		return resp, errors.E(op, err)
+		return resp, err
 	}
 	defer resp.Body.Close()
 	switch v := v.(type) {
@@ -138,12 +134,12 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 			var respBodyBytes []byte
 			respBodyBytes, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
-				return resp, errors.E(op, err)
+				return resp, err
 			}
 			var buf bytes.Buffer
 			err = json.Indent(&buf, respBodyBytes, "", "  ")
 			if err != nil {
-				return resp, errors.E(op, err)
+				return resp, err
 			}
 			// copy it to writer
 			_, err = io.Copy(v, &buf)
@@ -163,7 +159,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 }
 
 func GenerateTLSConfig(caPath string, insecureSkipTLSVerify bool) (*tls.Config, error) {
-	var op errors.Op = "httpc.GenerateTLSConfig"
 	tlsConfig := &tls.Config{InsecureSkipVerify: insecureSkipTLSVerify}
 	if caPath != "" {
 		// Get the SystemCertPool, continue with an empty pool on error
@@ -175,10 +170,10 @@ func GenerateTLSConfig(caPath string, insecureSkipTLSVerify bool) (*tls.Config, 
 		certPath, _ := filepath.Abs(caPath)
 		cert, err := ioutil.ReadFile(certPath)
 		if err != nil {
-			return nil, errors.E(op, fmt.Errorf("error reading CA %s: %w", caPath, err))
+			return nil, fmt.Errorf("error reading CA %s: %w", caPath, err)
 		}
 		if ok := rootCAs.AppendCertsFromPEM(cert); !ok {
-			return nil, errors.E(op, fmt.Errorf("unable to append given CA cert"))
+			return nil, fmt.Errorf("unable to append given CA cert")
 		}
 		tlsConfig.RootCAs = rootCAs
 	}

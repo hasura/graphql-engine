@@ -1,14 +1,14 @@
 ---
 sidebar_label: Introspection options
-sidebar_position: 21
-description: Manage introspection with the Hasura Metadata API
+sidebar_position: 18
+description: Manage introspection with the Hasura metadata API
 keywords:
-  - hasura
-  - docs
-  - Metadata API
-  - API reference
-  - introspection options
-  - disable introspection
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - introspection options
+   - disable introspection
 ---
 
 # Metadata API Reference: GraphQL Introspection Options
@@ -44,6 +44,6 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-set-graphql-schema-introspection-options-syntax}
 
-| Key                | Required | Schema                                                       | Description                                                                                                     |
-| ------------------ | -------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| disabled_for_roles | true     | Array of [RoleName](/api-reference/syntax-defs.mdx#rolename) | Roles for which GraphQL schema introspection should be disabled _(supported only in cloud/enterprise versions)_ |
+| Key                | Required | Schema                                                                    | Description                                                                                                     |
+|--------------------|----------|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| disabled_for_roles | true     | Array of [RoleName](/api-reference/syntax-defs.mdx#rolename) | Roles for which GraphQL schema introspection should be disabled *(supported only in cloud/enterprise versions)* |

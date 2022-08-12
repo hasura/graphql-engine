@@ -1,53 +1,46 @@
 ---
-sidebar_label: Metadata format
+sidebar_label: Metadata Format
 sidebar_position: 6
-description: Metadata formats
+description: Metadata Formats
 keywords:
   - hasura
   - format
   - Metadata
-toc_max_heading_level: 6
 ---
 
 # Metadata Format Reference
 
-## Introduction
+With Metadata config `v3`, the Metadata that is exported from the server by the CLI is a directory of multiple files
+and directories as per the example below:
 
-With Metadata config `v3`, the Metadata that is exported from the server by the CLI is a directory of multiple files and
-directories as per the example below:
-
-```text
-📂 metadata
-├─ 📂 databases
-│  ├─ 📄 databases.yaml
-│  └─ 📂 default
-│     ├─ 📂 tables
-│     │  ├─ 📄 public_author.yaml
-│     │  ├─ 📄 public_article.yaml
-│     │  └─ 📄 tables.yaml
-│     └─ 📂 functions
-│        ├─ 📄 public_search_author.yaml
-│        └─ 📄 functions.yaml
-├─ 📄 actions.graphql
-├─ 📄 actions.yaml
-├─ 📄 allow_list.yaml
-├─ 📄 api_limits.yaml
-├─ 📄 cron_triggers.yaml
-├─ 📄 graphql_schema_introspection.yaml
-├─ 📄 inherited_roles.yaml
-├─ 📄 network.yaml
-├─ 📄 query_collections.yaml
-├─ 📄 remote_schemas.yaml
-├─ 📄 rest_endpoints.yaml
-└─ 📄 version.yaml
-```
+  ```text
+  📂 metadata
+  ├─ 📂 databases
+  │  ├─ 📂 default
+  │  │  └─ 📂 tables
+  │  │     ├─ 📄 public_author.yaml
+  │  │     ├─ 📄 public_article.yaml
+  │  │     └─ 📄 tables.yaml
+  │  └── 📄 databases.yaml
+  ├─ 📄 actions.graphql
+  ├─ 📄 actions.yaml
+  ├─ 📄 allow_list.yaml
+  ├─ 📄 api_limits.yaml
+  ├─ 📄 cron_triggers.yaml
+  ├─ 📄 graphql_schema_introspection.yaml
+  ├─ 📄 inherited_roles.yaml
+  ├─ 📄 network.yaml
+  ├─ 📄 query_collections.yaml
+  ├─ 📄 remote_schemas.yaml
+  ├─ 📄 rest_endpoints.yaml
+  └─ 📄 version.yaml
+  ```
 
 Internally in Hasura Server, Metadata is maintained as a JSON blob in the `hdb_metadata` table of the Metadata database.
 
 :::info note
 
-For `config v2`, see
-[Metadata format reference (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx).
+For `config v2`, see [Metadata format reference (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx).
 
 :::
 
@@ -57,27 +50,25 @@ The following files will be generated in the `metadata/` directory of your proje
 
 :::info Note
 
-The output of the [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) Metadata
-API is a JSON version of the Metadata files.
+The output of the [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata)
+Metadata API is a JSON version of the Metadata files.
 
 :::
 
 ### databases
 
 ```text
-📂 databases
-├─ 📄 databases.yaml
-└─ 📂 default
-  ├─ 📂 tables
-  │  ├─ 📄 public_author.yaml
-  │  ├─ 📄 public_article.yaml
-  │  └─ 📄 tables.yaml
-  └─ 📂 functions
-     ├─ 📄 public_search_author.yaml
-     └─ 📄 functions.yaml
+📂 metadata
+├─ 📂 databases
+│  ├─ 📂 default
+│  │  └─ 📂 tables
+│  │     ├─ 📄 public_author.yaml
+│  │     ├─ 📄 public_article.yaml
+│  │     └─ 📄 tables.yaml
+│  └── 📄 databases.yaml
 ```
 
-#### databases.yaml
+### databases.yaml
 
 ```yaml
 - name: default
@@ -88,7 +79,7 @@ API is a JSON version of the Metadata files.
       database_url:
         from_env: PG_DATABASE_URL
       isolation_level: read-committed
-  tables: '!include default/tables/tables.yaml'
+  tables: "!include default/tables/tables.yaml"
 ```
 
 :::info Note
@@ -97,158 +88,12 @@ API is a JSON version of the Metadata files.
 
 :::
 
-#### [database-name]
-
-Directory with Metadata related to a database.
-
-```text
-📂 default
-├─ 📂 tables
-│  ├─ 📄 public_author.yaml
-│  ├─ 📄 public_article.yaml
-│  └─ 📄 tables.yaml
-└─ 📂 functions
-   ├─ 📄 public_search_author.yaml
-   └─ 📄 functions.yaml
-```
-
-##### tables
-
-Directory with Metadata related to a database's tables and views.
-
-```text
-📂 tables
-├─ 📄 public_author.yaml
-├─ 📄 public_article.yaml
-└─ 📄 tables.yaml
-```
-
-###### tables.yaml
-
-The `tables.yaml` file contains a list of all further database table `yaml` files which need to be included in the
-metadata.
-
-**Example**: A `tables.yaml` file which specifies further `author` and `article` table files
-
-```yaml
-- '!include public_author.yaml'
-- '!include public_article.yaml'
-```
-
-###### [table-name].yaml
-
-The specific files for each database table contain all the Metadata information regarding each database table.
-
-These files can contain information relating to the table for:
-
-- Relationships including object and array relationships
-- Remote relationships including those to Remote Schemas and remote databases
-- Operation permissions per role
-- Event Triggers
-- Computed fields
-- Whether the table is an enum table
-- GraphQL field customization
-
-**Example**: A `public_author.yaml` table Metadata file specifying some of the above.
-
-```yaml
-table:
-  name: author
-  schema: public
-array_relationships:
-  - name: articles
-    using:
-      foreign_key_constraint_on:
-        column: author_id
-        table:
-          name: article
-          schema: public
-insert_permissions:
-  - role: user
-    permission:
-      check:
-        id:
-          _eq: X-Hasura-User-Id
-      set:
-        id: x-hasura-user-id
-      columns:
-        - name
-select_permissions:
-  - role: user
-    permission:
-      columns:
-        - id
-        - name
-      filter:
-        id:
-          _eq: X-Hasura-User-Id
-      allow_aggregations: true
-      query_root_fields:
-        - select
-        - select_by_pk
-      subscription_root_fields:
-        - select
-        - select_by_pk
-delete_permissions:
-  - role: user
-    permission:
-      backend_only: true
-      filter: {}
-event_triggers:
-  - name: author_created
-    definition:
-      enable_manual: false
-      insert:
-        columns: '*'
-    retry_conf:
-      interval_sec: 10
-      num_retries: 0
-      timeout_sec: 60
-    webhook: http://httpbin.org/post
-```
-
-##### functions
-
-Directory with Metadata related to a database's functions tracked to be exposed as top-level GraphQL fields.
-
-```text
-📂 functions
-├─ 📄 public_search_author.yaml
-└─ 📄 functions.yaml
-```
-
-###### functions.yaml
-
-The `functions.yaml` file contains a list of all further database function `yaml` files which need to be included in the
-Metadata to be exposed as top-level GraphQL fields.
-
-**Example**: A `functions.yaml` file which specifies further `search_author` function file
-
-```yaml
-- '!include public_search_author.yaml'
-```
-
-###### [function-name].yaml
-
-The specific files for each database function contain all the Metadata information regarding exposing the database
-function as a top-level GraphQL field.
-
-**Example**: A `public_search_author.yaml` function Metadata file
-
-```yaml
-function:
-  name: search_author
-  schema: public
-permissions:
-  - role: user
-```
-
 ### actions.graphql
 
-The `actions.graphql` file contains all the GraphQL [Actions](/actions/overview.mdx) and their
+The `actions.graphql` file contains all the GraphQL [Actions](/actions/index.mdx) and their
 [custom type](/actions/types.mdx) definitions.
 
-**Example**: A query action called `greet` and two custom types called `SampleInput` and `SampleOutput`
+**Example**: A query action called `greet` and two custom types called `SampleInput` and `SampleOutput`.
 
 ```graphql
 type Query {
@@ -264,16 +109,16 @@ type SampleOutput {
 
 ### actions.yaml
 
-The `actions.yaml` file contains Metadata related to [actions](/actions/overview.mdx).
+The `actions.yaml` file contains Metadata related to [actions](/actions/index.mdx).
 
 **Example**: An action called `greet` with the `handler` set to `<base_url>/greet` and two custom types called
-`SampleInput` and `SampleOutput`
+`SampleInput` and `SampleOutput`.
 
 ```yaml
 actions:
   - name: greet
     definition:
-      kind: ''
+      kind: ""
       handler: <base_url>/greet
       forward_client_headers: true
       headers:
@@ -288,14 +133,14 @@ custom_types:
   scalars: []
 ```
 
-**Example**: Same example as above but with the base URL of the `handler` passed as an environment variable
+**Example**: Same example as above but with the base URL of the `handler` passed as an environment variable.
 
 ```yaml
 actions:
   - name: greet
     definition:
-      kind: ''
-      handler: '{{ACTION_BASE_URL}}/greet'
+      kind: ""
+      handler: "{{ACTION_BASE_URL}}/greet"
       forward_client_headers: true
       headers:
         - value: application/json
@@ -313,49 +158,19 @@ custom_types:
 
 The `allow_list.yaml` file contains the Metadata related to the [allow list](/security/allow-list.mdx).
 
-**Example**: A query collection called `allowed-queries` set as the allow-list
+**Example**: A query collection called `allowed-queries` set as the allow-list.
 
 ```yaml
 - collection: allowed-queries
 ```
 
-### api_limits.yaml
-
-For Hasura Cloud and Hasura Enterprise the `api_limits.yaml` file contains the Metadata related to
-[api limits](/security/api-limits.mdx).
-
-**Example**: An api limit setting with global limits and a specific limit for a `customer` role
-
-```yaml
-depth_limit:
-  global: 10
-  per_role:
-    customer: 5
-disabled: false
-node_limit:
-  global: 10
-  per_role:
-    customer: 5
-rate_limit:
-  global:
-    max_reqs_per_min: 100
-    unique_params: null
-  per_role:
-    customer:
-      max_reqs_per_min: 60
-      unique_params: null
-time_limit:
-  global: 10
-  per_role:
-    customer: 5
-```
-
 ### cron_triggers.yaml
 
-The `cron_triggers.yaml` file contains Metadata related to [cron triggers](/scheduled-triggers/create-cron-trigger.mdx).
-The `webhook` can be an HTTP endpoint or an environment variable containing the HTTP endpoint.
+The `cron_triggers.yaml` file contains Metadata related to
+[cron triggers](/scheduled-triggers/create-cron-trigger.mdx). The `webhook` can be an HTTP endpoint or
+an environment variable containing the HTTP endpoint.
 
-**Example**: A cron trigger called `test-trigger`
+**Example**: A cron trigger called `test-trigger`.
 
 ```yaml
 - name: test-trigger
@@ -373,56 +188,16 @@ retry_conf:
 :::info Note
 
 The Metadata about a cron trigger will not be stored if `Include this trigger in Hasura Metadata` is disabled in the
-advanced option of `events` on the Console or `include_in_metadata` is passed as `false` via the API.
+advanced option of `events` on the console or `include_in_metadata` is passed as `false` via the API.
 
 :::
-
-### graphql_schema_introspection.yaml
-
-For Hasura Cloud and Hasura Enterprise the `graphql_schema_introspection.yaml` file enables disabling of GraphQL
-introspection for specified roles.
-
-**Example**: Disabling introspection for roles `customer` and `user`
-
-```yaml
-disabled_for_roles:
-  - customer
-  - user
-```
-
-### inherited_roles.yaml
-
-The `inherited_roles.yaml` file contains Metadata related to [inherited roles](/auth/authorization/inherited-roles.mdx).
-
-**Example**: An inherited role of `manager` which inherits from `user` and `customer`
-
-```yaml
-- role_name: manager
-  role_set:
-    - user
-    - customer
-```
-
-### network.yaml
-
-The `network.yaml` file contains Metadata related to [network options](/api-reference/metadata-api/network.mdx).
-
-**Example**: A TLS Allowlist to represent a set of services that are permitted to use self-signed certificates
-
-```yaml
-tls_allowlist:
-  - host: graphql.hasura.io
-    permissions:
-      - self-signed
-    suffix: core.graphql
-```
 
 ### query_collections.yaml
 
 The `query_collections.yaml` file contains Metadata information about
 [query collections](/api-reference/metadata-api/query-collections.mdx).
 
-**Example**: A query collection called `sample-collection` which contains two queries `test` and `test2`
+**Example**: A query collection called `sample-collection` which contains two queries `test` and `test2`.
 
 ```yaml
 - name: sample-collection
@@ -449,9 +224,10 @@ The `query_collections.yaml` file contains Metadata information about
 
 ### remote_schemas.yaml
 
-The `remote_schemas.yaml` file contains the Metadata related to [Remote Schemas](/remote-schemas/overview.mdx).
+The `remote_schemas.yaml` file contains the Metadata related to
+[remote schemas](/remote-schemas/index.mdx).
 
-**Example**: A Remote Schema called `my-remote-schema` with the URL `<remote-schema-url>`
+**Example**: A remote schema called `my-remote-schema` with the URL `<remote-schema-url>`.
 
 ```yaml
 - name: my-remote-schema
@@ -460,7 +236,7 @@ The `remote_schemas.yaml` file contains the Metadata related to [Remote Schemas]
     timeout_seconds: 40
 ```
 
-**Example**: A Remote Schema called `my-remote-schema` with the URL passed as environment variable
+**Example**: A remote schema called `my-remote-schema` with the URL passed as environment variable.
 
 ```yaml
 - name: my-remote-schema
@@ -469,28 +245,18 @@ The `remote_schemas.yaml` file contains the Metadata related to [Remote Schemas]
     timeout_seconds: 40
 ```
 
-### rest_endpoints.yaml
-
-The `rest_endpoints.yaml` file contains the Metadata related to [REST endpoints](/api-reference/restified.mdx).
-
-**Example**: An example of a defined restified endpoint which gets an author based on their `id`
-
-```yaml
-- comment: Get an author based on their id
-  definition:
-    query:
-      collection_name: allowed-queries
-      query_name: Author by Id
-  methods:
-    - GET
-  name: Author by Id
-  url: author/:id
-```
-
 ### version.yaml
 
 The `version.yaml` file contains the Metadata format version.
 
 ```yaml
 version: 3
+```
+
+### public_t1.yaml OLD?
+
+```yaml
+table:
+name: t1
+schema: public
 ```

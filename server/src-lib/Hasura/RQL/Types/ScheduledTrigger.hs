@@ -22,13 +22,12 @@ module Hasura.RQL.Types.ScheduledTrigger
     ScheduledEventInvocation (..),
     OneOffScheduledEvent (..),
     CronEvent (..),
-    RowsCountOption (..),
     ScheduledEventPagination (..),
     GetScheduledEvents (..),
-    WithOptionalTotalCount (..),
+    WithTotalCount (..),
     DeleteScheduledEvent (..),
-    GetScheduledEventInvocationsBy (..),
-    GetScheduledEventInvocations (..),
+    GetInvocationsBy (..),
+    GetEventInvocations (..),
     ClearCronEvents (..),
     cctName,
     cctWebhook,
@@ -44,26 +43,24 @@ module Hasura.RQL.Types.ScheduledTrigger
   )
 where
 
-import Autodocodec (HasCodec (codec), bimapCodec, optionalField', optionalFieldWithDefaultWith', optionalFieldWithOmittedDefault', requiredField')
-import Autodocodec qualified as AC
-import Autodocodec.Extended (refinedCodec)
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
+import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Time.Clock
 import Data.Time.Clock.Units
 import Data.Time.Format.ISO8601
-import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
+import Hasura.Incremental
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (InputWebhook (..))
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
+import Hasura.RQL.Types.Common (InputWebhook (..), NonNegativeDiffTime, unsafeNonNegativeDiffTime)
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
-import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import PostgreSQL.Binary.Decoding qualified as PD
-import Refined (NonNegative, Refined, refineTH)
 import System.Cron.Types
 
 type CronEventId = EventId
@@ -76,63 +73,44 @@ type InvocationId = Text
 
 data STRetryConf = STRetryConf
   { strcNumRetries :: Int,
-    strcRetryIntervalSeconds :: Refined NonNegative DiffTime,
-    strcTimeoutSeconds :: Refined NonNegative DiffTime,
+    strcRetryIntervalSeconds :: NonNegativeDiffTime,
+    strcTimeoutSeconds :: NonNegativeDiffTime,
     -- | The tolerance configuration is used to determine whether a scheduled
     --   event is not too old to process. The age of the scheduled event is the
     --   difference between the current timestamp and the scheduled event's
     --   timestamp, if the age is than the tolerance then the scheduled event
     --   is marked as dead.
-    strcToleranceSeconds :: Refined NonNegative DiffTime
+    strcToleranceSeconds :: NonNegativeDiffTime
   }
   deriving (Show, Eq, Generic)
 
-defaultSTRetryConf :: STRetryConf
-defaultSTRetryConf =
-  STRetryConf
-    { strcNumRetries = 0,
-      strcRetryIntervalSeconds = $$(refineTH (seconds 10)),
-      strcTimeoutSeconds = $$(refineTH (seconds 60)),
-      strcToleranceSeconds = $$(refineTH (hours 6))
-    }
-
 instance NFData STRetryConf
 
-instance HasCodec STRetryConf where
-  codec =
-    AC.object "STRetryConf"
-      $ STRetryConf
-      <$> optionalFieldWithDefaultWith' "num_retries" nonNegativeCodec (strcNumRetries defaultSTRetryConf)
-      AC..= strcNumRetries
-        <*> optionalFieldWithDefaultWith' "retry_interval_seconds" refinedCodec (strcRetryIntervalSeconds defaultSTRetryConf)
-      AC..= strcRetryIntervalSeconds
-        <*> optionalFieldWithDefaultWith' "timeout_seconds" refinedCodec (strcTimeoutSeconds defaultSTRetryConf)
-      AC..= strcTimeoutSeconds
-        <*> optionalFieldWithDefaultWith' "tolerance_seconds" refinedCodec (strcToleranceSeconds defaultSTRetryConf)
-      AC..= strcToleranceSeconds
-    where
-      nonNegativeCodec = bimapCodec validateNonNegative id codec
-      validateNonNegative n =
-        if n < 0
-          then Left "cannot be a negative value"
-          else Right n
+instance Cacheable STRetryConf
 
 instance FromJSON STRetryConf where
   parseJSON = withObject "STRetryConf" \o -> do
     numRetries' <- o .:? "num_retries" .!= 0
     retryInterval <-
-      o .:? "retry_interval_seconds" .!= $$(refineTH @NonNegative @DiffTime (seconds 10))
+      o .:? "retry_interval_seconds" .!= unsafeNonNegativeDiffTime (seconds 10)
     timeout <-
-      o .:? "timeout_seconds" .!= $$(refineTH @NonNegative @DiffTime (seconds 60))
+      o .:? "timeout_seconds" .!= unsafeNonNegativeDiffTime (seconds 60)
     tolerance <-
-      o .:? "tolerance_seconds" .!= $$(refineTH @NonNegative @DiffTime (hours 6))
+      o .:? "tolerance_seconds" .!= unsafeNonNegativeDiffTime (hours 6)
     if numRetries' < 0
       then fail "num_retries cannot be a negative value"
       else pure $ STRetryConf numRetries' retryInterval timeout tolerance
 
-instance ToJSON STRetryConf where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''STRetryConf)
+
+defaultSTRetryConf :: STRetryConf
+defaultSTRetryConf =
+  STRetryConf
+    { strcNumRetries = 0,
+      strcRetryIntervalSeconds = unsafeNonNegativeDiffTime $ seconds 10,
+      strcTimeoutSeconds = unsafeNonNegativeDiffTime $ seconds 60,
+      strcToleranceSeconds = unsafeNonNegativeDiffTime $ hours 6
+    }
 
 data CronTriggerMetadata = CronTriggerMetadata
   { ctName :: TriggerName,
@@ -150,30 +128,7 @@ data CronTriggerMetadata = CronTriggerMetadata
 
 instance NFData CronTriggerMetadata
 
-instance HasCodec CronTriggerMetadata where
-  codec =
-    AC.object "CronTriggerMetadata"
-      $ CronTriggerMetadata
-      <$> requiredField' "name"
-      AC..= ctName
-        <*> requiredField' "webhook"
-      AC..= ctWebhook
-        <*> requiredField' "schedule"
-      AC..= ctSchedule
-        <*> optionalField' "payload"
-      AC..= ctPayload
-        <*> optionalFieldWithOmittedDefault' "retry_conf" defaultSTRetryConf
-      AC..= ctRetryConf
-        <*> optionalFieldWithOmittedDefault' "headers" []
-      AC..= ctHeaders
-        <*> requiredField' "include_in_metadata"
-      AC..= ctIncludeInMetadata
-        <*> optionalField' "comment"
-      AC..= ctComment
-        <*> optionalField' "request_transform"
-      AC..= ctRequestTransform
-        <*> optionalField' "response_transform"
-      AC..= ctResponseTransform
+instance Cacheable CronTriggerMetadata
 
 instance FromJSON CronTriggerMetadata where
   parseJSON =
@@ -190,9 +145,7 @@ instance FromJSON CronTriggerMetadata where
       ctResponseTransform <- o .:? "response_transform"
       pure CronTriggerMetadata {..}
 
-instance ToJSON CronTriggerMetadata where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''CronTriggerMetadata)
 
 data CreateCronTrigger = CreateCronTrigger
   { _cctName :: TriggerName,
@@ -213,6 +166,8 @@ $(makeLenses ''CreateCronTrigger)
 
 instance NFData CreateCronTrigger
 
+instance Cacheable CreateCronTrigger
+
 instance FromJSON CreateCronTrigger where
   parseJSON =
     withObject "CreateCronTrigger" $ \o -> do
@@ -229,19 +184,12 @@ instance FromJSON CreateCronTrigger where
       _cctResponseTransform <- o .:? "response_transform"
       pure CreateCronTrigger {..}
 
-instance ToJSON CreateCronTrigger where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''CreateCronTrigger)
 
 newtype ScheduledTriggerName = ScheduledTriggerName {unName :: TriggerName}
-  deriving stock (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance FromJSON ScheduledTriggerName where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
-
-instance ToJSON ScheduledTriggerName where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
+$(deriveJSON hasuraJSON ''ScheduledTriggerName)
 
 formatTime' :: UTCTime -> Text
 formatTime' = T.pack . iso8601Show
@@ -264,29 +212,16 @@ data CreateScheduledEvent = CreateScheduledEvent
 instance FromJSON CreateScheduledEvent where
   parseJSON =
     withObject "CreateScheduledEvent" $ \o ->
-      CreateScheduledEvent
-        <$> o
-        .: "webhook"
-        <*> o
-        .: "schedule_at"
-        <*> o
-        .:? "payload"
-        <*> o
-        .:? "headers"
-        .!= []
-        <*> o
-        .:? "retry_conf"
-        .!= defaultSTRetryConf
-        <*> o
-        .:? "comment"
-        <*> o
-        .:? "request_transform"
-        <*> o
-        .:? "response_transform"
+      CreateScheduledEvent <$> o .: "webhook"
+        <*> o .: "schedule_at"
+        <*> o .:? "payload"
+        <*> o .:? "headers" .!= []
+        <*> o .:? "retry_conf" .!= defaultSTRetryConf
+        <*> o .:? "comment"
+        <*> o .:? "request_transform"
+        <*> o .:? "response_transform"
 
-instance ToJSON CreateScheduledEvent where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
+$(deriveToJSON hasuraJSON ''CreateScheduledEvent)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
 --   between a 'CronScheduledEvent' and 'OneOffScheduledEvent' scheduled
@@ -303,14 +238,9 @@ data ScheduledEventType
   | -- | A One-off scheduled event doesn't have any template defined
     -- so all the configuration is fetched along the scheduled events.
     OneOff
-  deriving stock (Eq, Show, Generic)
+  deriving (Eq, Show)
 
-instance FromJSON ScheduledEventType where
-  parseJSON = genericParseJSON hasuraJSON {constructorTagModifier = snakeCase}
-
-instance ToJSON ScheduledEventType where
-  toJSON = genericToJSON hasuraJSON {constructorTagModifier = snakeCase}
-  toEncoding = genericToEncoding hasuraJSON {constructorTagModifier = snakeCase}
+$(deriveJSON defaultOptions {constructorTagModifier = snakeCase} ''ScheduledEventType)
 
 data ScheduledEventInvocation = ScheduledEventInvocation
   { _seiId :: InvocationId,
@@ -320,14 +250,9 @@ data ScheduledEventInvocation = ScheduledEventInvocation
     _seiResponse :: Maybe Value,
     _seiCreatedAt :: UTCTime
   }
-  deriving stock (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance FromJSON ScheduledEventInvocation where
-  parseJSON = genericParseJSON hasuraJSON
-
-instance ToJSON ScheduledEventInvocation where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
+$(deriveJSON hasuraJSON ''ScheduledEventInvocation)
 
 data ScheduledEvent
   = SEOneOff
@@ -378,23 +303,20 @@ textToScheduledEventStatus = \case
   "dead" -> Just SESDead
   _ -> Nothing
 
-instance PG.ToPrepArg ScheduledEventStatus where
-  toPrepVal = PG.toPrepVal . scheduledEventStatusToText
+instance Q.ToPrepArg ScheduledEventStatus where
+  toPrepVal = Q.toPrepVal . scheduledEventStatusToText
 
-instance PG.FromCol ScheduledEventStatus where
+instance Q.FromCol ScheduledEventStatus where
   fromCol bs =
-    flip PG.fromColHelper bs $ PD.enum textToScheduledEventStatus
+    flip Q.fromColHelper bs $ PD.enum textToScheduledEventStatus
 
 instance ToJSON ScheduledEventStatus where
   toJSON = String . scheduledEventStatusToText
 
 instance FromJSON ScheduledEventStatus where
   parseJSON = withText "String" $ \s ->
-    onNothing (textToScheduledEventStatus s)
-      $ fail
-      $ T.unpack
-      $ "unexpected status: "
-      <> s
+    onNothing (textToScheduledEventStatus s) $
+      fail $ T.unpack $ "unexpected status: " <> s
 
 data OneOffScheduledEvent = OneOffScheduledEvent
   { _ooseId :: OneOffScheduledEventId,
@@ -411,14 +333,9 @@ data OneOffScheduledEvent = OneOffScheduledEvent
     _ooseRequestTransform :: Maybe RequestTransform,
     _ooseResponseTransform :: Maybe MetadataResponseTransform
   }
-  deriving stock (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance FromJSON OneOffScheduledEvent where
-  parseJSON = genericParseJSON hasuraJSON
-
-instance ToJSON OneOffScheduledEvent where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
+$(deriveJSON hasuraJSON ''OneOffScheduledEvent)
 
 data CronEvent = CronEvent
   { _ceId :: CronEventId,
@@ -433,14 +350,9 @@ data CronEvent = CronEvent
     _ceCreatedAt :: UTCTime,
     _ceNextRetryAt :: Maybe UTCTime
   }
-  deriving stock (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance FromJSON CronEvent where
-  parseJSON = genericParseJSON hasuraJSON
-
-instance ToJSON CronEvent where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
+$(deriveJSON hasuraJSON ''CronEvent)
 
 data ScheduledEventPagination = ScheduledEventPagination
   { _sepLimit :: Maybe Int,
@@ -451,56 +363,37 @@ data ScheduledEventPagination = ScheduledEventPagination
 parseScheduledEventPagination :: Object -> Parser ScheduledEventPagination
 parseScheduledEventPagination o =
   ScheduledEventPagination
-    <$> o
-    .:? "limit"
-    <*> o
-    .:? "offset"
+    <$> o .:? "limit"
+    <*> o .:? "offset"
 
 scheduledEventPaginationToPairs :: ScheduledEventPagination -> [Pair]
 scheduledEventPaginationToPairs ScheduledEventPagination {..} =
   ["limit" .= _sepLimit, "offset" .= _sepOffset]
 
-data RowsCountOption = IncludeRowsCount | DontIncludeRowsCount
-  deriving (Show, Eq)
-
-instance FromJSON RowsCountOption where
-  parseJSON = withBool "RowsCountOption" $ pure . bool DontIncludeRowsCount IncludeRowsCount
-
-instance ToJSON RowsCountOption where
-  toJSON = Bool . (== IncludeRowsCount)
-
 -- | Query type to fetch all one-off/cron scheduled events
 data GetScheduledEvents = GetScheduledEvents
   { _gseScheduledEvent :: ScheduledEvent,
     _gsePagination :: ScheduledEventPagination,
-    _gseStatus :: [ScheduledEventStatus],
-    _gseGetRowsCount :: RowsCountOption
+    _gseStatus :: [ScheduledEventStatus]
   }
   deriving (Show, Eq)
 
 instance ToJSON GetScheduledEvents where
   toJSON GetScheduledEvents {..} =
-    object
-      $ scheduledEventToPairs _gseScheduledEvent
-      <> scheduledEventPaginationToPairs _gsePagination
-      <> [ "status" .= _gseStatus,
-           "get_rows_count" .= _gseGetRowsCount
-         ]
+    object $
+      scheduledEventToPairs _gseScheduledEvent
+        <> scheduledEventPaginationToPairs _gsePagination
+        <> ["status" .= _gseStatus]
 
 instance FromJSON GetScheduledEvents where
-  parseJSON = withObject "GetScheduledEvents" $ \o ->
+  parseJSON = withObject "Object" $ \o ->
     GetScheduledEvents
       <$> parseScheduledEvent o
       <*> parseScheduledEventPagination o
-      <*> o
-      .:? "status"
-      .!= []
-      <*> o
-      .:? "get_rows_count"
-      .!= DontIncludeRowsCount
+      <*> o .:? "status" .!= []
 
-data WithOptionalTotalCount a = WithOptionalTotalCount
-  { _wtcCount :: Maybe Int,
+data WithTotalCount a = WithTotalCount
+  { _wtcCount :: Int,
     _wtcData :: a
   }
   deriving (Show, Eq)
@@ -510,50 +403,37 @@ data DeleteScheduledEvent = DeleteScheduledEvent
   { _dseType :: ScheduledEventType,
     _dseEventId :: ScheduledEventId
   }
-  deriving stock (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance FromJSON DeleteScheduledEvent where
-  parseJSON = genericParseJSON hasuraJSON
+$(deriveJSON hasuraJSON ''DeleteScheduledEvent)
 
-instance ToJSON DeleteScheduledEvent where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
-
-data GetScheduledEventInvocationsBy
+data GetInvocationsBy
   = GIBEventId EventId ScheduledEventType
   | GIBEvent ScheduledEvent
   deriving (Show, Eq)
 
-data GetScheduledEventInvocations = GetScheduledEventInvocations
-  { _geiInvocationsBy :: GetScheduledEventInvocationsBy,
-    _geiPagination :: ScheduledEventPagination,
-    -- | Option to include the total rows corresponding in
-    --   response.
-    _geiGetRowsCount :: RowsCountOption
+data GetEventInvocations = GetEventInvocations
+  { _geiInvocationsBy :: GetInvocationsBy,
+    _geiPagination :: ScheduledEventPagination
   }
   deriving (Eq, Show)
 
-instance FromJSON GetScheduledEventInvocations where
-  parseJSON = withObject "GetScheduledEventInvocations" $ \o ->
-    GetScheduledEventInvocations
+instance FromJSON GetEventInvocations where
+  parseJSON = withObject "Object" $ \o ->
+    GetEventInvocations
       <$> (parseEventId o <|> (GIBEvent <$> parseScheduledEvent o))
       <*> parseScheduledEventPagination o
-      <*> o
-      .:? "get_rows_count"
-      .!= DontIncludeRowsCount
     where
       parseEventId o =
         GIBEventId <$> o .: "event_id" <*> o .: "type"
 
-instance ToJSON GetScheduledEventInvocations where
-  toJSON GetScheduledEventInvocations {..} =
-    object
-      $ case _geiInvocationsBy of
+instance ToJSON GetEventInvocations where
+  toJSON GetEventInvocations {..} =
+    object $
+      case _geiInvocationsBy of
         GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]
-        GIBEvent event ->
-          scheduledEventToPairs event
-            <> scheduledEventPaginationToPairs _geiPagination
-            <> bool mempty ["get_rows_count" .= True] (_geiGetRowsCount == IncludeRowsCount)
+        GIBEvent event -> scheduledEventToPairs event
+        <> scheduledEventPaginationToPairs _geiPagination
 
 data ClearCronEvents
   = -- | Used to delete the cron events only of the specified cron trigger

@@ -1,0 +1,39 @@
+{
+  "name": "hasura-realtime-poll",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "^3.4.16",
+    "graphql": "^15.6.0",
+    "graphql-ws": "^5.6.2",
+    "react": "^17.0.2",
+    "react-bootstrap": "^1.0.0",
+    "react-dom": "^16.4.2",
+    "react-google-charts": "^3.0.5",
+    "react-scripts": "^3.4.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "gh-pages": "^2.2.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

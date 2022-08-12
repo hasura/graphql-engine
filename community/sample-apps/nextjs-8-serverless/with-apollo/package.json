@@ -1,0 +1,24 @@
+{
+  "name": "hasura-nextjs-serverless",
+  "version": "1.0.0",
+  "scripts": {
+    "now-build": "next build",
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "apollo-boost": "^0.1.16",
+    "express": "^4.16.4",
+    "graphql": "^14.0.2",
+    "isomorphic-unfetch": "^3.0.0",
+    "next": "latest",
+    "prop-types": "^15.6.2",
+    "react": "^16.7.0",
+    "react-apollo": "^2.1.11",
+    "react-dom": "^16.7.0",
+    "serverless-http": "^1.9.0"
+  },
+  "author": "Praveen <praveen@hasura.io>",
+  "license": "MIT"
+}

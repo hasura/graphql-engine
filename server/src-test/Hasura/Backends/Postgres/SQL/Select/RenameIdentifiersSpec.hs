@@ -9,8 +9,8 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  it "empty is empty"
-    $ shouldBe
+  it "empty is empty" $
+    shouldBe
       (renameIdentifiers mkSelect)
       mkSelect
   literalQueries
@@ -123,8 +123,8 @@ simpleQueries =
                     [ mkSelect
                         { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `asC_` "root"],
                           selFrom =
-                            from_
-                              $ lateralLeftJoin_
+                            from_ $
+                              lateralLeftJoin_
                                 (selectStar_ "public" "article" `as'_` root_base')
                                 ( mkSelect
                                     { selExtr =
@@ -183,8 +183,8 @@ simpleQueries =
                     [ mkSelect
                         { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author_with_a_very_long_name_that_is_almost_63_characters_long"]] `asC_` "root"],
                           selFrom =
-                            from_
-                              $ lateralLeftJoin_
+                            from_ $
+                              lateralLeftJoin_
                                 (selectStar_ "public" "article" `as'_` root_base')
                                 ( mkSelect
                                     { selExtr =
@@ -277,8 +277,8 @@ simpleQueries =
                     [ mkSelect
                         { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `asC_` "root"],
                           selFrom =
-                            from_
-                              $ lateralLeftJoin_
+                            from_ $
+                              lateralLeftJoin_
                                 (selectStar_ "public" "author" `as'_` root_base')
                                 ( mkSelect
                                     { selExtr =

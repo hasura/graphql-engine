@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Database to Remote Database Relationships
+# Postgres: Database to remote database relationships
 
 ## Introduction
 
@@ -37,16 +37,16 @@ Remote database relationships for Postgres are supported from versions `v2.1.0` 
 
 ## Create remote database relationships
 
-### Step 1: Add two database sources
+### Step 0: Add two database sources
 
-Add a source database as described [here](/databases/overview.mdx) and track the required tables. Then, repeat
+Add a source database as described [here](/databases/connect-db/index.mdx) and track the required tables. Then, repeat
 the process to add your target database.
 
-### Step 2: Define and create the relationship
+### Step 1: Define and create the relationship
 
 A remote database relationship is defined alongside the source database table (that is, the source side of the join).
 
-The following fields can be defined for a Remote Schema relationship:
+The following fields can be defined for a remote schema relationship:
 
 - **Relationship type**: Either `object` or `array` - similar to normal relationships. Hasura supports both many-to-one
   (object) and one-to-many (array) relationships.
@@ -56,32 +56,24 @@ The following fields can be defined for a Remote Schema relationship:
 - **Field Mapping**: A mapping between fields in the source table and their corresponding fields in the target table,
   just as a foreign key relationship would be defined by such mapping within a single database.
 
-For example, say we have a table `orders(id int, user_id int)` in the source database and a table
+For example, say we have a table `order(id int, user_id int)` in the source database and a table
 `user(id int, name text)` in the target database.
 
-We can create an object remote database relationship `user` joining the `orders` table to the `user` table using the
-`orders.user_id` and `user.id` fields.
+We can create an object remote database relationship `user` joining the `order` table to the `user` table using the
+`order.user_id` and `user.id` fields.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-1. Head to the `Data > [database] > [orders] > Relationships` tab. Click on `Add Relationships` to open the widget.
-
-2. Search for the remote database table in the "To Reference" input box
-
-<Thumbnail
-  src="/img/schema/add-remote-db-rel-step-1.png"
-  alt="Create remote database relationships"
-/>
-
-3. Fill in the relationships details - type of the relationship & column mapping.
+Head to the `Data > [database] > [orders] > Relationships` tab. Under the `Remote Database Relationships` section,
+select `Add a remote database relationship`.
 
 <Thumbnail
-  src="/img/schema/add-remote-db-rel-step-2.png"
-  alt="Create remote database relationships"
+  src='/img/databases/postgres/schema/create-remote-source-relationship.png'
+  alt='Create remote database relationships'
 />
 
-4. Hit `Create Relationship` to track the remote relationship.
+Hit `Save`.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -118,7 +110,7 @@ You can add a remote database relationship by using the
 [pg_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship)
 or
 [pg_update_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-update-remote-relationship)
-Metadata APIs with the `to_source` field.
+metadata APIs with the `to_source` field.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -154,7 +146,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 3: Explore with GraphiQL
+### Step 2: Explore with GraphiQL
 
 Run the following query in the GraphiQL editor to test your remote database relationship across the two connected
 databases:

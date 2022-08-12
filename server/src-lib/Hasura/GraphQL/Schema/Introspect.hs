@@ -8,8 +8,8 @@ module Hasura.GraphQL.Schema.Introspect
 where
 
 import Data.Aeson.Ordered qualified as J
-import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Vector qualified as V
@@ -202,26 +202,33 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
       -- statically defined ones.  So, for instance, we don't correctly expose
       -- directives from remote schemas.
       directives :: [DirectiveInfo] = directivesInfo @P.Parse
+      -- The __schema and __type introspection fields
+      introspection = [schema @P.Parse, typeIntrospection]
+      {-# INLINE introspection #-}
 
-  -- Collect type information of all fields
-  --
-  -- TODO: it may be worth looking at whether we can stop collecting
-  -- introspection types monadically. They are independent of the user schema;
-  -- the types here are always the same and specified by the GraphQL spec
-  allTypes <-
+  -- Collect type information of all non-introspection fields
+  allBasicTypes <-
     P.collectTypeDefinitions
       [ P.TypeDefinitionsWrapper queryRoot',
         P.TypeDefinitionsWrapper mutationRoot',
         P.TypeDefinitionsWrapper subscriptionRoot',
-        P.TypeDefinitionsWrapper $ P.diArguments =<< directives,
-        -- The __schema introspection field
-        P.TypeDefinitionsWrapper $ fDefinition (schema @Parse),
-        -- The __type introspection field
-        P.TypeDefinitionsWrapper $ fDefinition (typeIntrospection @Parse)
+        P.TypeDefinitionsWrapper $ P.diArguments =<< directives
       ]
 
-  pure
-    $ P.Schema
+  -- TODO: it may be worth looking at whether we can stop collecting
+  -- introspection types monadically.  They are independent of the user schema;
+  -- the types here are always the same and specified by the GraphQL spec
+
+  -- Pull all the introspection types out (__Type, __Schema, etc)
+  allIntrospectionTypes <- P.collectTypeDefinitions (map fDefinition introspection)
+
+  let allTypes =
+        Map.unions
+          [ allBasicTypes,
+            Map.filterWithKey (\name _info -> name /= P.getName queryRoot') allIntrospectionTypes
+          ]
+  pure $
+    P.Schema
       { sDescription = Nothing,
         sTypes = allTypes,
         sQueryType = queryRoot',
@@ -233,7 +240,7 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
 -- | Generate a __type introspection parser
 typeIntrospection ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   FieldParser n (Schema -> J.Value)
 {-# INLINE typeIntrospection #-}
 typeIntrospection = do
@@ -246,13 +253,13 @@ typeIntrospection = do
   -- introspection-free GraphQL schema.  See Note [What introspection exposes].
   pure $ \partialSchema -> fromMaybe J.Null $ do
     name <- G.mkName nameText
-    P.SomeDefinitionTypeInfo def <- HashMap.lookup name $ sTypes partialSchema
+    P.SomeDefinitionTypeInfo def <- Map.lookup name $ sTypes partialSchema
     Just $ printer $ SomeType $ P.TNamed P.Nullable def
 
 -- | Generate a __schema introspection parser.
 schema ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   FieldParser n (Schema -> J.Value)
 {-# INLINE schema #-}
 schema = P.subselection_ GName.___schema Nothing schemaSet
@@ -287,7 +294,7 @@ data SomeType = forall k. SomeType (P.Type k)
 
 typeField ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   Parser 'Output n (SomeType -> J.Value)
 typeField =
   let includeDeprecated :: P.InputFieldsParser n Bool
@@ -338,8 +345,8 @@ typeField =
       fields = do
         -- TODO handle the value of includeDeprecated
         ~(_includeDeprecated, printer) <- P.subselection GName._fields Nothing includeDeprecated fieldField
-        return
-          $ \case
+        return $
+          \case
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces'))) ->
@@ -350,8 +357,8 @@ typeField =
       interfaces :: FieldParser n (SomeType -> J.Value)
       interfaces = do
         printer <- P.subselection_ GName._interfaces Nothing typeField
-        return
-          $ \case
+        return $
+          \case
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces'))) ->
@@ -360,8 +367,8 @@ typeField =
       possibleTypes :: FieldParser n (SomeType -> J.Value)
       possibleTypes = do
         printer <- P.subselection_ GName._possibleTypes Nothing typeField
-        return
-          $ \case
+        return $
+          \case
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInterface (P.InterfaceInfo _fields' objects'))) ->
@@ -373,8 +380,8 @@ typeField =
       enumValues = do
         -- TODO handle the value of includeDeprecated
         ~(_includeDeprecated, printer) <- P.subselection GName._enumValues Nothing includeDeprecated enumValue
-        return
-          $ \case
+        return $
+          \case
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIEnum vals)) ->
@@ -383,8 +390,8 @@ typeField =
       inputFields :: FieldParser n (SomeType -> J.Value)
       inputFields = do
         printer <- P.subselection_ GName._inputFields Nothing inputValue
-        return
-          $ \case
+        return $
+          \case
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs))) ->
@@ -430,19 +437,17 @@ type __InputValue {
 -}
 inputValue ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   Parser 'Output n (P.Definition P.InputFieldInfo -> J.Value)
 inputValue =
   let name :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       name =
         P.selection_ GName._name Nothing P.string
-          $> nameAsJSON
-          . P.dName
+          $> nameAsJSON . P.dName
       description :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       description =
         P.selection_ GName._description Nothing P.string
-          $> maybe J.Null (J.String . G.unDescription)
-          . P.dDescription
+          $> maybe J.Null (J.String . G.unDescription) . P.dDescription
       typeF :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       typeF = do
         printer <- P.subselection_ GName._type Nothing typeField
@@ -474,19 +479,17 @@ type __EnumValue {
 -}
 enumValue ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   Parser 'Output n (P.Definition P.EnumValueInfo -> J.Value)
 enumValue =
   let name :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
       name =
         P.selection_ GName._name Nothing P.string
-          $> nameAsJSON
-          . P.dName
+          $> nameAsJSON . P.dName
       description :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
       description =
         P.selection_ GName._description Nothing P.string
-          $> maybe J.Null (J.String . G.unDescription)
-          . P.dDescription
+          $> maybe J.Null (J.String . G.unDescription) . P.dDescription
       -- TODO We don't seem to support enum value deprecation
       isDeprecated :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
       isDeprecated =
@@ -520,7 +523,7 @@ enum __TypeKind {
 -}
 typeKind ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   Parser 'Both n ()
 typeKind =
   P.enum
@@ -552,14 +555,13 @@ type __Field {
 -}
 fieldField ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   Parser 'Output n (P.Definition P.FieldInfo -> J.Value)
 fieldField =
   let name :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       name =
         P.selection_ GName._name Nothing P.string
-          $> nameAsJSON
-          . P.dName
+          $> nameAsJSON . P.dName
       description :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       description =
         P.selection_ GName._description Nothing P.string $> \defInfo ->
@@ -607,7 +609,7 @@ type __Directive {
 
 directiveSet ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   Parser 'Output n (P.DirectiveInfo -> J.Value)
 directiveSet =
   let name :: FieldParser n (P.DirectiveInfo -> J.Value)
@@ -658,7 +660,7 @@ type __Schema {
 -}
 schemaSet ::
   forall n.
-  (MonadParse n) =>
+  MonadParse n =>
   Parser 'Output n (Schema -> J.Value)
 {-# INLINE schemaSet #-}
 schemaSet =
@@ -671,14 +673,12 @@ schemaSet =
       types :: FieldParser n (Schema -> J.Value)
       types = do
         printer <- P.subselection_ GName._types Nothing typeField
-        return
-          $ \partialSchema ->
-            J.Array
-              $ V.fromList
-              $ map (printer . schemaTypeToSomeType)
-              $ sortOn P.getName
-              $ HashMap.elems
-              $ sTypes partialSchema
+        return $
+          \partialSchema ->
+            J.Array $
+              V.fromList $
+                map (printer . schemaTypeToSomeType) $
+                  sortOn P.getName $ Map.elems $ sTypes partialSchema
         where
           schemaTypeToSomeType :: P.SomeDefinitionTypeInfo -> SomeType
           schemaTypeToSomeType (P.SomeDefinitionTypeInfo def) =
@@ -716,15 +716,15 @@ schemaSet =
           ]
 
 selectionSetToJSON ::
-  InsOrdHashMap.InsOrdHashMap G.Name J.Value ->
+  OMap.InsOrdHashMap G.Name J.Value ->
   J.Value
-selectionSetToJSON = J.object . map (first G.unName) . InsOrdHashMap.toList
+selectionSetToJSON = J.object . map (first G.unName) . OMap.toList
 
 applyPrinter ::
-  InsOrdHashMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> J.Value)) ->
+  OMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> J.Value)) ->
   a ->
   J.Value
 applyPrinter = flip (\x -> selectionSetToJSON . fmap (($ x) . P.handleTypename (const . nameAsJSON)))
 
-nameAsJSON :: (P.HasName a) => a -> J.Value
+nameAsJSON :: P.HasName a => a -> J.Value
 nameAsJSON = J.String . G.unName . P.getName

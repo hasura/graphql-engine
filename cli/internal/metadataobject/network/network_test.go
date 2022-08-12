@@ -9,7 +9,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,7 +23,6 @@ func TestMetadataObject_Build(t *testing.T) {
 		fields     fields
 		wantGolden string
 		wantErr    bool
-		assertErr  require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -35,7 +33,6 @@ func TestMetadataObject_Build(t *testing.T) {
 			},
 			"testdata/build_test/t1/want.golden.json",
 			false,
-			require.NoError,
 		},
 		{
 			"t2",
@@ -46,7 +43,6 @@ func TestMetadataObject_Build(t *testing.T) {
 			},
 			"testdata/build_test/t2/want.golden.json",
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -56,21 +52,22 @@ func TestMetadataObject_Build(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := m.Build()
-			tt.assertErr(t, err)
 			if tt.wantErr {
-				return
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				gotbs, err := yaml.Marshal(got)
+				assert.NoError(t, err)
+				jsonbs, err := goyaml.YAMLToJSON(gotbs)
+				assert.NoError(t, err)
+
+				// uncomment following lines to update golden file
+				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+
+				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				assert.NoError(t, err)
+				assert.Equal(t, string(wantbs), string(jsonbs))
 			}
-			gotbs, err := yaml.Marshal(got)
-			assert.NoError(t, err)
-			jsonbs, err := goyaml.YAMLToJSON(gotbs)
-			assert.NoError(t, err)
-
-			// uncomment following lines to update golden file
-			//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
-
-			wantbs, err := ioutil.ReadFile(tt.wantGolden)
-			assert.NoError(t, err)
-			assert.Equal(t, string(wantbs), string(jsonbs))
 		})
 	}
 }
@@ -84,13 +81,12 @@ func TestMetadataObject_Export(t *testing.T) {
 		metadata map[string]yaml.Node
 	}
 	tests := []struct {
-		id        string
-		name      string
-		fields    fields
-		args      args
-		want      map[string][]byte
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		id      string
+		name    string
+		fields  fields
+		args    args
+		want    map[string][]byte
+		wantErr bool
 	}{
 		{
 			"t1",
@@ -118,7 +114,6 @@ func TestMetadataObject_Export(t *testing.T) {
 				}(),
 			},
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -128,15 +123,15 @@ func TestMetadataObject_Export(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := obj.Export(tt.args.metadata)
-			tt.assertErr(t, err)
 			if tt.wantErr {
-				return
-			}
-			for k, v := range got {
-				assert.Contains(t, tt.want, k)
-				// uncomment to update golden files
-				//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
-				assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
+				assert.Error(t, err)
+			} else {
+				for k, v := range got {
+					assert.Contains(t, tt.want, k)
+					// uncomment to update golden files
+					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
+				}
 			}
 		})
 	}

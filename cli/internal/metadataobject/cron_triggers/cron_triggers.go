@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2/version"
@@ -34,40 +33,33 @@ func (c *CronTriggers) Validate() error {
 }
 
 func (c *CronTriggers) CreateFiles() error {
-	var op errors.Op = "crontriggers.CronTriggers.CreateFiles"
 	v := make([]interface{}, 0)
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	err = ioutil.WriteFile(filepath.Join(c.MetadataDir, c.Filename()), data, 0644)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	return nil
 }
 
-func (c *CronTriggers) Build() (map[string]interface{}, error) {
-	var op errors.Op = "crontriggers.CronTriggers.Build"
+func (c *CronTriggers) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(c.MetadataDir, c.Filename()))
 	if err != nil {
-		return nil, errors.E(op, c.error(err))
+		return nil, c.error(err)
 	}
 	var obj []yaml.Node
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return nil, errors.E(op, errors.KindBadInput, c.error(err))
+		return nil, c.error(err)
 	}
 	return map[string]interface{}{c.Key(): obj}, nil
 }
 
-func (c *CronTriggers) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
-	var op errors.Op = "crontriggers.CronTriggers.Export"
-	b, err := metadataobject.DefaultExport(c, metadata, c.error, metadataobject.DefaultObjectTypeSequence)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	return b, nil
+func (c *CronTriggers) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(c, metadata, c.error, metadataobject.DefaultObjectTypeSequence)
 }
 
 func (c *CronTriggers) Key() string {
@@ -78,21 +70,19 @@ func (c *CronTriggers) Filename() string {
 	return "cron_triggers.yaml"
 }
 
-func (c *CronTriggers) GetFiles() ([]string, error) {
-	var op errors.Op = "crontriggers.CronTriggers.GetFiles"
+func (c *CronTriggers) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
 	rootFile := filepath.Join(c.BaseDirectory(), c.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
-		return nil, errors.E(op, c.error(err))
+		return nil, c.error(err)
 	}
 	return files, nil
 }
 
-func (c *CronTriggers) WriteDiff(opts metadataobject.WriteDiffOpts) error {
-	var op errors.Op = "crontriggers.CronTriggers.WriteDiff"
+func (c *CronTriggers) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: c, WriteDiffOpts: opts})
 	if err != nil {
-		return errors.E(op, c.error(err))
+		return c.error(err)
 	}
 	return nil
 }

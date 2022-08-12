@@ -1,0 +1,79 @@
+@import '../../../Common/Common';
+
+//.rolesTableWrapper {
+//}
+
+.rolesTable {
+  width: fit-content;
+
+  th,
+  td {
+    vertical-align: middle !important;
+  }
+
+  th {
+    min-width: 150px;
+  }
+
+  td {
+    min-width: 200px;
+  }
+
+  td pre {
+    max-height: 150px;
+  }
+}
+
+.selected,
+.selected th {
+  background-color: #fff3d5 !important;
+}
+
+.permissionSymbolNA {
+  color: firebrick;
+}
+
+.permissionSymbolFA {
+  color: green;
+}
+
+.permissionSymbolNA,
+.permissionSymbolFA,
+.permissionSymbolPA {
+  font-size: 16px;
+}
+
+// TODO: make common with Permissions page
+.actionIcon {
+  font-size: 12px;
+  color: #337ab7;
+  cursor: pointer;
+}
+
+.clickableCell {
+  cursor: pointer;
+
+  .actionIcon {
+    visibility: hidden;
+  }
+}
+
+.clickableCell:hover {
+  background-color: #ebf7de;
+
+  .actionIcon {
+    visibility: visible;
+  }
+}
+
+.clickableCell,
+.actionCell {
+  .flex_space_between > div:first-child {
+    width: calc(100% - 20px);
+  }
+}
+
+.tableHeaderActions {
+  width: 60px;
+  justify-content: space-evenly;
+}

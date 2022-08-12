@@ -1,8 +1,0 @@
-{
-  "explain": null,
-  "errors": [
-    {
-      "message": "explain error: cannot explain introspection queries"
-    }
-  ]
-}

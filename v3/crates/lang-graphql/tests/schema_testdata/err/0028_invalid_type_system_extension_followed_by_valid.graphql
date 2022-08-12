@@ -1,5 +1,0 @@
-extend Cat
-
-extend interface NamedEntity {
-    name: String
-}

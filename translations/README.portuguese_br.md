@@ -125,25 +125,25 @@ Transforme dados no Postgres ou execute a lógica de negócios para obter outro 
 ## Demos
 
 Confira todos os aplicativos de exemplo no diretório
-[community/examples](https://github.com/hasura/sample-apps/tree/main).
+[community/examples](../community/sample-apps).
 
 ### Aplicações em tempo real
 
 - O aplicativo de bate-papo em grupo criado com o React inclui um indicador de digitação, usuários online e notificações de novas mensagens.
 
   - [Experimente](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.io/console)
 
 - Aplicativo de rastreamento de localização ao vivo que mostra um veículo em movimento alterando as coordenadas atuais do GPS em movimento no mapa.
 
   - [Experimente](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Um painel em tempo real para agregações de dados em constante mudança de dados.
   - [Experimente](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Browse APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### Vídeos

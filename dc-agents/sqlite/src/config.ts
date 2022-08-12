@@ -1,58 +1,41 @@
 import { FastifyRequest } from "fastify"
-import { ConfigSchemaResponse } from "@hasura/dc-api-types"
+import { SchemaObject } from "openapi3-ts"
 
 export type Config = {
   db: string,
-  explicit_main_schema: Boolean,
   tables: String[] | null,
   meta: Boolean
 }
 
-export const getConfig = (request: FastifyRequest): Config => {
-  const config = tryGetConfig(request);
-  if (config === null) {
-    throw new Error("X-Hasura-DataConnector-Config header must specify db");
-  }
-  return config;
+export type ConfigSchemaResponse = {
+  configSchema: SchemaObject,
+  otherSchemas: { [schemaName: string]: SchemaObject },
 }
 
-export const tryGetConfig = (request: FastifyRequest): Config | null => {
+export const getConfig = (request: FastifyRequest): Config => {
   const configHeader = request.headers["x-hasura-dataconnector-config"];
   const rawConfigJson = Array.isArray(configHeader) ? configHeader[0] : configHeader ?? "{}";
   const config = JSON.parse(rawConfigJson);
-
-  if(config.db == null) {
-    return null;
-  }
-
   return {
     db: config.db,
-    explicit_main_schema: config.explicit_main_schema ?? false,
     tables: config.tables ?? null,
     meta: config.include_sqlite_meta_tables ?? false
   }
 }
 
 export const configSchema: ConfigSchemaResponse = {
-  config_schema: {
+  configSchema: {
     type: "object",
     nullable: false,
-    required: ["db"],
     properties: {
       db: {
         description: "The SQLite database file to use.",
         type: "string"
       },
-      explicit_main_schema: {
-        description: "Prefix all tables with the 'main' schema",
-        type: "boolean",
-        nullable: true,
-        default: false
-      },
       tables: {
         description: "List of tables to make available in the schema and for querying",
         type: "array",
-        items: { $ref: "#/other_schemas/TableName" },
+        items: { $ref: "#/otherSchemas/TableName" },
         nullable: true
       },
       include_sqlite_meta_tables: {
@@ -68,7 +51,7 @@ export const configSchema: ConfigSchemaResponse = {
       }
     }
   },
-  other_schemas: {
+  otherSchemas: {
     TableName: {
       nullable: false,
       type: "string"

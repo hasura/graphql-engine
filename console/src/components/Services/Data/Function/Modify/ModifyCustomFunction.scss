@@ -1,0 +1,57 @@
+@import '../../../../Common/Common.scss';
+@import '../../../../Common/Layout//ExpandableEditor/Editor.scss';
+
+.modifyWrapper {
+  .commonBtn {
+    // padding: 20px 0;
+    // padding-top: 40px;
+
+    .delete_confirmation_error {
+      margin-left: 15px;
+      color: #d9534f;
+    }
+
+    .yellow_button {
+      margin-right: 20px;
+    }
+
+    .red_button {
+      margin-right: 20px;
+      color: #fff;
+    }
+
+    .no_mr_right {
+      margin-right: 0px;
+    }
+
+    .white_button {
+      margin-right: 20px;
+      color: #333;
+
+      &:hover {
+        background-color: #d4d4d4;
+      }
+      border-color: #8c8c8c;
+    }
+
+    a {
+      // margin-left: 20px;
+    }
+
+    .refresh_schema_btn {
+      margin-left: 20px;
+    }
+
+    span {
+      i {
+        cursor: pointer;
+        margin-left: 10px;
+      }
+    }
+  }
+
+  .sqlBlock {
+    position: relative;
+    width: 100%;
+  }
+}

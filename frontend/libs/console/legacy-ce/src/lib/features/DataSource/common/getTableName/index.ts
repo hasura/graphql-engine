@@ -1,1 +1,0 @@
-export { getTableName } from './getTableName';

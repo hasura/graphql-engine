@@ -34,7 +34,7 @@ fi
 
 # wait for a port to be ready
 wait_for_port() {
-    local PORT=$1
+    PORT=$1
     log "migrations-startup" "waiting $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT for $PORT to be ready"
     for _ in $(seq 1 $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT);
     do
@@ -69,7 +69,7 @@ fi
 
 # apply metadata if the directory exist
 if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
-    rm -rf "$TEMP_PROJECT_DIR"
+    rm -rf "TEMP_PROJECT_DIR"
     log "migrations-apply" "applying metadata from $HASURA_GRAPHQL_METADATA_DIR"
     mkdir -p "$TEMP_PROJECT_DIR"
     cp -a "$HASURA_GRAPHQL_METADATA_DIR/." "$TEMP_PROJECT_DIR/metadata/"

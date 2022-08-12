@@ -1,11 +1,11 @@
 ---
 sidebar_label: Run SQL
 sidebar_position: 1
-description: Execute SQL with the Hasura schema/Metadata API
+description: Execute SQL with the Hasura schema/metadata API
 keywords:
   - hasura
   - docs
-  - schema/Metadata API
+  - schema/metadata API
   - API reference
   - run_sql
 ---
@@ -36,33 +36,13 @@ permissions on that particular view for various roles.
 :::tip Supported from
 
 The schema API is supported for versions `v2.0.0` and above and replaces
-the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+the older [schema/metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
-### Supported databases
-
-`run_sql` can be invoked on most supported databases, but typically it requires
-a prefix corresponding to that database.
-
-In order to use it, you will need to specify the correct `type` in the query, as
-below:
-
-| Database      | `type` parameter              |
-| ------------- | ----------------------------- |
-| Postgres      | `"run_sql"` or `"pg_run_sql"` |
-| MS SQL Server | `"mssql_run_sql"`             |
-| Citus         | `"citus_run_sql"`             |
-| CockroachDB   | `"cockroach_run_sql"`         |
-| BigQuery      | `"bigquery_run_sql"`          |
-
-When using a data connector, use the connector's prefix.
-
-All examples below will use the Postgres `type` parameter, `"run_sql"`.
-
 ### Use cases
 
-1.  To execute DDL operations that are not supported by the Console
+1.  To execute DDL operations that are not supported by the console
     (e.g. managing indexes).
 2.  Run custom DML requests from backend microservices instead of
     installing libraries to speak to Postgres.
@@ -84,8 +64,8 @@ X-Hasura-Role: admin
 ```
 
 While `run_sql` lets you run any SQL, it tries to ensure that the Hasura
-GraphQL Engine's state (relationships, permissions etc.) is consistent
-i.e. you cannot drop a column on which any Metadata is dependent on (say
+GraphQL engine's state (relationships, permissions etc.) is consistent
+i.e. you cannot drop a column on which any metadata is dependent on (say
 a permission or a relationship). The effects, however, can be cascaded.
 
 Example: If we were to drop the 'bio' column from the author table
@@ -112,7 +92,7 @@ Content-Type: application/json
 
 {
     "path": "$.args",
-    "error": "cannot drop due to the following dependent objects: permission author.user.select"
+    "error": "cannot drop due to the following dependent objects : permission author.user.select"
 }
 ```
 
@@ -168,7 +148,7 @@ Content-Type: application/json
 
 {
     "path": "$.args",
-    "error": "cannot drop due to the following dependent objects: constraint article.article_author_id_fkey"
+    "error": "cannot drop due to the following dependent objects : constraint article.article_author_id_fkey"
 }
 ```
 
@@ -200,7 +180,7 @@ Content-Type: application/json
 
 With the above request, the dependent permission is also dropped.
 
-In general, the SQL operations that will affect Hasura Metadata are:
+In general, the SQL operations that will affect Hasura metadata are:
 
 1.  Dropping columns
 2.  Dropping tables
@@ -213,29 +193,29 @@ In case of 1, 2 and 3 the dependent objects (if any) can be dropped
 using `cascade`. However, when altering type of columns, if any objects
 are affected, the change cannot be cascaded. So, those dependent objects
 have to be manually dropped before executing the SQL statement. Dropping
-SQL functions will cascade the functions in Metadata even without using
+SQL functions will cascade the functions in metadata even without using
 `cascade` since no other objects depend on them. Overloading tracked SQL
 functions is not allowed.
 
 Set `check_metadata_consistency` field to `false` to force the server to
-not consider Metadata dependencies.
+not consider metadata dependencies.
 
 ### Args syntax {#schema-run-sql-syntax}
 
-| Key                          | Required | Supported databases        | Schema  | Description                                                                                                                                                                                                                        |
-| ---------------------------- | -------- | -------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sql`                        | true     | _all_                      | String  | The sql to be executed                                                                                                                                                                                                             |
-| `source`                     | false    | _all_                      | String  | The database on which the sql is to be executed (default: 'default' database)                                                                                                                                                      |
-| `cascade`                    | false    | Postgres and MS SQL Server | Boolean | When set to `true`, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).                                                                                                |
-| `check_metadata_consistency` | false    | Postgres and MS SQL Server | Boolean | When set to `false`, the sql is executed without checking Metadata dependencies.                                                                                                                                                   |
-| `read_only`                  | false    | Postgres                   | Boolean | When set to `true`, the request will be run in `READ ONLY` transaction access mode which means only `select` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant. |
+| Key                        | Required | Schema  | Description                                                                                                                                                                                                                        |
+|----------------------------|----------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| sql                        | true     | String  | The sql to be executed                                                                                                                                                                                                             |
+| source                     | false    | String  | The database on which the sql is to be executed (default: 'default' database)                                                                                                                                                      |
+| cascade                    | false    | Boolean | When set to `true`, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).                                                                                                |
+| check_metadata_consistency | false    | Boolean | When set to `false`, the sql is executed without checking metadata dependencies.                                                                                                                                                   |
+| read_only                  | false    | Boolean | When set to `true`, the request will be run in `READ ONLY` transaction access mode which means only `select` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant. |
 
 ### Response
 
 The response is a JSON Object with the following structure.
 
 | Key         | Always present | Schema                                                      | Description                                               |
-| ----------- | -------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
+|-------------|----------------|-------------------------------------------------------------|-----------------------------------------------------------|
 | result_type | true           | String                                                      | One of "CommandOk" or "TuplesOk"                          |
 | result      | false          | `[[Text]]` (An array of rows, each row an array of columns) | This is present only when the `result_type` is "TuplesOk" |
 

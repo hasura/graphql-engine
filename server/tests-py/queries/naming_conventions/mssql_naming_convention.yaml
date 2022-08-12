@@ -1,0 +1,20 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 400
+  response:
+    path: "$.args"
+    error: sources other than postgres do not support graphql-default as naming convention yet
+    code: not-supported
+  query:
+    type: mssql_add_source
+    args:
+      name: mssql_naming_conventions_db
+      configuration:
+        connection_info:
+          connection_string:
+            from_env: HASURA_GRAPHQL_MSSQL_SOURCE_URL
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+      customization:
+        naming_convention: graphql-default

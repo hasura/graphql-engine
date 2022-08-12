@@ -1,0 +1,1 @@
+export { useTableDefinition } from './useTableDefinition';

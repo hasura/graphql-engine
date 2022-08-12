@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Server.InitSpec
   ( spec,
   )
@@ -8,23 +6,22 @@ where
 --------------------------------------------------------------------------------
 
 import Data.HashSet qualified as Set
-import Data.Time (NominalDiffTime)
-import Database.PG.Query qualified as Query
-import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.Logging (Hasura)
+import Data.Monoid (All (..))
+import Database.PG.Query qualified as Q
+import Hasura.GraphQL.Execute.Subscription.Options (SubscriptionsOptions (_lqoBatchSize))
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ESO
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ESP
+import Hasura.GraphQL.Schema.NamingCase qualified as NC
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.NamingCase qualified as NamingCase
-import Hasura.RQL.Types.Roles qualified as Roles
-import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.SQL.Types qualified as MonadTx
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
+import Hasura.Session qualified as UUT
 import Network.WebSockets qualified as WS
-import Refined (NonNegative, Positive, refineTH, unrefine)
 import Test.Hspec qualified as Hspec
 
 {-# ANN module ("HLint: ignore Redundant ==" :: String) #-}
@@ -37,7 +34,7 @@ spec = Hspec.describe "Init Tests" $ do
 
 --------------------------------------------------------------------------------
 
-emptyServeOptionsRaw :: UUT.ServeOptionsRaw Hasura
+emptyServeOptionsRaw :: UUT.ServeOptionsRaw Logging.Hasura
 emptyServeOptionsRaw =
   UUT.ServeOptionsRaw
     { rsoPort = Nothing,
@@ -53,34 +50,31 @@ emptyServeOptionsRaw =
           },
       rsoTxIso = Nothing,
       rsoAdminSecret = Nothing,
-      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing Nothing,
+      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing,
       rsoJwtSecret = Nothing,
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
-      rsoConsoleStatus = UUT.ConsoleDisabled,
+      rsoEnableConsole = False,
       rsoConsoleAssetsDir = Nothing,
-      rsoConsoleSentryDsn = Nothing,
       rsoEnableTelemetry = Nothing,
-      rsoWsReadCookie = UUT.WsReadCookieDisabled,
+      rsoWsReadCookie = False,
       rsoStringifyNum = Options.Don'tStringifyNumbers,
       rsoDangerousBooleanCollapse = Nothing,
-      rsoBackwardsCompatibleNullInNonNullableVariables = Nothing,
-      rsoRemoteNullForwardingPolicy = Nothing,
       rsoEnabledAPIs = Nothing,
       rsoMxRefetchInt = Nothing,
       rsoMxBatchSize = Nothing,
       rsoStreamingMxRefetchInt = Nothing,
       rsoStreamingMxBatchSize = Nothing,
-      rsoEnableAllowList = UUT.AllowListDisabled,
+      rsoEnableAllowlist = False,
       rsoEnabledLogTypes = Nothing,
       rsoLogLevel = Nothing,
-      rsoDevMode = UUT.DevModeDisabled,
+      rsoDevMode = False,
       rsoAdminInternalErrors = Nothing,
       rsoEventsHttpPoolSize = Nothing,
       rsoEventsFetchInterval = Nothing,
       rsoAsyncActionsFetchInterval = Nothing,
       rsoEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
-      rsoWebSocketCompression = WS.NoCompression,
+      rsoWebSocketCompression = False,
       rsoWebSocketKeepAlive = Nothing,
       rsoInferFunctionPermissions = Nothing,
       rsoEnableMaintenanceMode = Types.MaintenanceModeDisabled,
@@ -91,17 +85,7 @@ emptyServeOptionsRaw =
       rsoWebSocketConnectionInitTimeout = Nothing,
       rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
       rsoDefaultNamingConvention = Nothing,
-      rsoExtensionsSchema = Nothing,
-      rsoMetadataDefaults = Nothing,
-      rsoApolloFederationStatus = Nothing,
-      rsoCloseWebsocketsOnMetadataChangeStatus = Nothing,
-      rsoMaxTotalHeaderLength = Nothing,
-      rsoTriggersErrorLogLevelStatus = Nothing,
-      rsoAsyncActionsFetchBatchSize = Nothing,
-      rsoPersistedQueries = Nothing,
-      rsoPersistedQueriesTtl = Nothing,
-      rsoRemoteSchemaResponsePriority = Nothing,
-      rsoHeaderPrecedence = Nothing
+      rsoExtensionsSchema = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec
@@ -114,29 +98,29 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soPort result `Hspec.shouldBe` Right (UUT._default UUT.servePortOption)
+        fmap UUT.soPort result `Hspec.shouldBe` Right 8080
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.servePortOption, "420")]
+            env = [("HASURA_GRAPHQL_SERVER_PORT", "420")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soPort result `Hspec.shouldBe` Right (UUT.unsafePort 420)
+        fmap UUT.soPort result `Hspec.shouldBe` Right 420
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoPort = Just (UUT.unsafePort 11)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoPort = Just 11}
             -- When
-            env = [(UUT._envVar UUT.servePortOption, "420")]
+            env = [("HASURA_GRAPHQL_SERVER_PORT", "420")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soPort result `Hspec.shouldBe` Right (UUT.unsafePort 11)
+        fmap UUT.soPort result `Hspec.shouldBe` Right 11
 
     Hspec.describe "soHost" $ do
       Hspec.it "Default = '*'" $ do
@@ -145,17 +129,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soHost result `Hspec.shouldBe` Right (UUT._default UUT.serveHostOption)
+        fmap UUT.soHost result `Hspec.shouldBe` Right "*"
 
       Hspec.it "Env > Nothing" $ do
         -- Given
         let rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.serveHostOption, "127.0.0.1")]
+            env = [("HASURA_GRAPHQL_SERVER_HOST", "127.0.0.1")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soHost result `Hspec.shouldBe` Right "127.0.0.1"
 
@@ -163,9 +147,9 @@ mkServeOptionsSpec =
         -- Given
         let rawServeOptions = emptyServeOptionsRaw {UUT.rsoHost = Just "*4"}
             -- When
-            env = [(UUT._envVar UUT.serveHostOption, "127.0.0.1")]
+            env = [("HASURA_GRAPHQL_SERVER_HOST", "127.0.0.1")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soHost result `Hspec.shouldBe` Right "*4"
 
@@ -176,18 +160,18 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soConnParams result
           `Hspec.shouldBe` Right
-            ( Query.ConnParams
-                { Query.cpStripes = unrefine $ UUT._default UUT.pgStripesOption,
-                  Query.cpConns = unrefine $ UUT._default UUT.pgConnsOption,
-                  Query.cpIdleTime = unrefine $ UUT._default UUT.pgTimeoutOption,
-                  Query.cpAllowPrepare = UUT._default UUT.pgUsePreparedStatementsOption,
-                  Query.cpMbLifetime = Just $ unrefine $ UUT._default UUT.pgConnLifetimeOption,
-                  Query.cpTimeout = Nothing,
-                  Query.cpCancel = True
+            ( Q.ConnParams
+                { Q.cpStripes = 1,
+                  Q.cpConns = 50,
+                  Q.cpIdleTime = 180,
+                  Q.cpAllowPrepare = True,
+                  Q.cpMbLifetime = Just 600,
+                  Q.cpTimeout = Nothing,
+                  Q.cpCancel = True
                 }
             )
 
@@ -196,26 +180,26 @@ mkServeOptionsSpec =
             rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
-              [ (UUT._envVar UUT.pgStripesOption, "42"),
-                (UUT._envVar UUT.pgConnsOption, "43"),
-                (UUT._envVar UUT.pgTimeoutOption, "44"),
-                (UUT._envVar UUT.pgConnLifetimeOption, "45"),
-                (UUT._envVar UUT.pgUsePreparedStatementsOption, "false"),
-                (UUT._envVar UUT.pgPoolTimeoutOption, "46")
+              [ ("HASURA_GRAPHQL_PG_STRIPES", "42"),
+                ("HASURA_GRAPHQL_PG_CONNECTIONS", "43"),
+                ("HASURA_GRAPHQL_PG_TIMEOUT", "44"),
+                ("HASURA_GRAPHQL_PG_CONN_LIFETIME", "45"),
+                ("HASURA_GRAPHQL_USE_PREPARED_STATEMENTS", "false"),
+                ("HASURA_GRAPHQL_PG_POOL_TIMEOUT", "46")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soConnParams result
           `Hspec.shouldBe` Right
-            ( Query.ConnParams
-                { Query.cpStripes = 42,
-                  Query.cpConns = 43,
-                  Query.cpIdleTime = 44,
-                  Query.cpAllowPrepare = False,
-                  Query.cpMbLifetime = Just 45,
-                  Query.cpTimeout = Just 46,
-                  Query.cpCancel = True
+            ( Q.ConnParams
+                { Q.cpStripes = 42,
+                  Q.cpConns = 43,
+                  Q.cpIdleTime = 44,
+                  Q.cpAllowPrepare = False,
+                  Q.cpMbLifetime = Just 45,
+                  Q.cpTimeout = Just 46,
+                  Q.cpCancel = True
                 }
             )
 
@@ -225,29 +209,29 @@ mkServeOptionsSpec =
               emptyServeOptionsRaw
                 { UUT.rsoConnParams =
                     UUT.ConnParamsRaw
-                      { rcpStripes = Just $$(refineTH @NonNegative @Int 2),
-                        rcpConns = Just $$(refineTH @NonNegative @Int 3),
-                        rcpIdleTime = Just $$(refineTH @NonNegative @Int 4),
-                        rcpConnLifetime = Just $$(refineTH @NonNegative @NominalDiffTime 5),
+                      { rcpStripes = Just 2,
+                        rcpConns = Just 3,
+                        rcpIdleTime = Just 4,
+                        rcpConnLifetime = Just 5,
                         rcpAllowPrepare = Just True,
-                        rcpPoolTimeout = Just $$(refineTH @NonNegative @NominalDiffTime 6)
+                        rcpPoolTimeout = Just 6
                       }
                 }
             -- When
             env =
-              [ (UUT._envVar UUT.pgStripesOption, "42"),
-                (UUT._envVar UUT.pgConnsOption, "43"),
-                (UUT._envVar UUT.pgTimeoutOption, "44"),
-                (UUT._envVar UUT.pgConnLifetimeOption, "45"),
-                (UUT._envVar UUT.pgUsePreparedStatementsOption, "false"),
-                (UUT._envVar UUT.pgPoolTimeoutOption, "46")
+              [ ("HASURA_GRAPHQL_PG_STRIPES", "42"),
+                ("HASURA_GRAPHQL_PG_CONNECTIONS", "43"),
+                ("HASURA_GRAPHQL_PG_TIMEOUT", "44"),
+                ("HASURA_GRAPHQL_PG_CONN_LIFETIME", "45"),
+                ("HASURA_GRAPHQL_USE_PREPARED_STATEMENTS", "false"),
+                ("HASURA_GRAPHQL_PG_POOL_TIMEOUT", "46")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soConnParams result
           `Hspec.shouldBe` Right
-            ( Query.ConnParams
+            ( Q.ConnParams
                 { cpStripes = 2,
                   cpConns = 3,
                   cpIdleTime = 4,
@@ -265,38 +249,38 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soTxIso result `Hspec.shouldBe` Right (UUT._default UUT.txIsolationOption)
+        fmap UUT.soTxIso result `Hspec.shouldBe` Right Q.ReadCommitted
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.txIsolationOption, "repeatable-read")]
+            env = [("HASURA_GRAPHQL_TX_ISOLATION", "repeatable-read")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soTxIso result `Hspec.shouldBe` Right Query.RepeatableRead
+        fmap UUT.soTxIso result `Hspec.shouldBe` Right Q.RepeatableRead
 
       Hspec.it "Arg > Env" $ do
         -- Given
-        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoTxIso = Just Query.Serializable}
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoTxIso = Just Q.Serializable}
             -- When
-            env = [(UUT._envVar UUT.txIsolationOption, "repeatable-read")]
+            env = [("HASURA_GRAPHQL_TX_ISOLATION", "repeatable-read")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soTxIso result `Hspec.shouldBe` Right Query.Serializable
+        fmap UUT.soTxIso result `Hspec.shouldBe` Right Q.Serializable
 
     Hspec.describe "soAdminSecret" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.adminSecretOption, "A monad is a monoid in the category of endofunctors")]
+            env = [("HASURA_GRAPHQL_ADMIN_SECRET", "A monad is a monoid in the category of endofunctors")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soAdminSecret result `Hspec.shouldBe` Right (Set.singleton (Auth.hashAdminSecret "A monad is a monoid in the category of endofunctors"))
 
@@ -304,9 +288,9 @@ mkServeOptionsSpec =
         -- Given
         let rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminSecret = Just (Auth.hashAdminSecret "Whats the big deal")}
             -- When
-            env = [(UUT._envVar UUT.adminSecretOption, "A monad is a monoid in the category of endofunctors")]
+            env = [("HASURA_GRAPHQL_ADMIN_SECRET", "A monad is a monoid in the category of endofunctors")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soAdminSecret result `Hspec.shouldBe` Right (Set.singleton (Auth.hashAdminSecret "Whats the big deal"))
 
@@ -315,37 +299,37 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.authHookOption, "http://auth.hook.com")]
+            env = [("HASURA_GRAPHQL_AUTH_HOOK", "http://auth.hook.com")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
-              [ (UUT._envVar UUT.authHookOption, "http://auth.hook.com"),
-                (UUT._envVar UUT.authHookModeOption, "POST")
+              [ ("HASURA_GRAPHQL_AUTH_HOOK", "http://auth.hook.com"),
+                ("HASURA_GRAPHQL_AUTH_HOOK_MODE", "POST")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost True))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet) Nothing}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet)}
             -- When
             env =
-              [ (UUT._envVar UUT.authHookOption, "http://auth.hook.com"),
-                (UUT._envVar UUT.authHookModeOption, "POST")
+              [ ("HASURA_GRAPHQL_AUTH_HOOK", "http://auth.hook.net"),
+                ("HASURA_GRAPHQL_AUTH_HOOK_MODE", "POST")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
 
     Hspec.describe "soJwtSecret" $ do
       Hspec.it "Env > Nothing" $ do
@@ -353,12 +337,12 @@ mkServeOptionsSpec =
             rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
-              [ ( UUT._envVar UUT.jwtSecretOption,
+              [ ( "HASURA_GRAPHQL_JWT_SECRET",
                   "{\"type\": \"HS256\", \"key\": \"11111111111111111111111111111111\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}"
                 )
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soJwtSecret result
           `Hspec.shouldBe` UUT.fromEnv "[{\"type\": \"HS256\", \"key\": \"11111111111111111111111111111111\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}]"
@@ -369,12 +353,12 @@ mkServeOptionsSpec =
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoJwtSecret = jwtConfig}
             -- When
             env =
-              [ ( UUT._envVar UUT.jwtSecretOption,
+              [ ( "HASURA_GRAPHQL_JWT_SECRET",
                   "{\"type\": \"HS256\", \"key\": \"11111111111111111111111111111111\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}"
                 )
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soJwtSecret result `Hspec.shouldBe` Right (onNothing jwtConfig [])
 
@@ -383,30 +367,30 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.unAuthRoleOption, "guest")]
+            env = [("HASURA_GRAPHQL_UNAUTHORIZED_ROLE", "guest")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "guest")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "guest")
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = Roles.mkRoleName "visitor"}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = UUT.mkRoleName "visitor"}
             -- When
-            env = [(UUT._envVar UUT.unAuthRoleOption, "guest")]
+            env = [("HASURA_GRAPHQL_UNAUTHORIZED_ROLE", "guest")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "visitor")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "visitor")
 
     Hspec.describe "soCorsConfig" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.corsDomainOption, "http://domain1:23, http://domain2:34")]
+            env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain1:23, http://domain2:34")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
@@ -416,17 +400,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soCorsConfig result `Hspec.shouldBe` Right (UUT._default UUT.corsDomainOption)
+        fmap UUT.soCorsConfig result `Hspec.shouldBe` Right Cors.CCAllowAll
 
       Hspec.it "Env 'HASURA_GRAPHQL_DISABLE_CORS=false' superseded by 'HASURA_GRAPHQL_CORS_DOMAIN'" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.corsDomainOption, "http://domain1:23, http://domain2:34"), (UUT._envVar UUT.disableCorsOption, "false")]
+            env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain1:23, http://domain2:34"), ("HASURA_GRAPHQL_DISABLE_CORS", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
@@ -434,9 +418,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.wsReadCookieOption, "true"), (UUT._envVar UUT.disableCorsOption, "true")]
+            env = [("HASURA_GRAPHQL_WS_READ_COOKIE", "true"), ("HASURA_GRAPHQL_DISABLE_CORS", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soCorsConfig result `Hspec.shouldBe` Right (Cors.CCDisabled True)
 
@@ -444,9 +428,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.corsDomainOption, "http://domain1:23, http://domain2:34"), (UUT._envVar UUT.disableCorsOption, "true")]
+            env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain1:23, http://domain2:34"), ("HASURA_GRAPHQL_DISABLE_CORS", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soCorsConfig result `Hspec.shouldBe` Right (Cors.CCDisabled False)
 
@@ -454,22 +438,22 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoCorsConfig = eitherToMaybe (Cors.readCorsDomains "http://domain1:23, http://domain2:34")}
             -- When
-            env = [(UUT._envVar UUT.corsDomainOption, "http://domain1:23, http://domain2:34")]
+            env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain3:23, http://domain4:34")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
-    Hspec.describe "soConsoleStatus" $ do
+    Hspec.describe "soEnableConsole" $ do
       Hspec.it "Default == False" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right (UUT._default UUT.enableConsoleOption)
+        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right False
 
       -- NOTE: This is a little confusing. We are first simulating
       -- not providing the '--enable-console' flag with the env var set to 'true'.
@@ -479,30 +463,30 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.enableConsoleOption, "true")]
+            env = [("HASURA_GRAPHQL_ENABLE_CONSOLE", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
+        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoConsoleStatus = UUT.ConsoleEnabled}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableConsole = True}
             -- When
-            env = [(UUT._envVar UUT.enableConsoleOption, "false")]
+            env = [("HASURA_GRAPHQL_ENABLE_CONSOLE", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
+        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
 
     Hspec.describe "soConsoleAssetsDir" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.consoleAssetsDirOption, "/assets")]
+            env = [("HASURA_GRAPHQL_CONSOLE_ASSETS_DIR", "/assets")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soConsoleAssetsDir result `Hspec.shouldBe` Right (Just "/assets")
 
@@ -512,30 +496,9 @@ mkServeOptionsSpec =
             -- When
             env = [("HASURA_GRAPHQL_CONSOLE_ASSETS_DIR", "/assets")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soConsoleAssetsDir result `Hspec.shouldBe` Right (Just "/data")
-
-    Hspec.describe "soConsoleSentryDsn" $ do
-      Hspec.it "Env > Nothing" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            env = [(UUT._envVar UUT.consoleSentryDsnOption, "123123")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soConsoleSentryDsn result `Hspec.shouldBe` Right (Just "123123")
-
-      Hspec.it "Arg > Env" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoConsoleSentryDsn = Just "456456"}
-            -- When
-            env = [("HASURA_CONSOLE_SENTRY_DSN", "123123")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soConsoleSentryDsn result `Hspec.shouldBe` Right (Just "456456")
 
     Hspec.describe "soEnableTelemetry" $ do
       Hspec.it "Default == True" $ do
@@ -544,48 +507,48 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right (UUT._default UUT.enableTelemetryOption)
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right True
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.enableTelemetryOption, "false")]
+            env = [("HASURA_GRAPHQL_ENABLE_TELEMETRY", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right UUT.TelemetryDisabled
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableTelemetry = Just UUT.TelemetryDisabled}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableTelemetry = Just False}
             -- When
-            env = [(UUT._envVar UUT.enableTelemetryOption, "true")]
+            env = [("HASURA_GRAPHQL_ENABLE_TELEMETRY", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right UUT.TelemetryDisabled
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
 
     Hspec.describe "soStringifyNum" $ do
-      Hspec.it "Default == Don'tStringifyNumbers" $ do
+      Hspec.it "Default == LeaveNumbersAlone" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soStringifyNum result `Hspec.shouldBe` Right (UUT._default UUT.stringifyNumOption)
+        fmap UUT.soStringifyNum result `Hspec.shouldBe` Right Options.Don'tStringifyNumbers
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.stringifyNumOption, "true")]
+            env = [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soStringifyNum result `Hspec.shouldBe` Right Options.StringifyNumbers
 
@@ -593,9 +556,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoStringifyNum = Options.StringifyNumbers}
             -- When
-            env = [(UUT._envVar UUT.stringifyNumOption, "false")]
+            env = [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soStringifyNum result `Hspec.shouldBe` Right Options.StringifyNumbers
 
@@ -606,60 +569,29 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right (UUT._default UUT.dangerousBooleanCollapseOption)
-
-      Hspec.it "Env > Nothing" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            env = [(UUT._envVar UUT.dangerousBooleanCollapseOption, "true")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right Options.DangerouslyCollapseBooleans
-
-      Hspec.it "Arg > Env" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDangerousBooleanCollapse = Just Options.Don'tDangerouslyCollapseBooleans}
-            -- When
-            env = [(UUT._envVar UUT.dangerousBooleanCollapseOption, "true")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right Options.Don'tDangerouslyCollapseBooleans
-
-    Hspec.describe "soBackwardsCompatibleNullInNonNullableVariables" $ do
-      Hspec.it "Default == False" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            env = []
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right (UUT._default UUT.backwardsCompatibleNullInNonNullableVariablesOption)
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right False
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.backwardsCompatibleNullInNonNullableVariablesOption, "true")]
+            env = [("HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right Options.AllowNullInNonNullableVariables
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right True
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoBackwardsCompatibleNullInNonNullableVariables = Just Options.Don'tAllowNullInNonNullableVariables}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDangerousBooleanCollapse = Just False}
             -- When
-            env = [(UUT._envVar UUT.dangerousBooleanCollapseOption, "true")]
+            env = [("HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right Options.Don'tAllowNullInNonNullableVariables
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right False
 
     Hspec.describe "soEnabledAPIs" $ do
       Hspec.it "Default == metadata,graphql,pgdump,config" $ do
@@ -668,17 +600,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledAPIs result `Hspec.shouldBe` Right (UUT._default UUT.enabledAPIsOption)
+        fmap UUT.soEnabledAPIs result `Hspec.shouldBe` Right (Set.fromList [UUT.METADATA, UUT.GRAPHQL, UUT.PGDUMP, UUT.CONFIG])
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.enabledAPIsOption, "metadata,graphql")]
+            env = [("HASURA_GRAPHQL_ENABLED_APIS", "metadata,graphql")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soEnabledAPIs result `Hspec.shouldBe` Right (Set.fromList [UUT.METADATA, UUT.GRAPHQL])
 
@@ -686,9 +618,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledAPIs = Just $ Set.fromList [UUT.CONFIG]}
             -- When
-            env = [(UUT._envVar UUT.enabledAPIsOption, "metadata,graphql")]
+            env = [("HASURA_GRAPHQL_ENABLED_APIS", "metadata,graphql")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soEnabledAPIs result `Hspec.shouldBe` Right (Set.fromList [UUT.CONFIG])
 
@@ -699,13 +631,13 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soLiveQueryOpts result
           `Hspec.shouldBe` Right
-            ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = UUT._default UUT.mxRefetchDelayOption,
-                  _lqoBatchSize = UUT._default UUT.mxBatchSizeOption
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 1,
+                  _lqoBatchSize = ESO.BatchSize 100
                 }
             )
 
@@ -714,17 +646,17 @@ mkServeOptionsSpec =
             rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
-              [ (UUT._envVar UUT.mxRefetchDelayOption, "2000"),
-                (UUT._envVar UUT.mxBatchSizeOption, "200")
+              [ ("HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL", "2000"),
+                ("HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE", "200")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soLiveQueryOpts result
           `Hspec.shouldBe` Right
-            ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 2),
-                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 200)
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 2,
+                  _lqoBatchSize = ESO.BatchSize 200
                 }
             )
 
@@ -732,22 +664,22 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions =
               emptyServeOptionsRaw
-                { UUT.rsoMxRefetchInt = Subscription.Options.mkRefetchInterval 3,
-                  UUT.rsoMxBatchSize = Subscription.Options.mkBatchSize 300
+                { UUT.rsoMxRefetchInt = ESO.mkRefetchInterval 3,
+                  UUT.rsoMxBatchSize = ESP.mkBatchSize 300
                 }
             -- When
             env =
-              [ (UUT._envVar UUT.mxRefetchDelayOption, "2000"),
-                (UUT._envVar UUT.mxBatchSizeOption, "200")
+              [ ("HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL", "2000"),
+                ("HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE", "200")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soLiveQueryOpts result
           `Hspec.shouldBe` Right
-            ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 3),
-                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 300)
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 3,
+                  _lqoBatchSize = ESO.BatchSize 300
                 }
             )
 
@@ -758,13 +690,13 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soStreamingQueryOpts result
           `Hspec.shouldBe` Right
-            ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = UUT._default UUT.streamingMxRefetchDelayOption,
-                  _lqoBatchSize = UUT._default UUT.streamingMxBatchSizeOption
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 1,
+                  _lqoBatchSize = ESO.BatchSize 100
                 }
             )
 
@@ -773,17 +705,17 @@ mkServeOptionsSpec =
             rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
-              [ (UUT._envVar UUT.streamingMxRefetchDelayOption, "2000"),
-                (UUT._envVar UUT.streamingMxBatchSizeOption, "200")
+              [ ("HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL", "2000"),
+                ("HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE", "200")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soStreamingQueryOpts result
           `Hspec.shouldBe` Right
-            ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 2),
-                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 200)
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 2,
+                  _lqoBatchSize = ESO.BatchSize 200
                 }
             )
 
@@ -791,45 +723,45 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions =
               emptyServeOptionsRaw
-                { UUT.rsoStreamingMxRefetchInt = Subscription.Options.mkRefetchInterval 3,
-                  UUT.rsoStreamingMxBatchSize = Subscription.Options.mkBatchSize 300
+                { UUT.rsoStreamingMxRefetchInt = ESO.mkRefetchInterval 3,
+                  UUT.rsoStreamingMxBatchSize = ESO.mkBatchSize 300
                 }
             -- When
             env =
-              [ (UUT._envVar UUT.streamingMxRefetchDelayOption, "2000"),
-                (UUT._envVar UUT.streamingMxBatchSizeOption, "200")
+              [ ("HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL", "2000"),
+                ("HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE", "200")
               ]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soStreamingQueryOpts result
           `Hspec.shouldBe` Right
-            ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 3),
-                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 300)
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 3,
+                  _lqoBatchSize = ESO.BatchSize 300
                 }
             )
 
-    Hspec.describe "soEnableAllowList" $ do
+    Hspec.describe "soEnableAllowlist" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.enableAllowlistOption, "true")]
+            env = [("HASURA_GRAPHQL_ENABLE_ALLOWLIST", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowList result `Hspec.shouldBe` Right UUT.AllowListEnabled
+        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableAllowList = UUT.AllowListEnabled}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableAllowlist = True}
             -- When
-            env = [(UUT._envVar UUT.enableAllowlistOption, "false")]
+            env = [("HASURA_GRAPHQL_ENABLE_ALLOWLIST", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowList result `Hspec.shouldBe` Right UUT.AllowListEnabled
+        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
 
     Hspec.describe "soEnabledLogTypes" $ do
       Hspec.it "Default == Startup, HttpLog, WebhookLog, WebsocketLog" $ do
@@ -838,17 +770,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledLogTypes result `Hspec.shouldBe` Right (UUT._default UUT.enabledLogsOption)
+        fmap UUT.soEnabledLogTypes result `Hspec.shouldBe` Right (Set.fromList [Logging.ELTStartup, Logging.ELTHttpLog, Logging.ELTWebhookLog, Logging.ELTWebsocketLog])
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar (UUT.enabledLogsOption @Hasura), "http-log")]
+            env = [("HASURA_GRAPHQL_ENABLED_LOG_TYPES", "http-log")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soEnabledLogTypes result `Hspec.shouldBe` Right (Set.fromList [Logging.ELTHttpLog])
 
@@ -856,9 +788,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledLogTypes = Just (Set.fromList [Logging.ELTActionHandler])}
             -- When
-            env = [(UUT._envVar (UUT.enabledLogsOption @Hasura), "http-log")]
+            env = [("HASURA_GRAPHQL_ENABLED_LOG_TYPES", "http-log")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soEnabledLogTypes result `Hspec.shouldBe` Right (Set.fromList [Logging.ELTActionHandler])
 
@@ -869,17 +801,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soLogLevel result `Hspec.shouldBe` Right (UUT._default UUT.logLevelOption)
+        fmap UUT.soLogLevel result `Hspec.shouldBe` Right Logging.LevelInfo
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.logLevelOption, "warn")]
+            env = [("HASURA_GRAPHQL_LOG_LEVEL", "warn")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soLogLevel result `Hspec.shouldBe` Right Logging.LevelWarn
 
@@ -887,9 +819,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoLogLevel = Just Logging.LevelWarn}
             -- When
-            env = [(UUT._envVar UUT.logLevelOption, "warn")]
+            env = [("HASURA_GRAPHQL_LOG_LEVEL", "warn")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soLogLevel result `Hspec.shouldBe` Right Logging.LevelWarn
 
@@ -900,29 +832,35 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDevMode result `Hspec.shouldBe` Right (UUT._default UUT.graphqlDevModeOption)
+        fmap (UUT.soDevMode &&& UUT.soResponseInternalErrorsConfig) result `Hspec.shouldSatisfy` \case
+          Right (soDevMode, soResponseInternalErrorsConfig) ->
+            getAll $ foldMap All [soDevMode == False, soResponseInternalErrorsConfig == UUT.InternalErrorsAdminOnly]
+          Left _err -> False
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.graphqlDevModeOption, "true")]
+            env = [("HASURA_GRAPHQL_DEV_MODE", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDevMode result `Hspec.shouldBe` Right UUT.DevModeEnabled
+        fmap (UUT.soDevMode &&& UUT.soResponseInternalErrorsConfig) result `Hspec.shouldSatisfy` \case
+          Right (soDevMode, soResponseInternalErrorsConfig) ->
+            getAll $ foldMap All [soDevMode == True, soResponseInternalErrorsConfig == UUT.InternalErrorsAllRequests]
+          Left _err -> False
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDevMode = UUT.DevModeEnabled}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDevMode = True}
             -- When
-            env = [(UUT._envVar UUT.graphqlDevModeOption, "false")]
+            env = [("HASURA_GRAPHQL_DEV_MODE", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDevMode result `Hspec.shouldBe` Right UUT.DevModeEnabled
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right True
 
     Hspec.describe "soAdminInternalErrors" $ do
       Hspec.it "Default == InternalErrorsAdminOnly" $ do
@@ -931,91 +869,98 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right (UUT._default UUT.graphqlAdminInternalErrorsOption)
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAdminOnly
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.graphqlAdminInternalErrorsOption, "false")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right UUT.AdminInternalErrorsDisabled
-
-      Hspec.it "Arg > Env" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminInternalErrors = Just UUT.AdminInternalErrorsDisabled}
-            -- When
-            env = [(UUT._envVar UUT.graphqlAdminInternalErrorsOption, "true")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right UUT.AdminInternalErrorsDisabled
-
-    Hspec.describe "soEventsHttpPoolSize" $ do
-      Hspec.it "Default == 100" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            env = []
+            env = [("HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS", "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (UUT._default UUT.graphqlEventsHttpPoolSizeOption)
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
+
+      Hspec.it "Dev Mode supersedes rsoAdminInternalErrors" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = [("HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS", "false"), ("HASURA_GRAPHQL_DEV_MODE", "true")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
+
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAllRequests
+
+      Hspec.it "Arg > Env" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminInternalErrors = Just False}
+            -- When
+            env = [("HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS", "true")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
+
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
+
+    Hspec.describe "soEventsHttpPoolSize" $ do
+      -- TODO(SOLOMON): The default value for this option is set in App.hs:
+      -- https://github.com/hasura/graphql-engine-mono/blob/main/server/src-lib/Hasura/App.hs#L910
+      -- We should move the defaulting into the 'Option' term and
+      -- remove the 'Maybe' from 'soEventsHttpPoolSize' but this
+      -- should be done in an isolated PR to prevent potential
+      -- regressions.
+      --
+      --Hspec.it "Default == 100" $ do
+      --  let -- Given
+      --      rawServeOptions = emptyServeOptionsRaw
+      --      -- When
+      --      env = []
+      --      -- Then
+      --      result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
+
+      --  fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 100)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.graphqlEventsHttpPoolSizeOption, "200")]
+            env = [("HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right $$(refineTH @Positive @Int 200)
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsHttpPoolSize = Just $$(refineTH @Positive @Int 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsHttpPoolSize = Just 300}
             -- When
-            env = [(UUT._envVar UUT.graphqlEventsHttpPoolSizeOption, "200")]
+            env = [("HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right $$(refineTH @Positive @Int 300)
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 300)
 
     Hspec.describe "soEventsFetchInterval" $ do
-      Hspec.it "Default == 1" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            env = []
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (UUT._default UUT.graphqlEventsFetchIntervalOption)
-
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.graphqlEventsFetchIntervalOption, "200")]
+            env = [("HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Milliseconds 200)
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Just 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchInterval = Just $$(refineTH @NonNegative @Milliseconds 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchInterval = Just 300}
             -- When
-            env = [(UUT._envVar UUT.graphqlEventsFetchIntervalOption, "200")]
+            env = [("HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Milliseconds 300)
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Just 300)
 
     Hspec.describe "soAsyncActionsFetchInterval" $ do
       Hspec.it "Default == 1000" $ do
@@ -1024,39 +969,39 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT._default UUT.asyncActionsFetchIntervalOption)
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval 1000)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.asyncActionsFetchIntervalOption, "200")]
+            env = [("HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 200))
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval 200)
 
       Hspec.it "0 == 'Skip'" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.asyncActionsFetchIntervalOption, "0")]
+            env = [("HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL", "0")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right UUT.Skip
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAsyncActionsFetchInterval = Just (UUT.Interval $$(refineTH 300))}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAsyncActionsFetchInterval = Just (UUT.Interval 300)}
             -- When
-            env = [(UUT._envVar UUT.asyncActionsFetchIntervalOption, "200")]
+            env = [("HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 300))
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval 300)
 
     Hspec.describe "soEnableRemoteSchemaPermissions" $ do
       Hspec.it "Default == False" $ do
@@ -1065,17 +1010,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldBe` Right (UUT._default UUT.enableRemoteSchemaPermsOption)
+        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldBe` Right Options.DisableRemoteSchemaPermissions
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.enableRemoteSchemaPermsOption, "true")]
+            env = [("HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldBe` Right Options.EnableRemoteSchemaPermissions
 
@@ -1083,9 +1028,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableRemoteSchemaPermissions = Options.EnableRemoteSchemaPermissions}
             -- When
-            env = [(UUT._envVar UUT.enableRemoteSchemaPermsOption, "false")]
+            env = [("HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldBe` Right Options.EnableRemoteSchemaPermissions
 
@@ -1096,7 +1041,7 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result `Hspec.shouldBe` Right WS.NoCompression
 
@@ -1104,20 +1049,20 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.webSocketCompressionOption, "true")]
+            env = [("HASURA_GRAPHQL_CONNECTION_COMPRESSION", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
           `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = True}
             -- When
-            env = [(UUT._envVar UUT.webSocketCompressionOption, "false")]
+            env = [("HASURA_GRAPHQL_CONNECTION_COMPRESSION", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
           `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
@@ -1129,29 +1074,29 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT._default UUT.webSocketKeepAliveOption)
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay 5)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.webSocketKeepAliveOption, "10")]
+            env = [("HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE", "10")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay $$(refineTH 10))
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay 10)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketKeepAlive = Just (UUT.KeepAliveDelay $$(refineTH 20))}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketKeepAlive = Just (UUT.KeepAliveDelay 20)}
             -- When
-            env = [(UUT._envVar UUT.webSocketKeepAliveOption, "10")]
+            env = [("HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE", "10")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay $$(refineTH 20))
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay 20)
 
     Hspec.describe "soInferFunctionPermissions" $ do
       Hspec.it "Default == FunctionPermissionsInferred" $ do
@@ -1160,17 +1105,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldBe` Right (UUT._default UUT.inferFunctionPermsOption)
+        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldBe` Right Options.InferFunctionPermissions
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.inferFunctionPermsOption, "false")]
+            env = [("HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldBe` Right Options.Don'tInferFunctionPermissions
 
@@ -1178,9 +1123,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoInferFunctionPermissions = Just Options.InferFunctionPermissions}
             -- When
-            env = [(UUT._envVar UUT.inferFunctionPermsOption, "false")]
+            env = [("HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldBe` Right Options.InferFunctionPermissions
 
@@ -1191,17 +1136,17 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldBe` Right (UUT._default UUT.enableMaintenanceModeOption)
+        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldBe` Right Types.MaintenanceModeDisabled
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.enableMaintenanceModeOption, "true")]
+            env = [("HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldBe` Right (Types.MaintenanceModeEnabled ())
 
@@ -1209,9 +1154,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableMaintenanceMode = Types.MaintenanceModeEnabled ()}
             -- When
-            env = [(UUT._envVar UUT.enableMaintenanceModeOption, "false")]
+            env = [("HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE", "false")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldBe` Right (Types.MaintenanceModeEnabled ())
 
@@ -1222,39 +1167,39 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT._default UUT.schemaPollIntervalOption)
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval 1000)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.schemaPollIntervalOption, "2000")]
+            env = [("HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL", "2000")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 2000))
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval 2000)
 
       Hspec.it "0 == Skip" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.schemaPollIntervalOption, "0")]
+            env = [("HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL", "0")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right UUT.Skip
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoSchemaPollInterval = Just (UUT.Interval $$(refineTH 3000))}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoSchemaPollInterval = Just (UUT.Interval 3000)}
             -- When
-            env = [(UUT._envVar UUT.schemaPollIntervalOption, "2000")]
+            env = [("HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL", "2000")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 3000))
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval 3000)
 
     Hspec.describe "soExperimentalFeatures" $ do
       Hspec.it "Default == mempty" $ do
@@ -1264,18 +1209,18 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soExperimentalFeatures) result `Hspec.shouldBe` Right (UUT._default UUT.experimentalFeaturesOption)
+        fmap (UUT.soExperimentalFeatures) result `Hspec.shouldBe` Right mempty
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
-            env = [(UUT._envVar UUT.experimentalFeaturesOption, "inherited_roles,optimize_permission_filters,naming_convention")]
+            env = [("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "inherited_roles,optimize_permission_filters,naming_convention")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soExperimentalFeatures) result
           `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])
@@ -1284,9 +1229,9 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoExperimentalFeatures = Just (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])}
             -- When
-            env = [(UUT._envVar UUT.experimentalFeaturesOption, "inherited_roles")]
+            env = [("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "inherited_roles")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soExperimentalFeatures) result
           `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])
@@ -1296,21 +1241,21 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.eventsFetchBatchSizeOption, "200")]
+            env = [("HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Int 200)
+        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right 200
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchBatchSize = Just $$(refineTH @NonNegative @Int 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchBatchSize = Just 300}
             -- When
-            env = [(UUT._envVar UUT.eventsFetchBatchSizeOption, "200")]
+            env = [("HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Int 300)
+        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right 300
 
     Hspec.describe "soGracefulShutdownTimeout" $ do
       Hspec.it "Default == 60" $ do
@@ -1320,30 +1265,30 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right (UUT._default UUT.gracefulShutdownOption)
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right 60
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
-            env = [(UUT._envVar UUT.gracefulShutdownOption, "200")]
+            env = [("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Seconds 200)
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right 200
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoGracefulShutdownTimeout = Just $$(refineTH @NonNegative @Seconds 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoGracefulShutdownTimeout = Just 300}
             -- When
-            env = [(UUT._envVar UUT.gracefulShutdownOption, "200")]
+            env = [("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Seconds 300)
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right 300
 
     Hspec.describe "soWebSocketConnectionInitTimeout" $ do
       Hspec.it "Default == 3" $ do
@@ -1352,32 +1297,29 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT._default UUT.webSocketConnectionInitTimeoutOption)
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout 3)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
-            env = [(UUT._envVar UUT.webSocketConnectionInitTimeoutOption, "200")]
+            env = [("HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout $$(refineTH @NonNegative @Seconds 200))
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions =
-              emptyServeOptionsRaw
-                { UUT.rsoWebSocketConnectionInitTimeout = Just (UUT.WSConnectionInitTimeout $$(refineTH @NonNegative @Seconds 300))
-                }
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketConnectionInitTimeout = Just (UUT.WSConnectionInitTimeout 300)}
             -- When
-            env = [(UUT._envVar UUT.webSocketConnectionInitTimeoutOption, "200")]
+            env = [("HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", "200")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout $$(refineTH @NonNegative @Seconds 300))
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout 300)
 
     Hspec.describe "soEnableMetadataQueryLoggingEnv" $ do
       Hspec.it "Default == MetadataQueryLoggingDisabled" $ do
@@ -1387,18 +1329,18 @@ mkServeOptionsSpec =
             -- When
             env = []
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right (UUT._default UUT.enableMetadataQueryLoggingOption)
+        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingDisabled
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
-            env = [(UUT._envVar UUT.enableMetadataQueryLoggingOption, "true")]
+            env = [("HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING", "true")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingEnabled
 
@@ -1406,74 +1348,30 @@ mkServeOptionsSpec =
         let -- Given
             rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingEnabled}
             -- When
-            env = [(UUT._envVar UUT.enableMetadataQueryLoggingOption, "false")]
+            env = [("HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING", "False")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
         fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingEnabled
 
     Hspec.describe "soDefaultNamingConvention" $ do
-      Hspec.it "Default = HasuraCase" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            -- When
-            env = []
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.HasuraCase
-
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
-            env = [(UUT._envVar UUT.defaultNamingConventionOption, "graphql-default")]
+            env = [("HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION", "graphql-default")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.GraphqlCase
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NC.GraphqlCase)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDefaultNamingConvention = Just NamingCase.GraphqlCase}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDefaultNamingConvention = Just NC.GraphqlCase}
             -- When
-            env = [(UUT._envVar UUT.defaultNamingConventionOption, "hasura-default")]
+            env = [("HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION", "hasura-default")]
             -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.GraphqlCase
-
-    Hspec.describe "soExtensionsSchema" $ do
-      Hspec.it "Default == 'public' " $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            -- When
-            env = []
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soExtensionsSchema result `Hspec.shouldBe` Right (UUT._default UUT.metadataDBExtensionsSchemaOption)
-
-      Hspec.it "Env > Nothing" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            -- When
-            env = [(UUT._envVar UUT.metadataDBExtensionsSchemaOption, "private")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soExtensionsSchema result `Hspec.shouldBe` Right (MonadTx.ExtensionsSchema "private")
-
-      Hspec.it "Arg > Env" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoExtensionsSchema = Just (MonadTx.ExtensionsSchema "other")}
-            -- When
-            env = [(UUT._envVar UUT.metadataDBExtensionsSchemaOption, "private")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soExtensionsSchema result `Hspec.shouldBe` Right (MonadTx.ExtensionsSchema "other")
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NC.GraphqlCase)

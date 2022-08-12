@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en-us">
   <head>
     <script>
@@ -13,8 +12,7 @@
        assetsVersion: "{{assetsVersion}}",
        cdnAssets: {{cdnAssets}},
        serverVersion: "{{serverVersion}}",
-       consoleType: "{{consoleType}}",
-       consoleSentryDsn: "{{consoleSentryDsn}}"
+       consoleType: "oss",
      };
      window.__env.versionedAssetsPath = window.__env.assetsPath;
     </script>
@@ -54,33 +52,35 @@
     </div>
     <div id="content" class="mainContent"></div>
 
-    <script type="module">
+    <script>
      // helper functions
      const loadIcon = (url) => {
-       const linkElem = document.createElement('link');
+       linkElem = document.createElement('link');
        linkElem.rel = 'icon';
        linkElem.type = 'image/png';
        linkElem.href = url;
        document.head.append(linkElem);
      };
      const loadCSS = (url) => {
-       const linkElem = document.createElement('link');
+       linkElem = document.createElement('link');
        linkElem.rel = 'stylesheet';
        linkElem.charset = 'UTF-8';
        linkElem.href = url;
        document.body.append(linkElem);
      };
      const loadScript = (url) => {
-       const scriptElem = document.createElement('script');
+       scriptElem = document.createElement('script');
        scriptElem.charset = 'UTF-8';
        scriptElem.src = url;
        document.body.append(scriptElem);
      };
      const prependSlash = (str) => str === '' ? '' : '/' + str;
-     const loadAssets = async () => {
+     const loadAssets = () => {
+       loadCSS(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
        loadIcon(window.__env.assetsPath + '/common/img/favicon_green.png');
-       await import(window.__env.versionedAssetsPath + '/assetLoader.js.gz');
-       window.__loadConsoleAssetsFromBasePath(window.__env.versionedAssetsPath + '/');
+       loadCSS(window.__env.versionedAssetsPath + '/main.css.gz');
+       loadScript(window.__env.versionedAssetsPath + '/main.js.gz');
+       loadScript(window.__env.versionedAssetsPath + '/vendor.js.gz');
      };
 
      // if cdnAssets is set to false, load assets from server instead of cdn
@@ -102,4 +102,3 @@
     </script>
   </body>
 </html>
-

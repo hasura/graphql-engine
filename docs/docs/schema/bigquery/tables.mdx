@@ -15,7 +15,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# BigQuery: Tables Basics
+# BigQuery: Tables basics
 
 ## Introduction
 
@@ -43,15 +43,15 @@ articles (
 
 ```
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Open the Hasura Console and head to the `Data` tab and click on the button on the left side bar to open up an interface
+Open the Hasura console and head to the `Data` tab and click on the button on the left side bar to open up an interface
 to create tables.
 
 For example, here is the schema for the `articles` table in this interface:
 
-<Thumbnail src="/img/schema/create-table-graphql-bigquery.png" alt="Schema for an article table" />
+<Thumbnail src='/img/schema/create-table-graphql-bigquery.png' alt='Schema for an article table' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -118,14 +118,14 @@ X-Hasura-Role: admin
 Tables can be present in the underlying BigQuery database without being exposed over the GraphQL API. In order to expose
 a table over the GraphQL API, it needs to be **tracked**.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-When a table is created via the Hasura Console, it gets tracked by default.
+When a table is created via the Hasura console, it gets tracked by default.
 
 You can track any existing tables in your database from the `Data -> Schema` page:
 
-<Thumbnail src="/img/schema/schema-track-tables-bigquery.png" alt="Track table" />
+<Thumbnail src='/img/schema/schema-track-tables-bigquery.png' alt='Track table' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -234,7 +234,7 @@ GraphQL descriptions of the auto-generated types and fields.
 ## Try out basic GraphQL requests
 
 At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables from the `API`
-tab in the Console. _(You may want to add some sample data into the tables first)_
+tab in the console. _(You may want to add some sample data into the tables first)_
 
 - Query all rows in the `articles` table:
 

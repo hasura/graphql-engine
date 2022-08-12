@@ -1,4 +1,12 @@
-cabal-version:  3.6
+cabal-version: 1.12
+
+-- This file is generated using hpack.
+-- Do not modify it directly. Instead, edit package.yaml and then run:
+--     make server/lib/aeson-ordered/aeson-ordered.cabal
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
 
 name:           aeson-ordered
 version:        0.1.0.0
@@ -11,7 +19,7 @@ author:         Anon Ray <anon@hasura.io>,
 maintainer:     Anon Ray <anon@hasura.io>,
                 Bryan O'Sullivan <bos@serpentine.com>,
                 MailRank, Inc.
-license:        BSD-3-Clause
+license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -39,24 +47,7 @@ library
       LambdaCase
       OverloadedStrings
       StrictData
-  ghc-options:
-    -foptimal-applicative-do
-    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
-    -Weverything
-    -Wno-missing-exported-signatures
-    -Wno-missing-import-lists
-    -Wno-missed-specialisations
-    -Wno-all-missed-specialisations
-    -Wno-unsafe
-    -Wno-safe
-    -Wno-missing-local-signatures
-    -Wno-monomorphism-restriction
-    -Wno-missing-kind-signatures
-    -Wno-missing-safe-haskell-mode
-    -- We want these warnings, but the code doesn't satisfy them yet:
-    -Wno-missing-deriving-strategies
-    -Wno-deriving-typeable
-    -Wno-implicit-prelude
+  ghc-options: -foptimal-applicative-do -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       aeson
     , attoparsec

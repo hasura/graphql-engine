@@ -7,7 +7,7 @@ import Control.Concurrent.Extended qualified as C
 import GHC.Stats
 import Hasura.Logging
 import Hasura.Prelude
-import System.Mem (performMajorGC, performMinorGC)
+import System.Mem (performMajorGC)
 
 -- | The RTS's idle GC doesn't work for us:
 --
@@ -24,15 +24,6 @@ import System.Mem (performMajorGC, performMinorGC)
 --
 -- ...so we hack together our own using GHC.Stats, which should have
 -- insignificant runtime overhead.
---
--- NOTE: as always the cost of a major GC (forced here, or initiated by the RTS)
--- with the default copying collector is proportional to live (non-garbage)
--- heap data. Tune parameters here to balance: more frequent GC pauses vs.
--- prompt cleanup of foreign data (which does not exert GC pressure).
---
--- NOTE: larger nursery size (+RTS -A) may help us run more finalizers during
--- cheaper minor GCs, before they are promoted, making it feasible (maybe) to
--- run this with longer interval parameters.
 ourIdleGC ::
   Logger Hasura ->
   -- | Run a major GC when we've been "idle" for idleInterval
@@ -43,9 +34,9 @@ ourIdleGC ::
   DiffTime ->
   IO void
 ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
-  startTimer >>= go 0 0 False
+  startTimer >>= go 0 0
   where
-    go gcs_prev major_gcs_prev lastIterationPerformedGC timerSinceLastMajorGC = do
+    go gcs_prev major_gcs_prev timerSinceLastMajorGC = do
       timeSinceLastGC <- timerSinceLastMajorGC
       when (timeSinceLastGC < minGCInterval) $ do
         -- no need to check idle until we've passed the minGCInterval:
@@ -58,29 +49,21 @@ ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
       let areIdle = gcs == gcs_prev
           areOverdue = timeSinceLastGC > maxNoGCInterval
 
+      -- a major GC was run since last iteration (cool!), reset timer:
       if
-        -- a major GC was run since last iteration (cool!), reset timer:
-        | major_gcs > major_gcs_prev -> do
-            startTimer >>= go gcs major_gcs False
+          | major_gcs > major_gcs_prev -> do
+            startTimer >>= go gcs major_gcs
 
-        -- we are idle and its a good time to do a GC, or we're overdue and must run a GC:
-        | areIdle || areOverdue -> do
-            -- If we performed a GC last time and nothing was promoted meantime
-            -- (minor GCs are the same) running a cheaper minor GC should
-            -- suffice to perform any new due finalizers:
-            if lastIterationPerformedGC && areIdle
-              then do
-                performMinorGC
-                startTimer >>= go (gcs + 1) major_gcs True
-              else do
-                when (areOverdue && not areIdle)
-                  $ logger
-                  $ UnstructuredLog LevelInfo
-                  $ "Overdue for a major GC: forcing one even though we don't appear to be idle"
-                performMajorGC
-                startTimer >>= go (gcs + 1) (major_gcs + 1) True
+          -- we are idle and its a good time to do a GC, or we're overdue and must run a GC:
+          | areIdle || areOverdue -> do
+            when (areOverdue && not areIdle) $
+              logger $
+                UnstructuredLog LevelWarn $
+                  "Overdue for a major GC: forcing one even though we don't appear to be idle"
+            performMajorGC
+            startTimer >>= go (gcs + 1) (major_gcs + 1)
 
-        -- else keep the timer running, waiting for us to go idle:
-        | otherwise -> do
+          -- else keep the timer running, waiting for us to go idle:
+          | otherwise -> do
             C.sleep idleInterval
-            go gcs major_gcs False timerSinceLastMajorGC
+            go gcs major_gcs timerSinceLastMajorGC

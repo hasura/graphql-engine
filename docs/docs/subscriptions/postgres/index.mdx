@@ -8,7 +8,7 @@ keywords:
 slug: index
 ---
 
-# Postgres: GraphQL Subscriptions
+# Postgres: GraphQL subscriptions
 
 ## Introduction
 
@@ -18,17 +18,10 @@ changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts of [queries](/queries/postgres/index.mdx) hold
 true for subscriptions as well.
 
-:::info Postgres Compatibility
-
-Hasura works with most [Postgres compatible flavours](/databases/postgres/index.mdx#postgres-compatible-flavors).
-
-:::
-
-:::info Single subscription in each query caveat
+:::info Caveat
 
 Hasura follows the [GraphQL spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field) which allows
-for only one root field in a subscription. You also cannot execute multiple separate subscriptions in one query. To
-have multiple subscriptions running at the same time they must be in separate queries.
+for only one root field in a subscription.
 
 :::
 
@@ -36,7 +29,7 @@ have multiple subscriptions running at the same time they must be in separate qu
 
 ### Live queries
 
-A live query subscription will return the **latest result** of the query being made and not necessarily all the individual
+A live query subscription will return the latest result of the query being made and not necessarily all the individual
 events leading up to the result. By default, updates are delivered to clients every **1 sec**.
 
 See more details [here](/subscriptions/postgres/livequery/index.mdx).
@@ -48,7 +41,7 @@ different from a live query as it sends individual rows at a time and not the en
 
 See more details [here](/subscriptions/postgres/streaming/index.mdx).
 
-### Live query vs streaming subscriptions
+### Live query vs Streaming subscriptions
 
 Suppose we need to display the messages of a group chat on a page, this can be done either via live queries or streaming
 subscriptions. Let's see how they can be used and how they differ from each other.
@@ -62,7 +55,7 @@ subscriptions. Let's see how they can be used and how they differ from each othe
      messages(where: { group_id: 1 }, order_by: { created_at: asc }) {
        id
        sender
-       receiver
+       reciever
        content
        created_at
        edited_at
@@ -83,7 +76,7 @@ subscriptions. Let's see how they can be used and how they differ from each othe
      messages_stream(where: { group_id: 1 }, cursor: { initial_value: { created_at: now } }, batch_size: 10) {
        id
        sender
-       receiver
+       reciever
        content
        created_at
        edited_at
@@ -100,11 +93,11 @@ subscriptions. Let's see how they can be used and how they differ from each othe
 
 ## Communication protocol
 
-Hasura GraphQL Engine uses the
+Hasura GraphQL engine uses the
 [GraphQL over WebSocket Protocol](https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md)
 by the [apollographql/subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) library
 and the [GraphQL over WebSocket Protocol](https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md) by the
-[graphql-ws](https://github.com/enisdenjo/graphql-ws) library for sending and receiving events. The GraphQL Engine uses
+[graphql-ws](https://github.com/enisdenjo/graphql-ws) library for sending and receiving events. The GraphQL engine uses
 the `Sec-WebSocket-Protocol` header to determine the communication protocol that'll be used. By default, the GraphQL
 engine will use the `apollographql/subscriptions-transport-ws` protocol.
 
@@ -133,7 +126,7 @@ using `connectionParams`.
 
 ## Cookies and WebSockets
 
-The Hasura GraphQL Engine will read cookies sent by the browser when initiating a WebSocket connection. The browser will
+The Hasura GraphQL engine will read cookies sent by the browser when initiating a WebSocket connection. The browser will
 send the cookie only if it is a secure cookie (`secure` flag in the cookie) and if the cookie has a `HttpOnly` flag.
 
 Hasura will read this cookie and use it as headers when resolving authorization (i.e. when resolving the auth webhook).
@@ -149,7 +142,7 @@ It uses the provided CORS configuration (as per
 1.  When it is `*`, the cookie is read and the CORS check is not enforced.
 2.  When there are explicit domains, the cookie will only be read if the request originates from one of the listed
     domains.
-3.  If CORS is disabled, the default behavior is that the cookie won't be read (because of potential security issues).
-    To override the behavior, you can use the flag `--ws-read-cookie` or the environment variable
+3.  If CORS is disabled, the default behaviour is that the cookie won't be read (because of potential security issues).
+    To override the behaviour, you can use the flag `--ws-read-cookie` or the environment variable
     `HASURA_GRAPHQL_WS_READ_COOKIE`. See
     [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for the setting.

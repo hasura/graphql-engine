@@ -1,7 +1,7 @@
 ---
-sidebar_label: Reset Hasura Migrations (config v2)
+sidebar_label: Resetting Hasura migrations (config v2)
 sidebar_position: 5
-description: Reset Hasura Migrations
+description: Resetting Hasura migrations
 keywords:
   - hasura
   - docs
@@ -10,39 +10,39 @@ keywords:
   - clear migrations
 ---
 
-# Reset Hasura Migrations (config v2)
+# Resetting Hasura migrations (config v2)
 
 ## Introduction
 
-This page explains how to reset the state of Migrations and create new
-Migrations from the state that is on the server. This can be useful if
+This page explains how to reset the state of migrations and create new
+migrations from the state that is on the server. This can be useful if
 the current migration state on your local machine is corrupted.
 
 ## Step 1: Delete the local migration files
 
-Move all your Migrations to a backup folder, in case you may need them
+Move all your migrations to a backup folder, in case you may need them
 later.
 
 You can use the following command:
 
 ```bash
-# move the contents of the Migrations folder into the migrations_backup folder
+# move the contents of the migrations folder into the migrations_backup folder
 
 mv migrations migrations_backup
 ```
 
 ## Step 2: Reset the migration history on the server
 
-On the SQL tab of the Hasura Console, run the following command:
+On the SQL tab of the Hasura console, run the following command:
 
 ```bash
 TRUNCATE hdb_catalog.schema_migrations;
 ```
 
-## Step 3: Pull the schema and Metadata from the server
+## Step 3: Pull the schema and metadata from the server
 
-If the Migrations were reset, then we will set up fresh Migrations by
-pulling the schema and Metadata from the server using the following
+If the migrations were reset, then we will set up fresh migrations by
+pulling the schema and metadata from the server using the following
 commands:
 
 ```bash
@@ -59,7 +59,7 @@ hasura migrate apply --version "<version>" --skip-execution
 ```
 
 ```bash
-## to also export the Hasura Metadata and save it in the ``/metadata`` directory
+## to also export the Hasura metadata and save it in the ``/metadata`` directory
 
 hasura metadata export
 ```
@@ -72,7 +72,7 @@ command. This flag can be used multiple times.
 
 :::
 
-## Step 4: Verify the status of the Migrations
+## Step 4: Verify the status of the migrations
 
 Run the following command to verify the migration status:
 
@@ -80,4 +80,4 @@ Run the following command to verify the migration status:
 hasura migrate status
 ```
 
-You should see the new Migrations!
+You should see the new migrations!

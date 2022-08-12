@@ -1,9 +1,8 @@
 # This tells graphql-bench that it's testing a hasura instance and should
 # collect some additional metrics:
 extended_hasura_checks: true
-headers:
-  X-Hasura-Admin-Secret: my-secret
-  Accept-Encoding: gzip
+# headers:
+#   X-Hasura-Admin-Secret: my-secret
 
 # Anchors to help us DRY below; settings here may be overridden selectively
 constants:
@@ -30,8 +29,6 @@ queries:
     <<: *k6_custom
     options:
       k6:
-        # See note on Chinook.simple_query_low_load
-        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -52,8 +49,6 @@ queries:
     <<: *k6_custom
     options:
       k6:
-        # See note on Chinook.simple_query_low_load
-        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -76,8 +71,6 @@ queries:
     <<: *k6_custom
     options:
       k6:
-        # See note on Chinook.simple_query_low_load
-        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -157,8 +150,6 @@ queries:
     <<: *k6_custom
     options:
       k6:
-        # See note on Chinook.simple_query_low_load
-        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings

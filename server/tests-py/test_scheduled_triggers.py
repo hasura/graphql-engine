@@ -1,10 +1,10 @@
-from croniter import croniter
-from datetime import datetime, timedelta
-import itertools
-import json
-import sqlalchemy
+#!/usr/bin/env python3
 
-from validate import validate_event_headers, validate_event_webhook
+import pytest
+from datetime import datetime,timedelta
+from croniter import croniter
+from validate import validate_event_webhook,validate_event_headers
+import json
 from utils import until_asserts_pass
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
@@ -14,65 +14,66 @@ from utils import until_asserts_pass
 
 def stringify_datetime(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+@pytest.mark.usefixtures('per_method_tests_db_state')
 class TestScheduledEvent(object):
 
     @classmethod
     def dir(cls):
         return 'queries/scheduled_triggers'
 
-    webhook_payload = {"foo": "baz"}
+    webhook_payload = {"foo":"baz"}
 
     header_conf = [
         {
-            "name": "header-key",
-            "value": "header-value"
+            "name":"header-key",
+            "value":"header-value"
         }
     ]
 
-    def test_scheduled_events(self, hge_ctx, scheduled_triggers_evts_webhook, metadata_schema_url):
-        metadata_engine = sqlalchemy.engine.create_engine(metadata_schema_url)
+    webhook_domain = "http://127.0.0.1:5594"
 
+    def test_scheduled_events(self,hge_ctx,scheduled_triggers_evts_webhook):
         query = {
             "type": "bulk",
             "args": [
                 # Succeeds
                 {
-                    "type": "create_scheduled_event",
-                    "args": {
-                        "webhook": f'{scheduled_triggers_evts_webhook.url}/test',
-                        "schedule_at": stringify_datetime(datetime.utcnow()),
-                        "payload": self.webhook_payload,
-                        "headers": self.header_conf,
-                        "comment": "test scheduled event",
-                    },
+                    "type":"create_scheduled_event",
+                    "args":{
+                        "webhook":'{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/test',
+                        "schedule_at":stringify_datetime(datetime.utcnow()),
+                        "payload":self.webhook_payload,
+                        "headers":self.header_conf,
+                        "comment":"test scheduled event"
+                    }
                 },
                 # Fails immediately, with 'dead'
                 {
-                    "type": "create_scheduled_event",
-                    "args": {
-                        "webhook": f'{scheduled_triggers_evts_webhook.url}/',
+                    "type":"create_scheduled_event",
+                    "args":{
+                        "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/",
                         "schedule_at": "2020-01-01T00:00:00Z",
-                        "payload": self.webhook_payload,
-                        "headers": self.header_conf,
-                    },
+                        "payload":self.webhook_payload,
+                        "headers":self.header_conf
+                    }
                 },
                 # Fails on request, trying twice:
                 {
-                    "type": "create_scheduled_event",
-                    "args": {
-                        "webhook": f'{scheduled_triggers_evts_webhook.url}/fail',
+                    "type":"create_scheduled_event",
+                    "args":{
+                        "webhook":self.webhook_domain + '/fail',
                         "schedule_at": stringify_datetime(datetime.utcnow()),
-                        "payload": self.webhook_payload,
-                        "headers": self.header_conf,
-                        "retry_conf": {
-                            "num_retries": 1,
-                            "retry_interval_seconds": 1,
-                            "timeout_seconds": 1,
-                            "tolerance_seconds": 21600,
-                        },
-                    },
-                },
-            ],
+                        "payload":self.webhook_payload,
+                        "headers":self.header_conf,
+                        "retry_conf":{
+                            "num_retries":1,
+                            "retry_interval_seconds":1,
+                            "timeout_seconds":1,
+                            "tolerance_seconds": 21600
+                        }
+                    }
+                }
+            ]
         }
         resp = hge_ctx.v1q(query)
         assert len(resp) == 3, resp
@@ -88,20 +89,21 @@ class TestScheduledEvent(object):
         # Check the two failures:
         validate_event_webhook(event_fail1['path'],'/fail')
         validate_event_webhook(event_fail2['path'],'/fail')
-
         # Check the one successful webhook call:
-        with metadata_engine.connect() as connection:
-            query = '''
-                select to_json(timezone('utc', created_at)) as created_at
+        query = {
+            "type":"run_sql",
+            "args":{
+                "sql":'''
+                select timezone('utc',created_at) as created_at
                 from hdb_catalog.hdb_scheduled_events
-                where comment = 'test scheduled event'
-            '''
-            result = connection.execute(query).fetchone()
-            assert result is not None
-            db_created_at = result['created_at']
-
-        validate_event_webhook(event_success['path'], '/test')
-        validate_event_headers(event_success['headers'], {"header-key": "header-value"})
+                where comment = 'test scheduled event';
+                '''
+            }
+        }
+        resp = hge_ctx.v1q(query)
+        db_created_at = resp['result'][1][0]
+        validate_event_webhook(event_success['path'],'/test')
+        validate_event_headers(event_success['headers'],{"header-key":"header-value"})
         assert event_success['body']['payload'] == self.webhook_payload
         assert event_success['body']['created_at'] == db_created_at.replace(" ","T") + "Z"
         payload_keys = dict.keys(event_success['body'])
@@ -110,87 +112,108 @@ class TestScheduledEvent(object):
         assert scheduled_triggers_evts_webhook.is_queue_empty()
 
         def try_check_events_statuses():
-            with metadata_engine.connect() as connection:
-                scheduled_event_statuses = list(
-                    connection.execute(
-                        "select status, tries from hdb_catalog.hdb_scheduled_events order by status desc"
-                    ).fetchall()
-                )
+            query = {
+                "type":"run_sql",
+                "args":{
+                    "sql":"select status,tries from hdb_catalog.hdb_scheduled_events order by status desc"
+                }
+            }
+            resp = hge_ctx.v1q(query)
+            scheduled_event_statuses = resp['result']
             # 3 scheduled events have been created
             # one should be dead because the timestamp was past the tolerance limit
             # one should be delivered because all the parameters were reasonable
             # one should be error because the webhook returns an error state
             assert scheduled_event_statuses == [
-                # status       tries
-                ( 'error',         2), # num_retries + 1
-                ( 'delivered',     1),
-                ( 'dead',          0),
-            ]
+                    ['status',    'tries'],
+                    ['error',     '2'], # num_retries + 1
+                    ['delivered', '1'],
+                    ['dead',      '0']
+                ], resp
 
-        until_asserts_pass(100, try_check_events_statuses)
+        until_asserts_pass(100,try_check_events_statuses)
 
-# WARNING: The tests in this class are not independent; they depend on the side effects of previous tests.
 class TestCronTrigger(object):
 
     cron_trigger_name = "cron_trigger"
-    # setting the test to be after 30 mins, to make sure that
-    # any of the events are not delivered.
-    min_after_30_mins = (datetime.utcnow() + timedelta(minutes=30)).minute
-    cron_schedule = "{} * * * *".format(min_after_30_mins)
-    init_time = datetime.utcnow()
 
-    def test_create_cron_schedule_triggers(self, hge_ctx, scheduled_triggers_evts_webhook):
+    def test_create_cron_schedule_triggers(self,hge_ctx):
+        # setting the test to be after 30 mins, to make sure that
+        # any of the events are not delivered.
+        min_after_30_mins = (datetime.utcnow() + timedelta(minutes=30)).minute
+        TestCronTrigger.cron_schedule = "{} * * * *".format(min_after_30_mins)
+
         cron_st_api_query = {
-            "type": "create_cron_trigger",
-            "args": {
-                "name": self.cron_trigger_name,
-                "webhook": f"{scheduled_triggers_evts_webhook.url}/foo",
-                "schedule": self.cron_schedule,
-                "headers": [
+            "type":"create_cron_trigger",
+            "args":{
+                "name":self.cron_trigger_name,
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}" + "/foo",
+                "schedule":self.cron_schedule,
+                "headers":[
                     {
-                        "name": "foo",
-                        "value": "baz",
-                    },
+                        "name":"foo",
+                        "value":"baz"
+                    }
                 ],
-                "payload": {"foo": "baz"},
-                "include_in_metadata": True,
-            },
+                "payload":{"foo":"baz"},
+                "include_in_metadata":True
+            }
         }
         resp = hge_ctx.v1q(cron_st_api_query)
+        TestCronTrigger.init_time = datetime.utcnow()
         # the cron events will be generated based on the current time, they
         # will not be exactly the same though(the server now and now here)
         assert resp['message'] == 'success'
 
-    def test_check_generated_cron_scheduled_events(self, metadata_schema_url):
-        metadata_engine = sqlalchemy.engine.create_engine(metadata_schema_url)
+    def test_check_generated_cron_scheduled_events(self,hge_ctx):
+        expected_schedule_timestamps = []
+        iter = croniter(self.cron_schedule,self.init_time)
+        for _ in range(100):
+            expected_schedule_timestamps.append(iter.next(datetime))
+        # Get timestamps in UTC from the db to compare it with
+        # the croniter generated timestamps
+        sql = '''
+        select timezone('utc',scheduled_time) as scheduled_time
+        from hdb_catalog.hdb_cron_events where
+        trigger_name = '{}' order by scheduled_time asc;'''
+        q = {
+            "type":"run_sql",
+            "args":{
+                "sql":sql.format(self.cron_trigger_name)
+            }
+        }
+        resp = hge_ctx.v1q(q)
+        ts_resp = resp['result'][1:]
+        assert len(ts_resp) == 100
+        # 100 scheduled events are generated in a single batch when the
+        # scheduled events need hydration
+        actual_schedule_timestamps = []
+        for ts in ts_resp:
+            datetime_ts = datetime.strptime(ts[0],"%Y-%m-%d %H:%M:%S")
+            actual_schedule_timestamps.append(datetime_ts)
+        assert actual_schedule_timestamps == expected_schedule_timestamps
 
-        schedule = croniter(self.cron_schedule, self.init_time)
-        expected_scheduled_timestamps = list(itertools.islice(schedule.all_next(datetime), 100))
-        self.verify_timestamps(metadata_engine, expected_scheduled_timestamps)
-
-    def test_update_existing_cron_trigger(self ,hge_ctx, metadata_schema_url, scheduled_triggers_evts_webhook):
-        metadata_engine = sqlalchemy.engine.create_engine(metadata_schema_url)
-
-        expected_scheduled_timestamps = []
+    def test_update_existing_cron_trigger(self,hge_ctx):
+        expected_schedule_timestamps = []
         iter = croniter(self.cron_schedule,datetime.utcnow())
         for _ in range(100):
-            expected_scheduled_timestamps.append(iter.next(datetime))
+            expected_schedule_timestamps.append(iter.next(datetime))
         q = {
-            "type": "create_cron_trigger",
-            "args": {
-                "name": self.cron_trigger_name,
-                "webhook": f"{scheduled_triggers_evts_webhook.url}/foo",
-                "schedule": self.cron_schedule,
-                "headers": [
+            "type":"create_cron_trigger",
+            "args":{
+                "name":self.cron_trigger_name,
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}" + "/foo",
+                "schedule":self.cron_schedule,
+                "headers":[
                     {
-                        "name": "header-name",
-                        "value": "header-value",
-                    },
+                        "name":"header-name",
+                        "value":"header-value"
+                    }
                 ],
-                "payload": {"foo": "baz"},
-                "include_in_metadata": True,
-                "replace": True,
-            },
+                "payload":{"foo":"baz"},
+                "include_in_metadata":True,
+                "replace":True
+            }
         }
         hge_ctx.v1q(q)
 
@@ -200,29 +223,49 @@ class TestCronTrigger(object):
         for cron_trigger in all_cron_triggers:
             if cron_trigger['name'] == self.cron_trigger_name:
                 assert cron_trigger['headers'] == [{
-                    "name": "header-name",
-                    "value": "header-value",
+                    "name":"header-name",
+                    "value":"header-value"
                 }]
 
-        # After updating the cron trigger, the future events should have been created
-        self.verify_timestamps(metadata_engine, expected_scheduled_timestamps)
+        # Get timestamps in UTC from the db to compare it with
+        # the croniter generated timestamps
+        # After updating the cron trigger, the future events should
+        # have been created
+        sql = '''
+        select timezone('utc',scheduled_time) as scheduled_time
+        from hdb_catalog.hdb_cron_events where
+        trigger_name = '{}' order by scheduled_time asc;'''
+        q = {
+            "type":"run_sql",
+            "args":{
+                "sql":sql.format(self.cron_trigger_name)
+            }
+        }
+        resp = hge_ctx.v1q(q)
+        ts_resp = resp['result'][1:]
+        assert len(ts_resp) == 100
+        actual_schedule_timestamps = []
+        for ts in ts_resp:
+            datetime_ts = datetime.strptime(ts[0],"%Y-%m-%d %H:%M:%S")
+            actual_schedule_timestamps.append(datetime_ts)
+        assert actual_schedule_timestamps == expected_schedule_timestamps
 
     def test_check_fired_webhook_event(self, hge_ctx, scheduled_triggers_evts_webhook):
         q = {
-            "type": "create_cron_trigger",
-            "args": {
-                "name": "test_cron_trigger",
-                "webhook": f"{scheduled_triggers_evts_webhook.url}/test",
-                "schedule": "* * * * *",
-                "headers": [
+            "type":"create_cron_trigger",
+            "args":{
+                "name":"test_cron_trigger",
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}" + "/test",
+                "schedule":"* * * * *",
+                "headers":[
                     {
-                        "name": "header-key",
-                        "value": "header-value",
-                    },
+                        "name":"header-key",
+                        "value":"header-value"
+                    }
                 ],
-                "payload": {"foo": "baz"},
-                "include_in_metadata": False,
-            },
+                "payload":{"foo":"baz"},
+                "include_in_metadata":False
+            }
         }
         hge_ctx.v1q(q)
         # The maximum timeout is set to 75s because, the cron timestamps
@@ -235,12 +278,12 @@ class TestCronTrigger(object):
         # 10:01:10 (seel sleep in processScheduledTriggers). So, in the worst
         # case, it will take 70 seconds to process the first scheduled event.
         event = scheduled_triggers_evts_webhook.get_event(75)
-        validate_event_webhook(event['path'], '/test')
-        validate_event_headers(event['headers'], {"header-key":"header-value"})
-        assert event['body']['payload'] == {"foo": "baz"}
+        validate_event_webhook(event['path'],'/test')
+        validate_event_headers(event['headers'],{"header-key":"header-value"})
+        assert event['body']['payload'] == {"foo":"baz"}
         assert event['body']['name'] == 'test_cron_trigger'
 
-    def test_get_cron_triggers(self, hge_ctx, scheduled_triggers_evts_webhook):
+    def test_get_cron_triggers(self, hge_ctx):
         q = {
             "type": "get_cron_triggers",
             "args": {}
@@ -252,50 +295,49 @@ class TestCronTrigger(object):
                 "headers": [
                     {
                         "name": "header-name",
-                        "value": "header-value",
+                        "value": "header-value"
                     }
                 ],
                 "include_in_metadata": True,
                 "name": self.cron_trigger_name,
                 "payload": {
-                    "foo": "baz",
+                    "foo": "baz"
                 },
                 "retry_conf": {
                     "num_retries": 0,
                     "retry_interval_seconds": 10,
                     "timeout_seconds": 60,
-                    "tolerance_seconds": 21600,
+                    "tolerance_seconds": 21600
                 },
                 "schedule": self.cron_schedule,
-                "webhook": f"{scheduled_triggers_evts_webhook.url}/foo",
+                "webhook": "{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/foo"
             },
             {
                 "headers": [
                     {
                         "name": "header-key",
-                        "value": "header-value",
-                    },
+                        "value": "header-value"
+                    }
                 ],
                 "include_in_metadata": False,
                 "name": "test_cron_trigger",
                 "payload": {
-                    "foo": "baz",
+                    "foo": "baz"
                 },
                 "retry_conf": {
                     "num_retries": 0,
                     "retry_interval_seconds": 10,
                     "timeout_seconds": 60,
-                    "tolerance_seconds": 21600,
+                    "tolerance_seconds": 21600
                 },
                 "schedule": "* * * * *",
-                "webhook": f"{scheduled_triggers_evts_webhook.url}/test",
+                "webhook": "{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/test"
             },
+
         ]
 
 
-    def test_export_and_import_cron_triggers(self, hge_ctx, metadata_schema_url, scheduled_triggers_evts_webhook):
-        metadata_engine = sqlalchemy.engine.create_engine(metadata_schema_url)
-
+    def test_export_and_import_cron_triggers(self, hge_ctx):
         q = {
             "type": "export_metadata",
             "args": {}
@@ -309,7 +351,7 @@ class TestCronTrigger(object):
                 "headers": [
                     {
                         "name": "header-name",
-                        "value": "header-value",
+                        "value": "header-value"
                     }
                 ],
                 "include_in_metadata": True,
@@ -318,46 +360,49 @@ class TestCronTrigger(object):
                     "foo": "baz"
                 },
                 "schedule": self.cron_schedule,
-                "webhook": f"{scheduled_triggers_evts_webhook.url}/foo",
-            },
+                "webhook": "{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/foo"
+            }
         ]
         q = {
             "type": "replace_metadata",
             "args": {
-                "metadata": resp,
-            },
+                "metadata": resp
+            }
         }
         resp = hge_ctx.v1q(q)
-
-        with metadata_engine.connect() as connection:
-            sql = '''
-                select count(1) as count
-                from hdb_catalog.hdb_cron_events
-                where trigger_name = %s
-            '''
-            result = connection.execute(sql, (self.cron_trigger_name,)).fetchone()
-            assert result is not None
-            count = result['count']
+        sql = '''
+        select count(1) as count
+        from hdb_catalog.hdb_cron_events
+        where trigger_name = '{}'
+        '''
+        run_sql_query = {
+            "type": "run_sql",
+            "args": {
+                "sql": sql.format(self.cron_trigger_name)
+            }
+        }
+        resp = hge_ctx.v1q(run_sql_query)
+        count_resp = resp['result'][1][0]
         # Check if the future cron events are created for
         # for a cron trigger while imported from the metadata
-        assert int(count) == 100
+        assert int(count_resp) == 100
 
-    def test_attempt_to_create_duplicate_cron_trigger_fail(self, hge_ctx, scheduled_triggers_evts_webhook):
+    def test_attempt_to_create_duplicate_cron_trigger_fail(self, hge_ctx):
         q = {
-            "type": "create_cron_trigger",
-            "args": {
-                "name": "test_cron_trigger",
-                "webhook": f"{scheduled_triggers_evts_webhook.url}/test",
-                "schedule": "* * * * *",
-                "headers": [
+            "type":"create_cron_trigger",
+            "args":{
+                "name":"test_cron_trigger",
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}" + "/test",
+                "schedule":"* * * * *",
+                "headers":[
                     {
-                        "name": "header-key",
-                        "value": "header-value",
-                    },
+                        "name":"header-key",
+                        "value":"header-value"
+                    }
                 ],
-                "payload": {"foo": "baz"},
-                "include_in_metadata": False,
-            },
+                "payload":{"foo":"baz"},
+                "include_in_metadata":False
+            }
         }
         resp = hge_ctx.v1q(q, expected_status_code = 400)
         assert dict(resp) == {
@@ -371,30 +416,17 @@ class TestCronTrigger(object):
             "type": "bulk",
             "args": [
                 {
-                    "type": "delete_cron_trigger",
-                    "args": {
-                        "name": self.cron_trigger_name,
-                    },
+                    "type":"delete_cron_trigger",
+                    "args":{
+                        "name":self.cron_trigger_name
+                    }
                 },
                 {
-                    "type": "delete_cron_trigger",
-                    "args": {
-                        "name": "test_cron_trigger",
-                    },
-                },
-            ],
+                    "type":"delete_cron_trigger",
+                    "args":{
+                        "name":"test_cron_trigger"
+                    }
+                }
+            ]
         }
         hge_ctx.v1q(q)
-
-    def verify_timestamps(self, metadata_engine, expected_scheduled_timestamps):
-        # Get timestamps in UTC from the db to compare them with the croniter-generated timestamps
-        with metadata_engine.connect() as connection:
-            sql = '''
-                select timezone('utc', scheduled_time) as scheduled_time
-                from hdb_catalog.hdb_cron_events
-                where trigger_name = %s
-                order by scheduled_time asc
-            '''
-            actual_scheduled_timestamps = list(scheduled_time for (scheduled_time,) in connection.execute(sql, (self.cron_trigger_name,)).fetchall())
-
-        assert actual_scheduled_timestamps == expected_scheduled_timestamps

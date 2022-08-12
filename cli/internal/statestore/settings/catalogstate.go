@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 )
 
@@ -14,54 +13,46 @@ func NewStateStoreCatalog(c *statestore.CLICatalogState) *StateStoreCatalog {
 }
 
 func (s StateStoreCatalog) GetSetting(key string) (value string, err error) {
-	var op errors.Op = "settings.StateStoreCatalog.GetSetting"
 	// get setting
 	state, err := s.client.Get()
 	if err != nil {
-		return "", errors.E(op, err)
+		return "", err
 	}
 	return state.GetSetting(key), nil
 }
 
 func (s StateStoreCatalog) UpdateSetting(name string, value string) error {
-	var op errors.Op = "settings.StateStoreCatalog.UpdateSetting"
 	// get setting
 	state, err := s.client.Get()
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	state.SetSetting(name, value)
 	_, err = s.client.Set(*state)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	return nil
 }
 
 func (s StateStoreCatalog) GetAllSettings() (map[string]string, error) {
-	var op errors.Op = "settings.StateStoreCatalog.GetAllSettings"
 	// get setting
 	state, err := s.client.Get()
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	return state.GetSettings(), nil
 }
 
 func (s StateStoreCatalog) PrepareSettingsDriver() error {
-	var op errors.Op = "settings.StateStoreCatalog.PrepareSettingsDriver"
-	if err := s.setDefaults(); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return s.setDefaults()
 }
 
 func (s StateStoreCatalog) setDefaults() error {
-	var op errors.Op = "settings.StateStoreCatalog.setDefaults"
 	// get setting
 	state, err := s.client.Get()
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	for _, setting := range Settings {
 		if v := state.GetSetting(setting.GetName()); len(v) == 0 {
@@ -70,7 +61,7 @@ func (s StateStoreCatalog) setDefaults() error {
 	}
 	_, err = s.client.Set(*state)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	return nil
 }

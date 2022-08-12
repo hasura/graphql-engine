@@ -1,5 +1,5 @@
 ---
-sidebar_label: Use variables / aliases / fragments / directives
+sidebar_label: Using variables / aliases / fragments / directives
 sidebar_position: 10
 description: Use variables, aliases, fragments and directives in Hasura queries
 keywords:
@@ -15,7 +15,7 @@ keywords:
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Use Variables / Aliases / Fragments / Directives in Queries
+# Using variables / aliases / fragments / directives in queries
 
 ## Using variables
 
@@ -25,31 +25,30 @@ variables.
 **Example:** Fetch an author by their `author_id`:
 
 <GraphiQLIDE
-  query={`query getArticles($author_id: Int!, $title: String!) {
-  articles(
-    where: { author_id: { _eq: $author_id }, title: { _ilike: $title } }
+  query={`query getArticles($author_id: Int!) {
+  bigquery_articles(
+    where: { author_id: { _eq: $author_id } }
   ) {
     id
     title
   }
 }`}
-  response={`{
+response={`{
   "data": {
-    "articles": [
+    "bigquery_articles": [
       {
-        "id": 15,
+        "id": "15",
         "title": "How to climb Mount Everest"
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "How to be successful on broadway"
       }
     ]
   }
 }`}
-  variables={`{
-  "author_id": 1,
-  "title": "%How to%"
+variables={`{
+  "author_id": 1
 }`}
 />
 

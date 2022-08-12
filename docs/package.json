@@ -1,11 +1,7 @@
 {
   "name": "docs",
-  "description": "Hasura GraphQL Engine Documentation",
   "version": "0.0.0",
   "private": true,
-  "engines": {
-    "node": ">=16.14"
-  },
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
@@ -18,39 +14,27 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc",
-    "spellcheck": "./spell_check.sh",
-    "spelladd": "./spell_add.sh",
-    "format": "prettier --write \"**/*.+(js|jsx|css|json|md|mdx)\""
+    "typecheck": "tsc"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.2.0",
-    "@docusaurus/preset-classic": "^2.2.0",
-    "@mdx-js/react": "^1.6.22",
-    "algoliasearch": "^4.14.2",
+    "@docusaurus/core": "^2.0.0-beta.18",
+    "@docusaurus/preset-classic": "^2.0.0-beta.18",
+    "@mdx-js/react": "^1.6.21",
     "algoliasearch-helper": "^3.7.4",
-    "clsx": "^1.2.1",
-    "cspell": "^6.18.1",
+    "clsx": "^1.1.1",
     "docusaurus-plugin-sass": "^0.2.2",
     "graphiql": "^1.5.1",
     "graphql": "^15.7.2",
-    "graphql-ws": "^5.11.2",
-    "markdown-to-jsx": "^7.3.2",
-    "prism-react-renderer": "^1.3.5",
+    "prism-react-renderer": "^1.2.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-transition-group": "^4.4.2",
-    "sass": "^1.49.8",
-    "usehooks-ts": "^2.9.1",
-    "uuid": "^9.0.0"
+    "sass": "^1.49.8"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^2.1.0",
-    "@swc/core": "^1.3.23",
-    "@tsconfig/docusaurus": "^1.0.6",
-    "prettier": "^3.0.0",
-    "swc-loader": "^0.2.3",
-    "typescript": "^4.8.4"
+    "@docusaurus/module-type-aliases": "^2.0.0-beta.18",
+    "@tsconfig/docusaurus": "^1.0.4",
+    "typescript": "^4.5.5"
   },
   "browserslist": {
     "production": [
@@ -63,6 +47,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "packageManager": "yarn@3.2.4"
+  }
 }

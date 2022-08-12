@@ -15,7 +15,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Enum Type Fields
+# Postgres: Enum type fields
 
 ## Introduction
 
@@ -43,7 +43,7 @@ For enums with values that are dynamic and may require updates, such as a list o
 strongly recommended. Modifying an enum defined this way is easy: simply insert, update, or delete rows in the enum
 table (and updates or deletes can even be cascaded to references, and they may be done within a transaction).
 
-## Enums in the Hasura GraphQL Engine
+## Enums in the Hasura GraphQL engine
 
 Given the limitations of native Postgres enum types (as described [above](#pg-native-enum)), Hasura currently only
 generates GraphQL enum types for enums defined using the [referenced tables](#pg-reference-table-enum) approach.
@@ -110,7 +110,7 @@ INSERT INTO user_role (value, comment) VALUES
   ('administrator', 'Users with the privilege to set users’ roles');
 ```
 
-<div id="pg-create-enum-table-from-pg-enum" />
+<div id='pg-create-enum-table-from-pg-enum' />
 
 :::info Creating an enum table from a native PG enum
 
@@ -118,7 +118,7 @@ You can create a table containing the values of a PG enum by executing the follo
 
 ```sql
 CREATE TABLE "<my_enum_table>" (value TEXT PRIMARY KEY);
-INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>"))::text);
+INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>")))::text);
 ```
 
 :::
@@ -130,13 +130,13 @@ Next, we need to tell Hasura that this table represents an enum.
 Once we have a table which satisfies the conditions for an enum table as described [above](#pg-create-enum-table), we
 need to tell Hasura that this table represents an enum.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Data -> [table-name] -> Modify` tab in the Console and toggle the switch in the `Set table as enum`
+Head to the `Data -> [table-name] -> Modify` tab in the console and toggle the switch in the `Set table as enum`
 section:
 
-<Thumbnail src="/img/schema/enum-set.png" alt="Set table as enum" />
+<Thumbnail src='/img/schema/enum-set.png' alt='Set table as enum' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -150,7 +150,7 @@ To set a table as an enum, change the `tables.yaml` file in the
   is_enum: true
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -161,7 +161,7 @@ hasura metadata apply
 A table can be set as an enum via the following 2 methods:
 
 1.  Passing `true` for the `is_enum` option of the
-    [pg_track_table](/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) Metadata API while tracking a
+    [pg_track_table](/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) metadata API while tracking a
     table:
 
     ```http {11}
@@ -268,19 +268,19 @@ string:
 }`}
 />
 
-### Enums and Migrations
+### Enums and migrations
 
 As enum tables have a requirement to contain at least 1 row, it is necessary to have a migration which inserts values
-into an enum table. Otherwise while applying Migrations an error would be thrown while trying to set the table as an
+into an enum table. Otherwise while applying migrations an error would be thrown while trying to set the table as an
 enum.
 
 The migration which inserts values into an enum table needs to be between the migration creating the table and the
 migration setting it as an enum.
 
-This can be achieved via the Console by performing the following steps while setting up an enum table:
+This can be achieved via the console by performing the following steps while setting up an enum table:
 
 1.  Create the enum table
-2.  Use the `RawSQL` tab of the Console to insert the enum values into the table and mark the insert as a migration
+2.  Use the `RawSQL` tab of the console to insert the enum values into the table and mark the insert as a migration
 3.  Set the table as an enum
 
 You can also

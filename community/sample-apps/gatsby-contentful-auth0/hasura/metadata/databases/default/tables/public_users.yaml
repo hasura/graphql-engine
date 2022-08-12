@@ -1,0 +1,11 @@
+table:
+  name: users
+  schema: public
+array_relationships:
+- name: playlists
+  using:
+    foreign_key_constraint_on:
+      column: user_id
+      table:
+        name: playlist
+        schema: public

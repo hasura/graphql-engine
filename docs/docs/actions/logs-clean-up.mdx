@@ -1,5 +1,5 @@
 ---
-sidebar_label: Async Action logs clean up
+sidebar_label: async Action logs clean up
 sidebar_position: 11
 description: Clean up async action logs
 keywords:
@@ -10,19 +10,19 @@ keywords:
   - async actions
 ---
 
-# Clean up Async Action Logs
+# Cleaning up async Action logs
 
 ## Introduction
 
-Hasura stores action logs of [async Actions](/actions/async-actions.mdx) in a table
-in **the "hdb_catalog" schema of the Hasura Metadata database**.
+Hasura stores action logs of [async actions](/actions/async-actions.mdx) in a table
+in **the "hdb_catalog" schema of the Hasura metadata database**.
 
 As the table gets larger, you may want to prune it. You can use any of the following options to prune your logs depending on
 your need.
 
 :::caution Warning
 
-- Deleting logs is irreversible, so be careful with these Actions.
+- Deleting logs is irreversible, so be careful with these actions.
 - Deleting logs while subscriptions for the response might still be
   open may result into the loss of data and `null` values been
   returned.
@@ -70,6 +70,7 @@ DELETE FROM hdb_catalog.hdb_action_log WHERE created_at < NOW() - INTERVAL '3 mo
 ```
 
 See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html) for more details.
+
 
 :::info Additional Resources
 

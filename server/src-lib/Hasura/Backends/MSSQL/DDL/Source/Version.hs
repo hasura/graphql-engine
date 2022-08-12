@@ -16,7 +16,7 @@ import Database.ODBC.TH qualified as ODBC
 import Hasura.Backends.MSSQL.Connection (MonadMSSQLTx (..))
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
 import Hasura.Prelude
-import Hasura.RQL.Types.BackendType (BackendType (MSSQL))
+import Hasura.SQL.Backend (BackendType (MSSQL))
 import Hasura.Server.Migrate.Version qualified as Version
 
 type SourceCatalogVersion = Version.SourceCatalogVersion 'MSSQL
@@ -25,12 +25,12 @@ initialSourceCatalogVersion :: SourceCatalogVersion
 initialSourceCatalogVersion = Version.SourceCatalogVersion 1
 
 latestSourceCatalogVersion :: SourceCatalogVersion
-latestSourceCatalogVersion = Version.SourceCatalogVersion 4
+latestSourceCatalogVersion = Version.SourceCatalogVersion 2
 
 previousSourceCatalogVersions :: [SourceCatalogVersion]
 previousSourceCatalogVersions = [initialSourceCatalogVersion .. pred latestSourceCatalogVersion]
 
-setSourceCatalogVersion :: (MonadMSSQLTx m) => SourceCatalogVersion -> m ()
+setSourceCatalogVersion :: MonadMSSQLTx m => SourceCatalogVersion -> m ()
 setSourceCatalogVersion (Version.SourceCatalogVersion version) =
   liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler setSourceCatalogVersionQuery
   where
@@ -50,7 +50,7 @@ setSourceCatalogVersion (Version.SourceCatalogVersion version) =
         COMMIT TRANSACTION
       |]
 
-getSourceCatalogVersion :: (MonadMSSQLTx m) => m SourceCatalogVersion
+getSourceCatalogVersion :: MonadMSSQLTx m => m SourceCatalogVersion
 getSourceCatalogVersion =
   Version.SourceCatalogVersion
     <$> liftMSSQLTx (singleRowQueryE HGE.defaultMSSQLTxErrorHandler [ODBC.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |])

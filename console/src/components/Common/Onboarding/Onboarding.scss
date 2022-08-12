@@ -1,0 +1,125 @@
+.hi_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+  text-align: center;
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  background-color: #fff;
+  border-radius: 100%;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.onboarding_popup {
+  bottom: 32px;
+  z-index: 10;
+  right: 32px;
+  background: #fff;
+  width: 320px;
+  border: 1px solid #d7d7d7;
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.08);
+  position: fixed;
+  font-family: 'Gudea', -apple-system, sans-serif;
+}
+
+.link_icon {
+  float: left;
+  font-size: 12px;
+}
+.popup_header {
+  display: flex;
+  font-weight: bold;
+  align-items: center;
+  padding: 16px;
+  color: #4d4d4d;
+  background: #faca33;
+  font-family: 'Gudea', -apple-system, sans-serif;
+}
+.popup_header img {
+  margin-right: 8px;
+  width: 25px;
+}
+.flex_center {
+  display: flex;
+  align-items: center;
+}
+.popup_body ul {
+  list-style: none;
+  text-align: start;
+  padding: 0px;
+}
+.popup_item {
+  font-size: 16px;
+  border-bottom: 1px solid #cccccc;
+}
+.popup_item.video {
+  border-bottom: none;
+}
+.link_container {
+  padding: 16px;
+  color: inherit;
+  text-decoration: none;
+}
+.link_container.link {
+  display: flex;
+  align-items: center;
+}
+.link_container.link:hover {
+  text-decoration: underline;
+  .link_icon {
+    text-decoration: underline;
+  }
+}
+.spacer {
+  flex: 1;
+}
+.link_num {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 24px;
+  padding: 2px;
+  width: 24px;
+  background-color: #eeeeee;
+  border-radius: 50%;
+  margin-right: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.muted {
+  color: #999fb1 !important;
+}
+.button {
+  background-color: white;
+  border: none;
+  cursor: pointer;
+}
+.button:hover {
+  text-decoration: underline;
+}
+.popup_buttons {
+  display: flex;
+  padding: 8px 8px 16px;
+  justify-content: space-between;
+}
+
+.helper_circle {
+  text-align: center;
+  display: inline-block;
+  background: #43495a;
+  color: #fff;
+  margin-right: 8px;
+  height: 24px;
+  width: 24px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  padding-top: 3px;
+}

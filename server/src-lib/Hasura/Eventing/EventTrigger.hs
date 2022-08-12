@@ -1,3 +1,6 @@
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- |
 -- = Event Triggers
 --
@@ -27,8 +30,6 @@
 -- failed requests at a regular (user-configurable) interval.
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx,
-    createFetchedEventsStatsLogger,
-    closeFetchedEventsStatsLogger,
     processEventQueue,
     defaultMaxEventThreads,
     defaultFetchInterval,
@@ -37,64 +38,51 @@ module Hasura.Eventing.EventTrigger
     -- Exported for testing
     saveLockedEventTriggerEvents,
     removeEventTriggerEventFromLockedEvents,
-    logQErr,
   )
 where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM.TVar
-import Control.FoldDebounce qualified as FDebounce
 import Control.Lens
 import Control.Monad.Catch (MonadMask, bracket_, finally, mask_)
 import Control.Monad.STM
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
-import Data.Aeson.Key qualified as Key
-import Data.Aeson.KeyMap qualified as KeyMap
-import Data.Aeson.Lens qualified as JL
+import Data.Aeson.TH
 import Data.Has
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as M
 import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Data.Time qualified as Time
 import Data.Time.Clock
+import Data.Time.Clock qualified as Time
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Base.Error
-import Hasura.Eventing.Backend
 import Hasura.Eventing.Common
 import Hasura.Eventing.HTTP
 import Hasura.HTTP (getHTTPExceptionStatus)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
+import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Metrics (ServerMetrics (..))
-import Hasura.Server.Prometheus
 import Hasura.Server.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
-import Refined (NonNegative, Positive, Refined, unrefine)
-import Refined.Unsafe (unsafeRefine)
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
-import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
-import System.Metrics.Prometheus.CounterVector (CounterVector)
-import System.Metrics.Prometheus.CounterVector qualified as CounterVector
-import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
-import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
-import System.Timeout.Lifted (timeout)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -134,18 +122,16 @@ following way now:
 data EventEngineCtx = EventEngineCtx
   { _eeCtxEventThreadsCapacity :: TVar Int,
     _eeCtxFetchInterval :: DiffTime,
-    _eeCtxFetchSize :: Refined NonNegative Int
+    _eeCtxFetchSize :: NonNegativeInt
   }
 
 data DeliveryInfo = DeliveryInfo
   { diCurrentRetry :: Int,
     diMaxRetries :: Int
   }
-  deriving (Show, Generic, Eq)
+  deriving (Show, Eq)
 
-instance J.ToJSON DeliveryInfo where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
+$(deriveJSON hasuraJSON {omitNothingFields = True} ''DeliveryInfo)
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -165,122 +151,48 @@ data EventPayload (b :: BackendType) = EventPayload
     epTrigger :: TriggerMetadata,
     epEvent :: J.Value,
     epDeliveryInfo :: DeliveryInfo,
-    epCreatedAt :: Time.LocalTime
+    epCreatedAt :: Time.UTCTime
   }
   deriving (Generic)
 
-deriving instance (Backend b) => Show (EventPayload b)
+deriving instance Backend b => Show (EventPayload b)
 
-deriving instance (Backend b) => Eq (EventPayload b)
+deriving instance Backend b => Eq (EventPayload b)
 
-instance (Backend b) => J.ToJSON (EventPayload b) where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+instance Backend b => J.ToJSON (EventPayload b) where
+  toJSON = J.genericToJSON hasuraJSON {omitNothingFields = True}
 
-defaultMaxEventThreads :: Refined Positive Int
-defaultMaxEventThreads = unsafeRefine 100
+defaultMaxEventThreads :: Int
+defaultMaxEventThreads = 100
 
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
 
-initEventEngineCtx :: (MonadIO m) => Refined Positive Int -> Refined NonNegative Milliseconds -> Refined NonNegative Int -> m EventEngineCtx
-initEventEngineCtx maxThreads fetchInterval _eeCtxFetchSize = do
-  _eeCtxEventThreadsCapacity <- liftIO $ newTVarIO $ unrefine maxThreads
-  let _eeCtxFetchInterval = milliseconds $ unrefine fetchInterval
-  return EventEngineCtx {..}
+initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
+initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
+  _eeCtxEventThreadsCapacity <- newTVar maxT
+  return $ EventEngineCtx {..}
 
-saveLockedEventTriggerEvents :: (MonadIO m) => SourceName -> [EventId] -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
+saveLockedEventTriggerEvents :: MonadIO m => SourceName -> [EventId] -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
 saveLockedEventTriggerEvents sourceName eventIds lockedEvents =
-  liftIO
-    $ atomically
-    $ do
+  liftIO $
+    atomically $ do
       lockedEventsVals <- readTVar lockedEvents
-      case HashMap.lookup sourceName lockedEventsVals of
-        Nothing -> writeTVar lockedEvents $! HashMap.singleton sourceName (Set.fromList eventIds)
-        Just _ -> writeTVar lockedEvents $! HashMap.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
+      case M.lookup sourceName lockedEventsVals of
+        Nothing -> writeTVar lockedEvents $! M.singleton sourceName (Set.fromList eventIds)
+        Just _ -> writeTVar lockedEvents $! M.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
 
 removeEventTriggerEventFromLockedEvents ::
-  (MonadIO m) => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
+  MonadIO m => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
 removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
-  liftIO
-    $ atomically
-    $ do
+  liftIO $
+    atomically $ do
       lockedEventsVals <- readTVar lockedEvents
-      writeTVar lockedEvents $! HashMap.adjust (Set.delete eventId) sourceName lockedEventsVals
+      writeTVar lockedEvents $! M.adjust (Set.delete eventId) sourceName lockedEventsVals
 
 type BackendEventWithSource = AB.AnyBackend EventWithSource
 
 type FetchEventArguments = ([BackendEventWithSource], Int, Bool)
-
-newtype EventsCount = EventsCount {unEventsCount :: Int}
-  deriving (Eq, Show, J.ToJSON, J.FromJSON, Num)
-
-newtype NumEventsFetchedPerSource = NumEventsFetchedPerSource {unNumEventsFetchedPerSource :: HashMap SourceName EventsCount}
-  deriving (Eq, Show)
-
-instance J.ToJSON NumEventsFetchedPerSource where
-  toJSON (NumEventsFetchedPerSource m) =
-    J.Object $ KeyMap.fromList $ map ((Key.fromText . sourceNameToText) *** J.toJSON) $ HashMap.toList m
-
-instance Semigroup NumEventsFetchedPerSource where
-  (NumEventsFetchedPerSource lMap) <> (NumEventsFetchedPerSource rMap) =
-    NumEventsFetchedPerSource $ HashMap.unionWith (+) lMap rMap
-
-instance Monoid NumEventsFetchedPerSource where
-  mempty = NumEventsFetchedPerSource mempty
-
-data FetchedEventsStats = FetchedEventsStats
-  { _fesNumEventsFetched :: NumEventsFetchedPerSource,
-    _fesNumFetches :: Int
-  }
-  deriving (Eq, Generic, Show)
-
-instance J.ToJSON FetchedEventsStats where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
-
-instance L.ToEngineLog FetchedEventsStats L.Hasura where
-  toEngineLog stats =
-    (L.LevelInfo, L.eventTriggerProcessLogType, J.toJSON stats)
-
-instance Semigroup FetchedEventsStats where
-  (FetchedEventsStats lMap lFetches) <> (FetchedEventsStats rMap rFetches) =
-    FetchedEventsStats (lMap <> rMap) (lFetches + rFetches)
-
-instance Monoid FetchedEventsStats where
-  mempty = FetchedEventsStats mempty 0
-
-type FetchedEventsStatsLogger = FDebounce.Trigger FetchedEventsStats FetchedEventsStats
-
--- | Logger to accumulate stats of fetched events over a period of time and log once using @'L.Logger L.Hasura'.
--- See @'createStatsLogger' for more details.
-createFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedEventsStatsLogger
-createFetchedEventsStatsLogger = L.createStatsLogger
-
--- | Close the fetched events stats logger.
-closeFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> FetchedEventsStatsLogger -> m ()
-closeFetchedEventsStatsLogger = L.closeStatsLogger L.eventTriggerProcessLogType
-
--- | Log statistics of fetched events. See @'logStats' for more details.
-logFetchedEventsStatistics ::
-  (MonadIO m) =>
-  FetchedEventsStatsLogger ->
-  [BackendEventWithSource] ->
-  m ()
-logFetchedEventsStatistics logger backendEvents =
-  L.logStats logger (FetchedEventsStats numEventsFetchedPerSource 1)
-  where
-    numEventsFetchedPerSource =
-      let sourceNames = flip map backendEvents
-            $ \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
-       in NumEventsFetchedPerSource $ HashMap.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
-
-{-# ANN processEventQueue ("HLint: ignore Use withAsync" :: String) #-}
-
--- | `upperBoundEventTriggerTimeout` is the maximum amount of time
---    an event trigger can take to process. This function is intended
---    to use with a timeout.
-upperBoundEventTriggerTimeout :: DiffTime
-upperBoundEventTriggerTimeout = minutes 30
 
 -- | Service events from our in-DB queue.
 --
@@ -294,31 +206,27 @@ upperBoundEventTriggerTimeout = minutes 30
 processEventQueue ::
   forall m.
   ( MonadIO m,
+    Tracing.HasReporter m,
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
-    MonadMask m,
-    Tracing.MonadTrace m,
-    MonadGetPolicies m
+    MonadMask m
   ) =>
   L.Logger L.Hasura ->
-  FetchedEventsStatsLogger ->
   HTTP.Manager ->
   IO SchemaCache ->
-  IO EventEngineCtx ->
-  TVar Int ->
+  EventEngineCtx ->
   LockedEventsCtx ->
   ServerMetrics ->
-  EventTriggerMetrics ->
   MaintenanceMode () ->
-  TriggersErrorLogLevelStatus ->
   m (Forever m)
-processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx activeEventProcessingThreads LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode triggersErrorLogLevelStatus = do
+processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
+    fetchBatchSize = getNonNegativeInt _eeCtxFetchSize
+
     popEventsBatch :: m [BackendEventWithSource]
     popEventsBatch = do
-      labelMe "popEventsBatch"
       {-
         SELECT FOR UPDATE .. SKIP LOCKED can throw serialization errors in RepeatableRead: https://stackoverflow.com/a/53289263/1911889
         We can avoid this safely by running it in ReadCommitted as Postgres will recheck the
@@ -330,45 +238,29 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       allSources <- scSources <$> liftIO getSchemaCache
-      fetchBatchSize <- unrefine . _eeCtxFetchSize <$> liftIO getEventEngineCtx
-      events <- liftIO
-        . fmap concat
-        $
+      liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
-        LA.forConcurrently (HashMap.toList allSources) \(sourceName, sourceCache) -> do
-          labelMe "processEventQueue forConcurrently"
-          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo {..} :: SourceInfo b) -> do
-            let tables = HashMap.elems _siTables
+        LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
+          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
+            let tables = M.elems tableCache
                 triggerMap = _tiEventTriggerInfoMap <$> tables
-                eventTriggerCount = sum (HashMap.size <$> triggerMap)
-                triggerNames = concatMap HashMap.keys triggerMap
+                eventTriggerCount = sum (M.size <$> triggerMap)
+                triggerNames = concatMap M.keys triggerMap
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
-              then do
-                eventPollStartTime <- getCurrentTime
-                runExceptT (fetchUndeliveredEvents @b _siConfiguration sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
-                  Right events -> do
-                    let eventFetchCount = fromIntegral $ length events
-                    Prometheus.Gauge.set (eventsFetchedPerBatch eventTriggerMetrics) eventFetchCount
-                    if (null events)
-                      then return []
-                      else do
-                        eventsFetchedTime <- getCurrentTime -- This is also the poll end time
-                        let eventPollTime = realToFrac $ diffUTCTime eventsFetchedTime eventPollStartTime
-                        _ <- EKG.Distribution.add (smEventFetchTimePerBatch serverMetrics) eventPollTime
-                        Prometheus.Histogram.observe (eventsFetchTimePerBatch eventTriggerMetrics) eventPollTime
-                        _ <- EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
-                        saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
-                        return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event _siConfiguration sourceName eventsFetchedTime) events
-                  Left err -> do
-                    L.unLogger logger $ EventInternalErr err
-                    pure []
+              then
+                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                    Right events -> do
+                      _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
+                      eventsFetchedTime <- liftIO getCurrentTime
+                      saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
+                      return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event sourceConfig sourceName eventsFetchedTime) events
+                    Left err -> do
+                      liftIO $ L.unLogger logger $ EventInternalErr err
+                      pure []
+                )
               else pure []
-
-      -- Log the statistics of events fetched
-      logFetchedEventsStatistics statsLogger events
-      pure events
 
     -- !!! CAREFUL !!!
     --     The logic here in particular is subtle and has been fixed, broken,
@@ -379,8 +271,6 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
     -- for each in the batch, minding the requested pool size.
     go :: FetchEventArguments -> m FetchEventArguments
     go (events, !fullFetchCount, !alreadyWarned) = do
-      EventEngineCtx {..} <- liftIO getEventEngineCtx
-      let fetchBatchSize = unrefine _eeCtxFetchSize
       -- process events ASAP until we've caught up; only then can we sleep
       when (null events) . liftIO $ sleep _eeCtxFetchInterval
 
@@ -395,23 +285,24 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
           -- depends on not putting anything that can throw in the body here:
           AB.dispatchAnyBackend @BackendEventTrigger eventWithSource \(eventWithSource' :: EventWithSource b) ->
             mask_ $ do
-              liftIO
-                $ atomically
-                $ do
+              liftIO $
+                atomically $ do
                   -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
-                  maxCapacity <- readTVar _eeCtxEventThreadsCapacity
-                  activeThreadCount <- readTVar activeEventProcessingThreads
-                  check $ maxCapacity > activeThreadCount
-                  modifyTVar' activeEventProcessingThreads (+ 1)
+                  capacity <- readTVar _eeCtxEventThreadsCapacity
+                  check $ capacity > 0
+                  writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
               -- since there is some capacity in our worker threads, we can launch another:
+              let restoreCapacity =
+                    liftIO $
+                      atomically $
+                        modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
               t <-
-                LA.async $ do
-                  labelMe "processEventQueue t"
-                  flip runReaderT (logger, httpMgr)
-                    $ processEvent eventWithSource'
-                    `finally`
-                    -- NOTE!: this needs to happen IN THE FORKED THREAD:
-                    decrementActiveThreadCount
+                LA.async $
+                  flip runReaderT (logger, httpMgr) $
+                    processEvent eventWithSource'
+                      `finally`
+                      -- NOTE!: this needs to happen IN THE FORKED THREAD:
+                      restoreCapacity
               LA.link t
 
         -- return when next batch ready; some 'processEvent' threads may be running.
@@ -419,92 +310,56 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
 
       let lenEvents = length events
       if
-        | lenEvents == fetchBatchSize -> do
+          | lenEvents == fetchBatchSize -> do
             -- If we've seen N fetches in a row from the DB come back full (i.e. only limited
             -- by our LIMIT clause), then we say we're clearly falling behind:
             let clearlyBehind = fullFetchCount >= 3
-            unless alreadyWarned
-              $ when clearlyBehind
-              $ L.unLoggerTracing logger
-              $ L.UnstructuredLog L.LevelWarn
-              $ fromString
-              $ "Events processor may not be keeping up with events generated in postgres, "
-              <> "or we're working on a backlog of events. Consider increasing "
-              <> "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+            unless alreadyWarned $
+              when clearlyBehind $
+                L.unLogger logger $
+                  L.UnstructuredLog L.LevelWarn $
+                    fromString $
+                      "Events processor may not be keeping up with events generated in postgres, "
+                        <> "or we're working on a backlog of events. Consider increasing "
+                        <> "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
             return (eventsNext, (fullFetchCount + 1), (alreadyWarned || clearlyBehind))
-        | otherwise -> do
-            when (lenEvents /= fetchBatchSize && alreadyWarned)
-              $
+          | otherwise -> do
+            when (lenEvents /= fetchBatchSize && alreadyWarned) $
               -- emit as warning in case users are only logging warning severity and saw above
-              L.unLoggerTracing logger
-              $ L.UnstructuredLog L.LevelWarn
-              $ fromString
-              $ "It looks like the events processor is keeping up again."
+              L.unLogger logger $
+                L.UnstructuredLog L.LevelWarn $
+                  fromString $
+                    "It looks like the events processor is keeping up again."
             return (eventsNext, 0, False)
-
-    decrementActiveThreadCount =
-      liftIO
-        $ atomically
-        $ modifyTVar' activeEventProcessingThreads (subtract 1)
-
-    -- \| Extract a trace context from an event trigger payload.
-    extractEventContext :: forall io. (MonadIO io) => J.Value -> io (Maybe Tracing.TraceContext)
-    extractEventContext e = do
-      let traceIdMaybe =
-            Tracing.traceIdFromHex
-              . txtToBs
-              =<< e
-              ^? JL.key "trace_context" . JL.key "trace_id" . JL._String
-      for traceIdMaybe $ \traceId -> do
-        freshSpanId <- Tracing.randomSpanId
-        let parentSpanId =
-              Tracing.spanIdFromHex
-                . txtToBs
-                =<< e
-                ^? JL.key "trace_context" . JL.key "span_id" . JL._String
-            samplingState =
-              Tracing.samplingStateFromHeader
-                $ e
-                ^? JL.key "trace_context" . JL.key "sampling_state" . JL._String
-        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState Tracing.emptyTraceState
 
     processEvent ::
       forall io r b.
-      ( MonadBaseControl IO io,
-        MonadIO io,
+      ( MonadIO io,
         MonadReader r io,
         Has HTTP.Manager r,
         Has (L.Logger L.Hasura) r,
+        Tracing.HasReporter io,
         MonadMask io,
-        BackendEventTrigger b,
-        Tracing.MonadTrace io,
-        MonadGetPolicies io
+        BackendEventTrigger b
       ) =>
       EventWithSource b ->
       io ()
     processEvent (EventWithSource e sourceConfig sourceName eventFetchedTime) = do
-      -- IO action for fetching the configured metrics granularity
-      getPrometheusMetricsGranularity <- runGetPrometheusMetricsGranularity
       -- Track Queue Time of Event (in seconds). See `smEventQueueTime`
       -- Queue Time = Time when the event was fetched from DB - Time when the event is being processed
       eventProcessTime <- liftIO getCurrentTime
       let eventQueueTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
       _ <- liftIO $ EKG.Distribution.add (smEventQueueTime serverMetrics) eventQueueTime
-      liftIO
-        $ observeHistogramWithLabel
-          getPrometheusMetricsGranularity
-          True
-          (eventQueueTimeSeconds eventTriggerMetrics)
-          (DynamicEventTriggerLabel (tmName (eTrigger e)) sourceName)
-          eventQueueTime
 
       cache <- liftIO getSchemaCache
 
-      trace <-
-        extractEventContext (eEvent e) <&> \case
-          Nothing -> Tracing.newTrace Tracing.sampleAlways
-          Just ctx -> Tracing.newTraceWith ctx Tracing.sampleAlways
+      tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
       let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
+          runTraceT =
+            maybe
+              Tracing.runTraceT
+              Tracing.runTraceTInContext
+              tracingCtx
 
       maintenanceModeVersionEither :: Either QErr (MaintenanceMode MaintenanceModeVersion) <-
         case maintenanceMode of
@@ -527,7 +382,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
               -- For such an event, we unlock the event and retry after a minute
               runExceptT (setRetry sourceConfig e (addUTCTime 60 currentTime) maintenanceModeVersion)
                 >>= flip onLeft logQErr
-            Right eti -> trace (spanName eti) do
+            Right eti -> runTraceT (spanName eti) do
               let webhook = wciCachedValue $ etiWebhookInfo eti
                   retryConf = etiRetryConf eti
                   timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
@@ -538,113 +393,34 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
                   requestTransform = etiRequestTransform eti
                   responseTransform = mkResponseTransform <$> etiResponseTransform eti
-                  eventTriggerProcessingTimeout = maybe upperBoundEventTriggerTimeout (min upperBoundEventTriggerTimeout . fromIntegral) (rcTimeoutSec retryConf)
-                  eventTriggerProcessAction = do
-                    eventExecutionStartTime <- liftIO getCurrentTime
-                    eitherReqRes <-
-                      runExceptT
-                        $ mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook)
-                        >>= \reqDetails -> do
-                          let request = extractRequest reqDetails
-                              tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig cache
-                              logger' res details = do
-                                logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders triggersErrorLogLevelStatus
-                                liftIO $ do
-                                  case res of
-                                    Left _err -> pure ()
-                                    Right response ->
-                                      Prometheus.Counter.add
-                                        (eventTriggerBytesReceived eventTriggerMetrics)
-                                        (hrsSize response)
-                                  let RequestDetails {_rdOriginalSize, _rdTransformedSize} = details
-                                   in Prometheus.Counter.add
-                                        (eventTriggerBytesSent eventTriggerMetrics)
-                                        (fromMaybe _rdOriginalSize _rdTransformedSize)
-                          -- Event Triggers have a configuration parameter called
-                          -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
-                          -- to control the concurrency of http delivery.
-                          -- This bracket is used to increment and decrement an
-                          -- HTTP Worker EKG Gauge for the duration of the
-                          -- request invocation
-                          resp <-
-                            bracket_
-                              ( do
-                                  liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics
-                                  liftIO $ Prometheus.Gauge.inc (eventTriggerHTTPWorkers eventTriggerMetrics)
-                              )
-                              ( do
-                                  liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics
-                                  liftIO $ Prometheus.Gauge.dec (eventTriggerHTTPWorkers eventTriggerMetrics)
-                              )
-                              (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger' tracesPropagator)
-                          pure (request, resp)
-                    case eitherReqRes of
-                      Right (req, resp) -> do
-                        let reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) req >>= J.decode @J.Value
-                        processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
-                        eventExecutionFinishTime <- liftIO getCurrentTime
-                        let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
-                            -- For event_processing_time, the start time is defined as the expected delivery time for an event, i.e.:
-                            --  - For event with no retries: created_at (at UTC) time
-                            --  - For event with retries: next_retry_at (at UTC) time
+              eitherReqRes <-
+                runExceptT $
+                  mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook) >>= \reqDetails -> do
+                    let request = extractRequest reqDetails
+                        logger' res details = logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
+                    -- Event Triggers have a configuration parameter called
+                    -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
+                    -- to control the concurrency of http delivery.
+                    -- This bracket is used to increment and decrement an
+                    -- HTTP Worker EKG Gauge for the duration of the
+                    -- request invocation
+                    resp <-
+                      bracket_
+                        (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
+                        (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                        (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
+                    pure (request, resp)
+              case eitherReqRes of
+                Right (req, resp) ->
+                  let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
+                   in processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
+                Left (HTTPError reqBody err) ->
+                  processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
+                Left (TransformationError _ err) -> do
+                  L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
-                            -- The timestamps in the DB are supposed to be UTC time, so the timestamps (`eventExecutionFinishTime` and
-                            -- `eventStartTime`) used here in calculation are all UTC time.
-                            eventStartTime = fromMaybe (eCreatedAtUTC e) (eRetryAtUTC e)
-                            eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
-                        observeHistogramWithLabel
-                          getPrometheusMetricsGranularity
-                          True
-                          (eventProcessingTime eventTriggerMetrics)
-                          (DynamicEventTriggerLabel (etiName eti) sourceName)
-                          eventProcessingTime'
-                        liftIO $ do
-                          EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
-                          observeHistogramWithLabel
-                            getPrometheusMetricsGranularity
-                            True
-                            (eventWebhookProcessingTime eventTriggerMetrics)
-                            (DynamicEventTriggerLabel (etiName eti) sourceName)
-                            eventWebhookProcessingTime'
-                          EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
-                          incEventTriggerCounterWithLabel
-                            getPrometheusMetricsGranularity
-                            True
-                            (eventProcessedTotal eventTriggerMetrics)
-                            (EventStatusWithTriggerLabel eventSuccessLabel (Just (DynamicEventTriggerLabel (etiName eti) sourceName)))
-                          incEventTriggerCounterWithLabel
-                            getPrometheusMetricsGranularity
-                            True
-                            (eventInvocationTotal eventTriggerMetrics)
-                            (EventStatusWithTriggerLabel eventSuccessLabel (Just (DynamicEventTriggerLabel (etiName eti) sourceName)))
-                      Left eventError -> do
-                        -- TODO (paritosh): We can also add a label to the metric to indicate the type of error
-                        liftIO
-                          $ incEventTriggerCounterWithLabel
-                            getPrometheusMetricsGranularity
-                            True
-                            (eventInvocationTotal eventTriggerMetrics)
-                            (EventStatusWithTriggerLabel eventFailedLabel (Just (DynamicEventTriggerLabel (etiName eti) sourceName)))
-                        case eventError of
-                          (HTTPError reqBody err) ->
-                            processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion eventTriggerMetrics err >>= flip onLeft logQErr
-                          (TransformationError _ err) -> do
-                            L.unLoggerTracing logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
-
-                            -- Record an Event Error
-                            recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
-              -- Try to process the event trigger with a timeout of min(`uppserBoundEventTriggerTimeout`, event's response timeout),
-              -- so that we're never blocked forever while processing a single event trigger.
-              --
-              -- If the request times out, then process it as an erroneous invocation and move on.
-              timeout (fromInteger (diffTimeToMicroSeconds eventTriggerProcessingTimeout)) eventTriggerProcessAction
-                `onNothingM` do
-                  let eventTriggerTimeoutMessage = "Event Trigger " <> etiName eti <<> " timed out while processing."
-                      eventTriggerTimeoutError = err500 TimeoutErrorCode eventTriggerTimeoutMessage
-                  L.unLoggerTracing logger $ EventInternalErr eventTriggerTimeoutError
-                  processError @b sourceConfig e retryConf logHeaders J.Null maintenanceModeVersion eventTriggerMetrics (HOther $ T.unpack eventTriggerTimeoutMessage)
-                    >>= flip onLeft logQErr
-
+                  -- Record an Event Error
+                  recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
       -- removing an event from the _eeCtxLockedEvents after the event has been processed:
       removeEventTriggerEventFromLockedEvents sourceName (eId e) leEvents
 
@@ -684,8 +460,7 @@ processSuccess sourceConfig e reqHeaders ep maintenanceModeVersion resp = do
 processError ::
   forall b m a.
   ( MonadIO m,
-    BackendEventTrigger b,
-    MonadGetPolicies m
+    BackendEventTrigger b
   ) =>
   SourceConfig b ->
   Event b ->
@@ -693,14 +468,13 @@ processError ::
   [HeaderConf] ->
   J.Value ->
   MaintenanceMode MaintenanceModeVersion ->
-  EventTriggerMetrics ->
   HTTPErr a ->
   m (Either QErr ())
-processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion eventTriggerMetrics err = do
+processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err = do
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
-           in mkInvocation (eId e) ep statusMaybe reqHeaders (SB.fromLBS (httpExceptionErrorEncoding httpException)) []
+           in mkInvocation (eId e) ep statusMaybe reqHeaders (SB.fromLBS (J.encode httpException)) []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
@@ -709,20 +483,16 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion event
         HOther detail -> do
           let errMsg = SB.fromLBS $ J.encode detail
           mkInvocation (eId e) ep (Just 500) reqHeaders errMsg []
-  retryOrError <- retryOrSetError e retryConf eventTriggerMetrics err
+  retryOrError <- retryOrSetError e retryConf err
   recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
 
 retryOrSetError ::
-  ( MonadIO m,
-    MonadGetPolicies m
-  ) =>
+  MonadIO m =>
   Event b ->
   RetryConf ->
-  EventTriggerMetrics ->
   HTTPErr a ->
   m ProcessEventError
-retryOrSetError e retryConf eventTriggerMetrics err = do
-  getPrometheusMetricsGranularity <- runGetPrometheusMetricsGranularity
+retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
       mretryHeaderSeconds = mretryHeader >>= parseRetryHeader
@@ -730,14 +500,7 @@ retryOrSetError e retryConf eventTriggerMetrics err = do
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
   if triesExhausted && noRetryHeader
-    then do
-      liftIO
-        $ incEventTriggerCounterWithLabel
-          getPrometheusMetricsGranularity
-          True
-          (eventProcessedTotal eventTriggerMetrics)
-          (EventStatusWithTriggerLabel eventFailedLabel (Just (DynamicEventTriggerLabel (tmName (eTrigger e)) (eSource e))))
-      pure PESetError
+    then pure PESetError
     else do
       currentTime <- liftIO getCurrentTime
       let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds
@@ -772,39 +535,22 @@ mkInvocation eid ep statusMaybe reqHeaders respBody respHeaders =
         (mkWebhookReq ep reqHeaders invocationVersionET)
         resp
 
-logQErr :: (Tracing.MonadTraceContext m, MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
+logQErr :: (MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
 logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
-  L.unLoggerTracing logger $ EventInternalErr err
+  L.unLogger logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent ::
-  forall b. (Backend b) => SchemaCache -> Event b -> Either Text (EventTriggerInfo b)
+  forall b. Backend b => SchemaCache -> Event b -> Either Text (EventTriggerInfo b)
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
       mTableInfo = unsafeTableInfo @b (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
-      mEventTriggerInfo = HashMap.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
-  onNothing mEventTriggerInfo
-    $ Left
-      ( "event trigger '"
-          <> triggerNameToTxt triggerName
+      mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
+  onNothing mEventTriggerInfo $
+    Left
+      ( "event trigger '" <> triggerNameToTxt triggerName
           <> "' on table '"
-          <> table
-          <<> "' not found"
+          <> table <<> "' not found"
       )
-
-incEventTriggerCounterWithLabel ::
-  (MonadIO m) =>
-  (IO GranularPrometheusMetricsState) ->
-  -- should the metric be observed without a label when granularMetricsState is OFF
-  Bool ->
-  CounterVector EventStatusWithTriggerLabel ->
-  EventStatusWithTriggerLabel ->
-  m ()
-incEventTriggerCounterWithLabel getMetricState alwaysObserve counterVector (EventStatusWithTriggerLabel status tl) = do
-  recordMetricWithLabel
-    getMetricState
-    alwaysObserve
-    (liftIO $ CounterVector.inc counterVector (EventStatusWithTriggerLabel status tl))
-    (liftIO $ CounterVector.inc counterVector (EventStatusWithTriggerLabel status Nothing))

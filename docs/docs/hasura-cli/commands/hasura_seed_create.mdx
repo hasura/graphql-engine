@@ -1,6 +1,6 @@
 ---
 sidebar_label: hasura seed create
-sidebar_position: 38
+sidebar_position: 36
 description: Create a new seed file using the Hasura CLI
 keywords:
   - hasura
@@ -15,19 +15,15 @@ Create a new seed file.
 
 ## Synopsis
 
-This will create a new seed file with the name provided as an argument. You can export tables from the database and create a seed file from it by using the ``--from-table`` flag.
+Create a new seed file.
 
-Further reading:
-- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-seeds/
-
-
-```bash
+```
 hasura seed create seed_name [flags]
 ```
 
 ## Examples
 
-```bash
+```
 # Create a new seed file and use editor to add SQL:
 hasura seed create new_table_seed
 
@@ -40,19 +36,19 @@ hasura seed create tables_seed --from-table table1 --from-table table2
 
 ## Options
 
-```sass
+```
     --from-table stringArray   name of table from which seed file has to be initialized. e.g. table1, myschema1.table1
 -h, --help                     help for create
 ```
 
 ## Options inherited from parent commands
 
-```sass
---admin-secret string            admin secret for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+```
+--admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
 --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
 --database-name string           database on which operation should be applied
 --disable-interactive            disables interactive prompts (default: false) (env "HASURA_GRAPHQL_DISABLE_INTERACTIVE")
---endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+--endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
 --envfile string                 .env filename to load ENV vars from (default ".env")
 --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")

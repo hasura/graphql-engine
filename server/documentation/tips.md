@@ -374,5 +374,5 @@ Use [ghcid](https://hackage.haskell.org/package/ghcid)
 And run this:
 
 ```sh
-ghcid -a -c "cabal repl graphql-engine:graphql-engine-tests -f -O0" --test Main.main --setup ":set args --match TheNameOfTestsIWantToRun" --width 100 --height 30
+ghcid -a -c "cabal repl graphql-engine:graphql-engine-tests -f -O0" --test Main.main --setup ":set args unit --match TheNameOfTestsIWantToRun" --width 100 --height 30
 ```

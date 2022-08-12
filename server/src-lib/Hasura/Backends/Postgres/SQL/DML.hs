@@ -6,8 +6,7 @@ module Hasura.Backends.Postgres.SQL.DML
     TableAlias (..),
     BinOp (AndOp, OrOp),
     BoolExp (..),
-    TopLevelCTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate, CTEUnsafeRawSQL),
-    InnerCTE (..),
+    TopLevelCTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate),
     CompareOp (SContainedIn, SContains, SEQ, SGT, SGTE, SHasKey, SHasKeysAll, SHasKeysAny, SILIKE, SIREGEX, SLIKE, SLT, SLTE, SMatchesFulltext, SNE, SNILIKE, SNIREGEX, SNLIKE, SNREGEX, SNSIMILAR, SREGEX, SSIMILAR),
     CountType (CTDistinct, CTSimple, CTStar),
     DistinctExpr (DistinctOn, DistinctSimple),
@@ -43,14 +42,13 @@ module Hasura.Backends.Postgres.SQL.DML
     SQLUpdate (..),
     Select (Select, selCTEs, selDistinct, selExtr, selFrom, selLimit, selOffset, selOrderBy, selWhere),
     SelectWith,
-    SelectWithG (..),
+    SelectWithG (SelectWith),
     SetExp (SetExp),
     SetExpItem (..),
     TupleExp (TupleExp),
     TypeAnn (TypeAnn),
     ValuesExp (ValuesExp),
     WhereFrag (WhereFrag),
-    dummySelectList,
     applyJsonBuildArray,
     applyJsonBuildObj,
     applyRowToJson,
@@ -76,11 +74,9 @@ module Hasura.Backends.Postgres.SQL.DML
     mkIdenFromExp,
     mkLateralFromItem,
     mkQIdenExp,
-    mkQIdentifier,
     mkQIdentifierTable,
     mkQual,
     mkRowExp,
-    mkIdentifierSQLExp,
     mkSIdenExp,
     mkSQLOpExp,
     mkSelFromExp,
@@ -97,24 +93,19 @@ module Hasura.Backends.Postgres.SQL.DML
     simplifyBoolExp,
     textArrTypeAnn,
     textTypeAnn,
-    mkColumnAlias,
-    mkTableAlias,
     toTableAlias,
-    tableAliasToIdentifier,
     toColumnAlias,
-    tableIdentifierToColumnAlias,
   )
 where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as HM
 import Data.Int (Int64)
 import Data.String (fromString)
-import Data.Text (pack)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.NativeQuery.Metadata
+import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.SQL.Types
 import Text.Builder qualified as TB
@@ -125,7 +116,7 @@ import Text.Builder qualified as TB
 data Select = Select
   { -- | Unlike 'SelectWith', does not allow data-modifying statements (as those are only allowed at
     -- the top level of a query).
-    selCTEs :: [(TableAlias, InnerCTE)],
+    selCTEs :: [(TableAlias, Select)],
     selDistinct :: Maybe DistinctExpr,
     selExtr :: [Extractor],
     selFrom :: Maybe FromExp,
@@ -139,6 +130,8 @@ data Select = Select
   deriving (Show, Eq, Generic, Data)
 
 instance NFData Select
+
+instance Cacheable Select
 
 instance Hashable Select
 
@@ -157,14 +150,9 @@ mkSelect =
     Nothing
     Nothing
 
--- | A dummy select list to avoid an empty select list, which doesn't work for cockroach db.
---   This is just the value @1@ without an alias.
-dummySelectList :: [Extractor]
-dummySelectList = [Extractor (SEUnsafe "1") Nothing]
-
 newtype LimitExp
   = LimitExp SQLExp
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL LimitExp where
   toSQL (LimitExp se) =
@@ -172,7 +160,7 @@ instance ToSQL LimitExp where
 
 newtype OffsetExp
   = OffsetExp SQLExp
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL OffsetExp where
   toSQL (OffsetExp se) =
@@ -180,8 +168,9 @@ instance ToSQL OffsetExp where
 
 newtype OrderByExp
   = OrderByExp (NonEmpty OrderByItem)
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
+-- |
 data OrderByItem = OrderByItem
   { oExpression :: SQLExp,
     oOrdering :: Maybe OrderType,
@@ -190,6 +179,8 @@ data OrderByItem = OrderByItem
   deriving (Show, Eq, Generic, Data)
 
 instance NFData OrderByItem
+
+instance Cacheable OrderByItem
 
 instance Hashable OrderByItem
 
@@ -202,6 +193,8 @@ data OrderType = OTAsc | OTDesc
   deriving (Show, Eq, Generic, Data)
 
 instance NFData OrderType
+
+instance Cacheable OrderType
 
 instance Hashable OrderType
 
@@ -222,6 +215,8 @@ data NullsOrder
 
 instance NFData NullsOrder
 
+instance Cacheable NullsOrder
+
 instance Hashable NullsOrder
 
 instance ToSQL NullsOrder where
@@ -229,12 +224,10 @@ instance ToSQL NullsOrder where
   toSQL NullsLast = "NULLS LAST"
 
 instance J.FromJSON NullsOrder where
-  -- Todo: write a proper parser https://github.com/hasura/graphql-engine-mono/issues/5484
-  parseJSON = J.genericParseJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 5}
+  parseJSON = J.genericParseJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 1}
 
 instance J.ToJSON NullsOrder where
-  -- Todo: write a proper parser https://github.com/hasura/graphql-engine-mono/issues/5484
-  toJSON = J.genericToJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 5}
+  toJSON = J.genericToJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 1}
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =
@@ -242,7 +235,7 @@ instance ToSQL OrderByExp where
 
 newtype GroupByExp
   = GroupByExp [SQLExp]
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL GroupByExp where
   toSQL (GroupByExp idens) =
@@ -250,15 +243,15 @@ instance ToSQL GroupByExp where
 
 newtype FromExp
   = FromExp [FromItem]
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL FromExp where
   toSQL (FromExp items) =
     "FROM" <~> (", " <+> items)
 
-mkIdenFromExp :: TableIdentifier -> FromExp
-mkIdenFromExp ident =
-  FromExp [FIIdentifier ident]
+mkIdenFromExp :: (IsIdentifier a) => a -> FromExp
+mkIdenFromExp a =
+  FromExp [FIIdentifier $ toIdentifier a]
 
 mkSimpleFromExp :: QualifiedTable -> FromExp
 mkSimpleFromExp qt =
@@ -281,22 +274,22 @@ mkRowExp extrs =
         mkSelect
           { selExtr = [Extractor (SERowIdentifier $ toIdentifier innerSelName) Nothing],
             selFrom =
-              Just
-                $ FromExp
+              Just $
+                FromExp
                   [mkSelFromExp False innerSel innerSelName]
           }
    in SESelect outerSel
 
 newtype HavingExp
   = HavingExp BoolExp
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL HavingExp where
   toSQL (HavingExp be) =
     "HAVING" <~> toSQL be
 
 newtype WhereFrag = WhereFrag {getWFBoolExp :: BoolExp}
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL WhereFrag where
   toSQL (WhereFrag be) =
@@ -316,21 +309,23 @@ instance ToSQL Select where
         <~> toSQL (selLimit sel)
         <~> toSQL (selOffset sel)
     -- reuse SelectWith if there are any CTEs, since the generated SQL is the same
-    ctes -> toSQL $ SelectWith (map (toTopLevelCTE <$>) ctes) sel {selCTEs = []}
+    ctes -> toSQL $ SelectWith (map (CTESelect <$>) ctes) sel {selCTEs = []}
 
 mkSIdenExp :: (IsIdentifier a) => a -> SQLExp
 mkSIdenExp = SEIdentifier . toIdentifier
 
-mkQIdenExp :: (IsIdentifier b) => TableIdentifier -> b -> SQLExp
+mkQIdenExp :: (IsIdentifier a, IsIdentifier b) => a -> b -> SQLExp
 mkQIdenExp q t = SEQIdentifier $ mkQIdentifier q t
 
 data Qual
-  = QualifiedIdentifier TableIdentifier (Maybe TypeAnn)
+  = QualifiedIdentifier Identifier (Maybe TypeAnn)
   | QualTable QualifiedTable
   | QualVar Text
   deriving (Show, Eq, Generic, Data)
 
 instance NFData Qual
+
+instance Cacheable Qual
 
 instance Hashable Qual
 
@@ -343,20 +338,19 @@ instance ToSQL Qual where
   toSQL (QualTable qt) = toSQL qt
   toSQL (QualVar v) = TB.text v
 
-mkQIdentifier :: (IsIdentifier b) => TableIdentifier -> b -> QIdentifier
-mkQIdentifier q t = QIdentifier (QualifiedIdentifier q Nothing) (toIdentifier t)
+mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
+mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
 
 mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
 mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
-
-mkIdentifierSQLExp :: forall a. (IsIdentifier a) => Qual -> a -> SQLExp
-mkIdentifierSQLExp q = SEQIdentifier . QIdentifier q . toIdentifier
 
 data QIdentifier
   = QIdentifier Qual Identifier
   deriving (Show, Eq, Generic, Data)
 
 instance NFData QIdentifier
+
+instance Cacheable QIdentifier
 
 instance Hashable QIdentifier
 
@@ -372,10 +366,12 @@ data ColumnOp = ColumnOp
 
 instance NFData ColumnOp
 
+instance Cacheable ColumnOp
+
 instance Hashable ColumnOp
 
 newtype SQLOp = SQLOp {sqlOpTxt :: Text}
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 incOp :: SQLOp
 incOp = SQLOp "+"
@@ -396,7 +392,7 @@ jsonbDeleteAtPathOp :: SQLOp
 jsonbDeleteAtPathOp = SQLOp "#-"
 
 newtype TypeAnn = TypeAnn {unTypeAnn :: Text}
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL TypeAnn where
   toSQL (TypeAnn ty) = "::" <> TB.text ty
@@ -425,17 +421,19 @@ jsonbTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSONB
 boolTypeAnn :: TypeAnn
 boolTypeAnn = mkTypeAnn $ CollectableTypeScalar PGBoolean
 
-data CountType columnType
+data CountType
   = CTStar
-  | CTSimple [columnType]
-  | CTDistinct [columnType]
-  deriving (Show, Eq, Generic, Data, Functor, Foldable, Traversable)
+  | CTSimple [PGCol]
+  | CTDistinct [PGCol]
+  deriving (Show, Eq, Generic, Data)
 
-instance (NFData columnType) => NFData (CountType columnType)
+instance NFData CountType
 
-instance (Hashable columnType) => Hashable (CountType columnType)
+instance Cacheable CountType
 
-instance ToSQL (CountType QIdentifier) where
+instance Hashable CountType
+
+instance ToSQL CountType where
   toSQL CTStar = "*"
   toSQL (CTSimple cols) =
     parenB $ ", " <+> cols
@@ -444,7 +442,7 @@ instance ToSQL (CountType QIdentifier) where
 
 newtype TupleExp
   = TupleExp [SQLExp]
-  deriving (Show, Eq, NFData, Data, Hashable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL TupleExp where
   toSQL (TupleExp exps) =
@@ -474,12 +472,14 @@ data SQLExp
   | SEArray [SQLExp]
   | SEArrayIndex SQLExp SQLExp
   | SETuple TupleExp
-  | SECount (CountType QIdentifier)
+  | SECount CountType
   | SENamedArg Identifier SQLExp
   | SEFunction FunctionExp
   deriving (Show, Eq, Generic, Data)
 
 instance NFData SQLExp
+
+instance Cacheable SQLExp
 
 instance Hashable SQLExp
 
@@ -488,22 +488,10 @@ instance J.ToJSON SQLExp where
 
 -- | Represents an alias assignment for a column
 newtype ColumnAlias = ColumnAlias {getColumnAlias :: Identifier}
-  deriving (Show, Eq, NFData, Data, Hashable)
-
-instance IsString ColumnAlias where
-  fromString = mkColumnAlias . pack
-
-instance Semigroup ColumnAlias where
-  (ColumnAlias ca1) <> (ColumnAlias ca2) = ColumnAlias (ca1 <> ca2)
-
-mkColumnAlias :: Text -> ColumnAlias
-mkColumnAlias = ColumnAlias . Identifier
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance IsIdentifier ColumnAlias where
   toIdentifier (ColumnAlias identifier) = identifier
-
-tableIdentifierToColumnAlias :: TableIdentifier -> ColumnAlias
-tableIdentifierToColumnAlias = mkColumnAlias . unTableIdentifier
 
 toColumnAlias :: (IsIdentifier a) => a -> ColumnAlias
 toColumnAlias = ColumnAlias . toIdentifier
@@ -518,28 +506,11 @@ columnAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
 
 -- | Represents an alias assignment for a table, relation or row
 newtype TableAlias = TableAlias {getTableAlias :: Identifier}
-  deriving (Show, Eq, NFData, Data, Generic, Hashable)
-
-instance IsString TableAlias where
-  fromString = mkTableAlias . pack
-
-instance Semigroup TableAlias where
-  (TableAlias ta1) <> (TableAlias ta2) = TableAlias (ta1 <> ta2)
-
--- | Create a table alias.
-mkTableAlias :: Text -> TableAlias
-mkTableAlias = TableAlias . Identifier
-
--- | Create a table identifier from a table alias.
-tableAliasToIdentifier :: TableAlias -> TableIdentifier
-tableAliasToIdentifier = TableIdentifier . getIdenTxt . getTableAlias
+  deriving (Show, Eq, NFData, Data, Generic, Cacheable, Hashable)
 
 instance IsIdentifier TableAlias where
   toIdentifier (TableAlias identifier) = identifier
 
--- TODO: Remove when we remove 'Identifier'. We should only be able to create
--- identifiers from aliases, not aliases from identifiers. Aliases represent
--- definition sites and identifiers usage sites.
 toTableAlias :: (IsIdentifier a) => a -> TableAlias
 toTableAlias = TableAlias . toIdentifier
 
@@ -583,8 +554,7 @@ instance ToSQL SQLExp where
   toSQL (SETyAnn e ty) =
     parenB (toSQL e) <> toSQL ty
   toSQL (SECond cond te fe) =
-    "CASE WHEN"
-      <~> toSQL cond
+    "CASE WHEN" <~> toSQL cond
       <~> "THEN"
       <~> toSQL te
       <~> "ELSE"
@@ -595,8 +565,7 @@ instance ToSQL SQLExp where
     "EXCLUDED."
       <> toSQL i
   toSQL (SEArray exps) =
-    "ARRAY"
-      <> TB.char '['
+    "ARRAY" <> TB.char '['
       <> (", " <+> exps)
       <> TB.char ']'
   toSQL (SEArrayIndex arrayExp indexExp) =
@@ -621,6 +590,8 @@ data Extractor = Extractor SQLExp (Maybe ColumnAlias)
   deriving (Show, Eq, Generic, Data)
 
 instance NFData Extractor
+
+instance Cacheable Extractor
 
 instance Hashable Extractor
 
@@ -667,6 +638,8 @@ data DistinctExpr
 
 instance NFData DistinctExpr
 
+instance Cacheable DistinctExpr
+
 instance Hashable DistinctExpr
 
 instance ToSQL DistinctExpr where
@@ -676,18 +649,20 @@ instance ToSQL DistinctExpr where
 
 data FunctionArgs = FunctionArgs
   { fasPostional :: [SQLExp],
-    fasNamed :: (HashMap.HashMap Text SQLExp)
+    fasNamed :: (HM.HashMap Text SQLExp)
   }
   deriving (Show, Eq, Generic, Data)
 
 instance NFData FunctionArgs
 
+instance Cacheable FunctionArgs
+
 instance Hashable FunctionArgs
 
 instance ToSQL FunctionArgs where
   toSQL (FunctionArgs positionalArgs namedArgsMap) =
-    let namedArgs = flip map (HashMap.toList namedArgsMap)
-          $ \(argName, argVal) -> SENamedArg (Identifier argName) argVal
+    let namedArgs = flip map (HM.toList namedArgsMap) $
+          \(argName, argVal) -> SENamedArg (Identifier argName) argVal
      in parenB $ ", " <+> (positionalArgs <> namedArgs)
 
 data FunctionDefinitionListItem = FunctionDefinitionListItem
@@ -697,6 +672,8 @@ data FunctionDefinitionListItem = FunctionDefinitionListItem
   deriving (Show, Eq, Data, Generic)
 
 instance NFData FunctionDefinitionListItem
+
+instance Cacheable FunctionDefinitionListItem
 
 instance Hashable FunctionDefinitionListItem
 
@@ -713,24 +690,21 @@ instance ToSQL FunctionDefinitionListItem where
 --   Note: a function that returns a table (instead of a record) cannot name the types
 --         as seen in the above example.
 data FunctionAlias = FunctionAlias
-  { _faIdentifier :: TableAlias, -- TODO: Rename to _faAlias
+  { _faIdentifier :: TableAlias,
     _faDefinitionList :: Maybe [FunctionDefinitionListItem]
   }
   deriving (Show, Eq, Data, Generic)
 
 instance NFData FunctionAlias
 
+instance Cacheable FunctionAlias
+
 instance Hashable FunctionAlias
 
-functionNameToTableAlias :: QualifiedFunction -> TableAlias
-functionNameToTableAlias = mkTableAlias . qualifiedObjectToText
-
--- | Construct a function alias which represents the "relation signature" for the function invocation,
---   Using the function name as the relation name, and the columns as the relation schema.
-mkFunctionAlias :: QualifiedObject FunctionName -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
+mkFunctionAlias :: TableAlias -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
 mkFunctionAlias alias listM =
-  FunctionAlias (functionNameToTableAlias alias)
-    $ fmap (map (uncurry FunctionDefinitionListItem)) listM
+  FunctionAlias alias $
+    fmap (map (uncurry FunctionDefinitionListItem)) listM
 
 instance ToSQL FunctionAlias where
   toSQL (FunctionAlias tableAlias (Just definitionList)) =
@@ -748,6 +722,8 @@ data FunctionExp = FunctionExp
 
 instance NFData FunctionExp
 
+instance Cacheable FunctionExp
+
 instance Hashable FunctionExp
 
 instance ToSQL FunctionExp where
@@ -759,7 +735,7 @@ data FromItem
   = -- | A simple table
     FISimple QualifiedTable (Maybe TableAlias)
   | -- | An identifier (from CTEs)
-    FIIdentifier TableIdentifier
+    FIIdentifier Identifier
   | -- | A function call (that should return a relation (@SETOF@) and not a scalar)
     FIFunc FunctionExp
   | -- | @unnest@ converts (an) array(s) to a relation.
@@ -778,6 +754,8 @@ data FromItem
   deriving (Show, Eq, Generic, Data)
 
 instance NFData FromItem
+
+instance Cacheable FromItem
 
 instance Hashable FromItem
 
@@ -807,8 +785,7 @@ instance ToSQL FromItem where
   toSQL (FISelectWith isLateral selectWith alias) =
     toSQL isLateral <~> parenB (toSQL selectWith) <~> tableAliasToSqlWithAs alias
   toSQL (FIValues valsExp alias columnAliases) =
-    parenB (toSQL valsExp)
-      <~> tableAliasToSqlWithAs alias
+    parenB (toSQL valsExp) <~> tableAliasToSqlWithAs alias
       <~> case columnAliases of
         Nothing -> ""
         Just cols -> parenB (", " <+> map columnAliasToSqlWithoutAs cols)
@@ -816,7 +793,7 @@ instance ToSQL FromItem where
     toSQL je
 
 newtype Lateral = Lateral Bool
-  deriving (Show, Eq, Data, NFData, Hashable)
+  deriving (Show, Eq, Data, NFData, Cacheable, Hashable)
 
 instance ToSQL Lateral where
   toSQL (Lateral True) = "LATERAL"
@@ -831,6 +808,8 @@ data JoinExpr = JoinExpr
   deriving (Show, Eq, Generic, Data)
 
 instance NFData JoinExpr
+
+instance Cacheable JoinExpr
 
 instance Hashable JoinExpr
 
@@ -850,6 +829,8 @@ data JoinType
 
 instance NFData JoinType
 
+instance Cacheable JoinType
+
 instance Hashable JoinType
 
 instance ToSQL JoinType where
@@ -864,6 +845,8 @@ data JoinCond
   deriving (Show, Eq, Generic, Data)
 
 instance NFData JoinCond
+
+instance Cacheable JoinCond
 
 instance Hashable JoinCond
 
@@ -890,6 +873,8 @@ data BoolExp
 
 instance NFData BoolExp
 
+instance Cacheable BoolExp
+
 instance Hashable BoolExp
 
 -- removes extraneous 'AND true's
@@ -899,23 +884,23 @@ simplifyBoolExp be = case be of
     let e1s = simplifyBoolExp e1
         e2s = simplifyBoolExp e2
      in if
-          | e1s == BELit True -> e2s
-          | e2s == BELit True -> e1s
-          | otherwise -> BEBin AndOp e1s e2s
+            | e1s == BELit True -> e2s
+            | e2s == BELit True -> e1s
+            | otherwise -> BEBin AndOp e1s e2s
   BEBin OrOp e1 e2 ->
     let e1s = simplifyBoolExp e1
         e2s = simplifyBoolExp e2
      in if
-          | e1s == BELit False -> e2s
-          | e2s == BELit False -> e1s
-          | otherwise -> BEBin OrOp e1s e2s
+            | e1s == BELit False -> e2s
+            | e2s == BELit False -> e1s
+            | otherwise -> BEBin OrOp e1s e2s
   e -> e
 
 mkExists :: FromItem -> BoolExp -> BoolExp
 mkExists fromItem whereFrag =
   BEExists
     mkSelect
-      { selExtr = dummySelectList,
+      { selExtr = [Extractor (SEUnsafe "1") Nothing],
         selFrom = Just $ FromExp $ pure fromItem,
         selWhere = Just $ WhereFrag whereFrag
       }
@@ -947,6 +932,8 @@ data BinOp = AndOp | OrOp
   deriving (Show, Eq, Generic, Data)
 
 instance NFData BinOp
+
+instance Cacheable BinOp
 
 instance Hashable BinOp
 
@@ -982,6 +969,8 @@ data CompareOp
   deriving (Eq, Generic, Data)
 
 instance NFData CompareOp
+
+instance Cacheable CompareOp
 
 instance Hashable CompareOp
 
@@ -1040,16 +1029,15 @@ newtype SetExpItem = SetExpItem (PGCol, SQLExp)
 
 buildUpsertSetExp ::
   [PGCol] ->
-  HashMap.HashMap PGCol SQLExp ->
+  HM.HashMap PGCol SQLExp ->
   SetExp
 buildUpsertSetExp cols preSet =
-  SetExp $ map SetExpItem $ HashMap.toList setExps
+  SetExp $ map SetExpItem $ HM.toList setExps
   where
-    setExps = HashMap.union preSet
-      $ HashMap.fromList
-      $ flip map cols
-      $ \col ->
-        (col, SEExcluded $ toIdentifier col)
+    setExps = HM.union preSet $
+      HM.fromList $
+        flip map cols $ \col ->
+          (col, SEExcluded $ toIdentifier col)
 
 newtype UsingExp = UsingExp [TableName]
   deriving (Show, Eq)
@@ -1132,7 +1120,7 @@ instance ToSQL SQLConflict where
       <~> toSQL whr
 
 newtype ValuesExp = ValuesExp {getValuesExp :: [TupleExp]}
-  deriving (Show, Eq, Data, NFData, Hashable)
+  deriving (Show, Eq, Data, NFData, Cacheable, Hashable)
 
 instance ToSQL ValuesExp where
   toSQL (ValuesExp tuples) =
@@ -1154,8 +1142,7 @@ instance ToSQL SQLInsert where
       <~> ( if null (siCols si)
               then
                 "VALUES"
-                  <~> ", "
-                  <+> map (const ("(DEFAULT)" :: TB.Builder)) (getValuesExp (siValues si))
+                  <~> ", " <+> map (const ("(DEFAULT)" :: TB.Builder)) (getValuesExp (siValues si))
               else "(" <~> (", " <+> siCols si) <~> ")" <~> toSQL (siValues si)
           )
       <~> maybe "" toSQL (siConflict si)
@@ -1172,7 +1159,6 @@ data TopLevelCTE
   | CTEInsert SQLInsert
   | CTEUpdate SQLUpdate
   | CTEDelete SQLDelete
-  | CTEUnsafeRawSQL (InterpolatedQuery SQLExp)
   deriving (Show, Eq)
 
 instance ToSQL TopLevelCTE where
@@ -1181,28 +1167,6 @@ instance ToSQL TopLevelCTE where
     CTEInsert q -> toSQL q
     CTEUpdate q -> toSQL q
     CTEDelete q -> toSQL q
-    CTEUnsafeRawSQL (InterpolatedQuery parts) ->
-      foldMap
-        ( \case
-            IIText t -> TB.text t
-            IIVariable v -> toSQL v
-        )
-        parts
-
--- | Represents a common table expresion that can be used in nested selects.
-data InnerCTE
-  = ICTESelect Select
-  | ICTEUnsafeRawSQL (InterpolatedQuery SQLExp)
-  deriving (Show, Eq, Generic, Data)
-
-instance NFData InnerCTE
-
-instance Hashable InnerCTE
-
-toTopLevelCTE :: InnerCTE -> TopLevelCTE
-toTopLevelCTE = \case
-  ICTESelect select -> CTESelect select
-  ICTEUnsafeRawSQL query -> CTEUnsafeRawSQL query
 
 -- | A @SELECT@ statement with Common Table Expressions.
 --   <https://www.postgresql.org/docs/current/queries-with.html>
@@ -1222,10 +1186,11 @@ data SelectWithG statement = SelectWith
 
 instance (NFData v) => NFData (SelectWithG v)
 
+instance (Cacheable v) => Cacheable (SelectWithG v)
+
 instance (Hashable v) => Hashable (SelectWithG v)
 
 instance (ToSQL v) => ToSQL (SelectWithG v) where
-  toSQL (SelectWith [] sel) = toSQL sel
   toSQL (SelectWith ctes sel) =
     "WITH " <> (", " <+> map f ctes) <~> toSQL sel
     where

@@ -12,11 +12,10 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.NamingCase
-import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.SQL.Backend
 
 toTxtValue :: ColumnValue ('Postgres pgKind) -> SQLExp
 toTxtValue ColumnValue {..} =
@@ -29,16 +28,16 @@ toJSONableExp :: Options.StringifyNumbers -> ColumnType ('Postgres pgKind) -> Bo
 toJSONableExp stringifyNum colType asText tCase expression
   -- If it's a numeric column greater than a 32-bit integer, we have to stringify it as JSON spec doesn't support >32-bit integers
   | asText || (isScalarColumnWhere isBigNum colType && (case stringifyNum of Options.StringifyNumbers -> True; Options.Don'tStringifyNumbers -> False)) =
-      expression `SETyAnn` textTypeAnn
+    expression `SETyAnn` textTypeAnn
   -- If the column is either a `Geometry` or `Geography` then apply the `ST_AsGeoJSON` function to convert it into GeoJSON format
   | isScalarColumnWhere isGeoType colType =
-      SEFnApp
-        "ST_AsGeoJSON"
-        [ expression,
-          SEUnsafe "15", -- max decimal digits
-          SEUnsafe "4" -- to print out crs
-        ]
-        Nothing
-        `SETyAnn` jsonTypeAnn
+    SEFnApp
+      "ST_AsGeoJSON"
+      [ expression,
+        SEUnsafe "15", -- max decimal digits
+        SEUnsafe "4" -- to print out crs
+      ]
+      Nothing
+      `SETyAnn` jsonTypeAnn
   | isEnumColumn colType && any isGraphqlCase tCase = applyUppercase expression
   | otherwise = expression

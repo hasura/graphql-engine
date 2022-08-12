@@ -1,31 +1,31 @@
-version: "3.6"
+version: '3.6'
 services:
   postgres:
-    image: postgres:15
+    image: postgres:12
     restart: always
     volumes:
-      - db_data:/var/lib/postgresql/data
+    - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
     image: hasura/graphql-engine:pull5655-633f084f
     ports:
-      - "8080:8080"
+    - "8080:8080"
     depends_on:
-      - "postgres"
+    - "postgres"
     command:
-      - graphql-engine
-      - --mysql-host
-      - <mysql-host>
-      - --mysql-user
-      - <mysql-user>
-      - --mysql-port
-      - <mysql-port>
-      - --mysql-dbname
-      - <mysql-dbname>
-      - --mysql-password
-      - <mysql-password>
-      - serve
+    - graphql-engine
+    - --mysql-host
+    - <mysql-host>
+    - --mysql-user
+    - <mysql-user>
+    - --mysql-port
+    - <mysql-port>
+    - --mysql-dbname
+    - <mysql-dbname>
+    - --mysql-password
+    - <mysql-password>
+    - serve
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
@@ -34,8 +34,6 @@ services:
       ## enable debugging mode. It is recommended to disable this in production
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      ## uncomment next line to run console offline (i.e load console assets from server instead of CDN)
-      # HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
       ## uncomment next line to set an admin secret
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 volumes:

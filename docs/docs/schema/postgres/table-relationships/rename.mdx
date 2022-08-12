@@ -1,5 +1,5 @@
 ---
-sidebar_label: Rename relationships
+sidebar_label: Renaming relationships
 sidebar_position: 2
 description: Rename Postgres relationships in Hasura
 keywords:
@@ -13,52 +13,38 @@ keywords:
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Thumbnail from '@site/src/components/Thumbnail';
 
-# Postgres: Rename Relationships
+# Postgres: Renaming relationships
 
 An existing relationship can be renamed as follows:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-**Renaming Local Relationships**
-
-- Head to `Data -> [table-name] -> Relationships` in the Console
-- Click on the `Rename` option for the relationship in question.
-
-<Thumbnail src="/img/schema/rename-local-rel-step-1.png" alt="Fill the relationship details" width="700px" />
-
-- This will open up a pop-up widget which will allow you to rename and save the relationship
-
-<Thumbnail src="/img/schema/rename-local-rel-step-2.png" alt="Fill the relationship details" width="700px" />
-
-
-**Renaming Remote Relationships**
-
-Remote relationships cannot be renamed. They have to dropped and created again with the new name.
-
+-   Head to `Data -> [table-name] -> Relationships` in the console
+-   Drop the existing relationship
+-   Recreate the relationship with the new name
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can rename a relationship by changing the relationship name in the `tables.yaml` file inside the `metadata`
-directory:
+You can rename a relationship by changing the relationship name in the
+`tables.yaml` file inside the `metadata` directory:
 
 ```yaml {5}
 - table:
     schema: public
     name: articles
   object_relationships:
-    - name: author
-      using:
-        foreign_key_constraint_on: author_id
+  - name: author
+    using:
+      foreign_key_constraint_on: author_id
 - table:
     schema: public
     name: authors
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -68,7 +54,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can rename a relationship by using the
-[pg_rename_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-rename-relationship) Metadata API:
+[pg_rename_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-rename-relationship) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -91,8 +77,10 @@ X-Hasura-Role: admin
 
 :::info Note
 
-You might not be allowed to drop a relationship if it has been referenced elsewhere (e.g. in a permissions rule).
+You might not be allowed to drop a relationship if it has been
+referenced elsewhere (e.g. in a permissions rule).
 
-In this case you will have to delete the references first, rename the relationship, and then re-add the references.
+In this case you will have to delete the references first, rename the
+relationship, and then re-add the references.
 
 :::

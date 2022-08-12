@@ -6,10 +6,9 @@
 module Hasura.Backends.Postgres.Instances.API () where
 
 import Hasura.Prelude
-import Hasura.RQL.Types.BackendType
-import Hasura.SQL.AnyBackend (mkAnyBackend)
+import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
-import Hasura.Server.API.Metadata.Types
+import {-# SOURCE #-} Hasura.Server.API.Metadata
 
 instance BackendAPI ('Postgres 'Vanilla) where
   metadataV1CommandParsers =
@@ -23,15 +22,9 @@ instance BackendAPI ('Postgres 'Vanilla) where
         remoteRelationshipCommands @('Postgres 'Vanilla),
         eventTriggerCommands @('Postgres 'Vanilla),
         computedFieldCommands @('Postgres 'Vanilla),
-        nativeQueriesCommands @('Postgres 'Vanilla),
-        logicalModelsCommands @('Postgres 'Vanilla),
-        [ commandParser
-            "set_table_is_enum"
-            ( RMPgSetTableIsEnum
-                . mkAnyBackend @('Postgres 'Vanilla)
-            )
-        ],
-        connectionTemplateCommands @('Postgres 'Vanilla)
+        -- postgres specific
+        [ commandParser "set_table_is_enum" RMPgSetTableIsEnum
+        ]
       ]
 
 instance BackendAPI ('Postgres 'Citus) where
@@ -43,27 +36,5 @@ instance BackendAPI ('Postgres 'Citus) where
         functionCommands @('Postgres 'Citus),
         functionPermissionsCommands @('Postgres 'Citus),
         relationshipCommands @('Postgres 'Citus),
-        remoteRelationshipCommands @('Postgres 'Citus),
-        connectionTemplateCommands @('Postgres 'Citus),
-        nativeQueriesCommands @('Postgres 'Citus),
-        logicalModelsCommands @('Postgres 'Citus)
-      ]
-
-instance BackendAPI ('Postgres 'Cockroach) where
-  metadataV1CommandParsers =
-    concat
-      [ sourceCommands @('Postgres 'Cockroach),
-        tableCommands @('Postgres 'Cockroach),
-        tablePermissionsCommands @('Postgres 'Cockroach),
-        relationshipCommands @('Postgres 'Cockroach),
-        remoteRelationshipCommands @('Postgres 'Cockroach),
-        [ commandParser
-            "set_table_is_enum"
-            ( RMPgSetTableIsEnum
-                . mkAnyBackend @('Postgres 'Cockroach)
-            )
-        ],
-        connectionTemplateCommands @('Postgres 'Cockroach),
-        nativeQueriesCommands @('Postgres 'Cockroach),
-        logicalModelsCommands @('Postgres 'Cockroach)
+        remoteRelationshipCommands @('Postgres 'Citus)
       ]

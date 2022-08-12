@@ -2,12 +2,7 @@
 
 import pytest
 from validate import check_query, check_query_f
-
-pytestmark = [
-    pytest.mark.usefixtures('auth_hook'),
-    pytest.mark.admin_secret,
-    pytest.mark.hge_env('HASURA_GRAPHQL_AUTH_HOOK_MODE', 'POST'),
-]
+from context import PytestConf
 
 def check_post_404(hge_ctx,url):
    return check_query(hge_ctx, {
@@ -16,8 +11,11 @@ def check_post_404(hge_ctx,url):
      'query': {}
    })[0]
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_ENABLED_APIS', 'graphql')
-@pytest.mark.default_source_disabled()
+metadata_api_disabled = PytestConf.config.getoption("--test-metadata-disabled")
+graphql_api_disabled = PytestConf.config.getoption("--test-graphql-disabled")
+
+@pytest.mark.skipif(not metadata_api_disabled,
+                    reason="flag --test-metadata-disabled is not set. Cannot run tests for metadata disabled")
 class TestMetadataDisabled:
 
     def test_metadata_v1_query_disabled(self, hge_ctx):
@@ -32,20 +30,23 @@ class TestMetadataDisabled:
     def test_graphql_explain_disabled(self, hge_ctx):
         check_post_404(hge_ctx, '/v1/graphql/explain')
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_ENABLED_APIS', 'metadata')
+@pytest.mark.skipif(not graphql_api_disabled,
+                    reason="--test-graphql-disabled is not set. Cannot run GraphQL disabled tests")
 class TestGraphQLDisabled:
 
     def test_graphql_endpoint_disabled(self, hge_ctx):
         check_post_404(hge_ctx, '/v1/graphql')
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_ENABLED_APIS', 'graphql')
-@pytest.mark.default_source_disabled()
+@pytest.mark.skipif(graphql_api_disabled,
+                    reason="--test-graphql-disabled is set. Cannot run GraphQL enabled tests")
 class TestGraphQLEnabled:
 
     def test_graphql_introspection(self, hge_ctx):
         check_query_f(hge_ctx, "queries/graphql_introspection/introspection_only_kind_of_queryType.yaml")
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_ENABLED_APIS', 'metadata')
+
+@pytest.mark.skipif(metadata_api_disabled,
+                    reason="--test-metadata-disabled is set. Cannot run metadata enabled tests")
 class TestMetadataEnabled:
 
     def test_reload_metadata(self, hge_ctx):
@@ -53,3 +54,5 @@ class TestMetadataEnabled:
 
     def test_run_sql(self, hge_ctx):
         check_query_f(hge_ctx, "queries/v1/run_sql/sql_set_timezone.yaml")
+
+

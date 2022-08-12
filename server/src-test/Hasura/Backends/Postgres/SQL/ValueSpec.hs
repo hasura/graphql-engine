@@ -1,11 +1,8 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Hasura.Backends.Postgres.SQL.ValueSpec (spec) where
 
-import Data.Text.RawString (raw)
 import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..), parsePGValue, pgScalarValueToJson, txtEncoder)
+import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Base.Error (Code (ParseFailed), QErr (..), runAesonParser)
 import Hasura.Base.Error.TestInstances ()
 import Hasura.Prelude
@@ -17,30 +14,24 @@ spec = do
   txtEncoderSpec
   jsonValueSpec
 
-singleElement, multiElement, edgeCaseStrings, nestedArray, nestedArray', malformedArray, nonLatinArray :: PGScalarValue
+singleElement, multiElement, nestedArray, nestedArray', malformedArray :: PGScalarValue
 singleElement = PGValArray [PGValInteger 1]
 multiElement = PGValArray [PGValVarchar "a", PGValVarchar "b"]
-edgeCaseStrings = PGValArray $ map PGValVarchar ["a", "", [raw|"|], [raw|\|], [raw|,|], [raw|}|]]
 nestedArray = PGValArray [multiElement, multiElement]
 nestedArray' = PGValArray [nestedArray]
 malformedArray = PGValArray [PGValInteger 1]
-nonLatinArray = PGValArray [PGValVarchar "שלום"]
 
 txtEncoderSpec :: Spec
 txtEncoderSpec =
   describe "txtEncoder should encode a valid Postgres array of:" $ do
     it "a single element" $ do
-      txtEncoder singleElement `shouldBe` SELit [raw|{1}|]
+      txtEncoder singleElement `shouldBe` SELit "{1}"
     it "multiple elements" $ do
-      txtEncoder multiElement `shouldBe` SELit [raw|{"a","b"}|]
+      txtEncoder multiElement `shouldBe` SELit "{a,b}"
     it "simple nested arrays" $ do
-      txtEncoder nestedArray `shouldBe` SELit [raw|{{"a","b"},{"a","b"}}|]
+      txtEncoder nestedArray `shouldBe` SELit "{{a,b},{a,b}}"
     it "more deeply nested arrays" $ do
-      txtEncoder nestedArray' `shouldBe` SELit [raw|{{{"a","b"},{"a","b"}}}|]
-    it "edge case strings" $ do
-      txtEncoder edgeCaseStrings `shouldBe` SELit [raw|{"a","","\"","\\",",","}"}|]
-    it "non-latin characters" $ do
-      txtEncoder nonLatinArray `shouldBe` SELit [raw|{"שלום"}|]
+      txtEncoder nestedArray' `shouldBe` SELit "{{{a,b},{a,b}}}"
 
 pgArrayRoundtrip :: PGScalarValue -> PGScalarType -> Expectation
 pgArrayRoundtrip v t = do

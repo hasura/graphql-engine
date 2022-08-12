@@ -25,7 +25,6 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 		wantAdminSecret  string
 		wantAdminSecrets []string
 		wantErr          bool
-		assertErr        require.ErrorAssertionFunc
 	}{
 		{
 			"can set admin secret from config file",
@@ -39,7 +38,6 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 			"test",
 			[]string{},
 			false,
-			require.NoError,
 		},
 		{
 			"can set admin secrets from config file",
@@ -53,7 +51,6 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 			"",
 			[]string{"s1", "s2", "s3"},
 			false,
-			require.NoError,
 		},
 		{
 			"can set admin secret from env variable",
@@ -69,7 +66,6 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 			"test",
 			[]string{},
 			false,
-			require.NoError,
 		},
 		{
 			"can set admin secrets from env variable",
@@ -86,7 +82,6 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 			"",
 			[]string{"s1", "s2", "s3"},
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -101,13 +96,13 @@ func TestExecutionContext_readAdminSecret(t *testing.T) {
 				Viper: v,
 			}
 			err := ec.readConfig()
-			tt.assertErr(t, err)
 			if tt.wantErr {
-				return
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantAdminSecret, ec.Config.AdminSecret)
+				assert.Equal(t, tt.wantAdminSecrets, ec.Config.AdminSecrets)
 			}
-			assert.Equal(t, tt.wantAdminSecret, ec.Config.AdminSecret)
-			assert.Equal(t, tt.wantAdminSecrets, ec.Config.AdminSecrets)
-
 		})
 	}
 }

@@ -1,0 +1,14 @@
+nav > a {
+	padding: 10px 5px;
+}
+.newPlaylistSection {
+	padding-top: 10px;
+}
+.newPlaylist {
+	padding: 10px 0px;
+}
+.playlistBtn {
+	padding: 5px 10px;
+    border-radius: 2px;
+    border-color: lightgreen;
+}

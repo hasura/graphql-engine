@@ -15,10 +15,10 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/plugins"
 )
 
@@ -30,7 +30,6 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "List all available plugins from index, versions and installation status",
-		Long:    "To see a list of all the available plugins which extend the functionality of the CLI, their versions and installation status, run the list command.",
 		Example: `  # List all plugins
   hasura plugins list
 
@@ -39,18 +38,10 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura plugins list --dont-update-index`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			op := genOpName(cmd, "PreRunE")
-			if err := ec.Prepare(); err != nil {
-				return errors.E(op, err)
-			}
-			return nil
+			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			op := genOpName(cmd, "RunE")
-			if err := opts.run(); err != nil {
-				return errors.E(op, err)
-			}
-			return nil
+			return opts.run()
 		},
 	}
 
@@ -67,7 +58,6 @@ type pluginListOptions struct {
 }
 
 func (p *pluginListOptions) run() error {
-	var op errors.Op = "commands.pluginListOptions.run"
 	if !p.dontUpdateIndex {
 		ec.Spin("Updating plugin index...")
 		err := p.EC.PluginsConfig.Repo.EnsureUpdated()
@@ -79,7 +69,7 @@ func (p *pluginListOptions) run() error {
 	defer ec.Spinner.Stop()
 	availablePlugins, err := ec.PluginsConfig.ListPlugins()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("failed to load the list of plugins from the index: %w", err))
+		return errors.Wrap(err, "failed to load the list of plugins from the index")
 	}
 	names := make([]string, 0, len(availablePlugins))
 	pluginMap := make(map[string]plugins.Plugin, len(availablePlugins))
@@ -90,7 +80,7 @@ func (p *pluginListOptions) run() error {
 	}
 	installed, err := ec.PluginsConfig.ListInstalledPlugins()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("failed to load installed plugins: %w", err))
+		return errors.Wrap(err, "failed to load installed plugins")
 	}
 	// No plugins found
 	if len(names) == 0 {
@@ -105,7 +95,7 @@ func (p *pluginListOptions) run() error {
 		if _, ok := installed[name]; ok {
 			status = "yes"
 		} else if _, ok, err := plugins.MatchPlatform(plugin.Platforms); err != nil {
-			return errors.E(op, fmt.Errorf("failed to get the matching platform for plugin %s: %w", name, err))
+			return errors.Wrapf(err, "failed to get the matching platform for plugin %s", name)
 		} else if ok {
 			status = "no"
 		} else {
@@ -120,14 +110,10 @@ func (p *pluginListOptions) run() error {
 	}
 	rows = sortByFirstColumn(rows)
 	ec.Spinner.Stop()
-	if err := printTable(p.EC.Stdout, cols, rows); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return printTable(p.EC.Stdout, cols, rows)
 }
 
 func printTable(out io.Writer, columns []string, rows [][]string) error {
-	var op errors.Op = "commands.printTable"
 	w := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
 	fmt.Fprint(w, strings.Join(columns, "\t"))
 	fmt.Fprintln(w)
@@ -135,10 +121,7 @@ func printTable(out io.Writer, columns []string, rows [][]string) error {
 		fmt.Fprint(w, strings.Join(values, "\t"))
 		fmt.Fprintln(w)
 	}
-	if err := w.Flush(); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return w.Flush()
 }
 
 func sortByFirstColumn(rows [][]string) [][]string {

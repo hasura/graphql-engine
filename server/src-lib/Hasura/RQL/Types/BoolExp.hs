@@ -5,9 +5,10 @@ module Hasura.RQL.Types.BoolExp
 where
 
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.Table.Cache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 
 -- | Context to parse a RHS value in a boolean expression
 data BoolExpRHSParser (b :: BackendType) m v = BoolExpRHSParser
@@ -21,8 +22,8 @@ data BoolExpRHSParser (b :: BackendType) m v = BoolExpRHSParser
 newtype BoolExpResolver b m v = BoolExpResolver
   { getBoolExpResolver ::
       BoolExpRHSParser b m v ->
-      FieldInfoMap (FieldInfo b) -> -- The root table's FieldInfoMap
-      FieldInfoMap (FieldInfo b) -> -- The FieldInfoMap of the table currently "in focus"
+      TableName b ->
+      FieldInfoMap (FieldInfo b) ->
       GBoolExp b ColExp ->
       m (AnnBoolExp b v)
   }

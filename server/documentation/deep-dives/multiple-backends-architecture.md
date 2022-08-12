@@ -39,7 +39,7 @@ it for readability.
 
 ## Project overview
 
-The goal of this project is for the GraphQL engine to be able to support multiple backends – that is, to expose in our GraphQL schema tables that are not only stored in Postgres, but also MSSQL, MongoDB, and has many others as we need. This poses several challenges, such as:
+The goal of this project is for the GraphQL engine to be able to support multiple backends – that is, to expose in our GraphQL schema tables that are not only stored in Postgres, but also MySQL, MSSQL, MongoDB, and has many others as we need. This poses several challenges, such as:
 - the codebase was originally written with the assumption that the underlying database is Postgres;
 - different backends support a different set of features, often incompatible or different in subtle ways.
 

@@ -42,6 +42,7 @@ module Hasura.Backends.Postgres.Types.BoolExp
 where
 
 import Data.Aeson.Extended
+import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 
@@ -82,11 +83,13 @@ data BooleanOperators a
   | AMatchesFulltext a
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
-instance (NFData a) => NFData (BooleanOperators a)
+instance NFData a => NFData (BooleanOperators a)
 
-instance (Hashable a) => Hashable (BooleanOperators a)
+instance Hashable a => Hashable (BooleanOperators a)
 
-instance (ToJSON a) => ToJSONKeyValue (BooleanOperators a) where
+instance Cacheable a => Cacheable (BooleanOperators a)
+
+instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
   toJSONKeyValue = \case
     AILIKE a -> ("_ilike", toJSON a)
     ANILIKE a -> ("_nilike", toJSON a)

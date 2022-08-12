@@ -16,7 +16,7 @@ CREATE TABLE hdb_catalog.event_log
   delivered BIT NOT NULL DEFAULT 0,
   error BIT NOT NULL DEFAULT 0,
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET() AT TIME ZONE 'UTC',
+  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET(),
   locked DATETIMEOFFSET(7),
   next_retry_at DATETIMEOFFSET(7),
   archived BIT NOT NULL DEFAULT 0
@@ -34,28 +34,16 @@ CREATE INDEX event_log_fetch_events
 
 CREATE TABLE hdb_catalog.event_invocation_logs (
   id UNIQUEIDENTIFIER NOT NULL DEFAULT newid() PRIMARY KEY,
-  trigger_name NVARCHAR(MAX),
-  event_id UNIQUEIDENTIFIER,
+  event_id UNIQUEIDENTIFIER NOT NULL,
   status INTEGER,
   request NVARCHAR(MAX),
   response NVARCHAR(MAX),
-  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'
+  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+
+  FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log(id)
 );
 
 /* This index improves the performance of deletes by event_id, so that if somebody
 tries to delete an event from the hdb_catalog.event_log along with the invocation log
 it will be faster with an index compared to without an index. */
 CREATE INDEX fetch_event_invocation_logs ON hdb_catalog.event_invocation_logs (event_id);
-
-CREATE TABLE hdb_catalog.hdb_event_log_cleanups
-(
-  id UNIQUEIDENTIFIER DEFAULT newid() PRIMARY KEY,
-  trigger_name NVARCHAR(900) NOT NULL,
-  scheduled_at DATETIMEOFFSET(7) NOT NULL,
-  deleted_event_logs INTEGER,
-  deleted_event_invocation_logs INTEGER,
-  status NVARCHAR(MAX) NOT NULL,
-  CHECK (status IN ('scheduled', 'paused', 'completed', 'dead')),
-
-  UNIQUE (trigger_name, scheduled_at)
-);

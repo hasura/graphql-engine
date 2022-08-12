@@ -1,74 +1,21 @@
-dist
-dist-*
-cabal-dev
-/result
-*.o
-*.hi
-*.chi
-*.chs.h
-*.dyn_o
-*.dyn_hi
-.hpc
-.hsenv
-.cabal-sandbox/
-cabal.sandbox.config
-*.prof
-*.aux
-*.hp
-*.eventlog
-.stack-work/
-cabal.project.local
-cabal.project.local~
-.HTF/
-.ghc.environment.*
-temp-console-hasura/
-.DS_Store
-.idea
-tags
-
-# tool-agnostic personal ignore files
-.direnv
-.envrc.local
-.ignore
+.hasura-dev-python-venv
+server/tests-py/.devsh_version
+npm-debug.log
+dist-newstyle/
+*.temp
+*.DS_Store
+.tern-project
+test-server-output
+test-server-flags-output
 .vscode
-.vim/
-.history/
-*.swp
+.idea
+.now
+
+# Standardize on 'venv' as the name for python venv directories
+venv
 
 # Test artifacts
 *.tix
 
-# Docs artifacts
-docs/_build/
-docs/_ext/
-
-
-# Ignore benchmark report output
-server/benchmarks/benchmark_sets/*/report.json
-server/benchmarks/venv
-
 # ignored so that everyone can have their own hie.yaml
 hie.yaml
-
-# This file is required to build the server but we want to explicitly ignore
-# it in the repo. See server/graphql-engine.cabal for details
-server/CURRENT_VERSION
-
-# ignored to prevent accidental unzips of the .gz version from being committed
-Chinook.xml
-chinook.db
-
-# log output from tests-hspec runs
-tests-hspec.log
-
-# Test run results from Sandwich-powered tests
-test_runs/
-
-# dependencies
-node_modules
-
-# ticky profiles, e.g. from dev.sh --prof-ticky
-*.ticky
-*.ticky.modules
-
-yarn-error.log

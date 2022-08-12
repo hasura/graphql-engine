@@ -1,5 +1,5 @@
 ---
-sidebar_label: Rename relationships
+sidebar_label: Renaming relationships
 sidebar_position: 2
 description: Rename BigQuery relationships in Hasura
 keywords:
@@ -14,14 +14,14 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# BigQuery: Rename Relationships
+# BigQuery: Renaming relationships
 
 An existing relationship can be renamed as follows:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-- Head to `Data -> [table-name] -> Relationships` in the Console
+- Head to `Data -> [table-name] -> Relationships` in the console
 - Drop the existing relationship
 - Recreate the relationship with the new name
 
@@ -29,7 +29,7 @@ An existing relationship can be renamed as follows:
 
 <TabItem value="api" label="API">
 
-<!-- TODO: BigQuery Metadata docs: https://github.com/hasura/graphql-engine/issues/8560  -->
+<!-- TODO: BigQuery metadata docs: https://github.com/hasura/graphql-engine/issues/8560  -->
 
 You can rename a relationship by using the
 [bigquery_rename_relationship](/api-reference/metadata-api/relationship.mdx#metadata-bq-rename-relationship) metadata

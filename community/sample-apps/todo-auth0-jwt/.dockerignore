@@ -1,0 +1,6 @@
+package-lock.json
+node_modules
+.gitignore
+exec.sh
+exec.ps1
+README.md

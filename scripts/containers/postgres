@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 ### This file is not meant to be run directly, but to be sourced from
 ### the dev script. It defines all the functions required to run a
 ### postgres docker container.
@@ -17,10 +15,15 @@ fi
 
 PG_PASSWORD=postgres
 PG_VOLUME_NAME='hasura-dev-postgres'
-PG_CONTAINER_IMAGE='postgis/postgis:16-3.4-alpine'
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
 PG_DB_URL="postgresql://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
-PG_DOCKER="docker exec -u postgres $PG_CONTAINER_NAME psql $PG_DB_URL"
+PG_DOCKER="docker exec -u postgres -it $PG_CONTAINER_NAME psql $PG_DB_URL"
+
+if [[ `uname -m` == 'arm64' ]]; then
+  PG_CONTAINER_IMAGE=sayitsocial/postgis:raspi
+else
+  PG_CONTAINER_IMAGE=cimg/postgres:14.4-postgis
+fi
 
 # NOTE FWIW:
 #   Brandon tried these options to speed up integration tests, but to little effect:
@@ -41,18 +44,23 @@ PG_DOCKER="docker exec -u postgres $PG_CONTAINER_NAME psql $PG_DB_URL"
 #
 # Also useful:
 #   log_autovacuum_min_duration=0
-CONF_FLAGS=(
--c log_min_duration_statement=0
--c log_checkpoints=on
--c log_connections=on
--c log_disconnections=on
--c log_lock_waits=on
--c log_temp_files=0
--c log_error_verbosity=default
--c log_hostname=off
--c log_duration=on
--c port="$PG_PORT"
+CONF=$(cat <<-EOF
+log_min_duration_statement=0
+log_checkpoints=on
+log_connections=on
+log_disconnections=on
+log_lock_waits=on
+log_temp_files=0
+log_error_verbosity=default
+log_hostname=off
+log_duration=on
+port=$PG_PORT
+EOF
 )
+
+# log lines above as -c flag arguments we pass to postgres
+CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
+
 
 ######################
 #     Functions      #
@@ -69,7 +77,7 @@ function pg_launch_container {
     --env=POSTGRES_PASSWORD="$PG_PASSWORD" \
     --detach \
     "$PG_CONTAINER_IMAGE" \
-    "${CONF_FLAGS[@]}"
+    $CONF_FLAGS
 
   # graphql-engine calls the pg_dump executable. To avoid a version mismatch (and
   # the dependency entirely) we create a shim that executes the pg_dump in the
@@ -103,7 +111,7 @@ function pg_cleanup {
 
   echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!"
   echo_pretty "  PRESS CTRL-C TO ABORT removal of all containers, or ENTER to clean up right away"
-  read -r -t5 || true
+  read -t5 || true
   docker stop "$PG_CONTAINER_NAME"
   docker rm -v "$PG_CONTAINER_NAME"
   docker volume rm "$PG_VOLUME_NAME"

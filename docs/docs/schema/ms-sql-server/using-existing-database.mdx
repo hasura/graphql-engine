@@ -1,5 +1,5 @@
 ---
-sidebar_label: Use an existing database
+sidebar_label: Using an existing database
 sidebar_position: 6
 description: Set up a Hasura GraphQL schema with an existing database
 keywords:
@@ -12,26 +12,26 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Set Up a GraphQL Schema Using an Existing MS SQL Server Database
+# Setting up a GraphQL schema using an existing MS SQL Server database
 
 ## Introduction
 
 When you have an existing database with a schema already present, you don't need to create tables or views or run DDL
-queries through the Hasura Console.
+queries through the Hasura console.
 
-All you need to do is indicate to Hasura GraphQL Engine which tables and views you want to expose over GraphQL and how
+All you need to do is indicate to Hasura GraphQL engine which tables and views you want to expose over GraphQL and how
 they are connected to each other so that you can query them as a "graph".
 
 ## Step 1: Track tables/views
 
-Tracking a table or a view means telling Hasura GraphQL Engine that you want to expose that table/view over GraphQL.
+Tracking a table or a view means telling Hasura GraphQL engine that you want to expose that table/view over GraphQL.
 
 ### To track a table or a view
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-1.  Head to the `Data -> Schema` section of the Console.
+1.  Head to the `Data -> Schema` section of the console.
 2.  Under the heading `Untracked Tables/Views`, click on the `Track` button next to the table/view name.
 
 </TabItem>
@@ -46,7 +46,7 @@ follows:
     name: <table name>
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -56,7 +56,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 To track a table and expose it over the GraphQL API, use the
-[mssql_track_table Metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
+[mssql_track_table metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -78,10 +78,10 @@ X-Hasura-Role: admin
 
 ### To track all tables and views present in the database
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-1.  Head to the `Data -> Schema` section of the Console.
+1.  Head to the `Data -> Schema` section of the console.
 2.  Under the heading `Untracked Tables/Views`, click the `Track All` button.
 
 </TabItem>
@@ -101,7 +101,7 @@ as follows:
 
 To automate this, you could add the tables in a loop through a script.
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -111,7 +111,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 To track all tables and expose them over the GraphQL API, use the
-[mssql_track_table Metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
+[mssql_track_table metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -153,10 +153,10 @@ tables involved in the foreign-key.
 
 ### To track a foreign-key between two tables in the database
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-1.  Head to the `Data -> Schema` section of the Console.
+1.  Head to the `Data -> Schema` section of the console.
 2.  Click on a table involved in the foreign-key and head to the `Relationships` tab.
 3.  You should see a suggested relationship based on the foreign-key. Click `Add`, give a name to your relationship
     (this will be the name of the [nested object](/queries/ms-sql-server/nested-object-queries.mdx) in the GraphQL
@@ -197,7 +197,7 @@ as follows:
             name: <reference table name>
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -210,7 +210,7 @@ hasura metadata apply
 
 You can create an object relationship by using the
 [mssql_create_object_relationship](/api-reference/metadata-api/relationship.mdx#mssql-create-object-relationship)
-Metadata API:
+metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -262,10 +262,10 @@ X-Hasura-Role: admin
 
 ### To track all the foreign-keys of all tables in the database
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-1.  Head to the `Data -> Schema` section of the Console.
+1.  Head to the `Data -> Schema` section of the console.
 2.  Under the heading `Untracked foreign-key relations`, click the `Track All` button to automatically create
     relationships based on the foreign-keys.
 
@@ -305,7 +305,7 @@ directory as follows:
 
 To automate this, you could add the relationships in a loop through a script.
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -317,7 +317,7 @@ hasura metadata apply
 You can create multiple relationships by using the
 [mssql_create_object_relationship](/api-reference/metadata-api/relationship.mdx#mssql-create-object-relationship) and
 the [mssql_create_array_relationship](/api-reference/metadata-api/relationship.mdx#mssql-create-array-relationship)
-Metadata APIs:
+metadata APIs:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -363,7 +363,7 @@ To automate this, you could add the create relationships requests to the `bulk` 
 
 :::info Relationship nomenclature
 
-In this case, Hasura GraphQL Engine will **automatically generate relationship names** (the names of the
+In this case, Hasura GraphQL engine will **automatically generate relationship names** (the names of the
 [nested objects](/queries/ms-sql-server/nested-object-queries.mdx) in the GraphQL query) based on the table names and
 the foreign-key names.
 

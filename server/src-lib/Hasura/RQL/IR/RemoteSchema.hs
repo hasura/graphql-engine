@@ -35,17 +35,19 @@ module Hasura.RQL.IR.RemoteSchema
 where
 
 import Control.Lens.TH (makeLenses, makePrisms)
-import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
+import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (longestCommonPrefix)
 import Hasura.GraphQL.Parser.Name as GName
 import Hasura.GraphQL.Parser.Variable (InputValue)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (FieldName)
+import Hasura.RQL.Types.Relationships.ToSchema
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.RemoteSchema qualified as RQL
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.ResultCustomization qualified as RQL
-import Hasura.RemoteSchema.SchemaCache.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -71,11 +73,11 @@ data DeduplicatedSelectionSet r var = DeduplicatedSelectionSet
   { -- | Fields that aren't explicitly defined for member types
     _dssCommonFields :: Set.HashSet G.Name,
     -- | SelectionSets of individual member types
-    _dssMemberSelectionSets :: HashMap.HashMap G.Name (ObjectSelectionSet r var)
+    _dssMemberSelectionSets :: Map.HashMap G.Name (ObjectSelectionSet r var)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
-type ObjectSelectionSet r var = InsOrdHashMap.InsOrdHashMap G.Name (Field r var)
+type ObjectSelectionSet r var = OMap.InsOrdHashMap G.Name (Field r var)
 
 -- | Constructs an 'InterfaceSelectionSet' from a set of interface fields and an
 -- association list of the fields. This function ensures that @__typename@ is
@@ -89,7 +91,7 @@ mkInterfaceSelectionSet ::
 mkInterfaceSelectionSet interfaceFields selectionSets =
   DeduplicatedSelectionSet
     (Set.insert GName.___typename interfaceFields)
-    (HashMap.fromList selectionSets)
+    (Map.fromList selectionSets)
 
 -- | Constructs an 'UnionSelectionSet' from a list of the fields, using a
 -- singleton set of @__typename@ for the set of common fields.
@@ -100,7 +102,7 @@ mkUnionSelectionSet ::
 mkUnionSelectionSet selectionSets =
   DeduplicatedSelectionSet
     (Set.singleton GName.___typename)
-    (HashMap.fromList selectionSets)
+    (Map.fromList selectionSets)
 
 -- | Representation of one individual field.
 --
@@ -143,7 +145,7 @@ mkGraphQLField alias name =
 
 -- | Root entry point for a remote schema.
 data RemoteSchemaRootField r var = RemoteSchemaRootField
-  { _rfRemoteSchemaInfo :: RemoteSchemaInfo,
+  { _rfRemoteSchemaInfo :: RQL.RemoteSchemaInfo,
     _rfResultCustomizer :: RQL.ResultCustomizer,
     _rfField :: GraphQLField r var
   }
@@ -175,7 +177,6 @@ data RemoteSchemaSelect r = RemoteSchemaSelect
     _rselFieldCall :: NonEmpty FieldCall,
     _rselRemoteSchema :: RemoteSchemaInfo
   }
-  deriving (Show)
 
 -------------------------------------------------------------------------------
 -- Conversion back to a GraphQL document
@@ -188,7 +189,7 @@ data RemoteSchemaSelect r = RemoteSchemaSelect
 -- set.
 convertSelectionSet ::
   forall var.
-  (Eq var) =>
+  Eq var =>
   SelectionSet Void var ->
   G.SelectionSet G.NoFragments var
 convertSelectionSet = \case
@@ -202,13 +203,13 @@ convertSelectionSet = \case
       FieldGraphQL f -> convertGraphQLField f
 
     convertObjectSelectionSet =
-      map (G.SelectionField . convertField . snd) . InsOrdHashMap.toList
+      map (G.SelectionField . convertField . snd) . OMap.toList
 
     convertAbstractTypeSelectionSet abstractSelectionSet =
       let (base, members) = reduceAbstractTypeSelectionSet abstractSelectionSet
           commonFields = convertObjectSelectionSet base
           concreteTypeSelectionSets =
-            HashMap.toList members <&> \(concreteType, selectionSet) ->
+            Map.toList members <&> \(concreteType, selectionSet) ->
               G.InlineFragment
                 { G._ifTypeCondition = Just concreteType,
                   G._ifDirectives = mempty,
@@ -219,7 +220,7 @@ convertSelectionSet = \case
           -- inline with the strategy used in `mkAbstractTypeSelectionSet`
           commonFields <> map G.SelectionInlineFragment concreteTypeSelectionSets
 
-convertGraphQLField :: (Eq var) => GraphQLField Void var -> G.Field G.NoFragments var
+convertGraphQLField :: Eq var => GraphQLField Void var -> G.Field G.NoFragments var
 convertGraphQLField GraphQLField {..} =
   G.Field
     { -- add the alias only if it is different from the field name. This
@@ -321,24 +322,22 @@ convertGraphQLField GraphQLField {..} =
 reduceAbstractTypeSelectionSet ::
   (Eq var) =>
   DeduplicatedSelectionSet Void var ->
-  (ObjectSelectionSet Void var, HashMap.HashMap G.Name (ObjectSelectionSet Void var))
+  (ObjectSelectionSet Void var, Map.HashMap G.Name (ObjectSelectionSet Void var))
 reduceAbstractTypeSelectionSet (DeduplicatedSelectionSet baseMemberFields selectionSets) =
-  (baseSelectionSet, HashMap.fromList memberSelectionSets)
+  (baseSelectionSet, Map.fromList memberSelectionSets)
   where
-    sharedSelectionSetPrefix = longestCommonPrefix $ map (InsOrdHashMap.toList . snd) $ HashMap.toList selectionSets
+    sharedSelectionSetPrefix = longestCommonPrefix $ map (OMap.toList . snd) $ Map.toList selectionSets
 
-    baseSelectionSet = InsOrdHashMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
+    baseSelectionSet = OMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
 
     shouldAddToBase = \case
       FieldGraphQL f -> Set.member (_fName f) baseMemberFields
 
     memberSelectionSets =
       -- remove member selection sets that are subsumed by base selection set
-      filter (not . null . snd)
-        $
+      filter (not . null . snd) $
         -- remove the common prefix from member selection sets
-        map (second (InsOrdHashMap.fromList . drop (InsOrdHashMap.size baseSelectionSet) . InsOrdHashMap.toList))
-        $ HashMap.toList selectionSets
+        map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) $ Map.toList selectionSets
 
 -------------------------------------------------------------------------------
 -- TH lens generation

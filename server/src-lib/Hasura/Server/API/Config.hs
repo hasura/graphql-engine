@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | API related to server configuration
 module Hasura.Server.API.Config
@@ -8,40 +8,24 @@ module Hasura.Server.API.Config
   )
 where
 
-import Data.Aeson qualified as J
+import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
-import Hasura.RQL.Types.NamingCase
-import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
-import Hasura.Server.Init.Config (API (METRICS), AllowListStatus)
-import Hasura.Server.Init.FeatureFlag (FeatureFlag (..))
-import Hasura.Server.Types (ApolloFederationStatus, ExperimentalFeature)
+import Hasura.Server.Types (ExperimentalFeature)
 import Hasura.Server.Version (Version, currentVersion)
-
-data FeatureFlagInfo = FeatureFlagInfo
-  { ffiName :: Text,
-    ffiDescription :: Text,
-    ffiEnabled :: Bool
-  }
-  deriving (Show, Eq, Generic, Hashable)
-
-instance J.ToJSON FeatureFlagInfo where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
 
 data JWTInfo = JWTInfo
   { jwtiClaimsNamespace :: !JWTNamespace,
     jwtiClaimsFormat :: !JWTClaimsFormat,
     jwtiClaimsMap :: !(Maybe JWTCustomClaimsMap)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance J.ToJSON JWTInfo where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(deriveToJSON hasuraJSON ''JWTInfo)
 
 data ServerConfig = ServerConfig
   { scfgVersion :: !Version,
@@ -51,49 +35,35 @@ data ServerConfig = ServerConfig
     scfgIsAuthHookSet :: !Bool,
     scfgIsJwtSet :: !Bool,
     scfgJwt :: ![JWTInfo],
-    scfgIsAllowListEnabled :: !AllowListStatus,
+    scfgIsAllowListEnabled :: !Bool,
     scfgLiveQueries :: !ES.LiveQueriesOptions,
     scfgStreamingQueries :: !ES.SubscriptionsOptions,
     scfgConsoleAssetsDir :: !(Maybe Text),
-    scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature),
-    scfgIsPrometheusMetricsEnabled :: !Bool,
-    scfgDefaultNamingConvention :: !NamingCase,
-    scfgFeatureFlags :: !(Set.HashSet FeatureFlagInfo),
-    scfgIsApolloFederationEnabled :: !ApolloFederationStatus
+    scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq)
 
-instance J.ToJSON ServerConfig where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(deriveToJSON hasuraJSON ''ServerConfig)
 
 runGetConfig ::
   Options.InferFunctionPermissions ->
   Options.RemoteSchemaPermissions ->
   AuthMode ->
-  AllowListStatus ->
+  Bool ->
   ES.LiveQueriesOptions ->
   ES.SubscriptionsOptions ->
   Maybe Text ->
   Set.HashSet ExperimentalFeature ->
-  Set.HashSet API ->
-  NamingCase ->
-  [(FeatureFlag, Text, Bool)] ->
-  ApolloFederationStatus ->
   ServerConfig
 runGetConfig
   functionPermsCtx
   remoteSchemaPermsCtx
   am
-  allowListStatus
+  isAllowListEnabled
   liveQueryOpts
   streamQueryOpts
   consoleAssetsDir
-  experimentalFeatures
-  enabledAPIs
-  defaultNamingConvention
-  featureFlags
-  apolloFederationStatus =
+  experimentalFeatures =
     ServerConfig
       currentVersion
       functionPermsCtx
@@ -102,27 +72,11 @@ runGetConfig
       (isAuthHookSet am)
       (isJWTSet am)
       (getJWTInfo am)
-      allowListStatus
+      isAllowListEnabled
       liveQueryOpts
       streamQueryOpts
       consoleAssetsDir
       experimentalFeatures
-      isPrometheusMetricsEnabled
-      defaultNamingConvention
-      featureFlagSettings
-      apolloFederationStatus
-    where
-      isPrometheusMetricsEnabled = METRICS `Set.member` enabledAPIs
-      featureFlagSettings =
-        Set.fromList
-          $ ( \(FeatureFlag {ffIdentifier}, description, enabled) ->
-                FeatureFlagInfo
-                  { ffiName = ffIdentifier,
-                    ffiEnabled = enabled,
-                    ffiDescription = description
-                  }
-            )
-          <$> featureFlags
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case

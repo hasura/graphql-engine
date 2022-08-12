@@ -1,23 +1,19 @@
 ---
-description: Hasura Cloud Query tags
+description: Hasura Cloud Query Tags
 sidebar_label: Query Tags
-title: 'Cloud & Enterprise: Query Tags'
+title: 'Cloud & EE: Query Tags'
 keywords:
   - hasura
   - docs
   - cloud
   - query-tags
   - monitoring
-sidebar_position: 6
-sidebar_class_name: cloud-and-enterprise-icon
+sidebar_position: 9
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
-import ProductBadge from '@site/src/components/ProductBadge';
 
-# Query Tags
-
-<ProductBadge pro ee self />
+# Cloud & EE: Query Tags <HeadingIcon icon={`cloud-ee`} size={36} />
 
 ## Introduction
 
@@ -78,7 +74,7 @@ The following information is present in query tags for the GraphQL operations.
 
 ### Query and Mutation
 
-1.  Request ID (`request_id`) - can be added by setting the `omit_request_id` flag to `false`
+1.  Request ID (`request_id`)
 2.  Operation Name (`operation_name`)
 3.  (Root) field name (alias if provided) (`field_name`)
 4.  Parameterized Query Hash (`parameterized_query_hash`)
@@ -96,8 +92,7 @@ sources:
   configuration:
   query_tags: # Optional Field
     disabled: # Optional Field | Type: Bool | Values: true or false
-    format: # Optional Field  | Values: standard or sqlcommenter
-    omit_request_id: # Optional Field | Type: Bool | Values: true or false
+    format: # Optinal Field  | Values: standard or sqlcommenter
 ```
 
 :::info
@@ -106,23 +101,12 @@ Note The default format for the Query Tags is `Standard` and it is enabled by de
 
 :::
 
-In the above Metadata spec:
+In the above metadata spec:
 
 1.  The <em>query_tags</em> field is optional. If the <em>query_tags</em> field is not present for a source, then query
     tags is enabled for the source and the format used is <em>standard</em>.
 2.  To disable query tags for any source, set the value of <em>disabled</em> field to <em>true</em>.
 3.  To override the default format (<em>Standard</em>) for query tags, use the <em>format</em> field.
-4.  To add the `request_id` part of the query tags for any source, set the value of <em>omit_request_id</em> field to
-    <em>false</em>.
-
-:::info Compatibility with prepared statements
-
-The `use_prepared_statements` flag supported by Postgres sources is largely incompatible with query tags. With query
-tags enabled, two otherwise identical GraphQL queries may produce different SQL text, which negates the caching benefit
-of prepared statements. If both query tags and `use_prepared_statements` are enabled at the same time, the
-`omit_request_id` should be set to `true`.
-
-:::
 
 ## Example Metadata Specification
 
@@ -137,7 +121,6 @@ sources:
       configuration:
       query_tags:
         format: sqlcommenter
-        omit_request_id: false
 
   - name: hasura_db_2
       configuration:
@@ -154,5 +137,4 @@ args:
   source_name: # Name of the source | Required
   disabled: # Optional Field | Type: Bool | Values: true or false
   format: # Optional Field  | Values: standard or sqlcommenter
-  omit_request_id: # Optional Field | Type: Bool | Values: true or false
 ```

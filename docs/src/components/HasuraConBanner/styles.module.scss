@@ -1,54 +1,15 @@
 .hasura-con-banner {
-  //hiding 2022 banner, will add new one for 2023 when the promotions start
-  // display: none;
-  display: grid;
   margin: 40px 0;
-  grid-template-columns: 159px 1fr;
-  grid-gap: 6%;
-  padding: 35px 32px;
-  background: #111927;
-  border: 1px solid transparent;
-  // background-image: url('@site/static/img/hasura-con-banner-light-bg.svg');
-  // background-repeat: no-repeat;
-  // background-size: cover;
-  // background-position: center;
-
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  grid-gap: 32px;
+  padding: 20px 60px;
+  background-image: url('@site/static/img/hasura-con-banner-light-bg.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
   border-radius: 8px;
-
-  .hasura-con-register-button {
-    // min-width: 163px;
-    height: 42px;
-    border-radius: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #3970fd;
-    white-space: nowrap;
-    padding: 0 16px 0 22px;
-    max-width: 130px;
-
-    color: #fff;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out 0s;
-
-    img {
-      transition: all 0.2s ease-in-out 0s;
-      margin-left: 4px;
-      min-width: 16px;
-      width: 16px;
-    }
-  }
-
   &:hover {
-    .hasura-con-register-button {
-      background: rgb(30, 86, 227);
-
-      img {
-        transform: translateX(5px);
-      }
-    }
-
     text-decoration: none;
     .hasura-con-register {
       svg {
@@ -71,19 +32,9 @@
     font-size: var(--ifm-small-font-size);
     font-weight: var(--ifm-font-weight-semibold);
     align-self: center;
-    display: grid;
     img {
       width: 97px;
     }
-    svg {
-      width: 170px;
-    }
-    .hasuracon23-img {
-      min-width: 159px;
-      // margin-right: 42px;
-      margin-bottom: -10px;
-    }
-
     .brand-dark {
       display: block;
     }
@@ -99,16 +50,6 @@
   .hasura-con-title {
     font-size: var(--ifm-h3-font-size);
     font-weight: var(--ifm-font-weight-semibold);
-  }
-
-  .hasura-con-23-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--color-gray-0);
-    line-height: 1.25;
-    letter-spacing: -0.02em;
-    // max-width: 220px;
-    padding-right: 60px;
   }
   .hasura-con-register {
     display: flex;
@@ -131,7 +72,7 @@
 }
 html[data-theme='dark'] {
   .hasura-con-banner {
-    border: 1px solid #384250;
+    background-image: url('@site/static/img/hasura-con-banner-dark-bg.svg') !important;
     .hasura-con-brand {
       .brand-light {
         display: block;
@@ -204,165 +145,14 @@ html[data-theme='dark'] {
   .hasura-con-banner {
     padding: 20px 40px;
     .hasura-con-space-between {
-      // display: block;
+      display: block;
     }
   }
 }
 @media (max-width: 800px) {
   .hasura-con-banner {
-    // grid-template-columns: 1fr;
-    grid-gap: 40px;
-    padding: 20px 24px;
-  }
-}
-
-@media (min-width: 997px) and (max-width: 1380px) {
-  .hasura-con-banner {
     grid-template-columns: 1fr;
-    grid-gap: 20px !important;
-    .hasura-con-register-button {
-      margin-top: 20px;
-    }
-  }
-}
-
-@media (max-width: 650px) {
-  .hasura-con-banner {
-    grid-template-columns: 1fr;
-    grid-gap: 20px;
+    grid-gap: 0;
     padding: 20px 24px;
-    .hasura-con-space-between {
-      display: block;
-      .hasura-con-23-title {
-        padding-right: 0;
-      }
-    }
-    .hasura-con-register-button {
-      margin-top: 20px;
-    }
-  }
-}
-
-.observe-bg {
-  background: linear-gradient(235.85deg, #2c64f4 -66.27%, #00288e 108.5%, #a36ff8 129.05%, #16a9c9 145.37%);
-  margin: 40px 0;
-  border-radius: 12px;
-
-  h3 {
-    font-size: 20px !important;
-  }
-}
-
-.security-bg {
-  background: linear-gradient(117.44deg, #2c64f4 35.75%, #a36ff8 95.65%, #16a9c9 136.27%);
-  margin: 40px 0;
-  border-radius: 12px;
-
-  h3 {
-    font-size: 20px !important;
-  }
-}
-
-.product-launch-webinar-bg {
-  background: #000615;
-  margin: 40px 0;
-  border-radius: 12px;
-}
-
-.snowflake-bg {
-  background: linear-gradient(117.44deg, #2c64f4 35.75%, #a36ff8 95.65%, #16a9c9 136.27%);
-  margin: 40px 0;
-  border-radius: 12px;
-}
-
-.webinar-banner {
-  background-image: none;
-  display: flex;
-  padding: 20px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  .brand-light {
-    min-width: 171px;
-    max-width: 171px;
-    margin-top: 5px;
-  }
-
-  .content-div {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    h3 {
-      font-weight: 500;
-      font-size: 16px;
-      line-height: 1.5;
-      color: #ffffff;
-      margin: 0 8% 0 10%;
-    }
-
-    .hasura-con-register {
-      font-weight: 500;
-      font-size: 14px;
-      line-height: 21px;
-      letter-spacing: 0.01em;
-      color: #ffffff;
-      white-space: nowrap;
-
-      svg {
-        margin-left: 8px;
-        transition: all 0.3s ease-in-out;
-        margin-bottom: -2px;
-
-        path {
-          stroke: white;
-        }
-      }
-    }
-  }
-
-  &:hover {
-    text-decoration: none;
-    .content-div {
-      .hasura-con-register {
-        svg {
-          transform: translateX(5px);
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 1290px) {
-  .webinar-banner {
-    padding: 20px 30px;
-
-    .content-div {
-      flex-wrap: wrap;
-      margin-left: 49px;
-
-      h3 {
-        margin: 0 0 12px;
-      }
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .webinar-banner {
-    padding: 30px;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-
-    .content-div {
-      margin-left: 0px;
-
-      h3 {
-        margin: 24px 0;
-      }
-    }
   }
 }

@@ -1,8 +1,13 @@
 {
-  "//": "We use node.js to start servers for testing remote schemas and federation with Apollo. In order to do so, we need the dependencies below.",
-  "name": "hasura-server-tests-py-remote-schemas",
+  "name": "aws-lambda-nodejs",
   "version": "1.0.0",
-  "author": "Hasura, Inc.",
+  "description": "",
+  "main": "lambdaCtx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "apollo-server": "3.8.1",

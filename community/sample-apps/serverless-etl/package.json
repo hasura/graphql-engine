@@ -1,0 +1,16 @@
+{
+  "name": "serverless-etl-hasura",
+  "version": "1.0.0",
+  "description": "Serverless ETL demo using Hasura GraphQL Engine Event Triggers and Algolia Search",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hasura/graphql-engine"
+  },
+  "keywords": [],
+  "author": "Praveen",
+  "license": "MIT"
+}

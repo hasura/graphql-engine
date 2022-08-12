@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en-US" data-reactroot="">
+  <head>
+    <link rel="icon" type="image/png" href="/rstatic/favicon_green.png" />
+    <script>
+       <%= htmlWebpackPlugin.options.env %>
+    </script>
+  </head>
+  <body>
+    <style>
+      .content {
+        display: 'none';
+        opacity: 0;
+        transition: opacity 0.2s linear;
+      }
+      .content.show {
+        display: 'block';
+        opacity: 1;
+        transition: opacity 0.2s linear;
+      }
+    </style>
+    <div id="loading">
+      <div
+        class="page-loading"
+        style="
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          font-family: sans-serif;
+          justify-content: center;
+        "
+      >
+        <span class="" style="font-size: 2em; margin-top: -3em; color: #848484">
+          Loading...
+        </span>
+      </div>
+    </div>
+    <div id="content" class="content"></div>
+  </body>
+</html>

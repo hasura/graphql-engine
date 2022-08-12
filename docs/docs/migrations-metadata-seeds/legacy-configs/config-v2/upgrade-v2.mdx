@@ -1,7 +1,7 @@
 ---
 sidebar_label: Upgrading to config v2
 sidebar_position: 5
-description: Upgrade to Hasura Migrations v2
+description: Upgrade to Hasura migrations v2
 keywords:
   - hasura
   - docs
@@ -9,23 +9,23 @@ keywords:
   - metadata
 ---
 
-# Upgrading to Hasura Migrations config v2
+# Upgrading to Hasura migrations config v2
 
 ## What has changed?
 
-In **config v1**, the PG schema Migrations and Hasura Metadata were both
+In **config v1**, the PG schema migrations and Hasura metadata were both
 handled using the same [migration files](/migrations-metadata-seeds/legacy-configs/config-v1/reference/migration-file-format.mdx)
 which were in `yaml` format. In **config v2**, these are managed
-separately in their own directories in the Hasura Project. Metadata is
+separately in their own directories in the Hasura project. Metadata is
 managed in its separate [metadata directory](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx) and PG
-schema Migrations are managed via
+schema migrations are managed via
 [migration files](/migrations-metadata-seeds/legacy-configs/config-v2/reference/migration-file-format.mdx) that are now in `SQL`
 format.
 
 ### Changes needed in existing workflows
 
 Due to the above mentioned changes, any workflows that involve applying
-Migrations have an additional step of applying Metadata as well.
+migrations have an additional step of applying metadata as well.
 
 For example,
 
@@ -39,12 +39,12 @@ For example,
 
 ## Upgrade steps
 
-### Step 1: Take a backup
+### Step 0: Take a backup
 
-Make sure you take a backup of your Hasura Project before upgrading to
+Make sure you take a backup of your Hasura project before upgrading to
 `config v2`.
 
-### Step 2: Upgrade to the latest CLI
+### Step 1: Upgrade to the latest CLI
 
 Config v2 is available since `v1.2.0`.
 
@@ -54,7 +54,7 @@ Run:
 hasura update-cli
 ```
 
-### Step 3: Upgrade Hasura Project to v2
+### Step 2: Upgrade hasura project to v2
 
 In your project directory, run:
 

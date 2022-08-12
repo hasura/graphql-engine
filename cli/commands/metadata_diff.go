@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
+
 	diffpkg "github.com/hasura/graphql-engine/cli/v2/internal/diff"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
@@ -37,14 +37,15 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataDiffCmd := &cobra.Command{
 		Use:   "diff [file1] [file2]",
-		Short: "(PREVIEW) Show a highlighted diff of the Hasura Metadata",
-		Long:  "(PREVIEW) This command shows changes between two different sets of Hasura Metadata. By default, it shows changes between the exported Hasura Metadata and the Hasura Metadata on the server.",
+		Short: "(PREVIEW) Show a highlighted diff of Hasura metadata",
+		Long: `(PREVIEW) Show changes between two different sets of Hasura metadata.
+By default, it shows changes between the exported metadata file and server metadata`,
 		Example: `  # NOTE: This command is in preview, usage and diff format may change.
 
   # Show changes between server metadata and the exported metadata file:
   hasura metadata diff
   
-# Apply admin secret for Hasura GraphQL Engine:
+# Apply admin secret for Hasura GraphQL engine:
   hasura metadata diff --admin-secret "<admin-secret>"
 
   # Specify a diff type
@@ -55,7 +56,6 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata diff --endpoint "<endpoint>"`,
 		Args: cobra.MaximumNArgs(2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			op := genOpName(cmd, "PreRunE")
 			if len(opts.DiffType) > 0 {
 				optsDiffType := DiffType(opts.DiffType)
 				diffTypes := []DiffType{DifftypeJSON, DifftypeYAML, DifftypeUnifiedJSON, DifftypeUnifiedYAML}
@@ -64,18 +64,14 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 						return nil
 					}
 				}
-				return errors.E(op, fmt.Errorf("metadata diff doesn't support difftype %s", optsDiffType))
+				return fmt.Errorf("metadata diff doesn't support difftype %s", optsDiffType)
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			op := genOpName(cmd, "RunE")
 			opts.Args = args
 			opts.DisableColor = ec.NoColor
-			if err := opts.Run(); err != nil {
-				return errors.E(op, err)
-			}
-			return nil
+			return opts.Run()
 		},
 	}
 
@@ -87,14 +83,10 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func (o *MetadataDiffOptions) Run() error {
-	var op errors.Op = "commands.MetadataDiffOptions.Run"
 	if o.EC.Config.Version >= cli.V2 && o.EC.MetadataDir != "" {
-		if err := getMetadataModeHandler(o.EC.MetadataMode).Diff(o); err != nil {
-			return errors.E(op, err)
-		}
-		return nil
+		return getMetadataModeHandler(o.EC.MetadataMode).Diff(o)
 	} else {
-		return errors.E(op, fmt.Errorf("metadata diff for config %d not supported", o.EC.Config.Version))
+		return fmt.Errorf("metadata diff for config %d not supported", o.EC.Config.Version)
 	}
 }
 
@@ -126,49 +118,42 @@ type printGeneratedMetadataFileDiffOpts struct {
 }
 
 func printGeneratedMetadataFileDiffBetweenProjectDirectories(opts printGeneratedMetadataFileDiffOpts) error {
-	var op errors.Op = "commands.printGeneratedMetadataFileDiffBetweenProjectDirectories"
 	// build server metadata
 	opts.projectMetadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(opts.ec, opts.toProjectDirectory))
 	newYaml, err := opts.projectMetadataHandler.BuildYAMLMetadata()
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	opts.projectMetadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(opts.ec, opts.fromProjectDirectory))
 	oldYaml, err := opts.projectMetadataHandler.BuildYAMLMetadata()
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 
 	switch opts.diffType {
 	case DifftypeJSON:
 		newJson, err := convertYamlToJsonWithIndent(newYaml)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("cannot unmarshal local metadata to json: %w", err))
+			return fmt.Errorf("cannot unmarshal local metadata to json: %w", err)
 		}
 		oldJson, err := convertYamlToJsonWithIndent(oldYaml)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("cannot unmarshal server metadata to json: %w", err))
+			return fmt.Errorf("cannot unmarshal server metadata to json: %w", err)
 		}
 
-		if err := printMyersDiff(string(newJson), string(oldJson), opts.toFriendlyName, opts.fromFriendlyName, opts.writer, opts.disableColor); err != nil {
-			return errors.E(op, err)
-		}
-		return nil
+		return printMyersDiff(string(newJson), string(oldJson), opts.toFriendlyName, opts.fromFriendlyName, opts.writer, opts.disableColor)
 	case DifftypeYAML:
-		if err := printMyersDiff(string(newYaml), string(oldYaml), opts.toFriendlyName, opts.fromFriendlyName, opts.writer, opts.disableColor); err != nil {
-			return errors.E(op, err)
-		}
-		return nil
+		return printMyersDiff(string(newYaml), string(oldYaml), opts.toFriendlyName, opts.fromFriendlyName, opts.writer, opts.disableColor)
 	case DifftypeUnifiedYAML:
 		printUnifiedDiff(string(newYaml), string(oldYaml), opts.writer)
 	case DifftypeUnifiedJSON:
 		newJson, err := convertYamlToJsonWithIndent(newYaml)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("cannot unmarshal local metadata to json: %w", err))
+			return fmt.Errorf("cannot unmarshal local metadata to json: %w", err)
 		}
 		oldJson, err := convertYamlToJsonWithIndent(oldYaml)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("cannot unmarshal server metadata to json: %w", err))
+			return fmt.Errorf("cannot unmarshal server metadata to json: %w", err)
 		}
 		printUnifiedDiff(string(newJson), string(oldJson), opts.writer)
 	}
@@ -176,12 +161,11 @@ func printGeneratedMetadataFileDiffBetweenProjectDirectories(opts printGenerated
 }
 
 func printMyersDiff(before, after, from, to string, writer io.Writer, disableColor bool) error {
-	var op errors.Op = "commands.printMyersDiff"
 	fmt.Fprintf(writer, "- %s\n", diffpkg.MakeDiffLine(from, "red", disableColor))
 	fmt.Fprintf(writer, "+ %s\n", diffpkg.MakeDiffLine(to, "green", disableColor))
 	count, err := diffpkg.MyersDiff(before, after, from, to, writer, disableColor)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	if count == 0 {
 		fmt.Fprintln(writer, zeroDifferencesFound)
@@ -206,27 +190,25 @@ func printUnifiedDiff(before, after string, to io.Writer) {
 }
 
 func checkDir(path string) error {
-	var op errors.Op = "commands.checkDir"
 	file, err := os.Stat(path)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	if !file.IsDir() {
-		return errors.E(op, fmt.Errorf("metadata diff only works with folder but got file %s", path))
+		return fmt.Errorf("metadata diff only works with folder but got file %s", path)
 	}
 	return nil
 }
 
 func convertYamlToJsonWithIndent(yamlByt []byte) ([]byte, error) {
-	var op errors.Op = "commands.convertYamlToJsonWithIndent"
 	jsonByt, err := metadatautil.YAMLToJSON(yamlByt)
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("cannot convert yaml to json: %w", err))
+		return nil, fmt.Errorf("cannot convert yaml to json: %w", err)
 	}
 	var jsonBuf bytes.Buffer
 	err = json.Indent(&jsonBuf, jsonByt, "", "  ")
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("cannot indent json: %w", err))
+		return nil, fmt.Errorf("cannot indent json: %w", err)
 	}
 	return jsonBuf.Bytes(), nil
 }

@@ -18,14 +18,14 @@ where
 
 import Control.Lens.TH (makePrisms)
 import Data.Aeson qualified as J
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Kind (Type)
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
+import Hasura.SQL.Backend
 
 data MutFldG (b :: BackendType) (r :: Type) v
   = MCount
@@ -34,16 +34,22 @@ data MutFldG (b :: BackendType) (r :: Type) v
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
-  ( Backend b,
-    Show (AnnFieldsG b r v)
+  ( Show r,
+    Backend b,
+    Show (BooleanOperators b a),
+    Show (FunctionArgumentExp b a),
+    Show a
   ) =>
-  Show (MutFldG b r v)
+  Show (MutFldG b r a)
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnFieldsG b r v)
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq r,
+    Eq a
   ) =>
-  Eq (MutFldG b r v)
+  Eq (MutFldG b r a)
 
 type MutFld b = MutFldG b Void (SQLExpression b)
 
@@ -56,17 +62,22 @@ data MutationOutputG (b :: BackendType) (r :: Type) v
 
 deriving stock instance
   ( Backend b,
-    Show (MutFldsG b r v),
-    Show (AnnFieldsG b r v)
+    Show (BooleanOperators b a),
+    Show (MutFldsG b r a),
+    Show (FunctionArgumentExp b a),
+    Show r,
+    Show a
   ) =>
-  Show (MutationOutputG b r v)
+  Show (MutationOutputG b r a)
 
 deriving stock instance
   ( Backend b,
-    Eq (MutFldsG b r v),
-    Eq (AnnFieldsG b r v)
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq r,
+    Eq a
   ) =>
-  Eq (MutationOutputG b r v)
+  Eq (MutationOutputG b r a)
 
 type MutationOutput b = MutationOutputG b Void (SQLExpression b)
 
@@ -74,7 +85,7 @@ type MutFlds b = MutFldsG b Void (SQLExpression b)
 
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case
-  MOutMultirowFields mutFlds -> encJFromJValue $ InsOrdHashMap.fromList $ map (second convMutFld) mutFlds
+  MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
   MOutSinglerowObject _ -> encJFromJValue $ J.Object mempty
   where
     convMutFld = \case

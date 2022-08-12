@@ -1,36 +1,38 @@
 ---
-sidebar_label: Computed fields
-sidebar_position: 7
-description: Manage computed fields with the Hasura schema/Metadata API
+sidebar_label: Computed Fields
+sidebar_position: 7 
+description: Manage computed fields with the Hasura schema/metadata API
 keywords:
-  - hasura
-  - docs
-  - schema/Metadata API
-  - API reference
-  - computed field
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - computed field
 ---
 
 # Schema/Metadata API Reference: Computed Fields (Deprecated)
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/Metadata API is deprecated in
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/api-reference/schema-api/index.mdx) and the
-[Metadata API](/api-reference/metadata-api/index.mdx).
+[metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/Metadata APIs will
+Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
 :::
+
 
 ## Introduction
 
 **computed field** is an extra field added to a table, its value is
 computed via an SQL function which has the table row type as an input
-argument. Currently, the Hasura GraphQL Engine supports functions
+argument. Currenty, the Hasura GraphQL engine supports functions
 returning [base types](https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9)
 or [table row types](https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING)
 as computed fields.
+
 
 ## add_computed_field {#schema-metadata-add-computed-field}
 
@@ -38,7 +40,7 @@ as computed fields.
 There cannot be an existing column or relationship or computed field
 with the same name.
 
-Create a `computed field` called `full_name` on an `author` _table_,
+Create a `computed field` called `full_name` on an `author` *table*,
 using an SQL function called `author_full_name`:
 
 ```http
@@ -67,12 +69,12 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-add-computed-field-syntax}
 
-| Key        | Required | Schema                                                                            | Description                    |
-| ---------- | -------- | --------------------------------------------------------------------------------- | ------------------------------ |
-| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                             | Name of the table              |
-| name       | true     | [ComputedFieldName](/api-reference/syntax-defs.mdx#computedfieldname)             | Name of the new computed field |
-| definition | true     | [ComputedFieldDefinition](/api-reference/syntax-defs.mdx#computedfielddefinition) | The computed field definition  |
-| comment    | false    | text                                                                              | comment                        |
+| Key        | Required | Schema                                                                                            | Description                    |
+|------------|----------|---------------------------------------------------------------------------------------------------|--------------------------------|
+| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                                | Name of the table              |
+| name       | true     | [ComputedFieldName](/api-reference/syntax-defs.mdx#computedfieldname)                | Name of the new computed field |
+| definition | true     | [ComputedFieldDefinition](/api-reference/syntax-defs.mdx#computedfielddefinition)    | The computed field definition  |
+| comment    | false    | text                                                                                              | comment                        |
 
 ## drop_computed_field {#schema-metadata-drop-computed-field}
 
@@ -104,8 +106,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-drop-computed-field-syntax}
 
-| Key     | Required | Schema                                                                | Description                                                                                   |
-| ------- | -------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                 | Name of the table                                                                             |
-| name    | true     | [ComputedFieldName](/api-reference/syntax-defs.mdx#computedfieldname) | Name of the computed field                                                                    |
-| cascade | false    | Boolean                                                               | When set to `true`, all the dependent items (if any) on this computed fields are also dropped |
+| Key     | Required | Schema                                                                               | Description                                                                                   |
+|---------|----------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                   | Name of the table                                                                             |
+| name    | true     | [ComputedFieldName](/api-reference/syntax-defs.mdx#computedfieldname)  | Name of the computed field                                                                    |
+| cascade | false    | Boolean                                                                              | When set to `true`, all the dependent items (if any) on this computed fields are also dropped |

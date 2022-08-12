@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 
 import pytest
+import subprocess
+import time
 
-from conftest import extract_server_address_from
+from validate import check_query_f, check_query
 from remote_server import NodeGraphQL
-from validate import check_query_f
 
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def graphql_service(worker_id: str, hge_fixture_env: dict[str, str]):
-    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_HANDLER')
-    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/index.js', port=port)
-    server.start()
-    print(f'{graphql_service.__name__} server started on {server.url}')
-    hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = server.url
-    yield server
-    server.stop()
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
 use_test_fixtures = pytest.mark.usefixtures(
     "graphql_service",

@@ -13,7 +13,7 @@ where
 
 import Control.Monad (foldM, unless)
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Maybe (fromMaybe)
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
@@ -138,23 +138,21 @@ mergeFields ::
   (MonadParse m, Eq var) =>
   [Field NoFragments var] ->
   m (InsOrdHashMap Name (Field NoFragments var))
-mergeFields = foldM addField InsOrdHashMap.empty
+mergeFields = foldM addField OMap.empty
   where
-    addField fields newField = case InsOrdHashMap.lookup alias fields of
+    addField fields newField = case OMap.lookup alias fields of
       Nothing ->
-        pure $! InsOrdHashMap.insert alias newField fields
+        pure $! OMap.insert alias newField fields
       Just oldField -> do
         mergedField <- mergeField alias oldField newField
-        pure $! InsOrdHashMap.insert alias mergedField fields
+        pure $! OMap.insert alias mergedField fields
       where
         alias = fromMaybe (_fName newField) (_fAlias newField)
 
     mergeField alias oldField newField = do
       unless (_fName oldField == _fName newField) $
         parseError $
-          "selection of both "
-            <> toErrorValue (_fName oldField)
-            <> " and "
+          "selection of both " <> toErrorValue (_fName oldField) <> " and "
             <> toErrorValue (_fName newField)
             <> " specify the same response name, "
             <> toErrorValue (alias)
@@ -163,8 +161,8 @@ mergeFields = foldM addField InsOrdHashMap.empty
         parseError $
           "inconsistent arguments between multiple selections of field " <> toErrorValue (_fName oldField)
 
-      pure $!
-        Field
+      pure
+        $! Field
           { _fAlias = Just alias,
             _fName = _fName oldField,
             _fArguments = _fArguments oldField,

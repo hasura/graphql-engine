@@ -9,7 +9,7 @@ module Hasura.Backends.MSSQL.Execute.Insert
   )
 where
 
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as HM
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
@@ -23,21 +23,17 @@ import Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable qualified as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
-import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), IfMatched (..))
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), IfMatched)
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Execute.Backend
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
-import Hasura.RQL.IR.ModelInformation
-import Hasura.RQL.IR.ModelInformation.Types (ModelNameInfo (..))
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common (SourceName (..))
-import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.SQL.Backend
 import Hasura.Session
 
 -- | Execute and insert/upsert mutation against MS SQL Server.
@@ -46,31 +42,15 @@ executeInsert ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   Options.StringifyNumbers ->
-  SourceName ->
-  ModelSourceType ->
   SourceConfig 'MSSQL ->
   AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (OnBaseMonad (ExceptT QErr) EncJSON, [ModelNameInfo])
-executeInsert userInfo stringifyNum sourceName modelSourceType sourceConfig annInsert = do
+  m (ExceptT QErr IO EncJSON)
+executeInsert userInfo stringifyNum sourceConfig annInsert = do
   queryTags <- ask
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
   insert <- traverse (prepareValueQuery sessionVariables) annInsert
-  let outputInsertMut = _aiOutput annInsert
-  argModels <- do
-    (_, res') <- flip runStateT [] $ getMutationInsertArgumentModelNamesMSSQL sourceName modelSourceType $ _aiData annInsert
-    return res'
-  let insertPermissionModelNames = do
-        (_, res') <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ fst $ _aiCheckCondition $ _aiData annInsert
-        res'
-      postUpdatePermissionModelNames = do
-        let postUpdateCheck = snd $ _aiCheckCondition $ _aiData annInsert
-        case postUpdateCheck of
-          Nothing -> []
-          Just check -> do
-            (_, res') <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType check
-            res'
-  let modelNames = argModels <> insertPermissionModelNames <> postUpdatePermissionModelNames <> getMutationOutputModelNamesGen sourceName modelSourceType outputInsertMut
-  pure $ (OnBaseMonad $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ buildInsertTx tableName withAlias stringifyNum insert queryTags, modelNames)
+  let insertTx = buildInsertTx tableName withAlias stringifyNum insert queryTags
+  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) insertTx
   where
     sessionVariables = _uiSession userInfo
     tableName = _aiTableName $ _aiData annInsert
@@ -163,39 +143,34 @@ executeInsert userInfo stringifyNum sourceName modelSourceType sourceConfig annI
 --
 --    When executed, the above statement returns a single row with mutation response as a string value and check constraint result as an integer value.
 buildInsertTx ::
-  (MonadIO m) =>
   TSQL.TableName ->
   Text ->
   Options.StringifyNumbers ->
   AnnotatedInsert 'MSSQL Void Expression ->
   QueryTagsComment ->
-  Tx.TxET QErr m EncJSON
+  Tx.TxET QErr IO EncJSON
 buildInsertTx tableName withAlias stringifyNum insert queryTags = do
   let tableColumns = _aiTableColumns $ _aiData insert
       ifMatchedField = _biIfMatched . _aiBackendInsert . _aiData $ insert
 
   -- Create #inserted temporary table
   let createInsertedTempTableQuery =
-        toQueryFlat
-          $ TQ.fromSelectIntoTempTable
-          $ TSQL.toSelectIntoTempTable tempTableNameInserted tableName tableColumns RemoveConstraints
+        toQueryFlat $
+          TQ.fromSelectIntoTempTable $
+            TSQL.toSelectIntoTempTable tempTableNameInserted tableName tableColumns RemoveConstraints
 
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
 
-  -- check we have any values to insert, SQLServer doesn't appear to have a
-  -- nice syntax for "insert no rows please"
-  unless (null $ _aiInsertObject $ _aiData insert)
-    $
-    -- Choose between running a regular @INSERT INTO@ statement or a @MERGE@ statement
-    -- depending on the @if_matched@ field.
-    --
-    -- Affected rows will be inserted into the #inserted temporary table regardless.
-    case ifMatchedField of
-      Nothing -> do
-        -- Insert values into the table using INSERT query
-        let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
-        Tx.unitQueryE mutationMSSQLTxErrorHandler (insertQuery `withQueryTags` queryTags)
-      Just ifMatched -> buildUpsertTx tableName insert ifMatched queryTags
+  -- Choose between running a regular @INSERT INTO@ statement or a @MERGE@ statement
+  -- depending on the @if_matched@ field.
+  --
+  -- Affected rows will be inserted into the #inserted temporary table regardless.
+  case ifMatchedField of
+    Nothing -> do
+      -- Insert values into the table using INSERT query
+      let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
+      Tx.unitQueryE mutationMSSQLTxErrorHandler (insertQuery `withQueryTags` queryTags)
+    Just ifMatched -> buildUpsertTx tableName insert ifMatched queryTags
 
   -- Build a response to the user using the values in the temporary table named #inserted
   (responseText, checkConditionInt) <- buildInsertResponseTx stringifyNum withAlias insert queryTags
@@ -205,8 +180,8 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
   Tx.unitQueryE defaultMSSQLTxErrorHandler (dropInsertedTempTableQuery `withQueryTags` queryTags)
 
   -- Raise an exception if the check condition is not met
-  unless (checkConditionInt == 0)
-    $ throw400 PermissionError "check constraint of an insert/update permission has failed"
+  unless (checkConditionInt == 0) $
+    throw400 PermissionError "check constraint of an insert permission has failed"
 
   pure $ encJFromText responseText
 
@@ -223,37 +198,34 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
 --
 --   Should be used as part of a bigger transaction in 'buildInsertTx'.
 buildUpsertTx ::
-  (MonadIO m) =>
   TSQL.TableName ->
   AnnotatedInsert 'MSSQL Void Expression ->
   IfMatched Expression ->
   QueryTagsComment ->
-  Tx.TxET QErr m ()
+  Tx.TxET QErr IO ()
 buildUpsertTx tableName insert ifMatched queryTags = do
   let presets = _aiPresetValues $ _aiData insert
       insertColumnNames =
-        concatMap (map fst . getInsertColumns) (_aiInsertObject $ _aiData insert) <> HashMap.keys presets
+        concatMap (map fst . getInsertColumns) (_aiInsertObject $ _aiData insert) <> HM.keys presets
       allTableColumns = _aiTableColumns $ _aiData insert
       insertColumns = filter (\c -> ciColumn c `elem` insertColumnNames) allTableColumns
       createValuesTempTableQuery =
-        toQueryFlat
-          $ TQ.fromSelectIntoTempTable
-          $
-          -- We want to KeepConstraints here so the user can omit values for identity columns such as `id`
-          TSQL.toSelectIntoTempTable tempTableNameValues tableName insertColumns KeepConstraints
+        toQueryFlat $
+          TQ.fromSelectIntoTempTable $
+            -- We want to KeepConstraints here so the user can omit values for identity columns such as `id`
+            TSQL.toSelectIntoTempTable tempTableNameValues tableName insertColumns KeepConstraints
   -- Create #values temporary table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createValuesTempTableQuery `withQueryTags` queryTags)
 
   -- Store values in #values temporary table
   let insertValuesIntoTempTableQuery =
-        toQueryFlat
-          $ TQ.fromInsertValuesIntoTempTable
-          $ TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
-
+        toQueryFlat $
+          TQ.fromInsertValuesIntoTempTable $
+            TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
   Tx.unitQueryE mutationMSSQLTxErrorHandler (insertValuesIntoTempTableQuery `withQueryTags` queryTags)
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
-  merge <- qwdQuery <$> runFromIrErrorOnCTEs (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
+  merge <- runFromIr (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
   let mergeQuery = toQueryFlat $ TQ.fromMerge merge
   Tx.unitQueryE mutationMSSQLTxErrorHandler (mergeQuery `withQueryTags` queryTags)
 
@@ -262,19 +234,18 @@ buildUpsertTx tableName insert ifMatched queryTags = do
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
 buildInsertResponseTx ::
-  (MonadIO m) =>
   Options.StringifyNumbers ->
   Text ->
   AnnotatedInsert 'MSSQL Void Expression ->
   QueryTagsComment ->
-  Tx.TxET QErr m (Text, Int)
+  Tx.TxET QErr IO (Text, Int)
 buildInsertResponseTx stringifyNum withAlias insert queryTags = do
   -- Generate a SQL SELECT statement which outputs the mutation response using the #inserted
-  mutationOutputSelect <- qwdQuery <$> runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert)
+  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert
 
   -- The check constraint is translated to boolean expression
   let checkCondition = fst $ _aiCheckCondition $ _aiData insert
-  checkBoolExp <- qwdQuery <$> runFromIrErrorOnCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
+  checkBoolExp <- runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias)
 
   let withSelect =
         emptySelect
@@ -285,7 +256,7 @@ buildInsertResponseTx stringifyNum withAlias insert queryTags = do
       mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
       -- WITH "with_alias" AS (<table_select>)
       -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
-      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased (CTESelect withSelect) withAlias}
+      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
   let selectQuery = toQueryFlat (TQ.fromSelect finalSelect)

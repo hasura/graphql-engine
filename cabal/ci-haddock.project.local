@@ -9,16 +9,28 @@
 package *
   ghc-options:
     -j2
-    -- For performance, with `-j`:
+    +RTS -M15000m -RTS
     +RTS -A64m -n2m -RTS
 
 -- Disable optimizations
 flags: -optimize-hasura
 
--- Set common options
-program-options
-  ghc-options: -j -Werror
+package graphql-engine
+  ghc-options:
+    -- At this point though we definitely want full module-level parallelism:
+    -j
+    -Werror
+  -- For speed; see `cabal.project.dev-sh.local`:
+  executable-dynamic: True
+  library-vanilla: False
 
--- For speed; see `cabal.project.dev-sh.local`:
-executable-dynamic: True
-library-vanilla: False
+-- %%%-BEGIN-PRO-ONLY-CONTENT-%%%
+
+package graphql-engine-pro
+  ghc-options:
+    -- At this point though we definitely want full module-level parallelism:
+    -j
+    -Werror
+  -- For speed; see `cabal.project.dev-sh.local`:
+  executable-dynamic: True
+  library-vanilla: False

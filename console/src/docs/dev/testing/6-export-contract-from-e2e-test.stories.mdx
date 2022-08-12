@@ -1,0 +1,158 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Dev/Testing/6. Export the Contract (request and responses) from an E2E test" />
+
+# Export the Contract (request/responses) from an E2E test
+
+During 2022, the need to reduce the number of E2E tests led us to move to a Contract Testing approach ([here is the related issue](https://github.com/hasura/graphql-engine-mono/issues/4601)). The goal of this document is to list the steps to do to export a contract out of an E2E test in order to simplify the server folks to replace the confidence the E2E tests give with a "contract" test.
+
+Limitations:
+
+1. Only one test at a time can export the fixtures
+
+2. The order of the fixtures can change at every run of the E2E test because the Console perform requests without a fixed order
+
+3. `cy.startContractIntercept` cannot be used as a way to help generating integration tests ot of E2E ones because of the bad DX offered by this approach, such as
+
+- the exported JSONs do not include only the response as Cypress expects from the fixture files
+- the requests performed during a full CRUD E2E tests are too much
+
+Please consider that the problem is strictly related to migrating the E2E tests to integration ones. When we are creating new features, the integration tests are smaller (that also means less requests), and we should have the typed mocks from the Storybook stories of the involved components that could also be imported in the Cypress tests.
+
+4. The fixtures as they are do not leverage any kind of [Pact feature](https://github.com/pact-foundation/pact-specification/tree/version-3)
+
+## Step 1: moving the test to using classif functions instead of arrow functions
+
+```diff
+-it('When the users create, edit, and delete a Query Action, everything should work', () => {
++it('When the users create, edit, and delete a Query Action, everything should work', function () {
+```
+
+## Step 2: moving the visit call inside the test instead of inside the test hooks
+
+```diff
+before(() => {
+-  cy.visit('/actions/manage/actions');
+});
+
+it('When the users create, edit, and delete a Query Action, everything should work', function () {
++  cy.visit('/actions/manage/actions');
+```
+
+## Step 3: leverage cy.startContractIntercept
+
+```diff
+it('When the users create, edit, and delete a Query Action, everything should work', function () {
++ cy.startContractIntercept(
++   {
++     thisTest: this.test,
++     mode: 'record',
++     createFixtureName: (req: CyHttpMessages.IncomingHttpRequest) => {
++       // Get the proper fixture file nema for every url
++       if (req.url.endsWith('v1/metadata')) {
++         return `v1-metadata-${req.body.type}`;
++       }
++       if (req.url.endsWith('v1alpha1/config')) {
++         return `v1alpha1-config`;
++       }
++       if (req.url.endsWith('v2/query')) {
++         return `v2-query-${req.body.type}`;
++       }
++       if (req.url.endsWith('v1/version')) {
++         return `v1-version`;
++       }
++       throw new Error(`Unknown url ${req.url}`);
++     },
++   },
++   'http://localhost:8080/**'
++ );
+
+  cy.visit('/actions/manage/actions');
+```
+
+## Step 4: halt cy.startContractIntercept at the end of the test
+
+```diff
+it('When the users create, edit, and delete a Query Action, everything should work', function () {
+  // Code of the test
+
++ cy.haltContractIntercept({ thisTest: this.test });
+})
+```
+
+## Result
+
+`cy.startContractIntercept` creates a new directory along the test file and stores all the fixtures inside it, something like
+
+```
+console/cypress/e2e/actions/query/fixtures/1-v1-metadata-get_inconsistent_metadata.json
+console/cypress/e2e/actions/query/fixtures/2-v1-metadata-export_metadata.json
+console/cypress/e2e/actions/query/fixtures/3-v1-metadata-get_catalog_state.json
+console/cypress/e2e/actions/query/fixtures/4-v1alpha1-config.json
+console/cypress/e2e/actions/query/fixtures/5-v1-metadata-export_metadata.json
+console/cypress/e2e/actions/query/fixtures/6-v1alpha1-config.json
+console/cypress/e2e/actions/query/fixtures/7-v1-version.json
+console/cypress/e2e/actions/query/fixtures/8-v1-metadata-get_inconsistent_metadata.json
+console/cypress/e2e/actions/query/fixtures/8-v1-metadata-test_webhook_transform.json
+console/cypress/e2e/actions/query/fixtures/9-v1-metadata-get_inconsistent_metadata.json
+console/cypress/e2e/actions/query/fixtures/9-v1-metadata-test_webhook_transform.json
+console/cypress/e2e/actions/query/fixtures/10-v1-metadata-export_metadata.json
+```
+
+and every fixture looks like the following
+
+```json
+{
+  "readme": "////////// This fixture has been automatically generated through cy.startContractIntercept //////////",
+  "request": {
+    "headers": {
+      "host": "localhost:8080",
+      "proxy-connection": "keep-alive",
+      "content-length": "46",
+      "sec-ch-ua": "\".Not/A)Brand\";v=\"99\", \"Google Chrome\";v=\"103\", \"Chromium\";v=\"103\"",
+      "x-hasura-admin-secret": "undefined",
+      "content-type": "application/json",
+      "sec-ch-ua-mobile": "?0",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
+      "sec-ch-ua-platform": "\"macOS\"",
+      "accept": "*/*",
+      "sec-fetch-site": "same-site",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-dest": "empty",
+      "referer": "http://localhost:3000/",
+      "accept-encoding": "gzip, deflate, br",
+      "accept-language": "en-GB,en-US;q=0.9,en;q=0.8"
+    },
+    "url": "http://localhost:8080/v1/metadata",
+    "method": "POST",
+    "httpVersion": "1.1",
+    "body": {
+      "type": "get_inconsistent_metadata",
+      "args": {}
+    },
+    "responseTimeout": 30000,
+    "query": {}
+  },
+  "fixtureName": "v1-metadata-get_inconsistent_metadata",
+  "fixtureFileName": "1-v1-metadata-get_inconsistent_metadata.json",
+  "response": {
+    "headers": {
+      "transfer-encoding": "chunked",
+      "date": "Fri, 05 Aug 2022 10:19:32 GMT",
+      "server": "Warp/3.3.19",
+      "x-request-id": "d5f59c25-6275-4298-a3fa-94cc619c0d24",
+      "content-type": "application/json; charset=utf-8",
+      "content-encoding": "gzip"
+    },
+    "url": "http://localhost:8080/v1/metadata",
+    "method": null,
+    "httpVersion": "1.1",
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "body": {
+      "is_consistent": true,
+      "inconsistent_objects": []
+    }
+  }
+}
+```

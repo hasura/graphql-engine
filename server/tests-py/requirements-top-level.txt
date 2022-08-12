@@ -1,5 +1,5 @@
 # Direct dependencies go here.
-# Regenerate requirements.txt by running `make server/tests-py/requirements.txt`.
+# Regenerate requirements.txt by running `make` in this directory.
 
 croniter
 cryptography == 3.*  # later versions require Rust support
@@ -9,12 +9,10 @@ jsondiff
 psycopg2-binary
 PyJWT == 2.3.*  # v2.4 disallows the key format we use
 pytest == 6.2.5
-pytest-durations
-pytest-fixture-order
 pytest-xdist
 PyYAML
 redis
 requests
 ruamel.yaml
-sqlalchemy == 1.*  # v2 changes the API
+sqlalchemy
 websocket-client == 0.56.0  # 0.58.0 and above changed the function signatures of callbacks

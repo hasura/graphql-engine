@@ -23,10 +23,10 @@ emptyTrie = Trie.empty
 singleton :: String -> Int -> TestTrie
 singleton k s = Trie.singleton [] $ MMap.singleton k s
 
-insert :: (Hashable a, Hashable k, Ord v) => [PathComponent a] -> k -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
+insert :: (Eq a, Hashable a, Eq k, Hashable k, Ord v) => [PathComponent a] -> k -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
 insert p k = Trie.insertWith (<>) p . MMap.singleton k
 
-inserts :: (Hashable a, Hashable k, Ord v) => [PathComponent a] -> [k] -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
+inserts :: (Eq a, Hashable a, Eq k, Hashable k, Ord v) => [PathComponent a] -> [k] -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
 inserts p ks v t = foldl' (\t' k -> insert p k v t') t ks
 
 spec :: Spec
@@ -58,9 +58,8 @@ spec = describe "Endpoint" $ do
     describe "ambiguousPaths" $ do
       let amb = map fst . ambiguousPaths
 
-      it "empty trie"
-        $ amb emptyTrie
-        `shouldBe` []
+      it "empty trie" $
+        amb emptyTrie `shouldBe` []
 
       prop "param/literal at start" $ \(t :: TestTrie) -> do
         let t' = inserts [PathParam] ["GET", "POST"] 42 $ inserts [PathLiteral 0] ["POST", "PUT"] 43 t

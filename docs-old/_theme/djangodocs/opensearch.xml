@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <ShortName>{{ project|e }}</ShortName>
+    <Description>{% trans docstitle=docstitle|e %}Search {{ docstitle }}{% endtrans %}</Description>
+    <InputEncoding>utf-8</InputEncoding>
+    <Url type="text/html" method="get"
+         template="{{ use_opensearch }}/{{version}}/{{ pathto('search') }}?query={searchTerms}"/>
+    <LongName>{{ docstitle|e }}</LongName>
+</OpenSearchDescription>

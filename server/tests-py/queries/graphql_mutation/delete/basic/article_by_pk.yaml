@@ -1,0 +1,25 @@
+description: Delete a row in article table by primary key
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      delete_article_by_pk(id: 1){
+        id
+        title
+        content
+        author{
+          id
+          name
+        }
+      }
+    }
+response:
+  data:
+    delete_article_by_pk:
+      id: 1
+      title: Article 1
+      content: Sample article content 1
+      author:
+        id: 1
+        name: Author 1

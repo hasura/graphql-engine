@@ -2,15 +2,14 @@ package metadatautil
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"io/ioutil"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var kindblackhole *hasura.SourceKind
@@ -33,18 +32,16 @@ func BenchmarkGetSourceKind(b *testing.B) {
 		})
 	}
 }
-
 func TestGetSourceKind(t *testing.T) {
 	type args struct {
 		exportMetadata func() (io.Reader, error)
 		sourceName     string
 	}
 	tests := []struct {
-		name      string
-		args      args
-		want      hasura.SourceKind
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		args    args
+		want    hasura.SourceKind
+		wantErr bool
 	}{
 		{
 			"can find source kind",
@@ -70,14 +67,15 @@ func TestGetSourceKind(t *testing.T) {
 			},
 			hasura.SourceKindPG,
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := GetSourceKind(tt.args.exportMetadata, tt.args.sourceName)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 				assert.NotNil(t, got)
 				assert.Equal(t, tt.want, *got)
 			}
@@ -90,11 +88,10 @@ func TestGetSources(t *testing.T) {
 		exportMetadata func() (io.Reader, error)
 	}
 	tests := []struct {
-		name      string
-		args      args
-		want      []string
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		args    args
+		want    []string
+		wantErr bool
 	}{
 		{
 			"can get list of sources",
@@ -118,15 +115,17 @@ func TestGetSources(t *testing.T) {
 			},
 			[]string{"test1", "test2"},
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := GetSources(tt.args.exportMetadata)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
-				require.Equal(t, got, tt.want)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSources() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetSources() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -137,11 +136,10 @@ func TestGetSourcesAndKind(t *testing.T) {
 		exportMetadata func() (io.Reader, error)
 	}
 	tests := []struct {
-		name      string
-		args      args
-		want      []Source
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		args    args
+		want    []Source
+		wantErr bool
 	}{
 		{
 			"can get sources and kind",
@@ -167,77 +165,17 @@ func TestGetSourcesAndKind(t *testing.T) {
 			},
 			[]Source{{"test1", hasura.SourceKindPG}, {"test2", hasura.SourceKindMSSQL}},
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := GetSourcesAndKind(tt.args.exportMetadata)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
-				require.Equal(t, got, tt.want)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSourcesAndKind() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
-		})
-	}
-}
-
-func TestGetSourcesAndKindStrict(t *testing.T) {
-	type args struct {
-		exportMetadata func() (io.Reader, error)
-	}
-	tests := []struct {
-		name      string
-		args      args
-		want      []Source
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
-	}{
-		{
-			"can return right error type when no sources are connected",
-			args{
-				exportMetadata: func() (io.Reader, error) {
-					metadata := `
-{
-	"sources": [],
-}
-					`
-					return strings.NewReader(metadata), nil
-				},
-			},
-			nil,
-			true,
-			require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.Truef(t, errors.Is(err, ErrNoConnectedSources), "expected to find ErrNoConnectedSources in error chain")
-			}),
-		},
-		{
-			"can parse sources when they are present",
-			args{
-				exportMetadata: func() (io.Reader, error) {
-					metadata := `
-{
-	"sources": [
-		{
-			"name": "something",
-			"kind": "postgres"
-		}
-	],
-}
-					`
-					return strings.NewReader(metadata), nil
-				},
-			},
-			[]Source{{Name: "something", Kind: "postgres"}},
-			false,
-			require.NoError,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetSourcesAndKindStrict(tt.args.exportMetadata)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
-				assert.Equal(t, tt.want, got)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetSourcesAndKind() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

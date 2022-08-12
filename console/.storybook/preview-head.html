@@ -1,0 +1,39 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+
+<style>
+  /* Fix background bug on ArgsTable header background color */
+  thead.docblock-argstable-head tr th {
+    background-color: transparent;
+  }
+
+  /* Add collapsible sections */
+  details .mdx-collapsible-section {
+    display: flex;
+  }
+
+  details .mdx-collapsible-section::marker {
+    display: none;
+  }
+
+  details .mdx-collapsible-section:hover {
+    cursor: pointer;
+  }
+
+  details .mdx-collapsible-section__chevron {
+    margin: 0;
+    transform: rotate(0deg);
+    transition: transform 0.1s ease-out;
+  }
+
+  details[open] .mdx-collapsible-section__chevron {
+    transform: rotate(90deg);
+  }
+
+  details .mdx-collapsible-section__label {
+    margin: 0;
+    padding-left: 0.5rem;
+  }
+</style>

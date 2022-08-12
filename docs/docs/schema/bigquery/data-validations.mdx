@@ -1,6 +1,6 @@
 ---
 sidebar_label: Data validations
-sidebar_position: 7
+sidebar_position: 6
 description: Data validations in Hasura over BigQuery
 keywords:
   - hasura
@@ -15,7 +15,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# BigQuery: Data Validations
+# BigQuery: Data validations
 
 ## Introduction
 
@@ -31,7 +31,7 @@ These solutions are explained in some more detail below.
 ## Using Hasura permissions
 
 If the validation logic can be expressed **declaratively** using static values and data from the database, then you can
-use [row level permissions](/auth/authorization/permissions/row-level-permissions.mdx) to perform the validations.
+use [row level permissions](/auth/authorization/permission-rules.mdx#row-level-permissions) to perform the validations.
 (Read more about [Authorization](/auth/authorization/index.mdx)).
 
 **Example 1:** Validate that the `editor` role can only select `article`s with empty titles.
@@ -45,10 +45,10 @@ articles (id int, title text, author_id int, body text)
 
 Now, we can create a role `editor` and add a select validation rule as follows:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src="/img/schema/bq-validation-not-empty.png" />
+<Thumbnail src='/img/schema/bq-validation-not-empty.png' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -68,7 +68,7 @@ select_permissions:
           _eq: ''
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -78,7 +78,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add an select permission rule by using the
-[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) Metadata API:
+[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -142,8 +142,7 @@ authors (id int, name text)
 articles (id int, title text, author_id int, body text)
 ```
 
-Also, suppose there is an [object relationship](schema/bigquery/table-relationships/index.mdx) `articles.author` defined
-as:
+Also, suppose there is an [object relationship](/table-relationships/index.mdx) `articles.author` defined as:
 
 ```sql
 articles.author_id -> authors.id
@@ -151,10 +150,10 @@ articles.author_id -> authors.id
 
 Now, we can create a role `author` and add an select validation rule as follows:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src="/img/schema/bq-author-own-articles.png" />
+<Thumbnail src='/img/schema/bq-author-own-articles.png' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -174,7 +173,7 @@ select_permissions:
           _eq: X-Hasura-User-Id
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -184,7 +183,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add a select permission rule by using the
-[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) Metadata API:
+[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1

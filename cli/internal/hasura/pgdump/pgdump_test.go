@@ -42,12 +42,11 @@ func TestClient_Send(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		want      string
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			"can make a pg_dump hasura/graphql-engine:v1.3.3",
@@ -69,7 +68,6 @@ func TestClient_Send(t *testing.T) {
 ALTER TABLE public.test OWNER TO test;
 `,
 			false,
-			require.NoError,
 		},
 		{
 			"can make a pg_dump on latest",
@@ -92,7 +90,6 @@ CREATE TABLE public.test (
 ALTER TABLE public.test OWNER TO test;
 `,
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -102,8 +99,10 @@ ALTER TABLE public.test OWNER TO test;
 				path:   tt.fields.path,
 			}
 			got, err := c.Send(tt.args.request)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
 				require.Equal(t, tt.want, string(gotb))

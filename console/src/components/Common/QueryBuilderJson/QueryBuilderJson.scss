@@ -1,0 +1,33 @@
+@import "../Common.scss";
+
+.qb_nested {
+  margin-top: 5px;
+  position: relative;
+  padding-left: 20px;
+  border-left: 1px dashed #ccc;
+}
+
+.qb_row {
+  margin-bottom: 5px;
+}
+
+.qb_key {
+  //font-style: italic;
+  color: #555;
+  font-weight: bold;
+  margin-right: 20px;
+}
+
+.qb_unselected_row {
+  background-color: #eee;
+  color: #999;
+
+  select option {
+    color: #555
+  }
+}
+
+.qb_unselected_key {
+  color: #999;
+}
+

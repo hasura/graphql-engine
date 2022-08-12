@@ -8,9 +8,9 @@ HAS_GOX := $(shell command -v gox;)
 HAS_GINKGO := $(shell command -v ginkgo;)
 
 ifeq (${CI}, true)
-	CLI_EXT_BIN_DIR := /build/_cli_ext_output
+	CLI_EXT_BIN_DIR := "/build/_cli_ext_output"
 else
-	CLI_EXT_BIN_DIR := ../cli-ext/bin
+	CLI_EXT_BIN_DIR := "../cli-ext/bin"
 endif
 
 .PHONY: deps
@@ -28,9 +28,10 @@ build: export CGO_ENABLED=0
 build: copy-cli-ext
 build:
 ifndef HAS_GOX
-	go install github.com/mitchellh/gox@latest
+	cd ~ && go get github.com/mitchellh/gox && cd -
 endif
 	gox -ldflags '-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/v2/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
+	-rebuild \
 	-osarch="linux/amd64 darwin/amd64 windows/amd64 linux/arm64 darwin/arm64" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/cli-hasura-{{.OS}}-{{.Arch}}" \
 	./cmd/hasura/
@@ -52,25 +53,15 @@ build-cli-ext:
 
 .PHONY: clean-cli-ext
 clean-cli-ext:
-	git clean -fx ./internal/cliext/static-bin
+	rm -rf ./internal/cliext/bin
 
 .PHONY: copy-cli-ext
-copy-cli-ext: ./internal/cliext/static-bin/linux/amd64/cli-ext ./internal/cliext/static-bin/linux/arm64/cli-ext ./internal/cliext/static-bin/darwin/amd64/cli-ext ./internal/cliext/static-bin/darwin/arm64/cli-ext ./internal/cliext/static-bin/windows/amd64/cli-ext.exe
-
-./internal/cliext/static-bin/linux/amd64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-linux-amd64
-	cp $< $@
-
-./internal/cliext/static-bin/linux/arm64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-linux-arm64
-	cp $< $@
-
-./internal/cliext/static-bin/darwin/amd64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-darwin-amd64
-	cp $< $@
-
-./internal/cliext/static-bin/darwin/arm64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-darwin-arm64
-	cp $< $@
-
-./internal/cliext/static-bin/windows/amd64/cli-ext.exe: $(CLI_EXT_BIN_DIR)/cli-ext-windows-amd64
-	cp $< $@
+copy-cli-ext: clean-cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-linux-amd64 ./internal/cliext/static-bin/linux/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-linux-arm64 ./internal/cliext/static-bin/linux/arm64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-darwin-amd64 ./internal/cliext/static-bin/darwin/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-darwin-arm64 ./internal/cliext/static-bin/darwin/arm64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-windows-amd64 ./internal/cliext/static-bin/windows/amd64/cli-ext.exe
 
 # run tests
 .PHONY: test
@@ -89,7 +80,7 @@ integration_tests_config_v2: copy-cli-ext
 test-e2e:
 	echo "--- :: run e2e tests"
 ifndef HAS_GINKGO
-	go install github.com/onsi/ginkgo/ginkgo@latest
+	cd ~ && go get github.com/onsi/ginkgo/ginkgo && cd -
 endif
 	cd commands && ginkgo -p -v -failFast $(ARGS)
 
@@ -100,7 +91,7 @@ clean:
 	rm -rf "$(OUTPUT_DIR)"
 
 .PHONY: all
-all: deps build-cli-ext build test
+all: deps test build
 
 # build cli inside a docker container
 all-in-docker:

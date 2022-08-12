@@ -1,7 +1,7 @@
 ---
-sidebar_label: Reset Migrations and Metadata
-sidebar_position: 10
-description: Reset Hasura Migrations and Metadata
+sidebar_label: Resetting Migrations and Metadata
+sidebar_position: 7
+description: Resetting Hasura Migrations and Metadata
 keywords:
   - hasura
   - migration
@@ -11,16 +11,16 @@ keywords:
   - clear migrations
 ---
 
-# Reset Hasura Migrations and Metadata
+# Resetting Hasura Migrations and Metadata
 
 ## Introduction
 
-This page explains how to reset the state of Migrations and create new Migrations from the state that is on the
+This page explains how to reset the state of Migrations and create new migrations from the state that is on the
 server. This can be useful if the current migration state on your local machine is corrupted.
 
 ## Step 1: Delete or backup the local migration files
 
-Move all your Migrations to a backup folder, in case you need them later.
+Move all your migrations to a backup folder, in case you need them later.
 
 You can use the following bash move command to move the folder:
 
@@ -56,9 +56,9 @@ To reset the Migrations status on server and clean up the local project migratio
 hasura migrate delete --all --database-name <database-name>
 ```
 
-## Step 3: Pull the schema and Metadata from the server
+## Step 3: Pull the schema and metadata from the server
 
-If the Migrations were reset, then we will set up fresh Migrations by pulling the schema and Metadata from the
+If the migrations were reset, then we will set up fresh migrations by pulling the schema and metadata from the
 server using the following commands:
 
 ```bash
@@ -66,15 +66,6 @@ server using the following commands:
 
 hasura migrate create "init" --from-server --database-name <database-name>
 ```
-
-:::info When using a non-Postgres database
-
-Please note that when using the `migrate create init --from-server` command, Hasura only supports Postgres databases.
-Should you wish to use a different database, you will need to manually create the migration files. For more information,
-please see this section of the [Migrations](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations)
-documentation.
-
-:::
 
 ```bash
 ## note down the version
@@ -84,7 +75,7 @@ hasura migrate apply --version "<version>" --skip-execution --database-name <dat
 ```
 
 ```bash
-## to also export the Hasura Metadata and save it in the ``/metadata`` directory
+## to also export the Hasura metadata and save it in the ``/metadata`` directory
 
 hasura metadata export
 ```
@@ -96,7 +87,7 @@ the create command. This flag can be used multiple times.
 
 :::
 
-## Step 4: Verify the status of the Migrations
+## Step 4: Verify the status of the migrations
 
 Run the following command to verify the migration status:
 
@@ -104,4 +95,4 @@ Run the following command to verify the migration status:
 hasura migrate status  --database-name <database-name>
 ```
 
-You should see the new Migrations!
+You should see the new migrations!

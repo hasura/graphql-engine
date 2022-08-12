@@ -1,35 +1,32 @@
 #!/usr/bin/env python3
 
-import graphql
 from http import HTTPStatus
+from socketserver import ThreadingMixIn
+from urllib.parse import urlparse
+from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml
+import threading
 import http.server
 import json
-import os
 import queue
-import random
-import re
-import requests
-import ruamel.yaml as yaml
-from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml
-import socketserver
-import sqlalchemy
-import sqlalchemy.schema
-import string
+import socket
 import subprocess
-import threading
 import time
-from typing import Any, NamedTuple, Optional
-from urllib.parse import urlparse
-import websocket
+import string
+import random
+import os
+import re
 
-import fixtures.tls
+import ruamel.yaml as yaml
+import requests
+import websocket
+from sqlalchemy import create_engine
+from sqlalchemy.schema import MetaData
 import graphql_server
-import ports
+import graphql
 
 # pytest has removed the global pytest.config
 # As a solution to this we are going to store it in PyTestConf.config
 class PytestConf():
-    config: Any
     pass
 
 class HGECtxError(Exception):
@@ -78,20 +75,13 @@ class GQLWsClient():
     def get_ws_query_event(self, query_id, timeout):
         return self.ws_id_query_queues[query_id].get(timeout=timeout)
 
-    def send(self, frame, count=0):
+    def send(self, frame):
         self.wait_for_connection()
         if frame.get('type') == 'stop':
             self.ws_active_query_ids.discard( frame.get('id') )
         elif frame.get('type') == 'start' and 'id' in frame:
             self.ws_id_query_queues[frame['id']] = queue.Queue(maxsize=-1)
-        try:
-            self._ws.send(json.dumps(frame))
-        except websocket.WebSocketConnectionClosedException:
-            if count > 2:
-                raise websocket.WebSocketConnectionClosedException("Connection is already closed and cannot be recreated even after 3 attempts")
-            # Connection closed, try to recreate the connection and send the frame again
-            self.recreate_conn()
-            self.send(frame, count+1)
+        self._ws.send(json.dumps(frame))
 
     def init_as_admin(self):
         headers={}
@@ -164,9 +154,6 @@ class GQLWsClient():
     def _on_close(self):
         self.remote_closed = True
         self.init_done = False
-
-    def get_conn_close_state(self):
-        return self.remote_closed or self.is_closing
 
     def teardown(self):
         self.is_closing = True
@@ -291,9 +278,6 @@ class GraphQLWSClient():
         if json_msg['type'] == 'ping':
             new_msg = json_msg
             new_msg['type'] = 'pong'
-            # Decline to reflect the payload of the ping, because the
-            # graphql-ws specification does not require it
-            new_msg.pop('payload')
             self.send(json.dumps(new_msg))
             return
 
@@ -324,8 +308,6 @@ class GraphQLWSClient():
         self.wst.join()
 
 class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
-    hge_url: str
-    hge_key: Optional[str]
 
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
@@ -387,12 +369,6 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/null-response":
             resp, status = self.null_response()
             self._send_response(status, resp)
-        
-        elif req_path == "/omitted-response-field":
-            self._send_response(
-                HTTPStatus.OK,
-                self.get_omitted_response_field()
-            )
 
         elif req_path == "/scalar-response":
             self._send_response(HTTPStatus.OK, "some-string")
@@ -624,11 +600,6 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             'id': 1,
             'child': None
         }
-    
-    def get_omitted_response_field(self):
-        return {
-            'country': 'India'
-        }
 
     def get_typed_nested_null_wrong_field(self):
         return {
@@ -665,23 +636,17 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         }, HTTPStatus.OK
 
     def check_email(self, email):
-        regex = '^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$'
+        regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
         return re.search(regex,email)
 
     def execute_query(self, query):
         headers = {}
-        admin_secret = self.hge_key
+        admin_secret = self.hge_ctx.hge_key
         if admin_secret is not None:
             headers['X-Hasura-Admin-Secret'] = admin_secret
-        resp = requests.post(
-            self.hge_url + '/v1/graphql',
-            json=query,
-            headers=headers,
-            timeout=60,
-        )
-        data = resp.json(object_pairs_hook=OrderedDict)
-        self.log_message(json.dumps(data))
-        return resp.status_code, data
+        code, resp, _ = self.hge_ctx.anyq('/v1/graphql', query, headers)
+        self.log_message(json.dumps(resp))
+        return code, resp
 
     def _send_response(self, status, body):
         self.log_request(status)
@@ -693,19 +658,16 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
 
 class ActionsWebhookServer(http.server.HTTPServer):
-    def __init__(self, hge_url, hge_key, server_address):
+    def __init__(self, hge_ctx, server_address):
         handler = ActionsWebhookHandler
-        handler.hge_url = hge_url
-        handler.hge_key = hge_key
+        handler.hge_ctx = hge_ctx
         super().__init__(server_address, handler)
 
-    @property
-    def url(self):
-        return f'http://{self.server_address[0]}:{self.server_address[1]}'
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
 
 class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
-    server: 'EvtsWebhookServer'
-
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
         self.end_headers()
@@ -749,12 +711,8 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
 # See: https://stackoverflow.com/a/14089457/176841
 #
 # TODO use this elsewhere, or better yet: use e.g. bottle + waitress
-class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
-
-    @property
-    def url(self):
-        return f'http://{self.server_name}:{self.server_port}'
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
@@ -777,81 +735,83 @@ class EvtsWebhookServer(ThreadedHTTPServer):
             # wait()s will block again (hence the simple self.unblocked flag)
             self.unblocked_wait.notify_all()
 
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+
     def get_event(self, timeout):
         return self.resp_queue.get(timeout=timeout)
 
     def is_queue_empty(self):
         return self.resp_queue.empty
 
+    def teardown(self):
+        self.evt_trggr_httpd.shutdown()
+        self.evt_trggr_httpd.server_close()
+        graphql_server.stop_server(self.graphql_server)
+        self.gql_srvr_thread.join()
+        self.evt_trggr_web_server.join()
+
 class HGECtxGQLServer:
-    def __init__(self, server_address: tuple[str, int], tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration] = None, hge_urls: list[str] = []):
-        self.server_address = server_address
-        self.tls_ca_configuration = tls_ca_configuration
-        self.server: Optional[http.server.HTTPServer] = None
+    def __init__(self, hge_urls, port=5000):
+        # start the graphql server
+        self.port = port
+        self._hge_urls = hge_urls
+        self.is_running = False
+        self.start_server()
 
     def start_server(self):
-        if not self.server:
-            self.server = graphql_server.create_server(self.server_address, self.tls_ca_configuration)
-            self.thread = threading.Thread(target=self.server.serve_forever)
-            self.thread.start()
-        # If the port is specified as 0, we will get a different,
-        # dynamically-allocated port whenever we restart. This captures the
-        # actual assigned port so that we re-use it.
-        self.server_address = self.server.server_address
-        ports.wait_for_port(self.port)
+        if not self.is_running:
+            self.graphql_server = graphql_server.create_server('127.0.0.1', self.port)
+            self.hge_urls = graphql_server.set_hge_urls(self._hge_urls)
+            self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
+            self.gql_srvr_thread.start()
+        self.is_running = True
+
+    def teardown(self):
+        self.stop_server()
 
     def stop_server(self):
-        if self.server:
-            graphql_server.stop_server(self.server)
-            self.thread.join()
-            self.server = None
-
-    @property
-    def url(self):
-        scheme = 'https' if self.tls_ca_configuration else 'http'
-        return f'{scheme}://{self.host}:{self.port}'
-
-    @property
-    def host(self):
-        # We must use 'localhost' and not `self.server.server_address[0]`
-        # because when using TLS, we need a domain name, not an IP address.
-        return 'localhost'
-
-    @property
-    def port(self):
-        if not self.server:
-            raise Exception('The server is not started.')
-        return self.server.server_address[1]
-
-class HGECtxWebhook(NamedTuple):
-    tls_trust: Optional[fixtures.tls.TLSTrust]
+        if self.is_running:
+            graphql_server.stop_server(self.graphql_server)
+            self.gql_srvr_thread.join()
+        self.is_running = False
 
 class HGECtx:
 
-    def __init__(
-        self,
-        hge_url: str,
-        metadata_schema_url: str,
-        hge_key: Optional[str],
-        webhook: Optional[HGECtxWebhook],
-        enabled_apis: Optional[set[str]],
-        clear_dbs: bool,
-        config,
-    ):
-        self.http = requests.Session()
-        self.timeout = 120  # BigQuery can take a while
+    def __init__(self, hge_url, pg_url, config):
 
+        self.http = requests.Session()
+        self.hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
-        self.metadata_schema_url = metadata_schema_url
-        self.hge_key = hge_key
-        self.webhook = webhook
+        self.pg_url = pg_url
+        self.hge_webhook = config.getoption('--hge-webhook')
+        hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
+        if hge_jwt_key_file is None:
+            self.hge_jwt_key = None
+        else:
+            with open(hge_jwt_key_file) as f:
+                self.hge_jwt_key = f.read()
+        self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
+        if self.hge_jwt_conf is not None:
+            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
+            self.hge_jwt_algo = self.hge_jwt_conf_dict["type"]
+            if self.hge_jwt_algo == "Ed25519":
+                self.hge_jwt_algo = "EdDSA"
+        self.webhook_insecure = config.getoption('--test-webhook-insecure')
+        self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
+        self.function_permissions = config.getoption('--test-function-permissions')
+        self.streaming_subscriptions = config.getoption('--test-streaming-subscriptions')
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
-        self.engine = sqlalchemy.create_engine(self.metadata_schema_url)
-        self.meta = sqlalchemy.schema.MetaData()
+        self.engine = create_engine(self.pg_url)
+        self.meta = MetaData()
+
+        self.ws_read_cookie = config.getoption('--test-ws-init-cookie')
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
+        self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
         self.pro_tests = config.getoption('--pro-tests')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
@@ -870,13 +830,17 @@ class HGECtx:
             # HGE version
             result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
             self.version = result.stdout.decode('utf-8').strip()
-        # TODO: remove once parallelization work is completed
-        if clear_dbs and self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis):
+        if self.is_default_backend and not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
               self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:
               self.teardown()
               raise HGECtxError(repr(e))
+
+        # Postgres version
+        if self.is_default_backend:
+            pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+            self.pg_version = int(pg_version_text)
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
@@ -887,70 +851,63 @@ class HGECtx:
         if v == 'GET':
           resp = self.http.get(
               self.hge_url + u,
-              headers=h,
-              timeout=self.timeout,
+              headers=h
           )
         elif v == 'POSTJSON' and b:
           resp = self.http.post(
               self.hge_url + u,
               json=b,
-              headers=h,
-              timeout=self.timeout,
+              headers=h
           )
         elif v == 'POST' and b:
           # TODO: Figure out why the requests are failing with a byte object passed in as `data`
           resp = self.http.post(
               self.hge_url + u,
               data=b,
-              headers=h,
-              timeout=self.timeout,
+              headers=h
           )
         elif v == 'PATCH' and b:
           resp = self.http.patch(
               self.hge_url + u,
               data=b,
-              headers=h,
-              timeout=self.timeout,
+              headers=h
            )
         elif v == 'PUT' and b:
           resp = self.http.put(
               self.hge_url + u,
               data=b,
-              headers=h,
-              timeout=self.timeout,
+              headers=h
            )
         elif v == 'DELETE':
           resp = self.http.delete(
               self.hge_url + u,
-              headers=h,
-              timeout=self.timeout,
+              headers=h
            )
         else:
           resp = self.http.post(
               self.hge_url + u,
               json=q,
-              headers=h,
-              timeout=self.timeout,
+              headers=h
            )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
         # Returning response headers to get the request id from response
         return resp.status_code, resp.json(object_pairs_hook=OrderedDict), resp.headers
 
-    # Executes a query, but does not return the result.
     def sql(self, q):
-        with self.engine.connect() as conn:
-            conn.execute(q)
+        conn = self.engine.connect()
+        res  = conn.execute(q)
+        conn.close()
+        return res
 
     def execute_query(self, q, url_path, headers = {}, expected_status_code = 200):
         h = headers.copy()
-        if self.hge_key is not None and 'X-Hasura-Admin-Secret' not in headers:
+        if self.hge_key is not None:
             h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
             self.hge_url + url_path,
             json=q,
-            headers=h,
-            timeout=self.timeout,
+            headers=h
         )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
@@ -959,7 +916,7 @@ class HGECtx:
         if expected_status_code:
             assert \
                 resp.status_code == expected_status_code, \
-                f'Expected {resp.status_code} to be {expected_status_code}.\nRequest:\n{json.dumps(q, indent=2)}\nResponse:\n{json.dumps(resp_obj, indent=2)}'
+                f'Expected {resp.status_code} to be {expected_status_code}. Response:\n{json.dumps(resp_obj, indent=2)}'
         return resp_obj
 
     def v1q(self, q, headers = {}, expected_status_code = 200):

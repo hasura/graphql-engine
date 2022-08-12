@@ -11,10 +11,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	stderrors "errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -28,7 +26,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1version"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
@@ -37,7 +34,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
@@ -153,14 +149,13 @@ func NewConfigVersionValue(val ConfigVersion, p *ConfigVersion) *ConfigVersion {
 
 // Set sets the value of the named command-line flag.
 func (c *ConfigVersion) Set(s string) error {
-	var op errors.Op = "cli.ConfigVersion.Set"
 	v, err := strconv.ParseInt(s, 0, 64)
 	*c = ConfigVersion(v)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	if !c.IsValid() {
-		return errors.E(op, ErrInvalidConfigVersion)
+		return ErrInvalidConfigVersion
 	}
 	return nil
 }
@@ -220,18 +215,18 @@ func (c *ServerConfig) GetAdminSecret() string {
 }
 
 func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error {
-	var op errors.Op = "cli.ServerConfig.GetHasuraInternalServerConfig"
 	// Determine from where assets should be served
 	url := c.getConfigEndpoint()
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFunc()
-	req, err := client.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("error fetching config from server: %w", err))
+		return fmt.Errorf("error fetching config from server: %w", err)
 	}
+
 	r, err := client.Do(ctx, req, &c.HasuraServerInternalConfig)
 	if err != nil {
-		return errors.E(op, errors.KindNetwork, err)
+		return err
 	}
 	defer r.Body.Close()
 
@@ -239,9 +234,9 @@ func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error
 		var horror hasuradb.HasuraError
 		err := json.NewDecoder(r.Body).Decode(&horror)
 		if err != nil {
-			return errors.E(op, errors.KindHasuraAPI, fmt.Errorf("error unmarshalling fetching server config"))
+			return fmt.Errorf("error unmarshalling fetching server config")
 		}
-		return errors.E(op, errors.KindHasuraAPI, fmt.Errorf("error fetching server config: %v", horror.Error()))
+		return fmt.Errorf("error fetching server config: %v", horror.Error())
 	}
 	return nil
 }
@@ -300,10 +295,9 @@ func (c *ServerConfig) getConfigEndpoint() string {
 
 // ParseEndpoint ensures the endpoint is valid.
 func (c *ServerConfig) ParseEndpoint() error {
-	var op errors.Op = "cli.ServerConfig.ParseEndpoint"
 	nurl, err := url.ParseRequestURI(c.Endpoint)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	c.ParsedEndpoint = nurl
 	return nil
@@ -488,7 +482,6 @@ func NewExecutionContext() *ExecutionContext {
 // initializing most of the variables to sensible defaults, if it is not already
 // set.
 func (ec *ExecutionContext) Prepare() error {
-	var op errors.Op = "cli.ExecutionContext.Prepare"
 	// set the command name
 	cmdName := os.Args[0]
 	if len(cmdName) == 0 {
@@ -510,7 +503,7 @@ func (ec *ExecutionContext) Prepare() error {
 	// setup global config
 	err := ec.setupGlobalConfig()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("setting up global config failed: %w", err))
+		return fmt.Errorf("setting up global config failed: %w", err)
 	}
 
 	if !ec.proPluginVersionValidated {
@@ -545,11 +538,10 @@ func (ec *ExecutionContext) Prepare() error {
 // SetupPlugins create and returns the inferred paths for hasura. By default, it assumes
 // $HOME/.hasura as the base path
 func (ec *ExecutionContext) SetupPlugins() error {
-	var op errors.Op = "cli.ExecutionContext.SetupPlugins"
 	base := filepath.Join(ec.GlobalConfigDir, "plugins")
 	base, err := filepath.Abs(base)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("cannot get absolute path: %w", err))
+		return fmt.Errorf("cannot get absolute path: %w", err)
 	}
 	ec.PluginsConfig = plugins.New(base)
 	ec.PluginsConfig.Logger = ec.Logger
@@ -557,11 +549,7 @@ func (ec *ExecutionContext) SetupPlugins() error {
 	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
 		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
 	}
-	err = ec.PluginsConfig.Prepare()
-	if err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return ec.PluginsConfig.Prepare()
 }
 
 func (ec *ExecutionContext) validateProPluginVersion() {
@@ -590,11 +578,10 @@ func (ec *ExecutionContext) validateProPluginVersion() {
 }
 
 func (ec *ExecutionContext) SetupCodegenAssetsRepo() error {
-	var op errors.Op = "cli.ExecutionContext.SetupCodegenAssetsRepo"
 	base := filepath.Join(ec.GlobalConfigDir, util.ActionsCodegenDirName)
 	base, err := filepath.Abs(base)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("cannot get absolute path: %w", err))
+		return fmt.Errorf("cannot get absolute path: %w", err)
 	}
 	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
 	ec.CodegenAssetsRepo.Logger = ec.Logger
@@ -608,17 +595,16 @@ func (ec *ExecutionContext) SetupCodegenAssetsRepo() error {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
-	var op errors.Op = "cli.ExecutionContext.Validate"
 	// validate execution directory
 	err := ec.validateDirectory()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("validating current directory failed: %w", err))
+		return fmt.Errorf("validating current directory failed: %w", err)
 	}
 
 	// load .env file
 	err = ec.loadEnvfile()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("loading .env file failed: %w", err))
+		return fmt.Errorf("loading .env file failed: %w", err)
 	}
 
 	// set names of config file
@@ -627,7 +613,7 @@ func (ec *ExecutionContext) Validate() error {
 	// read config and parse the values into Config
 	err = ec.readConfig()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("cannot read config: %w", err))
+		return fmt.Errorf("cannot read config: %w", err)
 	}
 
 	// initialize HTTP client
@@ -635,19 +621,19 @@ func (ec *ExecutionContext) Validate() error {
 	// get TLS Config
 	tlsConfig, err := httpc.GenerateTLSConfig(ec.Config.CAPath, ec.Config.InsecureSkipTLSVerify)
 	if err != nil || tlsConfig == nil {
-		return errors.E(op, fmt.Errorf("error while getting TLS config"))
+		return fmt.Errorf("error while getting TLS config")
 	}
 
 	// create a net/http.Client with TLS Config
 	standardHttpClient, err := httpc.NewHttpClientWithTLSConfig(tlsConfig)
 	if err != nil || standardHttpClient == nil {
-		return errors.E(op, fmt.Errorf("error while creating http client with TLS configuration %w", err))
+		return fmt.Errorf("error while creating http client with TLS configuration %w", err)
 	}
 
 	// create httpc.Client
 	httpClient, err := httpc.New(standardHttpClient, ec.Config.Endpoint, ec.HGEHeaders)
 	if err != nil || httpClient == nil {
-		return errors.E(op, err)
+		return err
 	}
 	ec.Config.HTTPClient = httpClient
 
@@ -660,19 +646,19 @@ func (ec *ExecutionContext) Validate() error {
 		ec.Logger.Info("3) Server might be unhealthy and is not running/accepting API requests")
 		ec.Logger.Info("4) Admin secret is not correct/set")
 		ec.Logger.Infoln()
-		return errors.E(op, err)
+		return err
 	}
 
 	// get version from the server and match with the cli version
 	err = ec.checkServerVersion()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("version check: %w", err))
+		return fmt.Errorf("version check: %w", err)
 	}
 
 	// get the server feature flags
 	err = ec.Version.GetServerFeatureFlags()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("error in getting server feature flags %w", err))
+		return fmt.Errorf("error in getting server feature flags %w", err)
 	}
 
 	ec.AddRequestHeaders(map[string]string{GetAdminSecretHeaderName(ec.Version): ec.Config.GetAdminSecret()})
@@ -688,27 +674,27 @@ func (ec *ExecutionContext) Validate() error {
 
 	// set name of migration directory
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
-	if _, err := os.Stat(ec.MigrationDir); stderrors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Stat(ec.MigrationDir); os.IsNotExist(err) {
 		err = os.MkdirAll(ec.MigrationDir, os.ModePerm)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("cannot create migrations directory: %w", err))
+			return fmt.Errorf("cannot create migrations directory: %w", err)
 		}
 	}
 
 	ec.SeedsDirectory = filepath.Join(ec.ExecutionDirectory, ec.Config.SeedsDirectory)
-	if _, err := os.Stat(ec.SeedsDirectory); stderrors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Stat(ec.SeedsDirectory); os.IsNotExist(err) {
 		err = os.MkdirAll(ec.SeedsDirectory, os.ModePerm)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("cannot create seeds directory: %w", err))
+			return fmt.Errorf("cannot create seeds directory: %w", err)
 		}
 	}
 
 	if ec.Config.Version >= V2 && ec.Config.MetadataDirectory != "" {
 		if len(ec.Config.MetadataFile) > 0 {
 			ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataFile)
-			if _, err := os.Stat(ec.MetadataFile); stderrors.Is(err, fs.ErrNotExist) {
+			if _, err := os.Stat(ec.MetadataFile); os.IsNotExist(err) {
 				if err := ioutil.WriteFile(ec.MetadataFile, []byte(""), os.ModePerm); err != nil {
-					return errors.E(op, err)
+					return err
 				}
 			}
 			switch filepath.Ext(ec.MetadataFile) {
@@ -717,15 +703,15 @@ func (ec *ExecutionContext) Validate() error {
 			case ".yaml":
 				ec.MetadataMode = MetadataModeYAML
 			default:
-				return errors.E(op, fmt.Errorf("unrecogonized file extension. only .json/.yaml files are allowed for value of metadata_file"))
+				return fmt.Errorf("unrecogonized file extension. only .json/.yaml files are allowed for value of metadata_file")
 			}
 		}
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
-		if _, err := os.Stat(ec.MetadataDir); stderrors.Is(err, fs.ErrNotExist) && !(len(ec.MetadataFile) > 0) {
+		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) && !(len(ec.MetadataFile) > 0) {
 			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
 			if err != nil {
-				return errors.E(op, fmt.Errorf("cannot create metadata directory: %w", err))
+				return fmt.Errorf("cannot create metadata directory: %w", err)
 			}
 		}
 	}
@@ -735,7 +721,7 @@ func (ec *ExecutionContext) Validate() error {
 
 	uri, err := url.Parse(ec.Config.Endpoint)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("error while parsing the endpoint :%w", err))
+		return fmt.Errorf("error while parsing the endpoint :%w", err)
 	}
 
 	// check if server is using metadata v3
@@ -747,22 +733,22 @@ func (ec *ExecutionContext) Validate() error {
 	requestUri := uri.String()
 	metadata, err := commonmetadata.New(httpClient, requestUri).ExportMetadata()
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	var v struct {
 		Version int `json:"version"`
 	}
 	if err := json.NewDecoder(metadata).Decode(&v); err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	if v.Version == 3 {
 		ec.HasMetadataV3 = true
 	}
 	if ec.Config.Version >= V3 && !ec.HasMetadataV3 {
-		return errors.E(op, fmt.Errorf(`config v3 can only be used with servers having metadata version >= 3
+		return fmt.Errorf(`config v3 can only be used with servers having metadata version >= 3
 You could fix this problem by taking one of the following actions:
 1. Upgrade your Hasura server to a newer version (>= v2.0.0) ie upgrade to a version which supports metadata v3
-2. Force CLI to use an older config version via the --version <VERSION> flag`))
+2. Force CLI to use an older config version via the --version <VERSION> flag`)
 	}
 
 	ec.APIClient = &hasura.Client{
@@ -771,7 +757,6 @@ You could fix this problem by taking one of the following actions:
 		V2Query:    v2query.New(httpClient, ec.Config.GetV2QueryEndpoint()),
 		PGDump:     pgdump.New(httpClient, ec.Config.GetPGDumpEndpoint()),
 		V1Graphql:  v1graphql.New(httpClient, ec.Config.GetV1GraphqlEndpoint()),
-		V1Version:  v1version.New(httpClient, ec.Config.GetVersionEndpoint()),
 	}
 	var state *util.ServerState
 	if ec.HasMetadataV3 {
@@ -787,10 +772,9 @@ You could fix this problem by taking one of the following actions:
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	var op errors.Op = "cli.ExecutionContext.checkServerVersion"
 	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.Config.HTTPClient)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("failed to get version from server: %w", err))
+		return fmt.Errorf("failed to get version from server: %w", err)
 	}
 	ec.Version.SetServerVersion(v)
 	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
@@ -805,7 +789,6 @@ func (ec *ExecutionContext) checkServerVersion() error {
 
 // WriteConfig writes the configuration from ec.Config or input config
 func (ec *ExecutionContext) WriteConfig(config *Config) error {
-	var op errors.Op = "cli.ExecutionContext.WriteConfig"
 	var cfg *Config
 	if config != nil {
 		cfg = config
@@ -817,13 +800,9 @@ func (ec *ExecutionContext) WriteConfig(config *Config) error {
 	encoder.SetIndent(2)
 	err := encoder.Encode(cfg)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
-	err = ioutil.WriteFile(ec.ConfigFile, buf.Bytes(), 0644)
-	if err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return ioutil.WriteFile(ec.ConfigFile, buf.Bytes(), 0644)
 }
 
 type DefaultAPIPath string
@@ -831,7 +810,6 @@ type DefaultAPIPath string
 // readConfig reads the configuration from config file, flags and env vars,
 // through viper.
 func (ec *ExecutionContext) readConfig() error {
-	var op errors.Op = "cli.ExecutionContext.readConfig"
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
 	v.SetEnvPrefix(util.ViperEnvPrefix)
@@ -860,7 +838,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("cannot read config from file/env: %w", err))
+		return fmt.Errorf("cannot read config from file/env: %w", err)
 	}
 	adminSecret := v.GetString("admin_secret")
 	if adminSecret == "" {
@@ -874,7 +852,7 @@ func (ec *ExecutionContext) readConfig() error {
 	adminSecrets := []string{}
 	if len(adminSecretsList) > 0 {
 		if err = json.Unmarshal([]byte(adminSecretsList), &adminSecrets); err != nil {
-			return errors.E(op, fmt.Errorf("parsing 'admin_secrets' from config.yaml / environment variable HASURA_GRAPHQL_ADMIN_SECRETS failed: expected value of format [\"secret1\", \"secret2\"]: %w", err))
+			return fmt.Errorf("parsing 'admin_secrets' from config.yaml / environment variable HASURA_GRAPHQL_ADMIN_SECRETS failed: expected value of format [\"secret1\", \"secret2\"]: %w", err)
 		}
 	}
 
@@ -912,12 +890,13 @@ func (ec *ExecutionContext) readConfig() error {
 		},
 	}
 	if !ec.Config.Version.IsValid() {
-		return errors.E(op, ErrInvalidConfigVersion)
+		return ErrInvalidConfigVersion
 	}
 	err = ec.Config.ServerConfig.ParseEndpoint()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("unable to parse server endpoint: %w", err))
+		return fmt.Errorf("unable to parse server endpoint: %w", err)
 	}
+
 	return nil
 }
 
@@ -944,7 +923,6 @@ func (ec *ExecutionContext) Spin(message string) {
 
 // loadEnvfile loads .env file
 func (ec *ExecutionContext) loadEnvfile() error {
-	var op errors.Op = "cli.ExecutionContext.loadEnvfile"
 	envfile := ec.Envfile
 	if !filepath.IsAbs(ec.Envfile) {
 		envfile = filepath.Join(ec.ExecutionDirectory, ec.Envfile)
@@ -953,9 +931,9 @@ func (ec *ExecutionContext) loadEnvfile() error {
 	if err != nil {
 		// return error if user provided envfile name
 		if ec.Envfile != ".env" {
-			return errors.E(op, err)
+			return err
 		}
-		if !stderrors.Is(err, fs.ErrNotExist) {
+		if !os.IsNotExist(err) {
 			ec.Logger.Warn(err)
 		}
 	}

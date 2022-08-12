@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
@@ -21,14 +20,13 @@ func New(client *httpc.Client, path string) *SourceOps {
 }
 
 func (c *SourceOps) send(body interface{}, responseBodyWriter io.Writer) (*httpc.Response, error) {
-	var op errors.Op = "mssql.SourceOps.send"
 	req, err := c.NewRequest(http.MethodPost, c.path, body)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	resp, err := c.LockAndDo(context.Background(), req, responseBodyWriter)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	return resp, nil
 }

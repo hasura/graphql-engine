@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This is taken from wai-logger and customised for our use
 module Hasura.Server.Logging
   ( StartupLog (..),
@@ -26,21 +28,14 @@ module Hasura.Server.Logging
     emptyHttpLogMetadata,
     MetadataQueryLoggingMode (..),
     LoggingSettings (..),
-    SchemaSyncThreadType (..),
-    SchemaSyncLog (..),
-    HttpLogGraphQLInfo,
-    emptyHttpLogGraphQLInfo,
-    ModelInfo (..),
-    ModelInfoLog (..),
   )
 where
 
-import Control.Lens ((^?))
-import Data.Aeson qualified as J
-import Data.Aeson.Lens (key, _String)
+import Data.Aeson
+import Data.Aeson.TH
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as Set
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
@@ -52,6 +47,7 @@ import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.HTTP
 import Hasura.Logging
+import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Object
@@ -72,57 +68,57 @@ import Network.Wai.Extended qualified as Wai
 data StartupLog = StartupLog
   { slLogLevel :: !LogLevel,
     slKind :: !Text,
-    slInfo :: !J.Value
+    slInfo :: !Value
   }
   deriving (Eq)
 
-instance J.ToJSON StartupLog where
+instance ToJSON StartupLog where
   toJSON (StartupLog _ k info) =
-    J.object
-      [ "kind" J..= k,
-        "info" J..= info
+    object
+      [ "kind" .= k,
+        "info" .= info
       ]
 
 instance ToEngineLog StartupLog Hasura where
   toEngineLog startupLog =
-    (slLogLevel startupLog, ELTStartup, J.toJSON startupLog)
+    (slLogLevel startupLog, ELTStartup, toJSON startupLog)
 
 data PGLog = PGLog
   { plLogLevel :: !LogLevel,
-    plMessage :: !J.Value
+    plMessage :: !Text
   }
   deriving (Eq)
 
-instance J.ToJSON PGLog where
+instance ToJSON PGLog where
   toJSON (PGLog _ msg) =
-    J.object ["message" J..= msg]
+    object ["message" .= msg]
 
 instance ToEngineLog PGLog Hasura where
   toEngineLog pgLog =
-    (plLogLevel pgLog, ELTInternal ILTPgClient, J.toJSON pgLog)
+    (plLogLevel pgLog, ELTInternal ILTPgClient, toJSON pgLog)
 
 data MetadataLog = MetadataLog
   { mlLogLevel :: !LogLevel,
     mlMessage :: !Text,
-    mlInfo :: !J.Value
+    mlInfo :: !Value
   }
   deriving (Eq)
 
-instance J.ToJSON MetadataLog where
+instance ToJSON MetadataLog where
   toJSON (MetadataLog _ msg infoVal) =
-    J.object
-      [ "message" J..= msg,
-        "info" J..= infoVal
+    object
+      [ "message" .= msg,
+        "info" .= infoVal
       ]
 
 instance ToEngineLog MetadataLog Hasura where
   toEngineLog ml =
-    (mlLogLevel ml, ELTInternal ILTMetadata, J.toJSON ml)
+    (mlLogLevel ml, ELTInternal ILTMetadata, toJSON ml)
 
 mkInconsMetadataLog :: [InconsistentMetadata] -> MetadataLog
 mkInconsMetadataLog objs =
-  MetadataLog LevelWarn "Inconsistent Metadata!"
-    $ J.object ["objects" J..= objs]
+  MetadataLog LevelWarn "Inconsistent Metadata!" $
+    object ["objects" .= objs]
 
 data WebHookLog = WebHookLog
   { whlLogLevel :: !LogLevel,
@@ -136,17 +132,17 @@ data WebHookLog = WebHookLog
 
 instance ToEngineLog WebHookLog Hasura where
   toEngineLog webHookLog =
-    (whlLogLevel webHookLog, ELTWebhookLog, J.toJSON webHookLog)
+    (whlLogLevel webHookLog, ELTWebhookLog, toJSON webHookLog)
 
-instance J.ToJSON WebHookLog where
+instance ToJSON WebHookLog where
   toJSON whl =
-    J.object
-      [ "status_code" J..= (HTTP.statusCode <$> whlStatusCode whl),
-        "url" J..= whlUrl whl,
-        "method" J..= show (whlMethod whl),
-        "http_error" J..= whlError whl,
-        "response" J..= whlResponse whl,
-        "message" J..= whlMessage whl
+    object
+      [ "status_code" .= (HTTP.statusCode <$> whlStatusCode whl),
+        "url" .= whlUrl whl,
+        "method" .= show (whlMethod whl),
+        "http_error" .= whlError whl,
+        "response" .= whlResponse whl,
+        "message" .= whlMessage whl
       ]
 
 -- | GQLQueryOperationSuccessLog captures all the data required to construct
@@ -158,32 +154,28 @@ data GQLQueryOperationSuccessLog = GQLQueryOperationSuccessLog
     gqolRequestSize :: !Int64,
     gqolParameterizedQueryHash :: !ParameterizedQueryHash
   }
-  deriving (Eq, Generic)
+  deriving (Eq)
 
-instance J.ToJSON GQLQueryOperationSuccessLog where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''GQLQueryOperationSuccessLog)
 
 -- | GQLQueryOperationErrorLog captures the request along with the error message
 data GQLQueryOperationErrorLog = GQLQueryOperationErrorLog
   { gqelQuery :: !GH.GQLReqUnparsed,
     gqelError :: !QErr
   }
-  deriving (Eq, Generic)
+  deriving (Eq)
 
-instance J.ToJSON GQLQueryOperationErrorLog where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(deriveToJSON hasuraJSON ''GQLQueryOperationErrorLog)
 
 data GQLBatchQueryOperationLog
   = GQLQueryOperationSuccess !GQLQueryOperationSuccessLog
   | GQLQueryOperationError !GQLQueryOperationErrorLog
   deriving (Eq)
 
-instance J.ToJSON GQLBatchQueryOperationLog where
+instance ToJSON GQLBatchQueryOperationLog where
   toJSON = \case
-    GQLQueryOperationSuccess successLog -> J.toJSON successLog
-    GQLQueryOperationError errorLog -> J.toJSON errorLog
+    GQLQueryOperationSuccess successLog -> toJSON successLog
+    GQLQueryOperationError errorLog -> toJSON errorLog
 
 -- | whether a request is executed in batched mode or not
 data RequestMode
@@ -197,7 +189,7 @@ data RequestMode
     RequestModeError
   deriving (Eq)
 
-instance J.ToJSON RequestMode where
+instance ToJSON RequestMode where
   toJSON = \case
     RequestModeBatched -> "batched"
     RequestModeSingle -> "single"
@@ -210,13 +202,6 @@ data CommonHttpLogMetadata = CommonHttpLogMetadata
   }
   deriving (Eq)
 
--- The information from the GraphQL layer that needs to be included in the http-log.
--- This info is used to construct 'HttpLogMetadata m'
-type HttpLogGraphQLInfo = (CommonHttpLogMetadata, ParameterizedQueryHashList)
-
-emptyHttpLogGraphQLInfo :: HttpLogGraphQLInfo
-emptyHttpLogGraphQLInfo = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, PQHSetEmpty)
-
 -- | The http-log metadata attached to HTTP requests running in the monad 'm', split into a
 -- common portion that is present regardless of 'm', and a monad-specific one defined in the
 -- 'HttpLog' instance.
@@ -227,31 +212,31 @@ type HttpLogMetadata m = (CommonHttpLogMetadata, ExtraHttpLogMetadata m)
 
 buildHttpLogMetadata ::
   forall m.
-  (HttpLog m) =>
-  HttpLogGraphQLInfo ->
-  ExtraUserInfo ->
+  HttpLog m =>
+  ParameterizedQueryHashList ->
+  RequestMode ->
+  Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog) ->
   HttpLogMetadata m
-buildHttpLogMetadata (commonHttpLogMetadata, paramQueryHashList) extraUserInfo =
-  (commonHttpLogMetadata, buildExtraHttpLogMetadata @m paramQueryHashList extraUserInfo)
+buildHttpLogMetadata paramQueryHashList requestMode batchQueryOperationLog =
+  (CommonHttpLogMetadata requestMode batchQueryOperationLog, buildExtraHttpLogMetadata @m paramQueryHashList)
 
 -- | synonym for clarity, writing `emptyHttpLogMetadata @m` instead of `def @(HttpLogMetadata m)`
-emptyHttpLogMetadata :: forall m. (HttpLog m) => HttpLogMetadata m
+emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
 emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, emptyExtraHttpLogMetadata @m)
 
 -- See Note [Disable query printing for metadata queries]
 data MetadataQueryLoggingMode = MetadataQueryLoggingEnabled | MetadataQueryLoggingDisabled
   deriving (Show, Eq)
 
-instance J.FromJSON MetadataQueryLoggingMode where
+instance FromJSON MetadataQueryLoggingMode where
   parseJSON =
-    J.withBool "MetadataQueryLoggingMode"
-      $ pure
-      . bool MetadataQueryLoggingDisabled MetadataQueryLoggingEnabled
+    withBool "MetadataQueryLoggingMode" $
+      pure . bool MetadataQueryLoggingDisabled MetadataQueryLoggingEnabled
 
-instance J.ToJSON MetadataQueryLoggingMode where
+instance ToJSON MetadataQueryLoggingMode where
   toJSON = \case
-    MetadataQueryLoggingEnabled -> J.Bool True
-    MetadataQueryLoggingDisabled -> J.Bool False
+    MetadataQueryLoggingEnabled -> Bool True
+    MetadataQueryLoggingDisabled -> Bool False
 
 -- | Setting used to control the information in logs
 data LoggingSettings = LoggingSettings
@@ -283,13 +268,13 @@ HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING envirnoment variables is not set, t
 we disable the 'query' field in HTTP logs.
 -}
 
-class (Monad m) => HttpLog m where
+class Monad m => HttpLog m where
   -- | Extra http-log metadata that we attach when operating in 'm'.
   type ExtraHttpLogMetadata m
 
   emptyExtraHttpLogMetadata :: ExtraHttpLogMetadata m
 
-  buildExtraHttpLogMetadata :: ParameterizedQueryHashList -> ExtraUserInfo -> ExtraHttpLogMetadata m
+  buildExtraHttpLogMetadata :: ParameterizedQueryHashList -> ExtraHttpLogMetadata m
 
   logHttpError ::
     -- | the logger
@@ -303,18 +288,11 @@ class (Monad m) => HttpLog m where
     -- | the Wai.Request object
     Wai.Request ->
     -- | the request body and parsed request
-    (BL.ByteString, Maybe J.Value) ->
+    (BL.ByteString, Maybe Value) ->
     -- | the error
     QErr ->
-    -- | IO/network wait time and service time (respectively) for this request, if available.
-    Maybe (DiffTime, DiffTime) ->
-    -- | possible compression type
-    Maybe CompressionType ->
     -- | list of request headers
     [HTTP.Header] ->
-    HttpLogMetadata m ->
-    -- | flag to indicate if the request/response size should be added to the Prometheus Counter
-    Bool ->
     m ()
 
   logHttpSuccess ::
@@ -329,7 +307,7 @@ class (Monad m) => HttpLog m where
     -- | the Wai.Request object
     Wai.Request ->
     -- | the request body and parsed request
-    (BL.ByteString, Maybe J.Value) ->
+    (BL.ByteString, Maybe Value) ->
     -- | the response bytes
     BL.ByteString ->
     -- | the compressed response bytes
@@ -342,120 +320,110 @@ class (Monad m) => HttpLog m where
     -- | list of request headers
     [HTTP.Header] ->
     HttpLogMetadata m ->
-    -- | flag to indicate if the request/response size should be added to the Prometheus Counter
-    Bool ->
     m ()
 
-instance (HttpLog m) => HttpLog (TraceT m) where
+instance HttpLog m => HttpLog (TraceT m) where
   type ExtraHttpLogMetadata (TraceT m) = ExtraHttpLogMetadata m
 
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
-instance (HttpLog m) => HttpLog (ReaderT r m) where
+instance HttpLog m => HttpLog (ReaderT r m) where
   type ExtraHttpLogMetadata (ReaderT r m) = ExtraHttpLogMetadata m
 
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
-instance (HttpLog m) => HttpLog (ExceptT e m) where
-  type ExtraHttpLogMetadata (ExceptT e m) = ExtraHttpLogMetadata m
+instance HttpLog m => HttpLog (MetadataStorageT m) where
+  type ExtraHttpLogMetadata (MetadataStorageT m) = ExtraHttpLogMetadata m
 
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 -- | Log information about the HTTP request
 data HttpInfoLog = HttpInfoLog
-  { hlStatus :: HTTP.Status,
-    hlMethod :: Text,
-    hlSource :: Wai.IpAddress,
-    hlPath :: Text,
-    hlHttpVersion :: HTTP.HttpVersion,
-    hlCompression :: Maybe CompressionType,
+  { hlStatus :: !HTTP.Status,
+    hlMethod :: !Text,
+    hlSource :: !Wai.IpAddress,
+    hlPath :: !Text,
+    hlHttpVersion :: !HTTP.HttpVersion,
+    hlCompression :: !(Maybe CompressionType),
     -- | all the request headers
-    hlHeaders :: [HTTP.Header]
+    hlHeaders :: ![HTTP.Header]
   }
   deriving (Eq)
 
-instance J.ToJSON HttpInfoLog where
-  toJSON (HttpInfoLog st met src path hv compressType _) =
-    J.object
-      [ "status" J..= HTTP.statusCode st,
-        "method" J..= met,
-        "ip" J..= Wai.showIPAddress src,
-        "url" J..= path,
-        "http_version" J..= show hv,
-        "content_encoding" J..= (compressionTypeToTxt <$> compressType)
+instance ToJSON HttpInfoLog where
+  toJSON (HttpInfoLog st met src path hv compressTypeM _) =
+    object
+      [ "status" .= HTTP.statusCode st,
+        "method" .= met,
+        "ip" .= Wai.showIPAddress src,
+        "url" .= path,
+        "http_version" .= show hv,
+        "content_encoding" .= (compressionTypeToTxt <$> compressTypeM)
       ]
 
 -- | Information about a GraphQL/Hasura metadata operation over HTTP
 data OperationLog = OperationLog
-  { olRequestId :: RequestId,
-    olUserVars :: Maybe SessionVariables,
-    olResponseSize :: Maybe Int64,
-    -- | Response size before compression
-    olUncompressedResponseSize :: Int64,
+  { olRequestId :: !RequestId,
+    olUserVars :: !(Maybe SessionVariables),
+    olResponseSize :: !(Maybe Int64),
     -- | Request IO wait time, i.e. time spent reading the full request from the socket.
-    olRequestReadTime :: Maybe Seconds,
+    olRequestReadTime :: !(Maybe Seconds),
     -- | Service time, not including request IO wait time.
-    olQueryExecutionTime :: Maybe Seconds,
-    olQuery :: Maybe J.Value,
-    olRawQuery :: Maybe Text,
-    olError :: Maybe QErr,
-    olRequestMode :: RequestMode
+    olQueryExecutionTime :: !(Maybe Seconds),
+    olQuery :: !(Maybe Value),
+    olRawQuery :: !(Maybe Text),
+    olError :: !(Maybe QErr),
+    olRequestMode :: !RequestMode
   }
-  deriving (Eq, Generic)
+  deriving (Eq)
 
-instance J.ToJSON OperationLog where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''OperationLog)
 
 -- | @BatchOperationSuccessLog@ contains the information required for a single
 --   successful operation in a batch request for OSS. This type is a subset of the @GQLQueryOperationSuccessLog@
 data BatchOperationSuccessLog = BatchOperationSuccessLog
-  { _bolQuery :: Maybe J.Value,
-    _bolResponseSize :: Int64,
-    _bolQueryExecutionTime :: Seconds
+  { _bolQuery :: !(Maybe Value),
+    _bolResponseSize :: !Int64,
+    _bolQueryExecutionTime :: !Seconds
   }
-  deriving (Eq, Generic)
+  deriving (Eq)
 
-instance J.ToJSON BatchOperationSuccessLog where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''BatchOperationSuccessLog)
 
 -- | @BatchOperationSuccessLog@ contains the information required for a single
 --   erroneous operation in a batch request for OSS. This type is a subset of the @GQLQueryOperationErrorLog@
 data BatchOperationErrorLog = BatchOperationErrorLog
-  { _belQuery :: !(Maybe J.Value),
+  { _belQuery :: !(Maybe Value),
     _belError :: !QErr
   }
-  deriving (Eq, Generic)
+  deriving (Eq)
 
-instance J.ToJSON BatchOperationErrorLog where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''BatchOperationErrorLog)
 
 data BatchOperationLog
   = BatchOperationSuccess !BatchOperationSuccessLog
   | BatchOperationError !BatchOperationErrorLog
   deriving (Eq)
 
-instance J.ToJSON BatchOperationLog where
+instance ToJSON BatchOperationLog where
   toJSON = \case
-    BatchOperationSuccess successLog -> J.toJSON successLog
-    BatchOperationError errorLog -> J.toJSON errorLog
+    BatchOperationSuccess successLog -> toJSON successLog
+    BatchOperationError errorLog -> toJSON errorLog
 
 data HttpLogContext = HttpLogContext
   { hlcHttpInfo :: !HttpInfoLog,
@@ -463,11 +431,9 @@ data HttpLogContext = HttpLogContext
     hlcRequestId :: !RequestId,
     hlcBatchedOperations :: !(Maybe (NE.NonEmpty BatchOperationLog))
   }
-  deriving (Eq, Generic)
+  deriving (Eq)
 
-instance J.ToJSON HttpLogContext where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''HttpLogContext)
 
 -- | Check if the 'query' field should be included in the http-log
 isQueryIncludedInLogs :: Text -> LoggingSettings -> Bool
@@ -482,23 +448,13 @@ isQueryIncludedInLogs urlPath LoggingSettings {..}
     metadataUrlPaths = ["/v1/metadata", "/v1/query"]
     isMetadataRequest = urlPath `elem` metadataUrlPaths
 
--- | Add the 'query' field to the http-log if `MetadataQueryLoggingMode`
--- is set to `MetadataQueryLoggingEnabled` else only adds the `query.type` field.
-addQuery :: Maybe J.Value -> Text -> LoggingSettings -> Maybe J.Value
-addQuery parsedReq path loggingSettings =
-  if isQueryIncludedInLogs path loggingSettings
-    then parsedReq
-    else Just $ J.object ["type" J..= (fmap (^? key "type" . _String)) parsedReq]
-
 mkHttpAccessLogContext ::
   -- | Maybe because it may not have been resolved
   Maybe UserInfo ->
   LoggingSettings ->
   RequestId ->
   Wai.Request ->
-  (BL.ByteString, Maybe J.Value) ->
-  -- | Size of response body, before compression
-  Int64 ->
+  (BL.ByteString, Maybe Value) ->
   BL.ByteString ->
   Maybe (DiffTime, DiffTime) ->
   Maybe CompressionType ->
@@ -506,7 +462,7 @@ mkHttpAccessLogContext ::
   RequestMode ->
   Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog) ->
   HttpLogContext
-mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncompressedResponseSize res mTiming compressTypeM headers batching queryLogMetadata =
+mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) res mTiming compressTypeM headers batching queryLogMetadata =
   let http =
         HttpInfoLog
           { hlStatus = status,
@@ -522,11 +478,10 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncomp
           { olRequestId = reqId,
             olUserVars = _uiSession <$> userInfoM,
             olResponseSize = respSize,
-            olUncompressedResponseSize = uncompressedResponseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
             olRequestMode = batching,
-            olQuery = addQuery parsedReq (hlPath http) loggingSettings,
+            olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,
             olRawQuery = Nothing,
             olError = Nothing
           }
@@ -535,19 +490,19 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncomp
           >>= ( \case
                   GH.GQLSingleRequest _ -> Nothing -- This case is aleady handled in the `OperationLog`
                   GH.GQLBatchedReqs opLogs ->
-                    NE.nonEmpty
-                      $ map
+                    NE.nonEmpty $
+                      map
                         ( \case
                             GQLQueryOperationSuccess (GQLQueryOperationSuccessLog {..}) ->
-                              BatchOperationSuccess
-                                $ BatchOperationSuccessLog
-                                  (addQuery parsedReq (hlPath http) loggingSettings)
+                              BatchOperationSuccess $
+                                BatchOperationSuccessLog
+                                  (if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing)
                                   gqolResponseSize
                                   (convertDuration gqolQueryExecutionTime)
                             GQLQueryOperationError (GQLQueryOperationErrorLog {..}) ->
-                              BatchOperationError
-                                $ BatchOperationErrorLog
-                                  (addQuery parsedReq (hlPath http) loggingSettings)
+                              BatchOperationError $
+                                BatchOperationErrorLog
+                                  (if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing)
                                   gqelError
                         )
                         opLogs
@@ -563,7 +518,7 @@ mkHttpErrorLogContext ::
   LoggingSettings ->
   RequestId ->
   Wai.Request ->
-  (BL.ByteString, Maybe J.Value) ->
+  (BL.ByteString, Maybe Value) ->
   QErr ->
   Maybe (DiffTime, DiffTime) ->
   Maybe CompressionType ->
@@ -580,16 +535,14 @@ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq (reqBody, parsedReq
             hlCompression = compressTypeM,
             hlHeaders = headers
           }
-      responseSize = BL.length $ J.encode err
       op =
         OperationLog
           { olRequestId = reqId,
             olUserVars = _uiSession <$> userInfoM,
-            olResponseSize = Just responseSize,
-            olUncompressedResponseSize = responseSize,
+            olResponseSize = Just $ BL.length $ encode err,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
-            olQuery = addQuery parsedReq (hlPath http) loggingSettings,
+            olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,
             -- if parsedReq is Nothing, add the raw query
             olRawQuery = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq,
             olError = Just err,
@@ -607,7 +560,7 @@ data HttpLogLine = HttpLogLine
 
 instance ToEngineLog HttpLogLine Hasura where
   toEngineLog (HttpLogLine logLevel logLine) =
-    (logLevel, ELTHttpLog, J.toJSON logLine)
+    (logLevel, ELTHttpLog, toJSON logLine)
 
 mkHttpLog :: HttpLogContext -> HttpLogLine
 mkHttpLog httpLogCtx =
@@ -630,72 +583,20 @@ logDeprecatedEnvVars logger env sources = do
   -- When a source named 'default' is present, it means that it is a migrated v2
   -- hasura project. In such cases log those environment variables that are moved
   -- to the metadata
-  for_ (HashMap.lookup SNDefault sources) $ \_defSource -> do
+  onJust (HM.lookup SNDefault sources) $ \_defSource -> do
     let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
-    unless (null deprecated)
-      $ unLogger logger
-      $ UnstructuredLog LevelWarn
-      $ SB.fromText
-      $ "The following environment variables are deprecated and moved to metadata: "
-      <> toText deprecated
+    unless (null deprecated) $
+      unLogger logger $
+        UnstructuredLog LevelWarn $
+          SB.fromText $
+            "The following environment variables are deprecated and moved to metadata: "
+              <> toText deprecated
 
   -- Log when completely deprecated environment variables are present
   let deprecated = checkDeprecatedEnvVars (unDeprecatedEnvVars deprecatedEnvVars)
-  unless (null deprecated)
-    $ unLogger logger
-    $ UnstructuredLog LevelWarn
-    $ SB.fromText
-    $ "The following environment variables are deprecated: "
-    <> toText deprecated
-
-data SchemaSyncThreadType
-  = TTListener
-  | TTProcessor
-  | TTMetadataApi
-  deriving (Eq)
-
-instance Show SchemaSyncThreadType where
-  show TTListener = "listener"
-  show TTProcessor = "processor"
-  show TTMetadataApi = "metadata-api"
-
-data SchemaSyncLog = SchemaSyncLog
-  { sslLogLevel :: !LogLevel,
-    sslThreadType :: !SchemaSyncThreadType,
-    sslInfo :: !J.Value
-  }
-  deriving (Show, Eq)
-
-instance J.ToJSON SchemaSyncLog where
-  toJSON (SchemaSyncLog _ t info) =
-    J.object
-      [ "thread_type" J..= show t,
-        "info" J..= info
-      ]
-
-instance ToEngineLog SchemaSyncLog Hasura where
-  toEngineLog threadLog =
-    (sslLogLevel threadLog, ELTInternal ILTSchemaSync, J.toJSON threadLog)
-
-data ModelInfo = ModelInfo
-  { miModelName :: !Text,
-    miModelType :: !Text,
-    miSourceName :: !(Maybe Text),
-    miSourceType :: !(Maybe Text),
-    miQueryType :: !Text,
-    miIsCached :: !Bool
-  }
-  deriving stock (Generic)
-
-instance J.ToJSON ModelInfo where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-
-data ModelInfoLog = ModelInfoLog
-  { milLogType :: !LogLevel,
-    milModelInfo :: !ModelInfo
-  }
-  deriving stock (Generic)
-
-instance ToEngineLog ModelInfoLog Hasura where
-  toEngineLog (ModelInfoLog level t) =
-    (level, ELTInternal ILTModelInfo, J.toJSON t)
+  unless (null deprecated) $
+    unLogger logger $
+      UnstructuredLog LevelWarn $
+        SB.fromText $
+          "The following environment variables are deprecated: "
+            <> toText deprecated

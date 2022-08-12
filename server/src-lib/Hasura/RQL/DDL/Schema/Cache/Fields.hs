@@ -1,23 +1,30 @@
+{-# LANGUAGE Arrows #-}
+
 module Hasura.RQL.DDL.Schema.Cache.Fields (addNonColumnFields) where
 
+import Control.Arrow.Extended
+import Control.Arrow.Interpret
+import Control.Lens ((^.), _3, _4)
 import Data.Aeson
 import Data.Align (align)
-import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.HashMap.Strict.Extended qualified as M
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.These (These (..))
 import Hasura.Base.Error
-import Hasura.Function.API
-import Hasura.Function.Cache
+import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.DDL.Schema.Function
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
@@ -26,202 +33,244 @@ import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 addNonColumnFields ::
-  forall b m.
-  ( MonadWriter (Seq CollectItem) m,
+  forall b arr m.
+  ( ArrowChoice arr,
+    Inc.ArrowDistribute arr,
+    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowKleisli m arr,
+    MonadError QErr m,
     BackendMetadata b
   ) =>
-  HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
-  SourceName ->
-  SourceConfig b ->
-  HashMap (TableName b) (TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b)) ->
-  FieldInfoMap (StructuredColumnInfo b) ->
-  PartiallyResolvedRemoteSchemaMap ->
-  DBFunctionsMetadata b ->
-  NonColumnTableInputs b ->
-  m (FieldInfoMap (FieldInfo b))
-addNonColumnFields allSources sourceName sourceConfig rawTableInfos columns remoteSchemaMap pgFunctions NonColumnTableInputs {..} = do
-  objectRelationshipInfos <-
-    buildInfoMapPreservingMetadataM
-      _rdName
-      (mkRelationshipMetadataObject @b ObjRel sourceName _nctiTable)
-      (buildObjectRelationship (_tciForeignKeys <$> rawTableInfos) sourceName sourceConfig _nctiTable)
-      _nctiObjectRelationships
+  ( HashMap SourceName (AB.AnyBackend PartiallyResolvedSource),
+    SourceName,
+    HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
+    FieldInfoMap (ColumnInfo b),
+    RemoteSchemaMap,
+    DBFunctionsMetadata b,
+    NonColumnTableInputs b
+  )
+    `arr` FieldInfoMap (FieldInfo b)
+addNonColumnFields =
+  proc
+    ( allSources,
+      source,
+      rawTableInfo,
+      columns,
+      remoteSchemaMap,
+      pgFunctions,
+      NonColumnTableInputs {..}
+      )
+  -> do
+    objectRelationshipInfos <-
+      buildInfoMapPreservingMetadata
+        (_rdName . (^. _3))
+        (\(s, t, c) -> mkRelationshipMetadataObject @b ObjRel (s, t, c))
+        buildObjectRelationship
+        -<
+          (_tciForeignKeys <$> rawTableInfo, map (source,_nctiTable,) _nctiObjectRelationships)
 
-  arrayRelationshipInfos <-
-    buildInfoMapPreservingMetadataM
-      _rdName
-      (mkRelationshipMetadataObject @b ArrRel sourceName _nctiTable)
-      (buildArrayRelationship (_tciForeignKeys <$> rawTableInfos) sourceName sourceConfig _nctiTable)
-      _nctiArrayRelationships
+    arrayRelationshipInfos <-
+      buildInfoMapPreservingMetadata
+        (_rdName . (^. _3))
+        (mkRelationshipMetadataObject @b ArrRel)
+        buildArrayRelationship
+        -<
+          (_tciForeignKeys <$> rawTableInfo, map (source,_nctiTable,) _nctiArrayRelationships)
 
-  let relationshipInfos = objectRelationshipInfos <> arrayRelationshipInfos
-      scalarColumns = HashMap.mapMaybe toScalarColumnInfo columns
+    let relationshipInfos = objectRelationshipInfos <> arrayRelationshipInfos
 
-  computedFieldInfos <-
-    buildInfoMapPreservingMetadataM
-      _cfmName
-      (mkComputedFieldMetadataObject sourceName _nctiTable)
-      (buildComputedField (HS.fromList $ HashMap.keys rawTableInfos) (HS.fromList $ map ciColumn $ HashMap.elems scalarColumns) sourceName pgFunctions _nctiTable)
-      _nctiComputedFields
-  -- the fields that can be used for defining join conditions to other sources/remote schemas:
-  -- 1. all columns
-  -- 2. computed fields which don't expect arguments other than the table row and user session
-  let lhsJoinFields =
-        let columnFields = scalarColumns <&> \columnInfo -> JoinColumn (ciColumn columnInfo) (ciType columnInfo)
-            computedFields = HashMap.fromList
-              $ flip mapMaybe (HashMap.toList computedFieldInfos)
-              $ \(cfName, (ComputedFieldInfo {..}, _)) -> do
-                scalarType <- case computedFieldReturnType @b _cfiReturnType of
-                  ReturnsScalar ty -> pure ty
-                  ReturnsTable {} -> Nothing
-                  ReturnsOthers {} -> Nothing
-                let ComputedFieldFunction {..} = _cfiFunction
-                case toList _cffInputArgs of
-                  [] ->
-                    pure
-                      $ (fromComputedField cfName,)
-                      $ JoinComputedField
-                      $ ScalarComputedField
-                        _cfiXComputedFieldInfo
-                        _cfiName
-                        _cffName
-                        _cffComputedFieldImplicitArgs
-                        scalarType
-                  _ -> Nothing
-         in HashMap.union columnFields computedFields
+    computedFieldInfos <-
+      buildInfoMapPreservingMetadata
+        (_cfmName . (^. _4))
+        (\(s, _, t, c) -> mkComputedFieldMetadataObject (s, t, c))
+        ( proc ((a, b), (c, d, e, f)) -> do
+            o <- interpretWriter -< buildComputedField a b c d e f
+            arrM liftEither -< o
+        )
+        -<
+          ( ( HS.fromList $ M.keys rawTableInfo,
+              HS.fromList $ map ciColumn $ M.elems columns
+            ),
+            map (source,pgFunctions,_nctiTable,) _nctiComputedFields
+          )
+    -- the fields that can be used for defining join conditions to other sources/remote schemas:
+    -- 1. all columns
+    -- 2. computed fields which don't expect arguments other than the table row and user session
+    let lhsJoinFields =
+          let columnFields = columns <&> \columnInfo -> JoinColumn (ciColumn columnInfo) (ciType columnInfo)
+              computedFields = M.fromList $
+                flip mapMaybe (M.toList computedFieldInfos) $
+                  \(cfName, (ComputedFieldInfo {..}, _)) -> do
+                    scalarType <- case computedFieldReturnType @b _cfiReturnType of
+                      ReturnsScalar ty -> pure ty
+                      ReturnsTable {} -> Nothing
+                      ReturnsOthers {} -> Nothing
+                    let ComputedFieldFunction {..} = _cfiFunction
+                    case toList _cffInputArgs of
+                      [] ->
+                        pure $
+                          (fromComputedField cfName,) $
+                            JoinComputedField $
+                              ScalarComputedField
+                                _cfiXComputedFieldInfo
+                                _cfiName
+                                _cffName
+                                _cffComputedFieldImplicitArgs
+                                scalarType
+                      _ -> Nothing
+           in M.union columnFields computedFields
 
-  rawRemoteRelationshipInfos <-
-    buildInfoMapPreservingMetadataM
-      _rrName
-      (mkRemoteRelationshipMetadataObject @b sourceName _nctiTable)
-      (buildRemoteRelationship allSources lhsJoinFields remoteSchemaMap sourceName _nctiTable)
-      _nctiRemoteRelationships
+    rawRemoteRelationshipInfos <-
+      buildInfoMapPreservingMetadata
+        (_rrName . (^. _3))
+        (mkRemoteRelationshipMetadataObject @b)
+        ( proc ((a, b, c), d) -> do
+            o <- interpretWriter -< buildRemoteRelationship a b c d
+            arrM liftEither -< o
+        )
+        -<
+          ((allSources, lhsJoinFields, remoteSchemaMap), map (source,_nctiTable,) _nctiRemoteRelationships)
 
-  let relationshipFields = mapKeys fromRel relationshipInfos
-      computedFieldFields = mapKeys fromComputedField computedFieldInfos
-      remoteRelationshipFields = mapKeys fromRemoteRelationship rawRemoteRelationshipInfos
+    let relationshipFields = mapKeys fromRel relationshipInfos
+        computedFieldFields = mapKeys fromComputedField computedFieldInfos
+        remoteRelationshipFields = mapKeys fromRemoteRelationship rawRemoteRelationshipInfos
 
-  -- Validation phase
-
-  -- First, check for conflicts between non-column fields, since we can raise a better error
-  -- message in terms of the two metadata objects that define them.
-  let relationshipAndComputedFields = align relationshipFields computedFieldFields
-  step1 <- HashMap.traverseWithKey (noFieldConflicts FIRelationship FIComputedField) relationshipAndComputedFields
-  -- Second, align with remote relationship fields
-  let nonColumnFields = align (catMaybes step1) remoteRelationshipFields
-  step2 <- HashMap.traverseWithKey (noFieldConflicts id FIRemoteRelationship) nonColumnFields
-  -- Next, check for conflicts with custom field names. This is easiest to do before merging with
-  -- the column info itself because we have access to the information separately, and custom field
-  -- names are not currently stored as a separate map (but maybe should be!).
-  step3 <- noCustomFieldConflicts (catMaybes step2)
-  -- Finally, check for conflicts with the columns themselves.
-  let allFields = align columns (catMaybes step3)
-  traverse noColumnConflicts allFields
+    -- First, check for conflicts between non-column fields, since we can raise a better error
+    -- message in terms of the two metadata objects that define them.
+    (align relationshipFields computedFieldFields >- returnA)
+      >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts FIRelationship FIComputedField) |)
+      -- Second, align with remote relationship fields
+      >-> (\fields -> align (catMaybes fields) remoteRelationshipFields >- returnA)
+      >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts id FIRemoteRelationship) |)
+      -- Next, check for conflicts with custom field names. This is easiest to do before merging with
+      -- the column info itself because we have access to the information separately, and custom field
+      -- names are not currently stored as a separate map (but maybe should be!).
+      >-> (\fields -> (columns, catMaybes fields) >- noCustomFieldConflicts)
+      -- Finally, check for conflicts with the columns themselves.
+      >-> (\fields -> align columns (catMaybes fields) >- returnA)
+      >-> (| Inc.keyed (\_ fields -> fields >- noColumnConflicts) |)
   where
-    noFieldConflicts this that fieldName = \case
-      This (thisField, metadata) -> pure $ Just (this thisField, metadata)
-      That (thatField, metadata) -> pure $ Just (that thatField, metadata)
+    noFieldConflicts this that = proc (fieldName, fields) -> case fields of
+      This (thisField, metadata) -> returnA -< Just (this thisField, metadata)
+      That (thatField, metadata) -> returnA -< Just (that thatField, metadata)
       These (_, thisMetadata) (_, thatMetadata) -> do
-        tell
-          $ Seq.singleton
-          $ CollectInconsistentMetadata
-          $ ConflictingObjects
-            ("conflicting definitions for field " <>> fieldName)
-            [thisMetadata, thatMetadata]
-        pure Nothing
+        tellA
+          -<
+            Seq.singleton $
+              CIInconsistency $
+                ConflictingObjects
+                  ("conflicting definitions for field " <>> fieldName)
+                  [thisMetadata, thatMetadata]
+        returnA -< Nothing
 
-    noCustomFieldConflicts nonColumnFields = do
-      let columnsByGQLName = mapFromL structuredColumnInfoName $ HashMap.elems columns
-      for nonColumnFields \(fieldInfo, metadata) -> withRecordInconsistencyM metadata do
-        for_ (fieldInfoGraphQLNames fieldInfo) \fieldGQLName ->
-          case HashMap.lookup fieldGQLName columnsByGQLName of
-            -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
-            -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
-            -- more useful error message.
-            Just columnInfo
-              | toTxt (structuredColumnInfoColumn columnInfo) /= G.unName fieldGQLName ->
-                  throw400 AlreadyExists
-                    $ "field definition conflicts with custom field name for postgres column "
-                    <>> structuredColumnInfoColumn columnInfo
-            _ -> return ()
-        return (fieldInfo, metadata)
+    noCustomFieldConflicts = proc (columns, nonColumnFields) -> do
+      let columnsByGQLName = mapFromL ciName $ M.elems columns
+      (|
+        Inc.keyed
+          ( \_ (fieldInfo, metadata) ->
+              (|
+                withRecordInconsistency
+                  ( do
+                      (|
+                        traverseA_
+                          ( \fieldGQLName -> case M.lookup fieldGQLName columnsByGQLName of
+                              -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
+                              -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
+                              -- more useful error message.
+                              Just columnInfo
+                                | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
+                                  throwA
+                                    -<
+                                      err400 AlreadyExists $
+                                        "field definition conflicts with custom field name for postgres column "
+                                          <>> ciColumn columnInfo
+                              _ -> returnA -< ()
+                          )
+                        |) (fieldInfoGraphQLNames fieldInfo)
+                      returnA -< (fieldInfo, metadata)
+                  )
+              |) metadata
+          )
+        |) nonColumnFields
 
-    noColumnConflicts = \case
-      This columnInfo -> pure $ FIColumn columnInfo
-      That (fieldInfo, _) -> pure $ fieldInfo
+    noColumnConflicts = proc fields -> case fields of
+      This columnInfo -> returnA -< FIColumn columnInfo
+      That (fieldInfo, _) -> returnA -< fieldInfo
       These columnInfo (_, fieldMetadata) -> do
-        recordInconsistencyM Nothing fieldMetadata "field definition conflicts with postgres column"
-        pure $ FIColumn columnInfo
+        recordInconsistency -< ((Nothing, fieldMetadata), "field definition conflicts with postgres column")
+        returnA -< FIColumn columnInfo
 
 mkRelationshipMetadataObject ::
   forall b a.
   (ToJSON a, Backend b) =>
   RelType ->
-  SourceName ->
-  TableName b ->
-  RelDef a ->
+  (SourceName, TableName b, RelDef a) ->
   MetadataObject
-mkRelationshipMetadataObject relType source table relDef =
+mkRelationshipMetadataObject relType (source, table, relDef) =
   let objectId =
-        MOSourceObjId source
-          $ AB.mkAnyBackend
-          $ SMOTableObj @b table
-          $ MTORel (_rdName relDef) relType
+        MOSourceObjId source $
+          AB.mkAnyBackend $
+            SMOTableObj @b table $
+              MTORel (_rdName relDef) relType
    in MetadataObject objectId $ toJSON $ WithTable @b source table relDef
 
 buildObjectRelationship ::
-  ( MonadWriter (Seq CollectItem) m,
-    BackendMetadata b
+  ( ArrowChoice arr,
+    ArrowWriter (Seq CollectedInfo) arr,
+    Backend b
   ) =>
-  HashMap (TableName b) (HashSet (ForeignKey b)) ->
-  SourceName ->
-  SourceConfig b ->
-  TableName b ->
-  ObjRelDef b ->
-  m (Maybe (RelInfo b))
-buildObjectRelationship fkeysMap sourceName sourceConfig table relDef = do
-  let buildRelInfo = buildObjectRelationshipInfo sourceConfig sourceName fkeysMap table
-  buildRelationship sourceName table buildRelInfo ObjRel relDef
+  ( HashMap (TableName b) (HashSet (ForeignKey b)),
+    ( SourceName,
+      TableName b,
+      ObjRelDef b
+    )
+  )
+    `arr` Maybe (RelInfo b)
+buildObjectRelationship = proc (fkeysMap, (source, table, relDef)) -> do
+  let buildRelInfo def = objRelP2Setup source table fkeysMap def
+  interpretWriter -< buildRelationship source table buildRelInfo ObjRel relDef
 
 buildArrayRelationship ::
-  ( MonadWriter (Seq CollectItem) m,
-    BackendMetadata b
+  ( ArrowChoice arr,
+    ArrowWriter (Seq CollectedInfo) arr,
+    Backend b
   ) =>
-  HashMap (TableName b) (HashSet (ForeignKey b)) ->
-  SourceName ->
-  SourceConfig b ->
-  TableName b ->
-  ArrRelDef b ->
-  m (Maybe (RelInfo b))
-buildArrayRelationship fkeysMap sourceName sourceConfig table relDef = do
-  let buildRelInfo = buildArrayRelationshipInfo sourceConfig sourceName fkeysMap table
-  buildRelationship sourceName table buildRelInfo ArrRel relDef
+  ( HashMap (TableName b) (HashSet (ForeignKey b)),
+    ( SourceName,
+      TableName b,
+      ArrRelDef b
+    )
+  )
+    `arr` Maybe (RelInfo b)
+buildArrayRelationship = proc (fkeysMap, (source, table, relDef)) -> do
+  let buildRelInfo def = arrRelP2Setup fkeysMap source table def
+  interpretWriter -< buildRelationship source table buildRelInfo ArrRel relDef
 
 buildRelationship ::
   forall m b a.
-  ( MonadWriter (Seq CollectItem) m,
+  ( MonadWriter (Seq CollectedInfo) m,
     ToJSON a,
     Backend b
   ) =>
   SourceName ->
   TableName b ->
-  (RelDef a -> Either QErr (RelInfo b, Seq SchemaDependency)) ->
+  (RelDef a -> Either QErr (RelInfo b, [SchemaDependency])) ->
   RelType ->
   RelDef a ->
   m (Maybe (RelInfo b))
 buildRelationship source table buildRelInfo relType relDef = do
   let relName = _rdName relDef
-      metadataObject = mkRelationshipMetadataObject @b relType source table relDef
+      metadataObject = mkRelationshipMetadataObject @b relType (source, table, relDef)
       schemaObject =
-        SOSourceObj source
-          $ AB.mkAnyBackend
-          $ SOITableObj @b table
-          $ TORel relName
+        SOSourceObj source $
+          AB.mkAnyBackend $
+            SOITableObj @b table $
+              TORel relName
       addRelationshipContext e = "in relationship " <> relName <<> ": " <> e
   withRecordInconsistencyM metadataObject $ do
     modifyErr (addTableContext @b table . addRelationshipContext) $ do
@@ -232,22 +281,20 @@ buildRelationship source table buildRelInfo relType relDef = do
 mkComputedFieldMetadataObject ::
   forall b.
   (Backend b) =>
-  SourceName ->
-  TableName b ->
-  ComputedFieldMetadata b ->
+  (SourceName, TableName b, ComputedFieldMetadata b) ->
   MetadataObject
-mkComputedFieldMetadataObject source table ComputedFieldMetadata {..} =
+mkComputedFieldMetadataObject (source, table, ComputedFieldMetadata {..}) =
   let objectId =
-        MOSourceObjId source
-          $ AB.mkAnyBackend
-          $ SMOTableObj @b table
-          $ MTOComputedField _cfmName
+        MOSourceObjId source $
+          AB.mkAnyBackend $
+            SMOTableObj @b table $
+              MTOComputedField _cfmName
       definition = AddComputedField @b source table _cfmName _cfmDefinition _cfmComment
    in MetadataObject objectId (toJSON definition)
 
 buildComputedField ::
   forall b m.
-  ( MonadWriter (Seq CollectItem) m,
+  ( MonadWriter (Seq CollectedInfo) m,
     BackendMetadata b
   ) =>
   HashSet (TableName b) ->
@@ -256,78 +303,69 @@ buildComputedField ::
   DBFunctionsMetadata b ->
   TableName b ->
   ComputedFieldMetadata b ->
-  m (Maybe (ComputedFieldInfo b))
-buildComputedField trackedTableNames tableColumns source pgFunctions table cf@ComputedFieldMetadata {..} = do
+  m (Either QErr (Maybe (ComputedFieldInfo b)))
+buildComputedField trackedTableNames tableColumns source pgFunctions table cf@ComputedFieldMetadata {..} = runExceptT do
   let addComputedFieldContext e = "in computed field " <> _cfmName <<> ": " <> e
       function = computedFieldFunction @b _cfmDefinition
-
-  withRecordInconsistencyM (mkComputedFieldMetadataObject source table cf)
-    $ modifyErr (addTableContext @b table . addComputedFieldContext)
-    $ do
-      funcDefs <-
-        onNothing
-          (HashMap.lookup function pgFunctions)
-          (throw400 NotExists $ "no such function exists: " <>> function)
-      rawfi <- getSingleUniqueFunctionOverload @b (computedFieldFunction @b _cfmDefinition) funcDefs
+      funcDefs = fromMaybe [] $ M.lookup function pgFunctions
+  withRecordInconsistencyM (mkComputedFieldMetadataObject (source, table, cf)) $
+    modifyErr (addTableContext @b table . addComputedFieldContext) $ do
+      rawfi <- handleMultipleFunctions @b (computedFieldFunction @b _cfmDefinition) funcDefs
       buildComputedFieldInfo trackedTableNames table tableColumns _cfmName _cfmDefinition rawfi _cfmComment
 
 mkRemoteRelationshipMetadataObject ::
   forall b.
-  (Backend b) =>
-  SourceName ->
-  TableName b ->
-  RemoteRelationship ->
+  Backend b =>
+  (SourceName, TableName b, RemoteRelationship) ->
   MetadataObject
-mkRemoteRelationshipMetadataObject source table RemoteRelationship {..} =
+mkRemoteRelationshipMetadataObject (source, table, RemoteRelationship {..}) =
   let objectId =
-        MOSourceObjId source
-          $ AB.mkAnyBackend
-          $ SMOTableObj @b table
-          $ MTORemoteRelationship _rrName
-   in MetadataObject objectId
-        $ toJSON
-        $ CreateFromSourceRelationship @b source table _rrName _rrDefinition
+        MOSourceObjId source $
+          AB.mkAnyBackend $
+            SMOTableObj @b table $
+              MTORemoteRelationship _rrName
+   in MetadataObject objectId $
+        toJSON $
+          CreateFromSourceRelationship @b source table _rrName _rrDefinition
 
 --  | This is a "thin" wrapper around 'buildRemoteFieldInfo', which only knows
 -- how to construct dependencies on the RHS of the join condition, so the
 -- dependencies on the remote relationship on the LHS entity are computed here
 buildRemoteRelationship ::
   forall b m.
-  ( MonadWriter (Seq CollectItem) m,
+  ( MonadWriter (Seq CollectedInfo) m,
     BackendMetadata b
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
-  HashMap.HashMap FieldName (DBJoinField b) ->
-  PartiallyResolvedRemoteSchemaMap ->
-  SourceName ->
-  TableName b ->
-  RemoteRelationship ->
-  m (Maybe (RemoteFieldInfo (DBJoinField b)))
-buildRemoteRelationship allSources allColumns remoteSchemaMap source table rr@RemoteRelationship {..} = do
-  let metadataObject = mkRemoteRelationshipMetadataObject @b source table rr
+  M.HashMap FieldName (DBJoinField b) ->
+  RemoteSchemaMap ->
+  (SourceName, TableName b, RemoteRelationship) ->
+  m (Either QErr (Maybe (RemoteFieldInfo (DBJoinField b))))
+buildRemoteRelationship allSources allColumns remoteSchemaMap (source, table, rr@RemoteRelationship {..}) = runExceptT $ do
+  let metadataObject = mkRemoteRelationshipMetadataObject @b (source, table, rr)
       schemaObj =
-        SOSourceObj source
-          $ AB.mkAnyBackend
-          $ SOITableObj @b table
-          $ TORemoteRel _rrName
-      addRemoteRelationshipContext e = "in remote relationship " <> _rrName <<> ": " <> e
-  withRecordInconsistencyM metadataObject
-    $ modifyErr (addTableContext @b table . addRemoteRelationshipContext)
-    $ do
+        SOSourceObj source $
+          AB.mkAnyBackend $
+            SOITableObj @b table $
+              TORemoteRel _rrName
+      addRemoteRelationshipContext e = "in remote relationship" <> _rrName <<> ": " <> e
+  withRecordInconsistencyM metadataObject $
+    modifyErr (addTableContext @b table . addRemoteRelationshipContext) $ do
       (remoteField, rhsDependencies) <-
         buildRemoteFieldInfo (tableNameToLHSIdentifier @b table) allColumns rr allSources remoteSchemaMap
       let lhsDependencies =
             -- a direct dependency on the table on which this is defined
             SchemaDependency (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b table) DRTable
-              -- the relationship is also dependent on all the lhs
-              -- columns that are used in the join condition
-              : flip map (HashMap.elems $ _rfiLHS remoteField) \case
-                JoinColumn column _ ->
-                  -- TODO: shouldn't this be DRColumn??
-                  mkColDep @b DRRemoteRelationship source table column
-                JoinComputedField computedFieldInfo ->
-                  mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
+            -- the relationship is also dependent on all the lhs
+            -- columns that are used in the join condition
+            :
+            flip map (M.elems $ _rfiLHS remoteField) \case
+              JoinColumn column _ ->
+                -- TODO: shouldn't this be DRColumn??
+                mkColDep @b DRRemoteRelationship source table column
+              JoinComputedField computedFieldInfo ->
+                mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
       -- Here is the essence of the function: construct dependencies on the RHS
       -- of the join condition.
-      recordDependenciesM metadataObject schemaObj (Seq.fromList lhsDependencies <> rhsDependencies)
+      recordDependenciesM metadataObject schemaObj (lhsDependencies <> rhsDependencies)
       return remoteField

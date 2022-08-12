@@ -1,12 +1,8 @@
 type: bulk
 args:
-- type: delete_event_trigger
-  args:
-    name: articles
-- type: run_sql
-  args:
+- args:
     cascade: true
     sql: |
       DROP TABLE articles;
       DROP TABLE authors;
-
+  type: run_sql

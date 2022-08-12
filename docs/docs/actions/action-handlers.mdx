@@ -13,7 +13,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Action Handlers
+# Action handlers
 
 ## Introduction
 
@@ -177,20 +177,20 @@ In your Hasura server, add the action secret as an environment variable, say `AC
 
 For your action, add a header that will act as an action secret.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Actions -> [action-name]` tab in the Console and scroll down to `Headers`. You can now configure an action
+Head to the `Actions -> [action-name]` tab in the console and scroll down to `Headers`. You can now configure an action
 secret by adding a header:
 
-<Thumbnail src="/img/actions/action-secret-header.png" alt="Console action secret" width="700px" />
+<Thumbnail src='/img/actions/action-secret-header.png' alt='Console action secret' width='700px' />
 
 Then hit `Save`.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-Go to `metadata/actions.yaml` in the Hasura Project directory.
+Go to `metadata/actions.yaml` in the Hasura project directory.
 
 Update the definition of your action by adding the action secret as a header:
 
@@ -212,7 +212,7 @@ Save the changes and run `hasura metadata apply` to set the headers.
 <TabItem value="api" label="API">
 
 Headers can be set when [creating](/api-reference/metadata-api/actions.mdx#metadata-create-action) or
-[updating](/api-reference/metadata-api/actions.mdx#metadata-update-action) an action via the Metadata API.
+[updating](/api-reference/metadata-api/actions.mdx#metadata-update-action) an action via the metadata API.
 
 ```http {12-17}
 POST /v1/metadata HTTP/1.1
@@ -250,20 +250,9 @@ X-Hasura-Role: admin
 
 :::info Note
 
-In case there are multiple headers with the same name, the order of precedence is: client headers \> resolved user
-(`x-hasura-*`) variables \> configuration headers.
-
-If you want to change the order of precedence to: configuration headers \> resolved user (`x-hasura-*`) variables
-\> client headers, use the [configured header
-precedence](deployment/graphql-engine-flags/reference.mdx/#configured-header-precedence) flag or environment variable.
-
-:::
-
-:::info Note
-
 Before creating an action via the
-[create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action), all custom types need to
-be defined via the [set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) Metadata
+[create_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action), all custom types need to
+be defined via the [set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata
 API.
 
 :::

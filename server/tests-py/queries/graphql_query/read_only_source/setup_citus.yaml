@@ -1,0 +1,28 @@
+# As this is a read-only test, we can't create the schema/tables as part of the
+# HGE metadata. This setup assumes the tables are already created.
+# The schema assumed is -
+# CREATE TABLE aves (id SERIAL PRIMARY KEY, name TEXT)
+# And (already existing) data assumed is -
+#  - id: 1
+#    name: Booted Eagle
+#  - id: 2
+#    name: Hooded Merganser
+
+type: bulk
+args:
+
+- type: citus_add_source
+  args:
+    name: citus_readonly
+    configuration:
+      connection_info:
+        database_url:
+          from_env:
+            HASURA_READONLY_DB_URL
+
+# track tables
+- type: citus_track_table
+  args:
+    source: citus_readonly
+    table:
+      name: aves

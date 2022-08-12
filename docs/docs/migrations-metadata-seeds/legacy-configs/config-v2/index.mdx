@@ -1,6 +1,6 @@
 ---
 sidebar_label: Config v2
-description: Manage Hasura Migrations and Metadata
+description: Manage Hasura migrations and metadata
 keywords:
   - hasura
   - docs
@@ -18,17 +18,17 @@ reproduce the same setup. For example, to achieve a dev -> staging -> production
 
 :::info Note
 
-This documentation is for Hasura Migrations `config v2`. For `config v3`, see
-[Migrations & Metadata (CI/CD)](/migrations-metadata-seeds/overview.mdx).
+This documentation is for Hasura migrations `config v2`. For `config v3`, see
+[Migrations & Metadata (CI/CD)](/migrations-metadata-seeds/index.mdx).
 
 :::
 
 ## How is Hasura state managed?
 
 Hasura needs 2 pieces of information to recreate your GraphQL API, the underlying PG database schema and the Hasura
-Metadata which is used to describe the exposed GraphQL API.
+metadata which is used to describe the exposed GraphQL API.
 
-The [Hasura CLI](/hasura-cli/overview.mdx) lets you manage these pieces of information as you build your project via:
+The [Hasura CLI](/hasura-cli/index.mdx) lets you manage these pieces of information as you build your project via:
 
 ### Database migration files
 
@@ -40,32 +40,32 @@ be used to roll-back the DB schema as well.
 
 :::info Note
 
-You can choose to manage database Migrations using external tools like knex, TypeORM, Django/Rails migrations, etc. as
+You can choose to manage database migrations using external tools like knex, TypeORM, Django/Rails migrations, etc. as
 well.
 
 :::
 
-### Hasura Metadata files
+### Hasura metadata files
 
-The state of Hasura Metadata is managed via snapshots of the metadata. These snapshots can be applied as a whole to
+The state of Hasura metadata is managed via snapshots of the metadata. These snapshots can be applied as a whole to
 configure Hasura to a state represented in the snapshot.
 
-Hasura Metadata can be exported and imported as a whole.
+Hasura metadata can be exported and imported as a whole.
 
-## Setting up Migrations
+## Setting up migrations
 
 See
-[Setting up Hasura Migrations (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/migrations-setup.mdx).
+[Setting up Hasura migrations (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/migrations-setup.mdx).
 
 ## Advanced use cases
 
-- [Auto-apply Migrations/Metadata when the server starts (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/auto-apply-migrations.mdx)
-- [Writing Migrations manually (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/writing-migrations-manually.mdx)
-- [Rolling back applied Migrations (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/rolling-back-migrations.mdx)
+- [Auto-apply migrations/metadata when the server starts (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/auto-apply-migrations.mdx)
+- [Writing migrations manually (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/writing-migrations-manually.mdx)
+- [Rolling back applied migrations (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/rolling-back-migrations.mdx)
 - [Creating a seed data migration (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/seed-data-migration.mdx)
 
 ## Reference documentation
 
-- [How Hasura Migrations work (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/how-it-works.mdx)
+- [How Hasura migrations work (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/how-it-works.mdx)
 - [Migration file format](/migrations-metadata-seeds/legacy-configs/config-v2/reference/migration-file-format.mdx)
 - [Metadata format](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx)

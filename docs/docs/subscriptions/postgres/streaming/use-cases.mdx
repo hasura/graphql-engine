@@ -11,11 +11,11 @@ keywords:
   - postgres
 ---
 
-# Streaming Subscriptions Sample Use Cases
+# Streaming subscriptions sample use cases
 
 ## Introduction
 
-The following are a few use cases for using streaming subscriptions, **all without the need for sticky sessions**:
+The following are a few use cases for using streaming subscriptions:
 
 ### Subscribing only to the events that have been changed
 
@@ -70,7 +70,7 @@ and the following messages need to be streamed:
     "created_at": "2020-01-01 01:01:20"
   },
   {
-    "id": 432434,
+    "id": 432432,
     "from": {
       "first_name": "Cindy"
     },
@@ -78,10 +78,10 @@ and the following messages need to be streamed:
       "first_name": "Michael"
     },
     "content": "I'm good! What about you?",
-    "created_at": "2020-01-01 01:01:40"
+    "created_at": "2020-01-01 01:00:00"
   },
   {
-    "id": 432435,
+    "id": 432433,
     "from": {
       "first_name": "Michael"
     },
@@ -89,7 +89,7 @@ and the following messages need to be streamed:
       "first_name": "Cindy"
     },
     "content": "All good here too! Thanks",
-    "created_at": "2020-01-01 01:02:00"
+    "created_at": "2020-01-01 01:01:20"
   }
 ]
 ```
@@ -98,8 +98,8 @@ To stream the latest undelivered messages:
 
 ```graphql
 subscription getUndeliveredMessages {
-  # will get all the messages that have `created_at > 2022-01-01` in batches of 2 rows
-  messages_stream(cursor: { initial_value: { created_at: "2022-01-01" }, ordering: ASC }, batch_size: 2) {
+  # will get all the messages that have `created_at > 2022-01-01` in batches of 100 rows
+  messages_stream(cursor: { created_at: "2022-01-01", ordering: ASC }, batch_size: 2) {
     id
     from {
       first_name
@@ -154,7 +154,7 @@ greatest value of the cursor column sent in the previous response.
   "data": {
     "messages_stream": [
       {
-        "id": 432434,
+        "id": 432432,
         "from": {
           "first_name": "Cindy"
         },
@@ -162,10 +162,10 @@ greatest value of the cursor column sent in the previous response.
           "first_name": "Michael"
         },
         "content": "I'm good! What about you?",
-        "created_at": "2020-01-01 01:01:40"
+        "created_at": "2020-01-01 01:00:00"
       },
       {
-        "id": 432435,
+        "id": 432433,
         "from": {
           "first_name": "Michael"
         },
@@ -173,61 +173,9 @@ greatest value of the cursor column sent in the previous response.
           "first_name": "Cindy"
         },
         "content": "All good here too! Thanks",
-        "created_at": "2020-01-01 01:02:00"
+        "created_at": "2020-01-01 01:01:20"
       }
     ]
-  }
-}
-```
-
-### Deal with out-of-order events
-
-Consider the following schema:
-
-```sql
-  cart_items (
-    id serial primary key,
-    cart_id integer references carts(id),
-    product_id integer references products(id),
-    quantity integer,
-    created_at timestamptz default now(),
-  )
-
-   carts (
-     id serial primary key,
-     user_id uuid references users(id),
-     status text,
-     created_at timestamptz default now(),
-   )
-
-   users (
-     id uuid primary key,
-     first_name text,
-     last_name text,
-     created_at timestamptz default current_timestamp
-   )
-```
-
-A user might add an item to their cart, remove it, and then add it again. If the updates are processed out of order, the
-item might be removed from the cart even though the user intended to keep it.
-
-To deal with this, you can use the `cursor` argument to stream the events in the order they were created.
-
-```graphql
-subscription getCartItems {
-  cart_items_stream(cursor: { initial_value: { created_at: "2022-01-01" }, ordering: ASC }) {
-    id
-    cart {
-      id
-      user {
-        first_name
-      }
-    }
-    product {
-      name
-    }
-    quantity
-    created_at
   }
 }
 ```

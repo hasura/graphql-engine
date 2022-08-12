@@ -1,0 +1,58 @@
+@import '../../../../Common/Common.scss';
+
+.schemaExplorerContainer {
+  background-color: #f7f7f7;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.height200Px {
+  height: 200px;
+}
+
+.skeletonItem {
+  margin-bottom: 15px;
+}
+
+.skeletonCheckbox {
+  width: 15px;
+  height: 15px;
+  background-color: white;
+  margin-right: 15px;
+}
+
+.skeletonLabel {
+  width: 200px;
+  height: 15px;
+  background-color: white;
+}
+
+.scalarColumnSelect {
+  margin-left: 5px;
+  border-radius: 4px;
+  background-color: white;
+  border: 1px solid #ccc;
+}
+
+.argValue {
+  background-color: white;
+  padding-right: 2.5rem;
+  color: #555555;
+  font-style: normal;
+}
+
+.fieldElement {
+  color: rgb(31, 97, 160);
+  font-style: normal;
+}
+
+.fieldElementDisabled {
+  color: #8091a1;
+  font-style: normal;
+}
+
+.argElement {
+  color: #8b2bb9;
+  font-style: italic;
+}

@@ -9,8 +9,8 @@ import (
 	"os/exec"
 
 	gyaml "github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -30,27 +30,25 @@ func NewCLIExtensionConfig(binPath *string, logger *logrus.Logger) *Config {
 }
 
 // ConvertMetadataToSDL converts actions metadata to graphql SDL
-func (c *Config) ConvertMetadataToSDL(toPayload types.SDLToRequest) (types.SDLToResponse, error) {
-	var op errors.Op = "cliextension.Config.ConvertMetadataToSDL"
-	var toResponse types.SDLToResponse
+func (c *Config) ConvertMetadataToSDL(toPayload types.SDLToRequest) (toResponse types.SDLToResponse, err error) {
 	outputFile, err := ioutil.TempFile("", "*.json")
 	if err != nil {
-		return toResponse, errors.E(op, err)
+		return
 	}
 	outputFileName := outputFile.Name()
 	// Defer removal of the temporary file in case any of the next steps fail.
 	defer os.Remove(outputFileName)
 	ybyt, err := yaml.Marshal(toPayload)
 	if err != nil {
-		return toResponse, errors.E(op, err)
+		return
 	}
 	fromByt, err := gyaml.YAMLToJSON(ybyt)
 	if err != nil {
-		return toResponse, errors.E(op, err)
+		return
 	}
 	inputFileName, err := writeCLIExtInput(fromByt)
 	if err != nil {
-		return toResponse, errors.E(op, err)
+		return
 	}
 	sdlToCmd := exec.Command(*c.binPath)
 	args := []string{"sdl", "to", "--input-file", inputFileName, "--output-file", outputFileName}
@@ -62,37 +60,35 @@ func (c *Config) ConvertMetadataToSDL(toPayload types.SDLToRequest) (types.SDLTo
 	err = sdlToCmd.Run()
 	c.logger.WithField("command", "sdl to").Debug(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
-		return toResponse, errors.E(op, fmt.Errorf("%s: %s", err.Error(), stderr.String()))
+		return toResponse, errors.Wrap(
+			fmt.Errorf(stderr.String()),
+			err.Error(),
+		)
 	}
 	tmpByt, err := readCliExtOutput(outputFileName)
 	if err != nil {
-		return toResponse, errors.E(op, err)
+		return
 	}
 	err = yaml.Unmarshal(tmpByt, &toResponse)
-	if err != nil {
-		return toResponse, errors.E(op, errors.KindBadInput, err)
-	}
-	return toResponse, nil
+	return
 }
 
 // ConvertSDLToMetadata converts graphql SDL to hasura metadata
-func (c *Config) ConvertSDLToMetadata(fromPayload types.SDLFromRequest) (types.SDLFromResponse, error) {
-	var op errors.Op = "cliextension.Config.ConvertSDLToMetadata"
-	var fromResponse types.SDLFromResponse
+func (c *Config) ConvertSDLToMetadata(fromPayload types.SDLFromRequest) (fromResponse types.SDLFromResponse, err error) {
 	outputFile, err := ioutil.TempFile("", "*.json")
 	if err != nil {
-		return fromResponse, errors.E(op, err)
+		return
 	}
 	outputFileName := outputFile.Name()
 	// Defer removal of the temporary file in case any of the next steps fail.
 	defer os.Remove(outputFileName)
 	fromByt, err := json.Marshal(fromPayload)
 	if err != nil {
-		return fromResponse, errors.E(op, err)
+		return
 	}
 	inputFileName, err := writeCLIExtInput(fromByt)
 	if err != nil {
-		return fromResponse, errors.E(op, err)
+		return
 	}
 	sdlFromCmd := exec.Command(*c.binPath)
 	args := []string{"sdl", "from", "--input-file", inputFileName, "--output-file", outputFileName}
@@ -104,37 +100,36 @@ func (c *Config) ConvertSDLToMetadata(fromPayload types.SDLFromRequest) (types.S
 	err = sdlFromCmd.Run()
 	c.logger.WithField("command", "sdl from").Debugln(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
-		return fromResponse, errors.E(op, fmt.Errorf("%s: %s", err.Error(), stderr.String()))
+		err = errors.Wrap(
+			fmt.Errorf(stderr.String()),
+			err.Error(),
+		)
+		return
 	}
 	tmpByt, err := readCliExtOutput(outputFileName)
 	if err != nil {
-		return fromResponse, errors.E(op, err)
+		return
 	}
 	err = yaml.Unmarshal(tmpByt, &fromResponse)
-	if err != nil {
-		return fromResponse, errors.E(op, errors.KindBadInput, err)
-	}
-	return fromResponse, nil
+	return
 }
 
 // GetActionsCodegen generates codegen for an action
-func (c *Config) GetActionsCodegen(codegenReq types.ActionsCodegenRequest) (types.ActionsCodegenResponse, error) {
-	var op errors.Op = "cliextension.Config.GetActionsCodegen"
-	var codegenResp types.ActionsCodegenResponse
+func (c *Config) GetActionsCodegen(codegenReq types.ActionsCodegenRequest) (codegenResp types.ActionsCodegenResponse, err error) {
 	outputFile, err := ioutil.TempFile("", "*.json")
 	if err != nil {
-		return codegenResp, errors.E(op, err)
+		return
 	}
 	outputFileName := outputFile.Name()
 	// Defer removal of the temporary file in case any of the next steps fail.
 	defer os.Remove(outputFileName)
 	fromByt, err := json.Marshal(codegenReq)
 	if err != nil {
-		return codegenResp, errors.E(op, err)
+		return
 	}
 	inputFileName, err := writeCLIExtInput(fromByt)
 	if err != nil {
-		return codegenResp, errors.E(op, err)
+		return
 	}
 	actionsCodegenCmd := exec.Command(*c.binPath)
 	args := []string{"actions-codegen", "--input-file", inputFileName, "--output-file", outputFileName}
@@ -146,15 +141,19 @@ func (c *Config) GetActionsCodegen(codegenReq types.ActionsCodegenRequest) (type
 	err = actionsCodegenCmd.Run()
 	c.logger.WithField("command", "actions-codegen").Debugln(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
-		return codegenResp, errors.E(op, fmt.Errorf("%s: %s", err.Error(), stderr.String()))
+		err = errors.Wrap(
+			fmt.Errorf(stderr.String()),
+			err.Error(),
+		)
+		return
 	}
 	tmpByt, err := readCliExtOutput(outputFileName)
 	if err != nil {
-		return codegenResp, errors.E(op, err)
+		return
 	}
 	err = json.Unmarshal(tmpByt, &codegenResp)
 	if err != nil {
-		return codegenResp, errors.E(op, errors.KindBadInput, err)
+		return
 	}
-	return codegenResp, nil
+	return
 }

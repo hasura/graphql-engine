@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
@@ -26,11 +25,10 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		fields       fields
-		wantGolden   string
-		wantErr      bool
-		errAssertion require.ErrorAssertionFunc
+		name       string
+		fields     fields
+		wantGolden string
+		wantErr    bool
 	}{
 		{
 			"get Introspection Schema from hasura/graphql-engine:v1.3.3",
@@ -40,7 +38,6 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 			},
 			"v1.3",
 			false,
-			require.NoError,
 		},
 		{
 			"get Introspection Schema from latest",
@@ -50,7 +47,6 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 			},
 			"latest",
 			false,
-			require.NoError,
 		},
 		{
 			"handles errors gracefully",
@@ -60,18 +56,6 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 			},
 			"latest",
 			true,
-			require.ErrorAssertionFunc(func(tt require.TestingT, e error, i ...interface{}) {
-				err, ok := e.(*errors.Error)
-				require.True(tt, ok)
-				require.Equal(tt, errors.Op("v1graphql.Client.GetIntrospectionSchema"), err.Op)
-				require.Equal(tt, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
-				require.EqualError(tt, err.Err, ` getIntrospectionSchema : 404 
-{
-  "error": "resource does not exist",
-  "path": "$",
-  "code": "not-found"
-}`)
-			}),
 		},
 	}
 	for _, tt := range tests {
@@ -81,8 +65,10 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.GetIntrospectionSchema()
-			tt.errAssertion(t, err)
-			if !tt.wantErr {
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 				wantb, err := ioutil.ReadFile(filepath.Join("testdata", fmt.Sprintf("%s.golden", tt.wantGolden)))
 				require.NoError(t, err)
 				gotb, err := json.MarshalIndent(got, "", "  ")

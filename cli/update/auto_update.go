@@ -1,11 +1,10 @@
 package update
 
 import (
-	"fmt"
 	"io/ioutil"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -26,10 +25,9 @@ func getTimeFromFileIfExists(path string) time.Time {
 }
 
 func writeTimeToFile(path string, inputTime time.Time) error {
-	var op errors.Op = "update.writeTimeToFile"
 	err := ioutil.WriteFile(path, []byte(inputTime.Format(timeLayout)), 0644)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("failed writing current time to file: %w", err))
+		return errors.Wrap(err, "failed writing current time to file")
 	}
 	return nil
 }

@@ -1,8 +1,0 @@
-query MyQuery {
-  Articles {
-    title
-    Author {
-      first_name
-    }
-  }
-}

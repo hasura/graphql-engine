@@ -1,4 +1,3 @@
-{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE PolyKinds #-}
 
 module Data.GADT.Compare.Extended
@@ -8,7 +7,7 @@ module Data.GADT.Compare.Extended
   )
 where
 
-import "dependent-sum" Data.GADT.Compare
+import Data.GADT.Compare
 
 strengthenOrdering :: Ordering -> GOrdering a a
 strengthenOrdering LT = GLT
@@ -17,7 +16,7 @@ strengthenOrdering GT = GGT
 
 infixr 6 `extendGOrdering`
 
-extendGOrdering :: GOrdering a b -> ((a ~ b) => GOrdering c d) -> GOrdering c d
+extendGOrdering :: GOrdering a b -> (a ~ b => GOrdering c d) -> GOrdering c d
 extendGOrdering GLT _ = GLT
 extendGOrdering GEQ x = x
 extendGOrdering GGT _ = GGT

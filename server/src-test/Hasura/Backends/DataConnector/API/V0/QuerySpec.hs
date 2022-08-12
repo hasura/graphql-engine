@@ -1,142 +1,85 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.QuerySpec
-  ( spec,
-    genFieldName,
-    genFieldMap,
-    genField,
-    genFieldValue,
-  )
-where
+module Hasura.Backends.DataConnector.API.V0.QuerySpec (spec) where
 
 import Data.Aeson qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.QQ.Simple (aesonQQ)
-import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.AggregateSpec (genAggregate)
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
-import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression, genRedactionExpressionName, genTargetRedactionExpressions)
-import Hasura.Backends.DataConnector.API.V0.FunctionSpec (genFunctionArgument, genFunctionName)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
-import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genRelationships)
-import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
-import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableTarget)
-import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genHashMap)
+import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
+import Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec qualified as Scalar
+import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Test.Aeson.Utils (genValue, jsonOpenApiProperties, testToFromJSONToSchema)
+import Hedgehog.Range (linear)
+import Test.Aeson.Utils (genKeyMap, genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
 spec :: Spec
 spec = do
   describe "Field" $ do
-    describe "ColumnField"
-      $ testToFromJSONToSchema
-        (ColumnField (ColumnName "my_column_name") (ScalarType "string") (Just $ RedactionExpressionName "RedactionExp0"))
+    describe "ColumnField" $
+      testToFromJSONToSchema
+        (ColumnField $ ColumnName "my_column_name")
         [aesonQQ|
-          { "type": "column",
-            "column": "my_column_name",
-            "column_type": "string",
-            "redaction_expression": "RedactionExp0"
-          }
-        |]
+        { "type": "column",
+          "column": "my_column_name"
+        }
+      |]
     describe "RelationshipField" $ do
-      let query = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
+      let query = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing
       testToFromJSONToSchema
         (RelField $ RelationshipField (RelationshipName "a_relationship") query)
         [aesonQQ|
-          { "type": "relationship",
-            "relationship": "a_relationship",
-            "query": {"fields": {}}
-          }
-        |]
+        { "type": "relationship",
+          "relationship": "a_relationship",
+          "query": {"fields": {}}
+        }
+      |]
     jsonOpenApiProperties genField
 
   describe "Query" $ do
     let query =
           Query
-            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") (ScalarType "string") Nothing)],
-              _qAggregates = Just $ HashMap.fromList [(FieldName "my_aggregate", StarCount)],
-              _qAggregatesLimit = Just 5,
+            { _qFields = Just $ KM.fromList [("my_field_alias", ColumnField $ ColumnName "my_field_name")],
+              _qAggregates = Just $ KM.fromList [("my_aggregate", StarCount)],
               _qLimit = Just 10,
               _qOffset = Just 20,
               _qWhere = Just $ And [],
-              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (mkColumnSelector $ ColumnName "my_column_name") Nothing) Ascending :| [])
+              _qOrderBy = Just [OrderBy (ColumnName "my_column_name") Ascending]
             }
     testToFromJSONToSchema
       query
       [aesonQQ|
-        { "fields": {"my_field_alias": {"type": "column", "column": "my_field_name", "column_type": "string"}},
+        { "fields": {"my_field_alias": {"type": "column", "column": "my_field_name"}},
           "aggregates": { "my_aggregate": { "type": "star_count" } },
-          "aggregates_limit": 5,
           "limit": 10,
           "offset": 20,
           "where": {"type": "and", "expressions": []},
-          "order_by": {
-            "relations": {},
-            "elements": [
-              { "target_path": [],
-                "target": {
-                  "type": "column",
-                  "column": "my_column_name"
-                },
-                "order_direction": "asc"
-              }
-            ]
-          }
+          "order_by": [{"column": "my_column_name", "ordering": "asc"}]
         }
       |]
     jsonOpenApiProperties genQuery
 
-  describe "TableRequest" $ do
+  describe "QueryRequest" $ do
     let queryRequest =
           QueryRequest
-            { _qrTarget = TTable (TargetTable (TableName ["my_table"])),
-              _qrRelationships = [],
-              _qrRedactionExpressions = [],
-              _qrInterpolatedQueries = mempty,
-              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
-              _qrForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
+            { _qrTable = TableName ["my_table"],
+              _qrTableRelationships = [],
+              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing
             }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
-        { "target": {
-            "type": "table",
-            "name": ["my_table"]
-          },
-          "relationships": [],
-          "query": { "fields": {} },
-          "foreach": [
-            { "my_id": { "value": 666, "value_type": "number" } }
-          ]
-        }
-      |]
-    jsonOpenApiProperties genQueryRequest
-
-  describe "FunctionRequest" $ do
-    let queryRequest =
-          QueryRequest
-            { _qrTarget = TFunction (TargetFunction (FunctionName ["my_function"]) []),
-              _qrRelationships = [],
-              _qrRedactionExpressions = [],
-              _qrInterpolatedQueries = mempty,
-              _qrForeach = Nothing,
-              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
-            }
-    testToFromJSONToSchema
-      queryRequest
-      [aesonQQ|
-        { "target": {
-            "type": "function",
-              "name": ["my_function"],
-              "arguments": []
-          },
-          "relationships": [],
-          "query": { "fields": {} }
-        }
+        { "table": ["my_table"],
+          "table_relationships": [],
+          "query": { "fields": {} } }
       |]
     jsonOpenApiProperties genQueryRequest
 
@@ -188,76 +131,45 @@ spec = do
             "aggregates": {} }
         |]
 
-genField :: Gen Field
+genField :: MonadGen m => m Field
 genField =
   Gen.recursive
     Gen.choice
-    [ColumnField <$> genColumnName <*> genScalarType <*> Gen.maybe genRedactionExpressionName]
+    [ColumnField <$> genColumnName]
     [RelField <$> genRelationshipField]
 
-genFieldName :: Gen FieldName
-genFieldName = FieldName <$> genArbitraryAlphaNumText defaultRange
-
-genFieldMap :: Gen value -> Gen (HashMap FieldName value)
-genFieldMap genValue' = genHashMap genFieldName genValue' defaultRange
-
-genRelationshipField :: Gen RelationshipField
+genRelationshipField :: MonadGen m => m RelationshipField
 genRelationshipField =
   RelationshipField
     <$> genRelationshipName
     <*> genQuery
 
-genQuery :: Gen Query
+genQuery :: MonadGen m => m Query
 genQuery =
   Query
-    <$> Gen.maybe (genFieldMap genField)
-    <*> Gen.maybe (genFieldMap genAggregate)
-    <*> Gen.maybe (Gen.int defaultRange)
-    <*> Gen.maybe (Gen.int defaultRange)
-    <*> Gen.maybe (Gen.int defaultRange)
+    <$> Gen.maybe (genKeyMap genField)
+    <*> Gen.maybe (genKeyMap genAggregate)
+    <*> Gen.maybe (Gen.int (linear 0 5))
+    <*> Gen.maybe (Gen.int (linear 0 5))
     <*> Gen.maybe genExpression
-    <*> Gen.maybe genOrderBy
+    <*> Gen.maybe (Gen.nonEmpty (linear 0 5) genOrderBy)
 
-genQueryRequest :: Gen QueryRequest
-genQueryRequest = genTableRequest <|> genFunctionRequest -- NOTE: We should probably weight tables more than functions...
-
-genFunctionTarget :: Gen Target
-genFunctionTarget =
-  TFunction
-    <$> ( TargetFunction
-            <$> genFunctionName
-            <*> Gen.list defaultRange genFunctionArgument
-        )
-
-genFunctionRequest :: Gen QueryRequest
-genFunctionRequest =
+genQueryRequest :: MonadGen m => m QueryRequest
+genQueryRequest =
   QueryRequest
-    <$> genFunctionTarget
-    <*> Gen.set defaultRange genRelationships
-    <*> Gen.set defaultRange genTargetRedactionExpressions
-    <*> pure mempty
+    <$> genTableName
+    <*> Gen.list (linear 0 5) genTableRelationships
     <*> genQuery
-    <*> pure Nothing
 
-genTableRequest :: Gen QueryRequest
-genTableRequest =
-  QueryRequest
-    <$> genTableTarget
-    <*> Gen.set defaultRange genRelationships
-    <*> Gen.set defaultRange genTargetRedactionExpressions
-    <*> pure mempty
-    <*> genQuery
-    <*> Gen.maybe (Gen.nonEmpty defaultRange (genHashMap genColumnName genScalarValue defaultRange))
-
-genFieldValue :: Gen FieldValue
+genFieldValue :: MonadGen m => m FieldValue
 genFieldValue =
   Gen.recursive
     Gen.choice
     [mkColumnFieldValue <$> genValue]
     [mkRelationshipFieldValue <$> genQueryResponse]
 
-genQueryResponse :: Gen QueryResponse
+genQueryResponse :: MonadGen m => m QueryResponse
 genQueryResponse =
   QueryResponse
-    <$> Gen.maybe (Gen.list defaultRange (genFieldMap genFieldValue))
-    <*> Gen.maybe (genFieldMap genValue)
+    <$> Gen.maybe (Gen.list (linear 0 5) (genKeyMap genFieldValue))
+    <*> Gen.maybe (genKeyMap Scalar.genValue)

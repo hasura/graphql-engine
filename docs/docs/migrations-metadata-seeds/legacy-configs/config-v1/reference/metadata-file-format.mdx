@@ -9,12 +9,12 @@ keywords:
   - file format
 ---
 
-# Metadata File Format Reference (config v1)
+# Metadata file format reference (config v1)
 
 ## Introduction
 
-The Metadata file that is exported from the server is a JSON/YAML
-representation of the Hasura Metadata stored in the `hdb_catalog` schema
+The metadata file that is exported from the server is a JSON/YAML
+representation of the Hasura metadata stored in the `hdb_catalog` schema
 on the Postgres database.
 
 The top level keys will be the following arrays:
@@ -25,11 +25,11 @@ remote_schemas: []
 tables: []
 ```
 
-Depending on the tables tracked, Remote Schemas and custom functions created,
+Depending on the tables tracked, remote schemas and functions created,
 these keys will have elements inside them.
 
-The `table` will have permission rules, relationships and Event Triggers
-defined for each table. Here is an example Metadata file:
+The `table` will have permission rules, relationships and event triggers
+defined for each table. Here is an example metadata file:
 
 ## metadata.yaml
 
@@ -84,9 +84,9 @@ tables:
     event_triggers:
       - definition:
           delete:
-            columns: '*'
+            columns: "*"
           insert:
-            columns: '*'
+            columns: "*"
           update:
             columns:
               - id
@@ -131,4 +131,4 @@ tables:
 ```
 
 The schema for this file will mostly correspond to the table structure
-of the [Metadata catalogue](/migrations-metadata-seeds/legacy-configs/config-v1/reference/metadata-schema.mdx).
+of the [metadata catalogue](/migrations-metadata-seeds/legacy-configs/config-v1/reference/metadata-schema.mdx).

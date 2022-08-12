@@ -2,7 +2,7 @@
 --
 -- Used to fill up the enum values field of 'Hasura.RQL.Types.Table.TableCoreInfoG'.
 --
--- See 'Hasura.Eventing.Backend'.
+-- See 'Hasura.RQL.Types.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.Table
   ( fetchAndValidateEnumValues,
   )
@@ -10,24 +10,24 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as Map
 import Data.List (delete)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended
-import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Utils
-import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data EnumTableIntegrityError (b :: BackendType)
@@ -49,9 +49,8 @@ fetchAndValidateEnumValues ::
   [RawColumnInfo ('Postgres pgKind)] ->
   m (Either QErr EnumValues)
 fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos =
-  runExceptT
-    $ either (throw400 ConstraintViolation . showErrors) pure
-    =<< runValidateT fetchAndValidate
+  runExceptT $
+    either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
   where
     fetchAndValidate ::
       (MonadIO n, MonadBaseControl IO n, MonadValidate [EnumTableIntegrityError ('Postgres pgKind)] n) =>
@@ -63,9 +62,9 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
         Nothing -> refute mempty
         Just primaryKeyColumn -> do
           result <-
-            runPgSourceReadTx pgSourceConfig
-              $ runValidateT
-              $ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn
+            runPgSourceReadTx pgSourceConfig $
+              runValidateT $
+                fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn
           case result of
             Left e -> (refute . pure . EnumTablePostgresError . qeError) e
             Right (Left vErrs) -> refute vErrs
@@ -75,7 +74,7 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
           Nothing -> refute [EnumTableMissingPrimaryKey]
           Just primaryKey -> case _pkColumns primaryKey of
             column NESeq.:<|| Seq.Empty -> case rciType column of
-              RawColumnTypeScalar PGText -> pure column
+              PGText -> pure column
               _ -> refute [EnumTableNonTextualPrimaryKey column]
             columns -> refute [EnumTableMultiColumnPrimaryKey $ map rciName (toList columns)]
 
@@ -84,7 +83,7 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
           case nonPrimaryKeyColumns of
             [] -> pure Nothing
             [column] -> case rciType column of
-              RawColumnTypeScalar PGText -> pure $ Just column
+              PGText -> pure $ Just column
               _ -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
             columns -> dispute [EnumTableTooManyColumns $ map rciName columns] $> Nothing
 
@@ -110,11 +109,8 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
                   value NE.:| [] -> "value " <> value <<> " is not a valid GraphQL enum value name"
                   value2 NE.:| [value1] -> "values " <> value1 <<> " and " <> value2 <<> pluralString
                   lastValue NE.:| otherValues ->
-                    "values "
-                      <> commaSeparated (reverse otherValues)
-                      <> ", and "
-                      <> lastValue
-                      <<> pluralString
+                    "values " <> commaSeparated (reverse otherValues) <> ", and "
+                      <> lastValue <<> pluralString
              in "the " <> valuesString
           EnumTableNonTextualCommentColumn colInfo -> typeMismatch "comment column" colInfo PGText
           EnumTableTooManyColumns cols ->
@@ -125,15 +121,8 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
               <> ")"
           where
             typeMismatch description colInfo expected =
-              let RawColumnTypeScalar scalarType = rciType @('Postgres pgKind) colInfo
-               in "the table’s "
-                    <> description
-                    <> " ("
-                    <> rciName colInfo
-                    <<> ") must have type "
-                    <> expected
-                    <<> ", not type "
-                    <>> scalarType
+              "the table’s " <> description <> " (" <> rciName colInfo <<> ") must have type "
+                <> expected <<> ", not type " <>> rciType colInfo
 
 fetchEnumValuesFromDb ::
   forall pgKind m.
@@ -146,16 +135,16 @@ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
   let nullExtr = Extractor SENull Nothing
       commentExtr = maybe nullExtr (mkExtr . rciName) maybeCommentColumn
       query =
-        PG.fromBuilder
-          $ toSQL
+        Q.fromBuilder $
+          toSQL
             mkSelect
               { selFrom = Just $ mkSimpleFromExp tableName,
                 selExtr = [mkExtr (rciName primaryKeyColumn), commentExtr]
               }
-  rawEnumValues <- liftTx $ PG.withQE defaultTxErrorHandler query () True
+  rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
   when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
-  let enumValues = flip map rawEnumValues
-        $ \(enumValueText, comment) ->
+  let enumValues = flip map rawEnumValues $
+        \(enumValueText, comment) ->
           case mkValidEnumValueName enumValueText of
             Nothing -> Left enumValueText
             Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
@@ -163,7 +152,7 @@ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
       validEnums = rights enumValues
   case NE.nonEmpty badNames of
     Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
-    Nothing -> pure $ HashMap.fromList validEnums
+    Nothing -> pure $ Map.fromList validEnums
   where
     -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
     mkValidEnumValueName name =

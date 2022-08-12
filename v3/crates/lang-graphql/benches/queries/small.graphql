@@ -1,4 +1,0 @@
-query MyQuery {
-  field1
-  field2
-}

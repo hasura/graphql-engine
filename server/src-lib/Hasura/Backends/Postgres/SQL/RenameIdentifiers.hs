@@ -20,7 +20,6 @@ module Hasura.Backends.Postgres.SQL.RenameIdentifiers
   ( -- * Exported API
     renameIdentifiers,
     renameIdentifiersSelectWith,
-    renameIdentifiersSelectWithTopLevelCTE,
   )
 where
 
@@ -30,7 +29,7 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types (Identifier (..), TableIdentifier (..), identifierToTableIdentifier, tableIdentifierToIdentifier)
+import Hasura.Backends.Postgres.SQL.Types (Identifier (..))
 import Hasura.Prelude
 
 {- Note [Postgres identifier length limitations]
@@ -50,10 +49,6 @@ renameIdentifiers = renameTablesAndLongIdentifiers
 -- | prefix table names with undescores and rename long identifiers.
 renameIdentifiersSelectWith :: S.SelectWithG S.Select -> S.SelectWithG S.Select
 renameIdentifiersSelectWith = renameTablesAndLongIdentifiersWith
-
--- | prefix table names with undescores and rename long identifiers.
-renameIdentifiersSelectWithTopLevelCTE :: S.SelectWithG S.TopLevelCTE -> S.SelectWithG S.TopLevelCTE
-renameIdentifiersSelectWithTopLevelCTE = renameTablesAndLongIdentifiersWithCTEs
 
 ------------------------------------------------
 
@@ -84,22 +79,20 @@ renameIdentifiersSelectWithTopLevelCTE = renameTablesAndLongIdentifiersWithCTEs
 --   We assume (rightly) that identifiers with names longer than 63 characters are not
 --   database table columns, and are made by us using aliases, so we should be free to
 --   rename them.
-prefixHash :: Text -> Text
-prefixHash name =
-  if T.length name > 63
-    then
-      let hash = T.decodeUtf8 . Base16.encode . MD5.hash . T.encodeUtf8 $ name
-       in "md5_" <> hash <> "_" <> name
-    else name
-
-identifierPrefixHash :: Identifier -> Identifier
-identifierPrefixHash (Identifier name) = Identifier $ prefixHash name
+prefixHash :: Identifier -> Identifier
+prefixHash (Identifier name) =
+  Identifier $
+    if T.length name > 63
+      then
+        let hash = T.decodeUtf8 . Base16.encode . MD5.hash . T.encodeUtf8 $ name
+         in "md5_" <> hash <> "_" <> name
+      else name
 
 ------------------------------------------------
 
 -- * Prefix table names with underscore
 
--- \$prefix_md5_implementation
+-- $prefix_md5_implementation
 
 -- | Prefix table names with underscores to avoid issues where column names and tables conflict.
 --   This can happen because we give columns and tables the name @root@ for some reason,
@@ -116,9 +109,6 @@ renameTablesAndLongIdentifiers = runMyState . uSelect
 renameTablesAndLongIdentifiersWith :: S.SelectWithG S.Select -> S.SelectWithG S.Select
 renameTablesAndLongIdentifiersWith = runMyState . uSelectWith
 
-renameTablesAndLongIdentifiersWithCTEs :: S.SelectWithG S.TopLevelCTE -> S.SelectWithG S.TopLevelCTE
-renameTablesAndLongIdentifiersWithCTEs = runMyState . uSelectWithCTEs
-
 ------------------------------------------------
 
 -- ** Data types
@@ -131,7 +121,7 @@ noTables = TableNames mempty
 
 -- | The tables in scope
 newtype TableNames = TableNames
-  { _tables :: Set.HashSet TableIdentifier
+  { _tables :: Set.HashSet Identifier
   }
   deriving (Show, Eq)
 
@@ -142,32 +132,25 @@ type MyState = State TableNames
 -- ** Utilities
 
 -- | attach a prefix to an identifier
-mkPrefixedTableName :: Text -> Text
-mkPrefixedTableName identifier = prefixHash $ "_" <> identifier
+mkPrefixedName :: Identifier -> Identifier
+mkPrefixedName identifier = prefixHash $ Identifier "_" <> identifier
 
 -- | Add the alias to the set and return a prefixed alias.
 addAliasAndPrefixHash :: S.TableAlias -> MyState S.TableAlias
-addAliasAndPrefixHash tableAlias@(S.TableAlias identifier) = do
+addAliasAndPrefixHash (S.TableAlias identifier) = do
   tables <- _tables <$> get
-  put $ TableNames $ Set.insert (S.tableAliasToIdentifier tableAlias) tables
-  pure $ S.TableAlias $ Identifier $ mkPrefixedTableName (getIdenTxt identifier)
+  put $ TableNames $ Set.insert identifier tables
+  pure $ S.TableAlias $ mkPrefixedName identifier
 
 -- | Search for the identifier in the table names set and return
 --   a prefixed identifier if found, or the original identifier
 --   if not found in the set.
 getTableNameAndPrefixHash :: Identifier -> MyState Identifier
-getTableNameAndPrefixHash identifier =
-  tableIdentifierToIdentifier <$> getTableIdentifierAndPrefixHash (identifierToTableIdentifier identifier)
-
--- | Search for the table identifier in the table names set and return
---   a prefixed table identifier if found, or the original table identifier
---   if not found in the set.
-getTableIdentifierAndPrefixHash :: TableIdentifier -> MyState TableIdentifier
-getTableIdentifierAndPrefixHash identifier = do
+getTableNameAndPrefixHash identifier = do
   tables <- _tables <$> get
-  pure
-    $ if Set.member identifier tables
-      then TableIdentifier $ mkPrefixedTableName (unTableIdentifier identifier)
+  pure $
+    if Set.member identifier tables
+      then mkPrefixedName identifier
       else identifier
 
 -- | Run an action that might change the tables names set
@@ -184,36 +167,13 @@ restoringTables action = do
 
 -- ** Algorithm
 
--- | We apply the renaming algorithm to @SELECT@ parts and ignore the others, as we don't
---   generally generate long identifiers on mutations.
-uSelectWithCTEs :: S.SelectWithG S.TopLevelCTE -> MyState (S.SelectWithG S.TopLevelCTE)
-uSelectWithCTEs (S.SelectWith ctes baseSelect) =
-  S.SelectWith
-    <$> forM
-      ctes
-      ( \(alias, topLevelCTE) ->
-          (,)
-            <$> addAliasAndPrefixHash alias
-            <*> ( case topLevelCTE of
-                    S.CTESelect select -> S.CTESelect <$> restoringTables (uSelect select)
-                    other -> pure other
-                )
-      )
-    <*> uSelect baseSelect
-
 -- | We run the algorithm on each CTE separately and discard the table names set,
 --   then we run the algorithm on the main select and return that result
 --   (with the table names found in scope).
 uSelectWith :: S.SelectWithG S.Select -> MyState (S.SelectWithG S.Select)
 uSelectWith (S.SelectWith ctes baseSelect) =
   S.SelectWith
-    <$> forM
-      ctes
-      ( \(alias, sel) ->
-          (,)
-            <$> addAliasAndPrefixHash alias
-            <*> restoringTables (uSelect sel)
-      )
+    <$> forM ctes (\(alias, sel) -> (prefixHashTableAlias alias,) <$> restoringTables (uSelect sel))
     <*> uSelect baseSelect
 
 -- | We go in order of each component in the select, starting with
@@ -226,26 +186,24 @@ uSelect (S.Select ctes distinctM extrs fromM whereM groupByM havingM orderByM li
   newCTEs <- for ctes $ \(alias, cte) ->
     (,)
       <$> addAliasAndPrefixHash alias
-      <*> case cte of
-        S.ICTESelect select -> S.ICTESelect <$> uSelect select
-        S.ICTEUnsafeRawSQL q -> S.ICTEUnsafeRawSQL <$> traverse uSqlExp q
+      <*> uSelect cte
 
   -- Potentially introduces a new alias so it should go before the rest.
   newFromM <- mapM uFromExp fromM
 
-  newWhereM <- forM whereM
-    $ \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
-  newGroupByM <- forM groupByM
-    $ \(S.GroupByExp l) -> S.GroupByExp <$> mapM uSqlExp l
-  newHavingM <- forM havingM
-    $ \(S.HavingExp be) -> S.HavingExp <$> uBoolExp be
+  newWhereM <- forM whereM $
+    \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
+  newGroupByM <- forM groupByM $
+    \(S.GroupByExp l) -> S.GroupByExp <$> mapM uSqlExp l
+  newHavingM <- forM havingM $
+    \(S.HavingExp be) -> S.HavingExp <$> uBoolExp be
   newOrderByM <- mapM uOrderBy orderByM
   newDistinctM <- mapM uDistinct distinctM
   newExtrs <- mapM uExtractor extrs
   newLimitM <- mapM uLimit limitM
   newOffsetM <- mapM uOffset offsetM
-  pure
-    $ S.Select
+  pure $
+    S.Select
       newCTEs
       newDistinctM
       newExtrs
@@ -280,7 +238,7 @@ uFromItem fromItem = case fromItem of
   S.FISimple qualifiedTable maybeAlias ->
     S.FISimple qualifiedTable <$> mapM addAliasAndPrefixHash maybeAlias
   S.FIIdentifier identifier ->
-    S.FIIdentifier <$> getTableIdentifierAndPrefixHash identifier
+    S.FIIdentifier <$> getTableNameAndPrefixHash identifier
   S.FIFunc funcExp ->
     S.FIFunc <$> uFunctionExp funcExp
   -- We transform the arguments and result table alias
@@ -306,9 +264,8 @@ uFromItem fromItem = case fromItem of
     newAls <- addAliasAndPrefixHash alias
     pure $ S.FISelectWith isLateral newSelectWith newAls
   S.FIValues (S.ValuesExp tups) alias mCols -> do
-    newValExp <- fmap S.ValuesExp
-      $ forM tups
-      $ \(S.TupleExp ts) ->
+    newValExp <- fmap S.ValuesExp $
+      forM tups $ \(S.TupleExp ts) ->
         S.TupleExp <$> mapM uSqlExp ts
     pure $ S.FIValues newValExp (prefixHashTableAlias alias) (fmap (map prefixHashColumnAlias) mCols)
   -- _Note_: Potentially introduces a new alias
@@ -351,7 +308,7 @@ uJoinExp (S.JoinExpr left joinType right joinCond) = do
 uJoinCond :: S.JoinCond -> MyState S.JoinCond
 uJoinCond joinCond = case joinCond of
   S.JoinOn be -> S.JoinOn <$> uBoolExp be
-  S.JoinUsing cols -> pure $ S.JoinUsing $ map identifierPrefixHash cols
+  S.JoinUsing cols -> pure $ S.JoinUsing $ map prefixHash cols
 
 -- | Transform boolean expression.
 --
@@ -391,12 +348,13 @@ uSqlExp =
     S.SEUnsafe t -> pure $ S.SEUnsafe t
     S.SESelect s -> S.SESelect <$> uSelect s
     S.SEStar qual -> S.SEStar <$> traverse uQual qual
-    S.SEIdentifier identifier -> pure $ S.SEIdentifier $ identifierPrefixHash identifier
+    S.SEIdentifier identifier -> pure $ S.SEIdentifier $ prefixHash identifier
     -- this is for row expressions
     S.SERowIdentifier identifier -> S.SERowIdentifier <$> getTableNameAndPrefixHash identifier
     -- we rename the table alias if needed
-    S.SEQIdentifier qIdentifier -> do
-      S.SEQIdentifier <$> uQIdentifier qIdentifier
+    S.SEQIdentifier (S.QIdentifier qualifier identifier) -> do
+      newQualifier <- uQual qualifier
+      pure $ S.SEQIdentifier $ S.QIdentifier newQualifier $ prefixHash identifier
     S.SEFnApp fn args orderBy ->
       S.SEFnApp fn
         <$> mapM uSqlExp args
@@ -422,18 +380,14 @@ uSqlExp =
       S.SEArrayIndex <$> uSqlExp arrayExp <*> uSqlExp indexExp
     S.SETuple (S.TupleExp l) ->
       S.SETuple . S.TupleExp <$> mapM uSqlExp l
-    S.SECount cty -> S.SECount <$> traverse uQIdentifier cty
+    S.SECount cty -> pure $ S.SECount cty
     S.SENamedArg arg val -> S.SENamedArg arg <$> uSqlExp val
     S.SEFunction funcExp -> S.SEFunction <$> uFunctionExp funcExp
   where
-    uQIdentifier (S.QIdentifier qualifier identifier) = do
-      newQualifier <- uQual qualifier
-      pure $ S.QIdentifier newQualifier $ Identifier $ prefixHash $ getIdenTxt identifier
-
     -- rename the table alias if needed
     uQual = \case
       S.QualifiedIdentifier identifier typeAnnotation ->
-        S.QualifiedIdentifier <$> getTableIdentifierAndPrefixHash identifier <*> pure typeAnnotation
+        S.QualifiedIdentifier <$> getTableNameAndPrefixHash identifier <*> pure typeAnnotation
       -- refers to a database table
       S.QualTable t -> pure $ S.QualTable t
       S.QualVar t -> pure $ S.QualVar t
@@ -451,8 +405,8 @@ uOrderBy (S.OrderByExp ordByItems) =
 
 -- | Prefix a table alias with a hash if needed.
 prefixHashTableAlias :: S.TableAlias -> S.TableAlias
-prefixHashTableAlias (S.TableAlias identifier) = S.TableAlias (Identifier $ prefixHash $ getIdenTxt identifier)
+prefixHashTableAlias (S.TableAlias identifier) = S.TableAlias (prefixHash identifier)
 
 -- | Prefix a column alias with a hash if needed.
 prefixHashColumnAlias :: S.ColumnAlias -> S.ColumnAlias
-prefixHashColumnAlias (S.ColumnAlias identifier) = S.ColumnAlias (Identifier $ prefixHash $ getIdenTxt identifier)
+prefixHashColumnAlias (S.ColumnAlias identifier) = S.ColumnAlias (prefixHash identifier)

@@ -34,10 +34,10 @@
   url: /v1/query
   status: 400
   response:
-    code: dependency-error
-    error: 'cannot drop due to the following dependent objects: relationship article.author
-      in source "default"'
     path: $.args
+    error: 'cannot drop due to the following dependent objects : relationship article.author
+      in source "default"'
+    code: dependency-error
   query:
     type: untrack_table
     args:
@@ -48,10 +48,10 @@
   url: /v1/query
   status: 400
   response:
-    code: dependency-error
-    error: 'cannot drop due to the following dependent objects: relationship author.articles
-      in source "default"'
     path: $.args
+    error: 'cannot drop due to the following dependent objects : relationship author.articles
+      in source "default"'
+    code: dependency-error
   query:
     type: untrack_table
     args:

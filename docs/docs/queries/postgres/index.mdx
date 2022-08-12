@@ -8,23 +8,17 @@ keywords:
 slug: index
 ---
 
-# Postgres: GraphQL Queries
+# Postgres: GraphQL queries
 
 ## Introduction
 
 GraphQL queries are used to fetch data from the server.
 
-Hasura GraphQL Engine auto-generates queries as part of the GraphQL schema from your Postgres schema model. It generates
+Hasura GraphQL engine auto-generates queries as part of the GraphQL schema from your Postgres schema model. It generates
 a range of possible queries and operators that also work with relationships defined in your SQL schema.
 
-All tables of the database tracked by the GraphQL Engine can be queried over the GraphQL endpoint. If you have a tracked
+All tables of the database tracked by the GraphQL engine can be queried over the GraphQL endpoint. If you have a tracked
 table in your database, its query field is added as a nested field under the `query_root` root level type.
-
-:::info Postgres Compatibility
-
-Hasura works with most [Postgres compatible flavours](/databases/postgres/index.mdx#postgres-compatible-flavors).
-
-:::
 
 ## Auto-generated query field schema
 
@@ -56,15 +50,15 @@ If a table is not in the `public` Postgres schema, the query field will be of th
 
 ## Exploring queries
 
-You can explore the entire schema and the available queries using the `GraphiQL` interface in the Hasura Console.
+You can explore the entire schema and the available queries using the `GraphiQL` interface in the Hasura console.
 
-Let’s take a look at the different queries you can run using the Hasura GraphQL Engine. We’ll use examples based on a
+Let’s take a look at the different queries you can run using the Hasura GraphQL engine. We’ll use examples based on a
 typical author/article schema for reference.
 
 - [Simple object queries](/queries/postgres/simple-object-queries.mdx)
 - [Nested object queries](/queries/postgres/nested-object-queries.mdx)
 - [Aggregation queries](/queries/postgres/aggregation-queries.mdx)
-- [Filter query results / search queries](/queries/postgres/filters/index.mdx)
+- [Filter query results / search queries](/queries/postgres/query-filters.mdx)
 - [Sort query results](/queries/postgres/sorting.mdx)
 - [Distinct query results](/queries/postgres/distinct-queries.mdx)
 - [Paginate query results](/queries/postgres/pagination.mdx)

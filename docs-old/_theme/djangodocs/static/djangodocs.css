@@ -1,0 +1,39 @@
+/*** basic styles ***/
+dd { margin-left:15px; }
+p, ul, dl { margin-top:.6em; margin-bottom:1em; padding-bottom: 0.1em;}
+caption { font-size:1em; font-weight:bold; margin-top:0.5em; margin-bottom:0.5em; margin-left: 2px; text-align: center; }
+strong { font-weight: bold; }
+em { font-style: italic; }
+
+/*** lists ***/
+ul { padding-left:30px; }
+ol { padding-left:30px; }
+ol.arabic li { list-style-type: decimal; }
+ul li { list-style-type:square; margin-bottom:.4em; }
+ul ul li { list-style-type:disc; }
+ul ul ul li { list-style-type:circle; }
+ol li { margin-bottom: .4em; }
+ul ul { padding-left:1.2em; }
+ul ul ul { padding-left:1em; }
+dt { font-weight:bold; margin-top:.5em; font-size:1.1em; }
+dd { margin-bottom:.8em; }
+
+/*** tables ***/
+table { margin-bottom: 1em; width: 100%; }
+table.docutils td p { margin-top:0; margin-bottom:.5em; }
+table.docutils td, table.docutils th { border-bottom:1px solid #dfdfdf; padding:10px 10px;}
+table.docutils thead th { border-bottom:2px solid #dfdfdf; text-align:left; font-weight: bold; white-space: nowrap; }
+table.docutils thead th p { margin: 0; padding: 0; }
+table.docutils { border-collapse:collapse; border: 1px solid #CFE3DC;}
+
+/*** versionadded/changes ***/
+ div.deprecated { color:#555; }
+
+/*** p-links ***/
+a.headerlink { color: #c60f0f; font-size: 0.8em; padding: 0 4px 0 4px; text-decoration: none; visibility: hidden; }
+h1:hover > a.headerlink, h2:hover > a.headerlink, h3:hover > a.headerlink, h4:hover > a.headerlink, h5:hover > a.headerlink, h6:hover > a.headerlink, dt:hover > a.headerlink { visibility: visible; }
+
+/*** page-specific overrides ***/
+div#contents ul { margin-bottom: 0;}
+div#contents ul li { margin-bottom: 0;}
+div#contents ul ul li { margin-top: 0.3em;}

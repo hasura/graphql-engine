@@ -9,7 +9,7 @@ module Hasura.Backends.MSSQL.FromIr.Expression
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as HM
 import Hasura.Backends.MSSQL.FromIr
   ( Error (UnsupportedOpExpG),
     FromIr,
@@ -21,9 +21,9 @@ import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
+import Hasura.SQL.Backend
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --
@@ -51,25 +51,25 @@ fromGBoolExp =
       selectFrom <- lift (aliasQualifiedTable _geTable)
       scopedTo selectFrom $ do
         whereExpression <- fromGBoolExp _geWhere
-        pure
-          $ ExistsExpression
-          $ emptySelect
-            { selectOrderBy = Nothing,
-              selectProjections =
-                [ ExpressionProjection
-                    ( Aliased
-                        { aliasedThing = trueExpression,
-                          aliasedAlias = existsFieldName
-                        }
-                    )
-                ],
-              selectFrom = Just selectFrom,
-              selectJoins = mempty,
-              selectWhere = Where [whereExpression],
-              selectTop = NoTop,
-              selectFor = NoFor,
-              selectOffset = Nothing
-            }
+        pure $
+          ExistsExpression $
+            emptySelect
+              { selectOrderBy = Nothing,
+                selectProjections =
+                  [ ExpressionProjection
+                      ( Aliased
+                          { aliasedThing = trueExpression,
+                            aliasedAlias = existsFieldName
+                          }
+                      )
+                  ],
+                selectFrom = Just selectFrom,
+                selectJoins = mempty,
+                selectWhere = Where [whereExpression],
+                selectTop = NoTop,
+                selectFor = NoFor,
+                selectOffset = Nothing
+              }
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --
@@ -81,47 +81,34 @@ fromAnnBoolExpFld ::
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    IR.AVColumn columnInfo redactionExp opExpGs -> do
-      -- TODO(redactionExp): Deal with the redaction expression
+    IR.AVColumn columnInfo opExpGs -> do
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
-      potentiallyRedacted redactionExp (AndExpression expressions)
-    IR.AVRemoteRelationship _ -> error "fromAnnBoolExpFld RemoteRelationship"
-    IR.AVRelationship IR.RelInfo {riMapping = IR.RelMapping mapping, riTarget = target} (IR.RelationshipFilters tablePerm annBoolExp) -> do
-      case target of
-        IR.RelTargetNativeQuery _ -> error "fromAnnBoolExpFld RelTargetNativeQuery"
-        IR.RelTargetTable table -> do
-          selectFrom <- lift (aliasQualifiedTable table)
-          mappingExpression <- translateMapping selectFrom mapping
-          whereExpression <- scopedTo selectFrom (fromGBoolExp (IR.BoolAnd [tablePerm, annBoolExp]))
-          pure
-            ( ExistsExpression
-                emptySelect
-                  { selectOrderBy = Nothing,
-                    selectProjections =
-                      [ ExpressionProjection
-                          ( Aliased
-                              { aliasedThing = trueExpression,
-                                aliasedAlias = existsFieldName
-                              }
-                          )
-                      ],
-                    selectFrom = Just selectFrom,
-                    selectJoins = mempty,
-                    selectWhere = Where (mappingExpression <> [whereExpression]),
-                    selectTop = NoTop,
-                    selectFor = NoFor,
-                    selectOffset = Nothing
-                  }
-            )
+      pure (AndExpression expressions)
+    IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+      selectFrom <- lift (aliasQualifiedTable table)
+      mappingExpression <- translateMapping selectFrom mapping
+      whereExpression <- scopedTo selectFrom (fromGBoolExp annBoolExp)
+      pure
+        ( ExistsExpression
+            emptySelect
+              { selectOrderBy = Nothing,
+                selectProjections =
+                  [ ExpressionProjection
+                      ( Aliased
+                          { aliasedThing = trueExpression,
+                            aliasedAlias = existsFieldName
+                          }
+                      )
+                  ],
+                selectFrom = Just selectFrom,
+                selectJoins = mempty,
+                selectWhere = Where (mappingExpression <> [whereExpression]),
+                selectTop = NoTop,
+                selectFor = NoFor,
+                selectOffset = Nothing
+              }
+        )
   where
-    potentiallyRedacted :: IR.AnnRedactionExp 'MSSQL Expression -> Expression -> ReaderT EntityAlias FromIr Expression
-    potentiallyRedacted redactionExp ex = do
-      case redactionExp of
-        IR.NoRedaction -> pure ex
-        IR.RedactIfFalse p -> do
-          condExp <- fromGBoolExp p
-          pure $ AndExpression [condExp, ex]
-
     -- Translate a relationship field mapping into column equality comparisons.
     translateMapping ::
       From ->
@@ -139,7 +126,7 @@ fromAnnBoolExpFld =
                   (ColumnExpression remoteFieldName)
               )
         )
-        . HashMap.toList
+        . HM.toList
 
 -- | Scope a translation action to the table bound in a FROM clause.
 scopedTo :: From -> ReaderT EntityAlias FromIr a -> ReaderT EntityAlias FromIr a
@@ -172,10 +159,10 @@ fromOpExpG columnInfo op = do
   case op of
     IR.ANISNULL -> pure $ TSQL.IsNullExpression column
     IR.ANISNOTNULL -> pure $ TSQL.IsNotNullExpression column
-    IR.AEQ IR.NullableComparison val -> pure $ nullableBoolEquality column val
-    IR.AEQ IR.NonNullableComparison val -> pure $ OpExpression TSQL.EQ' column val
-    IR.ANE IR.NullableComparison val -> pure $ nullableBoolInequality column val
-    IR.ANE IR.NonNullableComparison val -> pure $ OpExpression TSQL.NEQ' column val
+    IR.AEQ False val -> pure $ nullableBoolEquality column val
+    IR.AEQ True val -> pure $ OpExpression TSQL.EQ' column val
+    IR.ANE False val -> pure $ nullableBoolInequality column val
+    IR.ANE True val -> pure $ OpExpression TSQL.NEQ' column val
     IR.AGT val -> pure $ OpExpression TSQL.GT column val
     IR.ALT val -> pure $ OpExpression TSQL.LT column val
     IR.AGTE val -> pure $ OpExpression TSQL.GTE column val
@@ -193,14 +180,15 @@ fromOpExpG columnInfo op = do
       ASTTouches val -> pure $ TSQL.STOpExpression TSQL.STTouches column val
       ASTWithin val -> pure $ TSQL.STOpExpression TSQL.STWithin column val
     -- As of March 2021, only geometry/geography casts are supported
-    IR.ACast _casts -> refute (pure (UnsupportedOpExpG op))
+    IR.ACast _casts -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+
     -- We do not yet support column names in permissions
-    IR.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    IR.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    IR.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    IR.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    IR.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
-    IR.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    IR.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    IR.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    IR.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    IR.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    IR.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    IR.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

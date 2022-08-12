@@ -2,7 +2,6 @@
 sidebar_label: Relay schema
 sidebar_position: 12
 description: Using Hasura's Relay API
-sidebar_class_name: beta-tag
 keywords:
   - hasura
   - docs
@@ -13,18 +12,14 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Postgres: Relay Schema
-
-<div className="badge-container">
-  <div className="badge badge-gray heading-badge">Beta</div>
-</div>
+# Postgres: Relay schema
 
 ## Introduction
 
-The Hasura GraphQL Engine serves a [Relay](https://relay.dev/) schema for Postgres tables which have a primary key
+The Hasura GraphQL engine serves a [Relay](https://relay.dev/) schema for Postgres tables which have a primary key
 defined. The Relay schema can be accessed through the `/v1beta1/relay` endpoint.
 
-<Thumbnail src="/img/schema/relay.png" alt="Relay API toggle" width="1200px" />
+<Thumbnail src='/img/schema/relay.png' alt='Relay API toggle' width='1200px' />
 
 :::tip Supported from
 
@@ -87,7 +82,7 @@ According to the spec, the server must provide:
 
 :::info Note
 
-Check out this [example repo](https://github.com/hasura/sample-apps/tree/main/react-relay) to
+Check out this [example repo](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/react-relay) to
 see how to set up pagination with Hasura and Relay.
 
 :::
@@ -99,7 +94,7 @@ type in the Relay schema should implement the `Node` interface to provide
 [global object identification](https://relay.dev/graphql/objectidentification.htm).
 
 To identify each row in a table, the `id` field value is encoded with table information (schema and name) and primary
-key column values. The GraphQL Engine uses `base64` encoded JSON string and the JSON schema looks as follows:
+key column values. The GraphQL engine uses `base64` encoded JSON string and the JSON schema looks as follows:
 
 `[<version-integer>, "<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]`
 
@@ -128,8 +123,8 @@ WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgIjI5NmQzMGIxLTQ3NGQtNDAxMS1hOTA3LTI3MDE5OTJiMDRj
 ## Exporting the Relay schema
 
 You can export the Relay schema in the same way as you can
-[export the GraphQL schema](/schema/common-patterns/export-graphql-schema.mdx). But instead of the GraphQL endpoint, you
-can specify the Relay endpoint, which will end in `/v1beta1/relay`.
+[export the GraphQL schema](/guides/export-graphql-schema.mdx). But instead of the GraphQL endpoint, you can specify the
+Relay endpoint, which will end in `/v1beta1/relay`.
 
 ## Limitations
 
@@ -140,6 +135,6 @@ Persisted queries will be supported soon.
 
 :::info Note
 
-Currently, Hasura's Relay schema doesn't expose Remote Schemas or actions. This will be fixed in future releases.
+Currently, Hasura's Relay schema doesn't expose remote schemas or actions. This will be fixed in future releases.
 
 :::

@@ -63,10 +63,10 @@ instance HasName (Parser origin k m a) where
   getName = getName . pType
 
 type family ParserInput k where
-  -- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
+-- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
   ParserInput 'Both = InputValue Variable
   ParserInput 'Input = InputValue Variable
-  -- see Note [The meaning of Parser 'Output]
+-- see Note [The meaning of Parser 'Output]
   ParserInput 'Output = SelectionSet NoFragments Variable
 
 parserType :: Parser origin k m a -> Type origin k
@@ -84,7 +84,7 @@ unsurprisingly, parses GraphQL input values, much in the same way aeson
 
 Therefore, one might naturally conclude that `Parser 'Output` ought to parse
 GraphQL output values. But it doesn’t---a Parser is used to parse GraphQL
-\*queries*, and output values don’t show up in queries anywhere! Rather, the
+*queries*, and output values don’t show up in queries anywhere! Rather, the
 output values are the results of executing the query, not something the user
 sends us, so we don’t have to parse those at all.
 

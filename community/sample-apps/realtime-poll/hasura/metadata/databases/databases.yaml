@@ -1,0 +1,18 @@
+- name: default
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: SAMPLE_APPS_DATABASE_URL
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+  tables:
+  - "!include default/tables/public_online_users.yaml"
+  - "!include default/tables/public_option.yaml"
+  - "!include default/tables/public_poll.yaml"
+  - "!include default/tables/public_poll_results.yaml"
+  - "!include default/tables/public_user.yaml"
+  - "!include default/tables/public_vote.yaml"
+  functions: []

@@ -1,0 +1,26 @@
+---
+description: Manage queries on your databases with Hasura
+keywords:
+  - hasura
+  - docs
+  - query
+slug: index
+---
+
+# Queries
+
+## Introduction
+
+GraphQL queries are used to fetch data from the server.
+
+Hasura GraphQL engine auto-generates queries as part of the GraphQL schema from your database's schema model. It
+generates a range of possible queries and operators that also work with relationships defined in your SQL schema.
+
+All tables of the database tracked by the GraphQL engine can be queried over the GraphQL endpoint. If you have a tracked
+table in your database, its query field is added as a nested field under the `query_root` root level type.
+
+## Explore queries
+
+- [Explore queries with Postgres / Citus / Hyperscale](/queries/postgres/index.mdx)
+- [Explore queries with MS SQL Server](/queries/ms-sql-server/index.mdx)
+- [Explore queries with BigQuery](/queries/bigquery/index.mdx)
