@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
 
 import pytest
+import subprocess
+import time
 
-from validate import check_query_f
+from validate import check_query_f, check_query
+from remote_server import NodeGraphQL
+
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    svc.start()
+    yield svc
+    svc.stop()
+
+fixtures = pytest.mark.usefixtures(
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests'
+)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@pytest.mark.usefixtures(
-    'gql_server',
-    'per_class_db_schema_for_mutation_tests',
-    'per_method_db_data_for_mutation_tests',
-)
+@fixtures
 class TestHeterogeneousQuery:
     @classmethod
     def dir(cls):

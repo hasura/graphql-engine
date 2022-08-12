@@ -1,0 +1,14 @@
+type: bulk
+args:
+#Drop table and function from postgres
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE post cascade;
+      DROP TABLE test cascade;
+      DROP TABLE integer_column cascade;
+      DROP TABLE "user" cascade;
+      DROP TABLE text_result cascade;
+      DROP TABLE author cascade;
+      DROP MATERIALIZED VIEW IF EXISTS author_mat_view cascade;
+    cascade: true

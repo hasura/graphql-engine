@@ -2,7 +2,6 @@
 
 module Hasura.RQL.IR.Value
   ( UnpreparedValue (..),
-    Provenance (..),
     ValueWithOrigin (..),
     openValueOrigin,
     mkParameter,
@@ -12,25 +11,16 @@ where
 import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.SQL.Backend
 import Hasura.Session (SessionVariable)
-
--- | Where did this variable come from?
-data Provenance
-  = FromGraphQL VariableInfo
-  | -- | An internal source
-    FromInternal Text
-  | -- | A unique, fresh occurrence of a variable.
-    -- E.g. a native query argument, or generated
-    -- values that benefit from being prepared rather
-    -- than inlined.
-    FreshVar
-  deriving stock (Eq, Show)
 
 data UnpreparedValue (b :: BackendType)
   = -- | A SQL value that can be parameterized over.
-    UVParameter Provenance (ColumnValue b)
+    UVParameter
+      (Maybe VariableInfo)
+      -- ^ The GraphQL variable this value came from, if any.
+      (ColumnValue b)
   | -- | A literal SQL expression that /cannot/ be parameterized over.
     UVLiteral (SQLExpression b)
   | -- | The entire session variables JSON object.
@@ -40,13 +30,15 @@ data UnpreparedValue (b :: BackendType)
 
 deriving instance
   ( Backend b,
-    Eq (ColumnValue b)
+    Eq (ColumnValue b),
+    Eq (ScalarValue b)
   ) =>
   Eq (UnpreparedValue b)
 
 deriving instance
   ( Backend b,
-    Show (ColumnValue b)
+    Show (ColumnValue b),
+    Show (ScalarValue b)
   ) =>
   Show (UnpreparedValue b)
 
@@ -62,6 +54,6 @@ openValueOrigin (ValueNoOrigin a) = a
 
 mkParameter :: ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
 mkParameter (ValueWithOrigin valInfo columnValue) =
-  UVParameter (FromGraphQL valInfo) columnValue
+  UVParameter (Just valInfo) columnValue
 mkParameter (ValueNoOrigin columnValue) =
-  UVParameter FreshVar columnValue
+  UVParameter Nothing columnValue

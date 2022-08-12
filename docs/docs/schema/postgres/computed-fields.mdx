@@ -1,6 +1,6 @@
 ---
 sidebar_label: Computed fields
-sidebar_position: 4.2
+sidebar_position: 8
 description: Use computed fields over Postgres in Hasura
 keywords:
   - hasura
@@ -15,21 +15,19 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Computed Fields
+# Postgres: Computed fields
 
 ## What are computed fields?
 
 Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table/view's
-columns.
+columns. Computed fields are computed upon request. They are computed by executing
+[custom SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html) (a.k.a. stored procedures) using
+other columns of the table/view and other custom inputs if needed.
 
-Computed fields are computed upon request. They are computed by executing
-[user-defined SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html) (a.k.a. stored procedures)
-which take the columns of the table/view, and other custom values if needed, as inputs to compute the field.
-
-:::info Computed fields do not modify the database schema
+:::info Note
 
 Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a computed
-field. i.e. a computed field cannot be fetched as a table column directly from the database.
+field.
 
 :::
 
@@ -38,19 +36,15 @@ field. i.e. a computed field cannot be fetched as a table column directly from t
 Only functions which satisfy the following constraints can be added as a computed field to a table/view. (_terminology
 from_ [Postgres docs](https://www.postgresql.org/docs/current/sql-createfunction.html)):
 
-- **Function behavior**: ONLY `STABLE` or `IMMUTABLE`
+- **Function behaviour**: ONLY `STABLE` or `IMMUTABLE`
 - **Argument modes**: ONLY `IN`
-- **Table Argument**: ONE input argument as the table row type
+- **Table Argument**: One input argument with a table row type
 - **Return type**: Either `SETOF <table-name>` or `BASE` type
+
+:::info Note
 
 Functions used as computed fields can also accept other arguments other than the mandatory table row argument. Values
 for these extra arguments can be passed as arguments to the computed field in the GraphQL API.
-
-:::info No need for tracking
-
-Functions used as computed fields do not need to be [tracked](./custom-functions.mdx#pg-track-custom-sql-functions) by
-the Hasura GraphQL Engine. As the requirements for tracking functions differ from those to add them as computed fields,
-not all functions that can be used as computed fields can be tracked and vice versa.
 
 :::
 
@@ -183,12 +177,19 @@ Query data from the `authors` table:
 
 ## Adding a computed field to a table/view {#pg-adding-computed-field}
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `Modify` tab of the table/view and click on the `Add` button in the `Computed fields` section:
 
-<Thumbnail src="/img/schema/computed-field-create.png" alt="Add computed field" width="750px" />
+<Thumbnail src='/img/schema/computed-field-create.png' alt='Add computed field' />
+
+:::tip Supported from
+
+- Console support for tables is available in `v1.1.0` and above
+- Console support for views is available in `v1.3.0` and above
+
+:::
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -209,7 +210,7 @@ You can add a computed field by updating the `metadata > databases > [db-name] >
       comment: ''
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -219,7 +220,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 A computed field can be added to a table/view using the
-[pg_add_computed_field](/api-reference/metadata-api/computed-field.mdx#metadata-pg-add-computed-field) Metadata API:
+[pg_add_computed_field](/api-reference/metadata-api/computed-field.mdx#metadata-pg-add-computed-field) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -254,7 +255,7 @@ X-Hasura-Role: admin
 [Access control](/auth/authorization/index.mdx) to computed fields depends on the type of computed field.
 
 - For **scalar computed fields**, permissions are managed similar to the
-  [columns permissions](/auth/authorization/permissions/column-level-permissions.mdx) of the table.
+  [columns permissions](/auth/authorization/permission-rules.mdx#col-level-permissions) of the table.
 - For **table computed fields**, the permissions set on the return table are respected.
 
 ## Accessing Hasura session variables in computed fields
@@ -349,15 +350,15 @@ computed fields are defined via an SQL function, which allows users to define an
 Generated columns will go together with computed fields where Hasura treats generated columns as normal Postgres
 columns.
 
-## Computed fields in Remote Relationships
+## Computed fields in Remote relationships
 
-Using computed fields in [Remote Relationships](/schema/postgres/remote-relationships/index.mdx) allows transformation
+Using computed fields in [Remote relationships](/schema/postgres/remote-relationships/index.mdx) allows transformation
 of data from table columns before joining with data from remote sources. For instance, suppose we want to extract
-certain field from a `json` column and join it with a field in a Remote Schema by argument value. We would define a
+certain field from a `json` column and join it with a field in a remote schema by argument value. We would define a
 computed field which returns a scalar type of the field value in the `json` column and use it to join the graphql field
-of the Remote Schema. Consider the following Postgres schema.
+of the remote schema. Consider the following Postgres schema.
 
-<Thumbnail src="/img/databases/postgres/schema/computed-fields-remote-relationship.png" width="700px" />
+<Thumbnail src='/img/databases/postgres/schema/computed-fields-remote-relationship.png' width='700px' />
 
 ```plsql
 CREATE TABLE "user" (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, address json NOT NULL);
@@ -370,7 +371,7 @@ $$ LANGUAGE sql STABLE;
 ```
 
 Now, let's track the table and add computed field `user_city` using the SQL function `get_city`. Consider the following
-Remote Schema.
+remote schema.
 
 ```graphql
 type Query {
@@ -383,7 +384,7 @@ type Coordinates {
 ```
 
 [Define a remote relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship)
-with name `user_location` from `user_city` scalar computed field to `get_coordinates` Remote Schema field. We can query
+with name `user_location` from `user_city` scalar computed field to `get_coordinates` remote schema field. We can query
 users with the pincode of their residing place.
 
 <GraphiQLIDE

@@ -24,7 +24,7 @@ import Control.Exception.Safe
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import Data.Aeson
-import Data.Aeson qualified as J
+import Data.Aeson qualified as Aeson
 import Data.Foldable
 import Data.Maybe
 import Data.Sequence qualified as Seq
@@ -155,9 +155,8 @@ data RestType
   | GEOGRAPHY
   | DECIMAL
   | BIGDECIMAL
-  | JSON
   | STRUCT -- (same as RECORD).
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance FromJSON RestType where
   parseJSON j = do
@@ -180,35 +179,16 @@ instance FromJSON RestType where
       "DECIMAL" -> pure DECIMAL
       "BIGNUMERIC" -> pure BIGDECIMAL
       "BIGDECIMAL" -> pure BIGDECIMAL
-      "JSON" -> pure JSON
       "RECORD" -> pure STRUCT
       "STRUCT" -> pure STRUCT
       _ -> fail ("invalid type " ++ show s)
-
-instance ToJSON RestType where
-  toJSON =
-    String . \case
-      STRING -> "STRING"
-      BYTES -> "BYTES"
-      INTEGER -> "INTEGER"
-      FLOAT -> "FLOAT"
-      BOOL -> "BOOLEAN"
-      TIMESTAMP -> "TIMESTAMP"
-      DATE -> "DATE"
-      TIME -> "TIME"
-      DATETIME -> "DATETIME"
-      GEOGRAPHY -> "GEOGRAPHY"
-      DECIMAL -> "DECIMAL"
-      BIGDECIMAL -> "BIGDECIMAL"
-      JSON -> "JSON"
-      STRUCT -> "STRUCT"
 
 --------------------------------------------------------------------------------
 -- REST request
 
 -- | Get all tables from all specified data sets.
 getTables ::
-  (MonadIO m) =>
+  MonadIO m =>
   BigQuerySourceConfig ->
   m (Either RestProblem [RestTable])
 getTables BigQuerySourceConfig {..} =
@@ -217,9 +197,9 @@ getTables BigQuerySourceConfig {..} =
 
 -- | Get tables in the dataset.
 getTablesForDataSet ::
-  (MonadIO m) =>
+  MonadIO m =>
   BigQueryConnection ->
-  BigQueryDataset ->
+  Text ->
   m (Either RestProblem [RestTable])
 getTablesForDataSet conn dataSet = do
   result <-
@@ -238,15 +218,15 @@ getTablesForDataSet conn dataSet = do
   where
     run pageToken acc = do
       let req =
-            setRequestHeader "Content-Type" ["application/json"]
-              $ parseRequest_ url
+            setRequestHeader "Content-Type" ["application/json"] $
+              parseRequest_ url
       eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetTablesBigQueryProblem e))
         Right resp ->
           case getResponseStatusCode resp of
             200 ->
-              case J.eitherDecode (getResponseBody resp) of
+              case Aeson.eitherDecode (getResponseBody resp) of
                 Left e -> pure (Left (GetMetaDecodeProblem e))
                 Right RestTableList {nextPageToken, tables} ->
                   case nextPageToken of
@@ -255,13 +235,12 @@ getTablesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          T.unpack
-            $ "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> getBigQueryProjectId (_bqProjectId conn)
+          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+            <> T.unpack (_bqProjectId conn)
             <> "/datasets/"
-            <> getBigQueryDataset dataSet
+            <> T.unpack dataSet
             <> "/tables?alt=json&"
-            <> encodeParams extraParameters
+            <> T.unpack (encodeParams extraParameters)
         extraParameters = pageTokenParam
           where
             pageTokenParam =
@@ -271,9 +250,9 @@ getTablesForDataSet conn dataSet = do
 
 -- | Get tables in the schema.
 getTable ::
-  (MonadIO m) =>
+  MonadIO m =>
   BigQueryConnection ->
-  BigQueryDataset ->
+  Text ->
   Text ->
   m (Either RestProblem RestTable)
 getTable conn dataSet tableId = do
@@ -281,29 +260,28 @@ getTable conn dataSet tableId = do
   where
     run = do
       let req =
-            setRequestHeader "Content-Type" ["application/json"]
-              $ parseRequest_ url
+            setRequestHeader "Content-Type" ["application/json"] $
+              parseRequest_ url
       eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetTablesBigQueryProblem e))
         Right resp ->
           case getResponseStatusCode resp of
             200 ->
-              case J.eitherDecode (getResponseBody resp) of
+              case Aeson.eitherDecode (getResponseBody resp) of
                 Left e -> pure (Left (GetMetaDecodeProblem e))
                 Right table -> pure (Right table)
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          T.unpack
-            $ "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> getBigQueryProjectId (_bqProjectId conn)
+          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+            <> T.unpack (_bqProjectId conn)
             <> "/datasets/"
-            <> getBigQueryDataset dataSet
+            <> T.unpack dataSet
             <> "/tables/"
-            <> tableId
+            <> T.unpack tableId
             <> "?alt=json&"
-            <> encodeParams extraParameters
+            <> T.unpack (encodeParams extraParameters)
         extraParameters = []
 
 encodeParams :: [(Text, Text)] -> Text
@@ -322,8 +300,6 @@ data RestRoutineType
 
 instance FromJSON RestRoutineType
 
-instance ToJSON RestRoutineType
-
 -- | Input argument of a function/routine.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#Argument
 data RestArgument = RestArgument
@@ -331,7 +307,7 @@ data RestArgument = RestArgument
     _raName :: Maybe Text,
     _raDataType :: Maybe RestType
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 instance FromJSON RestArgument where
   parseJSON =
@@ -351,13 +327,6 @@ instance FromJSON RestArgument where
           pure $ RestArgument name type'
       )
 
-instance ToJSON RestArgument where
-  toJSON (RestArgument name ty) =
-    object
-      [ "name" .= name,
-        "dataType" .= object ["typeKind" .= ty]
-      ]
-
 -- | A field or a column.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/StandardSqlField
 data RestStandardSqlField = RestStandardSqlField
@@ -365,7 +334,7 @@ data RestStandardSqlField = RestStandardSqlField
     _rssfName :: Maybe Text,
     _rssType :: Maybe RestType
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 instance FromJSON RestStandardSqlField where
   parseJSON =
@@ -385,22 +354,15 @@ instance FromJSON RestStandardSqlField where
           pure $ RestStandardSqlField name type'
       )
 
-instance ToJSON RestStandardSqlField where
-  toJSON (RestStandardSqlField name ty) =
-    object ["name" .= name, "type" .= (object ["typeKind" .= ty])]
-
 -- | A table type, which has only list of columns with names and types.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#StandardSqlTableType
 data RestStandardSqlTableType = RestStandardSqlTableType
   { _rrttColumns :: [RestStandardSqlField]
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 instance FromJSON RestStandardSqlTableType where
   parseJSON = genericParseJSON hasuraJSON
-
-instance ToJSON RestStandardSqlTableType where
-  toJSON = genericToJSON hasuraJSON
 
 -- | Id path of a routine.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#RoutineReference
@@ -409,11 +371,9 @@ data RestRoutineReference = RestRoutineReference
     projectId :: Text,
     routineId :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 instance FromJSON RestRoutineReference
-
-instance ToJSON RestRoutineReference
 
 routineReferenceToFunctionName :: RestRoutineReference -> FunctionName
 routineReferenceToFunctionName RestRoutineReference {..} =
@@ -431,11 +391,9 @@ data RestRoutine = RestRoutine
     -- | Routines defined with 'RETURNS TABLE' clause has this information
     returnTableType :: Maybe RestStandardSqlTableType
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 instance FromJSON RestRoutine
-
-instance ToJSON RestRoutine
 
 -- | List of routines
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines/list
@@ -448,15 +406,12 @@ data RestRoutineList = RestRoutineList
 instance FromJSON RestRoutineList where
   parseJSON = withObject "Object" $ \o ->
     RestRoutineList
-      <$> o
-      .:? "routines"
-      .!= [] -- "routine" field is absent when there are no routines defined
-      <*> o
-      .:? "nextPageToken"
+      <$> o .:? "routines" .!= [] -- "routine" field is absent when there are no routines defined
+      <*> o .:? "nextPageToken"
 
 -- | Get all routines from all specified data sets.
 getRoutines ::
-  (MonadIO m) =>
+  MonadIO m =>
   BigQuerySourceConfig ->
   m (Either RestProblem [RestRoutine])
 getRoutines BigQuerySourceConfig {..} =
@@ -465,24 +420,24 @@ getRoutines BigQuerySourceConfig {..} =
 
 -- | Get routines in the dataset.
 getRoutinesForDataSet ::
-  (MonadIO m) =>
+  MonadIO m =>
   BigQueryConnection ->
-  BigQueryDataset ->
+  Text ->
   m (Either RestProblem [RestRoutine])
 getRoutinesForDataSet conn dataSet = do
   liftIO (catchAny (run Nothing mempty) (pure . Left . GetRoutineProblem))
   where
     run pageToken acc = do
       let req =
-            setRequestHeader "Content-Type" ["application/json"]
-              $ parseRequest_ url
+            setRequestHeader "Content-Type" ["application/json"] $
+              parseRequest_ url
       eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetRoutinesBigQueryProblem e))
         Right resp ->
           case getResponseStatusCode resp of
             200 ->
-              case J.eitherDecode (getResponseBody resp) of
+              case Aeson.eitherDecode (getResponseBody resp) of
                 Left e -> pure (Left (GetMetaDecodeProblem e))
                 Right RestRoutineList {_rrlRoutines = routines, _rrlNextPageToken = nextPageToken} ->
                   case nextPageToken of
@@ -491,13 +446,12 @@ getRoutinesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          T.unpack
-            $ "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> getBigQueryProjectId (_bqProjectId conn)
+          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+            <> T.unpack (_bqProjectId conn)
             <> "/datasets/"
-            <> getBigQueryDataset dataSet
+            <> T.unpack dataSet
             <> "/routines?alt=json&"
-            <> encodeParams extraParameters
+            <> T.unpack (encodeParams extraParameters)
         extraParameters = pageTokenParam <> readMaskParam
           where
             pageTokenParam =

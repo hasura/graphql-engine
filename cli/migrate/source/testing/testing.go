@@ -1,13 +1,10 @@
 package testing
 
 import (
-	"errors"
 	"os"
 	"testing"
 
-	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
-	"github.com/stretchr/testify/require"
 )
 
 // Test runs tests against source implementations.
@@ -46,89 +43,27 @@ func TestFirst(t *testing.T, d source.Driver) {
 func TestNext(t *testing.T, d source.Driver) {
 	tt := []struct {
 		version           uint64
-		wantErr           bool
+		expectErr         error
 		expectNextVersion uint64
-		assertErr         require.ErrorAssertionFunc
 	}{
-		{
-			version: 0,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:           1,
-			wantErr:           false,
-			expectNextVersion: 3,
-			assertErr:         require.NoError,
-		},
-		{
-			version: 2,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:           3,
-			wantErr:           false,
-			expectNextVersion: 4,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           4,
-			wantErr:           false,
-			expectNextVersion: 5,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           5,
-			wantErr:           false,
-			expectNextVersion: 6,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           6,
-			wantErr:           false,
-			expectNextVersion: 8,
-			assertErr:         require.NoError,
-		},
-		{
-			version: 7,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 8,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 9,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
+		{version: 0, expectErr: os.ErrNotExist},
+		{version: 1, expectErr: nil, expectNextVersion: 3},
+		{version: 2, expectErr: os.ErrNotExist},
+		{version: 3, expectErr: nil, expectNextVersion: 4},
+		{version: 4, expectErr: nil, expectNextVersion: 5},
+		{version: 5, expectErr: nil, expectNextVersion: 6},
+		{version: 6, expectErr: nil, expectNextVersion: 8},
+		{version: 7, expectErr: os.ErrNotExist},
+		{version: 8, expectErr: os.ErrNotExist},
+		{version: 9, expectErr: os.ErrNotExist},
 	}
 
 	for i, v := range tt {
 		nv, err := d.Next(v.version)
-		v.assertErr(t, err)
-		if v.wantErr {
-			return
+		if (v.expectErr == os.ErrNotExist && !os.IsNotExist(err)) && v.expectErr != err {
+			t.Errorf("Next: expected %v, got %v, in %v", v.expectErr, err, i)
 		}
-		if v.expectNextVersion != nv {
+		if err == nil && v.expectNextVersion != nv {
 			t.Errorf("Next: expected %v, got %v, in %v", v.expectNextVersion, nv, i)
 		}
 	}
@@ -137,87 +72,27 @@ func TestNext(t *testing.T, d source.Driver) {
 func TestPrev(t *testing.T, d source.Driver) {
 	tt := []struct {
 		version           uint64
-		wantErr           bool
+		expectErr         error
 		expectPrevVersion uint64
-		assertErr         require.ErrorAssertionFunc
 	}{
-		{
-			version: 0,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 1,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 2,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:           3,
-			wantErr:           false,
-			expectPrevVersion: 1,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           4,
-			wantErr:           false,
-			expectPrevVersion: 3,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           5,
-			wantErr:           false,
-			expectPrevVersion: 4,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           6,
-			wantErr:           false,
-			expectPrevVersion: 5,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           7,
-			wantErr:           false,
-			expectPrevVersion: 5,
-			assertErr:         require.NoError,
-		},
-		{
-			version:           8,
-			wantErr:           false,
-			expectPrevVersion: 6,
-			assertErr:         require.NoError,
-		},
-		{
-			version: 9,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
+		{version: 0, expectErr: os.ErrNotExist},
+		{version: 1, expectErr: os.ErrNotExist},
+		{version: 2, expectErr: os.ErrNotExist},
+		{version: 3, expectErr: nil, expectPrevVersion: 1},
+		{version: 4, expectErr: nil, expectPrevVersion: 3},
+		{version: 5, expectErr: nil, expectPrevVersion: 4},
+		{version: 6, expectErr: nil, expectPrevVersion: 5},
+		{version: 7, expectErr: nil, expectPrevVersion: 5},
+		{version: 8, expectErr: nil, expectPrevVersion: 6},
+		{version: 9, expectErr: os.ErrNotExist},
 	}
 
 	for i, v := range tt {
 		pv, err := d.Prev(v.version)
-		v.assertErr(t, err)
-		if v.wantErr {
-			return
+		if (v.expectErr == os.ErrNotExist && !os.IsNotExist(err)) && v.expectErr != err {
+			t.Errorf("Prev: expected %v, got %v, in %v", v.expectErr, err, i)
 		}
-		if v.expectPrevVersion != pv {
+		if err == nil && v.expectPrevVersion != pv {
 			t.Errorf("Prev: expected %v, got %v, in %v", v.expectPrevVersion, pv, i)
 		}
 	}
@@ -226,92 +101,36 @@ func TestPrev(t *testing.T, d source.Driver) {
 func TestReadUp(t *testing.T, d source.Driver) {
 	tt := []struct {
 		version   uint64
-		wantErr   bool
+		expectErr error
 		expectUp  bool
-		assertErr require.ErrorAssertionFunc
 	}{
-		{
-			version: 0,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:   1,
-			wantErr:   false,
-			expectUp:  true,
-			assertErr: require.NoError,
-		},
-		{
-			version: 2,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:   3,
-			wantErr:   false,
-			expectUp:  true,
-			assertErr: require.NoError,
-		},
-		{
-			version: 4,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 5,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 6,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 7,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:   8,
-			wantErr:   false,
-			expectUp:  true,
-			assertErr: require.NoError,
-		},
+		{version: 0, expectErr: os.ErrNotExist},
+		{version: 1, expectErr: nil, expectUp: true},
+		{version: 2, expectErr: os.ErrNotExist},
+		{version: 3, expectErr: nil, expectUp: true},
+		{version: 4, expectErr: os.ErrNotExist},
+		{version: 5, expectErr: os.ErrNotExist},
+		{version: 6, expectErr: os.ErrNotExist},
+		{version: 7, expectErr: os.ErrNotExist},
+		{version: 8, expectErr: nil, expectUp: true},
 	}
 
 	for i, v := range tt {
 		up, identifier, _, err := d.ReadUp(v.version)
-		v.assertErr(t, err)
-		if v.wantErr {
-			return
-		}
-		if len(identifier) == 0 {
-			t.Errorf("expected identifier not to be empty, in %v", i)
-		}
+		if (v.expectErr == os.ErrNotExist && !os.IsNotExist(err)) ||
+			(v.expectErr != os.ErrNotExist && err != v.expectErr) {
+			t.Errorf("expected %v, got %v, in %v", v.expectErr, err, i)
 
-		if v.expectUp && up == nil {
-			t.Errorf("expected up not to be nil, in %v", i)
-		} else if !v.expectUp && up != nil {
-			t.Errorf("expected up to be nil, got %v, in %v", up, i)
+		} else if err == nil {
+			if len(identifier) == 0 {
+				t.Errorf("expected identifier not to be empty, in %v", i)
+			}
+
+			if v.expectUp && up == nil {
+				t.Errorf("expected up not to be nil, in %v", i)
+			} else if !v.expectUp && up != nil {
+				t.Errorf("expected up to be nil, got %v, in %v", up, i)
+			}
 		}
 	}
 }
@@ -319,92 +138,36 @@ func TestReadUp(t *testing.T, d source.Driver) {
 func TestReadDown(t *testing.T, d source.Driver) {
 	tt := []struct {
 		version    uint64
-		wantErr    bool
+		expectErr  error
 		expectDown bool
-		assertErr  require.ErrorAssertionFunc
 	}{
-		{
-			version: 0,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:    1,
-			wantErr:    false,
-			expectDown: true,
-			assertErr:  require.NoError,
-		},
-		{
-			version: 2,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 3,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 4,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:    5,
-			wantErr:    false,
-			expectDown: true,
-			assertErr:  require.NoError,
-		},
-		{
-			version: 6,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 7,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:    8,
-			wantErr:    false,
-			expectDown: true,
-			assertErr:  require.NoError,
-		},
+		{version: 0, expectErr: os.ErrNotExist},
+		{version: 1, expectErr: nil, expectDown: true},
+		{version: 2, expectErr: os.ErrNotExist},
+		{version: 3, expectErr: os.ErrNotExist},
+		{version: 4, expectErr: os.ErrNotExist},
+		{version: 5, expectErr: nil, expectDown: true},
+		{version: 6, expectErr: os.ErrNotExist},
+		{version: 7, expectErr: os.ErrNotExist},
+		{version: 8, expectErr: nil, expectDown: true},
 	}
 
 	for i, v := range tt {
 		down, identifier, _, err := d.ReadDown(v.version)
-		v.assertErr(t, err)
-		if v.wantErr {
-			return
-		}
-		if len(identifier) == 0 {
-			t.Errorf("expected identifier not to be empty, in %v", i)
-		}
+		if (v.expectErr == os.ErrNotExist && !os.IsNotExist(err)) ||
+			(v.expectErr != os.ErrNotExist && err != v.expectErr) {
+			t.Errorf("expected %v, got %v, in %v", v.expectErr, err, i)
 
-		if v.expectDown && down == nil {
-			t.Errorf("expected down not to be nil, in %v", i)
-		} else if !v.expectDown && down != nil {
-			t.Errorf("expected down to be nil, got %v, in %v", down, i)
+		} else if err == nil {
+			if len(identifier) == 0 {
+				t.Errorf("expected identifier not to be empty, in %v", i)
+			}
+
+			if v.expectDown && down == nil {
+				t.Errorf("expected down not to be nil, in %v", i)
+			} else if !v.expectDown && down != nil {
+				t.Errorf("expected down to be nil, got %v, in %v", down, i)
+			}
 		}
 	}
 }
@@ -412,94 +175,36 @@ func TestReadDown(t *testing.T, d source.Driver) {
 func TestReadMetaUp(t *testing.T, d source.Driver) {
 	tt := []struct {
 		version      uint64
-		wantErr      bool
+		expectErr    error
 		expectMetaUp bool
-		assertErr    require.ErrorAssertionFunc
 	}{
-		{
-			version: 0,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:      1,
-			wantErr:      false,
-			expectMetaUp: true,
-			assertErr:    require.NoError,
-		},
-		{
-			version: 2,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 3,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:      4,
-			wantErr:      false,
-			expectMetaUp: true,
-			assertErr:    require.NoError,
-		},
-		{
-			version: 5,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 6,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 7,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 8,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
+		{version: 0, expectErr: os.ErrNotExist},
+		{version: 1, expectErr: nil, expectMetaUp: true},
+		{version: 2, expectErr: os.ErrNotExist},
+		{version: 3, expectErr: os.ErrNotExist},
+		{version: 4, expectErr: nil, expectMetaUp: true},
+		{version: 5, expectErr: os.ErrNotExist},
+		{version: 6, expectErr: os.ErrNotExist},
+		{version: 7, expectErr: os.ErrNotExist},
+		{version: 8, expectErr: os.ErrNotExist},
 	}
 
 	for i, v := range tt {
 		up, identifier, _, err := d.ReadMetaUp(v.version)
-		v.assertErr(t, err)
-		if v.wantErr {
-			return
-		}
-		if len(identifier) == 0 {
-			t.Errorf("expected identifier not to be empty, in %v", i)
-		}
+		if (v.expectErr == os.ErrNotExist && !os.IsNotExist(err)) ||
+			(v.expectErr != os.ErrNotExist && err != v.expectErr) {
+			t.Errorf("expected %v, got %v, in %v", v.expectErr, err, i)
 
-		if v.expectMetaUp && up == nil {
-			t.Errorf("expected up not to be nil, in %v", i)
-		} else if !v.expectMetaUp && up != nil {
-			t.Errorf("expected up to be nil, got %v, in %v", up, i)
+		} else if err == nil {
+			if len(identifier) == 0 {
+				t.Errorf("expected identifier not to be empty, in %v", i)
+			}
+
+			if v.expectMetaUp && up == nil {
+				t.Errorf("expected up not to be nil, in %v", i)
+			} else if !v.expectMetaUp && up != nil {
+				t.Errorf("expected up to be nil, got %v, in %v", up, i)
+			}
 		}
 	}
 }
@@ -507,94 +212,36 @@ func TestReadMetaUp(t *testing.T, d source.Driver) {
 func TestReadMetaDown(t *testing.T, d source.Driver) {
 	tt := []struct {
 		version        uint64
-		wantErr        bool
+		expectErr      error
 		expectMetaDown bool
-		assertErr      require.ErrorAssertionFunc
 	}{
-		{
-			version: 0,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:        1,
-			wantErr:        false,
-			expectMetaDown: true,
-			assertErr:      require.NoError,
-		},
-		{
-			version: 2,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 3,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 4,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 5,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version:        6,
-			wantErr:        false,
-			expectMetaDown: true,
-			assertErr:      require.NoError,
-		},
-		{
-			version: 7,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
-		{
-			version: 8,
-			wantErr: true,
-			assertErr: require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
-				require.IsType(t, &internalerrors.Error{}, err)
-				require.True(t, errors.Is(err, os.ErrNotExist))
-			}),
-		},
+		{version: 0, expectErr: os.ErrNotExist},
+		{version: 1, expectErr: nil, expectMetaDown: true},
+		{version: 2, expectErr: os.ErrNotExist},
+		{version: 3, expectErr: os.ErrNotExist},
+		{version: 4, expectErr: os.ErrNotExist},
+		{version: 5, expectErr: os.ErrNotExist},
+		{version: 6, expectErr: nil, expectMetaDown: true},
+		{version: 7, expectErr: os.ErrNotExist},
+		{version: 8, expectErr: os.ErrNotExist},
 	}
 
 	for i, v := range tt {
 		up, identifier, _, err := d.ReadMetaDown(v.version)
-		v.assertErr(t, err)
-		if v.wantErr {
-			return
-		}
-		if len(identifier) == 0 {
-			t.Errorf("expected identifier not to be empty, in %v", i)
-		}
+		if (v.expectErr == os.ErrNotExist && !os.IsNotExist(err)) ||
+			(v.expectErr != os.ErrNotExist && err != v.expectErr) {
+			t.Errorf("expected %v, got %v, in %v", v.expectErr, err, i)
 
-		if v.expectMetaDown && up == nil {
-			t.Errorf("expected up not to be nil, in %v", i)
-		} else if !v.expectMetaDown && up != nil {
-			t.Errorf("expected up to be nil, got %v, in %v", up, i)
+		} else if err == nil {
+			if len(identifier) == 0 {
+				t.Errorf("expected identifier not to be empty, in %v", i)
+			}
+
+			if v.expectMetaDown && up == nil {
+				t.Errorf("expected up not to be nil, in %v", i)
+			} else if !v.expectMetaDown && up != nil {
+				t.Errorf("expected up to be nil, got %v, in %v", up, i)
+			}
 		}
 	}
 }

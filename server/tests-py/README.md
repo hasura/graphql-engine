@@ -9,23 +9,13 @@ information on how to update test dependencies.
 
 ## Running tests
 
-Tests can be run using `run.sh`, `dev.sh` or directly using `pytest`.
+Tests can be run using the `dev.sh` script or directly using `pytest`.
 
 Please note that running the `BigQuery` tests requires a few manual steps.
 
-### Run and test via `run.sh`
-
-The `run.sh` scripts are an active work in progress, and will eventually replace the `dev.sh` option below.
-
-The easiest way to run the test suite is to:
-
-Run the Python integration tests with `./server/tests-py/run.sh`.
-
-Filter on specific test files with `./server/tests-py/run.sh -- create_async_action_with_nested_output_and_relation.py`
-
-If you have any issues with `run.sh`, please create a [GitHub issue](https://github.com/hasura/graphql-engine/issues/new/choose) and run and test via `dev.sh` instead.
-
 ### Running tests via dev.sh
+
+The easiest way to run the test suite is to do:
 
 ```sh
 scripts/dev.sh test --integration
@@ -44,6 +34,7 @@ Available options are documented in `scripts/parse-pytest-backend`:
 - bigquery (see section below)
 - citus
 - mssql
+- mysql
 
 #### Filtering tests
 
@@ -127,7 +118,7 @@ some of the tests are executed.
 
 5. Optionally, add more sources to test against:
 
-   If the tests include more sources (e.g., by using `-k MSSQL`), then you can use the following commands to add sources to your running graphql instance:
+   If the tests include more sources (e.g., by using `-k MSSQL or MySQL`), then you can use the following commands to add sources to your running graphql instance:
 
    ```
    # Add a Postgres source
@@ -285,7 +276,7 @@ The current convention is to indicate the backend(s) tests can be run against in
 
 This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).
 
-The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MSSQL" --backend mssql` to run all MSSQL tests.
+The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
 
 Note that `--backend` does not interact with the selection of tests. You will generally have to combine `--backend` with `-k`.
 

@@ -1,5 +1,5 @@
 ---
-sidebar_label: Manage Metadata
+sidebar_label: Managing Metadata
 sidebar_position: 4
 description: Manage Hasura Server Metadata
 keywords:
@@ -11,12 +11,12 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Manage Metadata
+# Managing Metadata
 
 ## Introduction
 
 We call the Hasura Server configuration the Metadata. All changes made to the Hasura instance via the Console or via the
-API such as tracking tables / views / custom functions, creating relationships, configuring permissions, creating event
+API such as tracking tables / views / functions, creating relationships, configuring permissions, creating event
 triggers and remote schemas, etc. are tracked by Hasura using the Metadata Catalogue and their state can be exported as
 YAML or JSON Metadata files.
 
@@ -56,7 +56,7 @@ Example Metadata directory:
 
 There is no way to create an export of partial Metadata.
 
-There are three ways to interact with the Hasura Metadata. Via the [Hasura CLI](/hasura-cli/overview.mdx), the Hasura
+There are three ways to interact with the Hasura Metadata. Via the [Hasura CLI](/hasura-cli/index.mdx), the Hasura
 Console, and the Hasura API. We'll go over each Metadata command below and how it is executed with each method.
 
 ### Metadata Formats
@@ -78,7 +78,7 @@ same.
 To export your Metadata means to save your internal Hasura Metadata configuration to a file or group of files in order
 to track it with version control or use it in a CI/CD pipeline.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="cli" label="CLI">
 
 To export your entire Metadata using the Hasura CLI execute the following command in your terminal:
@@ -123,20 +123,15 @@ This will export the Metadata as YAML files in the `/metadata` directory eg:
 
 <TabItem value="console" label="Console">
 
-1. Click on the settings ⚙ icon at the top right corner of the Console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-   <Thumbnail
-     alt="Settings navigation button"
-     src="/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png"
-   />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
 2. In the Hasura Metadata actions page that opens, click on the `Export Metadata` button.
 
-   <Thumbnail
-     src="/img/migrations-metadata-seeds/metadata-export_console_2-7-0.png"
-     alt="Export Metadata"
-     width="750px"
-   />
+{' '}
+<Thumbnail src='/img/migrations-metadata-seeds/metadata-export_console_2-7-0.png' alt='Export metadata' />
 
 3. This will prompt a file download for `hasura_metadata_[timestamp].json`. Save the JSON blob file.
 
@@ -161,6 +156,8 @@ This command will create a `hasura_metadata.json` file. If an admin secret is se
 </TabItem>
 </Tabs>
 
+---
+
 ## Apply Hasura Metadata {#apply-metadata}
 
 You can apply Metadata from one Hasura Server instance to another. You can also apply an older or modified version of an
@@ -169,7 +166,7 @@ instance's Metadata onto itself to replace the existing Metadata.
 Applying or importing completely replaces the Metadata on that instance, i.e. you lose any Metadata that existed before
 applying.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="cli" label="CLI">
 
 Metadata can be applied with the [hasura metadata apply](/hasura-cli/commands/hasura_metadata_apply.mdx) command.
@@ -188,20 +185,15 @@ INFO Metadata applied
 </TabItem>
 <TabItem value="console" label="Console">
 
-1. Click on the settings ⚙ icon at the top right corner of the Console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-   <Thumbnail
-     alt="Settings navigation button"
-     src="/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png"
-   />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
 2. Click on `Import Metadata` button.
 
-   <Thumbnail
-     src="/img/migrations-metadata-seeds/metadata-import_console_2-7-0.png"
-     alt="Import metadata"
-     width="750px"
-   />
+{' '}
+<Thumbnail src='/img/migrations-metadata-seeds/metadata-import_console_2-7-0.png' alt='Import metadata' />
 
 3. Choose a `hasura_metadata.json` file that was exported earlier.
 
@@ -217,15 +209,11 @@ The exported JSON can be imported via the
 Here is an example using `curl`:
 
 ```bash
-curl -d '{"type":"replace_metadata", "args":'"$(cat hasura_metadata.json)"'}' http://localhost:8080/v1/metadata
+curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
 ```
 
 This command reads the `hasura_metadata.json` file and makes a POST request to replace the Metadata. If an admin secret
-is set, add `-H 'X-Hasura-Admin-Secret: <YOUR_ADMIN_SECRET>'` as the API is an admin-only API:
-
-```bash
-curl -H "X-Hasura-Admin-Secret: <YOUR_ADMIN_SECRET>" -d '{"type":"replace_metadata", "args":'"$(cat hasura_metadata.json)"'}' http://localhost:8080/v1/metadata
-```
+is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
 
 </TabItem>
 
@@ -233,7 +221,7 @@ curl -H "X-Hasura-Admin-Secret: <YOUR_ADMIN_SECRET>" -d '{"type":"replace_metada
 
 :::info Note
 
-All the dependent objects, like tables, views, custom functions etc. should exist on the database before importing the
+All the dependent objects, like tables, views, functions etc. should exist on the database before importing the
 Metadata. Otherwise, it will result in an error saying the object does not exist. So,
 [apply the database Migration](/migrations-metadata-seeds/manage-migrations.mdx#apply-migrations) schema first, before
 apply the Metadata.
@@ -242,7 +230,7 @@ apply the Metadata.
 
 ## Roll back Hasura Metadata {#rollback-metadata}
 
-As Hasura Metadata is Managed via snapshots of whole of the Metadata, to roll it back to a particular state you need the
+As Hasura metadata is Managed via snapshots of whole of the Metadata, to roll it back to a particular state you need the
 Metadata snapshot at that point which you would typically achieve by checking out stable checkpoints of a project in
 version control.
 
@@ -251,7 +239,7 @@ version control.
 In some cases, the Metadata can be out of sync with the database schema. For example, when a new column has been added
 to a table via an external tool such as `psql`.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 
 <TabItem value="cli" label="CLI">
 
@@ -272,20 +260,15 @@ INFO Metadata is consistent
 </TabItem>
 <TabItem value="console" label="Console">
 
-1. Click on the settings ⚙ icon at the top right corner of the Console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-   <Thumbnail
-     alt="Settings navigation button"
-     src="/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png"
-   />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
 2. Click on `Reload` button.
 
-   <Thumbnail
-     alt="reload metadata"
-     src="/img/migrations-metadata-seeds/metadata-reload_console_2-7-0.png"
-     width="750px"
-   />
+{' '}
+<Thumbnail alt='reload metadata' src='/img/migrations-metadata-seeds/metadata-reload_console_2-7-0.png' />
 
 3. A notification should appear indicating success.
 
@@ -312,18 +295,18 @@ If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'`
 
 Reloading may result in an `inconsistent metadata` status. You may need to
 [resolve all inconsistent objects](/migrations-metadata-seeds/manage-metadata.mdx#metadata-inconsistency) manually or
-delete them. After that, you will need to reload Metadata again.
+delete them. After that, you will need to reload metadata again.
 
 :::
 
 ## Clear Hasura Metadata {#clear-metadata}
 
 Clearing the Hasura Metadata is an irreversible process. It is highly recommended to first
-[export the Metadata](/migrations-metadata-seeds/manage-metadata.mdx#export-export) as a backup so that it can be
+[export the metadata](/migrations-metadata-seeds/manage-metadata.mdx#export-export) as a backup so that it can be
 reapplied if necessary or else that information will be lost and Hasura will have to be configured again from scratch
 (e.g. tables tracking, relationships, triggers, actions, etc.).
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 
 <TabItem value="cli" label="CLI">
 
@@ -343,16 +326,15 @@ INFO Metadata cleared
 
 <TabItem value="console" label="Console">
 
-1. Click on the settings ⚙ icon at the top right corner of the Console screen.
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
 
-   <Thumbnail
-     alt="Settings navigation button"
-     src="/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png"
-   />
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
 
 2. Click on `Reset` button.
 
-   <Thumbnail alt="reset metadata" src="/img/migrations-metadata-seeds/metadata-reset.png" width="850px" />
+{' '}
+<Thumbnail alt='reset metadata' src='/img/migrations-metadata-seeds/metadata-reset.png' />
 
 3. A pop-up will appear prompting you to confirm the process.
 
@@ -362,7 +344,7 @@ INFO Metadata cleared
 
 <TabItem value="api" label="API">
 
-The clearing of Metadata can be done via the
+The clearing of metadata can be done via the
 [clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata) Metadata API.
 
 Here is an example using `curl`:
@@ -380,8 +362,87 @@ If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'`
 ## Metadata Inconsistencies {#metadata-inconsistency}
 
 Metadata should always be consistent against the underlying database schemas. When it's not, Hasura will mark the
-Metadata objects as `inconsistent`. You can learn more about Metadata inconsistencies on
-[this page](/migrations-metadata-seeds/resolving-metadata-inconsistencies.mdx).
+Metadata objects as `inconsistent`.
+
+<Tabs className="api-tabs">
+
+<TabItem value="cli" label="CLI">
+
+The status of Metadata inconsistency can be checked with the
+[hasura metadata inconsistency](/hasura-cli/commands/hasura_metadata_inconsistency_status.mdx) command.
+
+```bash
+hasura metadata inconsistency status
+```
+
+CLI will log:
+
+```text
+INFO metadata is consistent
+```
+
+If there are inconsistent objects they can be listed with:
+
+```bash
+hasura metadata inconsistency list
+```
+
+CLI will log, for example:
+
+```text
+NAME    TYPE   DESCRIPTION                             REASON
+
+author  table  {"name":"author","schema":"public"}...  Inconsistent object: no such table/view exists in source: "author"
+```
+
+You can then manually address each of the inconsistencies or, if necessary, drop them **all** with the command:
+
+```bash
+hasura metadata inconsistency drop
+```
+
+CLI will log:
+
+```text
+INFO all inconsistent objects removed from metadata
+```
+
+</TabItem>
+
+<TabItem value="console" label="Console">
+
+1. Click on the settings ⚙ icon at the top right corner of the console screen.
+
+{' '}
+<Thumbnail alt='Settings navigation button' src='/img/migrations-metadata-seeds/settings-navigation_console_2-7-0.png' />
+
+2. Click on `Reset` button.
+
+{' '}
+<Thumbnail alt='reset metadata' src='/img/migrations-metadata-seeds/metadata-reset.png' />
+
+3. A pop-up will appear prompting you to confirm the process.
+
+4. A notification should appear indicating success.
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+The clearing of metadata can be done via the
+[clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata) Metadata API.
+
+Here is an example using `curl`:
+
+```bash
+curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
+```
+
+If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
+
+</TabItem>
+
+</Tabs>
 
 ## Diff Metadata {#diff-metadata}
 

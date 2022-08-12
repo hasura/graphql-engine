@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -24,11 +23,10 @@ func NewV3MetadataFunctionConfig(ec *cli.ExecutionContext, baseDir string) *V3Me
 		},
 	}
 }
-func (t *V3MetadataFunctionConfig) Export(md map[string]yaml.Node) (map[string][]byte, error) {
-	var op errors.Op = "functions.V3MetadataFunctionConfig.Export"
+func (t *V3MetadataFunctionConfig) Export(md map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	metadataBytes, err := yaml.Marshal(md)
 	if err != nil {
-		return nil, errors.E(op, t.error(err))
+		return nil, t.error(err)
 	}
 	var metadata struct {
 		Sources []struct {
@@ -38,7 +36,7 @@ func (t *V3MetadataFunctionConfig) Export(md map[string]yaml.Node) (map[string][
 	}
 	var functions []yaml.Node
 	if err := yaml.Unmarshal(metadataBytes, &metadata); err != nil {
-		return nil, errors.E(op, t.error(err))
+		return nil, t.error(err)
 	}
 	if len(metadata.Sources) > 0 {
 		// use functions of first source
@@ -47,7 +45,7 @@ func (t *V3MetadataFunctionConfig) Export(md map[string]yaml.Node) (map[string][
 	var buf bytes.Buffer
 	err = metadataobject.GetEncoder(&buf).Encode(functions)
 	if err != nil {
-		return nil, errors.E(op, t.error(err))
+		return nil, t.error(err)
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(t.MetadataDir, t.Filename())): buf.Bytes(),

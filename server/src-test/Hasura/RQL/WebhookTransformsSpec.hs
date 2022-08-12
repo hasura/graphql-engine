@@ -32,30 +32,20 @@ import Test.Hspec.Hedgehog (hedgehog)
 
 spec :: Spec
 spec = describe "WebhookTransform" do
-  it "Method RoundTrip"
-    . hedgehog
-    $ forAll genMethod
-    >>= trippingJSON
+  it "Method RoundTrip" . hedgehog $
+    forAll genMethod >>= trippingJSON
 
-  it "StringTemplateText RoundTrip"
-    . hedgehog
-    $ forAll genUnescapedTemplate
-    >>= trippingJSON
+  it "StringTemplateText RoundTrip" . hedgehog $
+    forAll genUnescapedTemplate >>= trippingJSON
 
-  it "Url RoundTrip"
-    . hedgehog
-    $ forAll genUrl
-    >>= trippingJSON
+  it "Url RoundTrip" . hedgehog $
+    forAll genUrl >>= trippingJSON
 
-  it "Template RoundTrip"
-    . hedgehog
-    $ forAll genTemplate
-    >>= trippingJSON
+  it "Template RoundTrip" . hedgehog $
+    forAll genTemplate >>= trippingJSON
 
-  it "TemplateEngine RoundTrip"
-    . hedgehog
-    $ forAll genTemplatingEngine
-    >>= trippingJSON
+  it "TemplateEngine RoundTrip" . hedgehog $
+    forAll genTemplatingEngine >>= trippingJSON
 
   it "TransformHeaders" . hedgehog $ do
     headers <- forAll genTransformHeaders
@@ -69,23 +59,14 @@ spec = describe "WebhookTransform" do
     let sortH (WithOptional Nothing) = WithOptional Nothing
         sortH
           (WithOptional (Just (HeadersTransformFn_ (Headers.AddReplaceOrRemove (Headers.AddReplaceOrRemoveFields {..}))))) =
-            WithOptional
-              . Just
-              . HeadersTransformFn_
-              . Headers.AddReplaceOrRemove
-              $ Headers.AddReplaceOrRemoveFields (sort addOrReplaceHeaders) (sort removeHeaders)
+            WithOptional . Just . HeadersTransformFn_ . Headers.AddReplaceOrRemove $
+              Headers.AddReplaceOrRemoveFields (sort addOrReplaceHeaders) (sort removeHeaders)
 
     let sortQ (WithOptional Nothing) = WithOptional Nothing
         sortQ
           (WithOptional (Just (QueryParamsTransformFn_ (QueryParams.AddOrReplace qs)))) =
-            WithOptional
-              . Just
-              . QueryParamsTransformFn_
-              . QueryParams.AddOrReplace
-              $ sortOn fst qs
-        sortQ
-          (WithOptional (Just (QueryParamsTransformFn_ (QueryParams.ParamTemplate qs)))) =
-            WithOptional . Just . QueryParamsTransformFn_ . QueryParams.ParamTemplate $ qs
+            WithOptional . Just . QueryParamsTransformFn_ . QueryParams.AddOrReplace $
+              sortOn fst qs
     let sortRF rf@RequestFields {requestHeaders, queryParams} =
           rf {requestHeaders = sortH requestHeaders, queryParams = sortQ queryParams}
     let reqFieldsMaybe = eitherDecode $ encode reqFields

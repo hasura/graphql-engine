@@ -12,7 +12,7 @@ keywords:
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Upsert Mutation
+# Postgres: Upsert mutation
 
 ## Introduction
 
@@ -35,7 +35,7 @@ argument to specify:
 - a **unique or primary key constraint** using the `constraint` field, and
 - the **columns to be updated** in the case of a violation of that constraint using the `update_columns` field.
 
-The value of the `update_columns` field determines the behavior of the upsert request as shown via the use cases below.
+The value of the `update_columns` field determines the behaviour of the upsert request as shown via the use cases below.
 
 :::info Note
 
@@ -51,7 +51,7 @@ You can fetch details of unique or primary key constraints on a table by running
 SELECT * FROM "information_schema"."table_constraints" WHERE table_name='<table>' AND table_schema='<schema>';
 ```
 
-GraphQL Engine will automatically generate constraint names as enum values for the `constraint` field _(try
+GraphQL engine will automatically generate constraint names as enum values for the `constraint` field _(try
 autocompleting in GraphiQL)_. Typically, the constraint is automatically named as `<table-name>_<column-name>_key`.
 
 :::

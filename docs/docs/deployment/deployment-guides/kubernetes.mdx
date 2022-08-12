@@ -1,5 +1,5 @@
 ---
-description: Deploy Hasura GraphQL Engine with Kubernetes
+description: Deploy Hasura GraphQL engine with Kubernetes
 keywords:
   - hasura
   - docs
@@ -11,11 +11,11 @@ sidebar_label: Using Kubernetes
 
 import LatestRelease from '@site/src/components/LatestRelease';
 
-# Run Hasura GraphQL Engine on Kubernetes
+# Run Hasura GraphQL engine on Kubernetes
 
 ## Introduction
 
-This guide assumes that you already have Postgres running and helps you set up the Hasura GraphQL Engine on Kubernetes
+This guide assumes that you already have Postgres running and helps you set up the Hasura GraphQL engine on Kubernetes
 and connect it to your Postgres database.
 
 ## Deploying Hasura using Kubernetes
@@ -35,13 +35,15 @@ $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-ma
 
 Edit `deployment.yaml` and set the right database url:
 
-```yaml {2}
+```yaml {4}
+
+---
 env:
-  - name: HASURA_METADATA_DATABASE_URL
+  - name: HASURA_GRAPHQL_DATABASE_URL
     value: postgres://<username>:<password>@hostname:<port>/<dbname>
 ```
 
-Examples of `HASURA_METADATA_DATABASE_URL`:
+Examples of `HASURA_GRAPHQL_DATABASE_URL`:
 
 - `postgres://admin:password@localhost:5432/my-db`
 - `postgres://admin:@localhost:5432/my-db` _(if there is no password)_
@@ -49,12 +51,12 @@ Examples of `HASURA_METADATA_DATABASE_URL`:
 :::info Note
 
 - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
-  `HASURA_METADATA_DATABASE_URL` env var (e.g. %40 for @).
+  `HASURA_GRAPHQL_DATABASE_URL` env var (e.g. %40 for @).
 
   You can check the [logs](#kubernetes-logs) to see if the database credentials are proper and if Hasura is able to
   connect to the database.
 
-- The Hasura GraphQL Engine needs access permissions on your Postgres database as described in
+- The Hasura GraphQL engine needs access permissions on your Postgres database as described in
   [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
 
 :::
@@ -66,9 +68,9 @@ $ kubectl create -f deployment.yaml
 $ kubectl create -f svc.yaml
 ```
 
-### Step 4: Open the Hasura Console
+### Step 4: Open the Hasura console
 
-The above creates a LoadBalancer type service with port 80. So you should be able to access the Console at the external
+The above creates a LoadBalancer type service with port 80. So you should be able to access the console at the external
 IP.
 
 For example, using Docker-for-desktop on Mac:
@@ -80,7 +82,7 @@ hasura       LoadBalancer   10.96.214.240   localhost     80:30303/TCP   4m
 kubernetes   ClusterIP      10.96.0.1       <none>        443/TCP        8m
 ```
 
-Head to: `http://localhost` and the Console should load!
+Head to: `http://localhost` and the console should load!
 
 ### Step 5: Track existing tables and relationships
 
@@ -89,7 +91,7 @@ enable GraphQL over the database.
 
 ## Securing the GraphQL endpoint {#kubernetes-secure}
 
-To make sure that your GraphQL endpoint and the Hasura Console are not publicly accessible, you need to configure an
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to configure an
 admin secret key.
 
 ### Add the HASURA_GRAPHQL_ADMIN_SECRET env var
@@ -104,7 +106,7 @@ spec:
      command: ["graphql-engine"]
      args: ["serve", "--enable-console"]
      env:
-     - name: HASURA_METADATA_DATABASE_URL
+     - name: HASURA_GRAPHQL_DATABASE_URL
        value: postgres://<username>:<password>@hostname:<port>/<dbname>
      - name: HASURA_GRAPHQL_ADMIN_SECRET
        value: mysecretkey
@@ -116,23 +118,23 @@ spec:
 
 :::info Note
 
-The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
-the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/overview.mdx) for
+The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
 information on setting up authentication.
 
 :::
 
 ### (optional) Use the admin secret key with the CLI
 
-In case you're using the CLI to open the Hasura Console, use the `admin-secret` flag when you open the Console:
+In case you're using the CLI to open the Hasura console, use the `admin-secret` flag when you open the console:
 
 ```bash
 hasura console --admin-secret=<myadminsecretkey>
 ```
 
-## Hasura GraphQL Engine server logs {#kubernetes-logs}
+## Hasura GraphQL engine server logs {#kubernetes-logs}
 
-You can check the logs of the Hasura GraphQL Engine deployed on Kubernetes by checking the logs of the GraphQL Engine
+You can check the logs of the Hasura GraphQL engine deployed on Kubernetes by checking the logs of the GraphQL engine
 service, i.e. `hasura`:
 
 ```bash
@@ -146,12 +148,12 @@ $ kubectl logs -f svc/hasura
 
 - [https://kubernetes.io/docs/concepts/cluster-administration/logging](https://kubernetes.io/docs/concepts/cluster-administration/logging)
   for more details on logging in Kubernetes.
-- [Hasura GraphQL Engine logs](/deployment/logging.mdx) for more details on Hasura logs
+- [Hasura GraphQL engine logs](/deployment/logging.mdx) for more details on Hasura logs
 
-## Updating Hasura GraphQL Engine {#kubernetes-update}
+## Updating Hasura GraphQL engine {#kubernetes-update}
 
-This guide will help you update the Hasura GraphQL Engine running on Kubernetes. This guide assumes that you already
-have the Hasura GraphQL Engine running on Kubernetes.
+This guide will help you update the Hasura GraphQL engine running on Kubernetes. This guide assumes that you already
+have the Hasura GraphQL engine running on Kubernetes.
 
 ### Step 1: Check the latest release version
 
@@ -195,11 +197,11 @@ $ kubectl replace -f deployment.yaml
 
 :::info Note
 
-If you are downgrading to an older version of the GraphQL Engine you might need to downgrade your Metadata catalogue
-version as described in [Downgrading Hasura GraphQL Engine](/deployment/downgrading.mdx)
+If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue
+version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx)
 
 :::
 
 ## Advanced
 
-- [Setting up Migrations](/migrations-metadata-seeds/migrations-metadata-setup.mdx)
+- [Setting up migrations](/migrations-metadata-seeds/migrations-metadata-setup.mdx)

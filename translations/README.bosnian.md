@@ -126,23 +126,23 @@ Pretvorite podatke u Postgres ili pokrenite poslovnu logiku na njemu da biste do
 ## Demo
 
 Pogledajte sve primjere dostupne u
-[hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) mapi.
+[community/sample-apps](../community/sample-apps) mapi.
 
 ### Stvarne aplikacije
 
 - Aplikacija za grupno dopisivanje koja koristi React, uključuje pokazatelj tipkanja, online korisnike & obavijesti o novim porukama.
   - [Isprobajte odmah](https://realtime-chat.demo.hasura.io/)
-  - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
+  - [Tutorijal](../community/sample-apps/realtime-chat)
   - [Pogledaj API](https://realtime-chat.demo.hasura.io/console)
 
 - Aplikacija za praćenje lokacije vozila uživo koja prikazuje GPS koordinate dok se vozilo kreće po mapi..
   - [Isprobajte odmah](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
+  - [Tutorijal](../community/sample-apps/realtime-location-tracking)
   - [Pogledaj API](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Nadzorna ploča u stvarnom vremenu koja objedinjuje podatke o kontinuirano mijenjanim podacima.
   - [Isprobajte odmah](https://realtime-poll.demo.hasura.io/)
-  - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
+  - [Tutorijal](../community/sample-apps/realtime-poll)
   - [Pogledaj API](https://realtime-poll.demo.hasura.io/console)
 
 ### Video
@@ -175,19 +175,19 @@ Pogledajte naš [vodič za doprinos](../CONTRIBUTING.md) za više detalja.
 Hasura brendirani sadržaj (logo, Hasura maskota, powered by bedževi i slično.) mogu biti pronađeni u [assets/brand](../assets/brand) mapi. Slobodno ih možete koristiti u vašoj aplikaciji/web stranici. Biti će nam drago i ako dodate "Pokreće Hasura" bedž na vašu aplikaciju koju ste napravili uz pomoć Hasura-e. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
 <!-- Za svijetle pozadine -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
 </a>
 
 <!-- Za tamne pozadine -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
 </a>
 ```
 

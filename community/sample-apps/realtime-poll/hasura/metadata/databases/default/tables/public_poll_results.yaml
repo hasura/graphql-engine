@@ -1,0 +1,20 @@
+object_relationships:
+- name: option
+  using:
+    manual_configuration:
+      column_mapping:
+        option_id: id
+      remote_table:
+        name: option
+        schema: public
+- name: poll
+  using:
+    manual_configuration:
+      column_mapping:
+        poll_id: id
+      remote_table:
+        name: poll
+        schema: public
+table:
+  name: poll_results
+  schema: public

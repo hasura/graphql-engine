@@ -1,7 +1,7 @@
 ---
 sidebar_label: Actions permissions
 sidebar_position: 7
-description: Permissions for Hasura Actions
+description: Permissions for Hasura actions
 keywords:
   - hasura
   - docs
@@ -13,7 +13,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Actions Permissions
+# Actions permissions
 
 ## Introduction
 
@@ -21,19 +21,19 @@ As with the other fields in the GraphQL schema, users need to be given access to
 
 ## Set action permissions
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Actions -> [action-name] -> Permissions` tab in the Console.
+Head to the `Actions -> [action-name] -> Permissions` tab in the console.
 
-<Thumbnail src="/img/actions/actions-permissions.png" alt="Console action permission" />
+<Thumbnail src='/img/actions/actions-permissions.png' alt='Console action permission' />
 
 Hit `Save` to give the role permission to access the action.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-Go to `metadata/actions.yaml` in the Hasura Project directory.
+Go to `metadata/actions.yaml` in the Hasura project directory.
 
 Update the definition of the `insertAuthor` action as:
 
@@ -54,7 +54,7 @@ Save the changes and run `hasura metadata apply` to set the permissions.
 <TabItem value="api" label="API">
 
 Action permissions can be set by using the
-[create_action_permission](/api-reference/metadata-api/actions.mdx#metadata-create-action-permission) Metadata API:
+[create_action_permission](/api-reference/metadata-api/actions.mdx#metadata-create-action-permission) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1

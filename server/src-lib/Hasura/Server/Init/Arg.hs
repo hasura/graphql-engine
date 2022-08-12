@@ -1,8 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module Hasura.Server.Init.Arg
-  ( -- * Main Opt.Parser
+  ( -- * Main Parser
     parseHgeOpts,
     parsePostgresConnInfo,
     parseMetadataDbUrl,
@@ -11,7 +10,7 @@ module Hasura.Server.Init.Arg
     retriesNumOption,
     databaseUrlOption,
 
-    -- * Command Opt.Parsers
+    -- * Command Parsers
     module Downgrade,
     module Serve,
   )
@@ -20,28 +19,27 @@ where
 --------------------------------------------------------------------------------
 
 import Data.URL.Template qualified as Template
-import Hasura.Logging qualified as Logging
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.Server.Init.Arg.Command.Downgrade as Downgrade
 import Hasura.Server.Init.Arg.Command.Serve as Serve
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
-import Hasura.Server.Init.Config (HGECommand, HGEOptionsRaw, Option, PostgresConnDetailsRaw, PostgresConnInfo, PostgresConnInfoRaw, ServeOptionsRaw)
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Init.Env qualified as Env
 import Options.Applicative qualified as Opt
 
 --------------------------------------------------------------------------------
 
--- | The Main Arg 'Opt.Parser'. It constructs a 'HGEOptionsRaw' term:
+-- | The Main Arg Parser. It constructs a 'Config.HGEOptionsRaw' term:
 --
 -- 1. '(Config.PostgresConnInfo (Maybe PostgresConnInfoRaw))' - The DB connection.
 -- 2: 'Maybe String' - Representing the metadata connection.
 -- 3: 'Config.HGECommand' @a@ - The result of the supplied Subcommand.
-parseHgeOpts :: (Logging.EnabledLogTypes impl) => Opt.Parser (HGEOptionsRaw (ServeOptionsRaw impl))
+parseHgeOpts :: L.EnabledLogTypes impl => Opt.Parser (Config.HGEOptionsRaw (Config.ServeOptionsRaw impl))
 parseHgeOpts =
   Config.HGEOptionsRaw <$> parsePostgresConnInfo <*> parseMetadataDbUrl <*> parseHGECommand
 
-parseHGECommand :: (Logging.EnabledLogTypes impl) => Opt.Parser (HGECommand (ServeOptionsRaw impl))
+parseHGECommand :: L.EnabledLogTypes impl => Opt.Parser (Config.HGECommand (Config.ServeOptionsRaw impl))
 parseHGECommand =
   Opt.subparser
     ( Opt.command
@@ -80,7 +78,7 @@ parseHGECommand =
 
 --------------------------------------------------------------------------------
 
-parsePostgresConnInfo :: Opt.Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
+parsePostgresConnInfo :: Opt.Parser (Config.PostgresConnInfo (Maybe Config.PostgresConnInfoRaw))
 parsePostgresConnInfo = do
   retries' <- retries
   maybeRawConnInfo <-
@@ -89,15 +87,15 @@ parsePostgresConnInfo = do
   pure $ Config.PostgresConnInfo maybeRawConnInfo retries'
   where
     retries =
-      Opt.optional
-        $ Opt.option
+      Opt.optional $
+        Opt.option
           Opt.auto
           ( Opt.long "retries"
               <> Opt.metavar "NO OF RETRIES"
               <> Opt.help (Config._helpMessage retriesNumOption)
           )
 
-retriesNumOption :: Option ()
+retriesNumOption :: Config.Option ()
 retriesNumOption =
   Config.Option
     { Config._default = (),
@@ -105,17 +103,17 @@ retriesNumOption =
       Config._helpMessage = "No.of retries if Postgres connection error occurs (default: 1)"
     }
 
-parseDatabaseUrl :: Opt.Parser (Maybe Template.Template)
+parseDatabaseUrl :: Opt.Parser (Maybe Template.URLTemplate)
 parseDatabaseUrl =
-  Opt.optional
-    $ Opt.option
+  Opt.optional $
+    Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "database-url"
           <> Opt.metavar "<DATABASE-URL>"
           <> Opt.help (Config._helpMessage databaseUrlOption)
       )
 
-databaseUrlOption :: Option ()
+databaseUrlOption :: Config.Option ()
 databaseUrlOption =
   Config.Option
     { Config._default = (),
@@ -123,7 +121,7 @@ databaseUrlOption =
       Config._helpMessage = "Postgres database URL. Example postgres://foo:bar@example.com:2345/database"
     }
 
-parseRawConnDetails :: Opt.Parser (Maybe PostgresConnDetailsRaw)
+parseRawConnDetails :: Opt.Parser (Maybe Config.PostgresConnDetailsRaw)
 parseRawConnDetails = do
   host' <- host
   port' <- port
@@ -131,26 +129,26 @@ parseRawConnDetails = do
   password' <- password
   dbName' <- dbName
   options' <- options
-  pure
-    $ Config.PostgresConnDetailsRaw
-    <$> host'
-    <*> port'
-    <*> user'
-    <*> pure password'
-    <*> dbName'
-    <*> pure options'
+  pure $
+    Config.PostgresConnDetailsRaw
+      <$> host'
+      <*> port'
+      <*> user'
+      <*> pure password'
+      <*> dbName'
+      <*> pure options'
   where
     host =
-      Opt.optional
-        $ Opt.strOption
+      Opt.optional $
+        Opt.strOption
           ( Opt.long "host"
               <> Opt.metavar "<HOST>"
               <> Opt.help "Postgres server host"
           )
 
     port =
-      Opt.optional
-        $ Opt.option
+      Opt.optional $
+        Opt.option
           Opt.auto
           ( Opt.long "port"
               <> Opt.short 'p'
@@ -159,8 +157,8 @@ parseRawConnDetails = do
           )
 
     user =
-      Opt.optional
-        $ Opt.strOption
+      Opt.optional $
+        Opt.strOption
           ( Opt.long "user"
               <> Opt.short 'u'
               <> Opt.metavar "<USER>"
@@ -176,8 +174,8 @@ parseRawConnDetails = do
         )
 
     dbName =
-      Opt.optional
-        $ Opt.strOption
+      Opt.optional $
+        Opt.strOption
           ( Opt.long "dbname"
               <> Opt.short 'd'
               <> Opt.metavar "<DBNAME>"
@@ -185,30 +183,30 @@ parseRawConnDetails = do
           )
 
     options =
-      Opt.optional
-        $ Opt.strOption
+      Opt.optional $
+        Opt.strOption
           ( Opt.long "pg-connection-options"
               <> Opt.short 'o'
               <> Opt.metavar "<DATABASE-OPTIONS>"
               <> Opt.help "PostgreSQL options"
           )
 
--- Currently this MUST ultimately end up getting parsed in initBasicConnectionInfo
+-- TODO(SOLOMON): Should we parse the URL here?
 parseMetadataDbUrl :: Opt.Parser (Maybe String)
 parseMetadataDbUrl =
-  Opt.optional
-    $ Opt.strOption
+  Opt.optional $
+    Opt.strOption
       ( Opt.long "metadata-database-url"
           <> Opt.metavar "<METADATA-DATABASE-URL>"
           <> Opt.help (Config._helpMessage metadataDbUrlOption)
       )
 
-metadataDbUrlOption :: Option ()
+metadataDbUrlOption :: Config.Option ()
 metadataDbUrlOption =
   Config.Option
     { Config._default = (),
       Config._envVar = "HASURA_GRAPHQL_METADATA_DATABASE_URL",
-      Config._helpMessage = "Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database\nThis can also be a URI of the form ‘dynamic-from-file:///path/to/file’,  where the referenced file contains a postgres connection string, which will be read dynamically every time a new connection is established."
+      Config._helpMessage = "Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database"
     }
 
 --------------------------------------------------------------------------------

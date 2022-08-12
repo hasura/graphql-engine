@@ -12,18 +12,21 @@ where
 
 import Data.Aeson
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.Function.Cache
+import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Function
 
 newtype HasDefault = HasDefault {unHasDefault :: Bool}
-  deriving (Show, Eq, Ord, Generic, ToJSON, NFData, Hashable)
+  deriving (Show, Eq, Generic, ToJSON, Cacheable, NFData, Hashable)
 
 data FunctionArg = FunctionArg
   { faName :: Maybe FunctionArgName,
     faType :: QualifiedPGType,
     faHasDefault :: HasDefault
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving (Show, Eq, Generic)
+
+instance Cacheable FunctionArg
 
 instance NFData FunctionArg
 

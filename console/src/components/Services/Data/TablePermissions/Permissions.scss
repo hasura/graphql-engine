@@ -1,0 +1,163 @@
+@import "../TableModify/ModifyTable.scss";
+
+.permissionsTable {
+  width: 85%;
+
+  td, th {
+    text-align: center;
+    vertical-align: middle !important;
+    position: relative;
+  }
+
+  thead {
+    font-weight: bold;
+  }
+
+  td:last-child, th:last-child {
+    border-left: 4px double #ddd;
+    width: 10%;
+  }
+
+  td:first-child, th:first-child {
+    overflow: auto;
+    border-right: 4px double #ddd;
+    max-width: 250px;
+    width: 250px;
+  }
+
+  //.permissionDelete {
+  //  cursor: pointer;
+  //  margin-left: 10px;
+  //}
+
+  .bulkSelect {
+    margin-right: 10px !important;
+  }
+
+  // TODO: make common with Roles page
+  .clickableCell {
+    cursor: pointer;
+
+    .editPermsIcon {
+      font-size: 12px;
+      position: absolute;
+      right: 10px;
+      color: #337ab7;
+      cursor: pointer;
+      display: none;
+    }
+  }
+
+  .clickableCell:hover {
+    background-color: #ebf7de;
+
+    .editPermsIcon {
+      display: inline-block;
+    }
+  }
+
+  .currEdit, .currEdit:hover {
+    background-color: #FFF3D5;
+    color: #FD9540;
+
+    .editPermsIcon {
+      display: inline-block;
+    }
+  }
+}
+
+.permissionsLegend {
+  font-size: 12px;
+  margin-right: 5px;
+  margin-bottom: 20px;
+  //float: right;
+  //clear: both;
+
+  .permissionsLegendValue {
+    margin-right: 15px;
+  }
+}
+
+.newRoleInput {
+  margin-left: 20px;
+  width: calc(100% - 40px);
+  height: 30px;
+}
+
+.fkSelect {
+  max-width: 200px;
+}
+
+.fkInEdit {
+  display: inline-block;
+  width: 47%;
+}
+
+.limitInput {
+  display: inline-block;
+  width: 100px;
+  margin-left: 15px;
+  height: 25px;
+}
+
+.activeEdit {
+  .editPermsHeading {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 20px;
+    word-wrap: break-word;
+  }
+
+  .sectionStatus {
+    font-weight: normal;
+  }
+
+  .editPermsSection {
+    margin: 5px;
+    padding: 10px;
+    word-wrap: break-word;
+
+    .form_permission_insert_set_wrapper {
+      .permission_insert_set_wrapper {
+        .configure_insert_set_checkbox {
+          position: relative;
+          display: block;
+          margin-top: 10px;
+          margin-bottom: 10px;
+
+          label {
+            cursor: pointer;
+            min-height: 20px;
+            font-weight: normal;
+
+            input:not([disabled]) {
+              cursor: pointer;
+            }
+          }
+        }
+
+        .insertSetConfigRow {
+          margin: 10px 0px;
+          display: flex;
+          align-items: center;
+
+          .input_element_wrapper {
+            width: 20%;
+
+            i {
+              cursor: pointer;
+            }
+
+            select {
+              width: 100%;
+            }
+
+            input {
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+description: Create a new SQL function with same name (error)
+url: /v1/query
+status: 400
+response:
+  path: "$.args"
+  error: 'the following tracked function(s) cannot be overloaded: search_posts'
+  code: not-supported
+query:
+  type: run_sql
+  args:
+    sql: |
+      create function search_posts(search text, id integer)
+      returns setof post as $$
+          select *
+          from post
+          where
+          title ilike ('%' || search || '%') or
+          content ilike ('%' || search || '%') or
+          id = id
+      $$ language sql stable;

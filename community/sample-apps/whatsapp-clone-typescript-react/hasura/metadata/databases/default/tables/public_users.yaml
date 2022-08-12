@@ -1,0 +1,59 @@
+delete_permissions:
+- permission:
+    filter:
+      id:
+        _eq: X-Hasura-User-Id
+  role: user
+insert_permissions:
+- permission:
+    check:
+      id:
+        _eq: X-Hasura-User-Id
+    columns:
+    - created_at
+    - id
+    - name
+    - password
+    - picture
+    - username
+  role: user
+select_permissions:
+- permission:
+    columns:
+    - created_at
+    - id
+    - name
+    - password
+    - picture
+    - username
+    filter:
+      id:
+        _eq: X-Hasura-User-Id
+  role: mine
+- permission:
+    columns:
+    - created_at
+    - id
+    - name
+    - password
+    - picture
+    - username
+    filter: {}
+  role: user
+table:
+  name: users
+  schema: public
+update_permissions:
+- permission:
+    check: null
+    columns:
+    - created_at
+    - id
+    - name
+    - password
+    - picture
+    - username
+    filter:
+      id:
+        _eq: X-Hasura-User-Id
+  role: user

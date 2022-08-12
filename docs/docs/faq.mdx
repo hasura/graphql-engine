@@ -1,247 +1,130 @@
 ---
 description: Hasura FAQs
-title: FAQs
 keywords:
   - hasura
   - docs
   - FAQs
-sidebar_position: 105
+sidebar_position: 260
 sidebar_label: FAQs
 # adding index slug in case this root doc becomes a directory later
 slug: faq/index
 ---
 
-import FAQ from '@site/static/icons/features/faq.svg';
+# FAQs
 
-# <FAQ /> FAQs
+## What types of workloads and databases does Hasura support? {#faq-db}
 
-## What are some pain points in the development process which Hasura solves?
+Hasura supports the following databases:
 
-- Automatically exposes full-featured GraphQL [query, mutation, subscription](/getting-started/how-it-works/index.mdx)
-  CRUD types for each table in your database.
-- Compiles client GraphQL into [optimized SQL queries](#faq-compiler-performance), providing unmatched speed and
-  efficiency.
-- [Massively reduces time](#faq-hasura-timesaving) writing boilerplate database CRUD API's.
-- Replaces long, complex, unintuitive SQL queries with the
-  [declarative simplicity and benefits of GraphQL](#faq-how-hasura-works).
-- Allows you to manually extend your GraphQL API with extra endpoints to deal with any
-  [business logic](#faq-business-logic) you may need.
-- Supports adding the [authentication solution of your choice](#faq-hasura-auth).
-- Secures your data with user roles and [fine-grained row level permissions](#faq-authorization).
-- Replaces multiple data sources with a [single unified endpoint](#faq-data-federation) for your entire application.
-- Provides tools to [define relationships](#faq-data-federation) between disparate data.
-- [Tracks changes over time](#faq-version-control) allowing changes to be added to version control and synchronization
-  with your codebase.
-- Provides an [optimized and massively scalable](#faq-scaling) Cloud and Enterprise solution with which to host projects
-  with extra features.
-
-## What databases does Hasura support? {#faq-db}
-
-Check out the list of [compatible databases](/databases/overview.mdx).
+- PostgresQL (and the Postgres family of databases: Yugabyte, Timescale, Citus, Aurora)
+- SQL Server
+- Big Query
 
 ## How does Hasura work? {#faq-how-hasura-works}
 
-Although Hasura presents itself as a web-service API, Hasura is essentially a JIT compiler. Hasura takes incoming
-GraphQL API calls over HTTP and then tries to achieve theoretically optimal performance while delegating the data
-fetches to downstream data sources. You can read more about
-[how Hasura works here](/getting-started/how-it-works/index.mdx) and our design philosophy in this
-[blog post](https://hasura.io/blog/how-hasura-works/).
+Although Hasura presents itself as a web-service, Hasura is quite a JIT compiler. Hasura takes incoming GraphQL API
+calls over HTTP and then tries to achieve theoretically optimal performance while delegating the data fetches to
+downstream data sources. You can read more about Hasura’s design philosophy in this
+[blog post](https://hasura.io/blog/how-hasura-works/)
 
 ## How much time & effort does Hasura save? {#faq-hasura-timesaving}
 
-Hasura cuts development time by roughly at least 50-80%. You can find out more from our case studies
-[here](https://hasura.io/user-stories/).
+Hasura cuts down development time by 50-80%. You can find out more from our case studies
+[here.](https://hasura.io/user-stories/)
 
 ## How do I use Hasura if I already have an existing application or API? {#faq-hasura-existing-app-api}
 
 Hasura is designed for incremental adoption without having to rip-and-replace or entirely rebuild your stack. You can
 incrementally migrate your application to Hasura. Use Hasura to first build any new features for your application using
-your existing data as well as a high-performance read layer for any read-heavy use-cases as this takes no time to set
+your existing data as well as a high performance read layer for any read-heavy use-cases as this takes no time to set
 up. You can also use any business logic in your existing applications by delegating to them via Hasura Actions. This
-gives you the time to migrate over any legacy code or rewrite existing microservices with Hasura.
+gives you the time to migrate over any legacy code or rewrite existing micro-services with Hasura.
 
-## How can I get Hasura up-and-running quickly?
+## Where do I put business logic? {#faq-business-logic}
 
-The easiest and fastest way to get Hasura up and running quickly is by using our
-[Hasura Cloud](/getting-started/getting-started-cloud.mdx) platform. We have a set of
-[sample use cases](/getting-started/use-case/overview.mdx) available with step-by-step instructions in place.
+Hasura exposes your domain’s data and logic over a high-performance flexible API. Hasura removes the need for writing
+any code required for external or internal authorization rules.
 
-Hasura can be also deployed easily in a [Docker container](/getting-started/docker-simple.mdx).
+Hasura provides 4 ways for exposing existing or new business logic in your domain:
 
-## What does my first-time demo experience look like?
+**Event triggers:** Whenever there’s a change in the upstream database, Hasura can capture that change as an event and
+deliver that to a HTTP webhook that can process that data change event and react to it asynchronously. Apart from
+attaching specific pieces of logic to events, this is especially useful if you’re thinking about building end-to-end
+real-time and reactive applications.
 
-Using the Hasura Console, click on the Data tab and connect up a new Postgres database from our partner company
-[Neon](/databases/postgres/neon.mdx). Then create tables, insert some demo data and test out some queries and mutations
-using the GraphiQL interface in the API tab. Alternatively, from your connected database in the Data tab, try one of our
-demo templates from the Template Gallery which can demonstrate key Hasura features for you quickly. If you already have
-an existing database with tables and data you can also just have Hasura connect to it, track tables and relationships,
-and you can immediately start exploring your new GraphQL API.
+- Read more about this architecture at [https://3factor.app](https://3factor.app)
+- Read more about event triggers in the Hasura [docs.](/event-triggers/index.mdx)
+- Go through a quick tutorial on how to set event triggers up at [https://learn.hasura.io](https://learn.hasura.io)
 
-## What's so great about GraphQL?
-
-GraphQL is a query language that was developed by Facebook and released in 2015. It has gained a great deal of
-popularity due to its unique features, benefits and advantages over REST APIs and other alternatives.
-
-As opposed to multiple disparate endpoints with REST APIs, GraphQL uses one `POST`-enabled endpoint which can service
-many types of data requests from the client. Queries, mutations and subscriptions are made with a simple and intuitive
-syntax which describes the shape of the resulting data, so you know exactly what you're getting back. This declarative
-syntax makes it easier to understand and reason about the code and allows for more complex, nested, joined, queries to
-be written in a simple, clear and concise way.
-
-GraphQL allows developers to retrieve only the data they need and nothing more, resolving problems with over and
-under-fetching. This can lead to faster and more efficient performance and reduced network traffic.
-
-GraphQL uses a strong type system to define the structure of the data that can be queried. This provides better
-documentation, tooling, and error checking.
-
-GraphQL has a thriving ecosystem of libraries, tools, and services that make it easier to work with. This includes
-things like code generators, testing frameworks, and middleware.
-
-Overall, GraphQL is a powerful tool for building APIs that are flexible, efficient, and easy to use. Its popularity
-continues to grow, and it is likely to become an increasingly important part of more developers and businesses toolkits
-in the coming years.
-
-## How do I manage my database once it's connected to Hasura?
-
-Your database is still manageable in exactly the same way as it was before. In addition, you can perform many database
-management functions from the Hasura Console or run SQL directly on your DB from the Console.
-
-## How do I model out my data in a relational way in Hasura?
-
-Hasura allows you to specify relationships between your data including one-to-one, one-to-many and relationships to
-Remote Schemas between remote databases.
-
-## Can I connect my existing API endpoints, databases / data sources, or GraphQL servers? {#faq-data-federation}
-
-Yes, you can use Hasura as a data federation solution to connect multiple disparate data source types and define
-relationships between them. [Read more here](/data-federation/data-federation-types.mdx).
-
-## Are the common models accounted for? Querying? Filtering? Pagination? Inserting records? Live Queries?
-
-Yes. Hasura automatically generates `query`, `insert`, `update`, `delete` and `subscription` abilities on your databases
-which include `where`, `order_by`, `limit`, `offset` and `on_conflict` arguments where applicable.
-
-[//]: # '## How can I test the permission / business logic which I’ve setup?'
-
-## How do I track changes to my Hasura instance and keep them in sync with my codebase? {#faq-version-control}
-
-When using the Hasura CLI to manage Hasura, all actions regarding the underlying databases and Hasura config (Metadata)
-are recorded and can be committed to version control to enable easy versioned backups and re-deployment of your setup.
-
-## How do I declaratively deploy Hasura?
-
-With GitHub deployment on Hasura Cloud you can link a GitHub repository to your Hasura Project to automatically deploy
-Metadata and Migrations from within a given directory to the linked project. Alternatively, you can use GitHub Actions
-or a similar CI/CD service to build a custom deployment pipeline for your Hasura instances.
-
-## How can I preview changes to my Hasura instance?
-
-With [Preview Apps](/cloud-ci-cd/preview-apps.mdx) on Hasura Cloud you can automatically create an app on Hasura
-Cloud for every pull request you make to your GitHub repo enabling quick and easy testing of changes as you work.
-
-## How would I work collaboratively with my team using Hasura?
-
-Using [Projects](/hasura-cloud/projects/index.mdx) in Hasura Cloud you are able to add collaborators and assign each
-different access permissions on your instance. Since the Hasura
-[Metadata and Migrations](/migrations-metadata-seeds/overview.mdx) can be committed to version control, you can also use
-the user permissions systems of a version control host (eg: GitHub) in order to control how your team collaborates on
-your Hasura Project.
-
-## How do I connect business logic or extend the GraphQL schema? {#faq-business-logic}
-
-Hasura provides ways to connect existing or new business logic and for extending the generated GraphQL schema with extra
-CRUD functionality, eg:
-
-### REST APIs via Hasura Actions:
-
-If you have new or existing REST APIs that serve domain data or logic, you can easily connect Hasura to them and extend
-the GraphQL schema that Hasura exposes. This is useful not just when you have legacy APIs that contain a lot of
-transactional or application logic, but also when you want to build and serve custom logic with cloud-native code
+**REST APIs:** If you have new or existing REST APIs that serve domain data or logic, you can easily connect Hasura to
+them and extend the GraphQL schema that Hasura exposes. This is useful not just when you have legacy APIs that contain a
+lot of transactional or application logic, but also when you want to build and serve custom logic with cloud-native code
 deployed as containers or serverless functions.
 
-- Read more about [Hasura Actions](/actions/overview.mdx).
+- Read more about [Hasura Actions](/actions/index.mdx)
 
-### Hasura Event Triggers:
+**GraphQL APIs:** If you have a new or existing GraphQL service that extends the schema, say with custom mutations that
+incorporate your custom logic, or if you’d like to extend your overall GraphQL API with a “sub graph” that comes from a
+service that you may not directly own, you can use “Remote Schemas” in Hasura to bring in GraphQL services as data &
+logic providers to your GraphQL API.
 
-Whenever there’s a change in the upstream database, Hasura can capture that change as an event and deliver that to a
-HTTP webhook that can process that data change event and react to it asynchronously. Apart from attaching specific
-pieces of logic to events, this is especially useful if you’re thinking about building end-to-end real-time and reactive
-applications.
+- Read more about [Remote Schemas](/remote-schemas/index.mdx)
 
-- Read more about this architecture at [https://3factor.app](https://3factor.app).
-- Read more about Event Triggers in the Hasura [docs](/event-triggers/overview.mdx).
-- Go through a quick tutorial on how to set Event Triggers up at [https://learn.hasura.io](https://learn.hasura.io).
+**Stored procedures / functions in the database:** Stored procedures and functions are a common way to write and store
+high-performance business logic, or transactional logic, that's close to the data. As a part of the GraphQL API that
+Hasura exposes over databases, Hasura allows you to expose stored procedures or functions as fields in the GraphQL
+schema. This is a great way to bring in existing business logic that maybe in your database, or to write custom,
+high-performance logic if you’re familiar with databases!
 
-### GraphQL APIs via Hasura Remote Schemas:
-
-If you have a new or existing GraphQL service that extends the schema, say with custom mutations that incorporate your
-custom logic, or if you’d like to extend your overall GraphQL API with a “sub graph” that comes from a service that you
-may not directly own, you can use “Remote Schemas” in Hasura to bring in GraphQL services as data & logic providers to
-your GraphQL API.
-
-- Read more about [Remote Schemas](/remote-schemas/overview.mdx).
-
-### Stored procedures / functions in the database:
-
-Stored procedures and functions are a common way to write and store high-performance business logic, or transactional
-logic, that's close to the data. As a part of the GraphQL API that Hasura exposes over databases, Hasura allows you to
-expose stored procedures or functions as fields in the GraphQL schema. This is a great way to bring in existing business
-logic that maybe in your database, or to write custom, high-performance logic if you’re familiar with databases!
-
-- Read more about [custom functions](/schema/postgres/custom-functions.mdx).
+- Read more about [custom functions](/schema/postgres/custom-functions.mdx)
 
 Choose one or more of the methods above depending on where your existing business logic is; and where you want it to be
 in the future!
 
 For example, you might have existing logic in synchronous REST APIs in Java or .NET, but you might want to write new
-logic as reactive Event Triggers deployed as serverless functions (or lambdas) in Javascript or Python or Go!
+logic as reactive event triggers deployed as serverless functions (or lambdas) in Javascript or Python or Go!
 
 ## Can I use REST instead of GraphQL APIs? {#faq-REST-api}
 
-Yes. Hasura 2.0 added support for REST APIs and allows users to create idiomatic REST endpoints based on GraphQL
-templates. [Read more here](/api-reference/restified.mdx).
+Hasura 2.0 added support for REST APIs. Hasura 2.0 allows users to create idiomatic REST endpoints based on GraphQL
+templates. Read more [here.](/api-reference/restified.mdx)
 
 ## Can Hasura integrate with my authentication system? {#faq-hasura-auth}
 
-Hasura believes authentication should not be restricted to a particular provider. Therefore, authentication is handled
-outside of Hasura and we make it easy for you to bring in your own authentication system. The most favored mechanism is
-via JWT. Hasura can accept JWT tokens from any standard JWT provider. For extremely customized authentication systems,
-Hasura also supports auth webhook that allows you to read through cookies or tokens that might have a custom format. We
-have guides for some of the popular authentication providers. Read more [here.](/auth/authentication/index.mdx)
+Hasura believes authentication should not be restricted to a particular provider. Therefore, we make it easier for you
+to bring in your authentication system. The most favored mechanism is via JWT. Hasura can accept JWT tokens from any
+standard JWT provider. For extremely customized authentication systems, Hasura also supports auth webhook that allows
+you to read through cookies or tokens that might have a custom format. We have guides for some of the popular
+authentication providers. Read more [here.](/auth/authentication/index.mdx)
 
 ## Does Hasura also automatically cache queries or data to improve performance? {#faq-hasura-query-caching}
 
-Query response caching (available on Hasura Cloud & Hasura Enterprise Edition) can be enabled by specifying which query
-to cache using the @cached directive. Read more about caching
+Query response caching (available on Hasura Cloud & Hasura EE) can be enabled by specifying which query to cache using
+the @cached directive. Read more about caching
 [here.](https://hasura.io/learn/graphql/hasura-advanced/performance/1-caching/)
 
-## How do I limit what data my users can see? {#faq-authorization}
+## How does Hasura handle ABAC, RBAC style authorization policies? {#faq-ABAC-RBAC}
 
-Hasura's authorization system allows the creation of user roles which can then be assigned fine-grained permission
-policies for each of the `insert`, `select`, `update`, and `delete` fields.
+Hasura implements RBAC by automatically publishing a different GraphQL schema that represents the right queries, fields,
+and mutations that are available to that role.
 
-Hasura implements role-based access control (RBAC) by automatically publishing a different GraphQL schema that
-represents the right queries, fields, and mutations that are available to that role.
-
-For attribute-based access control (ABAC), session variables can be used as attributes, and permission rules can be
-created that can use any dynamic variable that is a property of the request.
-
-[Read more here](/auth/authorization/index.mdx).
+For ABAC, session variables can be used as attributes, and permission rules can be created that can use any dynamic
+variable that is a property of the request.
 
 ## Does Hasura have other security features, specifically for GraphQL in production? {#faq-security}
 
-Hasura has multiple security features to best utilize the power of our GraphQL Engine. Features like service-level
+Hasura has multiple security features to best utilize the power of our GraphQL Engine. Features like service level
 security, authentication & authorization, allow lists, rate, and response limiting are present. Learn more about Hasura
-security [here](https://hasura.io/learn/graphql/hasura-advanced/security/).
+security [here.](https://hasura.io/learn/graphql/hasura-advanced/security/)
 
 ## How does the compiler approach provide superior performance? {#faq-compiler-performance}
 
-Typically, when you think of GraphQL servers processing a query, you think of the number of resolvers involved in
+Typically when you think of GraphQL servers processing a query, you think of the number of resolvers involved in
 fetching the data for the query. This approach can lead to multiple hits to the database with obvious constraints
 associated with it. Batching with data loader can improve the situation by reducing the number of calls.
 
-Internally, Hasura parses a GraphQL query gets an internal representation of the GraphQL Abstract Syntax Tree (AST). The
-GraphQL AST is then converted to a SQL AST. With necessary transformations and variables the final SQL is formed.
+Internally Hasura parses a GraphQL query gets an internal representation of the GraphQL AST. GraphQL AST is then
+converted to a SQL AST. With necessary transformations and variables the final SQL is formed.
 
 `GraphQL Parser -> GraphQL AST -> SQL AST -> SQL`
 
@@ -252,12 +135,10 @@ This compiler-based approach allows Hasura to form a single SQL query for a Grap
 Hasura Cloud lets you scale your applications automatically without having to think about the number of instances,
 cores, memory, thresholds etc. You can keep increasing your number of concurrent users and the number of API calls and
 Hasura Cloud will figure out the optimizations auto-magically. Hasura Cloud can load balance queries and subscriptions
-across read replicas while sending all mutations and Metadata API calls to the master. Learn more about Horizontal
+across read replicas while sending all mutations and metadata API calls to the master. Learn more about Horizontal
 scaling with Hasura, [here.](https://hasura.io/learn/graphql/hasura-advanced/performance/2-horizontal-scaling/)
-Additionally, Hasura Community Edition can be scaled horizontally by adding more Hasura instances to your deployment.
 
-[//]: # '## How does Hasura interact with other services (data layer, business intelligence tooling, etc.)?'
-[//]: # '## How can I improve the performance of slow running API calls? {#faq-slow-api-perf}'
+## How can I improve the performance of slow running API calls? {#faq-slow-api-perf}
 
 Hasura allows analyzing queries to identify the slow running calls and use Indexes to improve the performance. Learn
 more [here.](https://hasura.io/learn/graphql/hasura-advanced/performance/3-analyze-query-plans/)

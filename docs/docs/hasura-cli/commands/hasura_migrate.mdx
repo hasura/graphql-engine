@@ -1,6 +1,6 @@
 ---
 sidebar_label: hasura migrate
-sidebar_position: 22
+sidebar_position: 20
 description: Manage migrations on the database using the Hasura CLI
 keywords:
   - hasura
@@ -15,27 +15,23 @@ Manage migrations on the database.
 
 ## Synopsis
 
-This command, when used with a collection of subcommands, allows you to manage migrations on the database.
-
-Further reading:
-- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
-
+Manage migrations on the database.
 
 ## Options
 
-```sass
-    --admin-secret string            admin secret for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+```
+    --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
     --database-name string           database on which operation should be applied
     --disable-interactive            disables interactive prompts (default: false) (env "HASURA_GRAPHQL_DISABLE_INTERACTIVE")
-    --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+    --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
 -h, --help                           help for migrate
     --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 ```
 
 ## Options inherited from parent commands
 
-```sass
+```
 --envfile string      .env filename to load ENV vars from (default ".env")
 --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
 --no-color            do not colorize output (default: false)
@@ -45,9 +41,9 @@ Further reading:
 
 ## SEE ALSO
 
-- [hasura](/hasura-cli/commands/hasura.mdx) - Hasura GraphQL Engine command line tool
+- [hasura](/hasura-cli/commands/hasura.mdx) - Hasura GraphQL engine command line tool
 - [hasura migrate apply](/hasura-cli/commands/hasura_migrate_apply.mdx) - Apply migrations on the database
-- [hasura migrate create](/hasura-cli/commands/hasura_migrate_create.mdx) - Create ``sql`` files required for a migration
+- [hasura migrate create](/hasura-cli/commands/hasura_migrate_create.mdx) - Create files required for a migration
 - [hasura migrate delete](/hasura-cli/commands/hasura_migrate_delete.mdx) - (PREVIEW) clear migrations from local project and server
 - [hasura migrate squash](/hasura-cli/commands/hasura_migrate_squash.mdx) - (PREVIEW) Squash multiple migrations into a single one
 - [hasura migrate status](/hasura-cli/commands/hasura_migrate_status.mdx) - Display current status of migrations on a database

@@ -1,0 +1,28 @@
+.notifications-wrapper .notification {
+  height: auto !important;
+  width: auto !important;
+}
+
+.notifications-wrapper .notifications-tr,
+.notifications-wrapper .notifications-br {
+  width: auto !important;
+}
+
+/* make position same as tr */
+.notifications-wrapper .notifications-br {
+  top: 0px !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 0px !important;
+}
+
+.notifications-wrapper .notification > * {
+  width: 400px;
+}
+
+.notifications-wrapper .notification .notification-details {
+  width: 75vw;
+  max-height: 300px;
+  position: relative;
+  margin-top: 10px;
+}

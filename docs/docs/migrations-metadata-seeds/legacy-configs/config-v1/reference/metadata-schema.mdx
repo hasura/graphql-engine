@@ -1,7 +1,6 @@
 ---
-description: Hasura Metadata catalogue
+description: Hasura metadata catalogue
 sidebar_position: 9
-sidebar_label: Metadata catalogue
 keywords:
   - hasura
   - docs
@@ -9,29 +8,29 @@ keywords:
   - how it works
 ---
 
-# Metadata Catalogue
+# Metadata catalogue
 
-## What is the Metadata catalogue?
+## What is the metadata catalogue?
 
-The Hasura Metadata catalogue is a set of internal tables used to manage the state of the database and the GraphQL schema.
-Hasura GraphQL Engine uses the data in the catalogue to generate the GraphQL API which then can be accessed from different clients.
+The Hasura metadata catalogue is a set of internal tables used to manage the state of the database and the GraphQL schema.
+Hasura GraphQL engine uses the data in the catalogue to generate the GraphQL API which then can be accessed from different clients.
 
-The Hasura GraphQL Engine stores this catalogue in a Postgres Metadata database _(which is by default the same database from which data is served over the GraphQL API if it is Postgres)_.
-When initialized, the Hasura GraphQL Engine creates a schema called `hdb_catalog` in the Metadata database and initializes a few tables under it as described below.
+The Hasura GraphQL engine stores this catalogue in a Postgres metadata database _(which is by default the same database from which data is served over the GraphQL API if it is Postgres)_.
+When initialized, the Hasura GraphQL engine creates a schema called `hdb_catalog` in the metadata database and initializes a few tables under it as described below.
 
 ## **hdb_catalog** schema
 
-This schema is created by the Hasura GraphQL Engine to manage its internal state. Whenever a table/permission/relationship is created/updated using the Hasura Console or the Metadata API, the Hasura GraphQL Engine captures that information and stores it in the corresponding tables.
+This schema is created by the Hasura GraphQL engine to manage its internal state. Whenever a table/permission/relationship is created/updated using the Hasura console or the metadata API, the Hasura GraphQL engine captures that information and stores it in the corresponding tables.
 
 ## Exploring the catalogue
 
-You can check the current schema and contents of the catalogue by exploring the `hdb_catalog` schema in the Metadata database through a Postgres client.
+You can check the current schema and contents of the catalogue by exploring the `hdb_catalog` schema in the metadata database through a Postgres client.
 
 :::info Hasura Cloud
 
-The Metadata for Hasura Cloud projects is stored in dedicated databases managed by Hasura Cloud itself,
-hence the Metadata catalogue will not be set up on the user's connected database(s).
-_(Though note that if any Event Triggers are defined on a database, then their invocation logs will be stored in the "hdb_catalog" schema of that database)._
+The metadata for Hasura Cloud projects is stored in dedicated databases managed by Hasura Cloud itself,
+hence the metadata catalogue will not be set up on the user's connected database(s).
+_(Though note that if any event triggers are defined on a database, then their invocation logs will be stored in the "hdb_catalog" schema of that database)._
 
 :::
 
@@ -39,4 +38,4 @@ _(Though note that if any Event Triggers are defined on a database, then their i
 
 Whenever the schema of the catalogue is modified _(typically to support new features)_ a new version of the catalogue is generated.
 
-The catalogue version is upgraded automatically on startup if a new version is available during Hasura GraphQL Engine updates.
+The catalogue version is upgraded automatically on startup if a new version is available during Hasura GraphQL engine updates.

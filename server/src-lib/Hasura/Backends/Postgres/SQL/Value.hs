@@ -32,7 +32,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.Lazy qualified as TL
 import Data.Time
 import Data.UUID qualified as UUID
-import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import Database.PG.Query.PTI qualified as PTI
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -94,8 +94,8 @@ data PGScalarValue
   | PGValTimeStampTZ UTCTime
   | PGValTimeTZ ZonedTimeOfDay
   | PGNull PGScalarType
-  | PGValJSON PG.JSON
-  | PGValJSONB PG.JSONB
+  | PGValJSON Q.JSON
+  | PGValJSONB Q.JSONB
   | PGValGeo GeometryWithCRS
   | PGValRaster RasterWKB
   | PGValUUID UUID.UUID
@@ -126,8 +126,8 @@ pgScalarValueToJson = \case
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
     toJSON (show tod ++ timeZoneOffsetString tz)
   PGNull _ -> Null
-  PGValJSON (PG.JSON j) -> j
-  PGValJSONB (PG.JSONB j) -> j
+  PGValJSON (Q.JSON j) -> j
+  PGValJSONB (Q.JSONB j) -> j
   PGValGeo o -> toJSON o
   PGValRaster r -> toJSON r
   PGValUUID u -> toJSON u
@@ -151,8 +151,8 @@ withScalarTypeAnn :: PGScalarType -> S.SQLExp -> S.SQLExp
 withScalarTypeAnn colTy v = S.SETyAnn v . S.mkTypeAnn $ CollectableTypeScalar colTy
 
 withTypeAnn :: CollectableType PGScalarType -> S.SQLExp -> S.SQLExp
-withTypeAnn ty expr = flip S.SETyAnn (S.mkTypeAnn ty)
-  $ case ty of
+withTypeAnn ty expr = flip S.SETyAnn (S.mkTypeAnn ty) $
+  case ty of
     CollectableTypeScalar baseTy -> withConstructorFn baseTy expr
     CollectableTypeArray _ -> expr
 
@@ -162,9 +162,7 @@ scientificToInteger :: (Integral i, Bounded i) => Scientific -> AT.Parser i
 scientificToInteger num =
   toBoundedInteger num
     `onNothing` fail
-      ( "The value "
-          ++ show num
-          ++ " lies outside the "
+      ( "The value " ++ show num ++ " lies outside the "
           ++ "bounds or is not an integer. Maybe it is a "
           ++ "float, or is there integer overflow?"
       )
@@ -174,9 +172,7 @@ scientificToFloat num =
   toBoundedRealFloat num
     `onLeft` \_ ->
       fail
-        ( "The value "
-            ++ show num
-            ++ " lies outside the "
+        ( "The value " ++ show num ++ " lies outside the "
             ++ "bounds. Is it overflowing the float bounds?"
         )
 
@@ -214,8 +210,8 @@ parsePGValue ty val = case (ty, val) of
       PGTimeStamp -> PGValTimeStamp <$> parseJSON val
       PGTimeStampTZ -> PGValTimeStampTZ <$> parseJSON val
       PGTimeTZ -> PGValTimeTZ <$> parseJSON val
-      PGJSON -> PGValJSON . PG.JSON <$> parseJSON val
-      PGJSONB -> PGValJSONB . PG.JSONB <$> parseJSON val
+      PGJSON -> PGValJSON . Q.JSON <$> parseJSON val
+      PGJSONB -> PGValJSONB . Q.JSONB <$> parseJSON val
       PGGeometry -> PGValGeo <$> parseJSON val
       PGGeography -> PGValGeo <$> parseJSON val
       PGRaster -> PGValRaster <$> parseJSON val
@@ -254,18 +250,18 @@ txtEncodedVal = \case
     TELit $ T.pack (show tod ++ timeZoneOffsetString tz)
   PGNull _ ->
     TENull
-  PGValJSON (PG.JSON j) ->
-    TELit
-      $ TL.toStrict
-      $ AE.encodeToLazyText j
-  PGValJSONB (PG.JSONB j) ->
-    TELit
-      $ TL.toStrict
-      $ AE.encodeToLazyText j
+  PGValJSON (Q.JSON j) ->
+    TELit $
+      TL.toStrict $
+        AE.encodeToLazyText j
+  PGValJSONB (Q.JSONB j) ->
+    TELit $
+      TL.toStrict $
+        AE.encodeToLazyText j
   PGValGeo o ->
-    TELit
-      $ TL.toStrict
-      $ AE.encodeToLazyText o
+    TELit $
+      TL.toStrict $
+        AE.encodeToLazyText o
   PGValRaster r -> TELit $ TC.toText $ getRasterWKB r
   PGValUUID u -> TELit $ UUID.toText u
   PGValLtree (Ltree t) -> TELit t
@@ -274,37 +270,37 @@ txtEncodedVal = \case
   PGValUnknown t -> TELit t
   PGValArray ts -> TELit $ buildArrayLiteral ts
 
-binEncoder :: PGScalarValue -> PG.PrepArg
+binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder = \case
-  PGValInteger i -> PG.toPrepVal i
-  PGValSmallInt i -> PG.toPrepVal i
-  PGValBigInt i -> PG.toPrepVal i
-  PGValFloat f -> PG.toPrepVal f
-  PGValDouble d -> PG.toPrepVal d
-  PGValNumeric sc -> PG.toPrepVal sc
-  PGValMoney m -> PG.toPrepVal m
-  PGValBoolean b -> PG.toPrepVal b
-  PGValChar t -> PG.toPrepVal t
-  PGValVarchar t -> PG.toPrepVal t
-  PGValText t -> PG.toPrepVal t
-  PGValCitext t -> PG.toPrepVal t
-  PGValDate d -> PG.toPrepVal d
-  PGValTimeStamp u -> PG.toPrepVal u
-  PGValTimeStampTZ u -> PG.toPrepVal u
-  PGValTimeTZ (ZonedTimeOfDay t z) -> PG.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
+  PGValInteger i -> Q.toPrepVal i
+  PGValSmallInt i -> Q.toPrepVal i
+  PGValBigInt i -> Q.toPrepVal i
+  PGValFloat f -> Q.toPrepVal f
+  PGValDouble d -> Q.toPrepVal d
+  PGValNumeric sc -> Q.toPrepVal sc
+  PGValMoney m -> Q.toPrepVal m
+  PGValBoolean b -> Q.toPrepVal b
+  PGValChar t -> Q.toPrepVal t
+  PGValVarchar t -> Q.toPrepVal t
+  PGValText t -> Q.toPrepVal t
+  PGValCitext t -> Q.toPrepVal t
+  PGValDate d -> Q.toPrepVal d
+  PGValTimeStamp u -> Q.toPrepVal u
+  PGValTimeStampTZ u -> Q.toPrepVal u
+  PGValTimeTZ (ZonedTimeOfDay t z) -> Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
   PGNull ty -> (pgTypeOid ty, Nothing)
-  PGValJSON u -> PG.toPrepVal u
-  PGValJSONB u -> PG.toPrepVal u
-  PGValGeo o -> PG.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
-  PGValRaster r -> PG.toPrepVal $ TC.toText $ getRasterWKB r
-  PGValUUID u -> PG.toPrepVal u
-  PGValLtree (Ltree t) -> PG.toPrepVal t
-  PGValLquery t -> PG.toPrepVal t
-  PGValLtxtquery t -> PG.toPrepVal t
+  PGValJSON u -> Q.toPrepVal u
+  PGValJSONB u -> Q.toPrepVal u
+  PGValGeo o -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
+  PGValRaster r -> Q.toPrepVal $ TC.toText $ getRasterWKB r
+  PGValUUID u -> Q.toPrepVal u
+  PGValLtree (Ltree t) -> Q.toPrepVal t
+  PGValLquery t -> Q.toPrepVal t
+  PGValLtxtquery t -> Q.toPrepVal t
   PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
   PGValArray s -> (PTI.auto, Just (TE.encodeUtf8 $ buildArrayLiteral s, PQ.Text))
 
-formatTimestamp :: (FormatTime t) => t -> Text
+formatTimestamp :: FormatTime t => t -> Text
 formatTimestamp = T.pack . formatTime defaultTimeLocale "%0Y-%m-%dT%T%QZ"
 
 txtEncoder :: PGScalarValue -> S.SQLExp
@@ -320,39 +316,8 @@ txtEncoder colVal = case txtEncodedVal colVal of
 -- https://github.com/hasura/graphql-engine-mono/issues/4892
 buildArrayLiteral :: [PGScalarValue] -> Text
 buildArrayLiteral ts =
-  T.concat ["{", T.intercalate "," (map (inner . encodeElement) ts), "}"]
+  T.concat ["{", T.intercalate "," (map (inner . txtEncodedVal) ts), "}"]
   where
-    -- present text elements as json strings
-    escape = TL.toStrict . AE.encodeToLazyText
-    encodeElement = \case
-      PGValChar t -> TELit $ escape $ T.singleton t
-      PGValVarchar t -> TELit $ escape t
-      PGValText t -> TELit $ escape t
-      PGValCitext t -> TELit $ escape t
-      PGValLquery t -> TELit $ escape t
-      PGValLtxtquery t -> TELit $ escape t
-      PGValUnknown t -> TELit $ escape t
-      PGValJSON (PG.JSON j) -> case j of
-        -- this is delicate - we want to encode JSON
-        -- that is provided to HGE as raw JSON literals provided via variables,
-        -- and in stringified form as received when
-        -- inlined in a query. Therefore we need to check whether any string
-        -- receive is a genuine JSON string value, or a stringified rich value.
-        String s -> case decode (txtToLbs s) of
-          Just jv -> fromJson jv -- it was some actual JSON in disguise! encode it like usual
-          Nothing -> TELit $ escape (escape s) -- it's an actual JSON string, so add quotes again
-        _ -> fromJson j
-      PGValJSONB (PG.JSONB j) -> case j of
-        -- we do the same for JSONB as JSON
-        String s -> case decode (txtToLbs s) of
-          Just jv -> fromJsonb jv -- it was some actual JSON in disguise! encode it like usual
-          Nothing -> TELit $ escape (escape s) -- it's an actual JSON string, so add quotes again
-        _ -> fromJsonb j
-      other -> txtEncodedVal other
-
-    fromJson = TELit . escape . bsToTxt . PE.encodingBytes . PE.json_ast
-    fromJsonb = TELit . escape . bsToTxt . PE.encodingBytes . PE.jsonb_ast
-
     inner = \case
       TENull -> "null"
       TELit t -> t

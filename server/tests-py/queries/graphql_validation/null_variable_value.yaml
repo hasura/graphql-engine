@@ -19,11 +19,8 @@
   url: /v1/graphql
   status: 200
   response:
-    errors:
-    - extensions:
-        code: validation-failed
-        path: $
-      message: 'null value found for non-nullable type: "Int!"'
+    data:
+      author: []
   query:
     variables:
       limit: null
@@ -48,7 +45,7 @@
     variables:
       author_id: null
     query: |
-      mutation update_author($author_id: Int) {
+      mutation update_author($author_id: Int!) {
         update_author(where: {id: {_eq: $author_id}}, _set: {name: ""}) {
           returning {
             id

@@ -15,14 +15,14 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Postgres: Setting Values for Fields Using Role-Based Column Presets
+# Postgres: Setting values for fields using role-based column presets
 
 ## Introduction
 
 Let's say you want certain fields to have their values set automatically using session variables or fixed values when a
 row is created/updated with a particular [user role](/auth/authorization/roles-variables.mdx).
 
-Hasura GraphQL Engine's column presets let you define role-based values for any field/column. These values can either be
+Hasura GraphQL engine's column presets let you define role-based values for any field/column. These values can either be
 a session variable value or a static value.
 
 :::caution Column preset restricts mutation access for configured role
@@ -37,18 +37,18 @@ of the user's session variable whenever a new row is added to the `article` tabl
 
 ## Step 1: Configure a column preset
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-The column preset option is available under the `Permissions` tab of a table. Open the Console and head to
+The column preset option is available under the `Permissions` tab of a table. Open the console and head to
 `Data -> [article] -> Permissions`:
 
-<Thumbnail src="/img/schema/column-presets-option.png" alt="Add a column preset in the permissions tab" />
+<Thumbnail src='/img/schema/column-presets-option.png' alt='Add a column preset in the permissions tab' />
 
 Enable the column preset option to define presets for one or more columns. For each column, you can pick between setting
 the preset using a static value or from a session variable.
 
-<Thumbnail src="/img/schema/column-presets-value-options.png" alt="Configure the column preset" />
+<Thumbnail src='/img/schema/column-presets-value-options.png' alt='Configure the column preset' />
 
 For our chosen example, we'll use the `from session variable` option and configure the `user_id` column to be
 automatically populated based on the value of the `X-Hasura-User-Id` session variable.
@@ -75,7 +75,7 @@ You can set column presets in the `tables.yaml` file inside the `metadata` direc
         backend_only: false
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -121,22 +121,22 @@ To set a column preset for a nested object's column, simply set the correspondin
 
 ## Step 2: Run an insert mutation
 
-Head to the GraphiQL interface in the Console and try making an insert mutation on the `article` table with the
+Head to the GraphiQL interface in the console and try making an insert mutation on the `article` table with the
 following headers (_to run through this example, don't forget to also grant the_ `user` _role sufficient permissions to
 select from the_ `article` _table_):
 
-- `X-Hasura-Role` --> `user` (_to test the behavior for the configured role_)
+- `X-Hasura-Role` --> `user` (_to test the behaviour for the configured role_)
 - `X-Hasura-User-Id` --> `1` (_this is the value we should expect in the_ `user_id` _field_)
 
 As mentioned earlier, you'll notice when you add the `X-Hasura-Role` header that the field, `user_id`, is no longer
 available as the mutation type's field:
 
-<Thumbnail src="/img/schema/column-preset-schema-change-for-role.png" alt="Write an insert mutation" />
+<Thumbnail src='/img/schema/column-preset-schema-change-for-role.png' alt='Write an insert mutation' />
 
 Now, if we run the following insert mutation, we'll see that the `user_id` field is indeed being set with the value
 passed in the `X-Hasura-User-Id` variable:
 
-<Thumbnail src="/img/schema/column-preset-mutation-result.png" alt="Write an insert mutation" />
+<Thumbnail src='/img/schema/column-preset-mutation-result.png' alt='Write an insert mutation' />
 
 :::info Note
 

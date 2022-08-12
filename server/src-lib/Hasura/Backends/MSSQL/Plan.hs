@@ -23,8 +23,8 @@ where
 import Control.Applicative (Const (Const))
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy (toStrict)
-import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -37,9 +37,9 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser qualified as GraphQL
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.IR
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -49,22 +49,22 @@ import Network.HTTP.Types qualified as HTTP
 -- Top-level planner
 
 planQuery ::
-  (MonadError QErr m) =>
+  MonadError QErr m =>
   SessionVariables ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (QueryWithDDL Select)
+  m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
   runIrWrappingRoot $ fromQueryRootField rootField
 
 -- | For more information, see the module/documentation of 'Hasura.GraphQL.Execute.RemoteJoin.Source'.
 planSourceRelationship ::
-  (MonadError QErr m) =>
+  MonadError QErr m =>
   SessionVariables ->
   -- | List of json objects, each of which becomes a row of the table
   NE.NonEmpty J.Object ->
   -- | The above objects have this schema
-  HashMap.HashMap RQL.FieldName (ColumnName, ScalarType) ->
+  HM.HashMap RQL.FieldName (ColumnName, ScalarType) ->
   RQL.FieldName ->
   (RQL.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
   m Select
@@ -78,26 +78,24 @@ planSourceRelationship
       traverseSourceRelationshipSelection
         (fmap Const . prepareValueQuery sessionVariables)
         sourceRelationshipRaw
-    qwdQuery
-      <$> runIrWrappingRoot
-        ( fromSourceRelationship
-            lhs
-            lhsSchema
-            argumentId
-            (relationshipName, sourceRelationship)
-        )
+    runIrWrappingRoot $
+      fromSourceRelationship
+        lhs
+        lhsSchema
+        argumentId
+        (relationshipName, sourceRelationship)
 
 runIrWrappingRoot ::
-  (MonadError QErr m) =>
+  MonadError QErr m =>
   FromIr Select ->
-  m (QueryWithDDL Select)
+  m Select
 runIrWrappingRoot selectAction =
-  runFromIrUseCTEs selectAction `onLeft` (throwError . overrideQErrStatus HTTP.status400 NotSupported)
+  runFromIr selectAction `onLeft` (throwError . overrideQErrStatus HTTP.status400 NotSupported)
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
 prepareValueQuery ::
-  (MonadError QErr m) =>
+  MonadError QErr m =>
   SessionVariables ->
   UnpreparedValue 'MSSQL ->
   m Expression
@@ -126,8 +124,8 @@ prepareValueQuery sessionVariables =
         <*> pure DataLengthMax
 
 planSubscription ::
-  (MonadError QErr m) =>
-  InsOrdHashMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
+  MonadError QErr m =>
+  OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
   SessionVariables ->
   m (Reselect, PrepareState)
 planSubscription unpreparedMap sessionVariables = do
@@ -138,14 +136,12 @@ planSubscription unpreparedMap sessionVariables = do
           unpreparedMap
       )
       emptyPrepareState
-  let rootFields :: InsOrdHashMap G.Name (FromIr Select)
-      rootFields = fmap fromQueryRootField rootFieldMap
-  selectMap <- fmap qwdQuery <$> runFromIrUseCTEsT rootFields
+  selectMap <- runFromIr (traverse fromQueryRootField rootFieldMap)
   pure (collapseMap selectMap, prepareState)
 
 -- Plan a query without prepare/exec.
 -- planNoPlanMap ::
---      InsOrdHashMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (UnpreparedValue 'MSSQL))
+--      OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (UnpreparedValue 'MSSQL))
 --   -> Either PrepareError Reselect
 -- planNoPlanMap _unpreparedMap =
 -- let rootFieldMap = runIdentity $
@@ -162,7 +158,7 @@ planSubscription unpreparedMap sessionVariables = do
 -- | Collapse a set of selects into a single select that projects
 -- these as subselects.
 collapseMap ::
-  InsOrdHashMap.InsOrdHashMap G.Name Select ->
+  OMap.InsOrdHashMap G.Name Select ->
   Reselect
 collapseMap selects =
   Reselect
@@ -170,7 +166,7 @@ collapseMap selects =
         JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot},
       reselectWhere = Where mempty,
       reselectProjections =
-        map projectSelect (InsOrdHashMap.toList selects)
+        map projectSelect (OMap.toList selects)
     }
   where
     projectSelect :: (G.Name, Select) -> Projection
@@ -222,41 +218,41 @@ prepareValueSubscription globalVariables =
       modify' (\s -> s {sessionVariables = sessionVariables s <> globalVariables})
       pure $ resultVarExp (RootPath `FieldPath` "session")
     UVSessionVar _typ text -> do
-      unless (text `Set.member` globalVariables)
-        $ throw400
+      unless (text `Set.member` globalVariables) $
+        throw400
           NotFound
           ("missing session variable: " <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
-    UVParameter (FromGraphQL variableInfo) columnValue -> do
-      let name = GraphQL.getName variableInfo
-
-      modify
-        ( \s ->
-            s
-              { namedArguments =
-                  HashMap.insert name columnValue (namedArguments s)
-              }
-        )
-      pure $ resultVarExp (queryDot $ G.unName name)
-    UVParameter _ columnValue -> do
-      currentIndex <- toInteger . length <$> gets positionalArguments
-      modify'
-        ( \s ->
-            s
-              { positionalArguments = positionalArguments s <> [columnValue]
-              }
-        )
-      pure (resultVarExp (syntheticIx currentIndex))
+    UVParameter mVariableInfo columnValue ->
+      case fmap GraphQL.getName mVariableInfo of
+        Nothing -> do
+          currentIndex <- toInteger . length <$> gets positionalArguments
+          modify'
+            ( \s ->
+                s
+                  { positionalArguments = positionalArguments s <> [columnValue]
+                  }
+            )
+          pure (resultVarExp (syntheticIx currentIndex))
+        Just name -> do
+          modify
+            ( \s ->
+                s
+                  { namedArguments =
+                      HM.insert name columnValue (namedArguments s)
+                  }
+            )
+          pure $ resultVarExp (queryDot $ G.unName name)
   where
     resultVarExp :: JsonPath -> Expression
     resultVarExp =
-      JsonValueExpression
-        $ ColumnExpression
-        $ FieldName
-          { fieldNameEntity = rowAlias,
-            fieldName = resultVarsAlias
-          }
+      JsonValueExpression $
+        ColumnExpression $
+          FieldName
+            { fieldNameEntity = rowAlias,
+              fieldName = resultVarsAlias
+            }
 
     queryDot :: Text -> JsonPath
     queryDot name = RootPath `FieldPath` "query" `FieldPath` name

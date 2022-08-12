@@ -1,0 +1,18 @@
+array_relationships:
+- name: moves
+  using:
+    foreign_key_constraint_on:
+      column: board_id
+      table:
+        name: move
+        schema: public
+object_relationships:
+- name: user1
+  using:
+    foreign_key_constraint_on: user_1_id
+- name: user2
+  using:
+    foreign_key_constraint_on: user_2_id
+table:
+  name: board
+  schema: public

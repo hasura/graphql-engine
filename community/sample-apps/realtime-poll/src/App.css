@@ -1,0 +1,111 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  width: 90px;
+  display: inline-block;
+  margin-right: 50px;
+}
+.displayFlex {
+  display: flex;
+  align-items: center;
+}
+.hasura-logo a:hover {
+  text-decoration: none;
+}
+.hasura-logo img {
+  height: 30px;
+}
+.App-header {
+  background-color: #222;
+  height: 50px;
+  color: white;
+  text-align: left;
+}
+.App-footer {
+  height: 50px;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 30px;
+  margin-top: 30px;
+}
+
+.App-title {
+  font-size: 1.5em;
+  display: inline-block;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+.cardGraphQL {
+  padding-top: 50px;
+}
+
+.pollWrapper {
+  padding-top: 10px;
+}
+
+pre {
+  font-size: 10px;
+  text-align: left;
+  margin: 25px 0;
+}
+
+.radio {
+  margin-bottom: 15px;
+}
+
+.textLeft {
+  text-align: left;
+}
+
+.wd100 {
+  width: 100%;
+}
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.footer-small-text {
+  padding-top: 10px;
+  font-size: 0.8em;
+}
+
+.online-users {
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  margin-top: 30px;
+}
+.online-users .alert {
+  margin-bottom: 0px;
+}
+
+.poll-result-chart-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 900px;
+  width: 100%;
+  min-height: 350px;
+}
+
+@media (max-width: 767px) {
+  .displayFlex {
+    display: block;
+  }
+}
+
+.hasura-logo img {
+  margin-bottom: 12px;
+}

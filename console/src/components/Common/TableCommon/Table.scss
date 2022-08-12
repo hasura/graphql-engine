@@ -1,0 +1,225 @@
+@import '../Common.scss';
+
+.container {
+  padding: 0;
+}
+
+.tableContainer {
+  overflow: auto;
+  width: 95%;
+  padding-right: 5px; // removes scrollbar if width is enough
+}
+
+.form_flex {
+  display: flex;
+  flex-direction: column;
+}
+
+.schemaWrapper {
+  width: 100%;
+
+  .schemaSidebarSection {
+    display: inline-block;
+    width: 100%;
+
+    a,
+    label {
+      display: inline-block !important;
+      font-weight: bold;
+    }
+
+    .changeSchema {
+      width: 70%;
+      margin-left: 10px;
+      display: inline-block;
+      font-weight: bold;
+    }
+  }
+}
+
+.viewRowsContainer {
+  border-left: 1px solid #ddd;
+}
+
+.tableHeaderCell {
+  text-align: left;
+  i {
+    font-size: 12px;
+    position: absolute;
+    top: calc(50% - 5px);
+    right: 8px;
+  }
+}
+
+.insertContainer {
+  button {
+    margin: 0 10px;
+  }
+
+  label.radioLabel {
+    padding-top: 0;
+
+    input[type='radio'] {
+      margin-top: 10px;
+    }
+  }
+
+  span.radioSpan {
+    line-height: 34px;
+  }
+}
+
+.table {
+  width: auto;
+
+  tr:nth-child(even) {
+    background: #f4f4f4;
+  }
+
+  th {
+    //min-width: 100px;
+    font-weight: 300;
+  }
+
+  tbody > tr > td {
+    padding: 4px 8px;
+    max-width: 600px;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.expandable {
+  color: #779ecb;
+  text-decoration: underline;
+}
+
+a.expanded {
+  color: red;
+}
+
+.expandable:hover {
+  background: #eee;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.tableNameInput {
+  width: 300px;
+}
+
+.select {
+  width: 300px;
+  display: inline-block;
+  height: 30px;
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+
+.addCol {
+  .input {
+    width: 300px;
+    display: inline-block;
+  }
+
+  .inputCheckbox {
+    width: auto;
+    display: inline-block;
+    padding-left: 20px;
+    margin: 0px 20px;
+    box-shadow: none;
+  }
+
+  .inputDefault {
+    width: 150px;
+    margin: 0px 20px;
+    display: inline-block;
+  }
+
+  .select {
+    display: inline-block;
+    width: 300px;
+    height: 34px;
+  }
+
+  .defaultWidth {
+    width: 200px;
+    margin-right: 0px;
+  }
+}
+
+.insertBox {
+  min-width: 270px;
+}
+
+.insertBoxLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tablesBody {
+  padding-top: 20px;
+}
+
+.count {
+  margin-top: 15px;
+}
+
+.addTablesBody {
+  padding-top: 20px;
+  padding-bottom: 30px;
+}
+
+.dataBreadCrumb {
+  padding-bottom: 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dataBreadCrumb a {
+  color: #6b7280 !important;
+}
+
+.tableCellCenterAlignedOverflow {
+  text-align: center;
+  overflow: hidden !important;
+}
+
+.tableCellExpanded {
+  white-space: pre-wrap;
+}
+
+.tableCenterContent {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.overflowUnset {
+  overflow: unset !important;
+}
+
+.bulkDeleteButton {
+  margin: 10px;
+  font-size: 16px;
+  padding: 0 6px;
+}
+
+.headerInputCheckbox {
+  height: 16px;
+  margin-bottom: 2px;
+  margin-right: 3px !important;
+}
+
+.labelText {
+  display: inline-block;
+  font-size: 14px;
+}
+
+input[type='checkbox'].migrationCheckbox {
+  margin: 0;
+  margin-right: 10px;
+}

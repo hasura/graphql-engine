@@ -18,16 +18,7 @@
           "content_type": "application/json",
           "method": "POST",
           "query_params": {},
-          "template_engine": "Kriti",
-          "version": 2
-        },
-        "response_transform": {
-          "body": {
-            "action": "transform",
-            "template": "{\n  \"data\": {{$body}},\n}"
-          },
-          "template_engine": "Kriti",
-          "version": 2
+          "template_engine": "Kriti"
         },
         "timeout": 10
       }

@@ -11,8 +11,6 @@ keywords:
 
 # Async Actions
 
-## Introduction
-
 Sometimes you may not want to wait for an action to complete before
 sending a response back to the client (say if the business logic takes a
 long time). In such cases you can create an **asynchronous** action,
@@ -25,7 +23,7 @@ query/subscribe to its status.
 
 :::info Note
 
-Only Actions of type `mutation` can be async. Actions of type query are
+Only actions of type `mutation` can be async. Actions of type query are
 always executed synchronously.
 
 :::
@@ -54,7 +52,7 @@ action using this `action id`.
 
 ```graphql
 subscription getPlaceOrderResponse {
-  place_order(id: "23b1c256-7aff-4b95-95bd-68220d9f93f2") {
+  place_order (id: "23b1c256-7aff-4b95-95bd-68220d9f93f2") {
     output
     errors
   }

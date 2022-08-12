@@ -7,8 +7,6 @@ module Hasura.RQL.Types.Metadata.Object
     MetadataObject (..),
     SourceMetadataObjId (..),
     TableMetadataObjId (..),
-    LogicalModelMetadataObjId (..),
-    NativeQueryMetadataObjId (..),
     droppableInconsistentMetadata,
     getInconsistentRemoteSchemas,
     groupInconsistentMetadataById,
@@ -30,6 +28,7 @@ module Hasura.RQL.Types.Metadata.Object
     _MOCronTrigger,
     _MOCustomTypes,
     _MOEndpoint,
+    _MOHostTlsAllowlist,
     _MOInheritedRole,
     _MORemoteSchema,
     _MORemoteSchemaPermissions,
@@ -40,13 +39,11 @@ where
 
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Types
-import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.HashMap.Strict.Extended qualified as M
+import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
-import Hasura.LogicalModel.Types
-import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -55,12 +52,11 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection (CollectionName, ListedQuery (_lqName))
-import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.RemoteSchema.Metadata
+import Hasura.RQL.Types.RemoteSchema
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableMetadataObjId
@@ -69,42 +65,20 @@ data TableMetadataObjId
   | MTOPerm RoleName PermType
   | MTOTrigger TriggerName
   | MTORemoteRelationship RelName
-  deriving (Show, Eq, Ord, Generic)
+  deriving (Show, Eq, Generic)
 
 instance Hashable TableMetadataObjId
-
--- | Identifiers for logical model elements within the metadata structure.
-data LogicalModelMetadataObjId
-  = LMMOPerm RoleName PermType
-  | LMMOReferencedLogicalModel LogicalModelName
-  deriving (Show, Eq, Ord, Generic)
-
-instance Hashable LogicalModelMetadataObjId
-
--- | the native query should probably also link to its logical model
-data NativeQueryMetadataObjId
-  = NQMORel RelName RelType
-  deriving (Show, Eq, Ord, Generic)
-
-instance Hashable NativeQueryMetadataObjId
 
 data SourceMetadataObjId b
   = SMOTable (TableName b)
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
-  | SMONativeQuery NativeQueryName
-  | SMONativeQueryObj NativeQueryName NativeQueryMetadataObjId
-  | SMOStoredProcedure (FunctionName b)
-  | SMOLogicalModel LogicalModelName
-  | SMOLogicalModelObj LogicalModelLocation LogicalModelMetadataObjId
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
 
 deriving instance (Backend b) => Eq (SourceMetadataObjId b)
-
-deriving instance (Backend b) => Ord (SourceMetadataObjId b)
 
 instance (Backend b) => Hashable (SourceMetadataObjId b)
 
@@ -125,10 +99,9 @@ data MetadataObjId
   | MOCronTrigger TriggerName
   | MOInheritedRole RoleName
   | MOEndpoint EndpointName
+  | MOHostTlsAllowlist String
   | MOQueryCollectionsQuery CollectionName ListedQuery
-  | MODataConnectorAgent DataConnectorName
-  | MOOpenTelemetry OpenTelemetryConfigSubobject
-  deriving (Show, Eq, Ord, Generic)
+  deriving (Show, Eq, Generic)
 
 $(makePrisms ''MetadataObjId)
 
@@ -150,22 +123,13 @@ moiTypeName = \case
   MOActionPermission _ _ -> "action_permission"
   MOInheritedRole _ -> "inherited_role"
   MOEndpoint _ -> "rest_endpoint"
+  MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
   MOQueryCollectionsQuery _ _ -> "query_collections"
-  MODataConnectorAgent _ -> "data_connector_agent"
-  MOOpenTelemetry _ -> "open_telemetry"
   where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
       SMOTable _ -> "table"
       SMOFunction _ -> "function"
-      SMONativeQuery _ -> "native_query"
-      SMONativeQueryObj _ nativeQueryObjId -> case nativeQueryObjId of
-        NQMORel _ relType -> relTypeToTxt relType <> "_relation"
-      SMOStoredProcedure _ -> "stored_procedure"
-      SMOLogicalModel _ -> "logical_model"
-      SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
-        LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
-        LMMOReferencedLogicalModel name -> "inner_logical_model_" <> toTxt name
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -183,10 +147,7 @@ moiName objectId =
     MORemoteSchemaPermissions name roleName ->
       toTxt roleName <> " permission in remote schema " <> toTxt name
     MORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
-      "remote_relationship "
-        <> toTxt relationshipName
-        <> " on type "
-        <> G.unName typeName
+      "remote_relationship " <> toTxt relationshipName <> " on type " <> G.unName typeName
         <> " in remote schema "
         <> toTxt remoteSchemaName
     MOCronTrigger name -> toTxt name
@@ -195,16 +156,12 @@ moiName objectId =
     MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
     MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
     MOEndpoint name -> toTxt name
+    MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
     MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
-    MODataConnectorAgent agentName -> toTxt agentName
-    MOOpenTelemetry subobject -> case subobject of
-      OtelSubobjectAll -> "all"
-      OtelSubobjectExporterOtlp -> "exporter_otlp"
-      OtelSubobjectBatchSpanProcessor -> "batch_span_processor"
   where
     handleSourceObj ::
       forall b.
-      (Backend b) =>
+      Backend b =>
       SourceName ->
       SourceMetadataObjId b ->
       Text
@@ -212,43 +169,10 @@ moiName objectId =
       SMOTable name -> toTxt name <> " in source " <> toTxt source
       SMOFunction name -> toTxt name <> " in source " <> toTxt source
       SMOFunctionPermission functionName roleName ->
-        toTxt roleName
-          <> " permission for function "
+        toTxt roleName <> " permission for function "
           <> toTxt functionName
           <> " in source "
           <> toTxt source
-      SMONativeQuery name -> toTxt name <> " in source " <> toTxt source
-      SMONativeQueryObj nativeQueryName nativeQueryObjId ->
-        case nativeQueryObjId of
-          NQMORel name _ -> toTxt name <> " in " <> toTxt nativeQueryName
-      SMOStoredProcedure name -> toTxt name <> " in source " <> toTxt source
-      SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
-      SMOLogicalModelObj (LMLLogicalModel logicalModelName) logicalModelObjectId -> do
-        let objectName :: Text
-            objectName = case logicalModelObjectId of
-              LMMOPerm name _ -> toTxt name
-              LMMOReferencedLogicalModel name -> toTxt name
-
-            sourceObjectId :: MetadataObjId
-            sourceObjectId =
-              MOSourceObjId source
-                $ AB.mkAnyBackend
-                $ SMOLogicalModel @b logicalModelName
-
-        objectName <> " in " <> moiName sourceObjectId
-      SMOLogicalModelObj (LMLNativeQuery nativeQueryName) logicalModelObjectId -> do
-        let objectName :: Text
-            objectName = case logicalModelObjectId of
-              LMMOPerm name _ -> toTxt name
-              LMMOReferencedLogicalModel name -> toTxt name
-
-            sourceObjectId :: MetadataObjId
-            sourceObjectId =
-              MOSourceObjId source
-                $ AB.mkAnyBackend
-                $ SMONativeQuery @b nativeQueryName
-
-        objectName <> " in " <> moiName sourceObjectId
       SMOTableObj tableName tableObjectId ->
         let tableObjectName = case tableObjectId of
               MTORel name _ -> toTxt name
@@ -259,16 +183,16 @@ moiName objectId =
          in tableObjectName
               <> " in "
               <> moiName
-                ( MOSourceObjId source
-                    $ AB.mkAnyBackend
-                    $ SMOTable @b tableName
+                ( MOSourceObjId source $
+                    AB.mkAnyBackend $
+                      SMOTable @b tableName
                 )
 
 data MetadataObject = MetadataObject
   { _moId :: MetadataObjId,
     _moDefinition :: Value
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving (Show, Eq, Generic)
 
 instance Hashable MetadataObject
 
@@ -277,13 +201,13 @@ $(makeLenses ''MetadataObject)
 data InconsistentRoleEntity
   = InconsistentTablePermission
       SourceName
-      -- | Table name -- using `Text` here instead of `TableName b` for simplification,
+      Text
+      -- ^ Table name -- using `Text` here instead of `TableName b` for simplification,
       -- Otherwise, we'll have to create a newtype wrapper around `TableName b` and then
       -- use it with `AB.AnyBackend`
-      Text
       PermType
   | InconsistentRemoteSchemaPermission RemoteSchemaName
-  deriving stock (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Generic)
 
 instance Hashable InconsistentRoleEntity
 
@@ -317,7 +241,7 @@ data InconsistentMetadata
   | InvalidRestSegments Text MetadataObject
   | AmbiguousRestEndpoints Text [MetadataObject]
   | ConflictingInheritedPermission RoleName InconsistentRoleEntity
-  deriving stock (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Generic)
 
 instance Hashable InconsistentMetadata
 
@@ -371,7 +295,7 @@ imReason = \case
 groupInconsistentMetadataById ::
   [InconsistentMetadata] -> HashMap MetadataObjId (NonEmpty InconsistentMetadata)
 groupInconsistentMetadataById =
-  HashMap.fromListWith (<>) . concatMap \metadata ->
+  M.fromListWith (<>) . concatMap \metadata ->
     map (,metadata :| []) (imObjectIds metadata)
 
 instance ToJSON InconsistentMetadata where

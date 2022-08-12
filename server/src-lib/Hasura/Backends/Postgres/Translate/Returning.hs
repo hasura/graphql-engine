@@ -18,21 +18,17 @@ import Data.Coerce
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs)
-import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs)
-import Hasura.Base.Error (QErr)
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.NamingCase (NamingCase)
-import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.RQL.Types.Session (UserInfo)
-import Hasura.Table.Cache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 
 -- | The postgres common table expression (CTE) for mutation queries.
 -- This CTE expression is used to generate mutation field output expression,
@@ -60,20 +56,20 @@ checkPermissionRequired = \case
 
 pgColsToSelFlds ::
   forall pgKind.
-  (Backend ('Postgres pgKind)) =>
+  Backend ('Postgres pgKind) =>
   [ColumnInfo ('Postgres pgKind)] ->
   [(FieldName, AnnField ('Postgres pgKind))]
 pgColsToSelFlds cols =
-  flip map cols
-    $ \pgColInfo ->
+  flip map cols $
+    \pgColInfo ->
       ( fromCol @('Postgres pgKind) $ ciColumn pgColInfo,
-        mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) NoRedaction Nothing
+        mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) Nothing Nothing
         --  ^^ Nothing because mutations aren't supported
         --  with inherited role
       )
 
 mkDefaultMutFlds ::
-  (Backend ('Postgres pgKind)) =>
+  Backend ('Postgres pgKind) =>
   Maybe [ColumnInfo ('Postgres pgKind)] ->
   MutationOutput ('Postgres pgKind)
 mkDefaultMutFlds =
@@ -85,47 +81,40 @@ mkDefaultMutFlds =
 
 mkMutFldExp ::
   ( Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadWriter CustomSQLCTEs m,
-    MonadIO m,
-    MonadError QErr m
+    PostgresAnnotatedFieldJSON pgKind
   ) =>
-  UserInfo ->
-  TableIdentifier ->
+  Identifier ->
   Maybe Int ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   MutFld ('Postgres pgKind) ->
-  m S.SQLExp
-mkMutFldExp userInfo cteAlias preCalAffRows strfyNum tCase = \case
+  S.SQLExp
+mkMutFldExp cteAlias preCalAffRows strfyNum tCase = \case
   MCount ->
     let countExp =
-          S.SESelect
-            $ S.mkSelect
+          S.SESelect $
+            S.mkSelect
               { S.selExtr = [S.Extractor S.countStar Nothing],
                 S.selFrom = Just $ S.FromExp $ pure $ S.FIIdentifier cteAlias
               }
-     in pure $ maybe countExp (S.SEUnsafe . tshow) preCalAffRows
-  MExp t -> pure $ S.SELit t
+     in maybe countExp (S.SEUnsafe . tshow) preCalAffRows
+  MExp t -> S.SELit t
   MRet selFlds ->
     let tabFrom = FromIdentifier $ toFIIdentifier cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
-     in S.SESelect
-          <$> mkSQLSelect
-            userInfo
-            JASMultipleRows
-            ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
-            )
+     in S.SESelect $
+          mkSQLSelect JASMultipleRows $
+            AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
 
-toFIIdentifier :: TableIdentifier -> FIIdentifier
-toFIIdentifier = coerce . unTableIdentifier
+toFIIdentifier :: Identifier -> FIIdentifier
+toFIIdentifier = coerce . getIdenTxt
 {-# INLINE toFIIdentifier #-}
 
 {- Note [Mutation output expression]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An example output expression for INSERT mutation:
 
-WITH "mra__<table-name>" AS (
+WITH "<table-name>__mutation_result_alias" AS (
   INSERT INTO <table-name> (<insert-column>[..])
   VALUES
     (<insert-value-row>[..])
@@ -133,26 +122,23 @@ WITH "mra__<table-name>" AS (
     -- An extra column expression which performs the 'CHECK' validation
     (<CHECK Condition>) AS "check__constraint"
 ),
-"aca__<table-name>" AS (
+"<table-name>__all_columns_alias" AS (
   -- Only extract columns from mutated rows. Columns sorted by ordinal position so that
   -- resulted rows can be casted to table type.
   SELECT (<table-column>[..])
   FROM
-    "mra__<table-name>"
+    "<table-name>__mutation_result_alias"
 )
-<SELECT statement to generate mutation response using 'aca__<table-name>' as FROM
- and bool_and("check__constraint") from "mra__<table-name>">
+<SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM
+ and bool_and("check__constraint") from "<table-name>__mutation_result_alias">
 -}
 
 -- | Generate mutation output expression with given mutation CTE statement.
 -- See Note [Mutation output expression].
 mkMutationOutputExp ::
   ( Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadIO m,
-    MonadError QErr m
+    PostgresAnnotatedFieldJSON pgKind
   ) =>
-  UserInfo ->
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   Maybe Int ->
@@ -160,69 +146,53 @@ mkMutationOutputExp ::
   MutationOutput ('Postgres pgKind) ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
-  m S.SelectWith
-mkMutationOutputExp userInfo qt allCols preCalAffRows cte mutOutput strfyNum tCase = do
-  (sel, customSQLCTEs) <- runWriterT writerSelect
-  pure
-    $ S.SelectWith
-      ( [ (mutationResultAlias, getMutationCTE cte),
-          (allColumnsAlias, allColumnsSelect)
-        ]
-          <> customSQLToTopLevelCTEs customSQLCTEs
-      )
-      sel
+  S.SelectWith
+mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
+  S.SelectWith
+    [ (S.toTableAlias mutationResultAlias, getMutationCTE cte),
+      (S.toTableAlias allColumnsAlias, allColumnsSelect)
+    ]
+    sel
   where
-    mutationResultAlias = S.mkTableAlias $ "mra__" <> snakeCaseQualifiedObject qt
-    mutationResultIdentifier = S.tableAliasToIdentifier mutationResultAlias
-    allColumnsAlias = S.mkTableAlias $ "aca__" <> snakeCaseQualifiedObject qt
-    allColumnsIdentifier = S.tableAliasToIdentifier allColumnsAlias
+    mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
+    allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
     allColumnsSelect =
-      S.CTESelect
-        $ S.mkSelect
+      S.CTESelect $
+        S.mkSelect
           { S.selExtr = map (S.mkExtr . ciColumn) (sortCols allCols),
-            S.selFrom = Just $ S.mkIdenFromExp mutationResultIdentifier
+            S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
           }
 
-    writerSelect =
-      ( \extrExp ->
-          S.mkSelect
-            { S.selExtr =
-                S.Extractor extrExp Nothing
-                  : bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionRequired cte)
-            }
-      )
-        <$> writerExtrExp
+    sel =
+      S.mkSelect
+        { S.selExtr =
+            S.Extractor extrExp Nothing :
+            bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionRequired cte)
+        }
       where
-        checkErrorExp = mkCheckErrorExp mutationResultIdentifier
-
-        writerExtrExp :: (MonadIO m, MonadError QErr m) => WriterT CustomSQLCTEs m S.SQLExp
-        writerExtrExp = case mutOutput of
-          MOutMultirowFields mutFlds -> do
-            jsonBuildObjArgs <-
-              traverse
-                ( \(FieldName k, mutFld) -> do
-                    mutFldExp <- mkMutFldExp userInfo allColumnsIdentifier preCalAffRows strfyNum tCase mutFld
-                    pure [S.SELit k, mutFldExp]
-                )
-                mutFlds
-            pure $ S.SEFnApp "json_build_object" (concat jsonBuildObjArgs) Nothing
+        checkErrorExp = mkCheckErrorExp mutationResultAlias
+        extrExp = case mutOutput of
+          MOutMultirowFields mutFlds ->
+            let jsonBuildObjArgs = flip concatMap mutFlds $
+                  \(FieldName k, mutFld) ->
+                    [ S.SELit k,
+                      mkMutFldExp allColumnsAlias preCalAffRows strfyNum tCase mutFld
+                    ]
+             in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
           MOutSinglerowObject annFlds ->
-            let tabFrom = FromIdentifier $ toFIIdentifier allColumnsIdentifier
+            let tabFrom = FromIdentifier $ toFIIdentifier allColumnsAlias
                 tabPerm = TablePerm annBoolExpTrue Nothing
-             in S.SESelect
-                  <$> mkSQLSelect
-                    userInfo
-                    JASSingleObject
-                    ( AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum tCase
-                    )
+             in S.SESelect $
+                  mkSQLSelect JASSingleObject $
+                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum tCase
 
-mkCheckErrorExp :: TableIdentifier -> S.SQLExp
+mkCheckErrorExp :: IsIdentifier a => a -> S.SQLExp
 mkCheckErrorExp alias =
   let boolAndCheckConstraint =
-        S.handleIfNull (S.SEBool $ S.BELit True)
-          $ S.SEFnApp "bool_and" [S.SEIdentifier checkConstraintIdentifier] Nothing
-   in S.SESelect
-        $ S.mkSelect
+        S.handleIfNull (S.SEBool $ S.BELit True) $
+          S.SEFnApp "bool_and" [S.SEIdentifier checkConstraintIdentifier] Nothing
+   in S.SESelect $
+        S.mkSelect
           { S.selExtr = [S.Extractor boolAndCheckConstraint Nothing],
             S.selFrom = Just $ S.mkIdenFromExp alias
           }

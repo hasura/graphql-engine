@@ -1,7 +1,4 @@
 {
   "label": "Authentication & Authorization",
-  "position": 41,
-  "customProps": {
-    "sidebar_pathname": "auth"
-  }
+  "position": 70
 }

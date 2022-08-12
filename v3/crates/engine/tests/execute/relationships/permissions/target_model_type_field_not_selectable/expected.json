@@ -1,8 +1,0 @@
-{
-  "data": null,
-  "errors": [
-    {
-      "message": "validation failed: field last_name on type Author is not allowed for user"
-    }
-  ]
-}

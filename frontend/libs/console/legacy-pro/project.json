@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/console/legacy-pro/src",
+  "projectType": "library",
+  "tags": ["legacy"],
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/console/legacy-pro/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/console/legacy-pro"],
+      "options": {
+        "jestConfig": "libs/console/legacy-pro/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

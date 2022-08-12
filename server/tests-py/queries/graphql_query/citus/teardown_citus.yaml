@@ -1,0 +1,44 @@
+type: bulk
+args:
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: author
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: article
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: country
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: state
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: disaster
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: disaster_affected_state
+    cascade: true

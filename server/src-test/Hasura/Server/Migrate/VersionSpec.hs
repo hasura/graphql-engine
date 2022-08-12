@@ -2,7 +2,7 @@ module Hasura.Server.Migrate.VersionSpec (spec) where
 
 import Data.Either (isLeft)
 import Hasura.Prelude
-import Hasura.RQL.Types.BackendType (BackendType (MSSQL))
+import Hasura.SQL.Backend (BackendType (MSSQL))
 import Hasura.Server.Migrate.Version (MetadataCatalogVersion (..))
 import Hasura.Server.Migrate.Version qualified as Version
 import Hedgehog.Gen qualified as Gen
@@ -39,9 +39,8 @@ spec = do
 
     it "cannot read any other non-integral number" $ hedgehog do
       expected <-
-        forAll
-          $ Gen.filter (/= 0.8)
-          $ Gen.float (Range.constantFrom 0 (-1e6) 1e6)
+        forAll $
+          Gen.filter (/= 0.8) $ Gen.float (Range.constantFrom 0 (-1e6) 1e6)
       let input = show expected
       let version :: Either String MetadataCatalogVersion = readEither input
       assert $ isLeft version

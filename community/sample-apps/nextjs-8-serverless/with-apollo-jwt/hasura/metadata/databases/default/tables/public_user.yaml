@@ -1,0 +1,18 @@
+table:
+  name: user
+  schema: public
+array_relationships:
+- name: articles
+  using:
+    foreign_key_constraint_on:
+      column: user_id
+      table:
+        name: article
+        schema: public
+- name: user_roles
+  using:
+    foreign_key_constraint_on:
+      column: user_id
+      table:
+        name: user_role
+        schema: public

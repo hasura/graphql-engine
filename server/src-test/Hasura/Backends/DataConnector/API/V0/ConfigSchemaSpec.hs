@@ -42,18 +42,18 @@ spec = do
         jsonVal =
           [aesonQQ|
           {
-            "config_schema": {
+            "configSchema": {
               "type": "object",
               "nullable": false,
               "properties": {
-                "tables": { "$ref": "#/other_schemas/Tables" }
+                "tables": { "$ref": "#/otherSchemas/Tables" }
               }
             },
-            "other_schemas": {
+            "otherSchemas": {
               "Tables": {
                 "description": "List of tables to make available in the schema and for querying",
                 "type": "array",
-                "items": { "$ref": "#/other_schemas/TableName" },
+                "items": { "$ref": "#/otherSchemas/TableName" },
                 "nullable": true
               },
               "TableName": {
@@ -65,21 +65,21 @@ spec = do
         |]
     testToFromJSON val jsonVal
 
-    it "OpenAPI spec is as expected"
-      $ toJSON (toSchema (Proxy @ConfigSchemaResponse))
-      `shouldBe` [aesonQQ|
+    it "OpenAPI spec is as expected" $
+      toJSON (toSchema (Proxy @ConfigSchemaResponse))
+        `shouldBe` [aesonQQ|
         {
           "required": [
-            "config_schema",
-            "other_schemas"
+            "configSchema",
+            "otherSchemas"
           ],
           "type": "object",
           "nullable": false,
           "properties": {
-            "config_schema": {
+            "configSchema": {
               "$ref": "#/components/schemas/OpenApiSchema"
             },
-            "other_schemas": {
+            "otherSchemas": {
               "additionalProperties": {
                 "$ref": "#/components/schemas/OpenApiSchema"
               },

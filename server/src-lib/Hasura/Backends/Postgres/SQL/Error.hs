@@ -22,7 +22,7 @@ where
 
 import Control.Lens.TH (makePrisms)
 import Data.Text qualified as T
-import Database.PG.Query.Connection qualified as PG
+import Database.PG.Query.Connection qualified as Q
 import Hasura.Prelude
 
 -- | The top-level error code type. Errors in Postgres are divided into different /classes/, which
@@ -70,9 +70,9 @@ data PGTransactionRollback
 $(makePrisms ''PGErrorType)
 $(makePrisms ''PGErrorCode)
 
-pgErrorType :: PG.PGStmtErrDetail -> Maybe PGErrorType
+pgErrorType :: Q.PGStmtErrDetail -> Maybe PGErrorType
 pgErrorType errorDetails = do
-  parseTypes =<< PG.edStatusCode errorDetails
+  parseTypes =<< Q.edStatusCode errorDetails
   where
     parseTypes fullCodeText =
       choice

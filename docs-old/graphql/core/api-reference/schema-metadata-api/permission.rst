@@ -1,0 +1,597 @@
+.. meta::
+   :description: Manage permissions with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, permission
+
+.. _schema_metadata_api_permission:
+
+Schema/Metadata API Reference: Permissions (Deprecated)
+=======================================================
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Introduction
+------------
+
+The permission layer is designed to restrict the operations that can be
+performed by various users. Permissions can be defined on various operations
+(insert/select/update/delete) at a role level granularity. By default, the ``admin``
+role has unrestricted access to all operations.
+
+.. admonition:: Variables in rules
+
+   All ``X-Hasura-*`` header values can be used in the permission rules. These
+   values can come with the request and can be validated using webhook or can be
+   sent with the JWT token.
+
+.. _schema_metadata_create_insert_permission:
+
+create_insert_permission
+------------------------
+
+An insert permission is used to enforce constraints on the data that is being
+inserted.
+
+Let's look at an example, a permission for the ``user`` role to insert into the
+``article`` table. What is the constraint that we would like to enforce here? *A
+user can only insert articles for themselves* .
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "create_insert_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user",
+           "permission" : {
+               "check" : {
+                   "author_id" : "X-HASURA-USER-ID"
+               },
+               "set":{
+                   "id":"X-HASURA-USER-ID"
+               },
+               "columns":["name","author_id"]
+           }
+       }
+   }
+
+This reads as follows - for the ``user`` role:
+
+* For every row that is being inserted into the *article* table, allow insert only if the ``check`` passes i.e. that the ``author_id`` column value is the same as the value in the request header ``X-HASURA-USER-ID``".
+
+* If the above ``check`` passes, then access for insert will be limited to columns ``name`` and ``author_id`` only.
+
+* When this insert happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
+
+
+The argument for ``check`` is a boolean expression which has the same syntax as the ``where`` clause in the ``select`` query, making it extremely expressive. 
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "create_insert_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user",
+           "permission" : {
+               "check" : {
+                   "author_id" : "X-HASURA-USER-ID",
+                   "$or" : [
+                       {
+                           "category" : "editorial",
+                           "is_reviewed" : false
+                       },
+                       {
+                           "category" : { "$neq" : "editorial"}
+                       }
+                   ]
+               }
+           }
+       }
+   }
+
+In the above definition, the row is allowed to be inserted if the ``author_id``
+is the same as the request's user id and ``is_reviewed`` is ``false`` when the
+``category`` is "editorial".
+
+.. _schema_metadata_create_insert_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+   * - permission
+     - true
+     - :ref:`InsertPermission`
+     - The permission definition
+   * - comment
+     - false
+     - text
+     - Comment
+
+.. _schema_metadata_drop_insert_permission:
+
+drop_insert_permission
+----------------------
+
+The ``drop_insert_permission`` API is used to drop an existing insert permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_insert_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
+
+.. _schema_metadata_drop_insert_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+
+.. _schema_metadata_create_select_permission:
+
+create_select_permission
+------------------------
+
+A select permission is used to restrict access to only the specified columns and rows.
+
+Let's look at an example, a permission for the ``user`` role to select from the
+``article`` table: all columns can be read, as well as the rows that have been published or
+authored by the user themselves.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "create_select_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user",
+           "permission" : {
+               "columns" : "*",
+               "filter" : {
+                   "$or" : [
+                       { "author_id" : "X-HASURA-USER-ID" },
+                       { "is_published" : true }
+                   ]
+                },
+                "limit": 10,
+                "allow_aggregations": true
+           }
+       }
+   }
+
+This reads as follows - For the ``user`` role:
+
+* Allow selecting rows where the ``check`` passes i.e. ``is_published`` is ``true`` or the ``author_id`` matches the value of the session variable ``X-HASURA-USER-ID``.
+
+* Allow selecting all columns (because the ``columns`` key is set to  ``*``).
+
+* ``limit`` the numbers of rows returned by a query to the ``article`` table by the ``user`` role to a maximum of 10.
+
+* Allow aggregate queries.
+
+.. _schema_metadata_create_select_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+   * - permission
+     - true
+     - :ref:`SelectPermission`
+     - The permission definition
+   * - comment
+     - false
+     - text
+     - Comment
+
+.. _schema_metadata_drop_select_permission:
+
+drop_select_permission
+----------------------
+
+The ``drop_select_permission`` is used to drop an existing select permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_select_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
+
+.. _schema_metadata_drop_select_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+
+.. _schema_metadata_create_update_permission:
+
+
+create_update_permission
+------------------------
+
+An update permission is used to restrict the columns and rows that can be
+updated. Its structure is quite similar to the select permission.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "create_update_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user",
+           "permission" : {
+               "columns" : ["title", "content", "category"],
+               "filter" : {
+                   "author_id" : "X-HASURA-USER-ID"
+               },
+               "check" : {
+                   "content" : {
+                     "_ne": ""
+                   }
+               },
+               "set":{
+                   "updated_at" : "NOW()"
+               }
+           }
+       }
+   }
+
+This reads as follows - for the ``user`` role:
+
+* Allow updating only those rows where the ``filter`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID``.
+
+* If the above ``filter`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*).
+
+* After the update happens, verify that the ``check`` condition holds for the updated row i.e. that the value in the ``content`` column is not empty.
+
+* When this update happens, the value of the column ``updated_at`` will be automatically ``set`` to the current timestamp.
+
+.. note::
+
+   It is important to deny updates to columns that will determine the row
+   ownership. In the above example, the ``author_id`` column determines the
+   ownership of a row in the ``article`` table. Columns such as this should
+   never be allowed to be updated.
+
+.. _schema_metadata_create_update_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+   * - permission
+     - true
+     - :ref:`UpdatePermission`
+     - The permission definition
+   * - comment
+     - false
+     - text
+     - Comment
+
+.. _schema_metadata_drop_update_permission:
+
+drop_update_permission
+----------------------
+
+The ``drop_update_permission`` API is used to drop an existing update permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_update_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
+
+.. _schema_metadata_drop_update_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+
+.. _schema_metadata_create_delete_permission:
+
+create_delete_permission
+------------------------
+
+A delete permission is used to restrict the rows that can be deleted.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "create_delete_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user",
+           "permission" : {
+               "filter" : {
+                   "author_id" : "X-HASURA-USER-ID"
+               }
+           }
+       }
+   }
+
+This reads as follows:
+
+"``delete`` for the ``user`` role on the ``article`` table is allowed on rows where
+``author_id`` is the same as the request header ``X-HASURA-USER-ID`` value."
+
+.. _schema_metadata_create_delete_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+   * - permission
+     - true
+     - :ref:`DeletePermission`
+     - The permission definition
+   * - comment
+     - false
+     - text
+     - Comment
+
+.. _schema_metadata_drop_delete_permission:
+
+drop_delete_permission
+----------------------
+
+The ``drop_delete_permission`` API is used to drop an existing delete permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_delete_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
+
+.. _schema_metadata_drop_delete_permission_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - Role
+
+.. _schema_metadata_set_permission_comment:
+
+set_permission_comment
+----------------------
+
+``set_permission_comment`` is used to set/update the comment on a permission.
+Setting the comment to ``null`` removes it.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   Authorization: Bearer <auth-token> # optional if cookie is set
+   X-Hasura-Role: admin
+
+   {
+       "type": "set_permission_comment",
+       "args": {
+           "table": "article",
+           "role": "user",
+           "type" : "update",
+           "comment" : "can only modify their own rows"
+       }
+   }
+
+.. _schema_metadata_set_permission_comment_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - role
+     - true
+     - :ref:`RoleName`
+     - The role in the permission
+   * - type
+     - true
+     - permission type (one of select/update/delete/insert)
+     - The type of the permission
+   * - comment
+     - false
+     - Text
+     - Comment

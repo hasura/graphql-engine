@@ -1,0 +1,151 @@
+---
+sidebar_position: 8
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# GraphiQL IDE
+
+We use graphiql editor wherever applicable for example showcase throughout docs.
+
+A `GraphiQLIDE` component is already created with required custom logic. So, use `GraphiQLIDE` just like any other React component.
+
+## Sphinx - RST
+
+```rest
+// highlight-start
+.. graphiql::
+  :view_only:
+  :query:
+// highlight-end
+    query get_authors_in_pincode ($jsonFilter: jsonb){
+      authors(
+        where: {
+          address: {_contains: $jsonFilter }
+        }
+      ) {
+        id
+        name
+        address
+      }
+    }
+  // highlight-next-line
+  :response:
+    {
+      "data": {
+        "authors": [
+          {
+            "id": 1,
+            "name": "Ash",
+            "address": {
+              "street_address": "161, 19th Main Road, Koramangala 6th Block",
+              "city": "Bengaluru",
+              "state": "Karnataka",
+              "pincode": 560095,
+              "phone": "9090909090",
+            }
+          }
+        ]
+      }
+    }
+  // highlight-next-line
+  :variables:
+    {
+      "jsonFilter": {
+        "pincode": 560095
+      }
+    }
+```
+
+:::note
+
+`:view_only:` is `viewOnly` prop and by default set to `true` in the `GraphQLIDE` component.
+
+:::
+
+
+## Docusaurus - MDX
+```jsx
+
+// highlight-start
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+<GraphiQLIDE
+  query={`query get_authors_in_pincode ($jsonFilter: jsonb){
+// highlight-end
+    authors(
+      where: {
+        address: {_contains: $jsonFilter }
+      }
+    ) {
+      id
+      name
+      address
+    }
+  }`}
+  // highlight-next-line
+  variables={`{
+    "jsonFilter": {
+      "pincode": 560095
+    }
+  }`}
+  // highlight-next-line
+  response={`{
+    "data": {
+      "authors": [
+        {
+          "id": 1,
+          "name": "Ash",
+          "address": {
+            "street_address": "161, 19th Main Road, Koramangala 6th Block",
+            "city": "Bengaluru",
+            "state": "Karnataka",
+            "pincode": 560095,
+            "phone": "9090909090",
+          }
+        }
+      ]
+    }
+  }`}
+/>
+```
+
+## Result in UI
+
+Below is how it should look in UI.
+<GraphiQLIDE
+  query={`query get_authors_in_pincode ($jsonFilter: jsonb){
+    authors(
+      where: {
+        address: {_contains: $jsonFilter }
+      }
+    ) {
+      id
+      name
+      address
+    }
+  }`}
+  variables={`{
+    "jsonFilter": {
+      "pincode": 560095
+    }
+  }`}
+  response={`{
+    "data": {
+      "authors": [
+        {
+          "id": 1,
+          "name": "Ash",
+          "address": {
+            "street_address": "161, 19th Main Road, Koramangala 6th Block",
+            "city": "Bengaluru",
+            "state": "Karnataka",
+            "pincode": 560095,
+            "phone": "9090909090",
+          }
+        }
+      ]
+    }
+  }`}
+/>

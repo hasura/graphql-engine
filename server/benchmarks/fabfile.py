@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import boto3
@@ -196,10 +196,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
                         ImageId=runner_image_id,
                         MinCount=1, MaxCount=1,
                         # NOTE: benchmarks are tuned very specifically to this instance type  and
-                        # the other settings here (see bench.sh):
-                        #   Lately AWS seems to be running out of capacity and so we may need to research 
-                        # (check numa configuration, etc) and switch to one of these:
-                        #   https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/processor_state_control.html
+                        # the other settings here (see bench.hs):
                         InstanceType='c4.8xlarge',
                         KeyName='hasura-benchmarks-runner',
                         InstanceInitiatedShutdownBehavior='terminate',
@@ -284,9 +281,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
             break
 
         # Install any extra dependencies (TODO: bake these into AMI)
-        c.sudo('apt-get update')
-        c.sudo('apt-get upgrade -y')
-        c.sudo('apt-get install -y jq')
+        c.sudo('apt install -y jq')
 
         # In case our heroic exception handling and cleanup attempts here fail,
         # make sure this instance shuts down (and is terminated, per
@@ -312,8 +307,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
             post_setup_sleep = 90 if benchmark_set == 'huge_schema' else 0
             # NOTE: it seems like K6 is what requires pty here:
             # NOTE: add hide='both' here if we decide to suppress output
-            lkey = os.environ['HASURA_GRAPHQL_EE_LICENSE_KEY']
-            bench_result = c.run(f"HASURA_GRAPHQL_EE_LICENSE_KEY={lkey} ./bench.sh {benchmark_set} {hasura_docker_image_name} {post_setup_sleep}", pty=True)
+            bench_result = c.run(f"./bench.sh {benchmark_set} {hasura_docker_image_name} {post_setup_sleep}", pty=True)
 
         with tempfile.TemporaryDirectory("-hasura-benchmarks") as tmp:
             filename = f"{benchmark_set}.json"
@@ -389,18 +383,12 @@ def generate_regression_report():
     # For each benchmark set we uploaded, for PR_NUMBER...
     for o in s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents']:
         this_prefix, benchmark_set_name = o['Key'].split('/')
-        this_report = fetch_report_json(this_prefix, benchmark_set_name)
+        this_report           = fetch_report_json(this_prefix,                benchmark_set_name)
         try:
             merge_base_report = fetch_report_json(f"mono-pr-{merge_base_pr}", benchmark_set_name)
         except botocore.exceptions.ClientError:
             # This will happen, e.g. when a new benchmark set is added in this change set
             warn(f"No results for {benchmark_set_name} found for PR #{merge_base_pr}. Skipping")
-            continue
-
-        # A benchmark set may contain no queries (e.g. formerly, If it was just
-        # using the ad hoc operation mode), in which case the results are an
-        # empty array.  Skip in those cases for now
-        if not (this_report and merge_base_report):
             continue
 
         benchmark_set_results = []
@@ -430,39 +418,15 @@ def generate_regression_report():
             # this_bench['requests']['count'] # TODO use this to normalize allocations
             name = this_bench['name']
 
-            # Skip if: this is a "low load" variation with few samples since these are 
-            #          likely redundant / less useful for the purpose of finding regressions
-            #          (see mono #5942)
-            if "low_load" in name:
-                warn(f"Skipping '{name}' which has 'low_load' in name")
-                continue
-
-            # Skip if: no result in merge base report to compare to:
             try:
                 merge_base_bench = merge_base_report_dict[name]
             except KeyError:
                 warn(f"Skipping '{name}' which is not found in the old report")
                 continue
 
-            # NOTE: below we want to skip any metrics not present in both reports,
+            # We also want to skip any metrics not present in both reports,
             # since we might decide to add or need to remove some:
             metrics = {}
-
-            # if this is a throughput benchmark set ( identified by the word
-            # "throughput" in the name)  then for now just look at the average
-            # RPS for the purposes of this regression report
-            if "throughput" in benchmark_set_name:
-                try:
-                    metrics['avg_peak_rps'] = pct_change(
-                        merge_base_bench["requests"]["average"],
-                        this_bench[      "requests"]["average"]
-                    )
-                    benchmark_set_results.append((name, metrics))
-                except KeyError:
-                    pass
-                # skip remaining metrics:
-                continue
-
             try:
                 metrics['bytes_alloc_per_req'] = pct_change(
                     merge_base_bench["extended_hasura_checks"]["bytes_allocated_per_request"],
@@ -470,34 +434,11 @@ def generate_regression_report():
                 )
             except KeyError:
                 continue
-
-            # For now just report regressions in the stable bytes-allocated metric for adhoc
-            if name.startswith("ADHOC-"):
-                warn(f"Just reporting regressions in bytes_alloc_per_req for '{name}' which is adhoc")
-                benchmark_set_results.append((name, metrics))
-                # Skip everything else:
-                continue
-
-            # Response body size:
-            try:
-                merge_base_body_size = float(merge_base_bench['response']['totalBytes']) / float(merge_base_bench['requests']['count'])
-                this_body_size       = float(      this_bench['response']['totalBytes']) / float(      this_bench['requests']['count'])
-                response_body_change = pct_change(merge_base_body_size, this_body_size)
-                # filter response body size unless it changes significantly, since this is rare:
-                if abs(response_body_change) > 1:
-                    metrics['response_body_size'] = response_body_change
-            # We need to catch division by zero here for adhoc mode queries
-            # (where we just set total_bytes to 0 for now), but probably want
-            # to keep this in even if that changes.
-            except (ZeroDivisionError, KeyError):
-                pass
             # NOTE: we decided to omit higher-percentile latencies here since
             # they are noisy (which might lead to people ignoring benchmarks)
-            # NOTE: we originally had `min` here, thinking it should be an
-            # asymptote (we can only get so fast doing a particular workload),
-            # but this hasn't turned out to be a useful summary statistic (we
-            # might need several times more samples for it to stabilize)
-            for m in ['p50']:
+            # and there are better ways to view these tail latencies in the works.
+          # for m in ['min', 'p50', 'p90', 'p97_5']:
+            for m in ['min', 'p50']:
                 try:
                     this_hist = this_bench['histogram']['json']
                     merge_base_hist = merge_base_bench['histogram']['json']
@@ -526,8 +467,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
     f = open(output_filename, "w")
     def out(s): f.write(s+"\n")
 
-    out(f"## Benchmark Results (graphql-engine-pro)") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
-    out(f"<details closed><summary>Click for detailed reports, and help docs</summary>")
+    out(f"## Benchmark Results") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
     out(f"")
     out((f"The regression report below shows, for each benchmark, the **percent change** for "
          f"different metrics, between the merge base (the changes from **PR {merge_base_pr}**) and "
@@ -536,7 +476,6 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
          f"(https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)."))
     out(f"")
     out(f"More significant regressions or improvements will be colored with `#b31d28` or `#22863a`, respectively.")
-    out(f"NOTE: throughput benchmarks are quite variable for now, and have a looser threshold for highlighting.")
     out(f"")
     out(f"You can view graphs of the full reports here:")
     for benchmark_set_name, _ in results.items():
@@ -547,11 +486,11 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
             f"[:bar_chart: merge base]({graphql_bench_url([base_id])})... "
             f"[:bar_chart: both compared]({graphql_bench_url([these_id, base_id])})")
     out(f"")
-    out(f"</details>")
+    out(f"<details open><summary>Click here for a detailed report.</summary>")
     out(f"")
 
     # Return what should be the first few chars of the line, which will detemine its styling:
-    def highlight_sensitive(val=None):
+    def col(val=None):
         if val == None:        return "#   "  # GRAY
         elif abs(val) <= 2.0:  return "#   "  # GRAY
         elif abs(val) <= 3.5:  return "*   "  # NORMAL
@@ -562,50 +501,31 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         elif -15.0 <= val < 0: return "+   "  # GREEN
         elif -25.0 <= val < 0: return "++  "  # GREEN
         else:                  return "+++ "  # GREEN
-    # For noisier benchmarks (tuned for throughput benchmarks, for now)
-    def highlight_lax(val=None):
-        if val == None:        return "#   "  # GRAY
-        elif abs(val) <= 8.0:  return "#   "  # GRAY
-        elif abs(val) <= 12.0: return "*   "  # NORMAL
-        elif 0 < val <= 20.0:  return "-   "  # RED
-        elif 0 < val <= 35.0:  return "--  "  # RED
-        elif 0 < val:          return "--- "  # RED
-        elif -20.0 <= val < 0: return "+   "  # GREEN
-        elif -35.0 <= val < 0: return "++  "  # GREEN
-        else:                  return "+++ "  # GREEN
 
-    out(f"``` diff")  # START DIFF SYNTAX
+    out(            f"``` diff                                       ")  # START DIFF SYNTAX
     for benchmark_set_name, (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmarks) in results.items():
         if benchmark_set_name[:-5] in skip_pr_report_names: continue
         l0 = live_bytes_before_diff
         l1 = live_bytes_after_diff
         u0 = mem_in_use_before_diff
-        # u1 = mem_in_use_after_diff
-
-        col = highlight_sensitive
-        out(        f"{col(u0)} {benchmark_set_name[:-5]+'  ':─<21s}{'┤ MEMORY RESIDENCY (from RTS)': <30}{'mem_in_use (BEFORE benchmarks)': >38}{u0:>12.1f} ┐")
-        out(        f"{col(l0)} {                        '  ': <21s}{'│'                            : <30}{'live_bytes (BEFORE benchmarks)': >38}{l0:>12.1f} │")
-        out(        f"{col(l1)} {                        '  ': <21s}{'│'                              }{'   live_bytes  (AFTER benchmarks)':_>67}{l1:>12.1f} ┘")
+        u1 = mem_in_use_after_diff
+        out(        f"{col( )}    ┌{'─'*(len(benchmark_set_name)+4)}┐")
+        out(        f"{col( )}    │  {benchmark_set_name}  │"         )
+        out(        f"{col( )}    └{'─'*(len(benchmark_set_name)+4)}┘")
+        out(        f"{col( )}                                       ")
+        out(        f"{col( )}    ᐉ  Memory Residency (RTS-reported):")
+        out(        f"{col(l0)}        {'live_bytes':<25}:  {l0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
+        out(        f"{col(l1)}        {'live_bytes':<25}:  {l1:>6.1f}   (AFTER benchmarks ran)")
+        out(        f"{col(u0)}        {'mem_in_use':<25}:  {u0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
+        out(        f"{col(u1)}        {'mem_in_use':<25}:  {u1:>6.1f}   (AFTER benchmarks ran)")
         for bench_name, metrics in benchmarks:
-            bench_name_pretty = bench_name.replace('-k6-custom','').replace('_',' ') # need at least 40 chars
-            if "throughput" in benchmark_set_name:
-                # invert the sign so we color properly, since higher throughput is better:
-                col = lambda v: highlight_lax(-v)
-            else:
-                col = highlight_sensitive
-
+            out(    f"{col( )}                                       ")
+            out(    f"{col( )}    ᐅ {bench_name.replace('-k6-custom','').replace('_',' ')}:")
             for metric_name, d in metrics.items():
-              if len(list(metrics.items())) == 1:  # if only one metric:
-                out(f"{col(d )} {                        '  ': <21s}{'│_'+bench_name_pretty+' '     :_<40}{                     metric_name:_>28}{d :>12.1f}  ")
-              elif metric_name == list(metrics.items())[0][0]:  # first:
-                out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
-              elif metric_name == list(metrics.items())[-1][0]:  # last:
-                out(f"{col(d )} {                        '  ': <21s}{'│'                                 }{               '   '+metric_name:_>67}{d :>12.1f} ┘")
-              else:   # middle, omit name
-                out(f"{col(d )} {                        '  ': <21s}{'│ '                           : <40}{                     metric_name: >28}{d :>12.1f} │")
-
-
-    out(f"```")  # END DIFF SYNTAX
+                out(f"{col(d)}        {metric_name:<25}:  {d:>6.1f}")
+        out(        f"{col( )}                                       ")
+    out(            f"```                                            ")  # END DIFF SYNTAX
+    out(f"</details>")
 
     say(f"Wrote github comment to {REGRESSION_REPORT_COMMENT_FILENAME}")
     f.close()

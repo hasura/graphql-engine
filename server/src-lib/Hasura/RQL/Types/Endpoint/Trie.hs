@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Endpoint.Trie
 where
 
 import Data.Aeson (ToJSON, ToJSONKey)
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Multi qualified as MM
 import Data.Set qualified as S
 import Data.Trie qualified as T
@@ -30,11 +30,11 @@ data PathComponent a
   | PathParam
   deriving stock (Show, Eq, Ord, Generic)
 
-instance (ToJSON a) => ToJSON (PathComponent a)
+instance ToJSON a => ToJSON (PathComponent a)
 
-instance (ToJSON a) => ToJSONKey (PathComponent a)
+instance ToJSON a => ToJSONKey (PathComponent a)
 
-instance (Hashable a) => Hashable (PathComponent a)
+instance Hashable a => Hashable (PathComponent a)
 
 -- | Result of matching a path @['PathComponent'] a@ and key @k@ in a 'MultiMapPathTrie'.
 --
@@ -88,7 +88,7 @@ instance Monoid (MatchResult a k v) where
 -- | Look up the value at a path.
 -- @PathParam@ matches any path component.
 -- Returns a list of pairs containing the value found and bindings for any @PathParam@s.
-lookupPath :: (Hashable a) => [a] -> T.Trie (PathComponent a) v -> [(v, [a])]
+lookupPath :: (Eq a, Hashable a) => [a] -> T.Trie (PathComponent a) v -> [(v, [a])]
 lookupPath [] t = [(v, []) | v <- maybeToList (T.trieData t)]
 lookupPath (x : xs) t = do
   (pc, t') <- matchPathComponent x $ T.trieMap t
@@ -98,15 +98,15 @@ lookupPath (x : xs) t = do
     PathParam -> (x :) <$> m
   where
     matchPathComponent ::
-      (Hashable a) =>
+      (Eq a, Hashable a) =>
       a ->
-      HashMap.HashMap (PathComponent a) v ->
+      M.HashMap (PathComponent a) v ->
       [(PathComponent (), v)]
     matchPathComponent a m =
-      catMaybes [(PathLiteral (),) <$> HashMap.lookup (PathLiteral a) m, (PathParam,) <$> HashMap.lookup PathParam m]
+      catMaybes [(PathLiteral (),) <$> M.lookup (PathLiteral a) m, (PathParam,) <$> M.lookup PathParam m]
 
 -- | Match a key @k@ and path @[a]@ against a @MultiMapPathTrie a k v@
-matchPath :: (Hashable k, Hashable a) => k -> [a] -> MultiMapPathTrie a k v -> MatchResult a k v
+matchPath :: (Eq a, Eq k, Hashable k, Hashable a) => k -> [a] -> MultiMapPathTrie a k v -> MatchResult a k v
 matchPath k path = foldMap toResult . lookupPath path
   where
     toResult (methodMap, paramMatches) =
@@ -116,7 +116,7 @@ matchPath k path = foldMap toResult . lookupPath path
         _ -> MatchAmbiguous
 
 -- | A version of ambiguousPaths that attempts to group all ambiguous paths that have overlapping endpoints
-ambiguousPathsGrouped :: (Hashable a, Hashable k, Ord v, Ord a) => MultiMapPathTrie a k v -> [(S.Set [PathComponent a], S.Set v)]
+ambiguousPathsGrouped :: (Hashable a, Eq k, Hashable k, Ord v, Ord a) => MultiMapPathTrie a k v -> [(S.Set [PathComponent a], S.Set v)]
 ambiguousPathsGrouped = groupAmbiguousPaths . map (first S.singleton) . ambiguousPaths
 
 groupAmbiguousPaths :: (Ord a, Ord v) => [(S.Set [PathComponent a], S.Set v)] -> [(S.Set [PathComponent a], S.Set v)]
@@ -133,14 +133,14 @@ groupAmbiguousPaths (x : xs) =
 
 -- | Detect and return all ambiguous paths in the @MultiMapPathTrie@
 -- A path @p@ is ambiguous if @matchPath k p@ can return @MatchAmbiguous@ for some @k@.
-ambiguousPaths :: (Hashable a, Hashable k, Ord v) => MultiMapPathTrie a k v -> [([PathComponent a], S.Set v)]
+ambiguousPaths :: (Eq a, Hashable a, Eq k, Hashable k, Ord v) => MultiMapPathTrie a k v -> [([PathComponent a], S.Set v)]
 ambiguousPaths (T.Trie pathMap methodMap) =
   thisNodeAmbiguousPaths ++ childNodesAmbiguousPaths
   where
     isAmbiguous e = S.size e >= 2
     ambiguous = mconcat $ filter isAmbiguous $ maybe [] MM.elems methodMap
     thisNodeAmbiguousPaths = guard (not $ null $ ambiguous) >> [([], ambiguous)]
-    childNodesAmbiguousPaths = uncurry childNodeAmbiguousPaths =<< HashMap.toList pathMap
+    childNodesAmbiguousPaths = uncurry childNodeAmbiguousPaths =<< M.toList pathMap
     childNodeAmbiguousPaths pc t = first (pc :) <$> ambiguousPaths (mergeWildcardTrie t)
-    wildcardTrie = HashMap.lookup PathParam pathMap
+    wildcardTrie = M.lookup PathParam pathMap
     mergeWildcardTrie = maybe id (<>) wildcardTrie

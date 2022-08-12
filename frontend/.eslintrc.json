@@ -2,18 +2,10 @@
   "root": true,
   "ignorePatterns": ["**/*"],
   "plugins": ["@nrwl/nx"],
-  "extends": ["plugin:@nrwl/nx/react"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "extends": ["plugin:storybook/recommended"],
       "rules": {
-        "react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
-        "@typescript-eslint/no-unused-vars": [
-          "warn",
-          { "ignoreRestSiblings": true }
-        ],
-        "@nrwl/nx/workspace/additional-dep-constraints": "error",
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
           {
@@ -21,68 +13,8 @@
             "allow": [],
             "depConstraints": [
               {
-                "sourceTag": "scope:shared",
-                "onlyDependOnLibsWithTags": ["scope:shared"]
-              },
-              {
-                "sourceTag": "scope:console",
-                "onlyDependOnLibsWithTags": ["scope:console", "scope:shared"]
-              },
-              {
-                "sourceTag": "scope:nx-plugins",
-                "onlyDependOnLibsWithTags": ["scope:shared", "scope:nx-plugins"]
-              },
-              {
-                "sourceTag": "type:utils",
-                "onlyDependOnLibsWithTags": ["type:utils"]
-              },
-              {
-                "sourceTag": "type:data",
-                "onlyDependOnLibsWithTags": ["type:data", "type:utils"]
-              },
-              {
-                "sourceTag": "type:ui",
-                "onlyDependOnLibsWithTags": ["type:ui", "type:utils"]
-              },
-              {
-                "sourceTag": "type:feature",
-                "onlyDependOnLibsWithTags": [
-                  "type:data",
-                  "type:feature",
-                  "type:ui",
-                  "type:utils"
-                ]
-              },
-              {
-                "sourceTag": "type:app",
-                "onlyDependOnLibsWithTags": [
-                  "type:data",
-                  "type:utils",
-                  "type:ui",
-                  "type:feature"
-                ]
-              },
-              {
-                "sourceTag": "type:storybook",
-                "onlyDependOnLibsWithTags": [
-                  "type:data",
-                  "type:storybook",
-                  "type:utils",
-                  "type:feature",
-                  "type:ui"
-                ]
-              },
-              {
-                "sourceTag": "type:e2e",
-                "onlyDependOnLibsWithTags": [
-                  "type:data",
-                  "type:e2e",
-                  "type:app",
-                  "type:ui",
-                  "type:storybook",
-                  "type:feature",
-                  "type:utils"
-                ]
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": ["*"]
               }
             ]
           }
@@ -92,101 +24,12 @@
     {
       "files": ["*.ts", "*.tsx"],
       "extends": ["plugin:@nrwl/nx/typescript"],
-      "rules": {
-        "react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
-        "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": [
-          "error",
-          {
-            "args": "none",
-            "varsIgnorePattern": "React",
-            "ignoreRestSiblings": true
-          }
-        ],
-        "@typescript-eslint/no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "lodash",
-                "message": "Please use sub imports (eg, lodash/get) instead of the global lodash import.",
-                "allowTypeImports": true
-              }
-            ]
-          }
-        ],
-        "jsx-a11y/alt-text": "error"
-      }
+      "rules": {}
     },
     {
       "files": ["*.js", "*.jsx"],
       "extends": ["plugin:@nrwl/nx/javascript"],
-      "rules": {
-        "no-unused-vars": [
-          "error",
-          {
-            "args": "none",
-            "varsIgnorePattern": "React"
-          }
-        ],
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "lodash",
-                "message": "Please use sub imports (eg, lodash/get) instead of the global lodash import."
-              }
-            ]
-          }
-        ],
-        "jsx-a11y/alt-text": "error"
-      }
-    },
-    {
-      "files": "*.json",
-      "parser": "jsonc-eslint-parser",
-      "rules": {
-        "@nrwl/nx/workspace/allowed-project-tags": [
-          "error",
-          {
-            "tags": {
-              "scope": {
-                "prefix": "scope:",
-                "allowMultiplePerProject": false,
-                "enforceAtLeastOne": true,
-                "allowedTags": ["console", "nx-plugins", "shared"]
-              },
-              "type": {
-                "prefix": "type:",
-                "allowMultiplePerProject": false,
-                "enforceAtLeastOne": true,
-                "allowedTags": [
-                  "utils",
-                  "data",
-                  "ui",
-                  "feature",
-                  "app",
-                  "storybook",
-                  "e2e"
-                ]
-              },
-              "meta": {
-                "prefix": "meta:",
-                "allowMultiplePerProject": true,
-                "enforceAtLeastOne": false,
-                "allowedTags": ["legacy", "package"]
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "files": ["*.stories.tsx"],
-      "rules": {
-        "react-hooks/rules-of-hooks": "off"
-      }
+      "rules": {}
     }
   ]
 }

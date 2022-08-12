@@ -9,7 +9,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,7 +22,6 @@ func TestInheritedRolesConfig_Build(t *testing.T) {
 		fields     fields
 		wantGolden string
 		wantErr    bool
-		assertErr  require.ErrorAssertionFunc
 	}{
 		{
 			"can build inherited roles",
@@ -33,7 +31,6 @@ func TestInheritedRolesConfig_Build(t *testing.T) {
 			},
 			"testdata/build_test/t1/want.golden.json",
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -43,8 +40,9 @@ func TestInheritedRolesConfig_Build(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := tc.Build()
-			tt.assertErr(t, err)
-			if !tt.wantErr {
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
 				assert.NoError(t, err)
 				gotbs, err := yaml.Marshal(got)
 				assert.NoError(t, err)
@@ -71,13 +69,12 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 		metadata map[string]yaml.Node
 	}
 	tests := []struct {
-		id        string
-		name      string
-		fields    fields
-		args      args
-		want      map[string][]byte
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		id      string
+		name    string
+		fields  fields
+		args    args
+		want    map[string][]byte
+		wantErr bool
 	}{
 		{
 			"t1",
@@ -108,7 +105,6 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 				return m
 			}(),
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -118,8 +114,9 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := tc.Export(tt.args.metadata)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files

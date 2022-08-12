@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/pkg/errors"
 )
 
-var ErrEventRejected = fmt.Errorf("event rejected")
+var ErrEventRejected = errors.New("event rejected")
 
 const (
 	Default StateType = ""
@@ -39,7 +39,6 @@ type StateMachine struct {
 }
 
 func (s *StateMachine) getNextState(event EventType) (StateType, error) {
-	var op errors.Op = "fsm.StateMachine.getNextState"
 	if state, ok := s.States[s.Current]; ok {
 		if state.Events != nil {
 			if next, ok := state.Events[event]; ok {
@@ -48,21 +47,20 @@ func (s *StateMachine) getNextState(event EventType) (StateType, error) {
 		}
 	}
 
-	return Default, errors.E(op, fmt.Errorf("next state: %w: %s", ErrEventRejected, event))
+	return Default, fmt.Errorf("next state: %w: %s", ErrEventRejected, event)
 }
 
 func (s *StateMachine) SendEvent(event EventType, eventCtx EventContext) error {
-	var op errors.Op = "fsm.StateMachine.SendEvent"
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for {
 		nextState, err := s.getNextState(event)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("%w: %s", err, event))
+			return fmt.Errorf("%w: %s", err, event)
 		}
 		state, ok := s.States[nextState]
 		if !ok || state.Action == nil {
-			return errors.E(op, fmt.Errorf("config error"))
+			return fmt.Errorf("config error")
 		}
 		s.Previous = s.Current
 		s.Current = nextState

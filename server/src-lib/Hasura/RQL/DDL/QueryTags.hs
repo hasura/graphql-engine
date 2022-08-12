@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.RQL.DDL.QueryTags
   ( SetQueryTagsConfig,
     runSetQueryTagsConfig,
@@ -6,30 +8,28 @@ where
 
 import Control.Lens
 import Data.Aeson
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.Aeson.TH qualified as J
+import Data.HashMap.Strict.InsOrd qualified as OM
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendTag
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
+import Hasura.SQL.Tag
 
 data SetQueryTagsConfig = SetQueryTagsConfig
   { _sqtSourceName :: SourceName,
     _sqtConfig :: QueryTagsConfig
   }
-  deriving stock (Generic)
 
-instance ToJSON SetQueryTagsConfig where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
+$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''SetQueryTagsConfig)
 
 instance FromJSON SetQueryTagsConfig where
   parseJSON = withObject "SetQueryTagsConfig" $ \o -> do
@@ -43,17 +43,18 @@ runSetQueryTagsConfig ::
   m EncJSON
 runSetQueryTagsConfig (SetQueryTagsConfig sourceName queryTagsConfig) = do
   oldMetadata <- getMetadata
-  case InsOrdHashMap.lookup sourceName (_metaSources oldMetadata) of
+  case OM.lookup sourceName (_metaSources oldMetadata) of
     Nothing -> throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
     Just exists -> do
       let backendType = getBackendType exists
       case backendType of
-        Postgres _ -> setQueryTagsConfigInMetadata (unBackendSourceMetadata exists) (Just queryTagsConfig)
+        Postgres Vanilla -> setQueryTagsConfigInMetadata exists (Just queryTagsConfig)
+        Postgres Citus -> setQueryTagsConfigInMetadata exists (Just queryTagsConfig)
         _ -> queryTagsNotSupported backendType
   where
     getBackendType :: BackendSourceMetadata -> BackendType
     getBackendType exists =
-      AB.dispatchAnyBackend @Backend (unBackendSourceMetadata exists) $ \(_sourceMetadata :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(_sourceMetadata :: SourceMetadata b) ->
         reify $ backendTag @b
 
     setQueryTagsConfigInMetadata exists qtConfig = do

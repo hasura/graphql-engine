@@ -1,8 +1,0 @@
-query MyQuery {
-  Album(limit: 4) {
-    Title
-    Artist {
-      Name
-    }
-  }
-}

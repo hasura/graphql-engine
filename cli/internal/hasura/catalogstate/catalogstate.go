@@ -3,13 +3,12 @@ package catalogstate
 import (
 	"bytes"
 	"context"
-
+	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
@@ -23,20 +22,18 @@ func New(client *httpc.Client, path string) *ClientCatalogState {
 }
 
 func (c *ClientCatalogState) send(body interface{}, responseBodyWriter io.Writer) (*httpc.Response, error) {
-	var op errors.Op = "catalogstate.ClientCatalogState.send"
 	req, err := c.NewRequest(http.MethodPost, c.path, body)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	resp, err := c.LockAndDo(context.Background(), req, responseBodyWriter)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	return resp, nil
 }
 
 func (c ClientCatalogState) Set(key string, state interface{}) (io.Reader, error) {
-	var op errors.Op = "catalogstate.ClientCatalogState.Set"
 	request := hasura.RequestBody{
 		Type: "set_catalog_state",
 		Args: map[string]interface{}{
@@ -47,16 +44,15 @@ func (c ClientCatalogState) Set(key string, state interface{}) (io.Reader, error
 	responseBody := new(bytes.Buffer)
 	response, err := c.send(request, responseBody)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	if response.StatusCode != http.StatusOK {
-		return nil, errors.E(op, errors.KindHasuraAPI, responseBody.String())
+		return nil, fmt.Errorf("%s", responseBody.String())
 	}
 	return responseBody, nil
 }
 
 func (c ClientCatalogState) Get() (io.Reader, error) {
-	var op errors.Op = "catalogstate.ClientCatalogState.Get"
 	request := hasura.RequestBody{
 		Type: "get_catalog_state",
 		Args: map[string]string{},
@@ -64,10 +60,10 @@ func (c ClientCatalogState) Get() (io.Reader, error) {
 	responseBody := new(bytes.Buffer)
 	response, err := c.send(request, responseBody)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 	if response.StatusCode != http.StatusOK {
-		return nil, errors.E(op, errors.KindHasuraAPI, responseBody.String())
+		return nil, fmt.Errorf("%s", responseBody.String())
 	}
 	return responseBody, nil
 }

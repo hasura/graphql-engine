@@ -1,5 +1,5 @@
 ---
-description: Deploy Hasura GraphQL Engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
+description: Deploy Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
 keywords:
   - hasura
   - docs
@@ -12,22 +12,22 @@ sidebar_position: 8
 sidebar_label: Using Google Cloud Platform & Kubernetes
 ---
 
-# Hasura GraphQL Engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
+# Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
 
 ## Introduction
 
-This is a guide on deploying the Hasura GraphQL Engine on the [Google
+This is a guide on deploying the Hasura GraphQL engine on the [Google
 Cloud Platform](https://cloud.google.com/) using [Kubernetes
 engine](https://cloud.google.com/kubernetes-engine/) to run Hasura and
-PostgreSQL backed by [Cloud SQL](https://cloud.google.com/sql/).
+PosgreSQL backed by [Cloud SQL](https://cloud.google.com/sql/).
 
 ## Prerequisites
 
-- Google Cloud account with billing enabled (or a [free trial](https://cloud.google.com/free/))
-- `gcloud` CLI ([install](https://cloud.google.com/sdk/))
-- `kubectl` CLI ([install](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+-   Google Cloud account with billing enabled (or a [free trial](https://cloud.google.com/free/))
+-   `gcloud` CLI ([install](https://cloud.google.com/sdk/))
+-   `kubectl` CLI ([install](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
 
-The Actions mentioned below can be done using the Google Cloud Console
+The actions mentioned below can be done using the Google Cloud Console
 and the `gcloud` CLI. But, for the sake of simplicity in documentation,
 we are going to use `gcloud` CLI, so that commands can be easily
 copy-pasted and executed.
@@ -120,7 +120,7 @@ kubectl create secret generic cloudsql-db-credentials \
         --from-literal=username=postgres --from-literal=password=[PASSWORD]
 ```
 
-## Deploy the Hasura GraphQL Engine
+## Deploy the Hasura GraphQL engine
 
 Download the `deployment.yaml` file:
 
@@ -152,13 +152,13 @@ Ensure the pods are running:
 kubectl get pods
 ```
 
-If there are any errors, check the logs of the GraphQL Engine:
+If there are any errors, check the logs of the GraphQL engine:
 
 ```bash
 kubectl logs deployment/hasura -c graphql-engine
 ```
 
-## Expose GraphQL Engine
+## Expose GraphQL engine
 
 ### HTTP
 
@@ -171,7 +171,7 @@ kubectl expose deploy/hasura \
      --type LoadBalancer
 ```
 
-#### Open the Hasura Console
+#### Open the Hasura console
 
 Wait for the external IP to be allocated, check the status using the
 command below. It usually takes a couple of minutes.
@@ -181,7 +181,7 @@ kubectl get service
 ```
 
 Once the IP is allocated, visit the IP in a browser and it should open
-the Console.
+the console.
 
 ### HTTPS
 
@@ -225,7 +225,7 @@ kind: Ingress
 metadata:
   name: basic-ingress
   annotations:
-    networking.gke.io/managed-certificates: 'hasura-cert'
+    networking.gke.io/managed-certificates: "hasura-cert"
 spec:
   rules:
     - host: example.com
@@ -239,7 +239,7 @@ spec:
 ## Logs {#gc-kubernetes-logs}
 
 Check the status for pods to see if they are running. If there are any
-errors, check the logs of the GraphQL Engine:
+errors, check the logs of the GraphQL engine:
 
 ```bash
 kubectl logs deployment/hasura -c graphql-engine

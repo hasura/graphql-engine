@@ -1,27 +1,28 @@
 ---
 sidebar_label: Permissions
-sidebar_position: 5
-description: Manage permissions with the Hasura schema/Metadata API
+sidebar_position: 5 
+description: Manage permissions with the Hasura schema/metadata API
 keywords:
-  - hasura
-  - docs
-  - schema/Metadata API
-  - API reference
-  - permission
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - permission
 ---
 
 # Schema/Metadata API Reference: Permissions (Deprecated)
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/Metadata API is deprecated in
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/api-reference/schema-api/index.mdx) and the
-[Metadata API](/api-reference/metadata-api/index.mdx).
+[metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/Metadata APIs will
+Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
 :::
+
 
 ## Introduction
 
@@ -45,7 +46,7 @@ being inserted.
 
 Let's look at an example, a permission for the `user` role to insert
 into the `article` table. What is the constraint that we would like to
-enforce here? _A user can only insert articles for themselves_ .
+enforce here? *A user can only insert articles for themselves* .
 
 ```http
 POST /v1/query HTTP/1.1
@@ -72,15 +73,15 @@ X-Hasura-Role: admin
 
 This reads as follows - for the `user` role:
 
-- For every row that is being inserted into the _article_ table, allow
-  insert only if the `check` passes i.e. that the `author_id` column
-  value is the same as the value in the request header
-  `X-HASURA-USER-ID`".
-- If the above `check` passes, then access for insert will be limited
-  to columns `name` and `author_id` only.
-- When this insert happens, the value of the column `id` will be
-  automatically `set` to the value of the resolved session variable
-  `X-HASURA-USER-ID`.
+-   For every row that is being inserted into the *article* table, allow
+    insert only if the `check` passes i.e. that the `author_id` column
+    value is the same as the value in the request header
+    `X-HASURA-USER-ID`".
+-   If the above `check` passes, then access for insert will be limited
+    to columns `name` and `author_id` only.
+-   When this insert happens, the value of the column `id` will be
+    automatically `set` to the value of the resolved session variable
+    `X-HASURA-USER-ID`.
 
 The argument for `check` is a boolean expression which has the same
 syntax as the `where` clause in the `select` query, making it extremely
@@ -122,12 +123,12 @@ In the above definition, the row is allowed to be inserted if the
 
 ### Args syntax {#schema-metadata-create-insert-permission-syntax}
 
-| Key        | Required | Schema                                                              | Description               |
-| ---------- | -------- | ------------------------------------------------------------------- | ------------------------- |
-| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table         |
-| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                 | Role                      |
-| permission | true     | [InsertPermission](/api-reference/syntax-defs.mdx#insertpermission) | The permission definition |
-| comment    | false    | text                                                                | Comment                   |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
+| permission | true     | [InsertPermission](/api-reference/syntax-defs.mdx#insertpermission)  | The permission definition |
+| comment    | false    | text                                                                              | Comment                   |
 
 ## drop_insert_permission {#schema-metadata-drop-insert-permission}
 
@@ -152,8 +153,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-drop-insert-permission-syntax}
 
-| Key   | Required | Schema                                                | Description       |
-| ----- | -------- | ----------------------------------------------------- | ----------------- |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
@@ -193,23 +194,23 @@ X-Hasura-Role: admin
 
 This reads as follows - For the `user` role:
 
-- Allow selecting rows where the `check` passes i.e. `is_published` is
-  `true` or the `author_id` matches the value of the session variable
-  `X-HASURA-USER-ID`.
-- Allow selecting all columns (because the `columns` key is set to
-  `*`).
-- `limit` the numbers of rows returned by a query to the `article`
-  table by the `user` role to a maximum of 10.
-- Allow aggregate queries.
+-   Allow selecting rows where the `check` passes i.e. `is_published` is
+    `true` or the `author_id` matches the value of the session variable
+    `X-HASURA-USER-ID`.
+-   Allow selecting all columns (because the `columns` key is set to
+    `*`).
+-   `limit` the numbers of rows returned by a query to the `article`
+    table by the `user` role to a maximum of 10.
+-   Allow aggregate queries.
 
 ### Args syntax {#schema-metadata-create-select-permission-syntax}
 
-| Key        | Required | Schema                                                              | Description               |
-| ---------- | -------- | ------------------------------------------------------------------- | ------------------------- |
-| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table         |
-| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                 | Role                      |
-| permission | true     | [SelectPermission](/api-reference/syntax-defs.mdx#selectpermission) | The permission definition |
-| comment    | false    | text                                                                | Comment                   |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
+| permission | true     | [SelectPermission](/api-reference/syntax-defs.mdx#selectpermission)  | The permission definition |
+| comment    | false    | text                                                                              | Comment                   |
 
 ## drop_select_permission {#schema-metadata-drop-select-permission}
 
@@ -234,8 +235,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-drop-select-permission-syntax}
 
-| Key   | Required | Schema                                                | Description       |
-| ----- | -------- | ----------------------------------------------------- | ----------------- |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
@@ -276,17 +277,17 @@ X-Hasura-Role: admin
 
 This reads as follows - for the `user` role:
 
-- Allow updating only those rows where the `filter` passes i.e. the
-  value of the `author_id` column of a row matches the value of the
-  session variable `X-HASURA-USER-ID`.
-- If the above `filter` passes for a given row, allow updating only
-  the `title`, `content` and `category` columns (_as specified in the_
-  `columns` _key_).
-- After the update happens, verify that the `check` condition holds
-  for the updated row i.e. that the value in the `content` column is
-  not empty.
-- When this update happens, the value of the column `updated_at` will
-  be automatically `set` to the current timestamp.
+-   Allow updating only those rows where the `filter` passes i.e. the
+    value of the `author_id` column of a row matches the value of the
+    session variable `X-HASURA-USER-ID`.
+-   If the above `filter` passes for a given row, allow updating only
+    the `title`, `content` and `category` columns (*as specified in the*
+    `columns` *key*).
+-   After the update happens, verify that the `check` condition holds
+    for the updated row i.e. that the value in the `content` column is
+    not empty.
+-   When this update happens, the value of the column `updated_at` will
+    be automatically `set` to the current timestamp.
 
 :::info Note
 
@@ -299,12 +300,12 @@ never be allowed to be updated.
 
 ### Args syntax {#schema-metadata-create-update-permission-syntax}
 
-| Key        | Required | Schema                                                              | Description               |
-| ---------- | -------- | ------------------------------------------------------------------- | ------------------------- |
-| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table         |
-| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                 | Role                      |
-| permission | true     | [UpdatePermission](/api-reference/syntax-defs.mdx#updatepermission) | The permission definition |
-| comment    | false    | text                                                                | Comment                   |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
+| permission | true     | [UpdatePermission](/api-reference/syntax-defs.mdx#updatepermission)  | The permission definition |
+| comment    | false    | text                                                                              | Comment                   |
 
 ## drop_update_permission {#schema-metadata-drop-update-permission}
 
@@ -329,8 +330,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-drop-update-permission-syntax}
 
-| Key   | Required | Schema                                                | Description       |
-| ----- | -------- | ----------------------------------------------------- | ----------------- |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
@@ -367,12 +368,12 @@ value."
 
 ### Args syntax {#schema-metadata-create-delete-permission-syntax}
 
-| Key        | Required | Schema                                                              | Description               |
-| ---------- | -------- | ------------------------------------------------------------------- | ------------------------- |
-| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table         |
-| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                 | Role                      |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
 | permission | true     | [DeletePermission](/api-reference/syntax-defs.mdx#deletepermission) | The permission definition |
-| comment    | false    | text                                                                | Comment                   |
+| comment    | false    | text                                                                              | Comment                   |
 
 ## drop_delete_permission {#schema-metadata-drop-delete-permission}
 
@@ -397,8 +398,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-drop-delete-permission-syntax}
 
-| Key   | Required | Schema                                                | Description       |
-| ----- | -------- | ----------------------------------------------------- | ----------------- |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
@@ -428,9 +429,9 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-set-permission-comment-syntax}
 
-| Key     | Required | Schema                                                | Description                |
-| ------- | -------- | ----------------------------------------------------- | -------------------------- |
-| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename) | Name of the table          |
-| role    | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)   | The role in the permission |
-| type    | true     | permission type (one of select/update/delete/insert)  | The type of the permission |
-| comment | false    | Text                                                  | Comment                    |
+| Key     | Required | Schema                                                               | Description                |
+|---------|----------|----------------------------------------------------------------------|----------------------------|
+| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table          |
+| role    | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)     | The role in the permission |
+| type    | true     | permission type (one of select/update/delete/insert)                 | The type of the permission |
+| comment | false    | Text                                                                 | Comment                    |

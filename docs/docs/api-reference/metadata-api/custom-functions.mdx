@@ -1,28 +1,28 @@
 ---
-sidebar_label: Custom functions
-sidebar_position: 6
-description: Manage custom functions with the Hasura Metadata API
+sidebar_label: Custom Functions
+sidebar_position: 3
+description: Manage custom functions with the Hasura metadata API
 keywords:
-  - hasura
-  - docs
-  - Metadata API
-  - API reference
-  - custom function
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - custom function
 ---
 
 # Metadata API Reference: Custom Functions
 
 ## Introduction
 
-Track/untrack a custom SQL function in the Hasura GraphQL Engine.
+Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for
 querying/mutating/subscribing data over the GraphQL API.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
@@ -30,7 +30,7 @@ replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/inde
 
 `pg_track_function` is used to add a custom SQL function to the GraphQL
 schema. It supports more configuration options than v1, and also
-supports tracking custom functions as mutations. Also refer a note
+supports tracking functions as mutations. Also refer a note
 [here](/api-reference/syntax-defs.mdx#function-req-note).
 
 Track an SQL function called `search_articles` with a Hasura session argument:
@@ -103,12 +103,12 @@ default).
 
 ### Args syntax {#metadata-pg-track-function-syntax}
 
-| Key           | Required | Schema                                                                          | Description                                                                                                                   |
-| ------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Key           | Required | Schema                                            | Description                                                                                                                   |
+|---------------|----------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | function      | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname)                     | Name of the SQL function                                                                                                      |
 | configuration | false    | [Function Configuration](/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the SQL function                                                                                            |
 | source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function (default: `default`)                                                              |
-| comment       | false    | String                                                                          | Comment for the function. This comment would replace the auto-generated comment for the function field in the GraphQL schema. |
+| comment       | false    | String                                            | Comment for the function. This comment would replace the auto-generated comment for the function field in the GraphQL schema. |
 
 ## pg_untrack_function {#metadata-pg-untrack-function}
 
@@ -135,8 +135,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-untrack-function-syntax}
 
-| Key      | Required | Schema                                                      | Description                                                      |
-| -------- | -------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| Key      | Required | Schema                        | Description                                                      |
+|----------|----------|-------------------------------|------------------------------------------------------------------|
 | function | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
 | source   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the function (default: `default`) |
 
@@ -170,8 +170,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-set-function-customization-syntax}
 
-| Key           | Required | Schema                                                                          | Description                                                      |
-| ------------- | -------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Key           | Required | Schema                                            | Description                                                      |
+|---------------|----------|---------------------------------------------------|------------------------------------------------------------------|
 | function      | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname)                     | Name of the function                                             |
 | configuration | false    | [Function Configuration](/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the function                                   |
 | source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function (default: `default`) |
@@ -199,11 +199,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-create-function-permission-syntax}
 
-| Key      | Required | Schema                                                      | Description                                                      |
-| -------- | -------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| Key      | Required | Schema                        | Description                                                      |
+|----------|----------|-------------------------------|------------------------------------------------------------------|
 | function | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
 | role     | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)         | Name of the role                                                 |
-| source   | false    | Text                                                        | Name of the source database of the function (default: `default`) |
+| source   | false    | Text                          | Name of the source database of the function (default: `default`) |
 
 ## pg_drop_function_permission {#metadata-pg-drop-function-permission}
 
@@ -226,70 +226,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-drop-function-permission-syntax}
 
-| Key      | Required | Schema                                                      | Description                                                      |
-| -------- | -------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| Key      | Required | Schema                        | Description                                                      |
+|----------|----------|-------------------------------|------------------------------------------------------------------|
 | function | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
 | role     | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)         | Name of the role                                                 |
-| source   | false    | Text                                                        | Name of the source database of the function (default: `default`) |
-
-## snowflake_track_function {#metadata-snowflake-track-function}
-
-`snowflake_track_function` is used to add a custom SQL function to the GraphQL
-schema. Also refer a note [here](/api-reference/syntax-defs.mdx#function-req-note).
-
-Track an SQL function called `search_articles` with a return table of `articles`:
-
-```http
-POST /v1/metadata HTTP/1.1
-Content-Type: application/json
-X-Hasura-Role: admin
-
-{
-    "type": "snowflake_track_function",
-    "args": {
-        "function": ["search_articles"],
-        "source": "default",
-        "configuration": {
-            "response": {
-                "type": "table",
-                "table": ["articles"]
-            }
-        }
-    }
-}
-```
-
-### Args syntax {#metadata-snowflake-track-function-syntax}
-
-| Key           | Required | Schema                                                                          | Description                                                                                                                   |
-| ------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| function      | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname)                     | Name of the SQL function                                                                                                      |
-| source        | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function                                                                                   |
-| configuration | true     | [Function Configuration](/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the SQL function                                                                                            |
-
-## snowflake_untrack_function {#metadata-snowflake-untrack-function}
-
-`snowflake_untrack_function` is used to remove a SQL function from the GraphQL schema.
-
-Remove an SQL function `search_articles`:
-
-```http
-POST /v1/metadata HTTP/1.1
-Content-Type: application/json
-X-Hasura-Role: admin
-
-{
-    "type": "snowflake_untrack_function",
-    "args": {
-        "function": ["search_articles"],
-        "source": "default"
-    }
-}
-```
-
-### Args syntax {#metadata-snowflake-untrack-function-syntax}
-
-| Key      | Required | Schema                                                      | Description                                                      |
-| -------- | -------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| function | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
-| source   | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the function                      |
+| source   | false    | Text                          | Name of the source database of the function (default: `default`) |

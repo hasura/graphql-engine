@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`update metadata in cache 1`] = `
+Object {
+  "metadata": Object {
+    "sources": Array [
+      Object {
+        "configuration": Object {
+          "connection_info": Object {
+            "database_url": Object {
+              "from_env": "HASURA_GRAPHQL_DATABASE_URL",
+            },
+            "isolation_level": "read-committed",
+            "pool_settings": Object {
+              "connection_lifetime": 600,
+              "idle_timeout": 180,
+              "max_connections": 50,
+              "retries": 1,
+            },
+            "use_prepared_statements": true,
+          },
+        },
+        "functions": Array [
+          Object {
+            "function": Object {
+              "name": "search_user2",
+              "schema": "public",
+            },
+          },
+        ],
+        "kind": "postgres",
+        "name": "default",
+        "tables": Array [
+          Object {
+            "table": Object {
+              "name": "a_table",
+              "schema": "public",
+            },
+          },
+          Object {
+            "insert_permissions": Array [
+              Object {
+                "permission": Object {
+                  "allow_aggregations": false,
+                  "backend_only": false,
+                  "check": Object {
+                    "id": Object {
+                      "_eq": 1,
+                    },
+                  },
+                  "columns": Array [
+                    "email",
+                    "type",
+                  ],
+                  "computed_fields": Array [],
+                  "filter": Object {},
+                  "limit": 0,
+                  "presets": Object {},
+                },
+                "role": "user",
+                "source": "default",
+                "table": Object {
+                  "name": "users",
+                  "schema": "public",
+                },
+              },
+            ],
+            "select_permissions": Array [
+              Object {
+                "permission": Object {
+                  "allow_aggregations": true,
+                  "columns": Array [
+                    "email",
+                    "id",
+                    "type",
+                  ],
+                  "filter": Object {
+                    "id": Object {
+                      "_eq": 1,
+                    },
+                  },
+                  "limit": 5,
+                },
+                "role": "user",
+              },
+            ],
+            "table": Object {
+              "name": "users",
+              "schema": "public",
+            },
+          },
+        ],
+      },
+    ],
+    "version": 3,
+  },
+  "resource_version": 30,
+}
+`;

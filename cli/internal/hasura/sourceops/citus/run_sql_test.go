@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
@@ -23,12 +22,11 @@ func TestCitus_RunSQL(t *testing.T) {
 		input hasura.CitusRunSQLInput
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		want      *hasura.CitusRunSQLOutput
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		fields  fields
+		args    args
+		want    *hasura.CitusRunSQLOutput
+		wantErr bool
 	}{
 		{
 			"can send a run_sql request",
@@ -47,7 +45,6 @@ func TestCitus_RunSQL(t *testing.T) {
 				Result:     nil,
 			},
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -58,10 +55,11 @@ func TestCitus_RunSQL(t *testing.T) {
 					path:   tt.fields.path,
 				}
 				got, err := h.CitusRunSQL(tt.args.input)
-				tt.assertErr(t, err)
-				if !tt.wantErr {
-					assert.Equal(t, tt.want, got)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("CitusRunSQL() error = %v, wantErr %v", err, tt.wantErr)
+					return
 				}
+				assert.Equal(t, tt.want, got)
 			}
 			test()
 		})

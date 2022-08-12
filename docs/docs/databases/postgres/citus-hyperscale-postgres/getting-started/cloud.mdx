@@ -14,30 +14,26 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Get Started with Hasura Cloud & Citus - Hyperscale
 
-## Introduction
+## Try it out
 
 ### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
 
 Navigate to
-[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default&skip_onboarding=true),
-and create a new Hasura Cloud account.
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
 
 Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
 
-<Thumbnail src="/img/getting-started/create-project.png" alt="Connect new or existing database" width="600px" />
+<Thumbnail src='/img/getting-started/create-project.png' alt='Connect new or existing database' width='600px' />
 
 ### Step 2: Add your Citus database as a source to Hasura
 
-In the `Data > Data Manager > Connect Existing Database` section on the Console, select `Citus` from the
+In the `Data > Data Manager > Connect Existing Database` section on the console, select `Citus` from the
 `Data Source Driver` dropdown and add the connection string directly or through an environment variable. As Citus speaks
 the same protocol as Postgres, the connection string will start with `postgres://`, i.e, there is no difference between
 Citus’s connection strings and Postgres’s connection strings.
 
-<Thumbnail
-  src="/img/databases/citus-hyperscale-postgres/connect-citus-db_console_2.10.1.png"
-  alt="Add source"
-  width="600px"
-/>
+<Thumbnail src='/img/databases/citus-hyperscale-postgres/1-add-source.png' alt='Add source' width='600px' />
 
 Once you add the database, you'll see your database pop up on the sidebar.
 
@@ -101,17 +97,17 @@ regular Postgres database.
 
 ### Step 4: Try out a GraphQL query
 
-Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+Head to the `API` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
 creating a GraphQL query.
 
-<Thumbnail src="/img/databases/api-explorer_step-4_console_2.10.1.png" alt="Make GraphQL query" width="1100px" />
+<Thumbnail src='/img/databases/ms-sql-server/6-make-graphql-query.png' alt='Make GraphQL query' width='1100px' />
 
 ## Keep up to date
 
-Hasura supports queries, relationships, permissions, custom functions and mutations on Citus.
+Hasura supports queries, relationships, permissions, functions and mutations on Citus.
 
-Please watch this space to get the latest docs on how you can try these features out via the Console or by manipulating
-Metadata in JSON/YAML directly.
+Please watch this space to get the latest docs on how you can try these features out via the console or by manipulating
+metadata in JSON/YAML directly.
 
 If you'd like to stay informed about the status of Citus support, subscribe to our newsletter and join our discord!
 

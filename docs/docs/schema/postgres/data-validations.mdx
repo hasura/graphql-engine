@@ -15,7 +15,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Data Validations
+# Postgres: Data validations
 
 ## Introduction
 
@@ -48,12 +48,12 @@ author (id uuid, name text, rating integer)
 
 We can now add a check constraint to limit the `rating` values as follows:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `Modify` tab in the table page and add a check constraint in the `Check Constraints` section:
 
-<Thumbnail src="/img/schema/validation-add-check-constraint.png" alt="Add check constraint" />
+<Thumbnail src='/img/schema/validation-add-check-constraint.png' alt='Add check constraint' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -146,10 +146,10 @@ an article's content exceeds a certain number of words, and then add a
 [Postgres trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html) that will call this function every
 time before an article is inserted or updated.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-- Head to the `Data -> SQL` section of the Hasura Console
+- Head to the `Data -> SQL` section of the Hasura console
 - Enter the SQL statement below to create a Postgres function and trigger
 - Hit the `Run` button
 
@@ -200,7 +200,7 @@ BEGIN
 
   -- throw an error if article content is too long
   IF content_length > 100 THEN
-      RAISE EXCEPTION USING ERRCODE= '22000', MESSAGE= 'Content can not have more than 100 words';
+      RAISE EXCEPTION 'Content can not have more than 100 words';
   END IF;
 
   -- return the article row if no error
@@ -232,10 +232,16 @@ Now, if we try to insert an article whose content has more than 100 words, we'll
     {
       "message": "postgres query error",
       "extensions": {
-        "path": "$",
-        "code": "data-exception"
-      },
-      "message": "Content can not have more than 100 words"
+        "internal": {
+          "error": {
+            "exec_status": "FatalError",
+            "message": "Content can not have more than 100 words",
+            "status_code": "P0001",
+          },
+        },
+        "path": "$.selectionSet.insert_article.args.objects",
+        "code": "unexpected"
+      }
     }
   ]
 }`}
@@ -245,130 +251,11 @@ Learn more about [Postgres triggers](https://www.postgresql.org/docs/current/sql
 
 ## Using Hasura permissions
 
-Hasura permissions provides two different ways to validate data:
+If the validation logic can be expressed **declaratively** using static values and data from the database, then you can
+use [row level permissions](/auth/authorization/permission-rules.mdx#row-level-permissions) to perform the validations.
+(Read more about [Authorization](/auth/authorization/index.mdx)).
 
-1. If input arguments of a mutations needs to be validated, you can use the
-   [input validation](/docs/schema/postgres/input-validations.mdx) feature. This
-   allows you to write custom validation logic that is run in an external webhook before hitting the
-   database to execute the mutation.
-2. If the validation logic can be expressed **declaratively** using static
-   values and data from the database, then you can use [row level
-   permissions](/auth/authorization/permissions/row-level-permissions.mdx) to
-   perform the validations. (Read more
-   about[Authorization](/auth/authorization/index.mdx)).
-
-**Example 1:** Validate that a valid email is being inserted
-
-Suppose, we have the following table in our schema:
-```sql
-customer (id uuid, name text, city text, email text)
-```
-Now, we can create a role `user` and add an input validation rule as follows:
-
-
-<Tabs className="api-tabs">
-<TabItem value="console" label="Console">
-
-<Thumbnail
-  src="/img/schema/input-validation-create-permission.png"
-  alt="Using boolean expressions to build rules"
-  width="500px"
-/>
-
-</TabItem>
-<TabItem value="cli" label="CLI">
-
-You can define the input validation  in the `metadata -> databases -> [database-name] -> tables -> [table-name].yaml`
-file, eg:
-
-```yaml {9-14}
-- table:
-    schema: public
-    name: customer
-  insert_permissions:
-    - role: user
-      permission:
-        columns: []
-        filter: {}
-        validate_input:
-          type: http
-          definition:
-            url: http://www.somedomain.com/validateCustomerMutation
-            forward_client_headers: true
-            timeout: 5
-        
-```
-
-Apply the Metadata by running:
-
-```bash
-hasura metadata apply
-```
-
-</TabItem>
-<TabItem value="api" label="API">
-
-You can define the input validations when using the [permissions Metadata API](/api-reference/metadata-api/permission.mdx).
-Example with a Postgres DB:
-
-```http {14-21}
-POST /v1/metadata HTTP/1.1
-Content-Type: application/json
-X-Hasura-Role: admin
-
-{
-  "type": "pg_create_insert_permission",
-  "args": {
-    "source": "<db_name>",
-    "table": "customer",
-    "role": "user",
-    "permission": {
-      "columns": "*",
-      "filter": {},
-      "validate_input": {
-        "type": "http",
-        "definition": {
-          "forward_client_headers": true,
-          "headers": [],
-          "timeout": 5,
-          "url": "http://www.somedomain.com/validateCustomerMutation"
-        }
-      }
-    }
-  }
-}
-```
-
-</TabItem>
-</Tabs>
-
-If we try to insert a customer with an invalid email, we will get a `validation-failed` error:
-
-<GraphiQLIDE
-  query={`mutation {
-  insert_customer(
-    objects: {
-      name: "customer 1"
-      email: "random-email",
-    }
-  ) {
-    affected_rows
-  }
-}`}
-  response={`{
-  "errors": [
-    {
-      "message": "customer email id is not valid",
-      "extensions": {
-        "path": "$",
-        "code": "validation-failed"
-      }
-    }
-  ]
-}`}
-/>
-
-**Example 2:** Validate that an `article` can be inserted only if `title` is not empty.
+**Example 1:** Validate that an `article` can be inserted only if `title` is not empty.
 
 Suppose, we have the following table in our schema:
 
@@ -378,10 +265,10 @@ article (id uuid, title text, content text, author_id uuid)
 
 Now, we can create a role `user` and add an insert validation rule as follows:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src="/img/schema/validation-not-empty.png" alt="validation using permission: title cannot be empty" />
+<Thumbnail src='/img/schema/validation-not-empty.png' alt='validation using permission: title cannot be empty' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -400,7 +287,7 @@ You can add roles and permissions in the `tables.yaml` file inside the `metadata
             _ne: ''
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -444,7 +331,7 @@ If we try to insert an article with `title = ""`, we will get a `permission-erro
   query={`mutation {
   insert_article(
     objects: {
-      title: ""
+      title: "
       content: "Lorem ipsum dolor sit amet",
     }
   ) {
@@ -464,7 +351,7 @@ If we try to insert an article with `title = ""`, we will get a `permission-erro
 }`}
 />
 
-**Example 3:** Validate that an `article` can be inserted only if its `author` is active.
+**Example 2:** Validate that an `article` can be inserted only if its `author` is active.
 
 Suppose, we have 2 tables:
 
@@ -482,12 +369,12 @@ article.author_id -> author.id
 
 Now, we can create a role `user` and add an insert validation rule as follows:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 <Thumbnail
-  src="/img/schema/validation-author-isactive.png"
-  alt="validation using permissions: author should be active"
+  src='/img/schema/validation-author-isactive.png'
+  alt='validation using permissions: author should be active'
 />
 
 </TabItem>
@@ -508,7 +395,7 @@ You can add roles and permissions in the `tables.yaml` file inside the `metadata
               _eq: true
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -585,7 +472,7 @@ A few features on the roadmap should simplify this experience in the future.
 ## Using Hasura Actions
 
 If the validation requires complex custom business logic and/or needs information from external sources, you can use
-[Actions](/actions/overview.mdx) to perform your validation.
+[Actions](/actions/index.mdx) to perform your validation.
 
 **Example:** Check with an external service that an author's name is not deny-listed before inserting them.
 
@@ -595,9 +482,9 @@ to check with this service if they are deny-listed or not.
 The validation process looks as follows:
 
 <Thumbnail
-  src="/img/schema/diagram-actions-data-validation.png"
-  alt="validation using actions: article not deny-listed"
-  width="60%"
+  src='/img/schema/diagram-actions-data-validation.png'
+  alt='validation using actions: article not deny-listed'
+  width='60%'
 />
 
 Actions allow us to define [custom types](/actions/types.mdx) in our GraphQL schema.

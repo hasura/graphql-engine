@@ -1,4 +1,4 @@
 {
-  "label": "Postgres",
-  "position": 3
+  "label": "Postgres / Citus / Hyperscale",
+  "position": 1
 }

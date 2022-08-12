@@ -1,49 +1,34 @@
-from datetime import datetime, timedelta
-import math
-
-import jwt
 import pytest
-from ruamel.yaml import YAML
+import jwt
+import math
+import json
 
 from validate import check_query
+from datetime import datetime, timedelta
+from context import PytestConf
+from ruamel.yaml import YAML
 
-yaml = YAML(typ='safe', pure=True)
+yaml=YAML(typ='safe', pure=True)
 
-basic_claims_map = {
-    'x-hasura-user-id': {
-        'path': "$.['https://myapp.com/jwt/claims'].user.id"
-    },
-    'x-hasura-allowed-roles': {
-        'path': "$.['https://myapp.com/jwt/claims'].role.allowed"
-    },
-    'x-hasura-default-role': {
-        'path': "$.['https://myapp.com/jwt/claims'].role.default"
-    }
-}
+if not PytestConf.config.getoption('--hge-jwt-key-file'):
+    pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
 
-basic_claims_map_with_default_values = {
-    'x-hasura-user-id': {
-        'path': "$.['https://myapp.com/jwt/claims'].user.id",
-        'default': '1'
-    },
-    'x-hasura-allowed-roles': {
-        'path': "$.['https://myapp.com/jwt/claims'].role.allowed",
-        'default': ['user', 'editor']
-    },
-    'x-hasura-default-role': {
-        'path': "$.['https://myapp.com/jwt/claims'].role.default",
-        'default': 'user'
-    }
-}
+hge_jwt_conf = PytestConf.config.getoption('--hge-jwt-conf')
 
-static_claims_map = {
-    'x-hasura-user-id': {
-        'path': "$.['https://myapp.com/jwt/claims'].user.id"
-    },
-    'x-hasura-allowed-roles': ['user','editor'],
-    'x-hasura-default-role': 'user',
-    'x-hasura-custom-header': 'custom-value'
-}
+if not hge_jwt_conf:
+    pytest.skip('--hge-jwt-key-conf is missing, skipping JWT tests', allow_module_level=True)
+
+if 'claims_map' not in hge_jwt_conf:
+    pytest.skip('cliams_map missing in jwt config, skipping JWT Claims Map tests', allow_module_level=True)
+
+# The following claims_map is assumed to be set
+# {
+#     "claims_map": {
+#         "x-hasura-user-id": {"path":"$.["https://myapp.com/jwt/claims"].user.id"}
+#         "x-hasura-allowed-roles": {"$.["https://myapp.com/jwt/claims"].role.allowed","default":["user","editor"]}
+#         "x-hasura-default-role": {"$.["https://myapp.com/jwt/claims"].role.default","default":"user"}
+#     }
+# }
 
 def clean_null_terms(d):
    clean = {}
@@ -61,9 +46,8 @@ def clean_null_terms(d):
 # default values here is referred to the default value that's being
 # used when a value is not found while looking up the JWT token using
 # the JSON Path provided
-@pytest.mark.admin_secret
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
-class AbstractTestJWTClaimsMapBasic:
+class TestJWTClaimsMapBasic():
     def mk_claims(self, user_id=None, allowed_roles=None, default_role=None):
         self.claims['https://myapp.com/jwt/claims'] = clean_null_terms({
             'user': {
@@ -75,17 +59,17 @@ class AbstractTestJWTClaimsMapBasic:
             }
         })
 
-    def test_jwt_claims_map_valid_claims_success(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_valid_claims_success(self, hge_ctx, endpoint):
         self.mk_claims('1', ['user', 'editor'], 'user')
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
         self.conf['status'] = 200
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_claims_map_invalid_role_in_request_header(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_invalid_role_in_request_header(self, hge_ctx, endpoint):
         self.mk_claims('1', ['contractor', 'editor'], 'contractor')
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -103,10 +87,10 @@ class AbstractTestJWTClaimsMapBasic:
             self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_claims_map_no_allowed_roles_in_claim(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_no_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.mk_claims('1', None, 'user')
-        default_allowed_roles = jwt_configuration.server_configuration['claims_map']['x-hasura-allowed-roles'].get('default')
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        default_allowed_roles = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-allowed-roles'].get('default')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         if default_allowed_roles is None:
             self.conf['response'] = {
@@ -128,9 +112,9 @@ class AbstractTestJWTClaimsMapBasic:
         self.conf['url'] = endpoint
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_claims_map_invalid_allowed_roles_in_claim(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_invalid_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.mk_claims('1', 'user', 'user')
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -148,13 +132,13 @@ class AbstractTestJWTClaimsMapBasic:
             self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_claims_map_no_default_role(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_no_default_role(self, hge_ctx, endpoint):
         # default_default_role is the default default role set in the JWT config
         # when the lookup with the JSONPath fails, this is the value that will
         # be used for the `x-hasura-default-role` claim
-        default_default_role = jwt_configuration.server_configuration['claims_map']['x-hasura-default-role'].get('default')
+        default_default_role = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-default-role'].get('default')
         self.mk_claims('1', ['user'])
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         if default_default_role is None:
             self.conf['response'] = {
@@ -175,10 +159,10 @@ class AbstractTestJWTClaimsMapBasic:
         self.conf['url'] = endpoint
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_claims_map_claim_not_found(self, hge_ctx, jwt_configuration, endpoint):
-        default_user_id = jwt_configuration.server_configuration['claims_map']['x-hasura-user-id'].get('default')
+    def test_jwt_claims_map_claim_not_found(self, hge_ctx, endpoint):
+        default_user_id = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-user-id'].get('default')
         self.mk_claims(None, ['user', 'editor'], 'user')
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         if default_user_id is None:
             self.conf['response'] = {
@@ -214,38 +198,16 @@ class AbstractTestJWTClaimsMapBasic:
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, postgis, hge_ctx):
+    def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
         hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
-
-@pytest.mark.jwt('rsa', { 'claims_map': basic_claims_map })
-class TestJWTClaimsMapBasicWithRSA(AbstractTestJWTClaimsMapBasic):
-    pass
-
-
-@pytest.mark.jwt('ed25519', { 'claims_map': basic_claims_map })
-class TestJWTClaimsMapBasicWithEd25519(AbstractTestJWTClaimsMapBasic):
-    pass
-
-
-@pytest.mark.jwt('rsa', { 'claims_map': basic_claims_map_with_default_values })
-class TestJWTClaimsMapBasicWithRSAAndDefaultValues(AbstractTestJWTClaimsMapBasic):
-    pass
-
-
-@pytest.mark.jwt('ed25519', { 'claims_map': basic_claims_map_with_default_values })
-class TestJWTClaimsMapBasicWithEd25519AndDefaultValues(AbstractTestJWTClaimsMapBasic):
-    pass
-
-
 # The values of 'x-hasura-allowed-roles' and 'x-hasura-default-role' has
 # been set in the JWT config
-@pytest.mark.admin_secret
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
-class AbstractTestJWTClaimsMapWithStaticHasuraClaimsMapValues:
+class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
     def mk_claims(self, user_id=None):
         self.claims['https://myapp.com/jwt/claims'] = clean_null_terms({
             'user': {
@@ -253,18 +215,18 @@ class AbstractTestJWTClaimsMapWithStaticHasuraClaimsMapValues:
             }
         })
 
-    def test_jwt_claims_map_valid_claims_success(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_valid_claims_success(self, hge_ctx, endpoint):
         self.mk_claims('1')
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['headers']['x-hasura-custom-header'] = 'custom-value'
         self.conf['url'] = endpoint
         self.conf['status'] = 200
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_claims_map_invalid_role_in_request_header(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_invalid_role_in_request_header(self, hge_ctx, endpoint):
         self.mk_claims('1')
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['headers']['X-Hasura-Role'] = 'random_string'
         self.conf['response'] = {
@@ -283,9 +245,9 @@ class AbstractTestJWTClaimsMapWithStaticHasuraClaimsMapValues:
             self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_claims_map_claim_not_found(self, hge_ctx, jwt_configuration, endpoint):
+    def test_jwt_claims_map_claim_not_found(self, hge_ctx, endpoint):
         self.mk_claims(None)
-        token = jwt.encode(self.claims, jwt_configuration.private_key, algorithm=jwt_configuration.algorithm)
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -318,18 +280,8 @@ class AbstractTestJWTClaimsMapWithStaticHasuraClaimsMapValues:
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, postgis, hge_ctx):
+    def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
         hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-
-
-@pytest.mark.jwt('rsa', { 'claims_map': static_claims_map })
-class TestJWTClaimsMapWithStaticHasuraClaimsMapValuesWithRSA(AbstractTestJWTClaimsMapWithStaticHasuraClaimsMapValues):
-    pass
-
-
-@pytest.mark.jwt('ed25519', { 'claims_map': static_claims_map })
-class TestJWTClaimsMapWithStaticHasuraClaimsMapValuesWithEd25519(AbstractTestJWTClaimsMapWithStaticHasuraClaimsMapValues):
-    pass

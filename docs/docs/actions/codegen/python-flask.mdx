@@ -1,7 +1,7 @@
 ---
 sidebar_label: Python & Flask
 sidebar_position: 1
-description: Codegen for Hasura Actions in Python & Flask
+description: Codegen for Hasura actions in Python & Flask
 keywords:
   - hasura
   - docs
@@ -15,11 +15,11 @@ keywords:
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# GraphQL API with Python & Flask: JWT Authentication
+# GraphQL API with Python & Flask: JWT authentication
 
 ## Introduction
 
-This page describes how to use Hasura Actions and codegen to build a Python & Flask API for JWT authentication.
+This page describes how to use Hasura actions and codegen to build a Python & Flask API for JWT authentication.
 
 ## Step 1: Create action definition & custom types
 
@@ -56,10 +56,10 @@ type JsonWebToken {
 Example: creating the `Signup` action
 
 <Thumbnail
-  src="/img/actions/python-flask-signup-types.png"
-  alt="Python Flask signup types"
-  width="1000px"
-  className="no-shadow"
+  src='/img/actions/python-flask-signup-types.png'
+  alt='Python Flask signup types'
+  width='1000px'
+  className='no-shadow'
 />
 
 ## Step 2: Action handler implementation for signup
@@ -347,7 +347,7 @@ $ decode_jwt 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwib
 
 ## Step 5: Calling the finished actions
 
-Try out your defined Actions from the GraphQL API.
+Try out your defined actions from the GraphQL API.
 
 Call the `Signup` action:
 

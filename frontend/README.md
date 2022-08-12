@@ -1,63 +1,94 @@
+
+
 # Frontend
 
 This project was generated using [Nx](https://nx.dev).
 
-Visit the [Nx Documentation](https://nx.dev) to learn more about it.
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="450"></p>
 
-This `frontend` monorepo contains the Hasura Console, in all the possible modes.
+🔎 **Smart, Fast and Extensible Build System**
 
-_Last import [2023-01-12](https://github.com/hasura/graphql-engine-mono/tree/a8cbb297437e4c2d9ba4cab5da1e464d4eac43e4)_
+## Adding capabilities to your workspace
 
-## Nx Console
+Nx supports many plugins which add capabilities for developing different types of applications and different tools.
 
-It's highly recommended to install the Nx Console for [VSCode](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console), [IntelliJ](https://plugins.jetbrains.com/plugin/15101-nx-console-idea) or [Neovim](https://github.com/Equilibris/nx.nvim).
+These capabilities include generating applications, libraries, etc as well as the devtools to test, and build projects as well.
 
-It will allow you to have all of the Nx commands usable via UI, have an embedded view of the NX graph right in your editor, and much more.
+Below are our core plugins:
 
-## Hasura Console
+- [React](https://reactjs.org)
+  - `npm install --save-dev @nrwl/react`
+- Web (no framework frontends)
+  - `npm install --save-dev @nrwl/web`
+- [Angular](https://angular.io)
+  - `npm install --save-dev @nrwl/angular`
+- [Nest](https://nestjs.com)
+  - `npm install --save-dev @nrwl/nest`
+- [Express](https://expressjs.com)
+  - `npm install --save-dev @nrwl/express`
+- [Node](https://nodejs.org)
+  - `npm install --save-dev @nrwl/node`
 
-The Hasura Console is an admin dashboard to manage the connected database and to try out GraphQL APIs. It is a React application bundled with Webpack, and the state is managed mostly using Redux.
+There are also many [community plugins](https://nx.dev/community) you could add.
 
-### Table of contents
+## Generate an application
 
-- [Generic info](./docs/generic-info.md)
-- [Coming from the previous codebase](./docs/from-previous-console.md)
-- [Development Tooling](https://main--614d7904644d03004addd43b.chromatic.com/?path=/story/dev-tooling--page)
-- [Design System's Storybook](https://main--614d7904644d03004addd43b.chromatic.com)
-  - [How to create/document new Components](./libs/console/legacy-ce/src/lib/docs/dev/ComponentDoc.stories.mdx)
-- Cypress Dashboard
-  - [CE Console](https://dashboard.cypress.io/projects/5yiuic)
-  - [EE Console](https://dashboard.cypress.io/projects/672jmv)
-- [Cypress README](./cypress/README.md)
+Run `nx g @nrwl/react:app my-app` to generate an application.
 
-## How to
+> You can use any of the plugins above to generate applications as well.
 
-### Install the dependencies
+When using Nx, you can create multiple applications and libraries in the same workspace.
 
-Run `npm install`.
+## Generate a library
 
-### Development server
+Run `nx g @nrwl/react:lib my-lib` to generate a library.
 
-Run `nx serve console-ce` (requires an [`.env` file](./docs/generic-info.md#set-up-env-file)) for a dev server. Navigate to http://localhost:4200/. The app will automatically reload if you change any of the source files.
+> You can also use any of the plugins above to generate libraries as well.
 
-### Build
+Libraries are shareable across libraries and applications. They can be imported from `@frontend/mylib`.
 
-Run `nx build console-ce` to build the project. The build artifacts will be stored in the `dist/` directory.
+## Development server
+
+Run `nx serve my-app` for a dev server. Navigate to http://localhost:4200/. The app will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `nx g @nrwl/react:component my-component --project=my-app` to generate a new component.
+
+## Build
+
+Run `nx build my-app` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
 
 ## Running unit tests
 
-Run `nx test console-ce` to execute the unit tests via [Jest](https://jestjs.io).
+Run `nx test my-app` to execute the unit tests via [Jest](https://jestjs.io).
 
 Run `nx affected:test` to execute the unit tests affected by a change.
 
 ## Running end-to-end tests
 
-Run `nx e2e console-ce-e2e --watch` (requires an [`.env` file](./docs/generic-info.md#set-up-env-file)) to open the Cypress UI and locally working with it.
+Run `nx e2e my-app` to execute the end-to-end tests via [Cypress](https://www.cypress.io).
 
-Run `nx e2e console-ce-e2e` (requires an [`.env` file](./docs/generic-info.md#set-up-env-file)) to execute the end-to-end tests via [Cypress](https://www.cypress.io).
-
-Run `nx affected:e2e` (requires an [`.env` file](./docs/generic-info.md#set-up-env-file)) to execute the end-to-end tests affected by a change.
+Run `nx affected:e2e` to execute the end-to-end tests affected by a change.
 
 ## Understand your workspace
 
 Run `nx graph` to see a diagram of the dependencies of your projects.
+
+## Further help
+
+Visit the [Nx Documentation](https://nx.dev) to learn more.
+
+
+
+## ☁ Nx Cloud
+
+### Distributed Computation Caching & Distributed Task Execution
+
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-cloud-card.png"></p>
+
+Nx Cloud pairs with Nx in order to enable you to build and test code more rapidly, by up to 10 times. Even teams that are new to Nx can connect to Nx Cloud and start saving time instantly.
+
+Teams using Nx gain the advantage of building full-stack applications with their preferred framework alongside Nx’s advanced code generation and project dependency graph, plus a unified experience for both frontend and backend developers.
+
+Visit [Nx Cloud](https://nx.app/) to learn more.

@@ -1,26 +1,26 @@
 ---
 sidebar_label: Databases
 sidebar_position: 1
-description: Manage databases with the Hasura Metadata API
+description: Manage databases with the Hasura metadata API
 keywords:
-  - hasura
-  - docs
-  - Metadata API
-  - API reference
-  - database
-  - source
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - database
+   - source
 ---
 
 # Metadata API Reference: Databases
 
 ## Introduction
 
-Add/remove databases in Hasura GraphQL Engine.
+Add/remove databases in Hasura GraphQL engine.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
@@ -52,21 +52,8 @@ X-Hasura-Role: admin
           "connection_lifetime": 600
         },
         "use_prepared_statements": true,
-        "isolation_level": "read-committed"
-      },
-      "connection_template": {
-        "template": "{{ if $.request.session?[\"x-hasura-role\"] == \"admin\" }} {{$.primary}} {{else}} {{$.connection_set.db_1}} {{ end }}"
-      },
-      "connection_set": [
-        {
-          "name": "db_1",
-          "connection_info": {
-            "database_url": {
-              "from_env": "<DB_URL_ENV_VAR>"
-            }
-          }
-        }
-      ]
+        "isolation_level": "read-committed",
+      }
     },
     "replace_configuration": false,
     "customization": {
@@ -87,12 +74,13 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-add-source-syntax}
 
-| Key                   | Required | Schema                                                                    | Description                                                                                                                           |
-| --------------------- | -------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                   | Name of the Postgres database                                                                                                         |
-| configuration         | true     | [PGConfiguration](/api-reference/syntax-defs.mdx#pgconfiguration)         | Database connection configuration                                                                                                     |
-| replace_configuration | false    | Boolean                                                                   | If set to `true` the configuration and customization will be replaced if the source with given name already exists (default: `false`) |
-| customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization) | Customize root fields and type names for the source                                                                                   |
+| Key                   | Required | Schema                                                                                   | Description                                                                                                                           |
+|-----------------------|----------|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                     | Name of the Postgres database                                                                                                                      |
+| configuration         | true     | [PGConfiguration](/api-reference/syntax-defs.mdx#pgconfiguration)           | Database connection configuration                                                                                                                  |
+| replace_configuration | false    | Boolean                                                                                  | If set to `true` the configuration and customization will be replaced if the source with given name already exists (default: `false`) |
+| customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization)   | Customize root fields and type names for the source                                                                                                |
+
 
 :::tip Deprecated field
 
@@ -130,32 +118,10 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-drop-source-syntax}
 
-| Key     | Required | Schema                                                  | Description                                                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Key     | Required | Schema                    | Description                                                                                                                                                        |
+|---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name    | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the Postgres database                                                                                                                                      |
-| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
-
-## pg_get_source_tables {#metadata-pg-get-source-tables}
-
-`pg_get_source_tables` is used to list the tables available on a given Postgres
-database.
-
-List the tables available on a database with name `pg1`:
-
-```http
-{
-  "type": "pg_get_source_tables",
-  "args": {
-    "source": "pg1"
-  }
-}
-```
-
-### Args syntax {#metadata-pg-get-source-tables-syntax}
-
-| Key    | Required | Schema                                                  | Description                   |
-| ------ | -------- | ------------------------------------------------------- | ------------------------------|
-| source | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the Postgres database |
+| cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
 ## rename_source {#metadata-rename-source}
 
@@ -181,8 +147,8 @@ Note that all settings are kept, only the name is changed.
 
 ### Args syntax {#metadata-rename-source-syntax}
 
-| Key      | Required | Schema                                                  | Description          |
-| -------- | -------- | ------------------------------------------------------- | -------------------- |
+| Key      | Required | Schema                    | Description          |
+|----------|----------|---------------------------|----------------------|
 | name     | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the database |
 | new_name | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the database |
 
@@ -235,11 +201,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-update-source-syntax}
 
-| Key           | Required | Schema                                                                    | Description                                         |
-| ------------- | -------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
-| name          | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                   | Name of the Postgres database                       |
-| configuration | false    | [PGConfiguration](/api-reference/syntax-defs.mdx#pgconfiguration)         | Database connection configuration                   |
-| customization | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization) | Customize root fields and type names for the source |
+| Key                   | Required | Schema                                                                                   | Description                                                                                                         |
+|-----------------------|----------|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                     | Name of the Postgres database                                                                                       |
+| configuration         | false    | [PGConfiguration](/api-reference/syntax-defs.mdx#pgconfiguration)           | Database connection configuration                                                                                   |
+| customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization)   | Customize root fields and type names for the source                                                                 |
 
 ## mssql_add_source {#mssql-add-source}
 
@@ -284,11 +250,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#mssql-add-source-syntax}
 
-| Key                   | Required | Schema                                                                    | Description                                                                                                                           |
-| --------------------- | -------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Key                   | Required | Schema                                                                                 | Description                                                                                                                           |
+|-----------------------|----------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                   | Name of the MS SQL Server database                                                                                                    |
 | configuration         | true     | [MsSQLConfiguration](/api-reference/syntax-defs.mdx#mssqlconfiguration)   | Database connection configuration                                                                                                     |
-| replace_configuration | false    | Boolean                                                                   | If set to `true` the configuration and customization will be replaced if the source with given name already exists (default: `false`) |
+| replace_configuration | false    | Boolean                                                                                | If set to `true` the configuration and customization will be replaced if the source with given name already exists (default: `false`) |
 | customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization) | Customize root fields and type names for the source                                                                                   |
 
 :::tip Deprecated field
@@ -319,32 +285,10 @@ X-Hasura-Role: admin
 
 ### Args syntax {#mssql-drop-source-syntax}
 
-| Key     | Required | Schema                                                  | Description                                                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Key     | Required | Schema                    | Description                                                                                                                                                        |
+|---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name    | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the MS SQL Server database                                                                                                                                 |
-| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
-
-## mssql_get_source_tables {#mssql-get-source-tables}
-
-`mssql_get_source_tables` is used to list the tables available on a given
-MS SQL Server database.
-
-List the tables available on a database with name `mssql1`:
-
-```http
-{
-  "type": "mssql_get_source_tables",
-  "args": {
-    "source": "mssql1"
-  }
-}
-```
-
-### Args syntax {#mssql-get-source-tables-syntax}
-
-| Key    | Required | Schema                                                  | Description                        |
-| ------ | -------- | ------------------------------------------------------- | ---------------------------------- |
-| source | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the MS SQL Server database |
+| cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
 ## mssql_update_source {#mssql-update-source}
 
@@ -389,11 +333,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#mssql-update-source-syntax}
 
-| Key           | Required | Schema                                                                    | Description                                         |
-| ------------- | -------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
-| name          | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                   | Name of the MS SQL Server database                  |
-| configuration | false    | [MsSQLConfiguration](/api-reference/syntax-defs.mdx#mssqlconfiguration)   | Database connection configuration                   |
-| customization | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization) | Customize root fields and type names for the source |
+| Key                   | Required | Schema                                                                                 | Description                                                                                                         |
+|-----------------------|----------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                   | Name of the MS SQL Server database                                                                                  |
+| configuration         | false    | [MsSQLConfiguration](/api-reference/syntax-defs.mdx#mssqlconfiguration)   | Database connection configuration                                                                                   |
+| customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization) | Customize root fields and type names for the source                                                                 |
 
 ## bigquery_add_source {#metadata-bigquery-add-source}
 
@@ -413,7 +357,7 @@ X-Hasura-Role: admin
     "configuration": {
       "service_account": "bigquery_service_account",
       "project_id": "bigquery_project_id",
-      "datasets": ["dataset1", "dataset2"]
+      "datasets": "dataset1, dataset2"
     },
     "customization": {
       "root_fields": {
@@ -432,11 +376,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-bigquery-add-source-syntax}
 
-| Key                   | Required | Schema                                                                        | Description                                                                                                                           |
-| --------------------- | -------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Key                   | Required | Schema                                                                                     | Description                                                                                                                           |
+|-----------------------|----------|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                       | Name of the BigQuery database                                                                                                         |
 | configuration         | true     | [BigQueryConfiguration](/api-reference/syntax-defs.mdx#bigqueryconfiguration) | Database connection configuration                                                                                                     |
-| replace_configuration | false    | Boolean                                                                       | If set to `true` the configuration and customization will be replaced if the source with given name already exists (default: `false`) |
+| replace_configuration | false    | Boolean                                                                                    | If set to `true` the configuration and customization will be replaced if the source with given name already exists (default: `false`) |
 | customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization)     | Customize root fields and type names for the source                                                                                   |
 
 :::tip Deprecated field
@@ -467,10 +411,10 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-bigquery-drop-source-syntax}
 
-| Key     | Required | Schema                                                  | Description                                                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Key     | Required | Schema                    | Description                                                                                                                                                        |
+|---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name    | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the BigQuery database                                                                                                                                      |
-| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
+| cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
 ## bigquery_update_source {#metadata-bigquery-update-source}
 
@@ -490,7 +434,7 @@ X-Hasura-Role: admin
     "configuration": {
       "service_account": "bigquery_service_account",
       "project_id": "bigquery_project_id",
-      "datasets": ["dataset1", "dataset2"]
+      "datasets": "dataset1, dataset2"
     },
     "customization": {
       "root_fields": {
@@ -509,8 +453,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-bigquery-update-source-syntax}
 
-| Key           | Required | Schema                                                                        | Description                                         |
-| ------------- | -------- | ----------------------------------------------------------------------------- | --------------------------------------------------- |
-| name          | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                       | Name of the BigQuery database                       |
-| configuration | false    | [BigQueryConfiguration](/api-reference/syntax-defs.mdx#bigqueryconfiguration) | Database connection configuration                   |
-| customization | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization)     | Customize root fields and type names for the source |
+| Key                   | Required | Schema                                                                                     | Description                                                                                                         |
+|-----------------------|----------|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                       | Name of the BigQuery database                                                                                       |
+| configuration         | false    | [BigQueryConfiguration](/api-reference/syntax-defs.mdx#bigqueryconfiguration) | Database connection configuration                                                                                   |
+| customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization)     | Customize root fields and type names for the source                                                                 |

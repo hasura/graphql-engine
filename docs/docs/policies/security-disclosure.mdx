@@ -6,8 +6,7 @@ keywords:
   - security
   - security disclosure
   - vulnerability
-sidebar_position: 3
-sidebar_label: Security vulnerability protocol
+sidebar_position: 6
 ---
 
 # Security Vulnerability Protocol
@@ -20,39 +19,28 @@ This page describes the Hasura security vulnerability reporting and disclosure p
 
 ## Security announcements
 
-Join the [Hasura Security Announcements](https://groups.google.com/forum/#!forum/hasura-security-announce) group for
-emails about security announcements.
+Join the [Hasura Security Announcements](https://groups.google.com/forum/#!forum/hasura-security-announce) group for emails about security announcements.
 
 ## Reporting vulnerabilities
 
-We’re extremely grateful for security researchers and users who report vulnerabilities to the Hasura community. All
-reports are thoroughly investigated by the Hasura team.
+We’re extremely grateful for security researchers and users who report vulnerabilities to the Hasura community. All reports are thoroughly investigated by the Hasura team.
 
-To report a security issue, please email us at <security@hasura.io> with details, if possible attaching relevant
-information. The more details we have, the quicker will we be able to fix potential vulnerabilities.
-
-We do not currently have a bug bounty program, however, for valid high and critical severity issues we may, at our
-discretion, choose to award a bounty. Please see our guidance at the bottom of the page for types of vulnerabilities
-which are in and out of scope. Do not use social engineering and make a good faith effort to avoid privacy violations,
-destruction of data, and interruption or degradation of our service. If you should accidentally do any of these things,
-stop immediately and report the issue.
+To report a security issue, please email us at <build@hasura.io> with details, if possible attaching relevant information. The more details we have, the quicker will we be able to fix potential vulnerabilities.
 
 ### When should I report a vulnerability?
 
-- You think you have discovered a potential security vulnerability in the Hasura GraphQL Engine or related components.
-- You are unsure how a vulnerability affects the Hasura GraphQL Engine.
-- You think you discovered a vulnerability in another project that Hasura GraphQL Engine depends on (e.g. Heroku,
-  Docker, etc).
-- You want to report any other security risk that could potentially harm Hasura GraphQL Engine users.
+- You think you have discovered a potential security vulnerability in the Hasura GraphQL engine or related components.
+- You are unsure how a vulnerability affects the Hasura GraphQL engine.
+- You think you discovered a vulnerability in another project that Hasura GraphQL engine depends on (e.g. Heroku, Docker, etc).
+- You want to report any other security risk that could potentially harm Hasura GraphQL engine users.
 
 ### When should I NOT report a vulnerability?
 
-- You need help tuning Hasura GraphQL Engine components for security.
+- You need help tuning Hasura GraphQL engine components for security.
 - You need help applying security related updates.
 - Your issue is not security related.
 
-In these cases you can join our [Discord server](https://hasura.io/discord) where the community will be happy to help
-you out.
+In these cases you can join our [Discord server](https://hasura.io/discord) where the community will be happy to help you out.
 
 ## Vulnerability report response
 
@@ -64,61 +52,8 @@ The reporter will be kept updated at every stage of the issue’s analysis and r
 
 A public disclosure date in case a vulnerability is discovered is negotiated by the Hasura team and the bug submitter.
 
-We prefer to fully disclose the vulnerability as soon as possible once a user mitigation is available and enough of the
-affected instances have been upgraded.
+We prefer to fully disclose the vulnerability as soon as possible once a user mitigation is available and enough of the affected instances have been upgraded.
 
-It is reasonable to delay disclosure when the vulnerability or the fix is not yet fully understood, the solution is not
-well-tested, or for vendor coordination. The time frame for disclosure is from immediate (especially if the
-vulnerability is already publicly known) to a few weeks. Though, we expect the time frame between a report to a public
-disclosure to typically be in the order of 7 days.
+It is reasonable to delay disclosure when the vulnerability or the fix is not yet fully understood, the solution is not well-tested, or for vendor coordination. The time frame for disclosure is from immediate (especially if the vulnerability is already publicly known) to a few weeks. Though, we expect the time frame between a report to a public disclosure to typically be in the order of 7 days.
 
-In any case, the Hasura team will do their best to identify and fix any vulnerabilities as soon as possible, as well as
-communicate to the submitter about the progress and set a disclosure date.
-
-## Vulnerability categories we encourage be reported
-
-We are keen on hearing about the vulnerabilities encompassing the following categories:
-
-- SQL Injection scenarios.
-- Server side injection cases.
-- Access control related issues.
-- Authentication/Authorization related issues.
-- Remote Code Execution.
-- Cross Site Scripting (XSS).
-- Cross Site Request Forgery (CSRF) attacks when an operation can be performed on behalf of the user.
-- Data Exposure.
-- Any unique issues that do not fall into explicit categories.
-
-## Out of scope vulnerabilities
-
-When reporting vulnerabilities, please consider (1) attack scenario / exploitability, and (2) security impact of the
-bug. The following issues are considered out of scope:
-
-- Clickjacking on pages with no sensitive actions.
-- Cross-Site Request Forgery (CSRF) on unauthenticated forms or forms with no sensitive actions.
-- Attacks requiring MITM or physical access to a user's device.
-- Previously known vulnerable libraries without a working proof of concept.
-- Comma Separated Values (CSV) injection without demonstrating a vulnerability.
-- Missing best practices in SSL/TLS configuration.
-- Any activity that could lead to the disruption of our service (DoS).
-- Content spoofing and text injection issues without showing an attack vector/without being able to modify HTML/CSS.
-- Rate limiting or bruteforce issues on non-authentication endpoints.
-- Missing best practices in Content Security Policy.
-- Missing HttpOnly or Secure flags on cookies.
-- Missing email best practices (invalid, incomplete or missing SPF/DKIM/DMARC records, etc.).
-- Vulnerabilities only affecting users of outdated or unpatched browsers [Less than 2 stable versions behind the latest
-  released stable version].
-- Software version disclosure / Banner identification issues / Descriptive error messages or headers (e.g. stack traces,
-  application or server errors).
-- Public Zero-day vulnerabilities that have had an official patch for less than 1 month will be awarded on a
-  case-by-case basis.
-- Tabnabbing.
-- Open redirect - unless an additional security impact can be demonstrated.
-- Issues that require unlikely user interaction.
-- Missing best practices in Content Security Policy (CSP) or lack of other security-related headers.
-- Leakage of sensitive tokens (e.g., reset password token) to trusted third parties on secure connection (HTTPS).
-- Bugs in third-party components which the Hasura uses only qualify if you can prove that they can be used to
-  successfully attack Hasura's in scope applications.
-- SSRF issues - To be eligible for a bounty on HTTP/WS based SSRF submissions, please provide a proof of concept
-  demonstrating access to sensitive resources such as leaking sensitive API keys or the ability to trigger state
-  changing actions. Exploits just demonstrating a service header being responded would not meet the threshold.
+In any case, the Hasura team will do their best to identify and fix any vulnerabilities as soon as possible, as well as communicate to the submitter about the progress and set a disclosure date.

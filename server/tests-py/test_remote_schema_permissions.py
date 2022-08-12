@@ -2,54 +2,39 @@
 
 import pytest
 
-from conftest import extract_server_address_from
-from context import PytestConf
-from remote_server import NodeGraphQL
 from validate import check_query_f
+from remote_server import NodeGraphQL
+from context import PytestConf
 
-pytestmark = [
-    pytest.mark.admin_secret,
-    pytest.mark.hge_env('HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS', 'true'),
-]
+if not PytestConf.config.getoption('--enable-remote-schema-permissions'):
+    pytest.skip('--enable-remote-schema-permissions is missing, skipping remote schema permissions tests', allow_module_level=True)
 
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def graphql_service_1(worker_id: str, hge_fixture_env: dict[str, str]):
-    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_1')
-    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/remote_schema_perms.js', port=port)
-    server.start()
-    print(f'{graphql_service_1.__name__} server started on {server.url}')
-    hge_fixture_env['GRAPHQL_SERVICE_1'] = server.url
-    yield server
-    server.stop()
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def graphql_service_2(worker_id: str, hge_fixture_env: dict[str, str]):
-    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_2')
-    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/secondary_remote_schema_perms.js', port=port)
-    server.start()
-    print(f'{graphql_service_2.__name__} server started on {server.url}')
-    hge_fixture_env['GRAPHQL_SERVICE_2'] = server.url
-    yield server
-    server.stop()
+@pytest.fixture(scope="module")
+def graphql_service_2():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def graphql_service_3(worker_id: str, hge_fixture_env: dict[str, str]):
-    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_3')
-    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/secondary_remote_schema_perms_error.js', port=port)
-    server.start()
-    print(f'{graphql_service_3.__name__} server started on {server.url}')
-    hge_fixture_env['GRAPHQL_SERVICE_3'] = server.url
-    yield server
-    server.stop()
+@pytest.fixture(scope="module")
+def graphql_service_3():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms_error.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
-use_test_fixtures = pytest.mark.usefixtures(
-    'graphql_service_1',
-    'graphql_service_2',
-    'graphql_service_3',
-    'per_method_tests_db_state',
+use_test_fixtures = pytest.mark.usefixtures (
+    "graphql_service",
+    "graphql_service_2",
+    "graphql_service_3",
+    "per_method_tests_db_state"
 )
 
 @use_test_fixtures
@@ -70,7 +55,7 @@ class TestAddRemoteSchemaPermissions:
         hge_ctx.v1metadataq_f(self.dir() + 'update_remote_schema/update_schema.yaml')
         """ check the details of remote schema in metadata """
         resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert resp['remote_schemas'][0]['definition']['url'] == "{{GRAPHQL_SERVICE_2}}"
+        assert resp['remote_schemas'][0]['definition']['url'] == "http://localhost:4021"
         assert resp['remote_schemas'][0]['comment'] == 'this is from update query', resp
         assert resp['remote_schemas'][0]['definition']['timeout_seconds'] == 120, resp
         """ reset the changes to the original config """
@@ -157,11 +142,6 @@ class TestRemoteSchemaPermissionsArgumentPresets:
         hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_session_preset_argument.yaml')
         check_query_f(hge_ctx, self.dir() + 'execution_with_session_preset_args.yaml')
 
-@pytest.mark.usefixtures(
-    'graphql_service_1',
-    'graphql_service_2',
-    'graphql_service_3',
-)
 class TestRemoteRelationshipPermissions:
 
     @classmethod
@@ -169,7 +149,7 @@ class TestRemoteRelationshipPermissions:
         return "queries/remote_schemas/permissions/remote_relationships/"
 
     @pytest.fixture(autouse=True)
-    def transact(self, hge_ctx):
+    def transact(self, hge_ctx, graphql_service):
         hge_ctx.v1q_f(self.dir() + 'setup_with_permissions.yaml')
         yield
         hge_ctx.v1q_f(self.dir() + 'teardown.yaml')

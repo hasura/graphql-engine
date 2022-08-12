@@ -8,16 +8,16 @@ keywords:
 slug: index
 ---
 
-# BigQuery: GraphQL Queries
+# BigQuery: GraphQL queries
 
 ## Introduction
 
 GraphQL queries are used to fetch data from the server.
 
-Hasura GraphQL Engine auto-generates queries as part of the GraphQL schema from your BigQuery schema model. It generates
+Hasura GraphQL engine auto-generates queries as part of the GraphQL schema from your BigQuery schema model. It generates
 a range of possible queries and operators that also work with relationships defined in your SQL schema.
 
-All tables of the database tracked by the GraphQL Engine can be queried over the GraphQL endpoint. If you have a tracked
+All tables of the database tracked by the GraphQL engine can be queried over the GraphQL endpoint. If you have a tracked
 table in your database, its query field is added as a nested field under the `query_root` root level type.
 
 ## Auto-generated query field schema
@@ -50,9 +50,9 @@ The query field will be of the format `<dataset_name>_<table_name>`.
 
 ## Exploring queries
 
-You can explore the entire schema and the available queries using the `GraphiQL` interface in the Hasura Console.
+You can explore the entire schema and the available queries using the `GraphiQL` interface in the Hasura console.
 
-Let's take a look at the different queries you can run using the Hasura GraphQL Engine. We'll use examples based on a
+Let's take a look at the different queries you can run using the Hasura GraphQL engine. We'll use examples based on a
 typical author/article schema for reference.
 
 - [Simple object queries](/queries/bigquery/simple-object-queries.mdx)

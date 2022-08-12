@@ -1,22 +1,16 @@
-from ruamel.yaml import YAML
 import pytest
-
-from conftest import extract_server_address_from
-from remote_server import NodeGraphQL
+from ruamel.yaml import YAML
 from validate import check_query_f, check_query
+from remote_server import NodeGraphQL
 
 yaml=YAML(typ='safe', pure=True)
 
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def graphql_service(worker_id: str, hge_fixture_env: dict[str, str]):
-    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_HANDLER')
-    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/index.js', port=port)
-    server.start()
-    print(f'{graphql_service.__name__} server started on {server.url}')
-    hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = server.url
-    yield server
-    server.stop()
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestGraphqlIntrospection:
@@ -89,8 +83,6 @@ class TestGraphqlIntrospectionWithCustomTableName:
         hasAggregate = False
         hasSelectByPk = False
         hasQueryRoot = False
-        hasMultiInsert = False
-        hasUpdateByPk = False
         for t in resp['data']['__schema']['types']:
             if t['name'] == 'query_root':
                 hasQueryRoot = True

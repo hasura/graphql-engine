@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- |
 -- Working example:
 --
@@ -19,35 +21,31 @@ module Hasura.Backends.BigQuery.DDL.RunSQL
 where
 
 import Data.Aeson qualified as J
+import Data.Aeson.TH (deriveJSON)
 import Data.Aeson.Text (encodeToLazyText)
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Execute qualified as Execute
-import Hasura.Backends.BigQuery.Source (BigQueryDataset (..), BigQuerySourceConfig (..))
+import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (RunSQLRes (..))
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.SQL.Backend
 
 data BigQueryRunSQL = BigQueryRunSQL
   { _mrsSql :: Text,
     _mrsSource :: SourceName
   }
-  deriving (Eq, Generic, Show)
+  deriving (Show, Eq)
 
-instance J.FromJSON BigQueryRunSQL where
-  parseJSON = J.genericParseJSON hasuraJSON
-
-instance J.ToJSON BigQueryRunSQL where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
+$(deriveJSON hasuraJSON ''BigQueryRunSQL)
 
 runSQL ::
   (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) =>
@@ -64,9 +62,9 @@ runDatabaseInspection (BigQueryRunSQL _query source) = do
   BigQuerySourceConfig {_scDatasets = dataSets} <- askSourceConfig @'BigQuery source
   let queries =
         [ "SELECT *, ARRAY(SELECT as STRUCT * from "
-            <> getBigQueryDataset dataSet
+            <> dataSet
             <> ".INFORMATION_SCHEMA.COLUMNS WHERE table_name = t.table_name) as columns from "
-            <> getBigQueryDataset dataSet
+            <> dataSet
             <> ".INFORMATION_SCHEMA.TABLES as t"
           | dataSet <- dataSets
         ]
@@ -91,7 +89,7 @@ runSQL_ f (BigQueryRunSQL query source) = do
     Right recordSet ->
       pure
         ( encJFromJValue
-            (RunSQLRes "TuplesOk" (f (snd recordSet)))
+            (RunSQLRes "TuplesOk" (f recordSet))
         )
 
 recordSetAsHeaderAndRows :: Execute.RecordSet -> J.Value
@@ -101,16 +99,16 @@ recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
       case rows V.!? 0 of
         Nothing -> []
         Just row ->
-          map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (InsOrdHashMap.keys row)
+          map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (OMap.keys row)
     tbody :: [[J.Value]]
-    tbody = map (map J.toJSON . InsOrdHashMap.elems) (toList rows)
+    tbody = map (map J.toJSON . OMap.elems) (toList rows)
 
 recordSetAsSchema :: Execute.RecordSet -> J.Value
 recordSetAsSchema rs@(Execute.RecordSet {rows}) =
-  recordSetAsHeaderAndRows
-    $ rs
+  recordSetAsHeaderAndRows $
+    rs
       { Execute.rows =
-          InsOrdHashMap.adjust
+          OMap.adjust
             (Execute.TextOutputValue . LT.toStrict . encodeToLazyText . J.toJSON)
             (Execute.FieldNameText "columns")
             <$> rows

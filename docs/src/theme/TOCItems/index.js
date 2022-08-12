@@ -1,10 +1,46 @@
-import React, { useMemo } from 'react';
-import { useThemeConfig } from '@docusaurus/theme-common';
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+import React, {useMemo} from 'react';
 import {
+  useThemeConfig,
   useTOCHighlight,
   useFilteredAndTreeifiedTOC,
-} from '@docusaurus/theme-common/internal';
-import TOCItemTree from '@theme/TOCItems/Tree';
+} from '@docusaurus/theme-common'; // Recursive component rendering the toc tree
+
+/* eslint-disable jsx-a11y/control-has-associated-label */
+
+function TOCItemList({toc, className, linkClassName, isChild}) {
+  if (!toc.length) {
+    return null;
+  }
+
+  return (
+    <ul className={isChild ? undefined : className}>
+      {toc.map((heading) => (
+        <li key={heading.id}>
+          <a
+            href={`#${heading.id}`}
+            className={linkClassName ?? undefined} // Developer provided the HTML, so assume it's safe.
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{
+              __html: heading.value,
+            }}
+          />
+          <TOCItemList
+            isChild
+            toc={heading.children}
+            className={className}
+            linkClassName={linkClassName}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function TOCItems({
   toc,
@@ -20,76 +56,22 @@ export default function TOCItems({
     minHeadingLevelOption ?? themeConfig.tableOfContents.minHeadingLevel;
   const maxHeadingLevel =
     maxHeadingLevelOption ?? themeConfig.tableOfContents.maxHeadingLevel;
+  // In the event of re-swizzling, make sure to change the tocTree declaration aboe to `let`
   let tocTree = useFilteredAndTreeifiedTOC({
     toc,
     minHeadingLevel,
     maxHeadingLevel,
   });
 
-  /* eslint-disable jsx-a11y/control-has-associated-label */
-
-  function TOCItemList({ toc, className, linkClassName, isChild }) {
-    if (!toc.length) {
-      return null;
-    }
-
-    return (
-      <ul className={isChild ? undefined : className}>
-        {toc.map(heading => (
-          <li key={heading.id}>
-            <a
-              href={`#${heading.id}`}
-              className={linkClassName ?? undefined} // Developer provided the HTML, so assume it's safe.
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{
-                __html: heading.value,
-              }}
-            />
-            <TOCItemList
-              isChild
-              toc={heading.children}
-              className={className}
-              linkClassName={linkClassName}
-            />
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  // find descendent with searchId as id using DFS and return its children
-  function findTOC(tocTree, searchId) {
-    for (let i = 0; i < tocTree.length; i++) {
-      let tocTreeNode = tocTree[i];
-
-      if (tocTreeNode.id === searchId) {
-        return tocTreeNode.children;
-      }
-
-      let searchResult = findTOC(tocTreeNode.children, searchId);
-      if (searchResult) {
-        return searchResult;
-      }
-    }
-
-    return null;
-  }
-
   // Customization START
   // In the event of re-swizzling, need to copy below snippet and add back in the newly swizzled TOCItems component
   // This block should alwways come after the `tocTree` variable which holds results from `useFilteredAndTreeifiedTOC`
-  // make sure to change the tocTree declaration above to `let`
-  if (typeof props.filterTOC === 'function') {
+  // make sure to change the tocTree declaration aboe to `let`
+  if (typeof props.filterTOC === "function") {
     tocTree = props.filterTOC(tocTree);
   }
-  if (typeof props.filterTOC === 'string') {
-    tocTree = findTOC(tocTree, props.filterTOC);
-  }
-
-  if (!tocTree) {
-    throw new Error('TOCInline error: filter gives no result');
-  }
   // Customization END
+
   const tocHighlightConfig = useMemo(() => {
     if (linkClassName && linkActiveClassName) {
       return {
@@ -99,11 +81,12 @@ export default function TOCItems({
         maxHeadingLevel,
       };
     }
+
     return undefined;
   }, [linkClassName, linkActiveClassName, minHeadingLevel, maxHeadingLevel]);
   useTOCHighlight(tocHighlightConfig);
   return (
-    <TOCItemTree
+    <TOCItemList
       toc={tocTree}
       className={className}
       linkClassName={linkClassName}

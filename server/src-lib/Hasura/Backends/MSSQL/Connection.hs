@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | MSSQL Connection
@@ -7,65 +8,55 @@
 --   and conversion functions between MSSQL and graphql-engine.
 module Hasura.Backends.MSSQL.Connection
   ( MSSQLConnConfiguration (MSSQLConnConfiguration),
-    MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx, _mscReadReplicas),
-    MSSQLConnectionInfo (..),
-    MSSQLPoolSettings (..),
-    MSSQLPoolConnectionSettings (..),
+    MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx),
     MSSQLExecCtx (..),
     MonadMSSQLTx (..),
-    defaultMSSQLMaxConnections,
     createMSSQLPool,
-    resizeMSSQLPool,
     getEnv,
     odbcValueToJValue,
     mkMSSQLExecCtx,
-    mkMSSQLAnyQueryTx,
     runMSSQLSourceReadTx,
     runMSSQLSourceWriteTx,
   )
 where
 
-import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, optionalFieldOrNull', optionalFieldWithDefault', requiredField')
-import Autodocodec qualified as AC
-import Autodocodec.Extended (fromEnvCodec)
-import Control.Lens (united)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
+import Data.Aeson.TH
 import Data.Environment qualified as Env
-import Data.Has
 import Data.Text (pack, unpack)
-import Data.Text qualified as T
-import Data.Time (localTimeToUTC)
 import Database.MSSQL.Pool qualified as MSPool
 import Database.MSSQL.Transaction qualified as MSTx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
+import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
-import Hasura.RQL.Types.ResizePool
 
-class (MonadError QErr m) => MonadMSSQLTx m where
+class MonadError QErr m => MonadMSSQLTx m where
   liftMSSQLTx :: MSTx.TxE QErr a -> m a
 
-instance (MonadMSSQLTx m) => MonadMSSQLTx (ReaderT s m) where
+instance MonadMSSQLTx m => MonadMSSQLTx (ReaderT s m) where
   liftMSSQLTx = lift . liftMSSQLTx
 
-instance (MonadMSSQLTx m) => MonadMSSQLTx (StateT s m) where
+instance MonadMSSQLTx m => MonadMSSQLTx (StateT s m) where
   liftMSSQLTx = lift . liftMSSQLTx
 
 instance (Monoid w, MonadMSSQLTx m) => MonadMSSQLTx (WriterT w m) where
   liftMSSQLTx = lift . liftMSSQLTx
 
-instance (MonadIO m) => MonadMSSQLTx (MSTx.TxET QErr m) where
+instance MonadIO m => MonadMSSQLTx (MSTx.TxET QErr m) where
   liftMSSQLTx = hoist liftIO
 
 -- | ODBC connection string for MSSQL server
 newtype MSSQLConnectionString = MSSQLConnectionString {unMSSQLConnectionString :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Hashable, NFData)
+  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData)
 
 -- * Orphan instances
+
+instance Cacheable MSPool.ConnectionString
 
 instance Hashable MSPool.ConnectionString
 
@@ -76,16 +67,11 @@ data InputConnectionString
   | FromEnvironment Text
   deriving stock (Show, Eq, Generic)
 
+instance Cacheable InputConnectionString
+
 instance Hashable InputConnectionString
 
 instance NFData InputConnectionString
-
-instance HasCodec InputConnectionString where
-  codec =
-    dimapCodec
-      (either RawString FromEnvironment)
-      (\case RawString m -> Left m; FromEnvironment wEnv -> Right wEnv)
-      $ disjointEitherCodec codec fromEnvCodec
 
 instance ToJSON InputConnectionString where
   toJSON =
@@ -100,166 +86,86 @@ instance FromJSON InputConnectionString where
       s@(String _) -> RawString <$> parseJSON s
       _ -> fail "one of string or object must be provided"
 
-data MSSQLPoolConnectionSettings = MSSQLPoolConnectionSettings
-  { mpsMaxConnections :: Maybe Int,
-    mpsTotalMaxConnections :: Maybe Int,
-    mpsIdleTimeout :: Int
+data MSSQLPoolSettings = MSSQLPoolSettings
+  { _mpsMaxConnections :: Int,
+    _mpsIdleTimeout :: Int
   }
   deriving (Show, Eq, Generic)
 
-instance Hashable MSSQLPoolConnectionSettings
-
-instance NFData MSSQLPoolConnectionSettings
-
-data MSSQLPoolSettings
-  = MSSQLPoolSettingsPool MSSQLPoolConnectionSettings
-  | MSSQLPoolSettingsNoPool
-  deriving (Show, Eq, Generic)
+instance Cacheable MSSQLPoolSettings
 
 instance Hashable MSSQLPoolSettings
 
 instance NFData MSSQLPoolSettings
 
-deriving via AC.Autodocodec MSSQLPoolSettings instance ToJSON MSSQLPoolSettings
+$(deriveToJSON hasuraJSON ''MSSQLPoolSettings)
 
-deriving via AC.Autodocodec MSSQLPoolSettings instance FromJSON MSSQLPoolSettings
-
-instance HasCodec MSSQLPoolSettings where
-  codec =
-    AC.matchChoiceCodec codecNoPool codecWithPool toInput
-    where
-      toInput :: MSSQLPoolSettings -> Either MSSQLPoolSettings MSSQLPoolSettings
-      toInput = \case
-        p@MSSQLPoolSettingsNoPool {} -> Left p
-        p@MSSQLPoolSettingsPool {} -> Right p
-
-      codecNoPool :: AC.JSONCodec MSSQLPoolSettings
-      codecNoPool =
-        AC.bimapCodec
-          ( \case
-              False -> Right MSSQLPoolSettingsNoPool
-              True -> Left "impossible, guarded by 'EqCodec False"
-          )
-          ( \case
-              MSSQLPoolSettingsNoPool -> False
-              _ -> True
-          )
-          $ AC.EqCodec False
-          $ AC.object "MSSQLPoolSettingsNoPool"
-          $ AC.requiredField "enable" "Whether the connection pool is entirely disabled"
-
-      codecWithPool :: AC.JSONCodec MSSQLPoolSettings
-      codecWithPool =
-        AC.dimapCodec MSSQLPoolSettingsPool (\case MSSQLPoolSettingsPool p -> p; MSSQLPoolSettingsNoPool -> error "unexpected MSSQLPoolSettingsNoPool")
-          $ AC.object
-            "MSSQLPoolSettings"
-            ( MSSQLPoolConnectionSettings
-                <$> optionalFieldWithDefault' "max_connections" (Just defaultMSSQLMaxConnections)
-                AC..= mpsMaxConnections
-                  <*> optionalFieldOrNull' "total_max_connections"
-                AC..= mpsTotalMaxConnections
-                  <*> optionalFieldWithDefault' "idle_timeout" defaultMSSQLIdleTimeout
-                AC..= mpsIdleTimeout
-            )
-
-defaultMSSQLMaxConnections :: Int
-defaultMSSQLMaxConnections = 50
-
-defaultMSSQLIdleTimeout :: Int
-defaultMSSQLIdleTimeout = 5
+instance FromJSON MSSQLPoolSettings where
+  parseJSON = withObject "MSSQL pool settings" $ \o ->
+    MSSQLPoolSettings
+      <$> o .:? "max_connections" .!= _mpsMaxConnections defaultMSSQLPoolSettings
+      <*> o .:? "idle_timeout" .!= _mpsIdleTimeout defaultMSSQLPoolSettings
 
 defaultMSSQLPoolSettings :: MSSQLPoolSettings
 defaultMSSQLPoolSettings =
-  MSSQLPoolSettingsPool
-    $ MSSQLPoolConnectionSettings
-      { mpsMaxConnections = Nothing,
-        mpsTotalMaxConnections = Nothing,
-        mpsIdleTimeout = defaultMSSQLIdleTimeout
-      }
+  MSSQLPoolSettings
+    { _mpsMaxConnections = 50,
+      _mpsIdleTimeout = 5
+    }
 
 data MSSQLConnectionInfo = MSSQLConnectionInfo
-  { mciConnectionString :: InputConnectionString,
-    mciPoolSettings :: MSSQLPoolSettings,
-    mciIsolationLevel :: MSTx.TxIsolation
+  { _mciConnectionString :: InputConnectionString,
+    _mciPoolSettings :: MSSQLPoolSettings
   }
   deriving (Show, Eq, Generic)
+
+instance Cacheable MSSQLConnectionInfo
 
 instance Hashable MSSQLConnectionInfo
 
 instance NFData MSSQLConnectionInfo
 
-instance HasCodec MSSQLConnectionInfo where
-  codec =
-    AC.object "MSSQLConnectionInfo"
-      $ MSSQLConnectionInfo
-      <$> requiredField' "connection_string"
-      AC..= mciConnectionString
-        <*> requiredField' "pool_settings"
-      AC..= mciPoolSettings
-        <*> AC.optionalFieldWithDefault "isolation_level" MSTx.ReadCommitted isolationLevelDoc
-      AC..= mciIsolationLevel
-    where
-      isolationLevelDoc =
-        T.unwords
-          [ "The transaction isolation level in which the queries made to the",
-            "source will be run with (default: read-committed)."
-          ]
-
-instance ToJSON MSSQLConnectionInfo where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
+$(deriveToJSON hasuraJSON ''MSSQLConnectionInfo)
 
 instance FromJSON MSSQLConnectionInfo where
   parseJSON = withObject "Object" $ \o ->
     MSSQLConnectionInfo
       <$> ((o .: "database_url") <|> (o .: "connection_string"))
-      <*> o
-      .:? "pool_settings"
-      .!= defaultMSSQLPoolSettings
-      <*> o
-      .:? "isolation_level"
-      .!= MSTx.ReadCommitted
+      <*> o .:? "pool_settings" .!= defaultMSSQLPoolSettings
 
 data MSSQLConnConfiguration = MSSQLConnConfiguration
-  { mccConnectionInfo :: MSSQLConnectionInfo,
-    mccReadReplicas :: Maybe (NonEmpty MSSQLConnectionInfo)
+  { _mccConnectionInfo :: MSSQLConnectionInfo,
+    _mccReadReplicas :: Maybe (NonEmpty MSSQLConnectionInfo)
   }
   deriving (Show, Eq, Generic)
+
+instance Cacheable MSSQLConnConfiguration
 
 instance Hashable MSSQLConnConfiguration
 
 instance NFData MSSQLConnConfiguration
 
-instance HasCodec MSSQLConnConfiguration where
-  codec =
-    AC.object "MSSQLConnConfiguration"
-      $ MSSQLConnConfiguration
-      <$> requiredField' "connection_info"
-      AC..= mccConnectionInfo
-        <*> optionalFieldOrNull' "read_replicas"
-      AC..= mccReadReplicas
-
-instance FromJSON MSSQLConnConfiguration where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
-
-instance ToJSON MSSQLConnConfiguration where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
+$(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
 
 createMSSQLPool ::
-  (MonadIO m) =>
-  (QErrM m) =>
-  InputConnectionString ->
-  MSPool.ConnectionOptions ->
+  MonadIO m =>
+  QErrM m =>
+  MSSQLConnectionInfo ->
   Env.Environment ->
   m (MSPool.ConnectionString, MSPool.MSSQLPool)
-createMSSQLPool iConnString connOptions env = do
+createMSSQLPool (MSSQLConnectionInfo iConnString MSSQLPoolSettings {..}) env = do
   connString <- resolveInputConnectionString env iConnString
+  let connOptions =
+        MSPool.ConnectionOptions
+          { _coConnections = _mpsMaxConnections,
+            _coStripes = 1,
+            _coIdleTime = fromIntegral _mpsIdleTimeout
+          }
   pool <- liftIO $ MSPool.initMSSQLPool connString connOptions
   pure (connString, pool)
 
 resolveInputConnectionString ::
-  (QErrM m) =>
+  QErrM m =>
   Env.Environment ->
   InputConnectionString ->
   m MSPool.ConnectionString
@@ -268,7 +174,7 @@ resolveInputConnectionString env =
     (RawString cs) -> pure cs
     (FromEnvironment envVar) -> MSPool.ConnectionString <$> getEnv env envVar
 
-getEnv :: (QErrM m) => Env.Environment -> Text -> m Text
+getEnv :: QErrM m => Env.Environment -> Text -> m Text
 getEnv env k = do
   let mEnv = Env.lookupEnv env (unpack k)
   case mEnv of
@@ -284,58 +190,22 @@ data MSSQLExecCtx = MSSQLExecCtx
     mssqlRunReadOnly :: MSSQLRunTx,
     -- | A function that runs read-write queries; run in a transaction
     mssqlRunReadWrite :: MSSQLRunTx,
-    -- | A function that runs a transaction in the SERIALIZABLE transaction isolation
-    --   level. This is mainly intended to run source catalog migrations.
-    mssqlRunSerializableTx :: MSSQLRunTx,
     -- | Destroys connection pools
-    mssqlDestroyConn :: IO (),
-    -- | Resize pools based on number of server instances
-    mssqlResizePools :: ServerReplicas -> IO SourceResizePoolSummary
+    mssqlDestroyConn :: IO ()
   }
 
 -- | Creates a MSSQL execution context for a single primary pool
-mkMSSQLExecCtx :: MSTx.TxIsolation -> MSPool.MSSQLPool -> ResizePoolStrategy -> MSSQLExecCtx
-mkMSSQLExecCtx isolationLevel pool resizeStrategy =
+mkMSSQLExecCtx :: MSPool.MSSQLPool -> MSSQLExecCtx
+mkMSSQLExecCtx pool =
   MSSQLExecCtx
-    { mssqlRunReadOnly = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler isolationLevel tx pool,
-      mssqlRunReadWrite = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler isolationLevel tx pool,
-      mssqlRunSerializableTx = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler MSTx.Serializable tx pool,
-      mssqlDestroyConn = MSPool.drainMSSQLPool pool,
-      mssqlResizePools =
-        case resizeStrategy of
-          NeverResizePool -> const $ pure noPoolsResizedSummary
-          ResizePool maxConnections -> resizeMSSQLPool' maxConnections
+    { mssqlRunReadOnly = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler tx pool,
+      mssqlRunReadWrite = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler tx pool,
+      mssqlDestroyConn = MSPool.drainMSSQLPool pool
     }
-  where
-    resizeMSSQLPool' maxConnections serverReplicas = do
-      -- Resize the primary pool
-      resizeMSSQLPool pool maxConnections serverReplicas
-      -- Return the summary. Only the primary pool is resized
-      pure
-        $ SourceResizePoolSummary
-          { _srpsPrimaryResized = True,
-            _srpsReadReplicasResized = False,
-            _srpsConnectionSet = []
-          }
-
--- | Resize MSSQL pool by setting the number of connections equal to
--- allowed maximum connections across all server instances divided by
--- number of instances
-resizeMSSQLPool :: MSPool.MSSQLPool -> Int -> ServerReplicas -> IO ()
-resizeMSSQLPool mssqlPool maxConnections serverReplicas =
-  MSPool.resizePool mssqlPool (maxConnections `div` getServerReplicasInt serverReplicas)
-
--- | Run any query discarding its results
-mkMSSQLAnyQueryTx :: ODBC.Query -> MSTx.TxET QErr IO ()
-mkMSSQLAnyQueryTx q = do
-  _discard :: [[ODBC.Value]] <- MSTx.multiRowQueryE defaultMSSQLTxErrorHandler q
-  pure ()
 
 data MSSQLSourceConfig = MSSQLSourceConfig
   { _mscConnectionString :: MSPool.ConnectionString,
-    _mscExecCtx :: MSSQLExecCtx,
-    -- | Number of read replicas used by the execution context
-    _mscReadReplicas :: Int
+    _mscExecCtx :: MSSQLExecCtx
   }
   deriving (Generic)
 
@@ -343,15 +213,14 @@ instance Show MSSQLSourceConfig where
   show = show . _mscConnectionString
 
 instance Eq MSSQLSourceConfig where
-  MSSQLSourceConfig connStr1 _ _ == MSSQLSourceConfig connStr2 _ _ =
+  MSSQLSourceConfig connStr1 _ == MSSQLSourceConfig connStr2 _ =
     connStr1 == connStr2
+
+instance Cacheable MSSQLSourceConfig where
+  unchanged _ = (==)
 
 instance ToJSON MSSQLSourceConfig where
   toJSON = toJSON . _mscConnectionString
-
--- Note: () ~ ScalarTypeParsingContext 'MSSQL but we can't use the type family instance in the Has instance.
-instance Has () MSSQLSourceConfig where
-  hasLens = united
 
 odbcValueToJValue :: ODBC.Value -> J.Value
 odbcValueToJValue = \case
@@ -367,7 +236,6 @@ odbcValueToJValue = \case
   ODBC.TimeOfDayValue td -> J.toJSON td
   ODBC.LocalTimeValue l -> J.toJSON l
   ODBC.NullValue -> J.Null
-  ODBC.ZonedTimeValue lt tz -> J.toJSON (localTimeToUTC tz lt)
 
 runMSSQLSourceReadTx ::
   (MonadIO m, MonadBaseControl IO m) =>

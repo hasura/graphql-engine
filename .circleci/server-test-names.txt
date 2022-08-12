@@ -1,58 +1,43 @@
-# This file lists the various test suites that can be run in order to fully
-# exercise HGE server with the Python tests. They are split into suites based
-# on how HGE needs to be started.
-#
-# To run them, the relevant name is passed to test-server.sh, which then starts
-# HGE in the correct fashion and runs the appropriate tests.
-#
-# We *also* have a new way of running the Python tests, in which each test
-# starts HGE with the appropriate configuration. This file is not used there, as
-# we run all the tests at once.
-#
-# Some of the below test suites are commented out. These are the tests that
-# are fully covered by the new style, and are therefore duplicated here.
-#
-# ================================================================
-#
-# no-auth
-# admin-secret
-# admin-secret-unauthorized-role
-# read-only-db
-# jwt-rs512
-# jwt-ed25519
-# jwt-stringified
-# jwt-audience-check-single-string
-# jwt-audience-check-list-string
-# jwt-issuer-check
-# jwt-with-claims-namespace-path
-# jwt-claims-map-with-json-path-values
-# jwt-claims-map-with-literal-values
-# jwt-with-expiry-time-leeway
-# jwt-cookie
-# jwt-cookie-unauthorized-role
-# cors-domains
-# auth-webhook-cookie
-# ws-init-cookie-read-cors-enabled
-# ws-init-cookie-noread
-# ws-init-cookie-read-cors-disabled
-# ws-graphql-api-disabled
-# ws-metadata-api-disabled
-# remote-schema-permissions
-# function-permissions
-# roles-inheritance
-# naming-conventions
-# streaming-subscriptions
-# remote-schema-https
-# query-caching
-# query-logs
-# startup-db-calls
-# webhook-request-context
-# post-webhook
-# get-webhook
-# insecure-webhook
-# insecure-webhook-with-admin-secret
-# apollo-federation
-# allowlist-queries
-# jwk-url
-# horizontal-scaling
-# developer-api-tests
+haskell-tests
+no-auth
+admin-secret
+admin-secret-unauthorized-role
+read-only-db
+jwt-rs512
+jwt-ed25519
+jwt-stringified
+jwt-audience-check-single-string
+jwt-audience-check-list-string
+jwt-issuer-check
+jwt-with-claims-namespace-path
+jwt-claims-map-with-json-path-values
+jwt-claims-map-with-literal-values
+jwt-with-expiry-time-leeway
+jwt-cookie
+jwt-cookie-unauthorized-role
+cors-domains
+auth-webhook-cookie
+ws-init-cookie-read-cors-enabled
+ws-init-cookie-noread
+ws-init-cookie-read-cors-disabled
+ws-graphql-api-disabled
+ws-metadata-api-disabled
+remote-schema-permissions
+function-permissions
+roles-inheritance
+naming-conventions
+streaming-subscriptions
+remote-schema-https
+query-caching
+query-logs
+startup-db-calls
+webhook-request-context
+post-webhook
+get-webhook
+insecure-webhook
+insecure-webhook-with-admin-secret
+apollo-federation
+allowlist-queries
+jwk-url
+horizontal-scaling
+developer-api-tests

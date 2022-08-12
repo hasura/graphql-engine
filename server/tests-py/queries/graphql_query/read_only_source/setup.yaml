@@ -1,0 +1,32 @@
+# As this is a read-only test, we can't create the schema/tables as part of the
+# HGE metadata. This setup assumes the tables are already created.
+# The schema assumed is -
+# CREATE TABLE aves (id SERIAL PRIMARY KEY, name TEXT)
+# And (already existing) data assumed is -
+#  - id: 1
+#    name: Booted Eagle
+#  - id: 2
+#    name: Hooded Merganser
+
+type: bulk
+args:
+
+# if a default source is not added, the teardown doesn't happen for PG backend.
+# That is weird! Why is it always assumed that PG backend tests will always have
+# a default source?
+
+- type: pg_add_source
+  args:
+    name: pg_readonly
+    configuration:
+      connection_info:
+        database_url:
+          from_env:
+            HASURA_READONLY_DB_URL
+
+# track tables
+- type: pg_track_table
+  args:
+    source: pg_readonly
+    table:
+      name: aves

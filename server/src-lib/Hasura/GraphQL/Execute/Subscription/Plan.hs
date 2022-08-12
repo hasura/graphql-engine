@@ -40,7 +40,7 @@
 -- We could iterate over @postIds@ in Haskell, executing the same prepared query 10 times:
 --
 -- > for postIds $ \postId ->
--- >   PG.withQE defaultTxErrorHandler preparedQuery (Identity postId) True
+-- >   Q.listQE defaultTxErrorHandler preparedQuery (Identity postId) True
 --
 -- Sadly, that on its own isn’t good enough. The overhead of running each query is large enough that
 -- Postgres becomes overwhelmed if we have to serve lots of concurrent subscribers. Therefore, what we
@@ -111,30 +111,24 @@ module Hasura.GraphQL.Execute.Subscription.Plan
     cvQueryVariables,
     cvSyntheticVariables,
     unValidatedVariables,
-    applyModifier,
   )
 where
 
 import Control.Lens (makeLenses)
 import Data.Aeson.Extended qualified as J
-import Data.Aeson.Ordered qualified as JO
 import Data.Aeson.TH qualified as J
-import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
-import Data.Monoid (Endo (..))
 import Data.UUID (UUID)
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
-import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Backends.Postgres.SQL.Value
-import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
-import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.Session (SessionVariable, SessionVariables, filterSessionVariables)
+import Hasura.SQL.Backend
+import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Encoding qualified as PE
 
@@ -165,11 +159,11 @@ deriving instance (Monoid (f TxtEncodedVal)) => Monoid (ValidatedVariables f)
 
 $(makeLenses 'ValidatedVariables)
 
-type ValidatedQueryVariables = ValidatedVariables (HashMap.HashMap G.Name)
+type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
 
 type ValidatedSyntheticVariables = ValidatedVariables []
 
-type ValidatedCursorVariables = ValidatedVariables (HashMap.HashMap G.Name)
+type ValidatedCursorVariables = ValidatedVariables (Map.HashMap G.Name)
 
 mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
 mkUnsafeValidateVariables = ValidatedVariables
@@ -178,7 +172,7 @@ mkUnsafeValidateVariables = ValidatedVariables
 -- Cohort
 
 newtype CohortId = CohortId {unCohortId :: UUID}
-  deriving (Show, Eq, Hashable, J.ToJSON, J.FromJSON, PG.FromCol)
+  deriving (Show, Eq, Hashable, J.ToJSON, J.FromJSON, Q.FromCol)
 
 newCohortId :: (MonadIO m) => m CohortId
 newCohortId = CohortId <$> liftIO UUID.nextRandom
@@ -240,8 +234,8 @@ mkCohortVariables ::
   ValidatedCursorVariables ->
   CohortVariables
 mkCohortVariables requiredSessionVariables sessionVariableValues =
-  CohortVariables
-    $ filterSessionVariables
+  CohortVariables $
+    filterSessionVariables
       (\k _ -> Set.member k requiredSessionVariables)
       sessionVariableValues
 
@@ -258,29 +252,19 @@ instance J.ToJSON CohortVariables where
 newtype CohortIdArray = CohortIdArray {unCohortIdArray :: [CohortId]}
   deriving (Show, Eq)
 
-instance PG.ToPrepArg CohortIdArray where
-  toPrepVal (CohortIdArray l) = PG.toPrepValHelper PTI.unknown encoder $ map unCohortId l
+instance Q.ToPrepArg CohortIdArray where
+  toPrepVal (CohortIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unCohortId l
     where
-      encoder = PE.array (PTI.unOid PTI.uuid) . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
+      encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
 
 newtype CohortVariablesArray = CohortVariablesArray {unCohortVariablesArray :: [CohortVariables]}
   deriving (Show, Eq)
 
--- to get around a CockroachDB JSON issue, we encode as JSONB instead of JSON
--- here. The query already casts it to the JSON it expects.
--- we can change this back to sending JSON once this issue is fixed:
--- https://github.com/cockroachdb/cockroach/issues/90839
-instance PG.ToPrepArg CohortVariablesArray where
+instance Q.ToPrepArg CohortVariablesArray where
   toPrepVal (CohortVariablesArray l) =
-    PG.toPrepValHelper PTI.jsonb_array encoder (map J.toJSON l)
+    Q.toPrepValHelper PTI.unknown encoder (map J.toJSON l)
     where
-      encoder = PE.array (PTI.unOid PTI.jsonb) . PE.dimensionArray foldl' (PE.encodingArray . PE.jsonb_ast)
-
-applyModifier :: (Maybe (Endo JO.Value)) -> BS.ByteString -> BS.ByteString
-applyModifier Nothing = id
-applyModifier (Just modifier) = \bs -> case JO.decode bs of
-  Nothing -> bs
-  Just v -> encJToBS . encJFromOrderedValue $ appEndo modifier v
+      encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
 
 ----------------------------------------------------------------------------------------------------
 -- Live query plans
@@ -289,14 +273,12 @@ applyModifier (Just modifier) = \bs -> case JO.decode bs of
 -- to find an existing poller that this can be added to /or/ to create a new poller
 -- if necessary.
 data SubscriptionQueryPlan (b :: BackendType) q = SubscriptionQueryPlan
-  { _sqpParameterizedPlan :: ParameterizedSubscriptionQueryPlan b q,
-    _sqpSourceConfig :: SourceConfig b,
-    _sqpCohortId :: CohortId,
-    _sqpResolvedConnectionTemplate :: ResolvedConnectionTemplate b,
-    _sqpVariables :: CohortVariables,
+  { _sqpParameterizedPlan :: !(ParameterizedSubscriptionQueryPlan b q),
+    _sqpSourceConfig :: !(SourceConfig b),
+    _sqpVariables :: !CohortVariables,
     -- | We need to know if the source has a namespace so that we can wrap it around
     -- the response from the DB
-    _sqpNamespace :: Maybe G.Name
+    _sqpNamespace :: !(Maybe G.Name)
   }
 
 data ParameterizedSubscriptionQueryPlan (b :: BackendType) q = ParameterizedSubscriptionQueryPlan

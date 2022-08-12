@@ -1,0 +1,52 @@
+spec-version: 0.34.7
+
+name: aeson-ordered
+description: >
+  Provides a data type that mirrors Aeson's 'Value', but that preserves order of
+  object properties using an insertion-ordered map.
+version: 0.1.0.0
+author:
+  - Anon Ray <anon@hasura.io>
+  - Bryan O'Sullivan <bos@serpentine.com>
+  - MailRank, Inc.
+license: BSD3
+github: hasura/github-engine-mono
+
+extra-source-files:
+  - CHANGELOG.md
+  - LICENSE
+
+ghc-options:
+  - "-foptimal-applicative-do"
+  - "-Wall"
+  - "-Wcompat"
+  - "-Wincomplete-record-updates"
+  - "-Wincomplete-uni-patterns"
+  - "-Wredundant-constraints"
+
+default-extensions:
+  - BangPatterns
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - GeneralizedNewtypeDeriving
+  - ImportQualifiedPost
+  - LambdaCase
+  - OverloadedStrings
+  - StrictData
+
+library:
+  source-dirs:
+    - src
+  dependencies:
+    - base
+    - aeson
+    - attoparsec
+    - bytestring
+    - hashable
+    - insert-ordered-containers
+    - lens
+    - lens-aeson
+    - scientific
+    - text
+    - vector

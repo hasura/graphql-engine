@@ -5,12 +5,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"errors"
-
 	"github.com/hasura/graphql-engine/cli/v2"
-	herrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -20,9 +18,6 @@ import (
 
 const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
   hasura migrate create "init" --from-server
-
-  # Setup migration files for the first time by introspecting a server when there are multiple schemas:
-  hasura migrate create "init" --from-server --schema myschema1,myschema2
 
   # Use with admin secret:
   hasura migrate create --admin-secret "<admin-secret>"
@@ -43,18 +38,13 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	migrateCreateCmd := &cobra.Command{
-		Use:   "create [migration-name]",
-		Short: "Create ``sql`` files required for a migration",
-		Long: `As you make changes to your database's schema, Hasura tracks these changes via migrations. This command creates a ` + "``sql``" + ` file that contains the changes you made that can then be applied to a database.
-
-Further reading:
-- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
-`,
+		Use:          "create [migration-name]",
+		Short:        "Create files required for a migration",
+		Long:         "Create ``sql`` files required for a migration",
 		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			op := genOpName(cmd, "PreRunE")
 			if cmd.Flags().Changed("up-sql") {
 				opts.upSQLChanged = true
 			}
@@ -62,10 +52,10 @@ Further reading:
 				opts.downSQLChanged = true
 			}
 			if cmd.Flags().Changed("metadata-from-server") {
-				return herrors.E(op, "metadata-from-server flag is deprecated")
+				return fmt.Errorf("metadata-from-server flag is deprecated")
 			}
 			if cmd.Flags().Changed("metadata-from-file") {
-				return herrors.E(op, "metadata-from-file flag is deprecated")
+				return fmt.Errorf("metadata-from-file flag is deprecated")
 			}
 			if err := validateConfigV3Flags(cmd, ec); err != nil {
 				if errors.Is(err, errDatabaseNotFound) {
@@ -73,11 +63,11 @@ Further reading:
 					// this can be ignored for `migrate create`
 					// we can allow users to create migration files for databases
 					// which are not connected
-					ec.Logger.Warnf("database '%s' is not connected to hasura", ec.Source.Name)
+					ec.Logger.Warnf("database %s is not connected to hasura", ec.Source.Name)
 					ec.Source.Kind = hasura.SourceKindPG // the default kind is postgres
 					return nil
 				}
-				return herrors.E(op, err)
+				return err
 			}
 
 			if opts.upSQLChanged && !opts.downSQLChanged {
@@ -90,14 +80,13 @@ Further reading:
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			op := genOpName(cmd, "RunE")
 			opts.name = args[0]
 			opts.EC.Spin("Creating migration files...")
 			opts.Source = ec.Source
 			version, err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
-				return herrors.E(op, err)
+				return err
 			}
 			opts.EC.Logger.WithFields(log.Fields{
 				"version": version,
@@ -154,7 +143,6 @@ type migrateCreateOptions struct {
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
-	var op herrors.Op = "migrate.migrateCreateOptions.run"
 	timestamp := getTime()
 	createOptions := mig.New(timestamp, o.name, filepath.Join(o.EC.MigrationDir, o.Source.Name))
 
@@ -168,7 +156,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if o.sqlServer || o.upSQLChanged || o.downSQLChanged {
 		migrateDrv, err = migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("cannot create migrate instance: %w", err))
+			return 0, fmt.Errorf("cannot create migrate instance: %w", err)
 		}
 	}
 
@@ -176,17 +164,17 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		// sql-file flag is set
 		err := createOptions.SetSQLUpFromFile(o.sqlFile)
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("cannot set sql file: %w", err))
+			return 0, fmt.Errorf("cannot set sql file: %w", err)
 		}
 	}
 	if o.sqlServer {
 		data, err := migrateDrv.ExportSchemaDump(o.includeSchemas, o.excludeSchemas, o.Source.Name, o.Source.Kind)
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("cannot fetch schema dump: %w", err))
+			return 0, fmt.Errorf("cannot fetch schema dump: %w", err)
 		}
 		err = createOptions.SetSQLUp(string(data))
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("while writing data from server into the up.sql file: %w", err))
+			return 0, fmt.Errorf("while writing data from server into the up.sql file: %w", err)
 		}
 	}
 
@@ -194,14 +182,14 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if o.upSQLChanged {
 		err = createOptions.SetSQLUp(o.upSQL)
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("up migration with SQL string could not be created: %w", err))
+			return 0, fmt.Errorf("up migration with SQL string could not be created: %w", err)
 		}
 	}
 
 	if o.downSQLChanged {
 		err = createOptions.SetSQLDown(o.downSQL)
 		if err != nil {
-			return 0, herrors.E(op, fmt.Errorf("down migration with SQL string could not be created: %w", err))
+			return 0, fmt.Errorf("down migration with SQL string could not be created: %w", err)
 		}
 	}
 
@@ -224,7 +212,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}()
 	err = createOptions.Create()
 	if err != nil {
-		return 0, herrors.E(op, fmt.Errorf("error creating migration files: %w", err))
+		return 0, fmt.Errorf("error creating migration files: %w", err)
 	}
 	o.EC.Spinner.Stop()
 	o.EC.Logger.Infof("Created Migrations")

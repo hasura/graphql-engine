@@ -1,27 +1,28 @@
 ---
-sidebar_label: Custom types
-sidebar_position: 14
-description: Define custom types with the Hasura schema/Metadata API
+sidebar_label: Custom Types
+sidebar_position: 14 
+description: Define custom types with the Hasura schema/metadata API
 keywords:
-  - hasura
-  - docs
-  - schema/Metadata API
-  - API reference
-  - custom types
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - custom types
 ---
 
 # Schema/Metadata API Reference: Custom Types (Deprecated)
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/Metadata API is deprecated in
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/api-reference/schema-api/index.mdx) and the
-[Metadata API](/api-reference/metadata-api/index.mdx).
+[metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/Metadata APIs will
+Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
 :::
+
 
 ## Introduction
 
@@ -85,9 +86,9 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-set-custom-types-syntax}
 
-| Key           | Required | Schema                                                                     | Description                   |
-| ------------- | -------- | -------------------------------------------------------------------------- | ----------------------------- |
-| input_objects | false    | Array of [InputObjectType](/api-reference/syntax-defs.mdx#inputobjecttype) | Set of GraphQL `Input Object` |
-| objects       | false    | Array of [ObjectType](/api-reference/syntax-defs.mdx#objecttype)           | Set of GraphQL `Object`       |
-| scalars       | false    | Array of [ScalarType](/api-reference/syntax-defs.mdx#scalartype)           | Set of GraphQL `Scalar`       |
-| enums         | false    | Array of [EnumType](/api-reference/syntax-defs.mdx#enumtype)               | Set of GraphQL `Enum`         |
+| Key           | Required | Schema                                                                                   | Description                   |
+|---------------|----------|------------------------------------------------------------------------------------------|-------------------------------|
+| input_objects | false    | Array of [InputObjectType](/api-reference/syntax-defs.mdx#inputobjecttype)  | Set of GraphQL `Input Object` |
+| objects       | false    | Array of [ObjectType](/api-reference/syntax-defs.mdx#objecttype)            | Set of GraphQL `Object`       |
+| scalars       | false    | Array of [ScalarType](/api-reference/syntax-defs.mdx#scalartype)            | Set of GraphQL `Scalar`       |
+| enums         | false    | Array of [EnumType](/api-reference/syntax-defs.mdx#enumtype)                | Set of GraphQL `Enum`         |

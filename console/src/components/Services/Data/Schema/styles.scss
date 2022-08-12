@@ -1,0 +1,141 @@
+@import '../../../Common/Common';
+
+.btnBlank {
+  background: transparent;
+  border: none;
+  color: #4d4d4d;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  display: inline-block;
+  margin-bottom: 0;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.queryButton {
+  margin-left: auto;
+}
+
+.buttonsSection {
+  display: flex;
+  margin-top: 10px;
+  align-items: center;
+
+  button:first-of-type {
+    margin-right: 10px;
+  }
+}
+
+.nestedBox {
+  background: #fff;
+  width: 100%;
+  border: 1px solid #d7d7d7;
+  padding: 16px;
+  border-radius: 4px;
+
+  margin-top: 16px;
+
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.volatileNote {
+  width: 420px;
+  padding: 8px 0;
+}
+
+.inconsistentSourceIcon {
+  padding: 3px;
+  color: #c02020;
+  font-size: 15px;
+}
+
+.replica_badge {
+  align-items: center;
+  background-color: #ccc;
+  width: auto;
+  border-radius: 10px;
+  height: 20px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: black;
+  margin: 0px 20px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.container_max_width {
+  width: 600px;
+}
+
+.collapsibleWrapper {
+  margin-bottom: 5px;
+  padding: 1px 12px !important;
+  border-radius: 8px;
+
+  .collapsibleToggle {
+    cursor: pointer;
+    display: inline-block;
+    outline: none;
+
+    .collapsibleIndicatorWrapper {
+      position: absolute;
+      float: left;
+      right: 0;
+      padding-right: 30px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.5);
+
+      .collapsibleIndicator {
+        transition: transform 0.4s ease;
+      }
+
+      .collapsibleIndicatorOpen {
+        transform: rotate(180deg);
+      }
+    }
+
+    .titleWrapper {
+      display: inline-block;
+    }
+  }
+}
+
+.display_flex_container {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+}
+
+.display_flex {
+  display: flex;
+  align-items: flex-start;
+}
+
+.dataSource_label {
+  font-weight: bold;
+  float: left;
+  width: 130px;
+}
+
+.dbversion_label {
+  font-weight: bold;
+  float: left;
+  flex: 0 0 130px;
+}
+.mr_xxs {
+  margin-right: 4px;
+}
+
+.ion_icon {
+  font-size: 16px;
+  vertical-align: -2px;
+}
+
+.tab_heading_flex {
+  display: flex;
+  align-items: center;
+}

@@ -124,23 +124,23 @@ GraphQL Engine предоставляет простые в обосновани
 ## Demos
 
 Ознакомьтесь со всеми примерами приложений в 
-[community/examples](https://github.com/hasura/sample-apps/tree/main) папке.
+[community/examples](../community/sample-apps) папке.
 
 ### Приложения в режиме реального времени
 
 - Приложение группового чата, построенное с помощью React, включает в себя индикатор набора текста, онлайн пользователей и уведомления о сообщениях.
   - [Попробуйте это](https://realtime-chat.demo.hasura.io/)
-  - [Руководство](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
+  - [Руководство](../community/sample-apps/realtime-chat)
   - [Просмотреть API](https://realtime-chat.demo.hasura.io/console)
 
 - Приложение для отслеживания местоположения в реальном времени, показывающее движущееся транспортное средство, изменяющее текущие GPS-координаты, движущееся по карте.
   - [Попробуйте это](https://realtime-location-tracking.demo.hasura.io/)
-  - [Руководство](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
+  - [Руководство](../community/sample-apps/realtime-location-tracking)
   - [Просмотреть API](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Информационная панель в режиме реального времени для агрегирования данных по постоянно меняющимся данным.
   - [Попробуйте это](https://realtime-poll.demo.hasura.io/)
-  - [Руководство](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
+  - [Руководство](../community/sample-apps/realtime-poll)
   - [Просмотреть API](https://realtime-poll.demo.hasura.io/console)
 
 ### Видео
@@ -174,19 +174,19 @@ GraphQL Engine предоставляет простые в обосновани
 Мы были бы рады, если бы вы добавили "Powered by Hasura" бейдж к вашим приложениям, построенным с помощью Hasura.. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
 <!-- Для светлых фонов -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
 </a>
 
 <!-- Для темных фонов -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
 </a>
 ```
 

@@ -3,7 +3,7 @@ module Hasura.GraphQL.Transport.WebSocket.Types
     WSConn,
     WSConnData (WSConnData, _wscOpMap, _wscUser),
     WSConnState (CSInitError, CSInitialised, CSNotInitialised),
-    WSServerEnv (..),
+    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseSubscriptionState, _wseLogger, _wseServer, _wseServerMetrics, _wsePrometheusMetrics),
     WsClientState (WsClientState, wscsIpAddress, wscsReqHeaders, wscsTokenExpTime, wscsUserInfo),
     WsHeaders (WsHeaders, unWsHeaders),
     SubscriberType (..),
@@ -20,14 +20,14 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.Server.AppStateRef
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config (KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (ReadOnlyMode (..))
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai.Extended qualified as Wai
@@ -71,18 +71,20 @@ data WSConnData = WSConnData
     _wscAPIType :: !E.GraphQLQueryType
   }
 
-data WSServerEnv impl = WSServerEnv
+data WSServerEnv = WSServerEnv
   { _wseLogger :: !(L.Logger L.Hasura),
     _wseSubscriptionState :: !ES.SubscriptionsState,
-    _wseAppStateRef :: AppStateRef impl,
+    -- | an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
+    _wseGCtxMap :: !(IO (SchemaCache, SchemaCacheVer)),
     _wseHManager :: !HTTP.Manager,
-    _wseCorsPolicy :: IO CorsPolicy,
+    _wseCorsPolicy :: !CorsPolicy,
+    _wseSQLCtx :: !SQLGenCtx,
     _wseReadOnlyMode :: ReadOnlyMode,
     _wseServer :: !WSServer,
+    _wseEnableAllowlist :: !Bool,
     _wseKeepAliveDelay :: !KeepAliveDelay,
     _wseServerMetrics :: !ServerMetrics,
-    _wsePrometheusMetrics :: !PrometheusMetrics,
-    _wseTraceSamplingPolicy :: !Tracing.SamplingPolicy
+    _wsePrometheusMetrics :: !PrometheusMetrics
   }
 
 data SubscriberType

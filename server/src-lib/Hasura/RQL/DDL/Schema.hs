@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module (along with the various @Hasura.RQL.DDL.Schema.*@ modules) provides operations to
 -- load and modify the Hasura catalog and schema cache.
 --
@@ -26,32 +28,29 @@ module Hasura.RQL.DDL.Schema
 where
 
 import Data.Aeson
+import Data.Aeson.TH (deriveJSON)
 import Data.Text.Encoding qualified as TE
-import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache as M
 import Hasura.RQL.DDL.Schema.Catalog as M
+import Hasura.RQL.DDL.Schema.Function as M
 import Hasura.RQL.DDL.Schema.Rename as M
-import Hasura.Table.API as M
+import Hasura.RQL.DDL.Schema.Table as M
 
 data RunSQLRes = RunSQLRes
   { rrResultType :: Text,
     rrResult :: Value
   }
-  deriving (Show, Generic, Eq)
+  deriving (Show, Eq)
 
-instance FromJSON RunSQLRes where
-  parseJSON = genericParseJSON hasuraJSON
+$(deriveJSON hasuraJSON ''RunSQLRes)
 
-instance ToJSON RunSQLRes where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
-
-instance PG.FromRes RunSQLRes where
-  fromRes (PG.ResultOkEmpty _) =
+instance Q.FromRes RunSQLRes where
+  fromRes (Q.ResultOkEmpty _) =
     return $ RunSQLRes "CommandOk" Null
-  fromRes (PG.ResultOkData res) = do
+  fromRes (Q.ResultOkData res) = do
     csvRows <- resToCSV res
     return $ RunSQLRes "TuplesOk" $ toJSON csvRows
     where

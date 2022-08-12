@@ -8,7 +8,6 @@ yaml=YAML(typ='safe', pure=True)
 
 usefixtures = pytest.mark.usefixtures
 
-# A very basic test that compression seems to be working
 @usefixtures('per_class_tests_db_state')
 class TestCompression:
 

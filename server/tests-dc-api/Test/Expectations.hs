@@ -1,0 +1,99 @@
+module Test.Expectations
+  ( jsonShouldBe,
+    rowsShouldBe,
+  )
+where
+
+import Control.Lens ((%~), (&))
+import Control.Monad (unless)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Data.Aeson (ToJSON (..), Value)
+import Data.Aeson.KeyMap (KeyMap)
+import Data.Algorithm.Diff (Diff, PolyDiff (..), getDiff)
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
+import Data.Text.Encoding.Error qualified as TE
+import Data.Yaml qualified as Yaml
+import GHC.Stack (HasCallStack)
+import Hasura.Backends.DataConnector.API (FieldValue, deserializeAsRelationshipFieldValue, mkRelationshipFieldValue, qrRows)
+import System.Console.ANSI (Color (..), ColorIntensity (..), ConsoleLayer (..), SGR (..), hSupportsANSIColor, setSGRCode)
+import System.IO (stdout)
+import Test.Hspec (Expectation, expectationFailure)
+import Prelude
+
+newtype YamlShow = YamlShow {unYamlShow :: Value}
+  deriving newtype (Eq)
+
+instance Show YamlShow where
+  show = T.unpack . TE.decodeUtf8With TE.lenientDecode . Yaml.encode . unYamlShow
+
+-- | Compares two JSON values for equality, but prints their diff upon failure
+-- as formatted YAML, which is a much nicer way to visualise the difference in
+-- expected vs actual.
+jsonShouldBe :: (HasCallStack, ToJSON value) => value -> value -> Expectation
+jsonShouldBe actual expected =
+  shouldBeWithLineDiff (YamlShow $ toJSON actual) (YamlShow $ toJSON expected)
+
+-- | Compares two lists of response rows, but normalizes them first to remove
+-- immaterial differences that show up when diffing in JSON/YAML
+rowsShouldBe :: HasCallStack => [KeyMap FieldValue] -> [KeyMap FieldValue] -> Expectation
+rowsShouldBe actual expected =
+  (normalize <$> actual) `jsonShouldBe` (normalize <$> expected)
+
+-- | Normalizes a response row so that immaterial differences are removed.
+--
+-- Immaterial differences can show up because 'FieldValue's are not actually decoded
+-- into Haskell types and are instead decoded as appropriate while traversing the Query
+-- IR (see 'FieldType' Haddocks for more info).
+-- This causes any JSON-based diff to show up immaterial differences even though two
+-- 'FieldValue's are equal, because the JSON contains differences that are ignored
+-- for equality purposes (eg the difference between a missing rows property and a
+-- null one).
+-- Normalization simply removes these differences by fully deserializing and then
+-- reserializing the JSON. It can do this by making the assumption that there are no
+-- custom scalar types that look like relationship field values (true for the Chinook
+-- data set used by the agent tests).
+normalize :: KeyMap FieldValue -> KeyMap FieldValue
+normalize =
+  fmap
+    ( \fieldValue ->
+        case deserializeAsRelationshipFieldValue fieldValue of
+          Left _ -> fieldValue
+          Right queryResponse ->
+            mkRelationshipFieldValue $
+              queryResponse & qrRows . traverse . traverse %~ normalize
+    )
+
+shouldBeWithLineDiff :: (HasCallStack, Show value, Eq value) => value -> value -> Expectation
+shouldBeWithLineDiff actual expected =
+  unless (actual == expected) $
+    expectationFailure =<< renderDiffError actual expected
+
+renderDiffError :: (Show value, MonadIO m) => value -> value -> m String
+renderDiffError actual expected = do
+  useColor <- liftIO $ hSupportsANSIColor stdout
+  pure $ renderDiffString useColor (show actual) (show expected)
+
+renderDiffString :: Bool -> String -> String -> String
+renderDiffString useColor actual expected =
+  unlines $ resetHspecErrorColor <$> explanation <> diffLines
+  where
+    resetHspecErrorColor line = colorCode Reset ++ line
+
+    explanation =
+      [ "━━━",
+        colorSpan Green "--- expected, but not present",
+        colorSpan Red "+++ present, but not expected",
+        "━━━"
+      ]
+
+    diffLines = annotateDiffLine <$> getDiff (lines actual) (lines expected)
+
+    annotateDiffLine :: Diff String -> String
+    annotateDiffLine = \case
+      Both _ s -> "    " ++ s
+      First s -> colorSpan Green $ "--- " ++ s
+      Second s -> colorSpan Red $ "+++ " ++ s
+
+    colorSpan c s = colorCode (SetColor Foreground Dull c) ++ s ++ colorCode Reset
+    colorCode sgr = if useColor then setSGRCode [sgr] else ""

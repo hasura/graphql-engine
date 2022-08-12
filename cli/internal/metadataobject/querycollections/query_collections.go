@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/sirupsen/logrus"
@@ -36,49 +35,46 @@ func (q *QueryCollectionConfig) Validate() error {
 }
 
 func (q *QueryCollectionConfig) CreateFiles() error {
-	var op errors.Op = "querycollections.QueryCollectionsConfig.CreateFiles"
 	v := make([]interface{}, 0)
 	buf := new(bytes.Buffer)
 	err := metadataobject.GetEncoder(buf).Encode(v)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, q.Filename()), buf.Bytes(), 0644)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	return nil
 }
 
-func (q *QueryCollectionConfig) Build() (map[string]interface{}, error) {
-	var op errors.Op = "querycollections.QueryCollectionConfig.Build"
+func (q *QueryCollectionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(q.MetadataDir, q.Filename()))
 	if err != nil {
-		return nil, errors.E(op, q.error(err))
+		return nil, q.error(err)
 	}
 	var obj []yaml.Node
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return nil, errors.E(op, errors.KindBadInput, q.error(err))
+		return nil, q.error(err)
 	}
 	return map[string]interface{}{q.Key(): obj}, nil
 }
 
 type querycollection struct {
 	Name       yaml.Node  `yaml:"name,omitempty"`
-	Definition definition `yaml:"definition"`
+	Definition definition `yaml:"definition,omitempty"`
 }
 
 type definition struct {
-	Queries []query `yaml:"queries"`
+	Queries []query `yaml:"queries,omitempty"`
 }
 type query struct {
 	Name  yaml.Node `yaml:"name,omitempty"`
 	Query string    `yaml:"query,omitempty"`
 }
 
-func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
-	var op errors.Op = "querycollections.QueryCollectionConfig.Export"
+func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var value interface{}
 	if v, ok := metadata[q.Key()]; !ok {
 		value = []yaml.Node{}
@@ -86,10 +82,10 @@ func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[strin
 		var collections []querycollection
 		bs, err := yaml.Marshal(v)
 		if err != nil {
-			return nil, errors.E(op, q.error(err))
+			return nil, q.error(err)
 		}
 		if err := yaml.Unmarshal(bs, &collections); err != nil {
-			return nil, errors.E(op, q.error(err))
+			return nil, q.error(err)
 		}
 		for collectionIdx := range collections {
 			for queryIdx := range collections[collectionIdx].Definition.Queries {
@@ -98,7 +94,7 @@ func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[strin
 					Input: collections[collectionIdx].Definition.Queries[queryIdx].Query,
 				})
 				if err != nil {
-					return nil, errors.E(op, q.error(err))
+					return nil, q.error(err)
 				}
 				gqlFormatter := formatter.NewFormatter(buf, formatter.WithIndent("  "))
 				gqlFormatter.FormatQueryDocument(queryDoc)
@@ -113,7 +109,7 @@ func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[strin
 	var buf bytes.Buffer
 	err := metadataobject.GetEncoder(&buf).Encode(value)
 	if err != nil {
-		return nil, errors.E(op, q.error(err))
+		return nil, q.error(err)
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(q.BaseDirectory(), q.Filename())): buf.Bytes(),
@@ -128,21 +124,19 @@ func (q *QueryCollectionConfig) Filename() string {
 	return "query_collections.yaml"
 }
 
-func (q *QueryCollectionConfig) GetFiles() ([]string, error) {
-	var op errors.Op = "querycollections.QueryCollectionConfig.GetFiles"
+func (q *QueryCollectionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
 	rootFile := filepath.Join(q.BaseDirectory(), q.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
-		return nil, errors.E(op, q.error(err))
+		return nil, q.error(err)
 	}
 	return files, nil
 }
 
-func (q *QueryCollectionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
-	var op errors.Op = "querycollections.QueryCollectionConfig.WriteDiff"
+func (q *QueryCollectionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: q, WriteDiffOpts: opts})
 	if err != nil {
-		return errors.E(op, q.error(err))
+		return q.error(err)
 	}
 	return nil
 }

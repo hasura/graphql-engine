@@ -5,8 +5,8 @@ module Hasura.AppSpec (spec) where
 import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.Extended (sleep)
 import Control.Exception (throwIO)
+import Hasura.App (newShutdownLatch, shutdownGracefully, shuttingDown, waitForShutdown)
 import Hasura.Prelude
-import Hasura.ShutdownLatch (newShutdownLatch, shutdownGracefully, shuttingDown, waitForShutdown)
 import System.Timeout (timeout)
 import Test.Hspec
 

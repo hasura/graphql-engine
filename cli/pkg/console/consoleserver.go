@@ -11,10 +11,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
-
-	errors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 //go:embed templates/gohtml/*
@@ -84,7 +83,7 @@ func (c *ConsoleServer) GetHTTPServer() (*http.Server, error) {
 func (c *ConsoleServer) Serve() {
 	server, err := c.GetHTTPServer()
 	if err != nil {
-		c.Logger.Fatal(fmt.Errorf("error starting server: %w", err))
+		c.Logger.Fatal(errors.Wrap(err, "error starting server"))
 		os.Exit(1)
 	}
 
@@ -124,7 +123,6 @@ func (c *ConsoleServer) Serve() {
 }
 
 func BuildConsoleRouter(templateProvider TemplateProvider, templateVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
-	var op errors.Op = "console.BuildConsoleRouter"
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -134,7 +132,7 @@ func BuildConsoleRouter(templateProvider TemplateProvider, templateVersion, stat
 	// Template console.gohtml
 	templateRender, err := templateProvider.LoadTemplates(templateProvider.BasePath()+templateVersion+"/", templateProvider.TemplateFilename())
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("cannot fetch template: %w", err))
+		return nil, errors.Wrap(err, "cannot fetch template")
 	}
 	r.HTMLRender = templateRender
 

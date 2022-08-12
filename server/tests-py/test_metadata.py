@@ -1,7 +1,6 @@
-import os
-import pytest
-
 from validate import check_query_f
+import pytest
+import os
 
 usefixtures = pytest.mark.usefixtures
 
@@ -11,7 +10,7 @@ use_mutation_fixtures = usefixtures(
 )
 
 
-@usefixtures('gql_server', 'per_method_tests_db_state')
+@usefixtures('per_method_tests_db_state')
 class TestMetadata:
 
     def test_reload_metadata(self, hge_ctx):
@@ -290,7 +289,7 @@ class TestMetadata:
             })
 
     @pytest.mark.skipif(
-        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') != 'postgresql://gql_test:gql_test@localhost:5432/pg_source_1',
+        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') != 'postgresql://gql_test@localhost:5432/pg_source_1',
         reason="This test relies on hardcoded connection parameters that match Circle's setup.")
     def test_pg_add_source_with_source_parameters(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_add_source_with_parameters.yaml')

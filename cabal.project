@@ -1,5 +1,4 @@
 -- Global project configuration.
-
 --
 -- This file can be overridden with cabal.project.local (see e.g. cabal/dev.project)
 --
@@ -16,97 +15,21 @@
 --
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 
-with-compiler: ghc-9.6.4
+with-compiler: ghc-8.10.7
 
 -- package-level parallelism:
 jobs: $ncpus
 
 packages: server
 packages: server/lib/*/*.cabal
-packages: server/forks/*/*.cabal
-
--- TODO remove these when we are able:
-allow-newer: req:template-haskell
-allow-newer: ekg-core:base
-allow-newer: ekg-core:ghc-prim
-allow-newer: ekg-core:inspection-testing
-allow-newer: ekg-core:text
-allow-newer: ekg-json:base
-allow-newer: ekg-json:text
-allow-newer: ekg-prometheus:base
-allow-newer: ekg-prometheus:text
-allow-newer: ekg-prometheus:bytestring
--- Migrating to 0.25+ looks like it will be a real pain... :(
--- https://github.com/morpheusgraphql/morpheus-graphql/pull/766
-allow-newer: relude:base
-allow-newer: relude:ghc-prim
-allow-newer: morpheus-graphql:text
-allow-newer: morpheus-graphql:relude
-allow-newer: morpheus-graphql:vector
-allow-newer: morpheus-graphql:transformers
-allow-newer: morpheus-graphql-app:text
-allow-newer: morpheus-graphql-app:vector
-allow-newer: morpheus-graphql-app:transformers
-allow-newer: morpheus-graphql-code-gen:text
-allow-newer: morpheus-graphql-code-gen:optparse-applicative
-allow-newer: morpheus-graphql-code-gen-utils:text
-allow-newer: morpheus-graphql-core:text
-allow-newer: morpheus-graphql-core:transformers
-allow-newer: morpheus-graphql-core:vector
-allow-newer: morpheus-graphql-server:text
-allow-newer: morpheus-graphql-server:transformers
-allow-newer: morpheus-graphql-server:vector
-allow-newer: morpheus-graphql-client:text
-allow-newer: morpheus-graphql-client:req
-allow-newer: morpheus-graphql-client:transformers
-allow-newer: morpheus-graphql-client:vector
-allow-newer: morpheus-graphql-subscriptions:text
-allow-newer: morpheus-graphql-subscriptions:transformers
-allow-newer: servant-openapi3:base
-allow-newer: openapi3:base
-allow-newer: servant-client:base
-allow-newer: servant-client:transformers
-allow-newer: servant-client:mtl
-allow-newer: servant-client-core:base
-allow-newer: servant-client-core:free
-allow-newer: servant-client-core:template-haskell
-allow-newer: servant-client-core:transformers
-allow-newer: servant-server:base
-allow-newer: servant-server:template-haskell
-allow-newer: servant-server:transformers
-allow-newer: servant-server:mtl
-allow-newer: servant:base
-allow-newer: servant:mtl
-allow-newer: ghc-heap-view:base
-allow-newer: ghc-heap-view:Cabal
-allow-newer: servant:transformers
-allow-newer: singleton-bool:base
-allow-newer: semigroupoids:base
-allow-newer: http-api-data:base
-allow-newer: validation:assoc
-allow-newer: aeson:th-abstraction
-allow-newer: optics-th:th-abstraction
-allow-newer: generics-sop:th-abstraction
-
--- https://gitlab.haskell.org/ghc/ghc-debug/-/merge_requests/27
-allow-newer: ghc-debug-stub:ghc-prim
--- https://github.com/mokus0/th-extras/pull/20
-allow-newer: th-extras:template-haskell
 
 package *
   -- NOTE: this gets applied to both local (hasura) packages and dependencies,
   -- but optimizations for local hasura packages are overridden/controlled
   -- via the 'optimize-hasura' flag.
   optimization: 2
-  -- For tooling support, e.g. HLS:
+  -- For tooling, e.g. 'weeder', and IDE-like stuff:
   ghc-options: -fwrite-ide-info
-
-  -- we statically link malloc from mimalloc. Out of an abundance of caution,
-  -- disable special treatment of these in all the foreign code we build. The
-  -- only risk is potential for some missed optimizations.
-  -- See: https://github.com/microsoft/mimalloc/issues/785
-  -- NOTE: cc-options is not recognized here for some reason, so we use ghc-options+optc:
-  ghc-options: -optc-fno-builtin-malloc -optc-fno-builtin-calloc -optc-fno-builtin-realloc -optc-fno-builtin-free
 
   haddock-html: true
   haddock-hoogle: true
@@ -114,52 +37,40 @@ package *
   haddock-quickjump: true
   haddock-internal: true
 
--- Allow for dead-code elimination at link-time, to reduce binary size
-if(os(linux))
- package *
-  -- ld on M1 OSX does not recognise this:
-  ld-options: -Wl,--gc-sections
-  ghc-options: -split-sections
-  -- -----------------------------------------------------------
-
 package graphql-engine
   ghc-options: -j
   haddock-options: "--show-all"
 
-allow-newer: hedgehog-generic:base
-allow-newer: hedgehog-generic:hedgehog
-
--- 9.6 support. Awaiting release I guess...
-source-repository-package
-  type: git
-  location: https://github.com/agrafix/Spock
-  tag: 40d028bfea0e94ca7096c719cd024ca47a46e559
-  subdir: Spock-core
-
--- 9.6 support: https://github.com/jfischoff/postgres-options/pull/7
-source-repository-package
-  type: git
-  location: https://github.com/jfischoff/postgres-options.git
-  tag: 3100f7ca4319748a07a46e2838f4c80f8e3f076a
-
--- 9.6 support: https://github.com/MichaelXavier/cron/pull/51
-source-repository-package
-  type: git
-  location: https://github.com/TristanCacqueray/cron.git
-  tag: 5f5b662a1d7abc3951ea5a2a625bbf3e83f7a11a
-
 source-repository-package
   type: git
   location: https://github.com/hasura/kriti-lang.git
-  tag: c8fd863d359876af3a0fce47db8a5393dc556667
+  tag: v0.3.2
 
--- This is an unrelesaed version of "odbc"
--- For text v2 support
--- WIP/FIXME: review change, maybe upstream PR
 source-repository-package
   type: git
-  location: https://github.com/hasura/odbc.git
-  tag: 43b07813d635215b3466824d07890de452920fc2
+  location: https://github.com/hasura/pg-client-hs.git
+  tag: 9393c9113a572632b999acbd20ab85386a165103
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/graphql-parser-hs.git
+  tag: 47feca50fbfe6a059d02910c283e7567fbc1d7ef
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ci-info-hs.git
+  tag: be578a01979fc95137cc2c84827f9fafb99df60f
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/pool.git
+  tag: 427c8f47b5a0de858780b0a9522ad953197b1658
+
+-- This is an unrelesaed version of "odbc"
+source-repository-package
+  type: git
+  location: https://github.com/fpco/odbc.git
+  tag: 3d80ffdd4a2879f0debecabb56d834d2d898212b
 
 package odbc
   ghc-options: -Wwarn
@@ -172,17 +83,42 @@ package odbc
 source-repository-package
   type: git
   location: https://github.com/hasura/ekg-core.git
-  tag: df610859603b504494ad770bdbb7053a7f0b9a6c
-
--- because we need 27d87f01, not yet released
-source-repository-package
-  type: git
-  location: https://github.com/snoyberg/yaml.git
-  tag: c1aa7b3991e669e4c6a977712b495d40a54cf819
-  subdir: yaml
+  tag: b0cdc337ca2a52e392d427916ba3e28246b396c0
 
 source-repository-package
   type: git
-  location: https://github.com/hasura/libdeflate-hs.git
-  tag: e6f020a1a24d07516d753fbb6f30758774f76372
+  location: https://github.com/hasura/ekg-prometheus.git
+  tag: v0.2.0.0
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ekg-json.git
+  tag: 84990712c165d7e3e76b2b289640ef8b5033f12f
+
+-- This is v1.2.5.0 with https://github.com/haskell/text/pull/348
+-- cherry-picked.
+-- These changes are in version 2.0,  but hopefully they can get backported:
+--   https://github.com/haskell/text/issues/452
+source-repository-package
+  type: git
+  location: https://github.com/hasura/text.git
+  tag: ba0fd2bf256c996a6c85dbdc8590a6fcde41b8f8
+
+-------- GHC 9.2 SPOCK-RELATED FORKS
+-- NOTE: jberryman is a Spock maintainer now
+-- see discussion: https://hasurahq.slack.com/archives/C03263T1L9W/p1649087218167979
+
+-- This is an unreleased version of "Spock-core"
+source-repository-package
+  type: git
+  location: https://github.com/agrafix/Spock.git
+  tag: efc06e4b4e91f63579d04eb15ec850cf7a5ebccf
+  subdir: Spock-core
+
+-- This is an unreleased version of "reroute-core", needed for "Spock-core"
+source-repository-package
+  type: git
+  location: https://github.com/agrafix/Spock.git
+  tag: efc06e4b4e91f63579d04eb15ec850cf7a5ebccf
+  subdir: reroute
 

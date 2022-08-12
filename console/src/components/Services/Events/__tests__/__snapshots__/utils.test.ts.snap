@@ -1,0 +1,761 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Events_Utils.ts parseEventsSQLResp should parse event invocations 1`] = `
+Array [
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:32.81592",
+    "delivered": false,
+    "error": true,
+    "event_id": "7bc7b398-f1cd-4761-839d-44971e01be48",
+    "id": "31b4c28c-954d-4871-ba95-a6d7da8d6988",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 8, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"455d47a2c5d8f40e\\", \\"trace_id\\": \\"04415c5c0870f8f6\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.658771Z",
+        "delivery_info": Object {
+          "current_retry": 4,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 8,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "455d47a2c5d8f40e",
+            "trace_id": "04415c5c0870f8f6",
+          },
+        },
+        "id": "7bc7b398-f1cd-4761-839d-44971e01be48",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"04415c5c0870f8f6\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"d1260fcdfe50945e\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"de05cf247e935b7a\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:32.815484",
+    "delivered": false,
+    "error": true,
+    "event_id": "c3ac48be-a569-4d87-8c52-cb84309002ed",
+    "id": "bf1760ee-c628-4b94-b535-1d5453675958",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 6, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"5a75ae38fccf4473\\", \\"trace_id\\": \\"ecba73bac1b4601a\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.332379Z",
+        "delivery_info": Object {
+          "current_retry": 4,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 6,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "5a75ae38fccf4473",
+            "trace_id": "ecba73bac1b4601a",
+          },
+        },
+        "id": "c3ac48be-a569-4d87-8c52-cb84309002ed",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"ecba73bac1b4601a\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"1c3c460b36da4a0e\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"f309dbf4632da6a5\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:32.81517",
+    "delivered": false,
+    "error": true,
+    "event_id": "338eec2d-0c1f-4358-ae12-05d3f73a85c6",
+    "id": "5836823f-9104-489e-b339-946b45e266a9",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 9, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"77150de9d725e5df\\", \\"trace_id\\": \\"ea970ad818f358cf\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.831182Z",
+        "delivery_info": Object {
+          "current_retry": 4,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 9,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "77150de9d725e5df",
+            "trace_id": "ea970ad818f358cf",
+          },
+        },
+        "id": "338eec2d-0c1f-4358-ae12-05d3f73a85c6",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"ea970ad818f358cf\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"332c2f49df1cb4d2\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"3668323420f67bb1\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:32.815118",
+    "delivered": false,
+    "error": true,
+    "event_id": "423e5a24-d4e0-493a-83df-ecff0eca2398",
+    "id": "7b314fa3-fa10-4d1d-9c7b-0799e2a2345c",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 7, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"5e088982a14f9bdd\\", \\"trace_id\\": \\"da0635bf4fb444b1\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.490999Z",
+        "delivery_info": Object {
+          "current_retry": 4,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 7,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "5e088982a14f9bdd",
+            "trace_id": "da0635bf4fb444b1",
+          },
+        },
+        "id": "423e5a24-d4e0-493a-83df-ecff0eca2398",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"da0635bf4fb444b1\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"f92c4fac3a66595a\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"b3a34f8a72e89980\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:22.736277",
+    "delivered": false,
+    "error": true,
+    "event_id": "7bc7b398-f1cd-4761-839d-44971e01be48",
+    "id": "c6ec4304-3848-4c4c-a188-ff91ebe61ea0",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 8, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"455d47a2c5d8f40e\\", \\"trace_id\\": \\"04415c5c0870f8f6\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.658771Z",
+        "delivery_info": Object {
+          "current_retry": 3,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 8,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "455d47a2c5d8f40e",
+            "trace_id": "04415c5c0870f8f6",
+          },
+        },
+        "id": "7bc7b398-f1cd-4761-839d-44971e01be48",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"04415c5c0870f8f6\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"f520ea1624695587\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"2dc1b4d86426e316\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:22.736095",
+    "delivered": false,
+    "error": true,
+    "event_id": "423e5a24-d4e0-493a-83df-ecff0eca2398",
+    "id": "8c88c745-29eb-4637-ad2d-85f3d6ba82c4",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 7, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"5e088982a14f9bdd\\", \\"trace_id\\": \\"da0635bf4fb444b1\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.490999Z",
+        "delivery_info": Object {
+          "current_retry": 3,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 7,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "5e088982a14f9bdd",
+            "trace_id": "da0635bf4fb444b1",
+          },
+        },
+        "id": "423e5a24-d4e0-493a-83df-ecff0eca2398",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"da0635bf4fb444b1\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"d6bdb95ec116b8ff\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"01b61664322a458b\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:22.736039",
+    "delivered": false,
+    "error": true,
+    "event_id": "338eec2d-0c1f-4358-ae12-05d3f73a85c6",
+    "id": "48532d4d-ee73-4245-a8f6-378b034eb4f0",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 9, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"77150de9d725e5df\\", \\"trace_id\\": \\"ea970ad818f358cf\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.831182Z",
+        "delivery_info": Object {
+          "current_retry": 3,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 9,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "77150de9d725e5df",
+            "trace_id": "ea970ad818f358cf",
+          },
+        },
+        "id": "338eec2d-0c1f-4358-ae12-05d3f73a85c6",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"ea970ad818f358cf\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"4d8d92209b40eab3\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"876f35924d13168e\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:22.735757",
+    "delivered": false,
+    "error": true,
+    "event_id": "c3ac48be-a569-4d87-8c52-cb84309002ed",
+    "id": "33105396-99dc-446c-ac7f-d93c38ceb686",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 6, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"5a75ae38fccf4473\\", \\"trace_id\\": \\"ecba73bac1b4601a\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.332379Z",
+        "delivery_info": Object {
+          "current_retry": 3,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 6,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "5a75ae38fccf4473",
+            "trace_id": "ecba73bac1b4601a",
+          },
+        },
+        "id": "c3ac48be-a569-4d87-8c52-cb84309002ed",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"ecba73bac1b4601a\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"4fa95afd2b803b9c\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"de923514252481ca\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:11.704173",
+    "delivered": false,
+    "error": true,
+    "event_id": "423e5a24-d4e0-493a-83df-ecff0eca2398",
+    "id": "f7980cf5-7520-489a-87f1-f658773f9e60",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 7, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"5e088982a14f9bdd\\", \\"trace_id\\": \\"da0635bf4fb444b1\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.490999Z",
+        "delivery_info": Object {
+          "current_retry": 2,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 7,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "5e088982a14f9bdd",
+            "trace_id": "da0635bf4fb444b1",
+          },
+        },
+        "id": "423e5a24-d4e0-493a-83df-ecff0eca2398",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"da0635bf4fb444b1\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"2fbf0361df48ccc7\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"ebc5dd9ef22f9543\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:40:11.704093",
+    "delivered": false,
+    "error": true,
+    "event_id": "338eec2d-0c1f-4358-ae12-05d3f73a85c6",
+    "id": "18e6a7de-c38d-4f56-90f5-d0cc1298ea97",
+    "locked": "NULL",
+    "next_retry_at": "NULL",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 9, \\"name\\": \\"safs\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"77150de9d725e5df\\", \\"trace_id\\": \\"ea970ad818f358cf\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "request": Object {
+      "headers": Array [
+        Object {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        Object {
+          "name": "User-Agent",
+          "value": "hasura-graphql-engine/v2.0.0-alpha.9",
+        },
+      ],
+      "payload": Object {
+        "created_at": "2021-05-18T07:39:50.831182Z",
+        "delivery_info": Object {
+          "current_retry": 2,
+          "max_retries": 4,
+        },
+        "event": Object {
+          "data": Object {
+            "new": Object {
+              "id": 9,
+              "name": "safs",
+            },
+            "old": null,
+          },
+          "op": "INSERT",
+          "session_variables": Object {
+            "x-hasura-role": "admin",
+          },
+          "trace_context": Object {
+            "span_id": "77150de9d725e5df",
+            "trace_id": "ea970ad818f358cf",
+          },
+        },
+        "id": "338eec2d-0c1f-4358-ae12-05d3f73a85c6",
+        "table": Object {
+          "name": "users",
+          "schema": "public",
+        },
+        "trigger": Object {
+          "name": "new_user",
+        },
+      },
+      "version": "2",
+    },
+    "response": Object {
+      "data": Object {
+        "message": "\\"HttpExceptionRequest Request {\\\\n  host                 = \\\\\\"httsssp.org\\\\\\"\\\\n  port                 = 80\\\\n  secure               = False\\\\n  requestHeaders       = [(\\\\\\"X-B3-TraceId\\\\\\",\\\\\\"ea970ad818f358cf\\\\\\"),(\\\\\\"X-B3-SpanId\\\\\\",\\\\\\"18ac4aa73874b52d\\\\\\"),(\\\\\\"X-B3-ParentSpanId\\\\\\",\\\\\\"705e55f29e621be4\\\\\\"),(\\\\\\"Content-Type\\\\\\",\\\\\\"application/json\\\\\\"),(\\\\\\"User-Agent\\\\\\",\\\\\\"hasura-graphql-engine/v2.0.0-alpha.9\\\\\\")]\\\\n  path                 = \\\\\\"/post\\\\\\"\\\\n  queryString          = \\\\\\"\\\\\\"\\\\n  method               = \\\\\\"POST\\\\\\"\\\\n  proxy                = Nothing\\\\n  rawBody              = False\\\\n  redirectCount        = 10\\\\n  responseTimeout      = ResponseTimeoutMicro 60000000\\\\n  requestVersion       = HTTP/1.1\\\\n  proxySecureMode      = ProxySecureWithConnect\\\\n}\\\\n (ConnectionFailure Network.Socket.getAddrInfo (called with preferred socket type/protocol: AddrInfo {addrFlags = [], addrFamily = AF_UNSPEC, addrSocketType = Stream, addrProtocol = 0, addrAddress = 0.0.0.0:0, addrCanonName = Nothing}, host name: Just \\\\\\"httsssp.org\\\\\\", service name: Just \\\\\\"80\\\\\\"): does not exist (Name or service not known))\\"",
+      },
+      "type": "client_error",
+      "version": "2",
+    },
+    "schema_name": "public",
+    "status": "1000",
+    "table_name": "users",
+    "tries": "5",
+    "trigger_name": "new_user",
+  },
+]
+`;
+
+exports[`Events_Utils.ts parseEventsSQLResp should parse events 1`] = `
+Array [
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:14:07.941913",
+    "delivered": false,
+    "error": false,
+    "id": "298f6a71-f503-46f1-814c-45daef0afe4d",
+    "locked": "NULL",
+    "next_retry_at": "2021-05-18 07:14:19.19469",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 5, \\"name\\": \\"dasds\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"28ff1f534abe461e\\", \\"trace_id\\": \\"8bb43c3d49b2c073\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "schema_name": "public",
+    "table_name": "users",
+    "tries": "1",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:14:07.778957",
+    "delivered": false,
+    "error": false,
+    "id": "b8fbfb81-3a13-4cc8-a4b4-1e97fade667a",
+    "locked": "NULL",
+    "next_retry_at": "2021-05-18 07:14:19.17979",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 4, \\"name\\": \\"dasds\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"e098ccedce27b446\\", \\"trace_id\\": \\"2d1eff74089d2ad5\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "schema_name": "public",
+    "table_name": "users",
+    "tries": "1",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:14:07.632082",
+    "delivered": false,
+    "error": false,
+    "id": "474d035b-8163-42c0-a240-9b9031452206",
+    "locked": "NULL",
+    "next_retry_at": "2021-05-18 07:14:19.192695",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 3, \\"name\\": \\"dasds\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"e5d2c45c9436a01f\\", \\"trace_id\\": \\"5ebb62f875d02dd3\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "schema_name": "public",
+    "table_name": "users",
+    "tries": "1",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:14:07.366513",
+    "delivered": false,
+    "error": false,
+    "id": "4671fb2b-1bdc-4615-9a0f-d384ef82e73a",
+    "locked": "NULL",
+    "next_retry_at": "2021-05-18 07:14:19.180674",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 2, \\"name\\": \\"dasds\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"ba9c5129d081a540\\", \\"trace_id\\": \\"5ab0b030acf37a3f\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "schema_name": "public",
+    "table_name": "users",
+    "tries": "1",
+    "trigger_name": "new_user",
+  },
+  Object {
+    "archived": false,
+    "created_at": "2021-05-18 07:14:06.784375",
+    "delivered": false,
+    "error": false,
+    "id": "a9fe39f6-3d9e-49c9-941c-09b84274dc87",
+    "locked": "NULL",
+    "next_retry_at": "2021-05-18 07:14:19.196511",
+    "payload": "{\\"op\\": \\"INSERT\\", \\"data\\": {\\"new\\": {\\"id\\": 1, \\"name\\": \\"dasds\\"}, \\"old\\": null}, \\"trace_context\\": {\\"span_id\\": \\"d4939311aad3a0bc\\", \\"trace_id\\": \\"65c31bf94eb7f656\\"}, \\"session_variables\\": {\\"x-hasura-role\\": \\"admin\\"}}",
+    "schema_name": "public",
+    "table_name": "users",
+    "tries": "1",
+    "trigger_name": "new_user",
+  },
+]
+`;

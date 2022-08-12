@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var blackhole []byte
@@ -35,21 +34,18 @@ func TestJSONToYAML(t *testing.T) {
 		inputFile      string
 		wantGoldenFile string
 		wantErr        bool
-		assertErr      require.ErrorAssertionFunc
 	}{
 		{
 			"can preserve order of json",
 			"testdata/json/t1/metadata.json",
 			"testdata/json/t1/want.metadata.yaml",
 			false,
-			require.NoError,
 		},
 		{
 			"can preserve order of json in largish metadata",
 			"testdata/json/t2/metadata.json",
 			"testdata/json/t2/want.metadata.yaml",
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -57,8 +53,9 @@ func TestJSONToYAML(t *testing.T) {
 			input, err := ioutil.ReadFile(tt.inputFile)
 			assert.NoError(t, err)
 			got, err := JSONToYAML(input)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
 				assert.NoError(t, err)
 				// uncomment to update golden file
 				// assert.NoError(t, ioutil.WriteFile(tt.wantGoldenFile, got, os.ModePerm))
@@ -67,6 +64,7 @@ func TestJSONToYAML(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, string(want), string(got))
 			}
+
 		})
 	}
 }

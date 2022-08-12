@@ -1,0 +1,315 @@
+import { useRef, useEffect } from 'react';
+import dedent from 'dedent';
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { z } from 'zod';
+import { FiSearch } from 'react-icons/fi';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { CodeEditorField, Form } from '@/new-components/Form';
+
+<Meta
+  title="components/Forms 🦠/CodeEditorField 🧬"
+  component={CodeEditorField}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+/>
+
+# CodeEditorField 🧬
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Form/CodeEditorField.tsx)
+
+## 🧰 Overview
+
+A component wrapping an Ace editor ([see Docs](https://ace.c9.io/)),
+its description, hint and error message.
+
+Default CSS display is `block`, provided without padding and margin (displayed here with the `<Form>` padding).
+
+### Basic usage
+
+```ts
+import { CodeEditorField } from '@/new-components/Form';
+```
+
+The `<CodeEditorField>` component must be wrapped inside a `<Form>` to be usable. It allows to benefit **form validation**
+and to define a **default value**:
+
+```ts
+const validationSchema = z.object({
+  codeEditorFieldName: z.string(),
+});
+```
+
+export const validationSchema = z.object({
+  codeEditorFieldName: z.string(),
+});
+
+```tsx
+<Form
+  options={{
+    defaultValues: {
+      codeEditorFieldName: dedent`query Catalog {
+        catalog {
+          id
+          name
+          description
+        }
+      }
+      `,
+    },
+    mode: 'onBlur',
+  }}
+  schema={validationSchema}
+>
+  {() => (
+    <CodeEditorField
+      name="codeEditorFieldName"
+      label="The codeEditor field label"
+      placeholder="Input field placeholder"
+    />
+  )}
+</Form>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <Form
+      options={{
+        defaultValues: {
+          codeEditorFieldName: dedent`query Catalog {
+            catalog {
+              id
+              name
+              description
+            }
+          }
+          `,
+        },
+        mode: 'onSubmit',
+        reValidateMode: 'onChange',
+      }}
+      schema={validationSchema}
+    >
+      {() => (
+        <CodeEditorField
+          name="codeEditorFieldName"
+          label="The codeEditor field label"
+          placeholder="Input field placeholder"
+        />
+      )}
+    </Form>
+  </Story>
+</Canvas>
+
+export const Template = args => {
+  const formRef = useRef();
+  if (args && args.triggerValidation) {
+    useEffect(() => {
+      formRef.current.trigger();
+    });
+  }
+  return (
+    <Form
+      ref={formRef}
+      options={{
+        defaultValues: {
+          ...(args && args.defaultValues ? args.defaultValues : {}),
+        },
+        mode: 'onBlur',
+      }}
+      schema={validationSchema}
+    >
+      {() => <CodeEditorField {...args} />}
+    </Form>
+  );
+};
+
+export const stories = {
+  'States - With default value': {
+    name: 'codeEditorFieldName',
+    label: 'With codeEditor value',
+    placeholder: 'Input field placeholder',
+    defaultValues: {
+      codeEditorFieldName: dedent`query Catalog {
+        catalog {
+          id
+          name
+          description
+        }
+      }
+      `,
+    },
+  },
+  'States - Disabled': {
+    name: 'codeEditorFieldName',
+    label: 'Disabled',
+    placeholder: 'Input field placeholder',
+    disabled: true,
+    defaultValues: {
+      codeEditorFieldName: dedent`query Catalog {
+        catalog {
+          id
+          name
+          description
+        }
+      }
+      `,
+    },
+  },
+  'States - With error message': {
+    name: 'codeEditorFieldName',
+    label: 'With error message',
+    placeholder: 'Input field placeholder',
+    triggerValidation: true,
+  },
+  'Variant - With description': {
+    name: 'codeEditorFieldName',
+    label: 'Label',
+    description: 'CodeEditorField description',
+    placeholder: 'Input field placeholder',
+    disabled: true,
+  },
+  'Variant - Size full': {
+    name: 'codeEditorFieldName',
+    label: 'Label',
+    placeholder: 'Input field placeholder',
+    size: 'full',
+  },
+  'Variant - Size medium': {
+    name: 'codeEditorFieldName',
+    label: 'Label',
+    placeholder: 'Input field placeholder',
+    size: 'medium',
+  },
+  'API playground': {
+    name: 'codeEditorFieldName',
+    label: 'API playground',
+    placeholder: 'Input field placeholder',
+  },
+  'Testing - Scalability': {
+    name: 'codeEditorFieldName',
+    label:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    description:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    placeholder:
+      '--Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.--',
+    tooltip:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    triggerValidation: true,
+  },
+};
+
+## 🔁 States
+
+### 🔁 With default value
+
+Use `<Form>` options to set default value.
+
+<Canvas>
+  <Story
+    name="States - With default value"
+    args={stories['States - With default value']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🔁 Disabled
+
+<Canvas>
+  <Story name="States - Disabled" args={stories['States - Disabled']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🔁 With error message
+
+Incorrect value is set then `<Form>` validation is automatically triggered.
+
+<Canvas>
+  <Story
+    name="States - With error message"
+    args={stories['States - With error message']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## 🎭 Variants
+
+### 🎭 Size
+
+<Canvas>
+  <Story
+    name="Variant - Size"
+    args={{
+      'Variant - Size full': stories['Variant - Size full'],
+      'Variant - Size medium': stories['Variant - Size medium'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+### 🎭 With description
+
+<Canvas>
+  <Story
+    name="Variant - With description"
+    args={stories['Variant - With description']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+## 🧪 Testing
+
+### 🧪 Scalability
+
+<Canvas>
+  <Story name="Testing - Scalability" args={stories['Testing - Scalability']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={stories}
+    parameters={{
+      chromatic: { disableSnapshot: true },
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

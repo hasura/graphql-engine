@@ -16,8 +16,7 @@ import (
 	"github.com/kardianos/osext"
 
 	"github.com/Masterminds/semver"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/pkg/errors"
 )
 
 const updateCheckURL = "https://releases.hasura.io/graphql-engine?agent=cli"
@@ -28,20 +27,19 @@ type updateCheckResponse struct {
 }
 
 func getLatestVersion() (*semver.Version, *semver.Version, error) {
-	var op errors.Op = "update.getLatestVersion"
 	res, err := http.Get(updateCheckURL)
 	if err != nil {
-		return nil, nil, errors.E(op, fmt.Errorf("update check request: %w", err))
+		return nil, nil, errors.Wrap(err, "update check request")
 	}
 
 	defer res.Body.Close()
 	var response updateCheckResponse
 	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
-		return nil, nil, errors.E(op, fmt.Errorf("decoding update check response: %w", err))
+		return nil, nil, errors.Wrap(err, "decoding update check response")
 	}
 	if response.Latest == nil && response.PreRelease == nil {
-		return nil, nil, errors.E(op, fmt.Errorf("expected version info not found at %s", updateCheckURL))
+		return nil, nil, fmt.Errorf("expected version info not found at %s", updateCheckURL)
 	}
 
 	return response.Latest, response.PreRelease, nil
@@ -61,15 +59,14 @@ func buildAssetURL(v string) string {
 }
 
 func downloadAsset(url, fileName, filePath string) (*os.File, error) {
-	var op errors.Op = "update.downloadAsset"
 	res, err := http.Get(url)
 	if err != nil {
-		return nil, errors.E(op, errors.KindNetwork, fmt.Errorf("downloading asset: %w", err))
+		return nil, errors.Wrap(err, "downloading asset")
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, errors.E(op, errors.E("could not find the release asset"))
+		return nil, errors.New("could not find the release asset")
 	}
 
 	asset, err := os.OpenFile(
@@ -78,13 +75,13 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 		0755,
 	)
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("creating new binary file: %w", err))
+		return nil, errors.Wrap(err, "creating new binary file")
 	}
 	defer asset.Close()
 
 	_, err = io.Copy(asset, res.Body)
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("saving downloaded file: %w", err))
+		return nil, errors.Wrap(err, "saving downloaded file")
 	}
 
 	return asset, nil
@@ -92,7 +89,6 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 
 // HasUpdate tells us if there is a new stable or prerelease update available.
 func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.Version, bool, *semver.Version, error) {
-	var op errors.Op = "update.HasUpdate"
 	if timeFile != "" {
 		defer func() {
 			if err := writeTimeToFile(timeFile, time.Now().UTC()); err != nil {
@@ -103,7 +99,7 @@ func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.V
 
 	latestVersion, preReleaseVersion, err := getLatestVersion()
 	if err != nil {
-		return false, nil, false, nil, errors.E(op, fmt.Errorf("get latest version: %w", err))
+		return false, nil, false, nil, errors.Wrap(err, "get latest version")
 	}
 
 	return latestVersion.GreaterThan(currentVersion), latestVersion, preReleaseVersion.GreaterThan(currentVersion), preReleaseVersion, nil
@@ -111,11 +107,10 @@ func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.V
 
 // ApplyUpdate downloads and applies the update indicated by version v.
 func ApplyUpdate(v *semver.Version) error {
-	var op errors.Op = "update.ApplyUpdate"
 	// get the current executable
 	exe, err := osext.Executable()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("find executable: %w", err))
+		return errors.Wrap(err, "find executable")
 	}
 
 	// extract the filename and path
@@ -127,7 +122,7 @@ func ApplyUpdate(v *semver.Version) error {
 		buildAssetURL(v.String()), "."+exeName+".new", exePath,
 	)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("download asset: %w", err))
+		return errors.Wrap(err, "download asset")
 	}
 
 	// get the downloaded binary name and build the absolute path
@@ -145,7 +140,7 @@ func ApplyUpdate(v *semver.Version) error {
 	// rename the current binary as old binary
 	err = os.Rename(exe, oldExe)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("rename exe to old: %w", err))
+		return errors.Wrap(err, "rename exe to old")
 	}
 
 	// rename the new binary as the current binary
@@ -161,12 +156,13 @@ func ApplyUpdate(v *semver.Version) error {
 		rerr := os.Rename(oldExe, exe)
 		if rerr != nil {
 			// rolling back failed, ask user to re-install cli
-			return errors.E(op, fmt.Errorf(
-				"rename old to exe: inconsistent state, re-install cli: %w",
-				rerr))
+			return errors.Wrap(
+				rerr,
+				"rename old to exe: inconsistent state, re-install cli",
+			)
 		}
 		// rolled back, throw update error
-		return errors.E(op, fmt.Errorf("rename new to exe: %w", err))
+		return errors.Wrap(err, "rename new to exe")
 	}
 
 	// rename success, remove the old binary

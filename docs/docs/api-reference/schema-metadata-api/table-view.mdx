@@ -1,11 +1,11 @@
 ---
 sidebar_label: Tables/Views
 sidebar_position: 2
-description: Manage tables and views with the Hasura schema/Metadata API
+description: Manage tables and views with the Hasura schema/metadata API
 keywords:
   - hasura
   - docs
-  - schema/Metadata API
+  - schema/metadata API
   - API reference
   - table
   - view
@@ -15,16 +15,16 @@ keywords:
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/Metadata API is deprecated in favour of the
-[schema API](/api-reference/schema-api/index.mdx) and the [Metadata API](/api-reference/metadata-api/index.mdx).
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in favour of the
+[schema API](/api-reference/schema-api/index.mdx) and the [metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/Metadata APIs will continue to function.
+Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 :::
 
 ## Introduction
 
-Track/untrack a table/view in Hasura GraphQL Engine.
+Track/untrack a table/view in Hasura GraphQL engine.
 
 Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
 
@@ -89,7 +89,7 @@ X-Hasura-Role: admin
 
 ## track_table v2 {#schema-metadata-track-table-v2}
 
-Version 2 of `track_table` is used to add a table/view to the GraphQL schema with configuration. You can customize the
+Version 2 of `track_table` is used to add a table/view to the GraphQL schema with configuration. You can customise the
 root field names.
 
 Add a table/view `author`:
@@ -160,18 +160,18 @@ nodes generated will be:
 
 :::info Note
 
-GraphQL Engine requires the constraint names (if any) of a table to be
+GraphQL engine requires the constraint names (if any) of a table to be
 [GraphQL compliant](https://spec.graphql.org/June2018/#sec-Names) in order to be able to track it.
 
 :::
 
 ### Args syntax {#schema-metadata-track-table-syntax-v2}
 
-| Key                      | Required | Schema                                                                          | Description                                   |
-| ------------------------ | -------- | ------------------------------------------------------------------------------- | --------------------------------------------- |
-| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                             |
-| configuration            | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config)                     | Configuration for the table/view              |
-| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table |
+| Key                      | Required | Schema                                                                          | Description                      |
+| ------------------------ | -------- | ------------------------------------------------------------------------------- | -------------------------------- |
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                |
+| configuration            | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config)                     | Configuration for the table/view |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                                                              |
 
 ## set_table_custom_fields (deprecated) {#schema-metadata-set-table-custom-fields}
 
@@ -216,8 +216,8 @@ X-Hasura-Role: admin
 | Key                 | Required | Schema                                                                  | Description                 |
 | ------------------- | -------- | ----------------------------------------------------------------------- | --------------------------- |
 | table               | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                   | Name of the table           |
-| custom_root_fields  | false    | [Custom Root Fields](/api-reference/syntax-defs.mdx#custom-root-fields) | Customize the root fields   |
-| custom_column_names | false    | [CustomColumnNames](/api-reference/syntax-defs.mdx#customcolumnnames)   | Customize the column fields |
+| custom_root_fields  | false    | [Custom Root Fields](/api-reference/syntax-defs.mdx#custom-root-fields) | Customise the root fields   |
+| custom_column_names | false    | [CustomColumnNames](/api-reference/syntax-defs.mdx#customcolumnnames)   | Customise the column fields |
 
 ## set_table_customization {#schema-metadata-set-table-customization}
 
@@ -293,4 +293,4 @@ X-Hasura-Role: admin
 | Key     | Required | Schema                                                | Description                                                                                                                        |
 | ------- | -------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename) | Name of the table                                                                                                                  |
-| cascade | false    | Boolean                                               | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates) |
+| cascade | false    | Boolean                                               | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |

@@ -7,7 +7,7 @@ module Hasura.Backends.BigQuery.DDL.ComputedField
 where
 
 import Control.Monad.Validate qualified as MV
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -16,11 +16,11 @@ import Hasura.Backends.BigQuery.Instances.Types ()
 import Hasura.Backends.BigQuery.Meta
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
-import Hasura.Function.Cache
 import Hasura.Prelude
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
+import Hasura.SQL.Backend
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -92,7 +92,7 @@ buildComputedFieldInfo trackedTables table tableColumns computedField ComputedFi
   where
     mkComputedFieldInfo ::
       forall n.
-      (MV.MonadValidate [ComputedFieldError] n) =>
+      MV.MonadValidate [ComputedFieldError] n =>
       n (ComputedFieldInfo 'BigQuery)
     mkComputedFieldInfo = do
       -- Currently, we only support functions returning set of rows in computed field.
@@ -100,7 +100,7 @@ buildComputedFieldInfo trackedTables table tableColumns computedField ComputedFi
       unless (routineType restRoutine == TABLE_VALUED_FUNCTION) $ MV.dispute $ pure CFENotTableValuedFunction
       restArguments <- onNothing (arguments restRoutine) $ MV.refute (pure CFENoInputArguments)
       inputArguments <- Seq.fromList <$> for restArguments resolveInputArgument
-      for_ (HashMap.toList _bqcfdArgumentMapping) (validateArgumentMapping inputArguments)
+      for_ (HM.toList _bqcfdArgumentMapping) (validateArgumentMapping inputArguments)
       let fieldFunction = ComputedFieldFunction _bqcfdFunction inputArguments _bqcfdArgumentMapping Nothing
       fieldReturn <- resolveFunctionReturning (returnTableType restRoutine) _bqcfdReturnTable
       pure $ ComputedFieldInfo @'BigQuery () computedField fieldFunction fieldReturn $ commentToMaybeText comment
@@ -151,11 +151,8 @@ buildComputedFieldInfo trackedTables table tableColumns computedField ComputedFi
 
     showErrors :: [ComputedFieldError] -> Text
     showErrors allErrors =
-      "the computed field "
-        <> computedField
-        <<> " cannot be added to table "
-        <> table
-        <<> " "
+      "the computed field " <> computedField <<> " cannot be added to table "
+        <> table <<> " "
         <> reasonMessage
       where
         reasonMessage = makeReasonMessage allErrors (showError _bqcfdFunction)

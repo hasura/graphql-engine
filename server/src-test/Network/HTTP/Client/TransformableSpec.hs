@@ -1,8 +1,8 @@
 module Network.HTTP.Client.TransformableSpec (spec) where
 
--- import           Data.Aeson                        (eitherDecodeStrict)
+--import           Data.Aeson                        (eitherDecodeStrict)
 
--- import           Test.QuickCheck
+--import           Test.QuickCheck
 
 import Control.Exception (Exception (displayException))
 import Control.Lens
@@ -64,28 +64,28 @@ specBodyLens = describe "Body Lens" $ do
 
   it "get body s ≡ a" $ do
     -- THEN
-    preview (Client.body . Client._RequestBodyLBS) req `shouldBe` Just mempty
+    view Client.body req `shouldBe` Nothing
 
   it "get body . set body b ≡ b" $ do
     -- WHEN
-    let req' = set Client.body (Client.RequestBodyLBS "{ \"hello\": \"world\"}") req
+    let req' = set Client.body (Just "{ \"hello\": \"world\"}") req
 
     -- THEN
-    preview (Client.body . Client._RequestBodyLBS) req' `shouldBe` (Just "{ \"hello\": \"world\"}")
+    view Client.body req' `shouldBe` (Just "{ \"hello\": \"world\"}")
 
   it "over id ≡ id" $ do
     -- WHEN
     let req' = over Client.body id req
 
     -- THEN
-    preview (Client.body . Client._RequestBodyLBS) req' `shouldBe` Just mempty
+    view Client.body req' `shouldBe` Nothing
 
   it "over body (const b) ≡ set body b" $ do
     -- WHEN
-    let req' = over Client.body (const (Client.RequestBodyLBS "{ \"hello\": \"world\"}")) req
+    let req' = over Client.body (const (Just "{ \"hello\": \"world\"}")) req
 
     -- THEN
-    preview (Client.body . Client._RequestBodyLBS) req' `shouldBe` (Just "{ \"hello\": \"world\"}")
+    view Client.body req' `shouldBe` (Just "{ \"hello\": \"world\"}")
 
 specHeadersLens :: Spec
 specHeadersLens = describe "Headers Lens" $ do

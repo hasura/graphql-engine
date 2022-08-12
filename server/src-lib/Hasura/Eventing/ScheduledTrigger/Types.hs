@@ -1,20 +1,16 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.Eventing.ScheduledTrigger.Types
   ( CronTriggerStats (CronTriggerStats, _ctsMaxScheduledTime, _ctsName),
-    FetchedCronTriggerStats (..),
-    FetchedCronTriggerStatsLogger,
     RetryContext (RetryContext, _rctxConf),
     ScheduledEventOp (..),
     ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime, sewpRequestTransform, sewpResponseTransform),
     ScheduledTriggerInternalErr (ScheduledTriggerInternalErr),
-    CronEventsCount (..),
-    OneOffScheduledEventsCount (..),
-    FetchedScheduledEventsStats (..),
-    FetchedScheduledEventsStatsLogger,
   )
 where
 
-import Control.FoldDebounce qualified as FDebounce
 import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
 import Data.Time.Clock
 import Hasura.Base.Error
 import Hasura.Eventing.HTTP
@@ -37,34 +33,7 @@ data CronTriggerStats = CronTriggerStats
     _ctsUpcomingEventsCount :: !Int,
     _ctsMaxScheduledTime :: !UTCTime
   }
-  deriving (Eq, Generic)
-
-instance J.ToJSON CronTriggerStats where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
-
-data FetchedCronTriggerStats = FetchedCronTriggerStats
-  { _fctsCronTriggers :: [CronTriggerStats],
-    _fctsNumFetches :: Int
-  }
-  deriving (Eq, Generic)
-
-instance J.ToJSON FetchedCronTriggerStats where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
-
-instance L.ToEngineLog FetchedCronTriggerStats L.Hasura where
-  toEngineLog stats =
-    (L.LevelInfo, L.cronEventGeneratorProcessType, J.toJSON stats)
-
-instance Semigroup FetchedCronTriggerStats where
-  (FetchedCronTriggerStats lTriggers lFetches) <> (FetchedCronTriggerStats rTriggers rFetches) =
-    FetchedCronTriggerStats (lTriggers <> rTriggers) (lFetches + rFetches)
-
-instance Monoid FetchedCronTriggerStats where
-  mempty = FetchedCronTriggerStats mempty 0
-
-type FetchedCronTriggerStatsLogger = FDebounce.Trigger FetchedCronTriggerStats FetchedCronTriggerStats
+  deriving (Eq)
 
 data RetryContext = RetryContext
   { _rctxTries :: !Int,
@@ -88,44 +57,11 @@ data ScheduledEventWebhookPayload = ScheduledEventWebhookPayload
     sewpRequestTransform :: !(Maybe RequestTransform),
     sewpResponseTransform :: !(Maybe MetadataResponseTransform)
   }
-  deriving (Show, Generic, Eq)
+  deriving (Show, Eq)
 
-instance J.ToJSON ScheduledEventWebhookPayload where
-  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
-  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
+$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
 
 data ScheduledEventOp
   = SEOpRetry !UTCTime
   | SEOpStatus !ScheduledEventStatus
   deriving (Show, Eq)
-
-newtype CronEventsCount = CronEventsCount {unCronEventsCount :: Int}
-  deriving (Eq, Show, J.ToJSON, J.FromJSON, Num)
-
-newtype OneOffScheduledEventsCount = OneOffScheduledEventsCount {unOneOffScheduledEventsCount :: Int}
-  deriving (Eq, Show, J.ToJSON, J.FromJSON, Num)
-
--- | Statistics of scheduled events fetched within a timeframe
-data FetchedScheduledEventsStats = FetchedScheduledEventsStats
-  { _fsesNumCronEventsFetched :: CronEventsCount,
-    _fsesNumOneOffScheduledEventsFetched :: OneOffScheduledEventsCount,
-    _fsesNumFetches :: Int
-  }
-  deriving (Eq, Generic, Show)
-
-instance J.ToJSON FetchedScheduledEventsStats where
-  toJSON = J.genericToJSON hasuraJSON
-  toEncoding = J.genericToEncoding hasuraJSON
-
-instance L.ToEngineLog FetchedScheduledEventsStats L.Hasura where
-  toEngineLog stats =
-    (L.LevelInfo, L.scheduledTriggerProcessLogType, J.toJSON stats)
-
-instance Semigroup FetchedScheduledEventsStats where
-  (FetchedScheduledEventsStats lCron lOneOff lFetches) <> (FetchedScheduledEventsStats rCron rOneOff rFetches) =
-    FetchedScheduledEventsStats (lCron + rCron) (lOneOff + rOneOff) (lFetches + rFetches)
-
-instance Monoid FetchedScheduledEventsStats where
-  mempty = FetchedScheduledEventsStats (CronEventsCount 0) (OneOffScheduledEventsCount 0) 0
-
-type FetchedScheduledEventsStatsLogger = FDebounce.Trigger FetchedScheduledEventsStats FetchedScheduledEventsStats

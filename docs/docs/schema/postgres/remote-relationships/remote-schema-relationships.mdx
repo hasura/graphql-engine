@@ -1,7 +1,7 @@
 ---
 sidebar_label: To Remote Schema
 sidebar_position: 2
-description: Adding Remote Schema relationships with Postgres tables in Hasura
+description: Adding remote schema relationships with Postgres tables in Hasura
 keywords:
   - hasura
   - docs
@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Database to Remote Schema Relationships
+# Postgres: Database to Remote Schema relationships
 
 ## Introduction
 
@@ -38,53 +38,50 @@ To see example use cases, check out this
 
 :::tip Supported from
 
-Remote Schema relationships from Postgres are supported from versions `v1.3.0` and above.
+Remote schema relationships from Postgres are supported from versions `v1.3.0` and above.
 
 :::
 
-## Create Remote Schema relationships
+## Create remote schema relationships
 
-### Step 1: Add a Remote Schema and a database
+### Step 0: Add a remote schema and a database
 
-Add a Remote Schema and a database as described [here](/remote-schemas/adding-schema.mdx) and
-[here](/databases/quickstart.mdx), if not already added.
+Add a remote schema and a database as described [here](/remote-schemas/adding-schema.mdx) and
+[here](/databases/connect-db/index.mdx), if not already added.
 
-### Step 2: Define and create the relationship
+### Step 1: Define and create the relationship
 
-The following fields can be defined for a Remote Schema relationship:
+The following fields can be defined for a remote schema relationship:
 
 - **Name**: Define a name for the relationship.
-- **Remote Schema**: Select a Remote Schema among all the ones you've created.
-- **Configuration**: Set up the join configuration, to inject values as input arguments of the Remote Schema field.
+- **Remote Schema**: Select a remote schema among all the ones you've created.
+- **Configuration**: Set up the join configuration, to inject values as input arguments of the remote schema field.
   - **From column**: Input injected from table column values.
   - **From static value**: Input injected from a static value of your choice.
 
-For example, let's assume that our database has a table `order(id int, user_id int)` and we've added a Remote Schema
+For example, let's assume that our database has a table `order(id int, user_id int)` and we've added a remote schema
 `user-remote-schema`.
 
 1.  We name the relationship `user`.
 2.  We select the `user-remote-schema` that we've added.
-3.  We set up the config to join the `id` input argument of our Remote Schema field to the `user_id` column of this
+3.  We set up the config to join the `id` input argument of our remote schema field to the `user_id` column of this
     table (in this case, the `order` table).
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 - Head to the `Data -> [table-name] -> Relationships` tab.
-
-- Click the `Add Relationship` button to open the widget.
-
-- Search for the remote schema by name in the `To Reference` input box.
-
-- Once selected, it will open the details section below to fill in the rest of the relationship definition.
-
-- Define the relationship details and hit `Create Relationship`.
+- Click the `Add a remote relationship` button.
 
   <Thumbnail
-    src="/img/schema/add-remote-schema-rel.png"
-    alt="Opening the remote relationship section"
-    width="1000px"
+    src='/img/schema/add-remote-schema-relationship.png'
+    alt='Opening the remote relationship section'
+    width='1000px'
   />
+
+- Define the relationship and hit `Save`.
+
+  <Thumbnail src='/img/schema/define-remote-schema-relationship.png' alt='Defining the relationship' width='800px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -107,7 +104,7 @@ Update the `databases > [database-name] > tables > [table-name].yaml` file in th
         remote_schema: user-remote-schema
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -116,9 +113,9 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a Remote Schema relationship by using the
+You can add a remote schema relationship by using the
 [pg_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship)
-Metadata API:
+metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -147,9 +144,9 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 3: Explore with GraphiQL
+### Step 2: Explore with GraphiQL
 
-In the `API` tab, test out your Remote Schema relationship.
+In the `API` tab, test out your remote schema relationship.
 
 <GraphiQLIDE
   query={`query {
@@ -178,19 +175,19 @@ In the `API` tab, test out your Remote Schema relationship.
 }`}
 />
 
-## Remote Schema relationship permissions {#pg-remote-schema-relationship-permissions}
+## Remote schema relationship permissions {#pg-remote-schema-relationship-permissions}
 
-Remote Schema relationship permissions are derived from the
-[Remote Schema permissions](/remote-schemas/auth/remote-schema-permissions.mdx) defined for the role. When a remote
+Remote schema relationship permissions are derived from the
+[remote schema permissions](/remote-schemas/auth/remote-schema-permissions.mdx) defined for the role. When a remote
 relationship permission cannot be derived, the remote relationship field will not be added to the schema for the role.
 
 Some cases in which a remote relationship permission cannot be derived are:
 
-1.  There are no Remote Schema permissions defined for the role.
+1.  There are no remote schema permissions defined for the role.
 2.  The role doesn't have access to the field or types that are used by the remote relationship.
 
 :::info Note
 
-Remote relationship permissions apply only if Remote Schema permissions are enabled in GraphQL Engine.
+Remote relationship permissions apply only if remote schema permissions are enabled in GraphQL engine.
 
 :::

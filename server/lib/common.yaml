@@ -1,0 +1,43 @@
+common-boilerplate: &common-boilerplate
+  version: 1.0.0
+  author:
+    - Hasura, Inc.
+  github: hasura/github-engine
+  extra-source-files:
+    - ../../../LICENSE
+
+common-lib: &common-lib
+  flags:
+    optimize-hasura:
+      description: Compile hasura code with appropriate optimizations
+      default: true
+      manual: false
+
+    profiling:
+      description: Configures the project to be profiling-compatible
+      default: false
+      manual: true
+
+  ghc-options:
+    - "-foptimal-applicative-do"
+    - "-Wall"
+    - "-Werror"
+    - "-Wcompat"
+    - "-Wincomplete-record-updates"
+    - "-Wincomplete-uni-patterns"
+    - "-Wredundant-constraints"
+    - "-Wmissing-export-lists"
+
+  when:
+    - condition: flag(profiling)
+      cpp-options: -DPROFILING
+
+    - condition: flag(optimize-hasura)
+      then:
+        ghc-options:
+          - "-fexpose-all-unfoldings"
+          - "-O2"
+      else:
+        # we just want to build fast
+        ghc-options:
+          - "-O0"

@@ -1,7 +1,7 @@
 ---
-sidebar_label: Roll back applied Migrations (config v2)
+sidebar_label: Rolling back applied migrations (config v2)
 sidebar_position: 3
-description: Roll back Hasura Migrations
+description: Roll back Hasura migrations
 keywords:
   - hasura
   - docs
@@ -9,23 +9,23 @@ keywords:
   - roll back
 ---
 
-# Roll Back Applied Migrations (config v2)
+# Rolling back applied migrations (config v2)
 
 ## Introduction
 
 If there are any issues with changes made to the DB schema and Hasura
-Metadata it is possible to roll back their state to a previous stable
+metadata it is possible to roll back their state to a previous stable
 version.
 
 :::info Note
 
-For `config v3`, see [Rolling back applied Migrations (config v3)](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations).
+For `config v3`, see [Rolling back applied migrations (config v3)](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations).
 
 :::
 
 ## Rolling back database schema
 
-Database schema rollbacks can be achieved via the `down` Migrations
+Database schema rollbacks can be achieved via the `down` migrations
 generated every time a schema change is made.
 
 Here are some example scenarios:
@@ -44,18 +44,18 @@ hasura migrate apply --down 2
 
 :::info Note
 
-Rollbacks will only work if there are `down` Migrations defined for a
+Rollbacks will only work if there are `down` migrations defined for a
 schema change.
 
-e.g. The Console will not generate `down` Migrations for SQL statements
+e.g. The console will not generate `down` migrations for SQL statements
 executed from the `SQL` tab.
 
 :::
 
-## Rolling back Hasura Metadata
+## Rolling back Hasura metadata
 
-As Hasura Metadata is managed via snapshots of the metadata, to roll
-back Hasura Metadata to a particular state you need the metadata
+As Hasura metadata is managed via snapshots of the metadata, to roll
+back Hasura metadata to a particular state you need the metadata
 snapshot at that point. This is typically achieved by marking stable
 checkpoints of a project in version control via commits.
 

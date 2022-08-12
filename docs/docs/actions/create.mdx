@@ -1,7 +1,7 @@
 ---
-sidebar_label: Create Actions
-sidebar_position: 3
-description: Create Hasura Actions
+sidebar_label: Creating Actions
+sidebar_position: 1
+description: Creating Hasura Actions
 keywords:
   - hasura
   - docs
@@ -15,7 +15,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Create Actions
+# Creating Actions
 
 ## Introduction
 
@@ -28,14 +28,14 @@ To create an action, you have to:
 2. Define the required types
 3. Create a handler
 
-Let's look at **examples** for mutation and query type Actions.
+Let's look at **examples** for mutation and query type actions.
 
 ## Setup
 
-<Tabs groupId="user-preference" className="api-tabs">
-<TabItem value="console" label="Console" className='empty-tab'>
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
-There is no setup required for defining Actions via the Console.
+There is no setup required for defining actions via the console.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -51,14 +51,14 @@ You can either get started with an existing project or create a new project.
 hasura init
 ```
 
-This will create a new project. You can set up your GraphQL Engine endpoint (and admin secret if it exists) in the
+This will create a new project. You can set up your GraphQL engine endpoint (and admin secret if it exists) in the
 `config.yaml`.
 
-Run `hasura metadata export` so that you get server's Metadata into the `metadata/` directory.
+Run `hasura metadata export` so that you get server's metadata into the `metadata/` directory.
 
 **For existing projects**
 
-Actions are supported only in the v2 config of the CLI. Check the `config.yaml` of your Hasura Project for the `version`
+Actions are supported only in the v2 config of the CLI. Check the `config.yaml` of your Hasura project for the `version`
 key.
 
 If you see `version: 1` (or do not see a version key), upgrade to version 2 by running:
@@ -67,12 +67,12 @@ If you see `version: 1` (or do not see a version key), upgrade to version 2 by r
 hasura scripts update-config-v2
 ```
 
-Run `hasura metadata export` so that you get server's Metadata into the `metadata/` directory.
+Run `hasura metadata export` so that you get server's metadata into the `metadata/` directory.
 
   </TabItem>
   <TabItem value="api" label="API">
 
-There is no setup required for defining Actions via the [Actions Metadata API](/api-reference/metadata-api/actions.mdx).
+There is no setup required for defining actions via the [actions metadata API](/api-reference/metadata-api/actions.mdx).
 
   </TabItem>
 </Tabs>
@@ -82,20 +82,20 @@ There is no setup required for defining Actions via the [Actions Metadata API](/
 Let's start with a mutation that accepts a username and password, and returns an access token. We'll call this mutation
 `login`.
 
-<TOCInline toc={toc} filterTOC={'mutation-type-action'} />
+<TOCInline toc={toc} filterTOC={(tocTree) => tocTree[2].children} />
 
 ### Step 1: Define your mutation and associated types
 
 Start with defining the mutation and the required types. These types will reflect in the GraphQL schema.
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Go to the `Actions` tab on the Console and click on `Create`. This will take you to a page like this:
+Go to the `Actions` tab on the console and click on `Create`. This will take you to a page like this:
 
-<Thumbnail src="/img/actions/mutation-action-create.png" alt="Console Action create" width="800px" />
+<Thumbnail src='/img/actions/mutation-action-create.png' alt='Console action create' width='800px' />
 
-Define the Action as follows in the `Action Definition` editor.
+Define the action as follows in the `Action Definition` editor.
 
 ```graphql
 type Mutation {
@@ -138,7 +138,7 @@ type LoginResponse {
 <TabItem value="api" label="API">
 
 It is essential that the custom types used in the action are defined _beforehand_ via the
-[set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) Metadata API:
+[set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -167,7 +167,7 @@ X-Hasura-Role: admin
 ```
 
 Once the custom types are defined, we can create an action via the
-[create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action):
+[create_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -208,16 +208,6 @@ The above definition means:
 - It returns an output type called `LoginResponse`.
 - `LoginResponse` is a simple object type with a field called `accessToken` of type `String!`.
 
-:::info Note
-
-When using a [numeric](/schema/postgres/postgresql-types.mdx#numeric) value in an [Action](/actions/overview.mdx), the
-value is [coerced](https://spec.graphql.org/October2021/#sec-Scalars.Input-Coercion) to its expected scalar type based
-on type of the input value supplied (from the Action payload). As stated in the spec, a GraphQL service (such as Hasura)
-will attempt to coerce numeric values to `Int`, `Float`, or `String` types, so long as its reasonable and doesn't result
-in the loss of data. Otherwise, the service will throw an error.
-
-:::
-
 ### Step 2: Create the action handler
 
 A handler is an HTTP webhook where you can perform the custom logic for the action.
@@ -247,7 +237,7 @@ You can deploy this code somewhere and get the URI. For getting started quickly,
 
 Now, set the handler for the action:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 Set the value of the `handler` field to the above endpoint.
@@ -263,10 +253,10 @@ endpoint.
 <TabItem value="api" label="API">
 
 The action handler must be set when creating an action via the
-[create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
+[create_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
 
 It can be updated later by using the
-[update_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-update-action).
+[update_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-update-action).
 
 </TabItem>
 </Tabs>
@@ -285,7 +275,7 @@ e.g. `https://my-handler-endpoint/addNumbers` can be templated to `{{ACTION_BASE
 :::info Note
 
 If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the handler endpoint. See
-[this page](/deployment/deployment-guides/docker.mdx#docker-networking) for Docker networking.
+[this page](/guides/docker-networking.mdx) for Docker networking.
 
 :::
 
@@ -293,7 +283,7 @@ If you are running Hasura using Docker, ensure that the Hasura Docker container 
 
 Finally, to save the action:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
   <TabItem value="console" label="Console">
 
 Hit `Create`.
@@ -307,14 +297,14 @@ Run `hasura metadata apply`.
   <TabItem value="api" label="API">
 
 An action will be created when sending a request to the
-[create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
+[create_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
 
   </TabItem>
 </Tabs>
 
 ### Step 4: Try it out
 
-In the Hasura Console, head to the `API` tab and try out the new action.
+In the Hasura console, head to the `API` tab and try out the new action.
 
 <GraphiQLIDE
   query={`mutation {
@@ -337,20 +327,20 @@ And that's it. You have extended your Hasura schema with a new mutation.
 
 Let's start with a basic query that accepts a list of numbers and returns their sum. We'll call this query `addNumbers`.
 
-<TOCInline toc={toc} filterTOC={'query-type-action'} />
+<TOCInline toc={toc} filterTOC={(tocTree) => tocTree[3].children} />
 
 ### Step 1: Define your query and associated types
 
 Start with defining the query and the required types. These types will reflect in the GraphQL schema.
 
-<Tabs groupId="user-preference" className="api_tabs">
+<Tabs className="api_tabs">
 <TabItem value="console" label="Console">
 
-Go to the `Actions` tab on the Console and click on `Create`. This will take you to a page like this:
+Go to the `Actions` tab on the console and click on `Create`. This will take you to a page like this:
 
-<Thumbnail src="/img/actions/query-action-create.png" alt="Console action create" width="800px" />
+<Thumbnail src='/img/actions/query-action-create.png' alt='Console action create' width='800px' />
 
-Define the Action as follows in the `Action Definition` editor.
+Define the action as follows in the `Action Definition` editor.
 
 ```graphql
 type Query {
@@ -392,7 +382,7 @@ type AddResult {
 <TabItem value="api" label="API">
 
 It is essential that the custom types used in the action are defined _beforehand_ via the
-[set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) Metadata API:
+[set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -421,7 +411,7 @@ X-Hasura-Role: admin
 ```
 
 Once the custom types are defined, we can create an action via the
-[create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action):
+[create_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -458,23 +448,6 @@ The above definition means:
 - It returns an output type called `AddResult`.
 - `AddResult` is a simple object type with a field called `sum` of type integer.
 
-:::info Note
-
-When using a [numeric](/schema/postgres/postgresql-types.mdx#numeric) value in an [Action](/actions/overview.mdx), the
-value is [coerced](https://spec.graphql.org/October2021/#sec-Scalars.Input-Coercion) to its expected scalar type based
-on type of the input value supplied (from the Action payload). As stated in the spec, a GraphQL service (such as Hasura)
-will attempt to coerce numeric values to `Int`, `Float`, or `String` types, so long as its reasonable and doesn't result
-in the loss of data. Otherwise, the service will throw an error.
-
-:::
-
-You can also use Type Generator feature to generate the types for your Action:
-
-<Thumbnail src="/img/actions/type-generator.png" alt="Console Action create" width="800px" />
-
-Insert JSON samples for the request and the response, click "Insert Types" and Hasura generates the GraphQL types for
-you.
-
 ### Step 2: Create the action handler
 
 A handler is an HTTP webhook where you can perform the custom logic for the action.
@@ -508,7 +481,7 @@ You can deploy this code somewhere and get the URI. For getting started quickly,
 
 Now, set the handler for the action:
 
-<Tabs groupId="user-preference" className="api_tabs">
+<Tabs className="api_tabs">
 <TabItem value="console" label="Console">
 
 Set the value of the `handler` field to the above endpoint.
@@ -525,10 +498,10 @@ Update the `handler` to the above endpoint.
 <TabItem value="api" label="API">
 
 The action handler must be set when creating an action via the Once the custom types are defined, we can create an
-action via the [create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
+action via the [create_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
 
 It can be updated later by using the
-[update_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-update-action).
+[update_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-update-action).
 
 </TabItem>
 </Tabs>
@@ -546,7 +519,7 @@ e.g. `https://my-handler-endpoint/addNumbers` can be templated to `{{ACTION_BASE
 
 Finally, to save the action:
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
   <TabItem value="console" label="Console">
 
 Hit `Create`.
@@ -560,14 +533,14 @@ Run `hasura metadata apply`.
   <TabItem value="api" label="API">
 
 An action will be created when sending a request to the
-[create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
+[create_action metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action).
 
   </TabItem>
 </Tabs>
 
 ### Step 4: Try it out
 
-In the Hasura Console, head to the `API` tab and try out the new action.
+In the Hasura console, head to the `API` tab and try out the new action.
 
 <GraphiQLIDE
   query={`query {

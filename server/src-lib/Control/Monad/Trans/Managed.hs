@@ -1,6 +1,3 @@
--- ghc 9.6 seems to be doing something screwy with...
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
-
 module Control.Monad.Trans.Managed
   ( ManagedT (..),
     allocate,
@@ -50,19 +47,19 @@ newtype ManagedT m a = ManagedT {runManagedT :: forall r. (a -> m r) -> m r}
   deriving (MonadTrans) via Codensity
 
 -- | Allocate a resource by providing setup and finalizer actions.
-allocate :: (MonadBaseControl IO m) => m a -> (a -> m b) -> ManagedT m a
+allocate :: MonadBaseControl IO m => m a -> (a -> m b) -> ManagedT m a
 allocate setup finalize = ManagedT (bracket setup finalize)
 
 -- | Allocate a resource but do not return a reference to it.
-allocate_ :: (MonadBaseControl IO m) => m a -> m b -> ManagedT m ()
+allocate_ :: MonadBaseControl IO m => m a -> m b -> ManagedT m ()
 allocate_ setup finalize = ManagedT (\k -> bracket_ setup finalize (k ()))
 
 -- | Run the provided computation by returning its result, and run any finalizers.
 -- Watch out: this function might leak finalized resources.
-lowerManagedT :: (Monad m) => ManagedT m a -> m a
+lowerManagedT :: Monad m => ManagedT m a -> m a
 lowerManagedT m = runManagedT m return
 
-hoistManagedTReaderT :: (Monad m) => r -> ManagedT (ReaderT r m) a -> ManagedT m a
+hoistManagedTReaderT :: Monad m => r -> ManagedT (ReaderT r m) a -> ManagedT m a
 hoistManagedTReaderT r cod = ManagedT $ \k ->
   runReaderT (runManagedT cod (lift . k)) r
 
@@ -73,7 +70,7 @@ hoistManagedTReaderT r cod = ManagedT $ \k ->
 --
 -- We need to be careful not to leak allocated resources via the use of
 -- recursively-defined monadic actions when making use of this instance.
-instance (MonadIO m) => MonadFix (ManagedT m) where
+instance MonadIO m => MonadFix (ManagedT m) where
   mfix f = ManagedT \k -> do
     m <- liftIO C.newEmptyMVar
     ans <- liftIO $ unsafeDupableInterleaveIO (C.readMVar m)

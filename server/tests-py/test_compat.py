@@ -1,6 +1,10 @@
 import pytest
+from context import PytestConf
 
-def v1qCompat(hge_ctx, q):
+if not PytestConf.config.getoption("--hge-key"):
+    pytest.skip("--hge-key flag is missing, skipping tests", allow_module_level=True)
+
+def v1qCompat(hge_ctx, q, headers = {}):
         h = {'X-Hasura-Access-Key': hge_ctx.hge_key}
         resp = hge_ctx.http.post(
             hge_ctx.hge_url + "/v1/query",
@@ -9,7 +13,6 @@ def v1qCompat(hge_ctx, q):
         )
         return resp.status_code, resp.json()
 
-@pytest.mark.admin_secret
 class TestGraphQLCompatAccessKey():
 
     export_metadata = {

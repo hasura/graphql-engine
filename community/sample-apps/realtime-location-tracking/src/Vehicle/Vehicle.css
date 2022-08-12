@@ -1,0 +1,52 @@
+.list_of_vehicles {
+  width: 50%;
+  margin: 0 auto;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+}
+
+.list_of_vehicles h3 {
+  margin-bottom: 0px;
+}
+
+.list_of_vehicles .vehicle_text {
+  font-size: 12px;
+  display: inline-block;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.list_of_vehicles .commuter_info {
+  font-size: 14px;
+}
+
+.list_of_vehicles .vehicle_info {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.Vehicle-footer {
+  height: 50px;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 50px;
+  margin-top: 50px;
+}
+
+.displayFlex {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.footer-small-text {
+  padding-top: 10px;
+  font-size: .8em;
+}
+
+.hasura-logo img {
+  height: 30px;
+  margin-bottom: 12px;
+}

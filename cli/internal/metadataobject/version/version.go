@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -36,37 +35,34 @@ func (a *VersionConfig) Validate() error {
 }
 
 func (a *VersionConfig) CreateFiles() error {
-	var op errors.Op = "version.VersionConfig.CreateFiles"
 	v := Version{
 		Version: 3,
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, a.Filename()), data, 0644)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	return nil
 }
 
-func (a *VersionConfig) Build() (map[string]interface{}, error) {
-	var op errors.Op = "version.VersionConfig.Build"
+func (a *VersionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
-		return nil, errors.E(op, a.error(err))
+		return nil, a.error(err)
 	}
 	var v Version
 	err = yaml.Unmarshal(data, &v)
 	if err != nil {
-		return nil, errors.E(op, a.error(err))
+		return nil, a.error(err)
 	}
 	return map[string]interface{}{a.Key(): v.Version}, nil
 }
 
-func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
-	var op errors.Op = "version.VersionConfig.Export"
+func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var version map[string]yaml.Node
 	if v, ok := metadata[a.Key()]; ok {
 		version = map[string]yaml.Node{a.Key(): v}
@@ -76,7 +72,7 @@ func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte
 	var buf bytes.Buffer
 	err := metadataobject.GetEncoder(&buf).Encode(version)
 	if err != nil {
-		return nil, errors.E(op, a.error(err))
+		return nil, a.error(err)
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(a.MetadataDir, a.Filename())): buf.Bytes(),
@@ -91,21 +87,19 @@ func (a *VersionConfig) Filename() string {
 	return "version.yaml"
 }
 
-func (a *VersionConfig) GetFiles() ([]string, error) {
-	var op errors.Op = "version.VersionConfig.GetFiles"
+func (a *VersionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
-		return nil, errors.E(op, a.error(err))
+		return nil, a.error(err)
 	}
 	return files, nil
 }
 
-func (a *VersionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
-	var op errors.Op = "version.VersionConfig.WriteDiff"
+func (a *VersionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
 	if err != nil {
-		return errors.E(op, a.error(err))
+		return a.error(err)
 	}
 	return nil
 }

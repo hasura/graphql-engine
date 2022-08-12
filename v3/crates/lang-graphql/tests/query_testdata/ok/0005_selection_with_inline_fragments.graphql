@@ -1,9 +1,0 @@
-{
-    animal
-    faveSnack
-    ... on Pet {
-      playmates {
-        count
-      }
-    }
-}

@@ -31,7 +31,7 @@ module Hasura.GraphQL.Execute.RemoteJoin.Types
 where
 
 import Data.Aeson.Ordered qualified as AO
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
@@ -40,9 +40,9 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Relationships.ToSchema
+import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -176,7 +176,7 @@ getAliasFieldName = \case
 -- requested by the user.
 getPhantomFields :: RemoteJoin -> [FieldName]
 getPhantomFields =
-  mapMaybe getPhantomFieldName . HashMap.elems . getJoinColumnMapping
+  mapMaybe getPhantomFieldName . Map.elems . getJoinColumnMapping
   where
     getPhantomFieldName :: JoinColumnAlias -> Maybe FieldName
     getPhantomFieldName = \case
@@ -189,7 +189,7 @@ getPhantomFields =
 -- The RHS of the mapping uses 'JoinColumnAlias' instead of 'FieldName' to
 -- differentiate between selected fields and phantom fields (see
 -- 'JoinColumnAlias').
-getJoinColumnMapping :: RemoteJoin -> HashMap.HashMap FieldName JoinColumnAlias
+getJoinColumnMapping :: RemoteJoin -> Map.HashMap FieldName JoinColumnAlias
 getJoinColumnMapping = \case
   RemoteJoinSource sourceJoin _ -> AB.runBackend
     sourceJoin
@@ -208,21 +208,24 @@ data RemoteSourceJoin b = RemoteSourceJoin
   { _rsjSource :: !SourceName,
     _rsjSourceConfig :: !(SourceConfig b),
     _rsjRelationship :: !(IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
-    _rsjJoinColumns :: !(HashMap.HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b))),
-    _rsjStringifyNum :: Options.StringifyNumbers
+    _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b)))
   }
   deriving (Generic)
 
 deriving instance
   ( Backend b,
-    Show (IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
-    Show (SourceConfig b)
+    Show (ScalarValue b),
+    Show (SourceConfig b),
+    Show (BooleanOperators b (IR.UnpreparedValue b)),
+    Show (FunctionArgumentExp b (IR.UnpreparedValue b))
   ) =>
   Show (RemoteSourceJoin b)
 
 deriving instance
   ( Backend b,
-    Eq (IR.SourceRelationshipSelection b Void IR.UnpreparedValue)
+    Eq (ScalarValue b),
+    Eq (BooleanOperators b (IR.UnpreparedValue b)),
+    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
   ) =>
   Eq (RemoteSourceJoin b)
 
@@ -234,13 +237,13 @@ deriving instance
 -- representation of a selection (see 'AnnFieldG').
 data RemoteSchemaJoin = RemoteSchemaJoin
   { -- | User-provided arguments with variables.
-    _rsjArgs :: !(HashMap.HashMap G.Name (P.InputValue RemoteSchemaVariable)),
+    _rsjArgs :: !(Map.HashMap G.Name (P.InputValue RemoteSchemaVariable)),
     -- | Customizer for JSON result from the remote server.
     _rsjResultCustomizer :: !ResultCustomizer,
     -- | User-provided selection set of remote field.
     _rsjSelSet :: !(IR.SelectionSet Void RemoteSchemaVariable),
     -- | A map of the join column to its alias in the response
-    _rsjJoinColumnAliases :: !(HashMap.HashMap FieldName JoinColumnAlias),
+    _rsjJoinColumnAliases :: !(Map.HashMap FieldName JoinColumnAlias),
     -- | Remote server fields.
     _rsjFieldCall :: !(NonEmpty FieldCall),
     -- | The remote schema server info.
@@ -264,7 +267,7 @@ instance Eq RemoteSchemaJoin where
 --   city.weather = get_weather(city: city.code, cityState: city.state_code)
 -- a join argument for this join would have the values of columns 'code' and
 -- 'state_code' for each 'city' row that participates in the join
-newtype JoinArgument = JoinArgument {unJoinArgument :: HashMap.HashMap FieldName AO.Value}
+newtype JoinArgument = JoinArgument {unJoinArgument :: Map.HashMap FieldName AO.Value}
   deriving stock (Eq, Generic, Show)
   deriving newtype (Hashable)
 
@@ -278,10 +281,10 @@ data JoinArguments = JoinArguments
     -- | Arguments for which we must fetch a response from the remote, along with
     -- the identifiers that are used to stitch the final response together.
     --
-    -- NOTE: 'HashMap.HashMap' is used to deduplicate multiple 'JoinArgument's so that
+    -- NOTE: 'Map.HashMap' is used to deduplicate multiple 'JoinArgument's so that
     -- we avoid fetching more data from a remote than is necessary (i.e. in the
     -- case of duplicate arguments).
-    _jalArguments :: !(HashMap.HashMap JoinArgument JoinArgumentId),
+    _jalArguments :: !(Map.HashMap JoinArgument JoinArgumentId),
     -- | The 'FieldName' associated with the "replacement token" for this join
     -- argument.
     --

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
@@ -24,12 +23,11 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 		args hasura.V2ReplaceMetadataArgs
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		want      hasura.V2ReplaceMetadataResponse
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		fields  fields
+		args    args
+		want    hasura.V2ReplaceMetadataResponse
+		wantErr bool
 	}{
 		{
 			"can replace with inconsistent metadata",
@@ -99,7 +97,6 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 				return v2ReplaceMetadataResponse
 			}(),
 			false,
-			require.NoError,
 		},
 
 		{
@@ -153,7 +150,6 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 				return v2ReplaceMetadataResponse
 			}(),
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -163,10 +159,13 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.V2ReplaceMetadata(tt.args.args)
-			tt.assertErr(t, err)
 			if !tt.wantErr {
+				assert.NoError(t, err)
 				assert.Equal(t, tt.want, *got)
+			} else {
+				assert.Error(t, err)
 			}
+
 		})
 	}
 }

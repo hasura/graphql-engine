@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css?family=Gudea:400,500,700');
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * This is where we have **TEMPORARY** fixes while we migrate the codebase to tailwind
+ */
+
+/* Redefine bootstrap form control to take precedence over tailwind */
+
+.form-control {
+  display: block;
+  width: 100%;
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857;
+  color: #555555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 1px rgba(0 0 0, 0.08);
+  transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+}
+
+/* reset some more bootstrap styles */
+.radio-inline input[type="checkbox"],
+.radio-inline input[type="radio"],
+.form-group input[type="checkbox"],
+.checkbox input[type="checkbox"],
+.form-group input[type="radio"],
+.radio input[type="radio"],
+/* escape hatch if we need to add a reset on a input */
+.legacy-input-fix,
+/* .form-group select, */
+/* Nullable + checkbox select in create table */
+input[data-test^="nullable-"],
+input[data-test^="unique-"],
+/* Browse row checkbox */
+input[type="checkbox"][data-test^="row-checkbox"],
+input[type="checkbox"][data-test="select-all-rows"] {
+  appearance: revert;
+  height: unset;
+  width: unset;
+}
+
+select[data-test='qb-select'],
+select.form-control {
+  font-size: unset;
+  line-height: unset;
+  border-radius: 4px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* By default, tailwind reset everything to block, but this breaks most of our SVGs and images, so this fix it */
+svg,
+img {
+  display: inline;
+}
+
+/* Add a blue color by default to all a without classes or with an empty class */
+a:not([class]),
+a[class=''] {
+  color: #337ab7;
+}
+
+.dropdown button {
+  background-color: rgb(239, 239, 239);
+}
+
+/* To remove botstrap html font size from 10px */
+html {
+  font-size: 14px;
+}
+
+/* React Select - Fixes Inner Outline in Select Box */
+input[id*='react-select'][id$='-input']:focus {
+  box-shadow: none;
+}
+
+/* ** GraphiQL CSS tweaks to fix compatibility */
+/* Input fixes from Tailwind */
+.graphiql-container input,
+.graphiql-container select {
+  min-width: min-content;
+  padding: 4px 8px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid rgb(203, 213, 225) !important;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+    rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+.graphiql-container input:focus,
+.graphiql-container select:focus {
+  border: 1px solid rgb(251, 191, 36) !important;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
+    rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+
+.graphiql-explorer-actions > select {
+  font-family: system, -apple-system, 'San Francisco', '.SFNSDisplay-Regular',
+    'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
+  font-variant-caps: normal;
+  font-weight: 400;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  margin-right: 8px;
+  height: 32px;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+    rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+.graphiql-explorer-actions > select:focus {
+  border: 1px solid rgb(251, 191, 36) !important;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
+    rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+
+/* While we're fixing the inputs maybe the Explorer header + footer */
+/* Fixes header spacing */
+.doc-explorer-title-bar {
+  height: 46px !important;
+}
+.docExplorerHide {
+  padding: 16px !important;
+}
+
+/* Fixes result loading spinner position */
+.graphiql-container .spinner-container {
+  top: 48px !important;
+}
+
+/* Fixes spacing in operation title namer */
+.graphiql-explorer-root {
+  padding-top: 0 !important;
+}
+.graphiql-operation-title-bar {
+  margin-top: 10px;
+}
+.graphiql-operation-title-bar > span > input {
+  margin-right: 4px;
+}
+
+/* Fixes footer spacing */
+.graphiql-explorer-actions > span {
+  font-family: system, -apple-system, 'San Francisco', '.SFNSDisplay-Regular',
+    'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
+  font-variant-caps: normal;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0px;
+  text-transform: capitalize;
+}
+.graphiql-explorer-actions {
+  margin: 4px 0px 0px -8px !important;
+  width: calc(100% + 16px) !important;
+  padding: 10px !important;
+}

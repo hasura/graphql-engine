@@ -9,7 +9,7 @@ keywords:
   - metadata
 ---
 
-# Upgrading to Hasura Migrations Config v3
+# Upgrading to Hasura migrations config v3
 
 ## What has changed?
 
@@ -18,7 +18,7 @@ same Hasura instance. If we want to take advantage of multiple databases
 we'll have to use a `config v3` project which brings some changes to the
 project directory when compared to `config v2`.
 
-`Config v3` also brings updates to the Metadata directory structure to
+`Config v3` also brings updates to the metadata directory structure to
 improve version control and collaboration workflows.To gain these
 benefits we recommend upgrading to `config v3` even if you do not intend
 to use multiple databases.
@@ -27,7 +27,7 @@ Let's try to understand what these changes are.
 
 ### Metadata directory
 
-The following is a sample Metadata directory when using `config v3`.
+The following is a sample metadata directory when using `config v3`.
 
 ```bash
 metadata
@@ -57,7 +57,7 @@ metadata
 ```
 
 Notice the introduction of a new `databases` directory. As the name
-suggests, this directory will have the Metadata related to all your
+suggests, this directory will have the metadata related to all your
 databases.
 
 Now let's looks at the contents of `databases/databases.yaml`
@@ -73,8 +73,8 @@ Now let's looks at the contents of `databases/databases.yaml`
         idle_timeout: 180
         max_connections: 50
         retries: 1
-  tables: '!include s1/tables/tables.yaml'
-  functions: '!include s1/functions/functions.yaml'
+  tables: "!include s1/tables/tables.yaml"
+  functions: "!include s1/functions/functions.yaml"
 ```
 
 We can see that we have a database called `s1`, with it's configuration
@@ -90,13 +90,13 @@ below) we understand that it is array whose values are again similarly
 sourced from different files.
 
 ```yaml
-- '!include public_albums.yaml'
-- '!include public_artists.yaml'
-- '!include public_genres.yaml'
-- '!include public_media_types.yaml'
-- '!include public_playlist_track.yaml'
-- '!include public_playlists.yaml'
-- '!include public_tracks.yaml'
+- "!include public_albums.yaml"
+- "!include public_artists.yaml"
+- "!include public_genres.yaml"
+- "!include public_media_types.yaml"
+- "!include public_playlist_track.yaml"
+- "!include public_playlists.yaml"
+- "!include public_tracks.yaml"
 ```
 
 Let's look at `public_albums.yaml` from the first line above.
@@ -119,12 +119,12 @@ table:
   schema: public
 ```
 
-This file specifies the Metadata related to a table called `tracks` in
+This file specifies the metadata related to a table called `tracks` in
 `public` schema. This means that each table will have it's own file for
-it's Metadata specifically. This makes understanding and managing
-Metadata related to tables a lot easier.
+it's metadata specifically. This makes understanding and managing
+metadata related to tables a lot easier.
 
-Also note that Metadata related to custom functions is also managed in a
+Also note that Metadata related to functions is also managed in a
 similar fashion.
 
 When doing a `hasura metadata apply` CLI will inline `!include`
@@ -141,7 +141,7 @@ Currently the CLI looks for `!include` directives in `tables` and
 
 There are some changes to `migrations` and `seeds` project directories
 in `config v3`. Projects will have child directories corresponding to
-Migrations for each connected database. Look at the following example,
+migrations for each connected database. Look at the following example,
 the `` `migrations `` directory has a sub directory `default` which
 corresponds to the connected database.
 
@@ -157,15 +157,15 @@ migrations
 With the introduction of multiple databases and it's configuration being
 stored in metadata, it brings a change of workflow with it.
 
-The steps to apply Migrations and Metadata to a new Hasura instance will
+The steps to apply migrations and metadata to a new Hasura instance will
 be:
 
 ```bash
-# first apply Metadata, this will connect Hasura to the configured databases.
+# first apply metadata, this will connect Hasura to the configured databases.
 hasura metadata apply
-# now we can apply Migrations to the connected databases.
+# now we can apply migrations to the connected databases.
 hasura migrate apply --all-databases
-# follow it with a Metadata reload to make sure Hasura is aware of any newly created database objects.
+# follow it with a metadata reload to make sure Hasura is aware of any newly created database objects.
 hasura metadata reload
 ```
 
@@ -176,10 +176,10 @@ databases it has to connect to as that information is present in
 metadata. Earlier we could not start Hasura without a connected
 database, but now we can.
 
-As we are now applying Metadata before Migrations, your Metadata might
+As we are now applying metadata before migrations, your metadata might
 be in an **inconsistent state** after the initial `metadata apply` till
 the `metadata reload` step as some database objects referred to in
-Metadata might not be available till the Migrations are applied.
+metadata might not be available till the migrations are applied.
 
 Also, `hasura seeds` and `hasura migrate` commands now accept a required
 flag `--database-name`.
@@ -188,7 +188,7 @@ flag `--database-name`.
 
 As the database connection configuration is now picked up from metadata,
 it is important to ensure that all the environments use the same env
-vars to store the database connection strings and the Metadata being
+vars to store the database connection strings and the metadata being
 applied also uses the appropriate env vars.
 
 :::
@@ -197,24 +197,24 @@ applied also uses the appropriate env vars.
 
 The latest version Hasura CLI comes with a convenience script used to
 upgrade your CLI project to use `config v3`. Note that this process is
-completely independent from your Hasura GraphQL Engine server update
+completely independent from your Hasura GraphQL engine server update
 process.
 
 ### Pre update checklist / notes
 
-1.  `Config V3` is expected to be used with Hasura GraphQL Engine
+1.  `Config V3` is expected to be used with Hasura GraphQL engine
     versions `v2.0.0-alpha.1` and above.
 2.  During the update process CLI uses the server as the source of
     truth, so make sure your server is upto date.
-3.  The update process replaces project Metadata with Metadata on the
+3.  The update process replaces project metadata with metadata on the
     server.
 
-### Step 1: Make a backup
+### Step 0: Take a backup
 
-Make sure you take a backup of your Hasura Project before upgrading to
+Make sure you take a backup of your Hasura project before upgrading to
 `config v3`.
 
-### Step 2: Upgrade to the latest CLI
+### Step 1: Upgrade to the latest CLI
 
 Run:
 
@@ -230,7 +230,7 @@ Run:
 hasura update-cli --version <version>
 ```
 
-### Step 3: Upgrade Hasura Project to v3
+### Step 2: Upgrade Hasura project to v3
 
 In your project directory, run:
 
@@ -241,7 +241,9 @@ hasura scripts update-project-v3
 Your project directory and `config.yaml` should be updated to v3.
 
 The update script will ask for the name of database the current
-Migrations and seeds correspond to.
+migrations and seeds correspond to. If you are starting Hasura with a
+`HASURA_GRAPHQL_DATABASE_URL` then the name of the database should be
+`default`.
 
 ## Continue using config v2
 
@@ -249,21 +251,21 @@ It is possible to continue using `config v2` with Hasura versions
 `v2.0.0` and above if you would like to do so.
 
 While using `config v2` with Hasura versions `v2.0.0` and above, as we
-have Metadata and Migrations for only a single database, the server
+have metadata and migrations for only a single database, the server
 assumes that they belong to a database named `default` and attempts to
 apply them to it.
 
 Hence, to continue using `config v2` we need to connect a database to
-Hasura GraphQL Engine with the name `default` and then run any metadata
-and Migrations commands.
+Hasura GraphQL engine with the name `default` and then run any metadata
+and migrations commands.
 
 - If you have connected your database using the
   `HASURA_GRAPHQL_DATABASE_URL` env var, the database will be added
   with the name `default` automatically.
 - Else you can connect a database with the name `default` following
-  the steps [here](/databases/quickstart.mdx).
+  the steps [here](/databases/connect-db/index.mdx#connect-database-v2-0).
 
-Post this, the Metadata and Migration commands should work as usual.
+Post this, the metadata and migration commands should work as usual.
 
 :::info Note
 

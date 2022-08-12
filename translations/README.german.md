@@ -127,7 +127,7 @@ Transformiere Daten in Postgres oder lasse deine Businesslogik eigene Daten able
 ## Demos
 
 Schaue dir die Beispiele in dem
-[hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) Verzeichnis an.
+[community/sample-apps](../community/sample-apps) Verzeichnis an.
 
 ### Realtime Applikationen
 
@@ -135,19 +135,19 @@ Schaue dir die Beispiele in dem
   neuen Nachrichten.
 
   - [Probiere es aus](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Durchsuche die APIs](https://realtime-chat.demo.hasura.io/console)
 
 - Echtzeit Standort Tracking App, welche die Koordinaten von Fahrzeugen
   verfolgt und auf einer Karte anzeigt.
 
   - [Probiere es aus](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Durchsuche die APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Echtzeit Dashboard für Datenaggregation von sich konstant ändernden Daten.
   - [Probiere es aus](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Durchsuche die APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### Videos
@@ -182,8 +182,8 @@ Webseite, etc. benutzen. Wir würden uns sehr freuen, wenn du das "Powered by Ha
 Abzeichen deiner Hasura App hinzufügst. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -191,7 +191,7 @@ Abzeichen deiner Hasura App hinzufügst. ❤️
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg"
   />
 </a>
 
@@ -199,7 +199,7 @@ Abzeichen deiner Hasura App hinzufügst. ❤️
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg"
   />
 </a>
 ```

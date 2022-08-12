@@ -5,28 +5,28 @@ keywords:
   - docs
   - deployment
   - secure
-sidebar_position: 50
-sidebar_label: Secure the GraphQL endpoint
+sidebar_position: 6
+sidebar_label: Securing the GraphQL endpoint
 ---
 
-# Secure the GraphQL Endpoint
+# Securing the GraphQL endpoint
 
-To make sure that your GraphQL endpoint and the Hasura Console are not publicly accessible, you need to configure an
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to configure an
 admin secret key.
 
 Depending on your deployment method, follow one of these guides to configure an admin secret key, and prevent public
-access to your GraphQL endpoint and the Hasura Console:
+access to your GraphQL endpoint and the Hasura console:
 
-- Hasura Cloud projects have a randomly generated admin secret added by default at the time of creation.
+- Hasura Cloud projects have a randomly generated admin secret added   by default at the time of creation.
+- [For Heroku](/deployment/deployment-guides/heroku.mdx#heroku-secure)
 - [For Docker](/deployment/deployment-guides/docker.mdx#docker-secure)
 - [For Kubernetes](/deployment/deployment-guides/kubernetes.mdx#kubernetes-secure)
-- [For DigitalOcean](/deployment/deployment-guides/digital-ocean-one-click.mdx#digital-ocean-secure)
+- [For Digital Ocean](/deployment/deployment-guides/digital-ocean-one-click.mdx#digital-ocean-secure)
 
 :::info Note
 
 If you're looking at adding access control rules for your data to your GraphQL API then head to
-[Authentication / access control](/auth/overview.mdx). You can also find more information about
-[Hasura security in general here](/security/overview.mdx) and best practices
-[here](/security/security-best-practices.mdx).
+[Authentication / access control](/auth/index.mdx). You can also find more information about
+[Hasura security in general here](/security/index.mdx).
 
 :::

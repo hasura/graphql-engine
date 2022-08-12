@@ -1,16 +1,10 @@
 # Hasura GraphQL Engine Changelog
 
-:warning: This file is deprecated and contains changelog only for older releases. Please visit [this page](https://hasura.io/changelog) or [the github releases page](https://github.com/hasura/graphql-engine/releases) to view the changelog for latest releases :warning:
-
-## v2.10.1
+## Next release
+- server: fix long identifiers in insert with parameters (fix #8741)
 
 ### Bug fixes and improvements
 
-- server: fix long identifiers in insert with parameters (fix #8741)
-- server: fix 'nulls: first' and 'nulls: last' parsing for Postgres
-- server: accept `extensions_schema` while adding a PostgreSQL source for the graphql-engine to install database extensions in the specified schema
-- server: accept a default extensions schema (`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`) for the metadata database where graphql-engine will install database extensions
-- console: add support extensions_schema on postgres connect/edit DB form
 
 ## v2.11.0-beta.1
 
@@ -20,7 +14,6 @@
 - server: accept a default extensions schema (`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`) for the metadata database where graphql-engine will install database extensions
 - server: add warning log for missing admin secret
 - server: fix querying relationships defined using multiple columns on BigQuery
-- server: fix 'nulls: first' and 'nulls: last' parsing for Postgres
 - console: add custom names for streaming subscriptions
 - console: add support for table query and subscription root fields visibility permissions
 - console: fix the BigQuery row-level restrictions on boolean columns
@@ -244,29 +237,8 @@ The way it works is:
 
 Please submit any feedback you may have for this feature at https://github.com/hasura/graphql-engine/issues/2768.
 
-### Error message syntax
-
-We are slowly standardizing the format of error messages, especially with regards to the way values are quoted.
-
-Any errors generated during the parsing of GraphQL or the construction of the schema might have changed the way they quote certain values. For example, GraphQL names are now always quoted with single quotes, leading to changes such as the following.
-
-_Before:_
-
-```
-field "nonexistent_root_field" not found in type: 'query_root'
-```
-
-_After:_
-
-```
-field 'nonexistent_root_field' not found in type: 'query_root'
-```
-
-If you are depending on the specific text of an error message and/or parsing the message, you may need to update your code accordingly.
-
-Further changes are forthcoming along similar lines.
-
 ### Bug fixes and improvements
+
 
 - server: Kriti `basicFunctions` now available for REST Connectors and Webhook Transforms
 - server: Fix bug where Hasura SQL trigger was not dropped when MS SQL Server source is dropped
@@ -292,6 +264,7 @@ Further changes are forthcoming along similar lines.
 - build: Changes to the `hasura/graphql-engine` Docker image:
   - Default graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use an Ubuntu base instead of Debian.
   - Debian flavour of images (`hasura/graphql-engine:<VERSION>.debian`) are still published to Docker Hub.
+  - CentOS flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
 
 ## v2.10.0-beta.1
 
@@ -559,8 +532,7 @@ Please submit any feedback you may have for this feature at https://github.com/h
   - Default graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use an Ubuntu base instead of Debian.
   - Debian flavour of images (`hasura/graphql-engine:<VERSION>.debian`) are still published to Docker Hub.
   - CentOS flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
-- docs: Kriti templating documentation sections added
-  
+
 ## v2.9.0
 
 ### Event Triggers for MS SQL Server

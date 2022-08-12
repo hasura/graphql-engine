@@ -1,6 +1,6 @@
 ---
 description: Quickstart with Hasura Cloud
-title: 'Quickstart with Hasura Cloud'
+title: 'Cloud: Quickstart with Hasura Cloud'
 sidebar_position: 2
 keywords:
   - hasura
@@ -13,100 +13,78 @@ sidebar_class_name: cloud-icon
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
-import ProductBadge from '@site/src/components/ProductBadge';
 
-# Quickstart with Hasura Cloud
-
-<ProductBadge free pro ee />
+# Cloud: Quickstart with Hasura Cloud <HeadingIcon icon={`cloud`} size={36} />
 
 ## Introduction
 
-Hasura Cloud is a powerful tool that can work with a wide variety of databases. If you have a preferred database, check
-out our [supported databases](/databases/overview.mdx) for details on how to connect.
-
-If you're just getting started with Hasura, you can also try out our free Neon Postgres database. We'll walk you through
-the setup process in this guide, so you can get started quickly and easily.
-
-:::info Not sure what you want to build?!
-
-If you're not sure what you want to build with Hasura, check out our
-[sample use cases](/getting-started/use-case/overview.mdx) for inspiration, and we'll walk you through the setup
-step-by-step!
-
-:::
+This guide talks about setting up Hasura Cloud with a new or existing database.
 
 ## Step 1: Create an account
 
 Navigate to
-[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default&skip_onboarding=true),
-and create a new Hasura Cloud account.
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
 
-## Step 2: Create a project
+## Step 2: Create project {#cloud-connect-db}
 
-On creating a new account, Hasura Cloud automatically creates an initial project for you.
-
-Click `Launch Console` to open the Hasura Console in your browser.
-
-<Thumbnail
-  src="/img/getting-started/cloud-initial-project-launch-console.png"
-  alt="Connect new or existing database"
-  width="556px"
-/>
-
-If you already have an account, you can create a new project by clicking the `New Project` link on the
-[Projects](https://cloud.hasura.io/projects) page.
-
-Regardless of tier, you have the choice of either Amazon Web Services (AWS) or Google Cloud Platform (GCP) as hosting
-providers.
+When getting started with Hasura Cloud, regardless of tier, you have the choice of either Amazon Web Services (AWS) or
+Google Cloud Platform (GCP) as hosting providers.
 
 <Thumbnail
-  src="/img/getting-started/getting-started-cloud-aws-and-gcp-emphasis.png"
-  alt="Choose either AWS or GCP"
-  width="556px"
+  src='/img/getting-started/getting-started-cloud-aws-and-gcp-emphasis.png'
+  alt='Choose either AWS or GCP'
+  width='556px'
 />
 
 Make your selection and then click `Create Free Project`:
 
-<Thumbnail src="/img/getting-started/getting-started-cloud-create-project.png" alt="Create project" width="556px" />
+<Thumbnail
+  src='/img/getting-started/getting-started-cloud-create-project.png'
+  alt='Create project'
+  width='556px'
+/>
 
-## Step 3: Connect a database {#cloud-connect-db}
+Hasura Cloud creates an initial project. Click `Launch Console` to open the Hasura console in your browser.
 
-Hit the `Launch console` button to open the Hasura Console and navigate to `Data -> Manage -> Connect Database`:
+<Thumbnail src='/img/getting-started/create-project.png' alt='Connect new or existing database' width='556px' />
 
-<Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
+## Step 3: Connect new/existing database {#create-new-db-with-cloud}
 
-- To try out quickly with a new Postgres database, choose `Create New Database`.
-- To use an [existing database](/databases/overview.mdx), choose `Connect existing database`.
+On the Hasura console, navigate to `Data -> Manage -> Connect Database`:
 
-<Thumbnail src="/img/getting-started/db-setup.png" alt="DB setup" width="1000px" />
+<Thumbnail src='/img/getting-started/connect-db-console.png' alt='Connect database' width='1000px' />
 
-### Option 3.1: Create and connect a new database {#create-new-db-with-cloud}
+- To use an existing database, choose `Connect existing database`.
+- To try out with a new Postgres database, choose `Create Heroku Database`.
 
-If you chose `Create New Database`:
+<Thumbnail src='/img/getting-started/db-setup.png' alt='DB setup' width='556px' />
 
-Click on `Connect Neon Database` to create and connect a new Postgres database to your Hasura Project.
+### Step 3.1: Enter database connection URL (for existing database)
 
-<Thumbnail src="/img/cloud-dbs/neon/connect_neon_database.png" alt="Connect Neon database" width="700px" />
+If you chose `Connect existing database`, enter your database connection URL.
 
-### Option 3.2: Connect an existing database
+Click `Connect Database`.
 
-If you chose `Connect existing database`:
+<Thumbnail src='/img/getting-started/connect-db-cloud.png' alt='Enter URL for existing database' width='556px' />
 
-- Give the database a name, say `default`
-- Choose the database type from the list of [supported databases](/databases/overview.mdx#supported-databases)
-- Enter your database connection details
-- Click `Connect Database`.
+If your database is hosted via any of the following managed cloud database services, check out their respective detailed
+guides to get the database connection URL and any other steps required to ensure connectivity from Hasura Cloud:
 
-<Thumbnail src="/img/getting-started/connect-db-cloud.png" alt="Enter URL for existing database" width="700px" />
-
-Check out [this section](databases/quickstart.mdx#cloud-projects-create-allow-nat-ip) for other steps required to ensure
-connectivity to your database from Hasura Cloud if needed.
+- [Aiven Postgres](/databases/connect-db/cloud-databases/aiven.mdx)
+- [AWS RDS Aurora Postgres](/databases/connect-db/cloud-databases/aws-aurora.mdx)
+- [AWS RDS Postgres](/databases/connect-db/cloud-databases/aws-postgres.mdx)
+- [Azure Postgres](/databases/connect-db/cloud-databases/azure.mdx)
+- [Digital Ocean Postgres](/databases/connect-db/cloud-databases/digital-ocean.mdx)
+- [GCP Postgres](/databases/connect-db/cloud-databases/gcp.mdx)
+- [TimescaleDB Cloud](/databases/connect-db/cloud-databases/timescale-cloud.mdx)
+- [YugabyteDB](/databases/connect-db/cloud-databases/yugabyte.mdx)
 
 ## Step 4: Try out Hasura
 
 ### Create a table
 
-On the Hasura Console, navigate to `Data -> Create table` and create a sample table called `profiles` with the following
+On the Hasura console, navigate to `Data -> Create table` and create a sample table called `profiles` with the following
 columns:
 
 ```sql
@@ -116,13 +94,13 @@ profiles (
 )
 ```
 
-<Thumbnail src="/img/getting-started/create-profile-table.png" alt="Create a table" />
+<Thumbnail src='/img/getting-started/create-profile-table.png' alt='Create a table' />
 
 Now, insert some sample data into the table using the `Insert Row` tab of the `profiles` table.
 
 ### Try out a query
 
-Head to the `API` tab in the Console and try running the following query:
+Head to the `API` tab in the console and try running the following query:
 
 ```graphql
 query {
@@ -135,40 +113,56 @@ query {
 
 You'll see that you get all the inserted data!
 
-<Thumbnail src="/img/getting-started/profile-query.png" alt="Try out a query" />
+<Thumbnail src='/img/getting-started/profile-query.png' alt='Try out a query' />
+
+### Check out monitoring
+
+You can navigate to the `Monitoring` tab in the console to check out the extra features for reliability and security
+that Hasura Cloud has set up for you.
+
+<Thumbnail src='/img/observability/monitoring-tab-overview.png' alt='Hasura Console: Monitoring tab' />
 
 ## Next steps
 
-### Learn tutorial
+### Learn course
 
 For a full hands-on tour of Hasura, check out our
-[30-Minute Hasura Basics Tutorial](https://hasura.io/learn/graphql/hasura/introduction/).
+[30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/).
 
 ### Database operations
 
-- [Databases overview](/databases/overview.mdx)
-- [Database modeling](/schema/postgres/index.mdx): Learn how to model your database schema, as well as how to extend it.
+- [Database modelling](/schema/postgres/index.mdx): Learn how to model your database schema, as well as how to extend
+  it.
 - [Querying data](/queries/postgres/index.mdx): Use GraphQL queries to query data from your GraphQL API.
 - [Inserting data](/mutations/postgres/index.mdx): Use GraphQL mutations to insert data into your GraphQL API.
-- [Postgres permissions](/deployment/postgres-requirements.mdx#managed-pg-permissions)
 
 ### Business logic
 
 There are several options for the implementation of business logic, depending on your use case.
 
-- [Actions](/actions/overview.mdx): Actions can be used if you'd like to extend your GraphQL schema by integrating with
-  a REST endpoint.
-- [Remote Schemas](/remote-schemas/overview.mdx): If you have an existing GraphQL server or if you're comfortable with
-  implementing one, you can use Remote Schemas.
-- [Event Triggers](/event-triggers/overview.mdx): To trigger a serverless function based on a database event, use event
+- [Actions](/actions/index.mdx): Actions can be used if you'd like to extend your GraphQL schema by integrating with a
+  REST endpoint.
+- [Remote schemas](/remote-schemas/index.mdx): If you have an existing GraphQL server or if you're comfortable with
+  implementing one, you can use remote schemas.
+- [Event triggers](/event-triggers/index.mdx): To trigger a serverless function based on a database event, use event
   triggers.
-- [Scheduled Triggers](/scheduled-triggers/overview.mdx): Scheduled Triggers are used to execute custom business logic
-  at specific points in time.
+- [Scheduled triggers](/scheduled-triggers/index.mdx): Scheduled triggers are used to execute custom business logic at
+  specific points in time.
 
 ### Manage Hasura Cloud project
 
 You can click the gear icon in the Hasura Cloud dashboard to manage your Hasura Cloud project (e.g. add
-[collaborators](/hasura-cloud/projects/collaborators.mdx), [env vars](/hasura-cloud/projects/env-vars.mdx) or
-[custom domains](/hasura-cloud/domains.mdx)).
+[collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
+[custom domains](/projects/domains.mdx)).
 
-<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
+<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+
+:::info Additional Resources
+
+Get Started with Hasura today -
+[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
+
+:::
+
+- [Cloud databases guides](/databases/connect-db/cloud-databases/index.mdx)
+- [Postgres permissions](/deployment/postgres-requirements.mdx#managed-pg-permissions)

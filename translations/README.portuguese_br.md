@@ -125,25 +125,25 @@ Transforme dados no Postgres ou execute a lógica de negócios para obter outro 
 ## Demos
 
 Confira todos os aplicativos de exemplo no diretório
-[community/examples](https://github.com/hasura/sample-apps/tree/main).
+[community/examples](../community/sample-apps).
 
 ### Aplicações em tempo real
 
 - O aplicativo de bate-papo em grupo criado com o React inclui um indicador de digitação, usuários online e notificações de novas mensagens.
 
   - [Experimente](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.io/console)
 
 - Aplicativo de rastreamento de localização ao vivo que mostra um veículo em movimento alterando as coordenadas atuais do GPS em movimento no mapa.
 
   - [Experimente](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Um painel em tempo real para agregações de dados em constante mudança de dados.
   - [Experimente](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [Browse APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### Vídeos
@@ -175,8 +175,8 @@ Confira nosso [guia de contribuição](/CONTRIBUTING.md) para mais detalhes.
 Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) podem ser encontrados na pasta [assets/brand](../assets/brand). Sinta-se à vontade para usá-los em seu aplicativo / site, etc. Ficaríamos felizes se você adicionar o "Powered by Hasura" badge para seus aplicativos criados usando o Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -184,7 +184,7 @@ Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) 
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg"
   />
 </a>
 
@@ -192,7 +192,7 @@ Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) 
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg"
   />
 </a>
 ```

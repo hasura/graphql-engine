@@ -13,33 +13,8 @@
   url: /v1/metadata
   status: 400
   response:
-    code: invalid-configuration
-    error: 'Inconsistent object: Event triggers for MS-SQL sources are not supported
-      on tables having Geometry or Geography column types'
-    internal:
-    - definition:
-        configuration:
-          definition:
-            delete:
-              columns: '*'
-            enable_manual: false
-            insert:
-              columns: '*'
-            update:
-              columns: '*'
-          name: geojson_all
-          retry_conf:
-            interval_sec: 10
-            num_retries: 0
-            timeout_sec: 60
-          webhook: '{{EVENT_WEBHOOK_HANDLER}}'
-        table:
-          name: test_geojson
-          schema: hge_tests
-      name: event_trigger geojson_all in table hge_tests.test_geojson in source mssql
-      reason: 'Inconsistent object: Event triggers for MS-SQL sources are not supported
-        on tables having Geometry or Geography column types'
-      type: event_trigger
+    error: Event triggers for MS-SQL sources are not supported on tables having Geometry or Geography column types
+    code: not-supported
     path: $.args
   query:
     type: mssql_create_event_trigger

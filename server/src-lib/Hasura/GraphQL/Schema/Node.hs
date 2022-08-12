@@ -21,18 +21,17 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as Map
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
-import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Table.Cache
 
 {- Note [Relay Node Id]
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,7 +117,7 @@ data NodeId
 -- This id does NOT uniquely identify the table properly, as it only knows the
 -- table's name, but doesn't store a source name.
 data V1NodeId = V1NodeId
-  { _ni1Table :: Postgres.QualifiedTable,
+  { _ni1Table :: PG.QualifiedTable,
     _ni1Columns :: NESeq.NESeq J.Value
   }
 
@@ -142,7 +141,7 @@ instance J.FromJSON NodeId where
 parseNodeIdV1 :: [J.Value] -> J.Parser V1NodeId
 parseNodeIdV1 (schemaValue : nameValue : firstColumn : remainingColumns) =
   V1NodeId
-    <$> (Postgres.QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
+    <$> (PG.QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
     <*> pure (firstColumn NESeq.:<|| Seq.fromList remainingColumns)
 parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
 
@@ -189,7 +188,7 @@ Relay query could look like this (assuming that there are corresponding tables
     }
 
 What that means is that the parser for the 'Node' interface needs to delegate to
-\*every table parser*, to deal with all possible cases. In practice, we use the
+*every table parser*, to deal with all possible cases. In practice, we use the
 'selectionSetInterface' combinator (from Hasura.GraphQL.Parser.Internal.Parser):
 we give it a list of all the parsers, and it in turn applies all of them, and
 gives us the result for each possible table:
@@ -237,7 +236,7 @@ type NodeMap = HashMap SourceName (AB.AnyBackend TableMap)
 -- | All the information required to craft a query to a row pointed to by a
 -- 'NodeId'.
 data NodeInfo b = NodeInfo
-  { nvSourceInfo :: SourceInfo b,
+  { nvSourceConfig :: SourceConfig b,
     nvSelectPermissions :: SelPermInfo b,
     nvPrimaryKeys :: PrimaryKeyColumns b,
     nvAnnotatedFields :: IR.AnnFieldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
@@ -247,8 +246,8 @@ newtype TableMap b = TableMap (HashMap (TableName b) (NodeInfo b))
 
 -- | Given a source name and table name, peform the double lookup within a
 -- 'NodeMap'.
-findNode :: forall b. (Backend b) => SourceName -> TableName b -> NodeMap -> Maybe (NodeInfo b)
+findNode :: forall b. Backend b => SourceName -> TableName b -> NodeMap -> Maybe (NodeInfo b)
 findNode sourceName tableName nodeMap = do
-  anyTableMap <- HashMap.lookup sourceName nodeMap
+  anyTableMap <- Map.lookup sourceName nodeMap
   TableMap tableMap <- AB.unpackAnyBackend @b anyTableMap
-  HashMap.lookup tableName tableMap
+  Map.lookup tableName tableMap

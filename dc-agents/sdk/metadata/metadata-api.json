@@ -86,7 +86,7 @@
               "table": ["Employee"],
               "object_relationships": [
                 {
-                  "name": "ReportsToEmployee",
+                  "name": "ReportsTo",
                   "using": {
                     "manual_configuration": {
                       "remote_table": ["Employee"],

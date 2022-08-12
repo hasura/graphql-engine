@@ -1,4 +1,0 @@
-extend enum Direction @example {
-    SOUTH
-    WEST
-}

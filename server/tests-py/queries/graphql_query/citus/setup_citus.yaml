@@ -1,0 +1,156 @@
+type: bulk
+args:
+
+#Author table
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: author
+
+#Article table
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: article
+
+#Object relationship
+- type: citus_create_object_relationship
+  args:
+    source: citus
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: citus_create_array_relationship
+  args:
+    source: citus
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#country table
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: country
+
+#state table
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: state
+
+#disaster table
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: disaster
+
+#disaster_affected_state table
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: disaster_affected_state
+
+
+# #using metadata from
+# #https://github.com/hasura/graphql-engine-mono/blob/vamshi/rfc/citus-support/rfcs/citus-support.md
+- type: citus_create_array_relationship
+  args:
+    source: citus
+    table: country
+    name: states
+    using:
+      foreign_key_constraint_on:
+        table: state
+        column: country_id
+
+- type: citus_create_array_relationship
+  args:
+    source: citus
+    table: country
+    name: disasters
+    using:
+      manual_configuration:
+        remote_table: disaster
+        column_mapping:
+          id: country_id
+
+- type: citus_create_object_relationship
+  args:
+    source: citus
+    table: state
+    name: country
+    using:
+      foreign_key_constraint_on: country_id
+
+- type: citus_create_object_relationship
+  args:
+    source: citus
+    table: disaster
+    name: country
+    using:
+      manual_configuration:
+        remote_table: country
+        column_mapping:
+          country_id: id
+
+- type: citus_create_array_relationship
+  args:
+    source: citus
+    table: disaster
+    name: affected_states
+    using:
+      manual_configuration:
+        remote_table: disaster_affected_state
+        column_mapping:
+          id: disaster_id
+          country_id: country_id
+
+- type: citus_create_object_relationship
+  args:
+    source: citus
+    table: disaster_affected_state
+    name: state
+    using:
+      manual_configuration:
+        remote_table: state
+        column_mapping:
+          state_id: id
+
+- type: citus_create_object_relationship
+  args:
+    source: citus
+    table: disaster_affected_state
+    name: disaster
+    using:
+      manual_configuration:
+        remote_table: disaster
+        column_mapping:
+          disaster_id: id
+          country_id: country_id
+
+#search_disasters_sql function
+- type: citus_track_function
+  args:
+    source: citus
+    function:
+      name: search_disasters_sql
+
+#search_disasters_plpgsql function
+- type: citus_track_function
+  args:
+    source: citus
+    function:
+      name: search_disasters_plpgsql

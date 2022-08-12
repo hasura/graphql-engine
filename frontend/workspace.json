@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
+  "version": 2,
+  "projects": {
+    "console-ce": "apps/console-ce",
+    "console-ce-e2e": "apps/console-ce-e2e",
+    "console-pro": "apps/console-pro",
+    "console-pro-e2e": "apps/console-pro-e2e",
+    "console-legacy-oss": "libs/console/legacy-oss",
+    "console-legacy-pro": "libs/console/legacy-pro"
+  }
+}

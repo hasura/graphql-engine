@@ -1,0 +1,7 @@
+type: citus_create_array_relationship
+args:
+  source: citus
+  table: author_multi
+  name: articles
+  using:
+    foreign_key_constraint_on: "I should have been an object"

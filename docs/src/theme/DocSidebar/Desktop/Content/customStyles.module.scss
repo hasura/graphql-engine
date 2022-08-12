@@ -1,0 +1,27 @@
+.doc-sidebar-tabs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  padding: 0.25rem 0.25rem 0;
+  margin-bottom: 0.5rem;
+  border: 1px solid transparent;
+  border-right-color: var(--ifm-toc-border-color);
+  border-bottom-color: var(--ifm-toc-border-color);
+  .link-tab {
+    font-weight: var(--ifm-font-weight-bold);
+    font-size: var(--ifm-code-font-size);
+    text-decoration: none;
+    text-transform: capitalize;
+    white-space: nowrap;
+    color: var(--color-gray-72);
+    padding: 0.5rem 0;
+    margin: 0.5rem 1rem -1px;
+    border-bottom: 3px solid transparent;
+
+    &.active {
+      border-bottom-color: var(--ifm-color-primary-light);
+    }
+  }
+}

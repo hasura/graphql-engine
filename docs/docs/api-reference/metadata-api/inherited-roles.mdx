@@ -1,14 +1,14 @@
 ---
-sidebar_label: Inherited roles
-sidebar_position: 9
-description: Manage inherited roles with the Hasura Metadata API
+sidebar_label: Inherited Roles
+sidebar_position: 6
+description: Manage inherited roles with the Hasura metadata API
 keywords:
-  - hasura
-  - docs
-  - Metadata API
-  - API reference
-  - inherited roles
-  - multiple roles
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - inherited roles
+   - multiple roles
 ---
 
 # Metadata API Reference: Inherited Roles
@@ -20,8 +20,8 @@ from other existing roles.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
@@ -48,9 +48,9 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-add-inherited-role-syntax}
 
-| Key       | Required | Schema                                                | Description                                                            |
-| --------- | -------- | ----------------------------------------------------- | ---------------------------------------------------------------------- |
-| role_name | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)   | Name of the inherited role                                             |
+| Key       | Required | Schema         | Description                                                            |
+|-----------|----------|----------------|------------------------------------------------------------------------|
+| role_name | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)     | Name of the inherited role                                             |
 | role_set  | true     | [[RoleName](/api-reference/syntax-defs.mdx#rolename)] | List of non-inherited roles from which permissions should be inherited |
 
 ## drop_inherited_role {#metadata-drop-inherited-role}
@@ -72,6 +72,6 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-drop-inherited-role-syntax}
 
-| Key       | Required | Schema                                              | Description                |
-| --------- | -------- | --------------------------------------------------- | -------------------------- |
+| Key       | Required | Schema     | Description                |
+|-----------|----------|------------|----------------------------|
 | role_name | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename) | Name of the inherited role |

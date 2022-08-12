@@ -1,34 +1,36 @@
 ---
-sidebar_label: Custom functions
-sidebar_position: 3
-description: Manage custom functions with the Hasura schema/Metadata API
+sidebar_label: Custom Functions
+sidebar_position: 3 
+description: Manage custom functions with the Hasura schema/metadata API
 keywords:
-  - hasura
-  - docs
-  - schema/Metadata API
-  - API reference
-  - custom function
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - custom function
 ---
 
 # Schema/Metadata API Reference: Custom Functions (Deprecated)
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/Metadata API is deprecated in
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/api-reference/schema-api/index.mdx) and the
-[Metadata API](/api-reference/metadata-api/index.mdx).
+[metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/Metadata APIs will
+Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
 :::
 
+
 ## Introduction
 
-Track/untrack a custom SQL function in the Hasura GraphQL Engine.
+Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for
 querying/mutating/subscribing data over the GraphQL API.
+
 
 ## track_function {#schema-metadata-track-function}
 
@@ -129,8 +131,8 @@ default).
 
 ### Args syntax {#schema-metadata-track-function-syntax-v2}
 
-| Key           | Required | Schema                                                                          | Description                        |
-| ------------- | -------- | ------------------------------------------------------------------------------- | ---------------------------------- |
+| Key           | Required | Schema                                                                                       | Description                        |
+|---------------|----------|----------------------------------------------------------------------------------------------|------------------------------------|
 | function      | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname)                     | Name of the SQL function           |
 | configuration | false    | [Function Configuration](/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the SQL function |
 
@@ -157,6 +159,6 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-untrack-function-syntax}
 
-| Key   | Required | Schema                                                      | Description              |
-| ----- | -------- | ----------------------------------------------------------- | ------------------------ |
+| Key   | Required | Schema                                                                   | Description              |
+|-------|----------|--------------------------------------------------------------------------|--------------------------|
 | table | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function |

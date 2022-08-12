@@ -6,18 +6,15 @@ keywords:
   - docs
   - API
   - API reference
-sidebar_position: 14
-sidebar_label: Hasura Cloud API reference
+sidebar_position: 13
+sidebar_label: Hasura Cloud API Reference
 sidebar_class_name: cloud-icon
 ---
 
 import TOCInline from '@theme/TOCInline';
-import ProductBadge from '@site/src/components/ProductBadge';
 import Thumbnail from '@site/src/components/Thumbnail';
 
 # Hasura Cloud API Reference
-
-<ProductBadge free pro ee />
 
 ## Introduction
 
@@ -34,8 +31,8 @@ Authentication is done using a Personal Access Token that you can create from th
 this option in the "My Account" section on bottom left.
 
 <Thumbnail
-  src="/img/api-reference/create-new-hasura-access-token_cloud_2.8.1.png"
-  alt="Create a Hasura Cloud personal access token"
+  src='/img/api-reference/create-new-hasura-access-token_cloud_2.8.1.png'
+  alt='Create a Hasura Cloud personal access token'
 />
 
 Once you have created the token it should be used as a header in your requests in the format:
@@ -54,7 +51,7 @@ Each Hasura Cloud Project is backed by an API entity called "Tenant", with a dis
 from the "Project ID". Each Project is associated with a Tenant. In some cases, like with the Metrics API, the Project
 ID is used instead of Tenant ID.
 
-<TOCInline toc={toc} filterTOC={'apis'} />
+<TOCInline toc={toc} filterTOC={(tocTree) => tocTree[3].children} />
 
 ### Create a Project
 
@@ -170,14 +167,14 @@ mutation createGitHubPreviewApp {
 | Argument                               | Description                                                                                                                                                                                                                                                                                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `githubPersonalAccessToken`            | GitHub personal access token for Hasura Cloud to access the Migrations and Metadata from your repository. Refer to GitHub docs on how to create a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). The token should have read access to the repository. |
-| under `githubRepoDetails`: `owner`     | GitHub repository owner (user or organization)                                                                                                                                                                                                                                                                                                          |
+| under `githubRepoDetails`: `owner`     | GitHub repository owner (user or organisation)                                                                                                                                                                                                                                                                                                          |
 | under `githubRepoDetails`: `repo`      | GitHub repository name.                                                                                                                                                                                                                                                                                                                                 |
 | under `githubRepoDetails`: `branch`    | Name of the branch from which to create a Preview App.                                                                                                                                                                                                                                                                                                  |
 | under `githubRepoDetails`: `directory` | Path to the Hasura Project directory (typically created by the Hasura CLI) containing Migrations and Metadata. The path should be relative to the project's root directory.                                                                                                                                                                             |
 | under `projectOptions`: `name`         | Name of the Preview App. A Hasura Cloud project will be created with the same name. Can contain lowercase characters, numbers and hyphens.                                                                                                                                                                                                              |
 | under `projectOptions`: `cloud`        | The cloud provider to deploy the Preview App on. A Hasura Cloud project will be created in the specified cloud provider. Available: `aws` and `gcp`.                                                                                                                                                                                                    |
 | under `projectOptions`: `region`       | The region within the cloud provider to deploy the Preview App on. A Hasura Cloud project will be created in the specified region. Refer to the Hasura Cloud dashboard for available options.                                                                                                                                                           |
-| under `projectOptions`: `plan`         | Pricing tier of the created Preview App. Available options: `cloud_free` and `cloud_payg` (corresponds to Free Tier and Professional Tier respectively).                                                                                                                                                                                                    |
+| under `projectOptions`: `plan`         | Pricing tier of the created Preview App. Available options: `cloud_free` and `cloud_payg` (corresponds to Free Tier and Standard Tier respectively).                                                                                                                                                                                                    |
 | under `projectOptions`: `envVars`      | ENV vars to be set for the created Preview App.                                                                                                                                                                                                                                                                                                         |
 
 #### Output Fields
@@ -215,4 +212,4 @@ query getPreviewAppCreationStatus($jobId: uuid!) {
 
 | Argument | Description                                                                                                                                                                                                                                                |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`     | Job ID of the Preview App creation job. The ID identifies the job responsible for creating the Preview App. This can be obtained from the output of the [`createGitHubPreviewApp` API](/api-reference/cloud-api-reference.mdx#api-ref-create-preview-app). |
+| `id`     | Job ID of the Preview App creation job. The ID identifies the job responsible for creating the Preview app. This can be obtained from the output of the [`createGitHubPreviewApp` API](/api-reference/cloud-api-reference.mdx#api-ref-create-preview-app). |

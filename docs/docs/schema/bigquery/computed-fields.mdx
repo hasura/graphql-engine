@@ -1,6 +1,6 @@
 ---
 sidebar_label: Computed fields
-sidebar_position: 3.1
+sidebar_position: 4
 description: Use computed fields over BigQuery in Hasura
 keywords:
   - hasura
@@ -13,19 +13,18 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# BigQuery: Computed Fields
+# BigQuery: Computed fields
 
 ## What are computed fields?
 
 Computed fields are virtual fields that are dynamically computed and can be queried along with a table's columns.
+Computed fields are computed upon request. They are computed by executing user-defined SQL functions using other columns
+of the table and other custom inputs if needed.
 
-Computed fields are computed upon request. They are computed by executing user-defined SQL functions which take columns
-of the table, and other custom values if needed, as inputs to compute the field.
+:::info Note
 
-:::info Computed fields do not modify the database schema
-
-Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a computed
-field. i.e. a computed field cannot be fetched as a table column directly from the database.
+Computed fields are only exposed over the GraphQL API and the BigQuery database schema is not modified on addition of a
+computed field.
 
 :::
 
@@ -85,7 +84,7 @@ statement.
 
 ## Adding computed fields to a table {#bigquery-adding-computed-field}
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 
 <TabItem value="console" label="Console">
 
@@ -115,7 +114,7 @@ You can add a computed field by updating the `metadata > databases > [db-name] >
       comment: ''
 ```
 
-Apply the Metadata by running:
+Apply the metadata by running:
 
 ```bash
 hasura metadata apply
@@ -127,7 +126,7 @@ hasura metadata apply
 
 A computed field can be added to a table using the
 [bigquery_add_computed_field](/api-reference/metadata-api/computed-field.mdx#metadata-bigquery-add-computed-field)
-Metadata API:
+metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1

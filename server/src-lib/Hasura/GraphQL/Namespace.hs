@@ -13,7 +13,7 @@ module Hasura.GraphQL.Namespace
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Hasura.GraphQL.Schema.Parser as P
 import Hasura.GraphQL.Schema.Typename
@@ -63,21 +63,21 @@ namespacedField f g = \case
 type NamespacedFieldMap a = InsOrdHashMap G.Name (NamespacedField a)
 
 flattenNamespaces :: forall a. NamespacedFieldMap a -> RootFieldMap a
-flattenNamespaces = InsOrdHashMap.foldMapWithKey flattenNamespace
+flattenNamespaces = OMap.foldMapWithKey flattenNamespace
   where
     flattenNamespace :: G.Name -> NamespacedField a -> RootFieldMap a
     flattenNamespace fieldName =
       namespacedField
-        (InsOrdHashMap.singleton $ mkUnNamespacedRootFieldAlias fieldName)
-        (InsOrdHashMap.mapKeys $ mkNamespacedRootFieldAlias fieldName)
+        (OMap.singleton $ mkUnNamespacedRootFieldAlias fieldName)
+        (OMap.mapKeys $ mkNamespacedRootFieldAlias fieldName)
 
 unflattenNamespaces :: RootFieldMap a -> NamespacedFieldMap a
-unflattenNamespaces = InsOrdHashMap.foldlWithKey' insert mempty
+unflattenNamespaces = OMap.foldlWithKey' insert mempty
   where
     insert m RootFieldAlias {..} v = case _rfaNamespace of
-      Nothing -> InsOrdHashMap.insert _rfaAlias (NotNamespaced v) m
-      Just ns -> InsOrdHashMap.insertWith merge ns (Namespaced $ (InsOrdHashMap.singleton _rfaAlias v)) m
-    merge (Namespaced m) (Namespaced m') = Namespaced (InsOrdHashMap.union m' m) -- Note: order of arguments to InsOrdHashMap.union to preserve ordering
+      Nothing -> OMap.insert _rfaAlias (NotNamespaced v) m
+      Just ns -> OMap.insertWith merge ns (Namespaced $ (OMap.singleton _rfaAlias v)) m
+    merge (Namespaced m) (Namespaced m') = Namespaced (OMap.union m' m) -- Note: order of arguments to OMap.union to preserve ordering
     merge v _ = v
 
 -- | Wrap the field parser results in @NamespacedField@
@@ -97,8 +97,7 @@ customizeNamespace (Just namespace) fromParsedSelection mkNamespaceTypename fiel
   where
     parser :: Parser 'Output n (NamespacedField a)
     parser =
-      Namespaced
-        . InsOrdHashMap.mapWithKey fromParsedSelection
+      Namespaced . OMap.mapWithKey fromParsedSelection
         <$> P.selectionSet (runMkTypename mkNamespaceTypename namespace) Nothing fieldParsers
 customizeNamespace Nothing _ _ fieldParsers =
   -- No namespace so just wrap the field parser results in @NotNamespaced@.

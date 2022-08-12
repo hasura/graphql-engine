@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/spf13/cobra"
@@ -21,15 +20,13 @@ func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataInconsistencyListCmd := &cobra.Command{
 		Use:          "list",
 		Aliases:      []string{"ls"},
-		Short:        "List all inconsistent objects from the Hasura Metadata",
-		Long:         "At times, when developing, the Hasura Metadata can become inconsistent. This command can be used to list all inconsistent objects from the Hasura Metadata and allow you to understand why your project's Metadata is in an inconsistent state.",
+		Short:        "List all inconsistent objects from the metadata",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			op := genOpName(cmd, "RunE")
 			err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
-				return errors.E(op, fmt.Errorf("failed to list inconsistent metadata: %w", err))
+				return fmt.Errorf("failed to list inconsistent metadata: %w", err)
 			}
 			if opts.isConsistent {
 				opts.EC.Logger.Println("metadata is consistent")
@@ -52,22 +49,20 @@ type metadataInconsistencyListOptions struct {
 }
 
 func (o *metadataInconsistencyListOptions) read(handler *projectmetadata.Handler) error {
-	var op errors.Op = "commands.metadataInconsistencyListOptions.read"
 	var err error
 	o.isConsistent, o.inconsistentObjects, err = handler.GetInconsistentMetadata()
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	return nil
 }
 
 func (o *metadataInconsistencyListOptions) run() error {
-	var op errors.Op = "commands.metadataInconsistencyListOptions.run"
 	o.EC.Spin("Getting inconsistent metadata...")
 
 	err := o.read(projectmetadata.NewHandlerFromEC(o.EC))
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 	if o.isConsistent {
 		return nil
@@ -75,7 +70,7 @@ func (o *metadataInconsistencyListOptions) run() error {
 	if o.outputFormat == "json" {
 		jsonBytes, err := json.MarshalIndent(o.inconsistentObjects, "", "  ")
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		o.EC.Spinner.Stop()
 		fmt.Fprintln(o.EC.Stdout, string(jsonBytes))

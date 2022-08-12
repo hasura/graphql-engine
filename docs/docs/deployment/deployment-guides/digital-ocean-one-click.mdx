@@ -1,12 +1,11 @@
 ---
-description: Deploy Hasura GraphQL Engine One-click App on DigitalOcean Marketplace
+description: Deploy Hasura GraphQL engine One-click App on DigitalOcean Marketplace
 keywords:
   - hasura
   - docs
   - guide
   - deployment
   - digital ocean
-  - digitalocean
   - marketplace
 sidebar_position: 6
 sidebar_label: Using DigitalOcean (one-click)
@@ -14,34 +13,34 @@ sidebar_label: Using DigitalOcean (one-click)
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Hasura GraphQL Engine One-click App on DigitalOcean Marketplace
+# Hasura GraphQL engine One-click App on DigitalOcean Marketplace
 
 ## Introduction
 
-The Hasura GraphQL Engine is available as a One-click app on the DigitalOcean Marketplace. It is packed with a
+The Hasura GraphQL engine is available as a One-click app on the DigitalOcean Marketplace. It is packed with a
 [Postgres](https://www.postgresql.org/) database and [Caddy](https://caddyserver.com/) webserver for easy and automatic
 HTTPS using [Let's Encrypt](https://letsencrypt.org/).
 
-## Deploying Hasura on DigitalOcean
+## Deploying Hasura on Digital Ocean
 
 ### Step 1: Create a Hasura One-click Droplet
 
-Click the button below to create a new Hasura GraphQL Engine Droplet through the DigitalOcean Marketplace. For first
-time users, the link also contains a referral code which gives you $100 over days. A $5 droplet is good enough to support
+Click the button below to create a new Hasura GraphQL engine Droplet through the DigitalOcean Marketplace. For first
+time users, the link also contains a referral code with gives you $100 over days. A $5 droplet is good enough to support
 most workloads. (`Ctrl+Click` to open in a new tab)
 
-[<img src="https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png" className="no-shadow" width="300" alt="do_create_droplet_button" />](https://marketplace.digitalocean.com/apps/hasura-graphql?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs)
+[<img src="https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png" className="no-shadow" width="300" alt="do_create_droplet_button" />](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs)
 
-### Step 2: Open the Console
+### Step 2: Open console
 
-Once the Hasura GraphQL Engine Droplet is ready, you can visit the Droplet IP to open the Hasura Console, where you can
+Once the Hasura GraphQL engine Droplet is ready, you can visit the Droplet IP to open the Hasura console, where you can
 create tables, explore GraphQL APIs etc. Note that it might take 1 or 2 minutes for everything to start running.
 
 The `Droplet IP` is highlighted in the image below:
 
-<Thumbnail src="/img/deployment/dashboard-digital-ocean.png" alt="Dashboard for DigitalOcean droplet" />
+<Thumbnail src='/img/deployment/dashboard-digital-ocean.png' alt='Dashboard for digital ocean droplet' />
 
-The Hasura Console will be at:
+The Hasura console will be at:
 
 ```bash
 http://<your_droplet_ip>/console
@@ -53,22 +52,22 @@ The GraphQL endpoint will be:
 http://<your_droplet_ip>/v1/graphql
 ```
 
-A Postgres database is also provisioned on the Droplet. Using the Console, you can create a table on this Postgres
+A Postgres database is also provisioned on the Droplet. Using the console, you can create a table on this Postgres
 instance and make your first GraphQL query.
 
-<Thumbnail src="/img/deployment/digital-ocean-hasura-console.png" alt="Hasura Console" />
+<Thumbnail src='/img/deployment/digital-ocean-hasura-console.png' alt='Hasura console' />
 
 ### Step 3: Create a table
 
-Navigate to `Data -> Add table` on the Console and create a table called `profile` with the following columns:
+Navigate to `Data -> Add table` on the console and create a table called `profile` with the following columns:
 
 `profile`
 
 <table>
   <thead>
     <tr>
-      <th width="50%">column name</th>
-      <th width="50%">type</th>
+      <th width='50%'>column name</th>
+      <th width='50%'>type</th>
     </tr>
   </thead>
   <tbody>
@@ -89,7 +88,7 @@ Navigate to `Data -> Add table` on the Console and create a table called `profil
 
 Choose `id` as the Primary key and click the `Add Table` button.
 
-<Thumbnail src="/img/deployment/digital-ocean-create-table.png" alt="Create a table" />
+<Thumbnail src='/img/deployment/digital-ocean-create-table.png' alt='Create a table' />
 
 ### Step 4: Insert sample data
 
@@ -103,7 +102,7 @@ Captain America
 Black Widow
 ```
 
-<Thumbnail src="/img/deployment/digital-ocean-hasura-insert-data.png" alt="Hasura Console - insert data" />
+<Thumbnail src='/img/deployment/digital-ocean-hasura-insert-data.png' alt='Hasura console - insert data' />
 
 ### Step 5: Try out GraphQL
 
@@ -118,7 +117,7 @@ query {
 }
 ```
 
-<Thumbnail src="/img/deployment/hasura-graphql-query.png" alt="Hasura Console - GraphiQL" />
+<Thumbnail src='/img/deployment/hasura-graphql-query.png' alt='Hasura console - GraphiQL' />
 
 ## Securing the GraphQL endpoint {#digital-ocean-secure}
 
@@ -158,10 +157,10 @@ HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
 ### Step 4: Update the container
 
 ```bash
-docker compose up -d
+docker-compose up -d
 ```
 
-That's it. Visit the Console at `http://<your_droplet_ip>/console` and it should prompt for the admin secret key.
+That's it. Visit the console at `http://<your_droplet_ip>/console` and it should prompt for the admin secret key.
 Further API requests can be made by adding the following header:
 
 ```bash
@@ -213,14 +212,14 @@ vim Caddyfile
 ### Step 5: Restart the container
 
 ```bash
-docker compose restart caddy
+docker-compose restart caddy
 ```
 
-Go to `https://<your_domain>/console` to visit the Hasura Console.
+Go to `https://<your_domain>/console` to visit the Hasura console.
 
 ## Updating to the latest version {#do-updating}
 
-When a new version of the GraphQL Engine is released, you can upgrade to it by just changing the version tag in
+When a new version of the GraphQL engine is released, you can upgrade to it by just changing the version tag in
 `docker-compose.yaml`. You can find the latest releases on the
 [GitHub releases page](https://github.com/hasura/graphql-engine/releases).
 
@@ -252,7 +251,7 @@ graphql-engine:
 ### Step 4: Restart the container
 
 ```bash
-docker compose up -d
+docker-compose up -d
 ```
 
 ## Using DigitalOcean Managed Postgres Database {#do-managed-pg-db}
@@ -284,10 +283,8 @@ cd /etc/hasura
 vim docker-compose.yaml
 
 ...
-# change the url to use a different database for your metadata
-HASURA_METADATA_DATABASE_URL: <database-url>
-# and here for your data using the same or different database as above
-PG_DATABASE_URL: <database-url>
+# change the url to use a different database
+HASURA_GRAPHQL_DATABASE_URL: <database-url>
 ...
 
 # type ESC followed by :wq to save and quit
@@ -358,7 +355,7 @@ cd /etc/hasura
 To checks logs for any container, use the following command:
 
 ```bash
-docker compose logs <container_name>
+docker-compose logs <container_name>
 ```
 
 Where `<container_name>` is one of `graphql-engine`, `postgres` or `caddy`.

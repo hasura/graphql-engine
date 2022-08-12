@@ -2,7 +2,7 @@
 --
 -- How to parse the boolean expressions, specifically for Postgres.
 --
--- See 'Hasura.Eventing.Backend'.
+-- See 'Hasura.RQL.DDL.Schema.Cache' and 'Hasura.RQL.Types.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.BoolExp
   ( parseBoolExpOperations,
     buildComputedFieldBooleanExp,
@@ -12,36 +12,38 @@ where
 import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict qualified as Map
+import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Backends.Postgres.Types.ComputedField as PG
 import Hasura.Base.Error
-import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
-import Hasura.Table.Cache
 
 parseBoolExpOperations ::
   forall pgKind m v.
   ( Backend ('Postgres pgKind),
-    MonadError QErr m
+    MonadError QErr m,
+    TableCoreInfoRM ('Postgres pgKind) m
   ) =>
   ValueParser ('Postgres pgKind) m v ->
-  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
+  QualifiedTable ->
   FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
   ColumnReference ('Postgres pgKind) ->
   Value ->
   m [OpExpG ('Postgres pgKind) v]
-parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
+parseBoolExpOperations rhsParser rootTable fim columnRef value = do
   restrictJSONColumn
   withPathK (toTxt columnRef) $ parseOperations columnRef value
   where
@@ -54,13 +56,13 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
     parseOperations :: ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
     parseOperations column = \case
       Object o -> mapM (parseOperation column . first K.toText) (KM.toList o)
-      val -> pure . AEQ NullableComparison <$> rhsParser columnType val
+      val -> pure . AEQ False <$> rhsParser columnType val
       where
         columnType = CollectableTypeScalar $ columnReferenceType column
 
     parseOperation :: ColumnReference ('Postgres pgKind) -> (Text, Value) -> m (OpExpG ('Postgres pgKind) v)
-    parseOperation column (opStr, val) = withPathK opStr
-      $ case opStr of
+    parseOperation column (opStr, val) = withPathK opStr $
+      case opStr of
         "$cast" -> parseCast
         "_cast" -> parseCast
         "$eq" -> parseEq
@@ -103,12 +105,11 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
         "_niregex" -> parseNIRegex
         "$is_null" -> parseIsNull
         "_is_null" -> parseIsNull
-        -- arrays and jsonb type
-        "_contains" -> guardTypeToArrayOrJsonb >> ABackendSpecific . AContains <$> parseOne
-        "$contains" -> guardTypeToArrayOrJsonb >> ABackendSpecific . AContains <$> parseOne
-        "_contained_in" -> guardTypeToArrayOrJsonb >> ABackendSpecific . AContainedIn <$> parseOne
-        "$contained_in" -> guardTypeToArrayOrJsonb >> ABackendSpecific . AContainedIn <$> parseOne
         -- jsonb type
+        "_contains" -> guardType [PGJSONB] >> ABackendSpecific . AContains <$> parseOne
+        "$contains" -> guardType [PGJSONB] >> ABackendSpecific . AContains <$> parseOne
+        "_contained_in" -> guardType [PGJSONB] >> ABackendSpecific . AContainedIn <$> parseOne
+        "$contained_in" -> guardType [PGJSONB] >> ABackendSpecific . AContainedIn <$> parseOne
         "_has_key" -> guardType [PGJSONB] >> ABackendSpecific . AHasKey <$> parseWithTy (ColumnScalar PGText)
         "$has_key" -> guardType [PGJSONB] >> ABackendSpecific . AHasKey <$> parseWithTy (ColumnScalar PGText)
         "_has_keys_any" -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
@@ -166,16 +167,13 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
         "$matches_any" -> guardType [PGLtree] >> ABackendSpecific . AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
         "_matches_fulltext" -> guardType [PGLtree] >> ABackendSpecific . AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
         "$matches_fulltext" -> guardType [PGLtree] >> ABackendSpecific . AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
-        x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
+        x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
       where
         colTy = columnReferenceType column
-        colNonNullable = case fromMaybe True $ columnReferenceNullable column of
-          True -> NullableComparison
-          False -> NonNullableComparison
 
         parseIsNull = bool ANISNOTNULL ANISNULL <$> parseVal -- is null
-        parseEq = AEQ colNonNullable <$> parseOne -- equals
-        parseNe = ANE colNonNullable <$> parseOne -- <>
+        parseEq = AEQ False <$> parseOne -- equals
+        parseNe = ANE False <$> parseOne -- <>
         parseIn = AIN <$> parseManyWithType colTy -- in an array
         parseNin = ANIN <$> parseManyWithType colTy -- not in an array
         parseGt = AGT <$> parseOne -- >
@@ -204,26 +202,23 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
         parseCast = do
           castOperations <- parseVal
           parsedCastOperations <-
-            forM (HashMap.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
+            forM (Map.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
               let targetType = textToPGScalarType targetTypeName
                   castedColumn = ColumnReferenceCast column (ColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <-
-                withPathK targetTypeName
-                  $ parseOperations castedColumn castedComparisons
+                withPathK targetTypeName $
+                  parseOperations castedColumn castedComparisons
               return (targetType, parsedCastedComparisons)
-          return . ACast $ HashMap.fromList parsedCastOperations
+          return . ACast $ Map.fromList parsedCastOperations
 
         checkValidCast targetType = case (colTy, targetType) of
           (ColumnScalar PGGeometry, PGGeography) -> return ()
           (ColumnScalar PGGeography, PGGeometry) -> return ()
           (ColumnScalar PGJSONB, PGText) -> return ()
           _ ->
-            throw400 UnexpectedPayload
-              $ "cannot cast column of type "
-              <> colTy
-              <<> " to type "
-              <>> targetType
+            throw400 UnexpectedPayload $
+              "cannot cast column of type " <> colTy <<> " to type " <>> targetType
 
         parseGeometryOp f =
           guardType [PGGeometry] >> ABackendSpecific . f <$> parseOneNoSess colTy val
@@ -243,7 +238,7 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
               from <- withPathK "from" $ parseOneNoSess colTy fromVal
               useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (ColumnScalar PGBoolean) sphVal
               return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
-            _ -> throwError $ invalidTypeMessage (dquoteList [PGGeometry, PGGeography])
+            _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
         decodeAndValidateRhsCol :: Value -> m (RootOrCurrentColumn ('Postgres pgKind))
         decodeAndValidateRhsCol v = case v of
@@ -252,7 +247,10 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
             [] -> throw400 Unexpected "path cannot be empty"
             [col] -> go IsCurrent fim col
             [String "$", col] -> do
-              go IsRoot rootFieldInfoMap col
+              rootTableInfo <-
+                lookupTableCoreInfo rootTable
+                  >>= flip onNothing (throw500 $ "unexpected: " <> rootTable <<> " doesn't exist")
+              go IsRoot (_tciFieldInfoMap rootTableInfo) col
             _ -> throw400 NotSupported "Relationship references are not supported in column comparison RHS"
           _ -> throw400 Unexpected "a boolean expression JSON must be either a string or an array"
           where
@@ -271,16 +269,12 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
 
         validateRhsCol fieldInfoMap rhsCol = do
           rhsType <- askColumnType fieldInfoMap rhsCol "column operators can only compare postgres columns"
-          when (colTy /= rhsType)
-            $ throw400 UnexpectedPayload
-            $ "incompatible column types: "
-            <> column
-            <<> " has type "
-            <> colTy
-            <<> ", but "
-            <> rhsCol
-            <<> " has type "
-            <>> rhsType
+          when (colTy /= rhsType) $
+            throw400 UnexpectedPayload $
+              "incompatible column types: "
+                <> column <<> " has type "
+                <> colTy <<> ", but "
+                <> rhsCol <<> " has type " <>> rhsType
           pure rhsCol
 
         parseWithTy ty = rhsParser (CollectableTypeScalar ty) val
@@ -291,26 +285,13 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
 
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
-        guardTypeToArrayOrJsonb = guardTypeWhere isArrayOrJsonb "an array or JSONB"
-          where
-            isArrayOrJsonb = \case
-              PGArray _ -> True
-              PGJSONB -> True
-              _ -> False
-
-        guardType validTypes = guardTypeWhere (`elem` validTypes) (dquoteList validTypes)
-
-        guardTypeWhere isValid messageOnError =
-          unless (isScalarColumnWhere isValid colTy)
-            $ throwError
-            $ invalidTypeMessage messageOnError
-
-        invalidTypeMessage expectedColumnType =
-          err400 UnexpectedPayload
-            $ " is of type "
-            <> colTy
-            <<> "; this operator works only on columns of type "
-            <> expectedColumnType
+        guardType validTys =
+          unless (isScalarColumnWhere (`elem` validTys) colTy) $
+            throwError $ buildMsg colTy validTys
+        buildMsg ty expTys =
+          err400 UnexpectedPayload $
+            " is of type " <> ty <<> "; this operator works only on columns of type "
+              <> T.intercalate "/" (map dquote expTys)
 
         parseVal :: (FromJSON a) => m a
         parseVal = decodeValue val
@@ -323,12 +304,12 @@ buildComputedFieldBooleanExp ::
   ) =>
   BoolExpResolver ('Postgres pgKind) m v ->
   BoolExpRHSParser ('Postgres pgKind) m v ->
-  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
+  TableName ('Postgres pgKind) ->
   FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
   ComputedFieldInfo ('Postgres pgKind) ->
   Value ->
   m (AnnComputedFieldBoolExp ('Postgres pgKind) v)
-buildComputedFieldBooleanExp boolExpResolver rhsParser rootFieldInfoMap colInfoMap ComputedFieldInfo {..} colVal = do
+buildComputedFieldBooleanExp boolExpResolver rhsParser rootTable colInfoMap ComputedFieldInfo {..} colVal = do
   let ComputedFieldFunction {..} = _cfiFunction
   case toList _cffInputArgs of
     [] -> do
@@ -337,12 +318,12 @@ buildComputedFieldBooleanExp boolExpResolver rhsParser rootFieldInfoMap colInfoM
       AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName computedFieldFunctionArgs
         <$> case _cfiReturnType of
           CFRScalar scalarType ->
-            CFBEScalar NoRedaction
-              <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
+            CFBEScalar
+              <$> parseBoolExpOperations (_berpValueParser rhsParser) rootTable colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
           CFRSetofTable table -> do
             tableBoolExp <- decodeValue colVal
             tableFieldInfoMap <- askFieldInfoMapSource table
-            annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser tableFieldInfoMap tableFieldInfoMap $ unBoolExp tableBoolExp
+            annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser table tableFieldInfoMap $ unBoolExp tableBoolExp
             pure $ CFBETable table annTableBoolExp
     _ ->
       throw400

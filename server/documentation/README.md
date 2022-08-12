@@ -17,7 +17,6 @@ You can [browse the engine's haddock documentation](haddock) for the [stable](ha
 * how to understand our [GraphQL schema](deep-dives/schema.md)
 * how to perform [database migrations](deep-dives/migration-guidelines.md)
 * how the [execution of remote joins](deep-dives/remote-joins-execution.md) works
-* how we [manage resources](deep-dives/managed.md)
 
 
 ## Backend-specific documentation

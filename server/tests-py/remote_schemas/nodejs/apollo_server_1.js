@@ -49,6 +49,6 @@ const server = new ApolloServer({
   schema: buildSubgraphSchema({ typeDefs, resolvers })
 });
 
-server.listen({ port: process.env.PORT }).then(({ url }) => {
+server.listen(4003).then(({ url }) => {
     console.log(`🚀 Server ready at ${url}`);
 });

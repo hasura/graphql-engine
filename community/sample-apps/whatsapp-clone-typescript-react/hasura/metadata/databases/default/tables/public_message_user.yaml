@@ -1,0 +1,39 @@
+object_relationships:
+- name: chat
+  using:
+    manual_configuration:
+      column_mapping:
+        chat_id: id
+      remote_table:
+        name: chat
+        schema: public
+- name: sender
+  using:
+    manual_configuration:
+      column_mapping:
+        sender_id: id
+      remote_table:
+        name: users
+        schema: public
+select_permissions:
+- permission:
+    allow_aggregations: true
+    columns:
+    - chat_id
+    - content
+    - created_at
+    - id
+    - sender_id
+    filter:
+      _or:
+      - sender_id:
+          _eq: X-Hasura-User-Id
+      - chat:
+          users:
+            user_id:
+              _eq: X-Hasura-User-Id
+    limit: 1
+  role: user
+table:
+  name: message_user
+  schema: public

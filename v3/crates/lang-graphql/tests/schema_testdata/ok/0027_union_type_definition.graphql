@@ -1,5 +1,0 @@
-union SearchResult = Photo | Person
-
-union MultiLine =
-  | Photo
-  | Person

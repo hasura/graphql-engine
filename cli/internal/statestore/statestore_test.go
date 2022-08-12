@@ -11,7 +11,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestClientCatalogState_GetCLIState(t *testing.T) {
@@ -22,11 +21,10 @@ func TestClientCatalogState_GetCLIState(t *testing.T) {
 		path   string
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		want      CLIState
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		fields  fields
+		want    CLIState
+		wantErr bool
 	}{
 		{
 			"can get catalog state",
@@ -42,7 +40,6 @@ func TestClientCatalogState_GetCLIState(t *testing.T) {
 				},
 			},
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -57,11 +54,12 @@ func TestClientCatalogState_GetCLIState(t *testing.T) {
 			})
 			assert.NoError(t, err)
 			got, err := c.Get()
-			tt.assertErr(t, err)
 			if tt.wantErr {
-				return
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, *got)
 			}
-			assert.Equal(t, tt.want, *got)
 		})
 	}
 }
@@ -76,12 +74,11 @@ func TestCLICatalogState_Set(t *testing.T) {
 		state CLIState
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		want      string
-		wantErr   bool
-		assertErr require.ErrorAssertionFunc
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			"can set CLI state",
@@ -102,7 +99,6 @@ func TestCLICatalogState_Set(t *testing.T) {
   "message": "success"
 }`,
 			false,
-			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -111,13 +107,14 @@ func TestCLICatalogState_Set(t *testing.T) {
 				client: tt.fields.client,
 			}
 			got, err := c.Set(tt.args.state)
-			tt.assertErr(t, err)
 			if tt.wantErr {
-				return
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				b, err := ioutil.ReadAll(got)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, string(b))
 			}
-			b, err := ioutil.ReadAll(got)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(b))
 		})
 	}
 }

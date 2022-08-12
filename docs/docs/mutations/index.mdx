@@ -1,0 +1,25 @@
+---
+description: Manage mutations on your database with Hasura
+keywords:
+  - hasura
+  - docs
+  - mutation
+slug: index
+---
+
+# Mutations
+
+## Introduction
+
+GraphQL mutations are used to modify data on the server (i.e. write, update or delete data).
+
+Hasura GraphQL engine auto-generates mutations as part of the GraphQL schema from your database's schema model.
+
+Data of all tables in the database tracked by the GraphQL engine can be modified over the GraphQL endpoint. If you have
+a tracked table in your database, its insert/update/delete mutation fields are added as nested fields under the
+`mutation_root` root level type.
+
+## Explore mutations
+
+- [Explore mutations with Postgres / Citus / Hyperscale](/mutations/postgres/index.mdx)
+- [Explore mutations with MS SQL Server](/mutations/ms-sql-server/index.mdx)

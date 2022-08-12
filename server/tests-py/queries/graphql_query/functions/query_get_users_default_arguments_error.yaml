@@ -1,0 +1,18 @@
+description: Query from users table using get_users function
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.get_users.args.args"
+      code: not-supported
+    message: Non default arguments cannot be omitted
+query:
+  query: |
+    query {
+      get_users(args: {arg_2: true}) {
+        id
+        name
+        is_admin
+      }
+    }

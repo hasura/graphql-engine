@@ -1,7 +1,4 @@
 {
   "label": "Migrations, Metadata and Seeds",
-  "position": 82,
-  "customProps": {
-    "sidebar_pathname": "migrations-metadata-seeds"
-  }
+  "position": 140
 }

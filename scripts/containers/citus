@@ -35,7 +35,7 @@ function citus_launch_container {
     --volume="${CITUS_VOLUME_NAME}:/var/lib/postgresql/data" \
     --env=POSTGRES_PASSWORD="$CITUS_PASSWORD" \
     --detach \
-    citusdata/citus:11.3.0
+    citusdata/citus:10.1
 }
 
 function citus_wait {

@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 )
 
@@ -34,34 +34,32 @@ func getMetadataModeHandler(mode cli.MetadataMode) MetadataModeHandler {
 type metadataModeDirectoryHandler struct{}
 
 func (m *metadataModeDirectoryHandler) Export(o *MetadataExportOptions) error {
-	var op errors.Op = "commands.metadataModeDirectoryHandler.Export"
 	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	files, err := metadataHandler.ExportMetadata()
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("failed to export metadata: %w", err))
+		return fmt.Errorf("failed to export metadata: %w", err)
 	}
 	err = metadataHandler.WriteMetadata(files)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("cannot write metadata to project: %w", err))
+		return fmt.Errorf("cannot write metadata to project: %w", err)
 	}
 	return nil
 }
 
 func (m *metadataModeDirectoryHandler) Apply(o *MetadataApplyOptions) error {
-	var op errors.Op = "commands.metadataModeDirectoryHandler.Apply"
 	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	if !o.DryRun {
 		if o.EC.Config.Version == cli.V2 {
 			_, err := metadataHandler.V1ApplyMetadata()
 			if err != nil {
-				return errors.E(op, errorApplyingMetadata(err))
+				return errorApplyingMetadata(err)
 			}
 			o.EC.Logger.Debug("metadata applied using v1 replace_metadata")
 		} else {
-			r, err := metadataHandler.V2ApplyMetadata(o.DisallowInconsistencies)
+			r, err := metadataHandler.V2ApplyMetadata()
 			if err != nil {
-				return errors.E(op, errorApplyingMetadata(err))
+				return errorApplyingMetadata(err)
 			}
 			if !r.IsConsistent {
 				o.EC.Logger.Warn("Metadata is inconsistent")
@@ -71,10 +69,7 @@ func (m *metadataModeDirectoryHandler) Apply(o *MetadataApplyOptions) error {
 		}
 		if len(o.rawOutput) != 0 {
 			// if not a dry run fetch metadata from and server and print it to stdout
-			if err := getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.rawOutput)); err != nil {
-				return errors.E(op, err)
-			}
-			return nil
+			return getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.rawOutput))
 		}
 		return nil
 	}
@@ -82,7 +77,7 @@ func (m *metadataModeDirectoryHandler) Apply(o *MetadataApplyOptions) error {
 	if o.DryRun {
 		projectMetadataJSON, err := metadataHandler.BuildJSONMetadata()
 		if err != nil {
-			return errors.E(op, fmt.Errorf("error building project metadata: %w", err))
+			return fmt.Errorf("error building project metadata: %w", err)
 		}
 
 		if o.DryRun && len(o.rawOutput) == 0 {
@@ -95,14 +90,13 @@ func (m *metadataModeDirectoryHandler) Apply(o *MetadataApplyOptions) error {
 		}
 
 		if err := writeByOutputFormat(o.EC.Stdout, projectMetadataJSON, rawOutputFormat(o.rawOutput)); err != nil {
-			return errors.E(op, fmt.Errorf("displaying metadata failed: %w", err))
+			return fmt.Errorf("displaying metadata failed: %w", err)
 		}
 	}
 	return nil
 }
 
 func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
-	var op errors.Op = "commands.metadataModeDirectoryHandler.Diff"
 	args := o.Args
 	messageFormat := "Showing diff between %s and %s..."
 	message := ""
@@ -119,7 +113,7 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 		// 1 arg, diff given directory and the metadata on server
 		err := checkDir(args[0])
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		o.Metadata[0] = args[0]
 		fromFriendlyName = o.Metadata[0]
@@ -127,7 +121,7 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 	case 2:
 		err := checkDir(args[0])
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		o.Metadata[0] = args[0]
 		fromFriendlyName = o.Metadata[0]
@@ -135,7 +129,7 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 
 		err = checkDir(args[1])
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		o.Metadata[1] = args[1]
 		toFriendlyName = o.Metadata[1]
@@ -152,18 +146,18 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 		// metadata from the server to it and then setting it as the "toDirectory"
 		tmpDir, err := ioutil.TempDir("", "*")
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		defer os.RemoveAll(tmpDir)
 		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, tmpDir))
 		var files map[string][]byte
 		files, err = metadataHandler.ExportMetadata()
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		err = metadataHandler.WriteMetadata(files)
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		toDirectory = tmpDir
 	}
@@ -180,10 +174,7 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 			writer:                 o.Output,
 			ec:                     o.EC,
 		}
-		if err := printGeneratedMetadataFileDiffBetweenProjectDirectories(opts); err != nil {
-			return errors.E(op, err)
-		}
-		return nil
+		return printGeneratedMetadataFileDiffBetweenProjectDirectories(opts)
 	}
 	opts := projectmetadata.PrintContextRichDiffBetweenProjectDirectoriesOpts{
 		EC:              o.EC,
@@ -193,130 +184,100 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 		Writer:          o.Output,
 		DisableColor:    o.DisableColor,
 	}
-	if err := projectmetadata.PrintContextRichDiffBetweenProjectDirectories(opts); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return projectmetadata.PrintContextRichDiffBetweenProjectDirectories(opts)
 }
 
 type metadataModeJSONHandler struct{}
 
 func (m *metadataModeJSONHandler) Export(o *MetadataExportOptions) error {
-	var op errors.Op = "commands.metadataModeJSONHandler.Export"
-	if err := export(o, o.EC.MetadataMode); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return export(o, o.EC.MetadataMode)
 }
 
 func (m *metadataModeJSONHandler) Apply(o *MetadataApplyOptions) error {
-	var op errors.Op = "commands.metadataModeJSONHandler.Apply"
-	if err := apply(o, o.EC.MetadataMode); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return apply(o, o.EC.MetadataMode)
 }
 
 func (m *metadataModeJSONHandler) Diff(o *MetadataDiffOptions) error {
-	var op errors.Op = "commands.metadataModeJSONHandler.Diff"
-	if err := diff(o, DifftypeJSON); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return diff(o, DifftypeJSON)
 }
 
 type metadataModeYAMLHandler struct{}
 
 func (m *metadataModeYAMLHandler) Export(o *MetadataExportOptions) error {
-	var op errors.Op = "commands.metadataModeYAMLHandler.Export"
-	if err := export(o, o.EC.MetadataMode); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return export(o, o.EC.MetadataMode)
 }
 
 func (m *metadataModeYAMLHandler) Apply(o *MetadataApplyOptions) error {
-	var op errors.Op = "commands.metadataModeYAMLHandler.Apply"
-	if err := apply(o, o.EC.MetadataMode); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return apply(o, o.EC.MetadataMode)
 }
 
 func (m *metadataModeYAMLHandler) Diff(o *MetadataDiffOptions) error {
-	var op errors.Op = "commands.metadataModeYAMLHandler.Diff"
-	if err := diff(o, DifftypeYAML); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return diff(o, DifftypeYAML)
 }
 
 func export(o *MetadataExportOptions, mode cli.MetadataMode) error {
-	var op errors.Op = "commands.export"
 	metadata, err := ec.APIClient.V1Metadata.ExportMetadata()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("exporting metadata from server: %w", err))
+		return fmt.Errorf("exporting metadata from server: %w", err)
 	}
 	var metadataBytes []byte
 	metadataBytes, err = ioutil.ReadAll(metadata)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("reading metadata from response: %w", err))
+		return fmt.Errorf("reading metadata from response: %w", err)
 	}
 	if mode == cli.MetadataModeYAML {
 		metadataBytes, err = metadatautil.JSONToYAML(metadataBytes)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("parsing metadata to yaml: %w", err))
+			return fmt.Errorf("parsing metadata to yaml: %w", err)
 		}
 	}
 	err = ioutil.WriteFile(o.EC.MetadataFile, metadataBytes, os.ModePerm)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("writing metadata to file: %w", err))
+		return fmt.Errorf("writing metadata to file: %w", err)
 	}
 	return nil
 }
-
 func apply(o *MetadataApplyOptions, mode cli.MetadataMode) error {
-	var op errors.Op = "commands.apply"
 	var localMetadataBytes []byte
 	var err error
 
 	localMetadataBytes, err = ioutil.ReadFile(o.EC.MetadataFile)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("reading metadata file: %w", err))
+		return fmt.Errorf("reading metadata file: %w", err)
 	}
 	if o.DryRun {
 		if len(o.rawOutput) == 0 {
 			o.rawOutput = string(rawOutputFormatJSON)
 		}
 		if err := writeByOutputFormat(o.EC.Stdout, localMetadataBytes, rawOutputFormat(o.rawOutput)); err != nil {
-			return errors.E(op, fmt.Errorf("displaying metadata failed: %w", err))
+			return fmt.Errorf("displaying metadata failed: %w", err)
 		}
 		return nil
 	}
 	if mode == cli.MetadataModeYAML {
 		localMetadataBytes, err = metadatautil.YAMLToJSON(localMetadataBytes)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("parsing yaml metadata to json: %w", err))
+			return fmt.Errorf("parsing yaml metadata to json: %w", err)
 		}
 	}
 	var metadata interface{}
 	err = json.Unmarshal(localMetadataBytes, &metadata)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("parsing metadata as json: %w", err))
+		return fmt.Errorf("parsing metadata as json: %w", err)
 	}
 	if o.EC.Config.Version == cli.V2 {
 		_, err := cli.GetCommonMetadataOps(o.EC).ReplaceMetadata(bytes.NewReader(localMetadataBytes))
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		return nil
 	}
 	r, err := o.EC.APIClient.V1Metadata.V2ReplaceMetadata(hasura.V2ReplaceMetadataArgs{
-		AllowInconsistentMetadata: !o.DisallowInconsistencies,
+		AllowInconsistentMetadata: true,
 		Metadata:                  metadata,
 	})
 	if err != nil {
-		return errors.E(op, errorApplyingMetadata(err))
+		return errorApplyingMetadata(err)
 	}
 	if !r.IsConsistent {
 		o.EC.Logger.Warn("Metadata is inconsistent")
@@ -324,40 +285,33 @@ func apply(o *MetadataApplyOptions, mode cli.MetadataMode) error {
 	}
 	if len(o.rawOutput) != 0 {
 		// if not a dry run fetch metadata from and server and print it to stdout
-		if err := getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.rawOutput)); err != nil {
-			return errors.E(op, err)
-		}
-		return nil
+		return getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.rawOutput))
 	}
 	return nil
 }
 
 func diff(o *MetadataDiffOptions, diffType DiffType) error {
-	var op errors.Op = "commands.diff"
 	if len(o.Args) > 0 {
-		return errors.E(op, fmt.Errorf("expected 0 arguments, found: %v", o.Args))
+		return fmt.Errorf("expected 0 arguments, found: %v", o.Args)
 	}
 	serverMetadata, err := cli.GetCommonMetadataOps(o.EC).ExportMetadata()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("exporting metadata from server: %w", err))
+		return fmt.Errorf("exporting metadata from server: %w", err)
 	}
 	var serverMetadataBytes []byte
 	serverMetadataBytes, err = ioutil.ReadAll(serverMetadata)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("reading server metadata: %w", err))
+		return fmt.Errorf("reading server metadata: %w", err)
 	}
 	if diffType == DifftypeYAML {
 		serverMetadataBytes, err = metadatautil.JSONToYAML(serverMetadataBytes)
 		if err != nil {
-			return errors.E(op, fmt.Errorf("parsing server metadata as yaml: %w", err))
+			return fmt.Errorf("parsing server metadata as yaml: %w", err)
 		}
 	}
 	localMetadataBytes, err := ioutil.ReadFile(o.EC.MetadataFile)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("reading local metadata: %w", err))
+		return fmt.Errorf("reading local metadata: %w", err)
 	}
-	if err := printMyersDiff(string(serverMetadataBytes), string(localMetadataBytes), "server", "project", o.Output, o.DisableColor); err != nil {
-		return errors.E(op, err)
-	}
-	return nil
+	return printMyersDiff(string(serverMetadataBytes), string(localMetadataBytes), "server", "project", o.Output, o.DisableColor)
 }

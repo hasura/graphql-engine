@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Postgres Execute Mutation
 --
 -- Generic combinators for translating and excecuting IR mutation statements.
@@ -15,53 +13,28 @@ module Hasura.Backends.Postgres.Execute.Mutation
     --
     executeMutationOutputQuery,
     mutateAndFetchCols,
-    --
-    ValidateInputPayloadVersion,
-    validateInputPayloadVersion,
-    ValidateInputErrorResponse (..),
-    HttpHandlerLog (..),
-    ValidateInsertInputLog (..),
-    InsertValidationPayloadMap,
-    validateUpdateMutation,
-    validateDeleteMutation,
-    validateMutation,
   )
 where
 
-import Control.Exception (try)
-import Control.Lens qualified as Lens
 import Data.Aeson
-import Data.Aeson qualified as J
-import Data.Aeson.Key qualified as J
-import Data.Aeson.TH qualified as J
-import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.List.Extended qualified as LE
 import Data.Sequence qualified as DS
-import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Delete
 import Hasura.Backends.Postgres.Translate.Insert
 import Hasura.Backends.Postgres.Translate.Mutation
 import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Backends.Postgres.Translate.Select
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
 import Hasura.Backends.Postgres.Translate.Update
-import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Parser.Internal.Convert
-import Hasura.GraphQL.Parser.Variable qualified as G
-import Hasura.HTTP
-import Hasura.Logging qualified as L
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
-import Hasura.RQL.DDL.Headers
-import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert
@@ -69,21 +42,11 @@ import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Headers (HeaderConf)
-import Hasura.RQL.Types.NamingCase (NamingCase)
-import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.Server.Types (HeaderPrecedence (..))
-import Hasura.Server.Utils
+import Hasura.SQL.Backend
+import Hasura.SQL.Types
 import Hasura.Session
-import Hasura.Tracing (b3TraceContextPropagator)
-import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client.Transformable qualified as HTTP
-import Network.Wreq qualified as Wreq
 
 data MutateResp (b :: BackendType) a = MutateResp
   { _mrAffectedRows :: Int,
@@ -103,7 +66,7 @@ instance (Backend b, FromJSON a) => FromJSON (MutateResp b a) where
 
 data Mutation (b :: BackendType) = Mutation
   { _mTable :: QualifiedTable,
-    _mQuery :: (MutationCTE, DS.Seq PG.PrepArg),
+    _mQuery :: (MutationCTE, DS.Seq Q.PrepArg),
     _mOutput :: MutationOutput b,
     _mCols :: [ColumnInfo b],
     _mStrfyNum :: Options.StringifyNumbers,
@@ -113,7 +76,7 @@ data Mutation (b :: BackendType) = Mutation
 mkMutation ::
   UserInfo ->
   QualifiedTable ->
-  (MutationCTE, DS.Seq PG.PrepArg) ->
+  (MutationCTE, DS.Seq Q.PrepArg) ->
   MutationOutput ('Postgres pgKind) ->
   [ColumnInfo ('Postgres pgKind)] ->
   Options.StringifyNumbers ->
@@ -125,92 +88,85 @@ mkMutation _userInfo table query output allCols strfyNum tCase =
 runMutation ::
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m,
-    MonadIO m
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
   ) =>
-  UserInfo ->
   Mutation ('Postgres pgKind) ->
   m EncJSON
-runMutation userInfo mut =
-  bool (mutateAndReturn userInfo mut) (mutateAndSel userInfo mut)
-    $ hasNestedFld
-    $ _mOutput mut
+runMutation mut =
+  bool (mutateAndReturn mut) (mutateAndSel mut) $
+    hasNestedFld $ _mOutput mut
 
 mutateAndReturn ::
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m,
-    MonadIO m
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
   ) =>
-  UserInfo ->
   Mutation ('Postgres pgKind) ->
   m EncJSON
-mutateAndReturn userInfo (Mutation qt (cte, p) mutationOutput allCols strfyNum tCase) =
-  executeMutationOutputQuery userInfo qt allCols Nothing cte mutationOutput strfyNum tCase (toList p)
+mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols strfyNum tCase) =
+  executeMutationOutputQuery qt allCols Nothing cte mutationOutput strfyNum tCase (toList p)
 
 execUpdateQuery ::
   forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m,
-    MonadIO m
-  ) =>
-  Options.StringifyNumbers ->
-  Maybe NamingCase ->
-  UserInfo ->
-  (AnnotatedUpdate ('Postgres pgKind), DS.Seq PG.PrepArg) ->
-  m EncJSON
-execUpdateQuery strfyNum tCase userInfo (u, p) = do
-  updateCTE <- mkUpdateCTE userInfo u
-  case updateCTE of
-    Update singleUpdate -> runCTE singleUpdate
-    MultiUpdate ctes -> encJFromList <$> traverse runCTE ctes
-  where
-    runCTE :: S.TopLevelCTE -> m EncJSON
-    runCTE cte =
-      runMutation
-        userInfo
-        (mkMutation userInfo (_auTable u) (MCCheckConstraint cte, p) (_auOutput u) (_auAllCols u) strfyNum tCase)
-
-execDeleteQuery ::
-  forall pgKind m.
-  ( MonadTx m,
-    MonadIO m,
-    Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
+    PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   UserInfo ->
-  (AnnDel ('Postgres pgKind), DS.Seq PG.PrepArg) ->
+  (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
-execDeleteQuery strfyNum tCase userInfo (u, p) = do
-  delete <- mkDelete userInfo u
-  runMutation
-    userInfo
-    (mkMutation userInfo (_adTable u) (MCDelete delete, p) (_adOutput u) (_adAllCols u) strfyNum tCase)
+execUpdateQuery strfyNum tCase userInfo (u, p) =
+  case updateCTE of
+    Update singleUpdate -> runCTE singleUpdate
+    MultiUpdate ctes -> encJFromList <$> traverse runCTE ctes
+  where
+    updateCTE :: UpdateCTE
+    updateCTE = mkUpdateCTE u
 
-execInsertQuery ::
+    runCTE :: S.TopLevelCTE -> m EncJSON
+    runCTE cte =
+      runMutation
+        (mkMutation userInfo (_auTable u) (MCCheckConstraint cte, p) (_auOutput u) (_auAllCols u) strfyNum tCase)
+
+execDeleteQuery ::
+  forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m,
-    MonadIO m
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   UserInfo ->
-  (InsertQueryP1 ('Postgres pgKind), DS.Seq PG.PrepArg) ->
+  (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
-execInsertQuery strfyNum tCase userInfo (u, p) = do
-  insertCTE <- mkInsertCTE userInfo u
+execDeleteQuery strfyNum tCase userInfo (u, p) =
   runMutation
-    userInfo
+    (mkMutation userInfo (_adTable u) (MCDelete delete, p) (_adOutput u) (_adAllCols u) strfyNum tCase)
+  where
+    delete = mkDelete u
+
+execInsertQuery ::
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  Options.StringifyNumbers ->
+  Maybe NamingCase ->
+  UserInfo ->
+  (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg) ->
+  m EncJSON
+execInsertQuery strfyNum tCase userInfo (u, p) =
+  runMutation
     (mkMutation userInfo (iqp1Table u) (MCCheckConstraint insertCTE, p) (iqp1Output u) (iqp1AllCols u) strfyNum tCase)
+  where
+    insertCTE = mkInsertCTE u
 
 {- Note: [Prepared statements in Mutations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -230,20 +186,17 @@ mutateAndSel ::
   forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m,
-    MonadIO m
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
   ) =>
-  UserInfo ->
   Mutation ('Postgres pgKind) ->
   m EncJSON
-mutateAndSel userInfo (Mutation qt q mutationOutput allCols strfyNum tCase) = do
+mutateAndSel (Mutation qt q mutationOutput allCols strfyNum tCase) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ columnVals <- liftTx $ mutateAndFetchCols userInfo qt allCols q strfyNum tCase
+  MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum tCase
   select <- mkSelectExpFromColumnValues qt allCols columnVals
   -- Perform select query and fetch returning fields
   executeMutationOutputQuery
-    userInfo
     qt
     allCols
     Nothing
@@ -256,20 +209,18 @@ mutateAndSel userInfo (Mutation qt q mutationOutput allCols strfyNum tCase) = do
 withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
 withCheckPermission sqlTx = do
   (rawResponse, checkConstraint) <- sqlTx
-  unless checkConstraint
-    $ throw400 PermissionError
-    $ "check constraint of an insert/update permission has failed"
+  unless checkConstraint $
+    throw400 PermissionError $
+      "check constraint of an insert/update permission has failed"
   pure rawResponse
 
 executeMutationOutputQuery ::
   forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m,
-    MonadIO m
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
   ) =>
-  UserInfo ->
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   Maybe Int ->
@@ -278,276 +229,72 @@ executeMutationOutputQuery ::
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   -- | Prepared params
-  [PG.PrepArg] ->
+  [Q.PrepArg] ->
   m EncJSON
-executeMutationOutputQuery userInfo qt allCols preCalAffRows cte mutOutput strfyNum tCase prepArgs = do
+executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase prepArgs = do
   queryTags <- ask
-  let queryTx :: (PG.FromRes a) => m a
+  let queryTx :: Q.FromRes a => m a
       queryTx = do
-        selectWith <- mkMutationOutputExp userInfo qt allCols preCalAffRows cte mutOutput strfyNum tCase
-        let query = toQuery selectWith
-            queryWithQueryTags = query {PG.getQueryText = (PG.getQueryText query) <> (_unQueryTagsComment queryTags)}
+        let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
+            query = Q.fromBuilder $ toSQL selectWith
+            queryWithQueryTags = query {Q.getQueryText = (Q.getQueryText query) <> (_unQueryTagsComment queryTags)}
         -- See Note [Prepared statements in Mutations]
-        liftTx (PG.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
+        liftTx (Q.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
 
   if checkPermissionRequired cte
-    then withCheckPermission $ PG.getRow <$> queryTx
-    else runIdentity . PG.getRow <$> queryTx
+    then withCheckPermission $ Q.getRow <$> queryTx
+    else (runIdentity . Q.getRow) <$> queryTx
 
 mutateAndFetchCols ::
   forall pgKind.
-  (Backend ('Postgres pgKind), PostgresTranslateSelect pgKind) =>
-  UserInfo ->
+  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
-  (MutationCTE, DS.Seq PG.PrepArg) ->
+  (MutationCTE, DS.Seq Q.PrepArg) ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
-  PG.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
-mutateAndFetchCols userInfo qt cols (cte, p) strfyNum tCase = do
-  (colSel, customSQLCTEs) <-
-    runWriterT
-      $ S.SESelect
-      <$> mkSQLSelect
-        userInfo
-        JASMultipleRows
-        ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
-        )
-  let selectWith =
-        S.SelectWith
-          ( [(rawAlias, getMutationCTE cte)]
-              <> customSQLToTopLevelCTEs customSQLCTEs
-          )
-          $ S.mkSelect
-            { S.selExtr =
-                S.Extractor
-                  ( S.applyJsonBuildObj
-                      [ S.SELit "affected_rows",
-                        ( S.SESelect
-                            $ S.mkSelect
-                              { S.selExtr = [S.Extractor S.countStar Nothing],
-                                S.selFrom = Just $ S.FromExp [S.FIIdentifier rawIdentifier]
-                              }
-                        ),
-                        S.SELit "returning_columns",
-                        colSel
-                      ]
-                  )
-                  Nothing
-                  : bool [] [S.Extractor (mkCheckErrorExp rawIdentifier) Nothing] (checkPermissionRequired cte)
-            }
-  let sqlText = toQuery selectWith
-  let mutationTx :: (PG.FromRes a) => PG.TxE QErr a
+  Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
+mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
+  let mutationTx :: Q.FromRes a => Q.TxE QErr a
       mutationTx =
         -- See Note [Prepared statements in Mutations]
-        PG.rawQE dmlTxErrorHandler sqlText (toList p) False
+        Q.rawQE dmlTxErrorHandler sqlText (toList p) False
 
   if checkPermissionRequired cte
-    then withCheckPermission $ (first PG.getViaJSON . PG.getRow) <$> mutationTx
-    else (PG.getViaJSON . runIdentity . PG.getRow) <$> mutationTx
+    then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
+    else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
-    rawAlias = S.mkTableAlias $ "mutres__" <> qualifiedObjectToText qt
-    rawIdentifier = S.tableAliasToIdentifier rawAlias
-    tabFrom = FromIdentifier $ FIIdentifier (unTableIdentifier rawIdentifier)
+    rawAliasIdentifier = qualifiedObjectToText qt <> "__mutation_result"
+    aliasIdentifier = Identifier rawAliasIdentifier
+    tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
-    selFlds = flip map cols
-      $ \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
+    selFlds = flip map cols $
+      \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
--------------- Validating insert input using external HTTP webhook -----------------------
-type ValidateInputPayloadVersion = Int
+    sqlText = Q.fromBuilder $ toSQL selectWith
+    selectWith = S.SelectWith [(S.toTableAlias aliasIdentifier, getMutationCTE cte)] select
+    select =
+      S.mkSelect
+        { S.selExtr =
+            S.Extractor extrExp Nothing :
+            bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
+        }
+    checkErrExp = mkCheckErrorExp aliasIdentifier
+    extrExp =
+      S.applyJsonBuildObj
+        [ S.SELit "affected_rows",
+          affRowsSel,
+          S.SELit "returning_columns",
+          colSel
+        ]
 
-validateInputPayloadVersion :: ValidateInputPayloadVersion
-validateInputPayloadVersion = 1
-
-newtype ValidateInputErrorResponse = ValidateInputErrorResponse {_vierMessage :: Text}
-  deriving (Show, Eq)
-
-$(J.deriveJSON hasuraJSON ''ValidateInputErrorResponse)
-
-data HttpHandlerLog = HttpHandlerLog
-  { _hhlUrl :: Text,
-    _hhlRequest :: J.Value,
-    _hhlRequestHeaders :: [HeaderConf],
-    _hhlResponse :: J.Value,
-    _hhlResponseStatus :: Int
-  }
-  deriving (Show)
-
-$(J.deriveToJSON hasuraJSON ''HttpHandlerLog)
-
-data ValidateInsertInputLog
-  = VIILHttpHandler HttpHandlerLog
-
-instance J.ToJSON ValidateInsertInputLog where
-  toJSON (VIILHttpHandler httpHandlerLog) =
-    J.object $ ["type" J..= ("http" :: String), "details" J..= J.toJSON httpHandlerLog]
-
-instance L.ToEngineLog ValidateInsertInputLog L.Hasura where
-  toEngineLog ahl = (L.LevelInfo, L.ELTValidateInputLog, J.toJSON ahl)
-
--- | Map of table name and the value that is being inserted for that table
--- This map is helpful for collecting all the insert mutation arguments for the
--- nested tables and then sending them all at onve to the input validation webhook.
-type InsertValidationPayloadMap pgKind = InsOrdHashMap.InsOrdHashMap (TableName ('Postgres pgKind)) ([IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))], (ValidateInput ResolvedWebhook))
-
-validateUpdateMutation ::
-  forall pgKind m.
-  (MonadError QErr m, MonadIO m, Tracing.MonadTrace m) =>
-  Env.Environment ->
-  HTTP.Manager ->
-  L.Logger L.Hasura ->
-  UserInfo ->
-  ResolvedWebhook ->
-  [HeaderConf] ->
-  Timeout ->
-  Bool ->
-  [HTTP.Header] ->
-  IR.AnnotatedUpdateG ('Postgres pgKind) Void (IR.UnpreparedValue ('Postgres pgKind)) ->
-  Maybe (HashMap G.Name (G.Value G.Variable)) ->
-  HeaderPrecedence ->
-  m ()
-validateUpdateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders updateOperation maybeSelSetArgs headerPrecedence = do
-  inputData <-
-    case maybeSelSetArgs of
-      Just arguments -> do
-        case (IR._auUpdateVariant updateOperation) of
-          -- Mutation arguments for single update (eg: update_customer) are
-          -- present as seperate root fields of the selection set.
-          -- eg:
-          Postgres.SingleBatch _ -> do
-            -- this constructs something like: {"_set":{"name": {"_eq": "abc"}}, "where":{"id":{"_eq":10}}}
-            let singleBatchinputVal =
-                  J.object
-                    $ map
-                      (\(k, v) -> J.fromText (G.unName k) J..= graphQLToJSON v)
-                      (HashMap.toList $ arguments)
-            return (J.object ["input" J..= [singleBatchinputVal]])
-          -- Mutation arguments for multiple updates (eg:
-          -- update_customer_many) are present in the "updates" field of the
-          -- selection set.
-          -- Look for "updates" field and get the mutation arguments from it.
-          -- eg: {"updates": [{"_set":{"id":{"_eq":10}}, "where":{"name":{"_eq":"abc"}}}]}
-          Postgres.MultipleBatches _ -> do
-            case (HashMap.lookup $$(G.litName "updates") arguments) of
-              Nothing -> return $ J.Null
-              Just val -> (return $ J.object ["input" J..= graphQLToJSON val])
-      Nothing -> return J.Null
-  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence
-
-validateDeleteMutation ::
-  forall m pgKind.
-  (MonadError QErr m, MonadIO m, Tracing.MonadTrace m) =>
-  Env.Environment ->
-  HTTP.Manager ->
-  L.Logger L.Hasura ->
-  UserInfo ->
-  ResolvedWebhook ->
-  [HeaderConf] ->
-  Timeout ->
-  Bool ->
-  [HTTP.Header] ->
-  IR.AnnDelG ('Postgres pgKind) Void (IR.UnpreparedValue ('Postgres pgKind)) ->
-  Maybe (HashMap G.Name (G.Value G.Variable)) ->
-  HeaderPrecedence ->
-  m ()
-validateDeleteMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders deleteOperation maybeSelSetArgs headerPrecedence = do
-  inputData <-
-    case maybeSelSetArgs of
-      Just arguments -> do
-        -- this constructs something like: {"where":{"id":{"_eq":10}}}
-        let deleteInputVal =
-              J.object
-                $ map
-                  (\(k, v) -> J.fromText (G.unName k) J..= graphQLToJSON v)
-                  (HashMap.toList $ arguments)
-        if (_adIsDeleteByPk deleteOperation)
-          then -- If the delete operation is delete_<table>_by_pk, then we need to
-          -- include the pk_columns field manually in the input payload. This
-          -- is needed, because unlike the update mutation, the pk_columns for
-          -- `delete_<table>_by_pk` is not present in the mutation arguments.
-          -- for eg: the `delete_<table>_by_pk` looks like:
-          --
-          -- mutation DeleteCustomerByPk {
-          --   delete_customer_by_pk(id: 1) {
-          --     id
-          --    }
-          -- }
-          do
-            let deleteInputValByPk = J.object ["pk_columns" J..= deleteInputVal]
-            return (J.object ["input" J..= [deleteInputValByPk]])
-          else return (J.object ["input" J..= [deleteInputVal]])
-      Nothing -> return J.Null
-  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence
-
-validateMutation ::
-  forall m.
-  ( MonadError QErr m,
-    MonadIO m,
-    Tracing.MonadTrace m
-  ) =>
-  Env.Environment ->
-  HTTP.Manager ->
-  L.Logger L.Hasura ->
-  UserInfo ->
-  ResolvedWebhook ->
-  [HeaderConf] ->
-  Timeout ->
-  Bool ->
-  [HTTP.Header] ->
-  J.Value ->
-  HeaderPrecedence ->
-  m ()
-validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence = do
-  let requestBody =
-        J.object
-          [ "version" J..= validateInputPayloadVersion,
-            "session_variables" J..= _uiSession userInfo,
-            "role" J..= _uiRole userInfo,
-            "data" J..= inputData
-          ]
-  resolvedConfHeaders <- makeHeadersFromConf env confHeaders
-  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
-      hdrs = case headerPrecedence of
-        -- preserves old behaviour (default)
-        -- avoids duplicates and forwards client headers with higher precedence than configuration headers
-        ClientHeadersFirst -> LE.uniquesOn fst (clientHeaders <> defaultHeaders <> resolvedConfHeaders)
-        -- avoids duplicates and forwards configuration headers with higher precedence than client headers
-        ConfiguredHeadersFirst -> LE.uniquesOn fst (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
-  initRequest <- liftIO $ HTTP.mkRequestThrow urlText
-  let request =
-        initRequest
-          & Lens.set HTTP.method "POST"
-          & Lens.set HTTP.headers hdrs
-          & Lens.set HTTP.body (HTTP.RequestBodyLBS $ J.encode requestBody)
-          & Lens.set HTTP.timeout (HTTP.responseTimeoutMicro (unTimeout timeout * 1000000)) -- (default: 10 seconds)
-  httpResponse <-
-    Tracing.traceHTTPRequest b3TraceContextPropagator request $ \request' ->
-      liftIO . try $ HTTP.httpLbs request' manager
-
-  case httpResponse of
-    Left e ->
-      throw500WithDetail "http exception when validating input data"
-        $ J.toJSON
-        $ HttpException e
-    Right response -> do
-      let responseStatus = response Lens.^. Wreq.responseStatus
-          responseBody = response Lens.^. Wreq.responseBody
-          responseBodyForLogging = fromMaybe (J.String $ lbsToTxt responseBody) $ J.decode' responseBody
-      -- Log the details of the HTTP webhook call
-      L.unLoggerTracing logger $ VIILHttpHandler $ HttpHandlerLog urlText requestBody confHeaders responseBodyForLogging (HTTP.statusCode responseStatus)
-      if
-        | HTTP.statusIsSuccessful responseStatus -> pure ()
-        | responseStatus == HTTP.status400 -> do
-            ValidateInputErrorResponse errorMessage <-
-              J.eitherDecode responseBody `onLeft` \e ->
-                throw500WithDetail "received invalid response from input validation webhook"
-                  $ J.toJSON
-                  $ "invalid response: "
-                  <> e
-            throw400 ValidationFailed errorMessage
-        | otherwise -> do
-            let err =
-                  J.toJSON
-                    $ "expecting 200 or 400 status code, but found "
-                    ++ show (HTTP.statusCode responseStatus)
-            throw500WithDetail "internal error when validating input data" err
+    affRowsSel =
+      S.SESelect $
+        S.mkSelect
+          { S.selExtr = [S.Extractor S.countStar Nothing],
+            S.selFrom = Just $ S.FromExp [S.FIIdentifier aliasIdentifier]
+          }
+    colSel =
+      S.SESelect $
+        mkSQLSelect JASMultipleRows $
+          AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase

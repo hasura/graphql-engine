@@ -1,0 +1,1 @@
+export { DatabaseRelationshipsTab } from './DatabaseRelationshipsTab';

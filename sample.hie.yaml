@@ -1,9 +1,9 @@
 cradle:
   cabal:
-    - path: "./server/lib/dc-api/src"
-      component: "dc-api:lib:dc-api"
-    - path: "./server/lib/dc-api/test"
-      component: "dc-api:test:tests-dc-api"
+    - path: "./server/src-dc-api"
+      component: "graphql-engine:lib:dc-api"
+    - path: "./server/tests-dc-api"
+      component: "graphql-engine:test:tests-dc-api"
 
     - path: "./server/src-lib"
       component: "graphql-engine:lib:graphql-engine"
@@ -12,15 +12,10 @@ cradle:
     - path: "./server/src-test"
       component: "graphql-engine:test:graphql-engine-tests"
 
-    - path: "./server/test-mssql"
-      component: "graphql-engine:test:graphql-engine-test-mssql"
-    - path: "./server/test-postgres"
-      component: "graphql-engine:test:graphql-engine-test-postgres"
-
     - path: "./server/src-bench-cache"
       component: "graphql-engine:bench:cache"
-    - path: "server/lib/api-tests"
-      component: "api-tests:exe:api-tests"
+    - path: "server/tests-hspec"
+      component: "graphql-engine:test:tests-hspec"
 
     - path: "server/src-emit-metadata-openapi"
       component: "graphql-engine:exe:emit-metadata-openapi"
@@ -28,13 +23,13 @@ cradle:
     - path: "server/lib/aeson-ordered/src"
       component: "aeson-ordered:lib:aeson-ordered"
 
-    - path: "server/lib/hasura-error-message/src"
+    - path: "server/lib/error-message/src"
       component: "hasura-error-message:lib:hasura-error-message"
-    - path: "server/lib/hasura-error-message/test"
-      component: "hasura-error-message:test:hasura-error-message-tests"
+    - path: "server/lib/error-message/test"
+      component: "hasura-error-message:test:tests"
 
     - path: "server/lib/schema-parsers/src"
-      component: "schema-parsers:lib:schema-parsers"
+      component: "hasura-schema-parsers:lib:hasura-schema-parsers"
     - path: "server/lib/schema-parsers/test"
-      component: "schema-parsers:test:schema-parser-tests"
+      component: "hasura-schema-parsers:test:tests"
 

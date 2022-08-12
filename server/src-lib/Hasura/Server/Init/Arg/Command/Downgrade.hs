@@ -33,6 +33,9 @@ downgradeShortcuts =
 
 --------------------------------------------------------------------------------
 
+-- TODO (SOLOMON): Since we are alreay using template haskell in this
+-- module, catalog versions should only parse if they are in
+-- 'catalog_versions.txt'.
 downgradeCommandParser :: Opt.Parser Config.DowngradeOptions
 downgradeCommandParser =
   Config.DowngradeOptions
@@ -41,8 +44,8 @@ downgradeCommandParser =
           ( Opt.long "to-catalog-version"
               <> Opt.metavar "<VERSION>"
               <> Opt.help "The target catalog schema version (e.g. 31)"
-          )
-          : map (uncurry shortcut) downgradeShortcuts
+          ) :
+        map (uncurry shortcut) downgradeShortcuts
       )
     <*> Opt.switch
       ( Opt.long "dryRun"

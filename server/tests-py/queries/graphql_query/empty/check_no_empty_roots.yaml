@@ -1,0 +1,31 @@
+- description: Empty schema does not have a mutation root object
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type: null
+  query:
+    query: |
+      query {
+        __type(name: "mutation_root") {
+          fields {
+            name
+          }
+        }
+      }
+
+- description: Empty schema does not have a subscription root object
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type: null
+  query:
+    query: |
+      query {
+        __type(name: "subscription_root") {
+          fields {
+            name
+          }
+        }
+      }

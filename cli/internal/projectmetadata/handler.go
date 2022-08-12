@@ -3,14 +3,12 @@ package projectmetadata
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
@@ -18,6 +16,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v3"
@@ -47,50 +46,48 @@ func (h *Handler) SetMetadataObjects(objects metadataobject.Objects) {
 
 // WriteMetadata writes the files in the metadata folder
 func (h *Handler) WriteMetadata(files map[string][]byte) error {
-	var op internalerrors.Op = "projectmetadata.Handler.WriteMetadata"
 	for name, content := range files {
 		fs := afero.NewOsFs()
 		if err := fs.MkdirAll(filepath.Dir(name), os.ModePerm); err != nil {
-			return internalerrors.E(op, err)
+			return err
 		}
 		err := afero.WriteFile(fs, name, content, 0644)
 		if err != nil {
-			return internalerrors.E(op, fmt.Errorf("creating metadata file %s failed: %w", name, err))
+			return errors.Wrapf(err, "creating metadata file %s failed", name)
 		}
 	}
 	return nil
 }
 
 func (h *Handler) ExportMetadata() (map[string][]byte, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.ExportMetadata"
 	metadataFiles := make(map[string][]byte)
 	var resp io.Reader
 	var err error
 	resp, err = h.v1MetadataOps.ExportMetadata()
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	jsonmdbs, err := ioutil.ReadAll(resp)
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	// We don't want to strongly type metadata here, but we cannot use a catch-all kind of datastructures like
 	// map[string]interface{} here because it'll mess up the ordering.
 	// So we directly translate JSON to YAML, to preserve it.
 	yamlmdbs, err := metadatautil.JSONToYAML(jsonmdbs)
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 
 	var c map[string]yaml.Node
 	err = yaml.NewDecoder(bytes.NewReader(yamlmdbs)).Decode(&c)
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	for _, object := range h.objects {
 		files, err := object.Export(c)
 		if err != nil {
-			return nil, internalerrors.E(op, fmt.Errorf("cannot export %s from metadata: %w", object.Key(), err))
+			return nil, errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", object.Key()))
 		}
 		for fileName, content := range files {
 			metadataFiles[fileName] = content
@@ -100,28 +97,19 @@ func (h *Handler) ExportMetadata() (map[string][]byte, error) {
 }
 
 func (h *Handler) ResetMetadata() error {
-	var op internalerrors.Op = "projectmetadata.Handler.ResetMetadata"
 	var err error
 	_, err = h.v1MetadataOps.ClearMetadata()
-	if err != nil {
-		return internalerrors.E(op, err)
-	}
-	return nil
+	return err
 }
 
 // ReloadMetadata - Reload Hasura GraphQL Engine metadata on the database
 func (h *Handler) ReloadMetadata() (io.Reader, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.ReloadMetadata"
 	var err error
 	r, err := h.v1MetadataOps.ReloadMetadata()
-	if err != nil {
-		return nil, internalerrors.E(op, err)
-	}
-	return r, nil
+	return r, err
 }
 
 func (h *Handler) buildMetadataMap() (map[string]interface{}, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.buildMetadataMap"
 	var metadata = map[string]interface{}{}
 	for _, object := range h.objects {
 		objectMetadata, err := object.Build()
@@ -130,7 +118,7 @@ func (h *Handler) buildMetadataMap() (map[string]interface{}, error) {
 				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", object.Key())
 				continue
 			}
-			return nil, internalerrors.E(op, fmt.Errorf("cannot build %s from project: %w", object.Key(), err))
+			return nil, fmt.Errorf("cannot build %s from project: %w", object.Key(), err)
 		}
 		for k, v := range objectMetadata {
 			metadata[k] = v
@@ -146,87 +134,74 @@ func (h *Handler) buildMetadataMap() (map[string]interface{}, error) {
 // unexpected results. Rather to get a JSON / YAML form of built metadata make use of Handler.BuildYAMLMetadata and
 // Handler.BuildJSONMetadata helper functions
 func (h *Handler) buildMetadata() (*Metadata, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.buildMetadata"
 	metadataMap, err := h.buildMetadataMap()
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	return GenMetadataFromMap(metadataMap)
 }
 
 func (h *Handler) BuildYAMLMetadata() ([]byte, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.BuildYAMLMetadata"
 	metadata, err := h.buildMetadata()
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	return metadata.YAML()
 }
 
 func (h *Handler) BuildJSONMetadata() ([]byte, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.BuildJSONMetadata"
 	metadata, err := h.buildMetadata()
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	return metadata.JSON()
 }
 
 func (h *Handler) V1ApplyMetadata() (io.Reader, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.V1ApplyMetadata"
 	jbyt, err := h.BuildJSONMetadata()
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	r, err := h.v1MetadataOps.ReplaceMetadata(bytes.NewReader(jbyt))
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	return r, nil
 }
 
-func (h *Handler) V2ApplyMetadata(disallowInconsistentMetadata bool) (*hasura.V2ReplaceMetadataResponse, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.V2ApplyMetadata"
+func (h *Handler) V2ApplyMetadata() (*hasura.V2ReplaceMetadataResponse, error) {
 	jbyt, err := h.BuildJSONMetadata()
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	var metadata interface{}
 	if err := json.Unmarshal(jbyt, &metadata); err != nil {
-		return nil, internalerrors.E(op, internalerrors.KindBadInput, err)
+		return nil, err
 	}
 	r, err := h.v2MetadataOps.V2ReplaceMetadata(hasura.V2ReplaceMetadataArgs{
-		AllowInconsistentMetadata: !disallowInconsistentMetadata,
+		AllowInconsistentMetadata: true,
 		Metadata:                  metadata,
 	})
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	return r, nil
 }
 
 func (h *Handler) GetInconsistentMetadata() (bool, []InconsistentMetadataObject, error) {
-	var op internalerrors.Op = "projectmetadata.Handler.GetInconsistentMetadata"
 	inconsistentMetadata, err := h.v1MetadataOps.GetInconsistentMetadata()
 	if err != nil {
-		return true, nil, internalerrors.E(op, err)
+		return true, nil, err
 	}
 	var objects []InconsistentMetadataObject
 	err = mapstructure.Decode(inconsistentMetadata.InconsistentObjects, &objects)
-	if err != nil {
-		return inconsistentMetadata.IsConsistent, objects, internalerrors.E(op, err)
-	}
-	return inconsistentMetadata.IsConsistent, objects, nil
+	return inconsistentMetadata.IsConsistent, objects, err
 }
 
 func (h *Handler) DropInconsistentMetadata() error {
-	var op internalerrors.Op = "projectmetadata.Handler.DropInconsistentMetadata"
 	var err error
 	_, err = h.v1MetadataOps.DropInconsistentMetadata()
-	if err != nil {
-		return internalerrors.E(op, err)
-	}
-	return nil
+	return err
 }
 
 type InconsistentMetadataObject struct {
@@ -328,12 +303,9 @@ type Metadata struct {
 	APILimits        interface{} `yaml:"api_limits,omitempty" mapstructure:"api_limits,omitempty"`
 	RestEndpoints    interface{} `yaml:"rest_endpoints,omitempty" mapstructure:"rest_endpoints,omitempty"`
 	InheritedRoles   interface{} `yaml:"inherited_roles,omitempty" mapstructure:"inherited_roles,omitempty"`
-	Opentelemetry    interface{} `yaml:"opentelemetry,omitempty" mapstructure:"opentelemetry,omitempty"`
-	BackendConfig    interface{} `yaml:"backend_configs,omitempty" mapstructure:"backend_configs,omitempty"`
 
 	// HGE Pro
 	GraphQLSchemaIntrospection interface{} `yaml:"graphql_schema_introspection,omitempty" mapstructure:"graphql_schema_introspection,omitempty"`
-	MetricsConfig              interface{} `yaml:"metrics_config,omitempty" mapstructure:"metrics_config,omitempty"`
 
 	// note: update metadatautil/json.metadata to reflect changes made here
 }
@@ -343,29 +315,26 @@ type Metadata struct {
 // the underlying type of struct fields might be yaml.Node
 // which might give unintended result
 func (m Metadata) JSON() ([]byte, error) {
-	var op internalerrors.Op = "projectmetadata.Metadata.JSON"
 	yamlbs, err := m.YAML()
 	if err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 
 	return metadatautil.YAMLToJSON(yamlbs)
 }
 
 func (m Metadata) YAML() ([]byte, error) {
-	var op internalerrors.Op = "projectmetadata.Metadata.YAML"
 	var buf bytes.Buffer
 	if err := metadataobject.GetEncoder(&buf).Encode(m); err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
 func GenMetadataFromMap(metadata map[string]interface{}) (*Metadata, error) {
-	var op internalerrors.Op = "projectmetadata.GenMetadataFromMap"
 	var m = new(Metadata)
 	if err := mapstructure.Decode(metadata, m); err != nil {
-		return nil, internalerrors.E(op, err)
+		return nil, err
 	}
 	return m, nil
 }

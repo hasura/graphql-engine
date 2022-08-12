@@ -1,6 +1,6 @@
 ---
 sidebar_label: hasura plugins upgrade
-sidebar_position: 32
+sidebar_position: 30
 description: Upgrade a plugin to a newer version using the Hasura CLI
 keywords:
   - hasura
@@ -15,29 +15,29 @@ Upgrade a plugin to a newer version.
 
 ## Synopsis
 
-To upgrade a plugin, run the upgrade command with the name of the plugin as an argument. If unsure of the plugin's name, you can run the `Hasura plugins list` command to see a list of all the available plugins.
+Upgrade a plugin to a newer version.
 
-```bash
+```
 hasura plugins upgrade [flags]
 ```
 
 ## Examples
 
-```bash
+```
 # Upgrade a plugin to a newer version
 hasura plugins upgrade [plugin-name]
 ```
 
 ## Options
 
-```sass
+```
 -h, --help             help for upgrade
     --version string   version to be upgraded
 ```
 
 ## Options inherited from parent commands
 
-```sass
+```
 --envfile string      .env filename to load ENV vars from (default ".env")
 --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
 --no-color            do not colorize output (default: false)

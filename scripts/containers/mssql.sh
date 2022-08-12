@@ -19,14 +19,15 @@ MSSQL_PASSWORD=hasuraMSSQL1
 MSSQL_VOLUME_NAME='hasura-dev-mssql'
 MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
 # shellcheck disable=SC2034  # this variable is used in scripts sourcing this one
-MSSQL_CONN_STR="DRIVER={ODBC Driver 18 for SQL Server};SERVER=$MSSQL_HOST,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;Encrypt=optional"
+MSSQL_CONN_STR="DRIVER={ODBC Driver 17 for SQL Server};SERVER=$MSSQL_HOST,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
+MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME sqlcmd -S localhost -U sa -P $MSSQL_PASSWORD"
 
 if [[ "$(uname -m)" == 'arm64' ]]; then
   MSSQL_PLATFORM=linux/arm64
   MSSQL_CONTAINER_IMAGE=mcr.microsoft.com/azure-sql-edge
 else
   MSSQL_PLATFORM=linux/amd64
-  MSSQL_CONTAINER_IMAGE=mcr.microsoft.com/mssql/server:2019-latest
+  MSSQL_CONTAINER_IMAGE=hasura/mssql-server-2019-cu10-ubuntu-20.04:latest
 fi
 
 ######################
@@ -49,7 +50,7 @@ function mssql_launch_container {
 
 function mssql_wait {
   echo -n "Waiting for mssql to come up"
-  until ( docker run --rm -it --net=host mcr.microsoft.com/mssql-tools /opt/mssql-tools/bin/sqlcmd -S "${MSSQL_HOST},${MSSQL_PORT}" -U SA -P "$MSSQL_PASSWORD" -Q 'SELECT 1' ) &>/dev/null; do
+  until ( $MSSQL_DOCKER -Q 'SELECT 1' ) &>/dev/null; do
     echo -n '.' && sleep 0.2
   done
   echo " Ok"

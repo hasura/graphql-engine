@@ -1,12 +1,11 @@
 import pytest
-
 from validate import check_query_f
+from context import PytestConf
 
+if not PytestConf.config.getoption("--test-webhook-insecure"):
+    pytest.skip("--test-webhook-https-insecure flag is missing, skipping tests", allow_module_level=True)
 
-@pytest.mark.usefixtures('webhook_server', 'per_class_tests_db_state')
-@pytest.mark.admin_secret
-@pytest.mark.tls_webhook_server
-@pytest.mark.tls_insecure_certificate
+@pytest.mark.usefixtures('per_class_tests_db_state')
 class TestHTTPSWebhookInsecure:
 
     def test_user_select_unpublished_articles_err(self, hge_ctx):

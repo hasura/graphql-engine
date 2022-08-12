@@ -1,0 +1,9 @@
+type: mysql_run_sql
+args:
+  source: mysql
+  sql: |
+    CREATE TABLE user(
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name TEXT NOT NULL,
+      age INTEGER
+    );

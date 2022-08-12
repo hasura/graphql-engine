@@ -23,7 +23,7 @@ newtype Parse a = Parse
   deriving newtype (Functor, Applicative, Monad)
 
 runParse ::
-  (MonadError ParseError m) =>
+  MonadError ParseError m =>
   Parse a ->
   m a
 runParse parse =

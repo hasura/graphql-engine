@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
@@ -36,10 +35,7 @@ func TestClient_Send(t *testing.T) {
 		fields               fields
 		args                 args
 		wantJSONResponseBody string
-		assertResponse       assert.ComparisonAssertionFunc
-		wantCode             int
-		assertResponseCode   assert.ComparisonAssertionFunc
-		wantErr              require.ErrorAssertionFunc
+		wantErr              bool
 	}{
 		{
 			"can send a request",
@@ -59,34 +55,7 @@ func TestClient_Send(t *testing.T) {
   "version": 2,
   "tables": []
 }`,
-			assert.ComparisonAssertionFunc(func(tt assert.TestingT, i1, i2 interface{}, i3 ...interface{}) bool {
-				return assert.JSONEq(t, i1.(string), i2.(string))
-			}),
-			http.StatusOK,
-			assert.Equal,
-			require.NoError,
-		},
-		{
-			"can return right error type",
-			fields{
-				Client:                       testutil.NewHttpcClient(t, port, nil),
-				path:                         "v1/query",
-				HasuraDatabaseRequests:       nil,
-				HasuraCommonMetadataRequests: nil,
-			},
-			args{
-				body: map[string]string{
-					"type": "export_metadata2",
-					"args": "this is not expected",
-				},
-			},
-			"",
-			assert.ComparisonAssertionFunc(func(tt assert.TestingT, _, _ interface{}, _ ...interface{}) bool {
-				return true
-			}),
-			http.StatusBadRequest,
-			assert.Equal,
-			require.NoError,
+			false,
 		},
 	}
 	for _, tt := range tests {
@@ -98,14 +67,17 @@ func TestClient_Send(t *testing.T) {
 				ClientCommonMetadataOps: tt.fields.HasuraCommonMetadataRequests,
 			}
 			resp, gotResponseBody, err := c.Send(tt.args.body)
-			tt.wantErr(t, err)
-
-			tt.assertResponseCode(t, tt.wantCode, resp.StatusCode)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Send() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 			b, err := ioutil.ReadAll(gotResponseBody)
-			assert.NoError(t, err)
-
-			tt.assertResponse(t, tt.wantJSONResponseBody, string(b))
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.JSONEq(t, tt.wantJSONResponseBody, string(b))
 		})
 	}
 }
@@ -123,13 +95,11 @@ func TestClient_Bulk(t *testing.T) {
 		args []hasura.RequestBody
 	}
 	tests := []struct {
-		name           string
-		fields         fields
-		args           args
-		want           string
-		assertResponse require.ComparisonAssertionFunc
-		assertErr      require.ErrorAssertionFunc
-		wantErr        bool
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			"can send a bulk request",
@@ -179,11 +149,6 @@ func TestClient_Bulk(t *testing.T) {
     ]
   }
 ]`,
-			require.ComparisonAssertionFunc(
-				func(tt require.TestingT, i1, i2 interface{}, i3 ...interface{}) {
-					require.JSONEq(tt, i1.(string), i2.(string))
-				}),
-			require.NoError,
 			false,
 		},
 		{
@@ -211,14 +176,6 @@ func TestClient_Bulk(t *testing.T) {
 				},
 			},
 			``,
-			require.Equal,
-			require.ErrorAssertionFunc(
-				func(tt require.TestingT, err error, i ...interface{}) {
-					require.IsType(t, &errors.Error{}, err)
-					require.Equal(tt, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
-					require.Equal(tt, errors.Op("v1query.Client.Bulk"), err.(*errors.Error).Op)
-					require.Contains(tt, err.(*errors.Error).Err.Error(), "bulk request failed:")
-				}),
 			true,
 		},
 	}
@@ -231,12 +188,13 @@ func TestClient_Bulk(t *testing.T) {
 				ClientCommonMetadataOps: tt.fields.ClientCommonMetadataOps,
 			}
 			got, err := c.Bulk(tt.args.args)
-			tt.assertErr(t, err)
-			if !tt.wantErr {
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
-				require.NotNil(t, got)
-				tt.assertResponse(t, tt.want, string(gotb))
+				require.JSONEq(t, tt.want, string(gotb))
 			}
 		})
 	}

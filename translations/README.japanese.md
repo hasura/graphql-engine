@@ -122,23 +122,23 @@ PostgreSQLのデータを変換するか、あるいはその上でビジネス�
 
 ## デモ
 
-[コミュニティ・サンプル](https://github.com/hasura/sample-apps/tree/main) ディレクトリにあるサンプルアプリケーションをチェックできます。
+[コミュニティ・サンプル](../community/sample-apps) ディレクトリにあるサンプルアプリケーションをチェックできます。
 
 ### リアルタイムアプリケーション
 
 - Reactを使用して構築されたグループチャットアプリケーション。タイピングインジケーター、オンラインユーザー、新しいメッセージ通知が含まれます。
   - [試してみよう](https://realtime-chat.demo.hasura.io/)
-  - [チュートリアル](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
+  - [チュートリアル](../community/sample-apps/realtime-chat)
   - [APIの参照](https://realtime-chat.demo.hasura.io/console)
 
 - 現在の場所を追跡できるアプリ。地図上を移動する乗り物の現在のGPS座標を表示します。
   - [試してみよう](https://realtime-location-tracking.demo.hasura.io/)
-  - [チュートリアル](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
+  - [チュートリアル](../community/sample-apps/realtime-location-tracking)
   - [APIの参照](https://realtime-location-tracking.demo.hasura.io/console)
 
 - 常にに変化するデータを集約するリアルタイムダッシュボード。
   - [試してみよう](https://realtime-poll.demo.hasura.io/)
-  - [チュートリアル](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
+  - [チュートリアル](../community/sample-apps/realtime-poll)
   - [APIの参照](https://realtime-poll.demo.hasura.io/console)
 
 ### 動画
@@ -171,19 +171,19 @@ Hasuraブランドの資産（ロゴ、Hasuraマスコット、バッジなど�
 あなたが作ったアプリに"Powered by Hasura"を追加してもらえるととてもうれしいです！
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_black.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
 <!-- 明るいバックグラウンド用 -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" />
 </a>
 
 <!-- 暗いバックグラウンド用 -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
 </a>
 ```
 

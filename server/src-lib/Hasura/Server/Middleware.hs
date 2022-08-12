@@ -1,57 +1,53 @@
 module Hasura.Server.Middleware
   ( corsMiddleware,
-    dateHeaderMiddleware,
   )
 where
 
 import Control.Applicative
 import Data.ByteString qualified as B
 import Data.CaseInsensitive qualified as CI
-import Data.IORef
 import Data.Text.Encoding qualified as TE
-import Hasura.CachedTime
 import Hasura.Prelude
 import Hasura.Server.Cors
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai
 
-corsMiddleware :: IO CorsPolicy -> Middleware
-corsMiddleware getPolicy app req sendResp = do
+corsMiddleware :: CorsPolicy -> Middleware
+corsMiddleware policy app req sendResp = do
   let origin = getRequestHeader "Origin" $ requestHeaders req
-  policy <- getPolicy
-  maybe (app req sendResp) (handleCors policy) origin
+  maybe (app req sendResp) handleCors origin
   where
-    handleCors policy origin = case cpConfig policy of
+    handleCors origin = case cpConfig policy of
       CCDisabled _ -> app req sendResp
-      CCAllowAll -> sendCors origin policy
+      CCAllowAll -> sendCors origin
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, send cors headers
-        | bsToTxt origin `elem` dmFqdns ds -> sendCors origin policy
+        | bsToTxt origin `elem` dmFqdns ds -> sendCors origin
         -- if current origin is part of wildcard domain list, send cors
-        | inWildcardList ds (bsToTxt origin) -> sendCors origin policy
+        | inWildcardList ds (bsToTxt origin) -> sendCors origin
         -- otherwise don't send cors headers
         | otherwise -> app req sendResp
 
-    sendCors :: B.ByteString -> CorsPolicy -> IO ResponseReceived
-    sendCors origin policy =
+    sendCors :: B.ByteString -> IO ResponseReceived
+    sendCors origin =
       case requestMethod req of
-        "OPTIONS" -> sendResp $ respondPreFlight origin policy
-        _ -> app req $ sendResp . injectCorsHeaders origin policy
+        "OPTIONS" -> sendResp $ respondPreFlight origin
+        _ -> app req $ sendResp . injectCorsHeaders origin
 
-    respondPreFlight :: B.ByteString -> CorsPolicy -> Response
-    respondPreFlight origin policy =
-      setHeaders (mkPreFlightHeaders requestedHeaders)
-        $ injectCorsHeaders origin policy emptyResponse
+    respondPreFlight :: B.ByteString -> Response
+    respondPreFlight origin =
+      setHeaders (mkPreFlightHeaders requestedHeaders) $
+        injectCorsHeaders origin emptyResponse
 
     emptyResponse = responseLBS HTTP.status204 [] ""
     requestedHeaders =
-      fromMaybe ""
-        $ getRequestHeader "Access-Control-Request-Headers"
-        $ requestHeaders req
+      fromMaybe "" $
+        getRequestHeader "Access-Control-Request-Headers" $
+          requestHeaders req
 
-    injectCorsHeaders :: B.ByteString -> CorsPolicy -> Response -> Response
-    injectCorsHeaders origin policy = setHeaders (mkCorsHeaders origin policy)
+    injectCorsHeaders :: B.ByteString -> Response -> Response
+    injectCorsHeaders origin = setHeaders (mkCorsHeaders origin)
 
     mkPreFlightHeaders allowReqHdrs =
       [ ("Access-Control-Max-Age", "1728000"),
@@ -60,25 +56,13 @@ corsMiddleware getPolicy app req sendResp = do
         ("Content-Type", "text/plain charset=UTF-8")
       ]
 
-    mkCorsHeaders origin policy =
+    mkCorsHeaders origin =
       [ ("Access-Control-Allow-Origin", origin),
         ("Access-Control-Allow-Credentials", "true"),
         ( "Access-Control-Allow-Methods",
           B.intercalate "," $ TE.encodeUtf8 <$> cpMethods policy
-        ),
-        -- console requires this header to access the cache headers as HGE and console
-        -- are hosted on different domains in production
-        ( "Access-Control-Expose-Headers",
-          B.intercalate "," $ TE.encodeUtf8 <$> cacheExposedHeaders
         )
       ]
 
-    cacheExposedHeaders = ["X-Hasura-Query-Cache-Key", "X-Hasura-Query-Family-Cache-Key", "Warning"]
     setHeaders hdrs = mapResponseHeaders (\h -> mkRespHdrs hdrs ++ h)
     mkRespHdrs = map (\(k, v) -> (CI.mk k, v))
-
--- bypass warp's use of 'auto-update'. See #10662
-dateHeaderMiddleware :: Middleware
-dateHeaderMiddleware app req respond = do
-  (_, _, nowRFC7231) <- liftIO $ readIORef cachedRecentFormattedTimeAndZone
-  app req $ respond . mapResponseHeaders (("Date", nowRFC7231) :)

@@ -1,5 +1,5 @@
 ---
-description: Codegen for Hasura Actions
+description: Codegen for Hasura actions
 keywords:
   - hasura
   - docs
@@ -12,7 +12,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Actions Codegen
+# Actions codegen
 
 ## Introduction
 
@@ -28,14 +28,14 @@ contributions from the community.
 
 ## Generating handler code for your action {#actions-codegen-execute}
 
-<Tabs groupId="user-preference" className="api-tabs">
+<Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Actions -> [action-name] -> Codegen` tab in the Console
+Head to the `Actions -> [action-name] -> Codegen` tab in the console
 
 You can select the framework of your choice to get the corresponding handler boilerplate code.
 
-<Thumbnail src="/img/actions/console-codegen-tab.png" alt="Console codegen tab" />
+<Thumbnail src='/img/actions/console-codegen-tab.png' alt='Console codegen tab' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -52,14 +52,14 @@ hasura actions use-codegen
 
 1.  Choose which framework you want to codegen for:
 
-    <Thumbnail src="/img/actions/cli-framework-prompt.png" alt="CLI Framework Prompt" />
+    <Thumbnail src='/img/actions/cli-framework-prompt.png' alt='CLI Framework Prompt' />
 
 2.  Choose if you also wish to clone a starter kit for the chosen framework:
 
-    <Thumbnail src="/img/actions/cli-starter-kit-prompt.png" alt="CLI Starter Kit Prompt" />
+    <Thumbnail src='/img/actions/cli-starter-kit-prompt.png' alt='CLI Starter Kit Prompt' />
 
 3.  Choose a path where you want to output the auto-generated code files
-    <Thumbnail src="/img/actions/cli-output-dir-prompt.png" alt="CLI Starter Kit Prompt" />
+    <Thumbnail src='/img/actions/cli-output-dir-prompt.png' alt='CLI Starter Kit Prompt' />
 
 This command will update your `config.yaml` with the codegen config as per your preferences. You can also set these
 values manually in `config.yaml`.
@@ -95,7 +95,7 @@ The codegen files will be generated at the `output_dir` path from `config.yaml`.
 ## Codegen for your framework
 
 As of now, Hasura provides codegen for a few frameworks (`nodejs-express`, `typescript-zeit`, `python-flask` and many
-more). You can see the full list in the `Codegen` tab on the Console after you've
+more). You can see the full list in the `Codegen` tab on the console after you've
 [created an action](/actions/create.mdx).
 
 We will continue adding more examples to the documentation.

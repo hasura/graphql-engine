@@ -1,27 +1,28 @@
 ---
 sidebar_label: Relationships
-sidebar_position: 4
-description: Use relationships with the Hasura schema/Metadata API
+sidebar_position: 4 
+description: Use relationships with the Hasura schema/metadata API
 keywords:
-  - hasura
-  - docs
-  - schema/Metadata API
-  - API reference
-  - relationship
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - relationship
 ---
 
 # Schema/Metadata API Reference: Relationships (Deprecated)
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/Metadata API is deprecated in
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/api-reference/schema-api/index.mdx) and the
-[Metadata API](/api-reference/metadata-api/index.mdx).
+[metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/Metadata APIs will
+Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
 :::
+
 
 ## Introduction
 
@@ -32,13 +33,13 @@ table to access the related data.
 
 For a simple `article/author` schema, the following relationships exist:
 
-- `author` of an `article`
-- `articles` of an `author`
+-   `author` of an `article`
+-   `articles` of an `author`
 
 There are two kinds of relationships:
 
-- one-to-one or `object relationships` (e.g. `author`).
-- one-to-many or `array relationships` (e.g. `articles`).
+-   one-to-one or `object relationships` (e.g. `author`).
+-   one-to-many or `array relationships` (e.g. `articles`).
 
 The above represents the same table relationship from different
 perspectives: there is a single `author` for every `article`
@@ -62,8 +63,8 @@ There are 3 ways in which you can create an object relationship.
 
 ### 1. Using foreign key constraint on a column
 
-Create an `object relationship` `author` on `article` _table_, _using_
-the _foreign_key_constraint_on_ the `author_id` column:
+Create an `object relationship` `author` on `article` *table*, *using*
+the *foreign_key_constraint_on* the `author_id` column:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -84,9 +85,9 @@ X-Hasura-Role: admin
 
 ### 2. Using foreign key constraint on a remote table
 
-Create an `object relationship` `details` on `author` _table_, _using_
-the _foreign_key_constraint_on_ the `author_details` _table_'s `id`
-_column_:
+Create an `object relationship` `details` on `author` *table*, *using*
+the *foreign_key_constraint_on* the `author_details` *table*'s `id`
+*column*:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -163,12 +164,12 @@ defined on `article` table's `id` column to `article_detail` view's
 
 ### Args syntax {#schema-metadata-create-object-relationship-syntax}
 
-| Key     | Required | Schema                                                              | Description                                                    |
-| ------- | -------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Key     | Required | Schema                                                                           | Description                                                    |
+|---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
 | table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                              |
 | name    | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                   |
 | using   | true     | [ObjRelUsing](/api-reference/syntax-defs.mdx#objrelusing)           | Use one of the available ways to define an object relationship |
-| comment | false    | text                                                                | comment                                                        |
+| comment | false    | text                                                                             | comment                                                        |
 
 ## create_array_relationship {#schema-metadata-create-array-relationship}
 
@@ -180,8 +181,8 @@ There are 2 ways in which you can create an array relationship.
 
 ### 1. Using foreign key constraint on a column
 
-Create an `array relationship` `articles` on `author` _table_, _using_
-the _foreign_key_constraint_on_ the `author_id` column of the `article`
+Create an `array relationship` `articles` on `author` *table*, *using*
+the *foreign_key_constraint_on* the `author_id` column of the `article`
 table:
 
 ```http
@@ -252,12 +253,12 @@ defined on the `author` table's `id` column to `article_detail` view's
 
 ### Args syntax {#schema-metadata-create-array-relationship-syntax}
 
-| Key     | Required | Schema                                                              | Description                                                   |
-| ------- | -------- | ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Key     | Required | Schema                                                                           | Description                                                   |
+|---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
 | table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                             |
 | name    | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                  |
 | using   | true     | [ArrRelUsing](/api-reference/syntax-defs.mdx#arrrelusing)           | Use one of the available ways to define an array relationship |
-| comment | false    | text                                                                | comment                                                       |
+| comment | false    | text                                                                             | comment                                                     |
 
 ## drop_relationship {#schema-metadata-drop-relationship}
 
@@ -285,11 +286,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-drop-relationship-syntax}
 
-| Key          | Required | Schema                                                              | Description                                                                       |
-| ------------ | -------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| table        | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                                                 |
-| relationship | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | Name of the relationship that needs to be dropped                                 |
-| cascade      | false    | Boolean                                                             | When set to `true`, all the dependent items on this relationship are also dropped |
+| Key          | Required | Schema                                                                              | Description                                                                       |
+|--------------|----------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| table        | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                  | Name of the table                                                                 |
+| relationship | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname)    | Name of the relationship that needs to be dropped                                 |
+| cascade      | false    | Boolean                                                                             | When set to `true`, all the dependent items on this relationship are also dropped |
 
 :::info Note
 
@@ -322,11 +323,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-set-relationship-comment-syntax}
 
-| Key          | Required | Schema                                                              | Description       |
-| ------------ | -------- | ------------------------------------------------------------------- | ----------------- |
-| table        | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table |
-| relationship | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | The relationship  |
-| comment      | false    | Text                                                                | Comment           |
+| Key          | Required | Schema                                                                              | Description       |
+|--------------|----------|-------------------------------------------------------------------------------------|-------------------|
+| table        | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                  | Name of the table |
+| relationship | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname)    | The relationship  |
+| comment      | false    | Text                                                                                | Comment           |
 
 ## rename_relationship {#schema-metadata-rename-relationship}
 
@@ -351,8 +352,8 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-rename-relationship-syntax}
 
-| Key      | Required | Schema                                                              | Description           |
-| -------- | -------- | ------------------------------------------------------------------- | --------------------- |
+| Key      | Required | Schema                                                                           | Description           |
+|----------|----------|----------------------------------------------------------------------------------|-----------------------|
 | table    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)               | Name of the table     |
 | name     | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | The relationship      |
 | new_name | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | New relationship name |

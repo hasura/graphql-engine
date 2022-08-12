@@ -1,0 +1,35 @@
+.parentContainer .header {
+  font-size: 40px;
+}
+.parentContainer input {
+  padding: 10px;
+  font-size: 16px;
+  width: 90%;
+  border: 2px solid #003399;
+}
+.parentContainer .todoList {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 50px;
+  width: 93%;
+}
+.parentContainer .todoList li {
+  color: #333;
+  background-color: #dedede;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.parentContainer .todoLabel {
+  width: 80%;
+}
+
+.parentContainer .deleteLabel {
+  color: #ff0000;
+  position: absolute;
+  cursor: pointer;
+  right: 0px;
+  width: 150px;
+}

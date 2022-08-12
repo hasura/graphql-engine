@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+
+	"github.com/pkg/errors"
 
 	"github.com/gin-contrib/cors"
 
@@ -70,10 +72,9 @@ func cliProjectUpdateCheck(ec *cli.ExecutionContext) gin.HandlerFunc {
 }
 
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
-	var op errors.Op = "console.NewAPIServer"
 	migrate, err := migrate.NewMigrate(ec, false, "", hasura.SourceKindPG)
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("error creating migrate instance: %w", err))
+		return nil, errors.Wrap(err, "error creating migrate instance")
 	}
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

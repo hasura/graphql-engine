@@ -1,0 +1,20 @@
+{
+  "name": "remote-schema-example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server": "^2.4.8",
+    "graphql": "^14.2.1",
+    "graphql-tools": "^4.0.4",
+    "knex": "^0.16.5",
+    "node-fetch": "^2.3.0",
+    "pg": "^7.10.0"
+  },
+  "scripts": {
+    "start": "node -r esm index.js"
+  },
+  "devDependencies": {
+    "esm": "^3.2.22"
+  }
+}

@@ -1,31 +1,13 @@
 #!/usr/bin/env bash
 
-### This is an example .envrc.local file you can start with. Uncomment the parts
-### you'd like to use, and copy this to `.envrc.local`.
+# This is an example .envrc.local file you can start with. Uncomment the parts
+# you'd like to use, and copy this to `.envrc.local`
 
-### Enable providing tooling with the Nix package manager
-### (read the commentary in flake.nix first)
+# Enable providing tooling with the Nix package manager
 # use flake
 
-### Enable providing NodeJS versions with `nvm`
-# use nvm
+# Enable providing NodeJS versions with `nvm`
+# use_nvm
 
-### Enable providing GHC versions with `ghcup`
-# use ghcup
-
-### Raise open file limit to stop `api-tests` struggling
-# ulimit -n 10240
-
-### Export key for running BigQuery tests locally. This depends on a
-### `bigquery-service-account-key.json` key living in the directory above
-### the `graphql-engine` repository.
-# HASURA_BIGQUERY_PROJECT_ID='regency-polecat-beehive'
-# export HASURA_BIGQUERY_PROJECT_ID
-# HASURA_BIGQUERY_SERVICE_KEY=$(cat ../bigquery-service-account.json)
-# export HASURA_BIGQUERY_SERVICE_KEY
-
-### Export EE license key for running pro tests locally
-### This depends on a `ee-license-key.txt` living in the directory above
-### the `graphql-engine` repository
-# HASURA_GRAPHQL_EE_LICENSE_KEY=$(cat ../ee-license-key.txt)
-# export HASURA_GRAPHQL_EE_LICENSE_KEY
+# Enable providing GHC versions with `ghcup`
+# use_ghcup

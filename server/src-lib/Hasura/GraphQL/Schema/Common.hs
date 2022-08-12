@@ -1,26 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
--- ghc 9.6 seems to be doing something screwy with...
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.GraphQL.Schema.Common
   ( SchemaContext (..),
-    SchemaSampledFeatureFlags (..),
-    sampleFeatureFlags,
-    WithSchemaSampledFeatureFlags,
-    withSchemaSampledFeatureFlags,
     SchemaKind (..),
     RemoteRelationshipParserBuilder (..),
     NodeInterfaceParserBuilder (..),
     MonadBuildSchemaBase,
     retrieve,
-    SchemaT (..),
     MonadBuildSourceSchema,
     MonadBuildRemoteSchema,
-    MonadBuildActionSchema,
     runSourceSchema,
     runRemoteSchema,
-    runActionSchema,
     ignoreRemoteRelationship,
     isHasuraSchema,
     AggSelectExp,
@@ -30,8 +20,6 @@ module Hasura.GraphQL.Schema.Common
     ConnectionSelectExp,
     AnnotatedActionField,
     AnnotatedActionFields,
-    AnnotatedNestedObjectSelect,
-    AnnotatedNestedArraySelect,
     EdgeFields,
     Scenario (..),
     SelectArgs,
@@ -40,11 +28,7 @@ module Hasura.GraphQL.Schema.Common
     StreamSelectExp,
     TablePerms,
     getTableRoles,
-    getLogicalModelRoles,
-    askScalarTypeParsingContext,
     askTableInfo,
-    askLogicalModelInfo,
-    askNativeQueryInfo,
     comparisonAggOperators,
     mapField,
     mkDescriptionWith,
@@ -52,64 +36,47 @@ module Hasura.GraphQL.Schema.Common
     optionalFieldParser,
     parsedSelectionsToFields,
     partialSQLExpToUnpreparedValue,
-    getRedactionExprForColumn,
-    getRedactionExprForComputedField,
     requiredFieldParser,
-    takeValidNativeQueries,
-    takeValidStoredProcedures,
     takeValidFunctions,
     takeValidTables,
     textToName,
-    textToGQLIdentifier,
     RemoteSchemaParser (..),
     mkEnumTypeName,
     addEnumSuffix,
     peelWithOrigin,
-    getIntrospectionResult,
-    tablePermissionsInfo,
   )
 where
 
-import Control.Monad.Trans.Control
 import Data.Either (isRight)
 import Data.Has
-import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.List (uncons)
+import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
-import Data.Text.Casing (GQLNameIdentifier)
-import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
-import Hasura.Function.Cache
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Node
+import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
-import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiPermissions))
-import Hasura.LogicalModel.Types (LogicalModelName)
-import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
-import Hasura.NativeQuery.Types (NativeQueryName)
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName)
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
-import Hasura.RQL.Types.Schema.Options (SchemaOptions)
-import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Init.FeatureFlag qualified as FF
-import Hasura.StoredProcedure.Cache (StoredProcedureCache)
-import Hasura.Table.Cache (SelPermInfo (..))
+import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -121,49 +88,8 @@ data SchemaContext = SchemaContext
     -- | how to process remote relationships
     scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder,
     -- | the role for which the schema is being built
-    scRole :: RoleName,
-    scSampledFeatureFlags :: SchemaSampledFeatureFlags
+    scRole :: RoleName
   }
-
--- | We want to be able to probe feature flags in the schema parsers, but we also
--- want to be able to run schema actions without requiring IO, in part because we
--- want to be able to run them in tests and in part because we want some assurance
--- that the schema we parse doesn't change without our knowledge, as that precludes
--- safely caching schema introspection.
-newtype SchemaSampledFeatureFlags = SchemaSampledFeatureFlags [(FF.FeatureFlag, Bool)]
-  deriving (Eq, Show)
-
-sampleFeatureFlags :: FF.CheckFeatureFlag -> IO SchemaSampledFeatureFlags
-sampleFeatureFlags checkFeatureFlag = do
-  let ffs = map fst $ FF.listKnownFeatureFlags checkFeatureFlag
-  SchemaSampledFeatureFlags <$> mapM (\ff -> (ff,) <$> FF.runCheckFeatureFlag checkFeatureFlag ff) ffs
-
--- | Monad transformer that lets you use the sampled feature flags from a reader environment.
--- This is necessary because we want 'ReaderT r m` to be transparent wrt. 'HasFeatureFlagChecker m'.
-newtype WithSchemaSampledFeatureFlags m a = WithSchemaSampledFeatureFlags {unWithSchemaSampledFeatureFlags :: ReaderT SchemaSampledFeatureFlags m a}
-  deriving (Functor, Applicative, Monad, MonadIO)
-
-deriving instance (MonadBase IO m) => MonadBase IO (WithSchemaSampledFeatureFlags m)
-
-deriving instance (MonadBaseControl IO m, MonadBase IO m) => MonadBaseControl IO (WithSchemaSampledFeatureFlags m)
-
-instance MonadTrans WithSchemaSampledFeatureFlags where
-  lift = WithSchemaSampledFeatureFlags . lift
-
-instance (MonadResolveSource m) => MonadResolveSource (WithSchemaSampledFeatureFlags m) where
-  getPGSourceResolver = lift getPGSourceResolver
-  getMSSQLSourceResolver = lift getMSSQLSourceResolver
-
-withSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags -> WithSchemaSampledFeatureFlags m a -> m a
-withSchemaSampledFeatureFlags ffs = flip runReaderT ffs . unWithSchemaSampledFeatureFlags
-
-instance (Monad m) => FF.HasFeatureFlagChecker (WithSchemaSampledFeatureFlags m) where
-  checkFlag ff = do
-    flags <- WithSchemaSampledFeatureFlags $ ask
-    pure $ sampledCheckFlag flags ff
-
-sampledCheckFlag :: SchemaSampledFeatureFlags -> FF.FeatureFlag -> Bool
-sampledCheckFlag (SchemaSampledFeatureFlags flags) ff = fromMaybe False (lookup ff flags)
 
 -- | The kind of schema we're building, and its associated options.
 data SchemaKind
@@ -176,10 +102,17 @@ isHasuraSchema = \case
   RelaySchema _ -> False
 
 -- | The set of common constraints required to build the schema.
-type MonadBuildSchemaBase m n =
+type MonadBuildSchemaBase r m n =
   ( MonadError QErr m,
+    MonadReader r m,
     P.MonadMemoize m,
-    P.MonadParse n
+    P.MonadParse n,
+    Has SchemaOptions r,
+    Has SchemaContext r,
+    -- TODO: make all `Has x r` explicit fields of 'SchemaContext'
+    Has MkTypename r,
+    Has CustomizeRemoteFieldName r,
+    Has NamingCase r
   )
 
 -- | How a remote relationship field should be processed when building a
@@ -194,9 +127,9 @@ type MonadBuildSchemaBase m n =
 newtype RemoteRelationshipParserBuilder
   = RemoteRelationshipParserBuilder
       ( forall lhsJoinField r n m.
-        (MonadBuildSchemaBase m n) =>
+        MonadBuildSchemaBase r m n =>
         RemoteFieldInfo lhsJoinField ->
-        SchemaT r m (Maybe [P.FieldParser n (IR.RemoteRelationshipField IR.UnpreparedValue)])
+        m (Maybe [P.FieldParser n (IR.RemoteRelationshipField IR.UnpreparedValue)])
       )
 
 -- | A 'RemoteRelationshipParserBuilder' that ignores the field altogether, that can
@@ -211,10 +144,8 @@ ignoreRemoteRelationship = RemoteRelationshipParserBuilder $ const $ pure Nothin
 -- the cross-sources cycles it creates otherwise.
 newtype NodeInterfaceParserBuilder = NodeInterfaceParserBuilder
   { runNodeBuilder ::
-      ( forall m n.
-        (MonadBuildSchemaBase m n) =>
-        SchemaContext ->
-        SchemaOptions ->
+      ( forall r n m.
+        MonadBuildSchemaBase r m n =>
         m (P.Parser 'P.Output n NodeMap)
       )
   }
@@ -228,132 +159,39 @@ retrieve f = asks $ f . getter
 
 -------------------------------------------------------------------------------
 
-{- Note [SchemaT and stacking]
+type MonadBuildSourceSchema r m n = MonadBuildSchemaBase r m n
 
-The schema is explicitly built in `SchemaT`, rather than in an arbitrary monad
-`m` that happens to have the desired properties (`MonadReader`, `MonadMemoize`,
-`MonadError`, and so on). The main reason why we do this is that we want to
-avoid a specific performance issue that arises out of two specific constraints:
-
-  - we want to build each part of the schema (such as sources and remote
-    schemas) with its own dedicated minimal reader context (i.e. not using a
-    shared reader context that is the union of all the information required);
-  - we want to be able to process remote-relationships, which means "altering"
-    the reader context when jumping from one "part" of the schema to another.
-
-What that means, in practice, is that we have to call `runReaderT` (or an
-equivalent) every time we build a part of the schema (at the root level or as
-part of a remote relationship) so that the part we build has access to its
-context. When processing a remote relationship, the calling code is *already* in
-a monad stack that contains a `ReaderT`, since we were processing a given part
-of the schema. If we directly call `runReaderT` to process the RHS of the remote
-relationship, we implicitly make it so that the monad stack of the LHS is the
-base underneath the `ReaderT` of the RHS; in other terms, we stack another
-reader on top of the existing monad stack.
-
-As the schema is built in a "depth-first" way, in a complicated schema with a
-lot of remote relationships we would end up with several readers stacked upon
-one another. A manually run benchmark showed that this could significantly
-impact performance in complicated schemas. We do now have a benchmark set to
-replicate this specific case (see the "deep_schema" benchmark set for more
-information).
-
-To prevent this stacking, we need to be able to "bring back" the result of the
-`runReaderT` back into the calling monad, rather than defaulting to having the
-calling monad be the base of the reader. The simplest way of doing this is to
-enforce that we are always building the schema in a monad stack that has the
-reader on top of some arbitrary *shared* base. This gives us the guarantee that
-the LHS of any remote relationship, the calling context for `runReaderT`, is
-itself a `ReaderT` on top og that known shared base, meaning that after a call
-to `runReaderT` on another part of the schema, we can always go back to the
-calling monad with a simple `lift`, as demonstrated in
-'remoteRelationshipField'.
--}
-
--- | The monad in which the schema is built.
---
--- The implementation of 'SchemaT' is intended to be opaque: running a
--- computation in 'SchemaT' is intended to be done via calls to
--- 'runSourceSchema' and 'runRemoteSchema', which also enforce what the @r@
--- parameter should be in each case.
---
--- The reason why we want to enforce that the schema is built in a reader on top
--- of an arbitrary base monad is for performance: see Note [SchemaT and
--- stacking] for more information.
---
--- In the future, we might monomorphize this further to make `MemoizeT` explicit.
-newtype SchemaT r m a = SchemaT {runSchemaT :: ReaderT r m a}
-  deriving newtype (Functor, Applicative, Monad, MonadReader r, P.MonadMemoize, MonadTrans, MonadError e)
-
-instance (Has SchemaContext r, Monad m) => FF.HasFeatureFlagChecker (SchemaT r m) where
-  checkFlag ff = do
-    flags <- asks (scSampledFeatureFlags . getter)
-    pure $ sampledCheckFlag flags ff
-
-type MonadBuildSourceSchema b r m n =
-  ( MonadBuildSchemaBase m n,
-    Has SchemaContext r,
-    Has SchemaOptions r,
-    Has (SourceInfo b) r
-  )
-
--- | Runs a schema-building computation with all the context required to build a source.
 runSourceSchema ::
-  forall b m a.
   SchemaContext ->
   SchemaOptions ->
-  SourceInfo b ->
-  SchemaT
+  ReaderT
     ( SchemaContext,
       SchemaOptions,
-      SourceInfo b
+      MkTypename,
+      CustomizeRemoteFieldName,
+      NamingCase
     )
     m
     a ->
   m a
-runSourceSchema context options sourceInfo (SchemaT action) = runReaderT action (context, options, sourceInfo)
+runSourceSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
 
-type MonadBuildRemoteSchema r m n =
-  ( MonadBuildSchemaBase m n,
-    Has SchemaContext r,
-    Has Options.RemoteNullForwardingPolicy r,
-    Has CustomizeRemoteFieldName r,
-    Has MkTypename r
-  )
+type MonadBuildRemoteSchema r m n = MonadBuildSchemaBase r m n
 
--- | Runs a schema-building computation with all the context required to build a remote schema.
 runRemoteSchema ::
   SchemaContext ->
-  Options.RemoteNullForwardingPolicy ->
-  SchemaT
-    ( SchemaContext,
-      Options.RemoteNullForwardingPolicy,
-      MkTypename,
-      CustomizeRemoteFieldName
-    )
-    m
-    a ->
-  m a
-runRemoteSchema context nullForwarding (SchemaT action) = runReaderT action (context, nullForwarding, mempty, mempty)
-
-type MonadBuildActionSchema r m n =
-  ( MonadBuildSchemaBase m n,
-    Has SchemaContext r,
-    Has SchemaOptions r
-  )
-
--- | Runs a schema-building computation with all the context required to build actions.
-runActionSchema ::
-  SchemaContext ->
   SchemaOptions ->
-  SchemaT
+  ReaderT
     ( SchemaContext,
-      SchemaOptions
+      SchemaOptions,
+      MkTypename,
+      CustomizeRemoteFieldName,
+      NamingCase
     )
     m
     a ->
   m a
-runActionSchema context options (SchemaT action) = runReaderT action (context, options)
+runRemoteSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
 
 -------------------------------------------------------------------------------
 
@@ -383,10 +221,6 @@ type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField IR.Unp
 
 type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField IR.UnpreparedValue)
 
-type AnnotatedNestedObjectSelect b = IR.AnnNestedObjectSelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
-
-type AnnotatedNestedArraySelect b = IR.AnnNestedArraySelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
-
 -------------------------------------------------------------------------------
 
 data RemoteSchemaParser n = RemoteSchemaParser
@@ -398,91 +232,31 @@ data RemoteSchemaParser n = RemoteSchemaParser
 getTableRoles :: BackendSourceInfo -> [RoleName]
 getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = HashMap.keys . _tiRolePermInfoMap =<< HashMap.elems (_siTables si)
-
-getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
-getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
-  where
-    go si =
-      let namedLogicalModelRoles = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
-          inlineLogicalModelRoles = HashMap.keys . _lmiPermissions . _nqiReturns =<< HashMap.elems (_siNativeQueries si)
-       in namedLogicalModelRoles <> inlineLogicalModelRoles
-
-askScalarTypeParsingContext ::
-  forall b r m.
-  (MonadReader r m, Has (SourceInfo b) r, Has (ScalarTypeParsingContext b) (SourceConfig b)) =>
-  m (ScalarTypeParsingContext b)
-askScalarTypeParsingContext = asks (getter . _siConfiguration @b . getter)
+    go si = Map.keys . _tiRolePermInfoMap =<< Map.elems (_siTables si)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
 -- TODO: deduplicate this with `CacheRM`.
 askTableInfo ::
-  forall b r m.
-  (Backend b, MonadError QErr m, MonadReader r m, Has (SourceInfo b) r) =>
+  forall b m.
+  (Backend b, MonadError QErr m) =>
+  SourceInfo b ->
   TableName b ->
   m (TableInfo b)
-askTableInfo tableName = do
-  SourceInfo {..} <- asks getter
-  HashMap.lookup tableName _siTables
+askTableInfo SourceInfo {..} tableName =
+  Map.lookup tableName _siTables
     `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote _siName)
-
--- | Looks up logical model information for the given logical model name. This function
--- should never fail, since the schema cache construction process is
--- supposed to ensure all dependencies are resolved.
--- TODO: deduplicate this with `CacheRM`.
-askLogicalModelInfo ::
-  forall b r m.
-  (MonadError QErr m, MonadReader r m, Has (SourceInfo b) r) =>
-  LogicalModelName ->
-  m (LogicalModelInfo b)
-askLogicalModelInfo logicalModelName = do
-  SourceInfo {..} <- asks getter
-  HashMap.lookup logicalModelName _siLogicalModels
-    `onNothing` throw500 ("askLogicalModelInfo: no info for logical model " <> dquote logicalModelName <> " in source " <> dquote _siName)
-
--- | Looks up native query information for the given native query name. This function
--- should never fail, since the schema cache construction process is
--- supposed to ensure all dependencies are resolved.
--- TODO: deduplicate this with `CacheRM`.
-askNativeQueryInfo ::
-  forall b r m.
-  (MonadError QErr m, MonadReader r m, Has (SourceInfo b) r) =>
-  NativeQueryName ->
-  m (NativeQueryInfo b)
-askNativeQueryInfo nativeQueryName = do
-  SourceInfo {..} <- asks getter
-  HashMap.lookup nativeQueryName _siNativeQueries
-    `onNothing` throw500 ("askNativeQueryInfo: no info for native query " <> dquote nativeQueryName <> " in source " <> dquote _siName)
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
-textToName :: (MonadError QErr m) => Text -> m G.Name
+textToName :: MonadError QErr m => Text -> m G.Name
 textToName textName =
   G.mkName textName
     `onNothing` throw400
       ValidationFailed
-      ( "cannot include "
-          <> textName
-          <<> " in the GraphQL schema because "
-          <> " it is not a valid GraphQL identifier"
-      )
-
-textToGQLIdentifier :: (MonadError QErr m) => Text -> m GQLNameIdentifier
-textToGQLIdentifier textName = do
-  let gqlIdents = do
-        (pref, suffs) <- uncons (C.fromSnake textName)
-        prefName <- G.mkName pref
-        suffNames <- traverse G.mkNameSuffix suffs
-        pure $ C.fromAutogeneratedTuple (prefName, suffNames)
-  gqlIdents
-    `onNothing` throw400
-      ValidationFailed
-      ( "cannot include "
-          <> textName
-          <<> " in the GraphQL schema because "
+      ( "cannot include " <> textName <<> " in the GraphQL schema because "
           <> " it is not a valid GraphQL identifier"
       )
 
@@ -491,18 +265,8 @@ partialSQLExpToUnpreparedValue (PSESessVar pftype var) = IR.UVSessionVar pftype 
 partialSQLExpToUnpreparedValue PSESession = IR.UVSession
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp) = IR.UVLiteral sqlExp
 
-getRedactionExprForColumn :: (Backend b) => SelPermInfo b -> Column b -> Maybe (IR.AnnRedactionExpUnpreparedValue b)
-getRedactionExprForColumn selectPermissions columnName =
-  let redactionExp = HashMap.lookup columnName (spiCols selectPermissions)
-   in fmap partialSQLExpToUnpreparedValue <$> redactionExp
-
-getRedactionExprForComputedField :: (Backend b) => SelPermInfo b -> ComputedFieldName -> Maybe (IR.AnnRedactionExpUnpreparedValue b)
-getRedactionExprForComputedField selectPermissions cfName =
-  let redactionExp = HashMap.lookup cfName (spiComputedFields selectPermissions)
-   in fmap partialSQLExpToUnpreparedValue <$> redactionExp
-
 mapField ::
-  (Functor m) =>
+  Functor m =>
   P.InputFieldsParser m (Maybe a) ->
   (a -> b) ->
   P.InputFieldsParser m (Maybe b)
@@ -511,34 +275,31 @@ mapField fp f = fmap (fmap f) fp
 parsedSelectionsToFields ::
   -- | how to handle @__typename@ fields
   (Text -> a) ->
-  InsOrdHashMap.InsOrdHashMap G.Name (P.ParsedSelection a) ->
+  OMap.InsOrdHashMap G.Name (P.ParsedSelection a) ->
   Fields a
 parsedSelectionsToFields mkTypenameFromText =
-  InsOrdHashMap.toList
+  OMap.toList
     >>> map (FieldName . G.unName *** P.handleTypename (mkTypenameFromText . G.unName))
 
-numericAggOperators :: [C.GQLNameIdentifier]
+numericAggOperators :: [G.Name]
 numericAggOperators =
-  [ C.fromAutogeneratedName $$(G.litName "sum"),
-    C.fromAutogeneratedName $$(G.litName "avg"),
-    C.fromAutogeneratedName $$(G.litName "stddev"),
-    C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["stddev", "samp"]),
-    C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["stddev", "pop"]),
-    C.fromAutogeneratedName $$(G.litName "variance"),
-    C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["var", "samp"]),
-    C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["var", "pop"])
+  [ Name._sum,
+    Name._avg,
+    Name._stddev,
+    Name._stddev_samp,
+    Name._stddev_pop,
+    Name._variance,
+    Name._var_samp,
+    Name._var_pop
   ]
 
-comparisonAggOperators :: [C.GQLNameIdentifier]
-comparisonAggOperators =
-  [ C.fromAutogeneratedName $$(G.litName "max"),
-    C.fromAutogeneratedName $$(G.litName "min")
-  ]
+comparisonAggOperators :: [G.Name]
+comparisonAggOperators = [$$(G.litName "max"), $$(G.litName "min")]
 
-mkDescriptionWith :: Maybe Postgres.PGDescription -> Text -> G.Description
+mkDescriptionWith :: Maybe PG.PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
   Nothing -> defaultTxt
-  Just (Postgres.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
+  Just (PG.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
 
 -- TODO why do we do these validations at this point? What does it mean to track
 --      a function but not add it to the schema...?
@@ -547,8 +308,8 @@ mkDescriptionWith descM defaultTxt = G.Description $ case descM of
 --      Karthikeyan: Yes, this is correct. We allowed this pre PDV but somehow
 --        got removed in PDV. OTOH, I’m not sure how prevalent this feature
 --        actually is
-takeValidTables :: forall b. (Backend b) => TableCache b -> TableCache b
-takeValidTables = HashMap.filterWithKey graphQLTableFilter
+takeValidTables :: forall b. Backend b => TableCache b -> TableCache b
+takeValidTables = Map.filterWithKey graphQLTableFilter
   where
     graphQLTableFilter tableName tableInfo =
       -- either the table name should be GraphQL compliant
@@ -558,17 +319,9 @@ takeValidTables = HashMap.filterWithKey graphQLTableFilter
 
 -- TODO and what about graphql-compliant function names here too?
 takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
-takeValidFunctions = HashMap.filter functionFilter
+takeValidFunctions = Map.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
-
--- | @TODO: Currently we do no validation on native queries in schema. Should we?
-takeValidNativeQueries :: forall b. NativeQueryCache b -> NativeQueryCache b
-takeValidNativeQueries = id
-
--- | @TODO: Currently we do no validation on stored procedures in schema. Should we?
-takeValidStoredProcedures :: forall b. StoredProcedureCache b -> StoredProcedureCache b
-takeValidStoredProcedures = id
 
 -- root field builder helpers
 
@@ -587,51 +340,22 @@ optionalFieldParser ::
 optionalFieldParser = fmap . fmap . fmap
 
 -- | Builds the type name for referenced enum tables.
-mkEnumTypeName :: forall b r m. (Backend b, MonadError QErr m, Has (SourceInfo b) r) => TableName b -> Maybe G.Name -> SchemaT r m G.Name
-mkEnumTypeName enumTableName enumTableCustomName = do
-  customization <- retrieve $ _siCustomization @b
-  enumTableGQLName <- getTableIdentifier @b enumTableName `onLeft` throwError
-  pure $ addEnumSuffix customization enumTableGQLName enumTableCustomName
+mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m) => EnumReference b -> m G.Name
+mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
+  enumTableGQLName <- tableGraphQLName @b enumTableName `onLeft` throwError
+  addEnumSuffix enumTableGQLName enumTableCustomName
 
-addEnumSuffix :: ResolvedSourceCustomization -> GQLNameIdentifier -> Maybe G.Name -> G.Name
-addEnumSuffix customization enumTableGQLName enumTableCustomName =
-  runMkTypename (_rscTypeNames customization)
-    $ applyTypeNameCaseIdentifier (_rscNamingConvention customization)
-    $ mkEnumTableTypeName enumTableGQLName enumTableCustomName
+addEnumSuffix :: (MonadReader r m, Has MkTypename r) => G.Name -> Maybe G.Name -> m G.Name
+addEnumSuffix enumTableGQLName enumTableCustomName = mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> Name.__enum
 
 -- TODO: figure out what the purpose of this method is.
-peelWithOrigin :: (P.MonadParse m) => P.Parser 'P.Both m a -> P.Parser 'P.Both m (IR.ValueWithOrigin a)
+peelWithOrigin :: P.MonadParse m => P.Parser 'P.Both m a -> P.Parser 'P.Both m (IR.ValueWithOrigin a)
 peelWithOrigin parser =
   parser
     { P.pParser = \case
         P.GraphQLValue (G.VVariable var@P.Variable {vInfo, vValue}) -> do
           -- Check types c.f. 5.8.5 of the June 2018 GraphQL spec
           P.typeCheck False (P.toGraphQLType $ P.pType parser) var
-          fmap (IR.ValueWithOrigin vInfo)
-            $ P.pParser parser
-            $ case vValue of
-              -- TODO: why is faking a null value here semantically correct? RE: GraphQL spec June 2018, section 2.9.5
-              Nothing -> P.GraphQLValue G.VNull
-              Just val -> absurd <$> val
+          IR.ValueWithOrigin vInfo <$> P.pParser parser (absurd <$> vValue)
         value -> IR.ValueNoOrigin <$> P.pParser parser value
-    }
-
-getIntrospectionResult :: Options.RemoteSchemaPermissions -> RoleName -> RemoteSchemaCtxG remoteFieldInfo -> Maybe IntrospectionResult
-getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
-  if
-    | -- admin doesn't have a custom annotated introspection, defaulting to the original one
-      role == adminRoleName ->
-        pure $ _rscIntroOriginal remoteSchemaContext
-    | -- if permissions are disabled, the role map will be empty, defaulting to the original one
-      remoteSchemaPermsCtx == Options.DisableRemoteSchemaPermissions ->
-        pure $ _rscIntroOriginal remoteSchemaContext
-    | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
-      otherwise ->
-        HashMap.lookup role (_rscPermissions remoteSchemaContext)
-
-tablePermissionsInfo :: (Backend b) => SelPermInfo b -> TablePerms b
-tablePermissionsInfo selectPermissions =
-  IR.TablePerm
-    { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
-      IR._tpLimit = spiLimit selectPermissions
     }

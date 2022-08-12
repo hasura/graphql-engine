@@ -1,8 +1,0 @@
-resolver: nightly-2019-11-29
-packages:
-- '.'
-extra-deps:
-flags:
-  hedis:
-    dev: true
-extra-package-dbs: []

@@ -1,4 +1,0 @@
-input {
-    a: String
-    b: Int!
-}

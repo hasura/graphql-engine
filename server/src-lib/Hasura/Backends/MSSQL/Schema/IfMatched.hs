@@ -13,7 +13,6 @@ module Hasura.Backends.MSSQL.Schema.IfMatched
   )
 where
 
-import Data.Has
 import Data.Text.Extended
 import Hasura.Backends.MSSQL.Types.Insert
 import Hasura.Backends.MSSQL.Types.Internal (ScalarType (..))
@@ -28,18 +27,17 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
-import Hasura.GraphQL.Schema.Typename
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
-import Hasura.Table.Cache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Field-parser for:
@@ -57,46 +55,39 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- @tablename@ defined /and/ these grant non-empty column permissions.
 ifMatchedFieldParser ::
   forall r m n.
-  ( MonadBuildSchema 'MSSQL r m n,
-    AggregationPredicatesSchema 'MSSQL
-  ) =>
+  MonadBuildSchema 'MSSQL r m n =>
+  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  SchemaT r m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedFieldParser tableInfo = do
-  maybeObject <- ifMatchedObjectParser tableInfo
-  pure case maybeObject of
-    Nothing -> pure Nothing
-    Just object -> P.fieldOptional Name._if_matched (Just "upsert condition") object
+  m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
+ifMatchedFieldParser sourceInfo tableInfo = do
+  maybeObject <- ifMatchedObjectParser sourceInfo tableInfo
+  return $ withJust maybeObject $ P.fieldOptional Name._if_matched (Just "upsert condition")
 
 -- | Parse a @tablename_if_matched@ object.
 ifMatchedObjectParser ::
   forall r m n.
-  ( MonadBuildSchema 'MSSQL r m n,
-    AggregationPredicatesSchema 'MSSQL
-  ) =>
+  MonadBuildSchema 'MSSQL r m n =>
+  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  SchemaT r m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedObjectParser tableInfo = runMaybeT do
+  m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
+ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
   -- Short-circuit if we don't have sufficient permissions.
-  sourceInfo :: SourceInfo 'MSSQL <- asks getter
   roleName <- retrieve scRole
-  let customization = _siCustomization sourceInfo
-      mkTypename = runMkTypename $ _rscTypeNames customization
   updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
-  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum tableInfo
+  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceInfo tableInfo
   lift do
     updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
     tableGQLName <- getTableGQLName tableInfo
-    let objectName = mkTypename $ tableGQLName <> Name.__if_matched
-        _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
+    objectName <- mkTypename $ tableGQLName <> Name.__if_matched
+    let _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
         updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
         objectDesc = G.Description $ "upsert condition type for table " <>> tableInfoName tableInfo
         matchColumnsName = Name._match_columns
         updateColumnsName = Name._update_columns
         whereName = Name._where
-    whereExpParser <- tableBoolExp tableInfo
-    pure
-      $ P.object objectName (Just objectDesc) do
+    whereExpParser <- boolExp sourceInfo tableInfo
+    pure $
+      P.object objectName (Just objectDesc) do
         _imConditions <-
           (\whereExp -> BoolAnd $ updateFilter : maybeToList whereExp)
             <$> P.fieldOptional whereName Nothing whereExpParser
@@ -119,31 +110,27 @@ ifMatchedObjectParser tableInfo = runMaybeT do
 -- permissions for.
 tableInsertMatchColumnsEnum ::
   forall r m n.
-  (MonadBuildSourceSchema 'MSSQL r m n) =>
+  MonadBuildSchemaBase r m n =>
+  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
-tableInsertMatchColumnsEnum tableInfo = do
-  sourceInfo :: SourceInfo 'MSSQL <- asks getter
-  let customization = _siCustomization sourceInfo
-      mkTypename = runMkTypename $ _rscTypeNames customization
+  m (Maybe (Parser 'Both n (Column 'MSSQL)))
+tableInsertMatchColumnsEnum sourceInfo tableInfo = do
   tableGQLName <- getTableGQLName @'MSSQL tableInfo
-  columns <- tableSelectColumns tableInfo
-  let enumName = mkTypename $ tableGQLName <> Name.__insert_match_column
-      description =
-        Just
-          $ G.Description
-          $ "select match_columns of table "
-          <>> tableInfoName tableInfo
-  pure
-    $ P.enum enumName description
-    <$> nonEmpty
-      [ ( define $ ciName column,
-          ciColumn column
-        )
-        | -- TODO(redactionExp): Does the redaction expression need to be considered here?
-          (SCIScalarColumn column, _redactionExp) <- columns,
-          isMatchColumnValid column
-      ]
+  columns <- tableSelectColumns sourceInfo tableInfo
+  enumName <- mkTypename $ tableGQLName <> Name.__insert_match_column
+  let description =
+        Just $
+          G.Description $
+            "select match_columns of table " <>> tableInfoName tableInfo
+  pure $
+    P.enum enumName description
+      <$> nonEmpty
+        [ ( define $ ciName column,
+            ciColumn column
+          )
+          | column <- columns,
+            isMatchColumnValid column
+        ]
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo

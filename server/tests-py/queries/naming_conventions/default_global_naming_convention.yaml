@@ -1,3 +1,26 @@
+# Test with graphql-default naming convention
+
+# Please note that we don't need to set the naming convention in the source
+# customisation as we are using the environment variable (already set)
+# HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries:
+
 - description: create table 1
   url: /v1/query
   status: 200
@@ -33,12 +56,12 @@
   response:
     data:
       authorLocal:
-        - authorId: 1
-          name: "Author 1"
-          __typename: AuthorLocal
-        - authorId: 2
-          name: "Author 2"
-          __typename: AuthorLocal
+      - authorId: 1
+        name: 'Author 1'
+        __typename: AuthorLocal
+      - authorId: 2
+        name: 'Author 2'
+        __typename: AuthorLocal
   query:
     query: |
       query {
@@ -54,12 +77,12 @@
   status: 200
   response:
     data:
-      a:
+        a:
         - b: 1
-          c: "Author 1"
+          c: 'Author 1'
           d: AuthorLocal
         - b: 2
-          c: "Author 2"
+          c: 'Author 2'
           d: AuthorLocal
   query:
     query: |
@@ -78,7 +101,7 @@
     data:
       authorLocalByPk:
         authorId: 1
-        name: "Author 1"
+        name: 'Author 1'
         __typename: AuthorLocal
   query:
     query: |
@@ -120,9 +143,9 @@
       insertAuthorLocal:
         __typename: AuthorLocalMutationResponse
         returning:
-          - __typename: AuthorLocal
-            authorId: 3
-            name: Author 3
+        - __typename: AuthorLocal
+          authorId: 3
+          name: Author 3
   query:
     query: |
       mutation MyMutation {
@@ -178,3 +201,13 @@
       source: pg1
       sql: |
         drop table author_local;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1
