@@ -1,8 +1,9 @@
 # Do not modify this file directly. Instead, modify server/tests-py/requirements-top-level.txt.
-# Then, run `make` in this directory to regenerate this file.
+# Then, run `make server/tests-py/requirements.txt` to regenerate this file.
+
 aniso8601==7.0.0
 async-timeout==4.0.2
-attrs==21.4.0
+attrs==22.1.0
 certifi==2022.6.15
 cffi==1.15.1
 charset-normalizer==2.1.0
@@ -15,7 +16,6 @@ graphql-core==2.3.2
 graphql-relay==2.0.1
 greenlet==1.1.2
 idna==3.3
-importlib-metadata==4.12.0
 iniconfig==1.1.1
 jsondiff==2.0.0
 packaging==21.3
@@ -27,6 +27,7 @@ pycparser==2.21
 PyJWT==2.3.0
 pyparsing==3.0.9
 pytest==6.2.5
+pytest-durations==1.2.0
 pytest-forked==1.4.0
 pytest-xdist==2.5.0
 python-dateutil==2.8.2
@@ -37,10 +38,8 @@ ruamel.yaml==0.17.21
 ruamel.yaml.clib==0.2.6
 Rx==1.6.1
 six==1.16.0
-SQLAlchemy==1.4.39
+SQLAlchemy==1.4.40
 toml==0.10.2
-typing_extensions==4.3.0
-urllib3==1.26.10
+urllib3==1.26.11
 websocket-client==0.56.0
 wrapt==1.14.1
-zipp==3.8.1
