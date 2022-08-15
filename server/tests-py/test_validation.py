@@ -5,7 +5,7 @@ from validate import check_query_f
 # graphql parser can't seem to parse {where: null}, disabling
 # websocket till then
 @pytest.mark.parametrize("transport", ['http'])
-@pytest.mark.usefixtures('per_method_tests_db_state')
+@pytest.mark.usefixtures('postgis', 'per_method_tests_db_state')
 class TestGraphQLValidation:
 
     def test_null_value(self, hge_ctx, transport):

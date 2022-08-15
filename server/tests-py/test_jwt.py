@@ -119,7 +119,7 @@ class TestJWTExpirySkew():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
@@ -388,7 +388,7 @@ class TestJWTBasic():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
@@ -512,7 +512,7 @@ class TestJwtAudienceCheck():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
@@ -592,7 +592,7 @@ class TestJwtIssuerCheck():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield

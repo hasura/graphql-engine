@@ -798,7 +798,7 @@ class TestCreateActionNestedTypeWithRelation:
     def test_create_sync_action_with_nested_output_and_nested_relation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')
 
-@pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.usefixtures('postgis', 'per_class_tests_db_state')
 class TestSetCustomTypes:
 
     @classmethod

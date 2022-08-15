@@ -14,7 +14,7 @@ from ruamel.yaml.comments import CommentedMap
 usefixtures = pytest.mark.usefixtures
 
 
-@usefixtures("per_class_tests_db_state")
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestTests1:
     """
     Test various things about our test framework code. Validate that tests work
@@ -44,7 +44,7 @@ class TestTests1:
         """We can detect bad ordering of selection set"""
         check_query_f(hge_ctx, 'test_tests/select_query_author_by_pkey_bad_ordering.yaml', 'http')
         #
-        # E           AssertionError: 
+        # E           AssertionError:
         # E           expected:
         # E             data:
         # E               author_by_pk:
@@ -64,7 +64,7 @@ class TestTests1:
         return 'queries/graphql_query/basic'
 
 
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestTests2:
     """
     Test various things about our test framework code. Validate that tests work
@@ -77,7 +77,7 @@ class TestTests2:
         """We can detect bad ordering of selection set"""
         check_query_f(hge_ctx, 'test_tests/user_can_query_jsonb_values_filter_bad_order.yaml', 'http')
         #
-        # E           AssertionError: 
+        # E           AssertionError:
         # E           expected:
         # E             data:
         # E               jsonb_table:
@@ -113,15 +113,15 @@ class TestTests2:
         # (CommentedMap is ruamel.yaml's OrderedMap that also preserves
         # format):
         fully_ordered_result = \
-            CommentedMap([('data', 
+            CommentedMap([('data',
                 CommentedMap([
                     ('thing1', "thing1"),
                     ('jsonb_table', [
                         CommentedMap([
-                            ('id', 1), 
+                            ('id', 1),
                             ('jsonb_col', CommentedMap([('age', 7), ('name', 'Hasura')]))]),
                         CommentedMap([
-                            ('id', 2), 
+                            ('id', 2),
                             ('jsonb_col', CommentedMap([('age', 8), ('name', 'Rawkz')]))]),
                     ]),
                     ('thing2', CommentedMap([("a",1), ("b",2), ("c",3)])),
@@ -131,15 +131,15 @@ class TestTests2:
 
         # We expect to have discarded ordering of leaves not in selset:
         relevant_ordered_result_expected = \
-            dict([('data', 
+            dict([('data',
                 CommentedMap([
                     ('thing1', "thing1"),
                     ('jsonb_table', [
                         CommentedMap([
-                            ('id', 1), 
+                            ('id', 1),
                             ('jsonb_col', dict([('age', 7), ('name', 'Hasura')]))]),
                         CommentedMap([
-                            ('id', 2), 
+                            ('id', 2),
                             ('jsonb_col', dict([('age', 8), ('name', 'Rawkz')]))]),
                     ]),
                     ('thing2', dict([("a",1), ("b",2), ("c",3)])),
@@ -166,7 +166,7 @@ class TestTests2:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
-    
+
 @usefixtures("per_class_tests_db_state")
 class TestTests3:
 
@@ -194,7 +194,7 @@ class TestTests3:
             print("FAIL!")
             assert 0, "Test failure, occurs as expected"
         # It reaches here only if the exception wasn't caught, in which case
-        # this current test should fail  
+        # this current test should fail
 
     """
       This test case is about testing validate_http_anyq_with_allowed_responses
@@ -246,8 +246,8 @@ class TestTests3:
         except:
             print("FAIL!")
             assert 0, "Test failed, as expected"
-            
-            
+
+
 
     # Re-use setup and teardown from where we adapted this test case:
     @classmethod

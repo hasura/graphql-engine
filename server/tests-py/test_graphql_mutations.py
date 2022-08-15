@@ -290,6 +290,7 @@ class TestGraphqlInsertNullPrefixedColumnOnConflict:
 
 
 @use_mutation_fixtures
+@usefixtures('postgis')
 class TestGraphqlInsertGeoJson:
 
     def test_insert_point_landmark(self, hge_ctx):
@@ -414,6 +415,7 @@ class TestGraphqlInsertViews:
 
 
 @use_mutation_fixtures
+@usefixtures('postgis')
 class TestGraphqlUpdateBasic:
 
     def test_set_author_name(self, hge_ctx):
@@ -570,6 +572,7 @@ class TestGraphqlUpdatePermissionsMSSQL:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures
+@usefixtures('postgis')
 class TestGraphqlDeleteBasic:
 
     def test_article_delete(self, hge_ctx, transport):
@@ -596,7 +599,7 @@ class TestGraphqlDeleteBasic:
 
 @pytest.mark.backend('mssql')
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_method_tests_db_state')
+@usefixtures('per_method_tests_db_state', 'postgis')
 class TestGraphqlDeleteBasicMSSQL:
 
     def test_article_delete(self, hge_ctx, transport):
