@@ -933,13 +933,13 @@ forall a. FromRes a =&gt; TxE QErr a
 </span><a href="#local-6989586621689367401"><span class="hs-identifier hs-var">mutationTx</span></a></span><span>
 </span><span id="line-266"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-267"></span><span>    </span><span id="local-6989586621689367398"><span class="annot"><span class="annottext">rawAliasIdentifier :: Text
-</span><a href="#local-6989586621689367398"><span class="hs-identifier hs-var hs-var">rawAliasIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text
+</span><a href="#local-6989586621689367398"><span class="hs-identifier hs-var hs-var">rawAliasIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;mutres__&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text
 forall a. ToTxt a =&gt; QualifiedObject a -&gt; Text
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#qualifiedObjectToText"><span class="hs-identifier hs-var">qualifiedObjectToText</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689367407"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;__mutation_result&quot;</span></span><span>
+</span><a href="#local-6989586621689367407"><span class="hs-identifier hs-var">qt</span></a></span><span>
 </span><span id="line-268"></span><span>    </span><span id="local-6989586621689367396"><span class="annot"><span class="annottext">aliasIdentifier :: Identifier
 </span><a href="#local-6989586621689367396"><span class="hs-identifier hs-var hs-var">aliasIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text

@@ -360,7 +360,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An example output expression for INSERT mutation:
 
-WITH &quot;&lt;table-name&gt;__mutation_result_alias&quot; AS (
+WITH &quot;mra__&lt;table-name&gt;&quot; AS (
   INSERT INTO &lt;table-name&gt; (&lt;insert-column&gt;[..])
   VALUES
     (&lt;insert-value-row&gt;[..])
@@ -368,15 +368,15 @@ WITH &quot;&lt;table-name&gt;__mutation_result_alias&quot; AS (
     -- An extra column expression which performs the 'CHECK' validation
     (&lt;CHECK Condition&gt;) AS &quot;check__constraint&quot;
 ),
-&quot;&lt;table-name&gt;__all_columns_alias&quot; AS (
+&quot;aca__&lt;table-name&gt;&quot; AS (
   -- Only extract columns from mutated rows. Columns sorted by ordinal position so that
   -- resulted rows can be casted to table type.
   SELECT (&lt;table-column&gt;[..])
   FROM
-    &quot;&lt;table-name&gt;__mutation_result_alias&quot;
+    &quot;mra__&lt;table-name&gt;&quot;
 )
-&lt;SELECT statement to generate mutation response using '&lt;table-name&gt;__all_columns_alias' as FROM
- and bool_and(&quot;check__constraint&quot;) from &quot;&lt;table-name&gt;__mutation_result_alias&quot;&gt;
+&lt;SELECT statement to generate mutation response using 'aca__&lt;table-name&gt;' as FROM
+ and bool_and(&quot;check__constraint&quot;) from &quot;mra__&lt;table-name&gt;&quot;&gt;
 -}</span><span>
 </span><span id="line-135"></span><span>
 </span><span id="line-136"></span><span class="hs-comment">-- | Generate mutation output expression with given mutation CTE statement.</span><span>
@@ -432,24 +432,24 @@ forall a. IsIdentifier a =&gt; a -&gt; TableAlias
 </span><a href="#local-6989586621689364523"><span class="hs-identifier hs-var hs-var">mutationResultAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Identifier) -&gt; Text -&gt; Identifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;mra__&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text
 forall a. ToTxt a =&gt; QualifiedObject a -&gt; Text
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#snakeCaseQualifiedObject"><span class="hs-identifier hs-var">snakeCaseQualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689364532"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;__mutation_result_alias&quot;</span></span><span>
+</span><a href="#local-6989586621689364532"><span class="hs-identifier hs-var">qt</span></a></span><span>
 </span><span id="line-158"></span><span>    </span><span id="local-6989586621689364522"><span class="annot"><span class="annottext">allColumnsAlias :: Identifier
 </span><a href="#local-6989586621689364522"><span class="hs-identifier hs-var hs-var">allColumnsAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Identifier) -&gt; Text -&gt; Identifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;aca__&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text
 forall a. ToTxt a =&gt; QualifiedObject a -&gt; Text
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#snakeCaseQualifiedObject"><span class="hs-identifier hs-var">snakeCaseQualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689364532"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;__all_columns_alias&quot;</span></span><span>
+</span><a href="#local-6989586621689364532"><span class="hs-identifier hs-var">qt</span></a></span><span>
 </span><span id="line-159"></span><span>    </span><span id="local-6989586621689364521"><span class="annot"><span class="annottext">allColumnsSelect :: TopLevelCTE
 </span><a href="#local-6989586621689364521"><span class="hs-identifier hs-var hs-var">allColumnsSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">Select -&gt; TopLevelCTE
