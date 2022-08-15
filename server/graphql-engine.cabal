@@ -1273,6 +1273,7 @@ test-suite tests-hspec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
+    Test.Regression.NullsOrderParsing8780Spec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
