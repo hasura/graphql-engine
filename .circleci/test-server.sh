@@ -179,18 +179,25 @@ pip3 install -r requirements.txt ||
 
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
+export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
+export DEFAULT_HASURA_EXPERIMENTAL_FEATURES=streaming_subscriptions
+export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
+
 export HGE_URL="http://localhost:8080"
 export HGE_URL_2=""
 if [ -n "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ]; then
 	HGE_URL_2="http://localhost:8081"
 fi
-export EVENT_WEBHOOK_HANDLER="http://127.0.0.1:5592"
-export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
-export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
-export DEFAULT_HASURA_EXPERIMENTAL_FEATURES=streaming_subscriptions
-export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
-export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
-export ACTION_WEBHOOK_HANDLER="http://127.0.0.1:5593"
+
+export EVENT_WEBHOOK_HEADER="MyEnvValue"
+export EVENT_WEBHOOK_HANDLER="http://localhost:5592"
+export ACTION_WEBHOOK_HANDLER="http://localhost:5593"
+export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://localhost:5594"
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://localhost:5000"
+export GRAPHQL_SERVICE_HANDLER="http://localhost:4001"
+export GRAPHQL_SERVICE_1="http://localhost:4020"
+export GRAPHQL_SERVICE_2="http://localhost:4021"
+export GRAPHQL_SERVICE_3="http://localhost:4022"
 
 HGE_PIDS=""
 WH_PID=""
@@ -896,7 +903,8 @@ EOF
 remote-schema-https)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SECURE REMOTE SCHEMA #########################>\n"
 
-	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="https://127.0.0.1:5001/"
+	OLD_REMOTE_SCHEMAS_WEBHOOK_DOMAIN="${REMOTE_SCHEMAS_WEBHOOK_DOMAIN}"
+	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="https://localhost:5001"
 	init_ssl
 
 	run_hge_with_args serve
@@ -910,7 +918,7 @@ remote-schema-https)
 
 	pytest -n 1 --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" test_schema_stitching.py::TestRemoteSchemaBasic
 
-	export REMOTE_SCHEMA_WEBHOOK_DOMAIN="https://localhost:5000/"
+	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="${OLD_REMOTE_SCHEMAS_WEBHOOK_DOMAIN}"
 	kill_hge_servers
 	kill $GQL_SERVER_PID
 	;;

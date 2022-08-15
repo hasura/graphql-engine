@@ -1,1 +1,2 @@
 /.hlint.yaml
+/server/tests-py/**/*

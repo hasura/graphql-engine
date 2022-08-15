@@ -14,7 +14,7 @@ query:
       - name: test
         comment: testing replace metadata with remote schemas
         definition:
-          url: http://localhost:5000/hello-graphql
+          url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/hello-graphql"
           forward_client_headers: false
       tables:
       - table: author

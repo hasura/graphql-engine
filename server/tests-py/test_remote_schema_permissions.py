@@ -10,7 +10,7 @@ if not PytestConf.config.getoption('--enable-remote-schema-permissions'):
     pytest.skip('--enable-remote-schema-permissions is missing, skipping remote schema permissions tests', allow_module_level=True)
 
 @pytest.fixture(scope="module")
-def graphql_service():
+def graphql_service_1():
     svc = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"])
     svc.start()
     yield svc
@@ -30,8 +30,8 @@ def graphql_service_3():
     yield svc
     svc.stop()
 
-use_test_fixtures = pytest.mark.usefixtures (
-    "graphql_service",
+use_test_fixtures = pytest.mark.usefixtures(
+    "graphql_service_1",
     "graphql_service_2",
     "graphql_service_3",
     "per_method_tests_db_state"
@@ -55,7 +55,7 @@ class TestAddRemoteSchemaPermissions:
         hge_ctx.v1metadataq_f(self.dir() + 'update_remote_schema/update_schema.yaml')
         """ check the details of remote schema in metadata """
         resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert resp['remote_schemas'][0]['definition']['url'] == "http://localhost:4021"
+        assert resp['remote_schemas'][0]['definition']['url'] == "{{GRAPHQL_SERVICE_2}}"
         assert resp['remote_schemas'][0]['comment'] == 'this is from update query', resp
         assert resp['remote_schemas'][0]['definition']['timeout_seconds'] == 120, resp
         """ reset the changes to the original config """
@@ -149,7 +149,7 @@ class TestRemoteRelationshipPermissions:
         return "queries/remote_schemas/permissions/remote_relationships/"
 
     @pytest.fixture(autouse=True)
-    def transact(self, hge_ctx, graphql_service):
+    def transact(self, hge_ctx):
         hge_ctx.v1q_f(self.dir() + 'setup_with_permissions.yaml')
         yield
         hge_ctx.v1q_f(self.dir() + 'teardown.yaml')

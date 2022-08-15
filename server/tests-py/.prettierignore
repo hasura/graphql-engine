@@ -1,0 +1,7 @@
+# If you add server/tests-py as its own workspace root in Visual Studio Code,
+# the Prettier plugin only looks up to this directory.
+# We therefore need to duplicate the ignore list here.
+
+# Currently we just ignore everything.
+
+/**

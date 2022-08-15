@@ -470,10 +470,14 @@ elif [ "$MODE" = "test" ]; then
 
   # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
-  export EVENT_WEBHOOK_HANDLER="http://127.0.0.1:5592"
-  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
-  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
-  export ACTION_WEBHOOK_HANDLER="http://127.0.0.1:5593"
+  export EVENT_WEBHOOK_HANDLER="http://localhost:5592"
+  export ACTION_WEBHOOK_HANDLER="http://localhost:5593"
+  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://localhost:5594"
+  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://localhost:5000"
+  export GRAPHQL_SERVICE_HANDLER="http://localhost:4001"
+  export GRAPHQL_SERVICE_1="http://localhost:4020"
+  export GRAPHQL_SERVICE_2="http://localhost:4021"
+  export GRAPHQL_SERVICE_3="http://localhost:4022"
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     # It's better UX to build first (possibly failing) before trying to launch

@@ -64,5 +64,5 @@ args:
   args:
     name: actions-remote-join-schema
     definition:
-      url: http://localhost:4001
+      url: "{{GRAPHQL_SERVICE_HANDLER}}"
       forward_client_headers: false
