@@ -2,7 +2,7 @@
 
 -- |
 -- See https://github.com/hasura/graphql-engine/issues/8158
-module Test.Regression.DoNotTruncateSessionVariables8158 (spec) where
+module Test.Regression.DoNotTruncateSessionVariables8158Spec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
