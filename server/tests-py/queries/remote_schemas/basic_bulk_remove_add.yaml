@@ -9,5 +9,5 @@ args:
     name: simple 2
     comment: testing
     definition:
-      url: http://localhost:5000/hello-graphql
+      url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/hello-graphql"
       forward_client_headers: false

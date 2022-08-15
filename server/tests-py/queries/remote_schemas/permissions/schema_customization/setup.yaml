@@ -2,7 +2,7 @@ type: add_remote_schema
 args:
   name: my-remote-schema
   definition:
-    url: http://localhost:4020
+    url: "{{GRAPHQL_SERVICE_1}}"
     forward_client_headers: false
     customization:
       root_fields_namespace: my_remote_schema
