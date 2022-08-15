@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 
-import time
-import ruamel.yaml as yaml
-from ruamel.yaml.compat import ordereddict, StringIO
-from ruamel.yaml.comments import CommentedMap
-import json
+import base64
 import copy
 import graphql
-import os
-import base64
+import json
 import jsondiff
 import jwt
+import os
+import pytest
 import queue
 import random
-import warnings
-import pytest
+import ruamel.yaml as yaml
+from ruamel.yaml.comments import CommentedMap
+from ruamel.yaml.compat import ordereddict, StringIO
+import string
 import textwrap
+import warnings
 
 from context import GQLWsClient, PytestConf
 
@@ -523,33 +523,33 @@ def get_conf_f(f):
         return yaml.YAML().load(c)
 
 def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
-    print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
-    print ("transport="+transport)
-    with open(f, 'r+') as c:
-        # For `--accept`:
-        should_write_back = False
+    should_write_back = False
 
-        # ruamel will preserve order so that we can test the JSON ordering
-        # property conforms to YAML spec.  It also lets us write back the yaml
-        # nicely when we `--accept.`
-        yml = yaml.YAML()
+    # ruamel will preserve order so that we can test the JSON ordering
+    # property conforms to YAML spec.  It also lets us write back the yaml
+    # nicely when we `--accept.`
+    yml = yaml.YAML()
+
+    with open(f, 'r+') as c:
+        # NOTE: preserve ordering with ruamel
         conf = yml.load(c)
-        if isinstance(conf, list):
-            for ix, sconf in enumerate(conf):
-                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
-                if PytestConf.config.getoption("--accept") and not matched:
-                    conf[ix]['response'] = actual_resp
-                    should_write_back = True
-        else:
-            if conf['status'] != 200:
-                hge_ctx.may_skip_test_teardown = True
-            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
-            # If using `--accept` write the file back out with the new expected
-            # response set to the actual response we got:
+
+    if isinstance(conf, list):
+        for ix, sconf in enumerate(conf):
+            actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
             if PytestConf.config.getoption("--accept") and not matched:
-                conf['response'] = actual_resp
+                conf[ix]['response'] = actual_resp
                 should_write_back = True
+    else:
+        if conf['status'] != 200:
+            hge_ctx.may_skip_test_teardown = True
+        actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
+        # If using `--accept` write the file back out with the new expected
+        # response set to the actual response we got:
+        if PytestConf.config.getoption("--accept") and not matched:
+            conf['response'] = actual_resp
+            should_write_back = True
 
         if should_write_back:
             warnings.warn(
