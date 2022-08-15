@@ -1272,6 +1272,7 @@ test-suite tests-hspec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
+    Test.Regression.DoNotTruncateSessionVariables8158
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
@@ -1280,7 +1281,6 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-    Test.RequestHeadersSpec
     Test.RunSQLSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
