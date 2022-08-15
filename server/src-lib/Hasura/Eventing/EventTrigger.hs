@@ -76,11 +76,14 @@ import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Metrics (ServerMetrics (..))
+import Hasura.Server.Prometheus (EventTriggerMetrics (..))
 import Hasura.Server.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
+import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
+import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -209,9 +212,10 @@ processEventQueue ::
   EventEngineCtx ->
   LockedEventsCtx ->
   ServerMetrics ->
+  EventTriggerMetrics ->
   MaintenanceMode () ->
   m (Forever m)
-processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics maintenanceMode = do
+processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -342,6 +346,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
       eventProcessTime <- liftIO getCurrentTime
       let eventQueueTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
       _ <- liftIO $ EKG.Distribution.add (smEventQueueTime serverMetrics) eventQueueTime
+      liftIO $ Prometheus.Histogram.observe (eventQueueTimeSeconds eventTriggerMetrics) eventQueueTime
 
       cache <- liftIO getSchemaCache
 
@@ -398,8 +403,14 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                     -- request invocation
                     resp <-
                       bracket_
-                        (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
-                        (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                        ( do
+                            liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics
+                            liftIO $ Prometheus.Gauge.inc (eventTriggerHTTPWorkers eventTriggerMetrics)
+                        )
+                        ( do
+                            liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics
+                            liftIO $ Prometheus.Gauge.dec (eventTriggerHTTPWorkers eventTriggerMetrics)
+                        )
                         (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
                     pure (request, resp)
               case eitherReqRes of
