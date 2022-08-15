@@ -783,6 +783,7 @@ class HGECtx:
 
         self.http = requests.Session()
         self.hge_key = config.getoption('--hge-key')
+        self.timeout = 60
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')
@@ -851,43 +852,50 @@ class HGECtx:
         if v == 'GET':
           resp = self.http.get(
               self.hge_url + u,
-              headers=h
+              headers=h,
+              timeout=self.timeout,
           )
         elif v == 'POSTJSON' and b:
           resp = self.http.post(
               self.hge_url + u,
               json=b,
-              headers=h
+              headers=h,
+              timeout=self.timeout,
           )
         elif v == 'POST' and b:
           # TODO: Figure out why the requests are failing with a byte object passed in as `data`
           resp = self.http.post(
               self.hge_url + u,
               data=b,
-              headers=h
+              headers=h,
+              timeout=self.timeout,
           )
         elif v == 'PATCH' and b:
           resp = self.http.patch(
               self.hge_url + u,
               data=b,
-              headers=h
+              headers=h,
+              timeout=self.timeout,
            )
         elif v == 'PUT' and b:
           resp = self.http.put(
               self.hge_url + u,
               data=b,
-              headers=h
+              headers=h,
+              timeout=self.timeout,
            )
         elif v == 'DELETE':
           resp = self.http.delete(
               self.hge_url + u,
-              headers=h
+              headers=h,
+              timeout=self.timeout,
            )
         else:
           resp = self.http.post(
               self.hge_url + u,
               json=q,
-              headers=h
+              headers=h,
+              timeout=self.timeout,
            )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
@@ -907,7 +915,8 @@ class HGECtx:
         resp = self.http.post(
             self.hge_url + url_path,
             json=q,
-            headers=h
+            headers=h,
+            timeout=self.timeout,
         )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
