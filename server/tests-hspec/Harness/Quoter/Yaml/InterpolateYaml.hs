@@ -86,9 +86,9 @@ parseInterpolated = Bifunctor.first show . P.parse parseParts "yamlQQ"
             <|> parseRaw
         )
 
-    -- Parses raw text. Will never parse a '#', '*' or `'`.
+    -- Parses raw text. Will never parse a '#'.
     parseRaw :: Parser InterpolatePart
-    parseRaw = IPRaw <$> P.many1 (P.try $ P.noneOf "#*")
+    parseRaw = IPRaw <$> P.many1 (P.try $ P.noneOf "#")
 
     -- Parses a comment: wherever we encounter a '#', until the end of line.
     parseComment :: Parser InterpolatePart
