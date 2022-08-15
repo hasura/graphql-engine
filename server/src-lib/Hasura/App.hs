@@ -943,6 +943,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
               eventEngineCtx
               lockedEventsCtx
               serverMetrics
+              (pmEventTriggerMetrics prometheusMetrics)
               soEnableMaintenanceMode
 
     startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState = do
