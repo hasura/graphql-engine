@@ -224,10 +224,12 @@ instance ToSQL NullsOrder where
   toSQL NullsLast = "NULLS LAST"
 
 instance J.FromJSON NullsOrder where
-  parseJSON = J.genericParseJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 1}
+  -- Todo: write a proper parser https://github.com/hasura/graphql-engine-mono/issues/5484
+  parseJSON = J.genericParseJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 5}
 
 instance J.ToJSON NullsOrder where
-  toJSON = J.genericToJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 1}
+  -- Todo: write a proper parser https://github.com/hasura/graphql-engine-mono/issues/5484
+  toJSON = J.genericToJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 5}
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =
