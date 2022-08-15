@@ -6,6 +6,7 @@ from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 class CookieAuth(RequestHandler):
     def get(self, request):
+        print('auth GET request')
         headers = {k.lower(): v for k, v in request.headers.items()}
 
         print(headers)
@@ -18,10 +19,13 @@ class CookieAuth(RequestHandler):
                     hdr = ('Set-Cookie', v)
                     cookieHdrs.append(hdr)
 
+            print('auth response: OK')
             return Response(HTTPStatus.OK, res, cookieHdrs)
+        print('auth response: Unauthorized')
         return Response(HTTPStatus.UNAUTHORIZED)
 
     def post(self, request):
+        print('auth POST request')
         headers = {k.lower(): v for k, v in request.json['headers'].items()}
         cookieHdrs = []
         
@@ -33,7 +37,9 @@ class CookieAuth(RequestHandler):
                     hdr = ('Set-Cookie', v)
                     cookieHdrs.append(hdr)
 
+            print('auth response: OK')
             return Response(HTTPStatus.OK, res, headers)
+        print('auth response: Unauthorized')
         return Response(HTTPStatus.UNAUTHORIZED)
 
 
