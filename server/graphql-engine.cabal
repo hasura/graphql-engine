@@ -1250,7 +1250,6 @@ test-suite tests-hspec
     Test.EventTrigger.EventTriggersRunSQLSpec
     Test.EventTrigger.EventTriggersExtensionSchemaSpec
     Test.HelloWorldSpec
-    Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
     Test.InsertOnConflictSpec
     Test.LongIdentifiersSpec
@@ -1283,10 +1282,11 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RunSQLSpec
+    Test.Schema.DataValidation.Permissions.SelectSpec
+    Test.Schema.DataValidation.Permissions.InsertSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
     Test.SQLServer.InsertVarcharColumnSpec
-    Test.Schema.DataValidation.PermissionSpec
     Test.Schema.DefaultValuesSpec
     Test.Schema.EnumSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
