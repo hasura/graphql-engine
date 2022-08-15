@@ -260,7 +260,7 @@ class TestEventFloodPostgresMSSQL(object):
         ns.sort()
         assert ns == list(payload)
 
-@usefixtures("per_class_tests_db_state")
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestEventDataFormat(object):
 
     @classmethod

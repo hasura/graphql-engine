@@ -1,12 +1,15 @@
-import pytest
-import time
-from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf, GraphQLWSClient
-import threading
-import random
-from datetime import datetime
-import sys
-import os
 from collections import OrderedDict
+from datetime import datetime
+import os
+import pytest
+import random
+import re
+import sqlalchemy
+import sys
+import threading
+import time
+
+from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf, GraphQLWSClient
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -332,7 +335,16 @@ def per_backend_test_class(request: pytest.FixtureRequest):
 def per_backend_test_function(request: pytest.FixtureRequest):
     return per_backend_tests_fixture(request)
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
+def postgis(hge_ctx):
+    with sqlalchemy.create_engine(hge_ctx.pg_url).connect() as connection:
+        connection.execute('CREATE EXTENSION IF NOT EXISTS postgis')
+        connection.execute('CREATE EXTENSION IF NOT EXISTS postgis_topology')
+        postgis_version = connection.execute('SELECT PostGIS_lib_version() as postgis_version').fetchone()['postgis_version']
+        if re.match('^3\\.', postgis_version):
+            connection.execute('CREATE EXTENSION IF NOT EXISTS postgis_raster')
+
+@pytest.fixture(scope='class')
 def hge_ctx(request):
     config = request.config
     print("create hge_ctx")
@@ -369,7 +381,7 @@ def evts_webhook(request):
     webhook_httpd.server_close()
     web_server.join()
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
 def actions_fixture(hge_ctx):
     if hge_ctx.is_default_backend:
         pg_version = hge_ctx.pg_version

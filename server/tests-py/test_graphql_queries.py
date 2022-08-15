@@ -489,7 +489,7 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
         return 'queries/graphql_query/boolexp/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphqlQueryPermissions:
 
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
@@ -760,7 +760,7 @@ class TestGraphQLQueryBoolExpJsonB:
         return 'queries/graphql_query/boolexp/jsonb'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphQLQueryBoolExpPostGIS:
 
     def test_query_using_point(self, hge_ctx, transport):
@@ -792,7 +792,7 @@ class TestGraphQLQueryBoolExpPostGIS:
         return 'queries/graphql_query/boolexp/postgis'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphQLQueryBoolExpRaster:
 
     def test_query_st_intersects_geom_nband(self, hge_ctx, transport):
@@ -984,7 +984,7 @@ class TestGraphQLQueryEnums:
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphQLQueryComputedFields:
     @classmethod
     def dir(cls):

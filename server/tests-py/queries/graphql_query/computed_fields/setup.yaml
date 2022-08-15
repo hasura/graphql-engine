@@ -59,15 +59,6 @@ args:
         END;
       $$ LANGUAGE plpgsql STABLE;
 
-      CREATE EXTENSION IF NOT EXISTS postgis;
-      CREATE EXTENSION IF NOT EXISTS postgis_topology;
-      DO $$
-      BEGIN
-        IF PostGIS_lib_version() ~ '^3.*' THEN
-          CREATE EXTENSION IF NOT EXISTS postgis_raster;
-        END IF;
-      END$$;
-
       CREATE TABLE locations
       (
           id uuid NOT NULL DEFAULT gen_random_uuid(),
