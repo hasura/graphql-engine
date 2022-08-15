@@ -142,3 +142,15 @@ spec = describe "Yaml quasiquoters" $ do
                 limit: 6
             |]
       input `shouldBe` expected
+
+    it "Interpolation does not fail when parsing a '*'" $ const do
+      let input :: Aeson.Value
+          input =
+            [interpolateYaml|
+              "*"
+            |]
+          expected =
+            [yaml|
+              "*"
+            |]
+      input `shouldBe` expected
