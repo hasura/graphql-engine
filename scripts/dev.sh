@@ -578,7 +578,6 @@ elif [ "$MODE" = "test" ]; then
           -W ignore::DeprecationWarning \
           --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT \
           --pg-urls "$PG_DB_URL" \
-          --durations=20 \
           --assert=plain \
           "${PYTEST_ARGS[@]}"
     then
