@@ -1228,7 +1228,6 @@ test-suite tests-hspec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.BigQuery.Queries.SpatialTypesSpec
     Test.BigQuery.TypeInterpretationSpec
-    Test.CustomRootFieldsSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
@@ -1293,6 +1292,7 @@ test-suite tests-hspec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.ViewsSpec
     Test.ServiceLivenessSpec
+    Test.Subscriptions.CustomFieldsSpec
 
 test-suite tests-dc-api
   import: common-all, common-exe
