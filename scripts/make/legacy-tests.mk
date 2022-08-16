@@ -29,3 +29,11 @@ $(LEGACY_TESTS)/requirements.txt: $(LEGACY_TESTS)/requirements-top-level.txt
 			echo; \
 			pip3 freeze \
 		) > $@
+
+$(LEGACY_TESTS)/node_modules: $(LEGACY_TESTS)/package-lock.json
+	@ cd $(LEGACY_TESTS); \
+	npm_config_loglevel=error npm ci
+
+$(LEGACY_TESTS)/package-lock.json: $(LEGACY_TESTS)/remote_schemas/nodejs/package.json
+	@ cd $(LEGACY_TESTS); \
+	npm_config_loglevel=error npm install --package-lock-only

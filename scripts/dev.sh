@@ -562,16 +562,10 @@ elif [ "$MODE" = "test" ]; then
     make "$PY_VENV"
     source "${PY_VENV}/bin/activate"
 
-    cd "$TEST_DIR"
+    # Install node.js test dependencies
+    make "${TEST_DIR}/node_modules"
 
-    ## Install misc test dependencies:
-    if [ ! -d "node_modules" ]; then
-      npm_config_loglevel=error npm install remote_schemas/nodejs/
-    else
-      echo_pretty "It looks like node dependencies have been installed already. Skipping."
-      echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"${TEST_DIR}/node_modules\""
-    fi
+    cd "$TEST_DIR"
 
     # TODO MAYBE: fix deprecation warnings, make them an error
     if ! pytest \

@@ -175,7 +175,7 @@ export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 pip3 install -r requirements.txt ||
 	pip3 install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com -r requirements.txt
 
-(cd remote_schemas/nodejs && npm_config_loglevel=error npm ci)
+npm_config_loglevel=error npm ci
 
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
