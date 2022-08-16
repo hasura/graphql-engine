@@ -160,6 +160,14 @@ spec api sourceName config = describe "Basic Queries" $ do
       Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
+    it "treats an empty and expression as 'true'" $ do
+      let where' = And []
+      let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
+      receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
+
+      Data.responseRows receivedAlbums `rowsShouldBe` Data.albumsRows
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
     it "can combine filters using an or expression" $ do
       let where1 = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 2))
       let where2 = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 3))
@@ -171,6 +179,14 @@ spec api sourceName config = describe "Basic Queries" $ do
             filter (flip elem [Just 2, Just 3] . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
       Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
+    it "treats an empty or expression as 'false'" $ do
+      let where' = Or []
+      let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
+      receivedAlbums <- (api // _query) sourceName config query
+
+      Data.responseRows receivedAlbums `rowsShouldBe` []
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter by applying the greater than operator" $ do
