@@ -2,6 +2,7 @@
 
 ## Next release
 - server: fix long identifiers in insert with parameters (fix #8741)
+- cli: add  `--disallow-inconsistent-metadata`  flag in `hasura metadata apply`. Setting this flag will prevent applying metadata which can introduce inconsistencies.
 
 ### Bug fixes and improvements
 

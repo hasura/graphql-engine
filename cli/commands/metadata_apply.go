@@ -22,7 +22,10 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata apply --admin-secret "<admin-secret>"
 
   # Apply metadata to an instance specified by the flag:
-  hasura metadata apply --endpoint "<endpoint>"`,
+  hasura metadata apply --endpoint "<endpoint>"
+  
+  # Prevent inconsistent metadata from getting applied:
+  hasura metadata apply --disallow-inconsistent-metadata`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.FromFile {
@@ -52,15 +55,17 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f.BoolVar(&opts.DryRun, "dry-run", false, "show metadata generated from project directory without applying to server.  generated metadata will be printed as JSON by default, use -o flag for other display formats")
 	f.StringVarP(&opts.rawOutput, "output", "o", "", `specify an output format to show applied metadata. Allowed values: json, yaml (default "json")`)
+	f.BoolVar(&opts.DisallowInconsistencies, "disallow-inconsistent-metadata", false, "disallow inconsistent metadata to be applied. Defaults to false")
 	return metadataApplyCmd
 }
 
 type MetadataApplyOptions struct {
 	EC *cli.ExecutionContext
 
-	FromFile  bool
-	DryRun    bool
-	rawOutput string
+	FromFile  			    bool
+	DryRun    			    bool
+	rawOutput 			    string
+	DisallowInconsistencies bool
 }
 
 func (o *MetadataApplyOptions) Run() error {

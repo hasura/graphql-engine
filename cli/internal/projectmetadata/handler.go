@@ -169,7 +169,7 @@ func (h *Handler) V1ApplyMetadata() (io.Reader, error) {
 	return r, nil
 }
 
-func (h *Handler) V2ApplyMetadata() (*hasura.V2ReplaceMetadataResponse, error) {
+func (h *Handler) V2ApplyMetadata(disallowInconsistentMetadata bool) (*hasura.V2ReplaceMetadataResponse, error) {
 	jbyt, err := h.BuildJSONMetadata()
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (h *Handler) V2ApplyMetadata() (*hasura.V2ReplaceMetadataResponse, error) {
 		return nil, err
 	}
 	r, err := h.v2MetadataOps.V2ReplaceMetadata(hasura.V2ReplaceMetadataArgs{
-		AllowInconsistentMetadata: true,
+		AllowInconsistentMetadata: !disallowInconsistentMetadata,
 		Metadata:                  metadata,
 	})
 	if err != nil {

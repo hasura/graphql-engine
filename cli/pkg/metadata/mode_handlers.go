@@ -44,7 +44,7 @@ func (m *metadataModeDirectoryHandler) Apply(p *ProjectMetadata) (io.Reader, err
 		return r, nil
 	}
 	if p.ec.Config.Version >= cli.V3 {
-		replaceMetadataResponse, err := metadataHandler.V2ApplyMetadata()
+		replaceMetadataResponse, err := metadataHandler.V2ApplyMetadata(false)
 		if err != nil {
 			return nil, err
 		}
