@@ -746,7 +746,9 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     connection_lifetime: true,
     namingConvention: true,
     ssl_certificates:
-      globals.consoleType === 'cloud' || globals.consoleType === 'pro',
+      globals.consoleType === 'cloud' ||
+      globals.consoleType === 'pro' ||
+      globals.consoleType === 'pro-lite',
   },
 };
 

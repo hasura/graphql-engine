@@ -4,7 +4,7 @@ import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
 
-type ConsoleType = 'oss' | 'cloud' | 'pro';
+type ConsoleType = 'oss' | 'cloud' | 'pro' | 'pro-lite';
 
 type UUID = string;
 
@@ -22,6 +22,18 @@ type OSSServerEnv = {
 
 type ProServerEnv = {
   consoleType: 'pro';
+  consoleId: string;
+  consoleMode: 'server';
+  assetsPath: string;
+  consolePath: string;
+  enableTelemetry: boolean;
+  isAdminSecretSet: boolean;
+  serverVersion: string;
+  urlPrefix: string;
+};
+
+type ProLiteServerEnv = {
+  consoleType: 'pro-lite';
   consoleId: string;
   consoleMode: 'server';
   assetsPath: string;
@@ -91,6 +103,7 @@ export type CloudCliEnv = {
 };
 
 type ProCliEnv = CloudCliEnv;
+type ProLiteCliEnv = CloudCliEnv;
 
 export type EnvVars = {
   nodeEnv?: string;
@@ -114,9 +127,11 @@ export type EnvVars = {
   | OSSServerEnv
   | CloudServerEnv
   | ProServerEnv
+  | ProLiteServerEnv
   | OSSCliEnv
   | CloudCliEnv
   | ProCliEnv
+  | ProLiteCliEnv
 );
 
 declare global {

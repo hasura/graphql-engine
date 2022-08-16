@@ -1,4 +1,4 @@
-export type AllowedConsoleTypes = 'oss' | 'pro' | 'cloud';
+export type AllowedConsoleTypes = 'oss' | 'pro' | 'cloud' | 'pro-lite';
 export type AllowedConsoleModes = 'cli' | 'server';
 
 export type Privileges = string[];
