@@ -14,6 +14,29 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
+var inconsistent_query_collections = `
+- name: sample-collection
+  definition:
+    queries:
+      - name: test
+        query: |-
+          query test {
+            books {
+              id
+              author_id
+              title
+            }
+          }
+      - name: test2
+        query: |-
+          query test2 {
+              authors{
+                  id
+                  author_name
+              }
+          }
+`
+
 var commonMetadataCommandsTest = func(projectDirectory string) {
 	Context("check the behavior --dry-run", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -32,6 +55,14 @@ var commonMetadataCommandsTest = func(projectDirectory string) {
 	Context("should apply metadata to server", func() {
 		session := testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "apply"},
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(session, timeout).Should(Exit(0))
+		Expect(session.Err.Contents()).Should(ContainSubstring("Metadata applied"))
+	})
+	Context("Should apply metadata to server with inconsistencies allowed", func() {
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "apply", "--disallow-inconsistent-metadata=false",},
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).Should(Exit(0))
@@ -69,6 +100,26 @@ var commonMetadataCommandsTest = func(projectDirectory string) {
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).ShouldNot(Exit(0))
+	})
+}
+
+var inconsistentMetadataTestsForConfigV3 = func(projectDirectory string) {
+	Context("Should apply metadata to server with inconsistencies allowed", func() {
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "apply"},
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(session, timeout).Should(Exit(0))
+		Expect(session.Err.Contents()).Should(ContainSubstring("Metadata applied"))
+	})
+
+	Context("Should not apply metadata to server with inconsistencies", func() {
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "apply", "--disallow-inconsistent-metadata"},
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(session, timeout).Should(Exit(1))
+		Expect(session.Err.Contents()).Should(ContainSubstring("cannot continue due to inconsistent metadata"))
 	})
 }
 
@@ -117,6 +168,15 @@ var _ = Describe("hasura metadata apply (config v3)", func() {
 	It("metadata apply", func() {
 		commonMetadataCommandsTest(projectDirectory)
 		verifyRequestTransformsMetadataIsApplied(hgeEndpoint)
+	})
+
+	It("Make metadata inconsistent", func() {    
+		file := fmt.Sprintf("%s/metadata/query_collections.yaml", projectDirectory)
+		err := os.WriteFile(file, []byte(inconsistent_query_collections), 0666)
+		Expect(err).To(BeNil())
+		Context("inconsistent metadata apply", func ()  {
+			inconsistentMetadataTestsForConfigV3(projectDirectory)
+		})
 	})
 })
 
