@@ -9,7 +9,9 @@ export type ProConsoleEnv = {
 export const isProConsole = (env: ProConsoleEnv) => {
   if (
     env.consoleMode === 'server' &&
-    (env.consoleType === 'cloud' || env.consoleType === 'pro')
+    (env.consoleType === 'cloud' ||
+      env.consoleType === 'pro' ||
+      env.consoleType === 'pro-lite')
   ) {
     return true;
   }

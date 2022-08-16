@@ -32,6 +32,16 @@ describe('isProConsole', () => {
     });
   });
 
+  describe('when consoleMode is server and consoleType is pro-lite', () => {
+    it('returns true', () => {
+      const env: ProConsoleEnv = {
+        consoleMode: 'server',
+        consoleType: 'pro-lite',
+      };
+      expect(isProConsole(env)).toBe(true);
+    });
+  });
+
   describe('when consoleMode is server and consoleType is oss', () => {
     it('returns false', () => {
       const env: ProConsoleEnv = {
