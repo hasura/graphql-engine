@@ -100,6 +100,48 @@ spec api sourceName config = describe "Relationship Queries" $ do
     Data.responseRows receivedEmployees `rowsShouldBe` expectedEmployees
     _qrAggregates receivedEmployees `jsonShouldBe` Nothing
 
+  it "perform an object relationship query by joining employee to customers but filter employees by comparing columns on the employee" $ do
+    -- Join Employee to Customers via SupportRep, and only get those customers that have a rep
+    -- However, the Employee table is filtered with a permission rule that compares columns on that table.
+    -- This Employee table permissions filter would look like:
+    -- { FirstName: { _cgt: ["LastName"] } }
+    let customersWhere =
+          And
+            [ ( ApplyBinaryComparisonOperator
+                  GreaterThan
+                  (Data.comparisonColumn [Data.supportRepRelationshipName] "FirstName")
+                  (AnotherColumn (Data.comparisonColumn [Data.supportRepRelationshipName] "LastName"))
+              ),
+              (Not (ApplyUnaryComparisonOperator IsNull (Data.comparisonColumn [Data.supportRepRelationshipName] "EmployeeId")))
+            ]
+
+    let employeesWhere =
+          ApplyBinaryComparisonOperator
+            GreaterThan
+            (Data.localComparisonColumn "FirstName")
+            (AnotherColumn (Data.localComparisonColumn "LastName"))
+
+    let query = customersWithSupportRepQuery (\q -> q & qWhere ?~ employeesWhere) & qrQuery . qWhere ?~ customersWhere
+    receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> (api // _query) sourceName config query
+
+    let joinInSupportRep (customer :: KeyMap FieldValue) =
+          let supportRep = do
+                employeeId <- (customer ^? ix "SupportRepId" . Data._ColumnFieldNumber)
+                employee <- Data.employeesRowsById ^? ix employeeId
+                firstName <- employee ^? ix "FirstName"
+                lastName <- employee ^? ix "LastName"
+                if firstName > lastName then pure employee else Nothing
+              supportRepPropVal = maybeToList $ Data.filterColumnsByQueryFields employeesQuery <$> supportRep
+           in KeyMap.insert "SupportRep" (mkSubqueryResponse supportRepPropVal) customer
+
+    let filterCustomersBySupportRepExistence (customer :: KeyMap FieldValue) =
+          let supportRep = customer ^.. ix "SupportRep" . subqueryRows
+           in not (null supportRep)
+
+    let expectedCustomers = filter filterCustomersBySupportRepExistence $ Data.filterColumnsByQueryFields (query ^. qrQuery) . joinInSupportRep <$> Data.customersRows
+    Data.responseRows receivedCustomers `rowsShouldBe` expectedCustomers
+    _qrAggregates receivedCustomers `jsonShouldBe` Nothing
+
 albumsWithArtistQuery :: (Query -> Query) -> QueryRequest
 albumsWithArtistQuery modifySubquery =
   let artistsSubquery = modifySubquery artistsQuery
