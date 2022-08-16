@@ -1250,7 +1250,6 @@ test-suite tests-hspec
     Test.EventTrigger.EventTriggersExtensionSchemaSpec
     Test.HelloWorldSpec
     Test.InsertDefaultsSpec
-    Test.InsertOnConflictSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.ObjectRelationshipsLimitSpec
@@ -1271,6 +1270,7 @@ test-suite tests-hspec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
+    Test.Regression.InsertOnConflict8260Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
