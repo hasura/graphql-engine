@@ -5,6 +5,7 @@ import { Button } from '@/new-components/Button';
 
 import { DataTarget } from '@/features/Datasources';
 
+import { SuggestedRelationshipForm } from './components';
 import { useSuggestedRelationships } from './hooks';
 
 export interface SuggestedRelationshipProps {
@@ -15,6 +16,7 @@ export const SuggestedRelationships = ({
   target,
 }: SuggestedRelationshipProps) => {
   const { data, isLoading, isError } = useSuggestedRelationships(target);
+  const [open, setOpen] = React.useState<string | null>(null);
 
   if (isError) {
     return (
@@ -45,46 +47,51 @@ export const SuggestedRelationships = ({
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {data?.map(relationship => (
-            <CardedTable.TableBodyRow
-              key={`${relationship.to}-${relationship.from}`}
-            >
-              <CardedTable.TableBodyCell>
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    console.log(
-                      'in the future ill open a form, but now i nothing :('
-                    )
-                  }
-                >
-                  Add
-                </Button>
-              </CardedTable.TableBodyCell>
-              <CardedTable.TableBodyCell>
-                <FaTable className="text-sm text-muted mr-xs" />
-                Local Relation
-              </CardedTable.TableBodyCell>
-              <CardedTable.TableBodyCell>
-                <span className="capitalize">{relationship.type}</span>
-              </CardedTable.TableBodyCell>
-              <CardedTable.TableBodyCell>
-                <FaTable className="text-sm text-muted mr-xs" />
-                {relationship.from.table}&nbsp;/&nbsp;
-                <FaColumns className="text-sm text-muted mr-xs" />
-                {relationship.from.column}
-              </CardedTable.TableBodyCell>
-              <CardedTable.TableBodyCell>
-                <FaArrowRight className="fill-current text-sm text-muted" />
-              </CardedTable.TableBodyCell>
-              <CardedTable.TableBodyCell>
-                <FaTable className="text-sm text-muted mr-xs" />
-                {relationship.to.table}&nbsp;/&nbsp;
-                <FaColumns className="text-sm text-muted mr-xs" />
-                {relationship.to.column}
-              </CardedTable.TableBodyCell>
-            </CardedTable.TableBodyRow>
-          ))}
+          {data.map(relationship => {
+            // create a unique key
+            const key = `${relationship.to.table}-${relationship.to.column}-${relationship.from.table}-${relationship.from.column}`;
+
+            return (
+              <CardedTable.TableBodyRow key={key}>
+                <CardedTable.TableBodyCell>
+                  {open === key ? (
+                    <SuggestedRelationshipForm
+                      key={key}
+                      target={target}
+                      relationship={relationship}
+                      close={() => setOpen(null)}
+                    />
+                  ) : (
+                    <Button size="sm" onClick={() => setOpen(key)}>
+                      Add
+                    </Button>
+                  )}
+                </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  <FaTable className="text-sm text-muted mr-xs" />
+                  Local Relation
+                </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  <span className="capitalize">{relationship.type}</span>
+                </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  <FaTable className="text-sm text-muted mr-xs" />
+                  {relationship.from.table}&nbsp;/&nbsp;
+                  <FaColumns className="text-sm text-muted mr-xs" />
+                  {relationship.from.column}
+                </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  <FaArrowRight className="fill-current text-sm text-muted" />
+                </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  <FaTable className="text-sm text-muted mr-xs" />
+                  {relationship.to.table}&nbsp;/&nbsp;
+                  <FaColumns className="text-sm text-muted mr-xs" />
+                  {relationship.to.column}
+                </CardedTable.TableBodyCell>
+              </CardedTable.TableBodyRow>
+            );
+          })}
         </CardedTable.TableBody>
       </CardedTable.Table>
     </div>
