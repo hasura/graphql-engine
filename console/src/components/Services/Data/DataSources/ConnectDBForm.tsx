@@ -438,6 +438,27 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               />
             </>
           )}
+        {getSupportedDrivers('connectDbForm.extensions_schema').includes(
+          connectionDBState.dbType
+        ) ? (
+          <LabeledInput
+            label="Extensions Schema"
+            onChange={e => {
+              const data =
+                e.target?.value?.length > 1 ? e.target.value : undefined;
+              connectionDBStateDispatch({
+                type: 'UPDATE_EXTENSIONS_SCHEMA',
+                data,
+              });
+            }}
+            type="text"
+            value={connectionDBState.extensionsSchema}
+            placeholder="public"
+            tooltipText="Name of the schema where the graphql-engine will install database extensions (default: `public`). Specified schema should be present in the search path of the database."
+            data-test="extensions_schema"
+          />
+        ) : null}
+
         <ConnectionSettingsForm
           connectionDBState={connectionDBState}
           connectionDBStateDispatch={connectionDBStateDispatch}

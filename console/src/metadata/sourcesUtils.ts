@@ -48,6 +48,7 @@ export const addSource = (
     connection_parameters?: ConnectionParams;
     connection_pool_settings?: ConnectionPoolSettings;
     replace_configuration?: boolean;
+    extensionsSchema?: string;
     bigQuery: {
       projectId: string;
       datasets: string;
@@ -161,6 +162,9 @@ export const addSource = (
             ssl_configuration: payload.sslConfiguration,
           },
           read_replicas: replicas?.length ? replicas : null,
+          extensions_schema: payload?.extensionsSchema
+            ? payload?.extensionsSchema
+            : null,
         },
         replace_configuration,
         ...adaptedCustomizations,
@@ -183,6 +187,9 @@ export const addSource = (
           ssl_configuration: payload.sslConfiguration,
         },
         read_replicas: replicas?.length ? replicas : null,
+        extensions_schema: payload?.extensionsSchema
+          ? payload?.extensionsSchema
+          : null,
       },
       replace_configuration,
       ...adaptedCustomizations,

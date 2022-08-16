@@ -740,6 +740,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     isolation_level: true,
     connectionSettings: true,
     retries: true,
+    extensions_schema: true,
     pool_timeout: true,
     connection_lifetime: true,
     namingConvention: true,

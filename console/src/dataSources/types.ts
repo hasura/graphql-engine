@@ -419,6 +419,7 @@ export type SupportedFeaturesType = {
     isolation_level: boolean;
     connectionSettings: boolean;
     retries: boolean;
+    extensions_schema: boolean;
     pool_timeout: boolean;
     connection_lifetime: boolean;
     ssl_certificates: boolean;

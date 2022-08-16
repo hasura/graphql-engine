@@ -6,7 +6,18 @@
 
 ### Bug fixes and improvements
 
-- server: accept `extensions_schema` while adding a postgres source for the graphql-engine to install database extensions in the specified schema.
+## v2.10.1
+
+### Bug fixes and improvements
+
+- server: accept `extensions_schema` while adding a PostgreSQL source for the graphql-engine to install database extensions in the specified schema
+- console: add support extensions_schema on postgres connect/edit DB form
+
+
+## v2.11.0-beta.1
+
+### Bug fixes and improvements
+
 - server: accept a default extensions schema (`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`) for the metadata database where graphql-engine will install database extensions
 - server: add warning log for missing admin secret
 - server: fix querying relationships defined using multiple columns on BigQuery

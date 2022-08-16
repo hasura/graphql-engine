@@ -25,6 +25,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   connectDbForm: {
     ...PgSupportedFeatures?.connectDbForm,
     namingConvention: false,
+    extensions_schema: false,
   },
   driver: {
     name: 'citus',
