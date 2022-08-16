@@ -1,10 +1,17 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
-- server: fix long identifiers in insert with parameters (fix #8741)
 
 ### Bug fixes and improvements
 
+## v2.10.1
+
+### Bug fixes and improvements
+
+- server: fix long identifiers in insert with parameters (fix #8741)
+- server: fix 'nulls: first' and 'nulls: last' parsing for Postgres
+- server: accept `extensions_schema` while adding a PostgreSQL source for the graphql-engine to install database extensions in the specified schema
+- console: add support extensions_schema on postgres connect/edit DB form
 
 ## v2.11.0-beta.1
 
