@@ -252,6 +252,9 @@ mkServeOptions rso = do
 
   globalDefaultNamingCase <- withEnv (rsoDefaultNamingConvention rso) $ fst defaultNamingConventionEnv
 
+  extensionsSchema <-
+    fromMaybe (PG.ExtensionsSchema "public") <$> (withEnv (rsoExtensionsSchema rso) $ fst metadataDBExtensionsSchemaEnv)
+
   pure $
     ServeOptions
       port
@@ -293,6 +296,7 @@ mkServeOptions rso = do
       Types.ReadOnlyModeDisabled
       enableMetadataQueryLogging
       globalDefaultNamingCase
+      extensionsSchema
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second

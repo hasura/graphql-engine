@@ -85,7 +85,8 @@ emptyRawServeOptions =
       rsoGracefulShutdownTimeout = Nothing,
       rsoWebSocketConnectionInitTimeout = Nothing,
       rsoEnableMetadataQueryLoggingEnv = False,
-      rsoDefaultNamingConvention = Nothing
+      rsoDefaultNamingConvention = Nothing,
+      rsoExtensionsSchema = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

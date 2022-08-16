@@ -51,6 +51,7 @@ import Data.Text qualified as T
 import Data.Time
 import Data.URL.Template
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -165,7 +166,8 @@ data RawServeOptions impl = RawServeOptions
     rsoWebSocketConnectionInitTimeout :: Maybe Int,
     rsoEnableMetadataQueryLoggingEnv :: Bool,
     -- | stores global default naming convention
-    rsoDefaultNamingConvention :: Maybe NamingCase
+    rsoDefaultNamingConvention :: Maybe NamingCase,
+    rsoExtensionsSchema :: Maybe ExtensionsSchema
   }
 
 --------------------------------------------------------------------------------
@@ -274,7 +276,8 @@ data ServeOptions impl = ServeOptions
     soEventingMode :: EventingMode,
     soReadOnlyMode :: ReadOnlyMode,
     soEnableMetadataQueryLogging :: MetadataQueryLoggingMode,
-    soDefaultNamingConvention :: Maybe NamingCase
+    soDefaultNamingConvention :: Maybe NamingCase,
+    soExtensionsSchema :: ExtensionsSchema
   }
 
 -- | The Downgrade Command options. These are only sourced from the

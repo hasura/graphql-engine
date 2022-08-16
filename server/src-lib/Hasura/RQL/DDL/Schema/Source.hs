@@ -82,7 +82,8 @@ runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourc
               pure $ updateConfig . updateCustomization
             else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
         else do
-          let sourceMetadata = mkSourceMetadata @b name backendKind sourceConfig sourceCustomization
+          let sourceMetadata =
+                mkSourceMetadata @b name backendKind sourceConfig sourceCustomization
           pure $ metaSources %~ OMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier

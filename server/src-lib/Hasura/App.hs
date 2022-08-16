@@ -346,7 +346,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
                     _ppsConnectionLifetime = Q.cpMbLifetime soConnParams
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
-           in PostgresConnConfiguration sourceConnInfo Nothing
+           in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
       dangerouslyCollapseBooleans
         | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
         | otherwise = Options.Don'tDangerouslyCollapseBooleans
@@ -378,6 +378,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
         serverConfigCtx
         (mkPgSourceResolver pgLogger)
         mkMSSQLSourceResolver
+        soExtensionsSchema
 
   -- Start a background thread for listening schema sync events from other server instances,
   metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
@@ -427,6 +428,7 @@ migrateCatalogSchema ::
   ServerConfigCtx ->
   SourceResolver ('Postgres 'Vanilla) ->
   SourceResolver ('MSSQL) ->
+  ExtensionsSchema ->
   m RebuildableSchemaCache
 migrateCatalogSchema
   env
@@ -436,7 +438,8 @@ migrateCatalogSchema
   httpManager
   serverConfigCtx
   pgSourceResolver
-  mssqlSourceResolver = do
+  mssqlSourceResolver
+  extensionsSchema = do
     initialiseResult <- runExceptT $ do
       -- TODO: should we allow the migration to happen during maintenance mode?
       -- Allowing this can be a sanity check, to see if the hdb_catalog in the
@@ -446,6 +449,7 @@ migrateCatalogSchema
         Q.runTx pool (Q.Serializable, Just Q.ReadWrite) $
           migrateCatalog
             defaultSourceConfig
+            extensionsSchema
             (_sccMaintenanceMode serverConfigCtx)
             currentTime
       let cacheBuildParams =
@@ -1218,7 +1222,7 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
           }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do

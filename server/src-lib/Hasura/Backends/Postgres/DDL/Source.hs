@@ -184,7 +184,7 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) Q.ReadWrite do
       -- Fresh database
       | not hdbCatalogExist -> liftTx do
         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-        enablePgcryptoExtension
+        enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
         initPgSourceCatalog
         return RETDoNothing
       -- Only 'hdb_catalog' schema defined

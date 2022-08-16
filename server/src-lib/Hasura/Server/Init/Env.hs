@@ -21,6 +21,7 @@ import Data.Text qualified as T
 import Data.Time (NominalDiffTime)
 import Data.URL.Template (URLTemplate, parseURLTemplate)
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase (NamingCase, parseNamingConventionFromText)
@@ -237,3 +238,6 @@ instance FromEnv NonNegativeInt where
 
 instance FromEnv Cache.CacheSize where
   fromEnv = Cache.parseCacheSize
+
+instance FromEnv ExtensionsSchema where
+  fromEnv = Right . ExtensionsSchema . T.pack

@@ -1247,6 +1247,7 @@ test-suite tests-hspec
     Test.EventTrigger.EventTriggersRecreationSpec
     Test.EventTrigger.EventTriggersRunSQLSpec
     Test.EventTrigger.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.EventTriggersExtensionSchemaSpec
     Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
     Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec
     Test.GatheringUniqueConstraintsSpec

@@ -15,6 +15,7 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Time qualified as Time
 import Database.PG.Query qualified as Query
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ESO
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
@@ -79,6 +80,7 @@ serveCommandParser =
     <*> parseWebSocketConnectionInitTimeout
     <*> parseEnableMetadataQueryLogging
     <*> parseDefaultNamingConvention
+    <*> parseMetadataDBExtensionsSchema
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -889,6 +891,21 @@ defaultNamingConventionEnv =
     "Default naming convention for the auto generated graphql names. Possible values are"
       <> "hasura-default: Use snake_case for all names."
       <> "graphql-default: Use camelCase for field names and PascalCase for type names."
+  )
+
+parseMetadataDBExtensionsSchema :: Opt.Parser (Maybe ExtensionsSchema)
+parseMetadataDBExtensionsSchema =
+  Opt.optional $
+    Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "metadata-database-extensions-schema"
+          <> Opt.help (snd metadataDBExtensionsSchemaEnv)
+      )
+
+metadataDBExtensionsSchemaEnv :: (String, String)
+metadataDBExtensionsSchemaEnv =
+  ( "HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA",
+    "Name of the schema where Hasura can install database extensions. Default: public"
   )
 
 --------------------------------------------------------------------------------

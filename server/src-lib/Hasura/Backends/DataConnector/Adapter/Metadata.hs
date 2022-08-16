@@ -48,7 +48,7 @@ import Servant.Client.Generic (genericClient)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
-  prepareCatalog = const $ pure RETDoNothing
+  prepareCatalog _ = pure RETDoNothing
   resolveSourceConfig = resolveSourceConfig'
   resolveDatabaseMetadata = resolveDatabaseMetadata'
   parseBoolExpOperations = parseBoolExpOperations'
