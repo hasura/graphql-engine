@@ -17,4 +17,4 @@ spec api sourceName config Capabilities {..} = do
     Test.QuerySpec.BasicSpec.spec api sourceName config
     when (isJust cRelationships) $
       Test.QuerySpec.RelationshipsSpec.spec api sourceName config
-    Test.QuerySpec.AggregatesSpec.spec api sourceName config
+    Test.QuerySpec.AggregatesSpec.spec api sourceName config cRelationships
