@@ -2,6 +2,7 @@
 
 ## Next release
 - server: fix long identifiers in insert with parameters (fix #8741)
+- server: fix 'nulls: first' and 'nulls: last' parsing for Postgres
 
 ### Bug fixes and improvements
 
