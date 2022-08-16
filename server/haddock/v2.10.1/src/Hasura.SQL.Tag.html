@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.SQL.Tag</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.SQL.Tag.html#BackendTag"><span class="hs-identifier">BackendTag</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier">HasTag</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Tag.html#reify"><span class="hs-identifier">reify</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.TH.html"><span class="hs-identifier">Hasura.SQL.TH</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">reify</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- | A singleton-like GADT that associates a tag to each backend.</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- It is generated with Template Haskell for each 'Backend'. Its</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- declaration results in the following type:</span><span>
+</span><span id="line-18"></span><span class="hs-comment">--</span><span>
+</span><span id="line-19"></span><span class="hs-comment">--   data BackendTag (b :: BackendType) where</span><span>
+</span><span id="line-20"></span><span class="hs-comment">--     PostgresVanillaTag :: BackendTag ('Postgres 'Vanilla)</span><span>
+</span><span id="line-21"></span><span class="hs-comment">--     PostgresCitusTag   :: BackendTag ('Postgres 'Citus)</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--     MSSQLTag           :: BackendTag 'MSSQL</span><span>
+</span><span id="line-23"></span><span class="hs-comment">--     ...</span><span>
+</span><span id="line-24"></span><span class="hs-special">$(</span><span> </span><span id="DataConnectorTag"><span id="MySQLTag"><span id="BigQueryTag"><span id="MSSQLTag"><span id="PostgresCitusTag"><span id="PostgresVanillaTag"><span id="local-6989586621689395715"><span id="BackendTag"><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">name</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">mkName</span><span> </span><span class="hs-string">&quot;BackendTag&quot;</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">backendData</span><span>
+</span><span id="line-26"></span><span>         </span><span class="hs-comment">-- the name of the type</span><span>
+</span><span id="line-27"></span><span>         </span><span class="hs-identifier">name</span><span>
+</span><span id="line-28"></span><span>         </span><span class="hs-comment">-- the type variable</span><span>
+</span><span id="line-29"></span><span>         </span><span class="hs-special">[</span><span class="hs-identifier">KindedTV</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">mkName</span><span> </span><span class="hs-string">&quot;b&quot;</span><span class="hs-special">)</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-identifier">ConT</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BackendType</span><span class="hs-special">]</span><span>
+</span><span id="line-30"></span><span>         </span><span class="hs-comment">-- the constructor for each backend</span><span>
+</span><span id="line-31"></span><span>         </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-identifier">b</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-32"></span><span>             </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
+</span><span id="line-33"></span><span>               </span><span class="hs-identifier">GadtC</span><span>
+</span><span id="line-34"></span><span>                 </span><span class="hs-comment">-- the name of the constructor (FooTag)</span><span>
+</span><span id="line-35"></span><span>                 </span><span class="hs-special">[</span><span class="hs-identifier">getBackendTagName</span><span> </span><span class="hs-identifier">b</span><span class="hs-special">]</span><span>
+</span><span id="line-36"></span><span>                 </span><span class="hs-comment">-- no type argument</span><span>
+</span><span id="line-37"></span><span>                 </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-38"></span><span>                 </span><span class="hs-comment">-- the resulting type (BackendTag 'Foo)</span><span>
+</span><span id="line-39"></span><span>                 </span><span class="hs-special">(</span><span class="hs-identifier">AppT</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">ConT</span><span> </span><span class="hs-identifier">name</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">getBackendTypeValue</span><span> </span><span class="hs-identifier">b</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>         </span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>         </span><span class="hs-comment">-- deriving clauses</span><span>
+</span><span id="line-42"></span><span>         </span><span class="hs-special">[</span><span class="hs-special">]</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-43"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- | This class describes how to get a tag for a given type.</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- We use it in AnyBackend: `case backendTag @b of`...</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">class</span><span> </span><span id="HasTag"><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-var">HasTag</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689395719"><span class="annot"><a href="#local-6989586621689395719"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>  </span><span id="backendTag"><span class="annot"><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-type">backendTag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Tag.html#BackendTag"><span class="hs-identifier hs-type">BackendTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689395719"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- | This generates the instance of HasTag for every backend.</span><span>
+</span><span id="line-51"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689395696"><span id="local-6989586621689395698"><span id="local-6989586621689395700"><span id="local-6989586621689395702"><span id="local-6989586621689395704"><span id="local-6989586621689395706"><span class="hs-identifier">concat</span><span> </span><span class="hs-operator">&lt;$&gt;</span><span> </span><span class="hs-identifier">forEachBackend</span><span> </span><span class="hs-glyph">\</span><span class="hs-identifier">b</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>     </span><span class="hs-comment">-- the name of the tag: FooTag</span><span>
+</span><span id="line-53"></span><span>     </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">tagName</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-identifier">ConE</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-identifier">getBackendTagName</span><span> </span><span class="hs-identifier">b</span><span>
+</span><span id="line-54"></span><span>     </span><span class="hs-comment">-- the promoted version of b: 'Foo</span><span>
+</span><span id="line-55"></span><span>     </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">promotedName</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-identifier">getBackendTypeValue</span><span> </span><span class="hs-identifier">b</span><span>
+</span><span id="line-56"></span><span>     </span><span class="hs-comment">-- the instance:</span><span>
+</span><span id="line-57"></span><span>     </span><span class="hs-comment">--  instance HasTag 'Foo          where backendTag = FooTag</span><span>
+</span><span id="line-58"></span><span>     </span><span class="hs-special">[d|</span><span class="hs-keyword">instance</span><span> </span><span class="hs-identifier">HasTag</span><span> </span><span class="">$promotedName</span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-identifier">backendTag</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="">$tagName</span><span class="hs-special">|]</span></span></span></span></span></span></span><span>
+</span><span id="line-59"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- | How to convert back from a tag to a runtime value. This function</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- is generated with Template Haskell for each 'Backend'. The case</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- switch looks like this:</span><span>
+</span><span id="line-64"></span><span class="hs-comment">--</span><span>
+</span><span id="line-65"></span><span class="hs-comment">--   PostgresVanillaTag -&gt; Postgres Vanilla</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--   PostgresCitusTag   -&gt; Postgres Citus</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--   MSSQLTag           -&gt; MSSQL</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--   ...</span><span>
+</span><span id="line-69"></span><span id="local-6989586621689395694"><span class="annot"><a href="Hasura.SQL.Tag.html#reify"><span class="hs-identifier hs-type">reify</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Tag.html#BackendTag"><span class="hs-identifier hs-type">BackendTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689395694"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span></span><span>
+</span><span id="line-70"></span><span id="reify"><span class="annot"><span class="annottext">reify :: BackendTag b -&gt; BackendType
+</span><a href="Hasura.SQL.Tag.html#reify"><span class="hs-identifier hs-var hs-var">reify</span></a></span></span><span> </span><span id="local-6989586621689395693"><span class="annot"><span class="annottext">BackendTag b
+</span><a href="#local-6989586621689395693"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">$(</span><span> </span><span class="hs-identifier">backendCase</span><span>
+</span><span id="line-72"></span><span>       </span><span class="hs-comment">-- the expression on which we do the case switch</span><span>
+</span><span id="line-73"></span><span>       </span><span class="hs-special">[|</span><span class="hs-identifier">t</span><span class="hs-special">|]</span><span>
+</span><span id="line-74"></span><span>       </span><span class="hs-comment">-- the pattern for a given backend: just its tag, no argument</span><span>
+</span><span id="line-75"></span><span>       </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-identifier">b</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-identifier">ConP</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">getBackendTagName</span><span> </span><span class="hs-identifier">b</span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>       </span><span class="hs-comment">-- the body for a given backend: the backend constructor itself</span><span>
+</span><span id="line-77"></span><span>       </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-identifier">b</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-identifier">getBackendValue</span><span> </span><span class="hs-identifier">b</span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>       </span><span class="hs-comment">-- no default case: every constructor should be handled</span><span>
+</span><span id="line-79"></span><span>       </span><span class="hs-identifier">Nothing</span><span>
+</span><span id="line-80"></span><span>   </span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span></pre></body></html>

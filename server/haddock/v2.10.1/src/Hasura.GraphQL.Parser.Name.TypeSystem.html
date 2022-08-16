@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-missing-export-lists #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Parser.Name.TypeSystem</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax.QQ</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- * 3. Type System</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- ** 3.3. Schema</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- *** 3.3.1. Root Operation Types</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Mutation"><span class="hs-identifier hs-type">_Mutation</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-16"></span><span id="_Mutation"><span class="annot"><span class="annottext">_Mutation :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Mutation"><span class="hs-identifier hs-var hs-var">_Mutation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Mutation|]</span></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Query"><span class="hs-identifier hs-type">_Query</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-19"></span><span id="_Query"><span class="annot"><span class="annottext">_Query :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Query"><span class="hs-identifier hs-var hs-var">_Query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Query|]</span></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Subscription"><span class="hs-identifier hs-type">_Subscription</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-22"></span><span id="_Subscription"><span class="annot"><span class="annottext">_Subscription :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Subscription"><span class="hs-identifier hs-var hs-var">_Subscription</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Subscription|]</span></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- ** 3.5. Scalars</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Int"><span class="hs-identifier hs-type">_Int</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-27"></span><span id="_Int"><span class="annot"><span class="annottext">_Int :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Int"><span class="hs-identifier hs-var hs-var">_Int</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Int|]</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Float"><span class="hs-identifier hs-type">_Float</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-30"></span><span id="_Float"><span class="annot"><span class="annottext">_Float :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Float"><span class="hs-identifier hs-var hs-var">_Float</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Float|]</span></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_String"><span class="hs-identifier hs-type">_String</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-33"></span><span id="_String"><span class="annot"><span class="annottext">_String :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_String"><span class="hs-identifier hs-var hs-var">_String</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|String|]</span></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Boolean"><span class="hs-identifier hs-type">_Boolean</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-36"></span><span id="_Boolean"><span class="annot"><span class="annottext">_Boolean :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_Boolean"><span class="hs-identifier hs-var hs-var">_Boolean</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Boolean|]</span></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_ID"><span class="hs-identifier hs-type">_ID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-39"></span><span id="_ID"><span class="annot"><span class="annottext">_ID :: Name
+</span><a href="Hasura.GraphQL.Parser.Name.TypeSystem.html#_ID"><span class="hs-identifier hs-var hs-var">_ID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|ID|]</span></span><span>
+</span><span id="line-40"></span></pre></body></html>

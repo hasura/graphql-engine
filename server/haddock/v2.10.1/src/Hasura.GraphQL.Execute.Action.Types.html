@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Execute.Action.Types</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionContext"><span class="hs-identifier">ActionContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecution"><span class="hs-identifier">ActionExecution</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecutionPlan"><span class="hs-identifier">ActionExecutionPlan</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionHandlerLog"><span class="hs-identifier">ActionHandlerLog</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionInternalError"><span class="hs-identifier">ActionInternalError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionRequestInfo"><span class="hs-identifier">ActionRequestInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionResponseInfo"><span class="hs-identifier">ActionResponseInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookErrorResponse"><span class="hs-identifier">ActionWebhookErrorResponse</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookPayload"><span class="hs-identifier">ActionWebhookPayload</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookResponse"><span class="hs-identifier">ActionWebhookResponse</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQueryExecution"><span class="hs-identifier">AsyncActionQueryExecution</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQueryExecutionPlan"><span class="hs-identifier">AsyncActionQueryExecutionPlan</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQuerySourceExecution"><span class="hs-identifier">AsyncActionQuerySourceExecution</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Casing</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.HTTP.Protocol</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html"><span class="hs-identifier">Hasura.RQL.DDL.Headers</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RS</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html"><span class="hs-identifier">Hasura.RQL.IR.Value</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html"><span class="hs-identifier">Hasura.RQL.Types.Action</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html"><span class="hs-identifier">Network.HTTP.Client.Transformable</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">newtype</span><span> </span><span id="ActionExecution"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecution"><span class="hs-identifier hs-var">ActionExecution</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionExecution"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecution"><span class="hs-identifier hs-var">ActionExecution</span></a></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unActionExecution"><span class="annot"><span class="annottext">ActionExecution
+-&gt; forall (m :: * -&gt; *).
+   (MonadIO m, MonadBaseControl IO m, MonadError QErr m,
+    MonadTrace m) =&gt;
+   m (EncJSON, ResponseHeaders)
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#unActionExecution"><span class="hs-identifier hs-var hs-var">unActionExecution</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-43"></span><span>      </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689485303"><span class="annot"><a href="#local-6989586621689485303"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-44"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689485303"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689485303"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689485303"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689485303"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><a href="#local-6989586621689485303"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ResponseHeaders</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">data</span><span> </span><span id="AsyncActionQuerySourceExecution"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQuerySourceExecution"><span class="hs-identifier hs-var">AsyncActionQuerySourceExecution</span></a></span></span><span> </span><span id="local-6989586621689485245"><span class="annot"><a href="#local-6989586621689485245"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AsyncActionQuerySourceExecution"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQuerySourceExecution"><span class="hs-identifier hs-var">AsyncActionQuerySourceExecution</span></a></span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aaqseSource"><span class="annot"><span class="annottext">AsyncActionQuerySourceExecution v -&gt; SourceName
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aaqseSource"><span class="hs-identifier hs-var hs-var">_aaqseSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span id="_aaqseJsonAggSelect"><span class="annot"><span class="annottext">AsyncActionQuerySourceExecution v -&gt; JsonAggSelect
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aaqseJsonAggSelect"><span class="hs-identifier hs-var hs-var">_aaqseJsonAggSelect</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#JsonAggSelect"><span class="hs-identifier hs-type">JsonAggSelect</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span id="_aaqseSelectBuilder"><span class="annot"><span class="annottext">AsyncActionQuerySourceExecution v
+-&gt; ActionLogResponse
+-&gt; AnnSimpleSelectG ('Postgres 'Vanilla) Void v
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aaqseSelectBuilder"><span class="hs-identifier hs-var hs-var">_aaqseSelectBuilder</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionLogResponse"><span class="hs-identifier hs-type">ActionLogResponse</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnSimpleSelectG"><span class="hs-identifier hs-type">RS.AnnSimpleSelectG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="#local-6989586621689485245"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">data</span><span> </span><span id="AsyncActionQueryExecution"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQueryExecution"><span class="hs-identifier hs-var">AsyncActionQueryExecution</span></a></span></span><span> </span><span id="local-6989586621689485240"><span class="annot"><a href="#local-6989586621689485240"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Async actions associated with no relationships.</span><span>
+</span><span id="line-56"></span><span>    </span><span id="AAQENoRelationships"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AAQENoRelationships"><span class="hs-identifier hs-var">AAQENoRelationships</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionLogResponse"><span class="hs-identifier hs-type">ActionLogResponse</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Async actions with relationships defined to Postgres</span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-comment">-- (as of now, we may have support for other backends as well in further iterations) tables.</span><span>
+</span><span id="line-59"></span><span>    </span><span id="AAQEOnSourceDB"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AAQEOnSourceDB"><span class="hs-identifier hs-var">AAQEOnSourceDB</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQuerySourceExecution"><span class="hs-identifier hs-type">AsyncActionQuerySourceExecution</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689485240"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- | A plan to execute async action query</span><span>
+</span><span id="line-62"></span><span class="hs-keyword">data</span><span> </span><span id="AsyncActionQueryExecutionPlan"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQueryExecutionPlan"><span class="hs-identifier hs-var">AsyncActionQueryExecutionPlan</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AsyncActionQueryExecutionPlan"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQueryExecutionPlan"><span class="hs-identifier hs-var">AsyncActionQueryExecutionPlan</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aaqepId"><span class="annot"><span class="annottext">AsyncActionQueryExecutionPlan -&gt; ActionId
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aaqepId"><span class="hs-identifier hs-var hs-var">_aaqepId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionId"><span class="hs-identifier hs-type">ActionId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span id="_aaqepExecution"><span class="annot"><span class="annottext">AsyncActionQueryExecutionPlan
+-&gt; AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aaqepExecution"><span class="hs-identifier hs-var hs-var">_aaqepExecution</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQueryExecution"><span class="hs-identifier hs-type">AsyncActionQueryExecution</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- A plan to execute any action</span><span>
+</span><span id="line-68"></span><span class="hs-keyword">data</span><span> </span><span id="ActionExecutionPlan"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecutionPlan"><span class="hs-identifier hs-var">ActionExecutionPlan</span></a></span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AEPSync"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AEPSync"><span class="hs-identifier hs-var">AEPSync</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecution"><span class="hs-identifier hs-type">ActionExecution</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AEPAsyncQuery"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AEPAsyncQuery"><span class="hs-identifier hs-var">AEPAsyncQuery</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AsyncActionQueryExecutionPlan"><span class="hs-identifier hs-type">AsyncActionQueryExecutionPlan</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AEPAsyncMutation"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#AEPAsyncMutation"><span class="hs-identifier hs-var">AEPAsyncMutation</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionId"><span class="hs-identifier hs-type">ActionId</span></a></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">newtype</span><span> </span><span id="ActionContext"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionContext"><span class="hs-identifier hs-var">ActionContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionContext"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionContext"><span class="hs-identifier hs-var">ActionContext</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_acName"><span class="annot"><span class="annottext">ActionContext -&gt; ActionName
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_acName"><span class="hs-identifier hs-var hs-var">_acName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">ActionName</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689485223"><span id="local-6989586621689485225"><span id="local-6989586621689485227"><span class="annot"><span class="annottext">Int -&gt; ActionContext -&gt; ShowS
+[ActionContext] -&gt; ShowS
+ActionContext -&gt; String
+(Int -&gt; ActionContext -&gt; ShowS)
+-&gt; (ActionContext -&gt; String)
+-&gt; ([ActionContext] -&gt; ShowS)
+-&gt; Show ActionContext
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionContext] -&gt; ShowS
+$cshowList :: [ActionContext] -&gt; ShowS
+show :: ActionContext -&gt; String
+$cshow :: ActionContext -&gt; String
+showsPrec :: Int -&gt; ActionContext -&gt; ShowS
+$cshowsPrec :: Int -&gt; ActionContext -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689485218"><span id="local-6989586621689485220"><span class="annot"><span class="annottext">ActionContext -&gt; ActionContext -&gt; Bool
+(ActionContext -&gt; ActionContext -&gt; Bool)
+-&gt; (ActionContext -&gt; ActionContext -&gt; Bool) -&gt; Eq ActionContext
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionContext -&gt; ActionContext -&gt; Bool
+$c/= :: ActionContext -&gt; ActionContext -&gt; Bool
+== :: ActionContext -&gt; ActionContext -&gt; Bool
+$c== :: ActionContext -&gt; ActionContext -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-special">$(</span><span id="local-6989586621689485205"><span id="local-6989586621689485207"><span id="local-6989586621689485209"><span id="local-6989586621689485211"><span id="local-6989586621689485213"><span id="local-6989586621689485215"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionContext</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- _awpRequestQuery is Nothing is case of Asynchronous actions</span><span>
+</span><span id="line-79"></span><span class="hs-keyword">data</span><span> </span><span id="ActionWebhookPayload"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookPayload"><span class="hs-identifier hs-var">ActionWebhookPayload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionWebhookPayload"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookPayload"><span class="hs-identifier hs-var">ActionWebhookPayload</span></a></span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_awpAction"><span class="annot"><span class="annottext">ActionWebhookPayload -&gt; ActionContext
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_awpAction"><span class="hs-identifier hs-var hs-var">_awpAction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionContext"><span class="hs-identifier hs-type">ActionContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>    </span><span id="_awpSessionVariables"><span class="annot"><span class="annottext">ActionWebhookPayload -&gt; SessionVariables
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_awpSessionVariables"><span class="hs-identifier hs-var hs-var">_awpSessionVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>    </span><span id="_awpInput"><span class="annot"><span class="annottext">ActionWebhookPayload -&gt; Value
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_awpInput"><span class="hs-identifier hs-var hs-var">_awpInput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>    </span><span id="_awpRequestQuery"><span class="annot"><span class="annottext">ActionWebhookPayload -&gt; Maybe GQLQueryText
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_awpRequestQuery"><span class="hs-identifier hs-var hs-var">_awpRequestQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLQueryText"><span class="hs-identifier hs-type">GQLQueryText</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689485189"><span id="local-6989586621689485191"><span id="local-6989586621689485193"><span class="annot"><span class="annottext">Int -&gt; ActionWebhookPayload -&gt; ShowS
+[ActionWebhookPayload] -&gt; ShowS
+ActionWebhookPayload -&gt; String
+(Int -&gt; ActionWebhookPayload -&gt; ShowS)
+-&gt; (ActionWebhookPayload -&gt; String)
+-&gt; ([ActionWebhookPayload] -&gt; ShowS)
+-&gt; Show ActionWebhookPayload
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionWebhookPayload] -&gt; ShowS
+$cshowList :: [ActionWebhookPayload] -&gt; ShowS
+show :: ActionWebhookPayload -&gt; String
+$cshow :: ActionWebhookPayload -&gt; String
+showsPrec :: Int -&gt; ActionWebhookPayload -&gt; ShowS
+$cshowsPrec :: Int -&gt; ActionWebhookPayload -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689485185"><span id="local-6989586621689485187"><span class="annot"><span class="annottext">ActionWebhookPayload -&gt; ActionWebhookPayload -&gt; Bool
+(ActionWebhookPayload -&gt; ActionWebhookPayload -&gt; Bool)
+-&gt; (ActionWebhookPayload -&gt; ActionWebhookPayload -&gt; Bool)
+-&gt; Eq ActionWebhookPayload
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionWebhookPayload -&gt; ActionWebhookPayload -&gt; Bool
+$c/= :: ActionWebhookPayload -&gt; ActionWebhookPayload -&gt; Bool
+== :: ActionWebhookPayload -&gt; ActionWebhookPayload -&gt; Bool
+$c== :: ActionWebhookPayload -&gt; ActionWebhookPayload -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-special">$(</span><span id="local-6989586621689485173"><span id="local-6989586621689485175"><span id="local-6989586621689485177"><span id="local-6989586621689485179"><span id="local-6989586621689485181"><span id="local-6989586621689485183"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionWebhookPayload</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-keyword">data</span><span> </span><span id="ActionWebhookErrorResponse"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookErrorResponse"><span class="hs-identifier hs-var">ActionWebhookErrorResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionWebhookErrorResponse"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookErrorResponse"><span class="hs-identifier hs-var">ActionWebhookErrorResponse</span></a></span></span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_awerMessage"><span class="annot"><span class="annottext">ActionWebhookErrorResponse -&gt; Text
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_awerMessage"><span class="hs-identifier hs-var hs-var">_awerMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>    </span><span id="_awerCode"><span class="annot"><span class="annottext">ActionWebhookErrorResponse -&gt; Maybe Text
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_awerCode"><span class="hs-identifier hs-var hs-var">_awerCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>    </span><span id="_awerExtensions"><span class="annot"><span class="annottext">ActionWebhookErrorResponse -&gt; Maybe Value
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_awerExtensions"><span class="hs-identifier hs-var hs-var">_awerExtensions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689485163"><span id="local-6989586621689485165"><span id="local-6989586621689485167"><span class="annot"><span class="annottext">Int -&gt; ActionWebhookErrorResponse -&gt; ShowS
+[ActionWebhookErrorResponse] -&gt; ShowS
+ActionWebhookErrorResponse -&gt; String
+(Int -&gt; ActionWebhookErrorResponse -&gt; ShowS)
+-&gt; (ActionWebhookErrorResponse -&gt; String)
+-&gt; ([ActionWebhookErrorResponse] -&gt; ShowS)
+-&gt; Show ActionWebhookErrorResponse
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionWebhookErrorResponse] -&gt; ShowS
+$cshowList :: [ActionWebhookErrorResponse] -&gt; ShowS
+show :: ActionWebhookErrorResponse -&gt; String
+$cshow :: ActionWebhookErrorResponse -&gt; String
+showsPrec :: Int -&gt; ActionWebhookErrorResponse -&gt; ShowS
+$cshowsPrec :: Int -&gt; ActionWebhookErrorResponse -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689485159"><span id="local-6989586621689485161"><span class="annot"><span class="annottext">ActionWebhookErrorResponse -&gt; ActionWebhookErrorResponse -&gt; Bool
+(ActionWebhookErrorResponse -&gt; ActionWebhookErrorResponse -&gt; Bool)
+-&gt; (ActionWebhookErrorResponse
+    -&gt; ActionWebhookErrorResponse -&gt; Bool)
+-&gt; Eq ActionWebhookErrorResponse
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionWebhookErrorResponse -&gt; ActionWebhookErrorResponse -&gt; Bool
+$c/= :: ActionWebhookErrorResponse -&gt; ActionWebhookErrorResponse -&gt; Bool
+== :: ActionWebhookErrorResponse -&gt; ActionWebhookErrorResponse -&gt; Bool
+$c== :: ActionWebhookErrorResponse -&gt; ActionWebhookErrorResponse -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-special">$(</span><span id="local-6989586621689485147"><span id="local-6989586621689485149"><span id="local-6989586621689485151"><span id="local-6989586621689485153"><span id="local-6989586621689485155"><span id="local-6989586621689485157"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">5</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionWebhookErrorResponse</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">type</span><span> </span><span id="ActionWebhookResponse"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionWebhookResponse"><span class="hs-identifier hs-var">ActionWebhookResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">data</span><span> </span><span id="ActionRequestInfo"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionRequestInfo"><span class="hs-identifier hs-var">ActionRequestInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionRequestInfo"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionRequestInfo"><span class="hs-identifier hs-var">ActionRequestInfo</span></a></span></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_areqiUrl"><span class="annot"><span class="annottext">ActionRequestInfo -&gt; Text
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_areqiUrl"><span class="hs-identifier hs-var hs-var">_areqiUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>    </span><span id="_areqiBody"><span class="annot"><span class="annottext">ActionRequestInfo -&gt; Value
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_areqiBody"><span class="hs-identifier hs-var hs-var">_areqiBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>    </span><span id="_areqiHeaders"><span class="annot"><span class="annottext">ActionRequestInfo -&gt; [HeaderConf]
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_areqiHeaders"><span class="hs-identifier hs-var hs-var">_areqiHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>    </span><span id="_areqiTransformedRequest"><span class="annot"><span class="annottext">ActionRequestInfo -&gt; Maybe Request
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_areqiTransformedRequest"><span class="hs-identifier hs-var hs-var">_areqiTransformedRequest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689485136"><span id="local-6989586621689485138"><span id="local-6989586621689485140"><span class="annot"><span class="annottext">Int -&gt; ActionRequestInfo -&gt; ShowS
+[ActionRequestInfo] -&gt; ShowS
+ActionRequestInfo -&gt; String
+(Int -&gt; ActionRequestInfo -&gt; ShowS)
+-&gt; (ActionRequestInfo -&gt; String)
+-&gt; ([ActionRequestInfo] -&gt; ShowS)
+-&gt; Show ActionRequestInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionRequestInfo] -&gt; ShowS
+$cshowList :: [ActionRequestInfo] -&gt; ShowS
+show :: ActionRequestInfo -&gt; String
+$cshow :: ActionRequestInfo -&gt; String
+showsPrec :: Int -&gt; ActionRequestInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; ActionRequestInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="hs-special">$(</span><span id="local-6989586621689485128"><span id="local-6989586621689485130"><span id="local-6989586621689485132"><span id="local-6989586621689485134"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">6</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionRequestInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">data</span><span> </span><span id="ActionResponseInfo"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionResponseInfo"><span class="hs-identifier hs-var">ActionResponseInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionResponseInfo"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionResponseInfo"><span class="hs-identifier hs-var">ActionResponseInfo</span></a></span></span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aresiStatus"><span class="annot"><span class="annottext">ActionResponseInfo -&gt; Int
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aresiStatus"><span class="hs-identifier hs-var hs-var">_aresiStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>    </span><span id="_aresiBody"><span class="annot"><span class="annottext">ActionResponseInfo -&gt; Value
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aresiBody"><span class="hs-identifier hs-var hs-var">_aresiBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>    </span><span id="_aresiHeaders"><span class="annot"><span class="annottext">ActionResponseInfo -&gt; [HeaderConf]
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aresiHeaders"><span class="hs-identifier hs-var hs-var">_aresiHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689485118"><span id="local-6989586621689485120"><span id="local-6989586621689485122"><span class="annot"><span class="annottext">Int -&gt; ActionResponseInfo -&gt; ShowS
+[ActionResponseInfo] -&gt; ShowS
+ActionResponseInfo -&gt; String
+(Int -&gt; ActionResponseInfo -&gt; ShowS)
+-&gt; (ActionResponseInfo -&gt; String)
+-&gt; ([ActionResponseInfo] -&gt; ShowS)
+-&gt; Show ActionResponseInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionResponseInfo] -&gt; ShowS
+$cshowList :: [ActionResponseInfo] -&gt; ShowS
+show :: ActionResponseInfo -&gt; String
+$cshow :: ActionResponseInfo -&gt; String
+showsPrec :: Int -&gt; ActionResponseInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; ActionResponseInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689485114"><span id="local-6989586621689485116"><span class="annot"><span class="annottext">ActionResponseInfo -&gt; ActionResponseInfo -&gt; Bool
+(ActionResponseInfo -&gt; ActionResponseInfo -&gt; Bool)
+-&gt; (ActionResponseInfo -&gt; ActionResponseInfo -&gt; Bool)
+-&gt; Eq ActionResponseInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionResponseInfo -&gt; ActionResponseInfo -&gt; Bool
+$c/= :: ActionResponseInfo -&gt; ActionResponseInfo -&gt; Bool
+== :: ActionResponseInfo -&gt; ActionResponseInfo -&gt; Bool
+$c== :: ActionResponseInfo -&gt; ActionResponseInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="hs-special">$(</span><span id="local-6989586621689485106"><span id="local-6989586621689485108"><span id="local-6989586621689485110"><span id="local-6989586621689485112"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">6</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionResponseInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="ActionInternalError"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionInternalError"><span class="hs-identifier hs-var">ActionInternalError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionInternalError"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionInternalError"><span class="hs-identifier hs-var">ActionInternalError</span></a></span></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aieError"><span class="annot"><span class="annottext">ActionInternalError -&gt; Value
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aieError"><span class="hs-identifier hs-var hs-var">_aieError</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>    </span><span id="_aieRequest"><span class="annot"><span class="annottext">ActionInternalError -&gt; ActionRequestInfo
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aieRequest"><span class="hs-identifier hs-var hs-var">_aieRequest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionRequestInfo"><span class="hs-identifier hs-type">ActionRequestInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-122"></span><span>    </span><span id="_aieResponse"><span class="annot"><span class="annottext">ActionInternalError -&gt; Maybe ActionResponseInfo
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_aieResponse"><span class="hs-identifier hs-var hs-var">_aieResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionResponseInfo"><span class="hs-identifier hs-type">ActionResponseInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689485096"><span id="local-6989586621689485098"><span id="local-6989586621689485100"><span class="annot"><span class="annottext">Int -&gt; ActionInternalError -&gt; ShowS
+[ActionInternalError] -&gt; ShowS
+ActionInternalError -&gt; String
+(Int -&gt; ActionInternalError -&gt; ShowS)
+-&gt; (ActionInternalError -&gt; String)
+-&gt; ([ActionInternalError] -&gt; ShowS)
+-&gt; Show ActionInternalError
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionInternalError] -&gt; ShowS
+$cshowList :: [ActionInternalError] -&gt; ShowS
+show :: ActionInternalError -&gt; String
+$cshow :: ActionInternalError -&gt; String
+showsPrec :: Int -&gt; ActionInternalError -&gt; ShowS
+$cshowsPrec :: Int -&gt; ActionInternalError -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span class="hs-special">$(</span><span id="local-6989586621689485088"><span id="local-6989586621689485090"><span id="local-6989586621689485092"><span id="local-6989586621689485094"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionInternalError</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span class="hs-comment">-- * Action handler logging related</span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">data</span><span> </span><span id="ActionHandlerLog"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionHandlerLog"><span class="hs-identifier hs-var">ActionHandlerLog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionHandlerLog"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionHandlerLog"><span class="hs-identifier hs-var">ActionHandlerLog</span></a></span></span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ahlRequest"><span class="annot"><span class="annottext">ActionHandlerLog -&gt; Request
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_ahlRequest"><span class="hs-identifier hs-var hs-var">_ahlRequest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span id="_ahlRequestTrans"><span class="annot"><span class="annottext">ActionHandlerLog -&gt; Maybe Request
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_ahlRequestTrans"><span class="hs-identifier hs-var hs-var">_ahlRequestTrans</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span id="_ahlRequestSize"><span class="annot"><span class="annottext">ActionHandlerLog -&gt; Int64
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_ahlRequestSize"><span class="hs-identifier hs-var hs-var">_ahlRequestSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>    </span><span id="_ahlTransformedRequestSize"><span class="annot"><span class="annottext">ActionHandlerLog -&gt; Maybe Int64
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_ahlTransformedRequestSize"><span class="hs-identifier hs-var hs-var">_ahlTransformedRequestSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span id="_ahlResponseSize"><span class="annot"><span class="annottext">ActionHandlerLog -&gt; Int64
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_ahlResponseSize"><span class="hs-identifier hs-var hs-var">_ahlResponseSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>    </span><span id="_ahlActionName"><span class="annot"><span class="annottext">ActionHandlerLog -&gt; ActionName
+</span><a href="Hasura.GraphQL.Execute.Action.Types.html#_ahlActionName"><span class="hs-identifier hs-var hs-var">_ahlActionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">ActionName</span></a></span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689485075"><span id="local-6989586621689485077"><span id="local-6989586621689485079"><span class="annot"><span class="annottext">Int -&gt; ActionHandlerLog -&gt; ShowS
+[ActionHandlerLog] -&gt; ShowS
+ActionHandlerLog -&gt; String
+(Int -&gt; ActionHandlerLog -&gt; ShowS)
+-&gt; (ActionHandlerLog -&gt; String)
+-&gt; ([ActionHandlerLog] -&gt; ShowS)
+-&gt; Show ActionHandlerLog
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionHandlerLog] -&gt; ShowS
+$cshowList :: [ActionHandlerLog] -&gt; ShowS
+show :: ActionHandlerLog -&gt; String
+$cshow :: ActionHandlerLog -&gt; String
+showsPrec :: Int -&gt; ActionHandlerLog -&gt; ShowS
+$cshowsPrec :: Int -&gt; ActionHandlerLog -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-special">$(</span><span id="local-6989586621689485067"><span id="local-6989586621689485069"><span id="local-6989586621689485071"><span id="local-6989586621689485073"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionHandlerLog</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionHandlerLog"><span class="hs-identifier hs-type">ActionHandlerLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-143"></span><span>  </span><span id="local-6989586621689485063"><span class="annot"><span class="annottext">toEngineLog :: ActionHandlerLog -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689485061"><span class="annot"><span class="annottext">ActionHandlerLog
+</span><a href="#local-6989586621689485061"><span class="hs-identifier hs-var">ahl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">L.LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
+</span><a href="Hasura.Logging.html#ELTActionHandler"><span class="hs-identifier hs-var">L.ELTActionHandler</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ActionHandlerLog -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ActionHandlerLog
+</span><a href="#local-6989586621689485061"><span class="hs-identifier hs-var">ahl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span></pre></body></html>
