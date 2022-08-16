@@ -82,8 +82,8 @@ renderDiffString useColor actual expected =
 
     explanation =
       [ "━━━",
-        colorSpan Green "--- expected, but not present",
-        colorSpan Red "+++ present, but not expected",
+        colorSpan Red "--- present, but not expected",
+        colorSpan Green "+++ expected, but not present",
         "━━━"
       ]
 
@@ -92,8 +92,8 @@ renderDiffString useColor actual expected =
     annotateDiffLine :: Diff String -> String
     annotateDiffLine = \case
       Both _ s -> "    " ++ s
-      First s -> colorSpan Green $ "--- " ++ s
-      Second s -> colorSpan Red $ "+++ " ++ s
+      First s -> colorSpan Red $ "--- " ++ s
+      Second s -> colorSpan Green $ "+++ " ++ s
 
     colorSpan c s = colorCode (SetColor Foreground Dull c) ++ s ++ colorCode Reset
     colorCode sgr = if useColor then setSGRCode [sgr] else ""
