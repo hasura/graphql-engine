@@ -1,0 +1,9 @@
+{
+  "name": "hasura-server-tests-py",
+  "version": "1.0.0",
+  "author": "Hasura, Inc.",
+  "license": "ISC",
+  "dependencies": {
+    "hasura-server-tests-py-remote-schemas": "file:remote_schemas/nodejs"
+  }
+}
