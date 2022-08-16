@@ -49,7 +49,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  tag: 9393c9113a572632b999acbd20ab85386a165103
+  tag: 1602c3cf5d52ad80fca744c5cb0d1c126709ed50
 
 source-repository-package
   type: git
@@ -64,7 +64,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/pool.git
-  tag: 427c8f47b5a0de858780b0a9522ad953197b1658
+  tag: c5faf9a358e83eaf15fef0c1e890f463d0022565
 
 -- This is an unrelesaed version of "odbc"
 source-repository-package
