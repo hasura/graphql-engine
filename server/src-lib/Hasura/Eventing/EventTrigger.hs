@@ -31,6 +31,8 @@
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx,
     processEventQueue,
+    defaultMaxEventThreads,
+    defaultFetchInterval,
     Event (..),
     EventEngineCtx (..),
     -- Exported for testing
@@ -71,6 +73,8 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
+import Hasura.RQL.Types.Numeric (NonNegativeInt)
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
@@ -163,6 +167,12 @@ deriving instance Backend b => Eq (EventPayload b)
 instance Backend b => J.ToJSON (EventPayload b) where
   toJSON = J.genericToJSON hasuraJSON {omitNothingFields = True}
 
+defaultMaxEventThreads :: Numeric.PositiveInt
+defaultMaxEventThreads = Numeric.unsafePositiveInt 100
+
+defaultFetchInterval :: DiffTime
+defaultFetchInterval = seconds 1
+
 initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
@@ -219,7 +229,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
-    fetchBatchSize = getNonNegativeInt _eeCtxFetchSize
+    fetchBatchSize = Numeric.getNonNegativeInt _eeCtxFetchSize
 
     popEventsBatch :: m [BackendEventWithSource]
     popEventsBatch = do

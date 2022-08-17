@@ -57,7 +57,7 @@ import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (PGConnectionParams (..), UrlConf (..))
-import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..))
+import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Network.Socket qualified as Socket
@@ -232,7 +232,7 @@ startServerThread murlPrefixport = do
         port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
         let urlPrefix = "http://127.0.0.1"
         threadId <-
-          forkIO (runApp Constants.serveOptions {soPort = fromIntegral port})
+          forkIO (runApp Constants.serveOptions {soPort = unsafePort port})
         pure (urlPrefix, port, threadId)
   let server = Server {port = fromIntegral port, urlPrefix, threadId}
   Http.healthCheck (serverUrl server)
