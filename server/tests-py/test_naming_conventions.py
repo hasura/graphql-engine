@@ -17,17 +17,59 @@ class TestNamingConventions:
     def dir(cls):
         return "queries/naming_conventions"
 
-    def test_type_and_field_names(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/type_and_field_names.yaml')
-
     def test_field_name_precedence(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/field_name_precedence.yaml')
 
     def test_enum_value_convention(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/enum_value_convention.yaml')
 
+@pytest.mark.skipif(
+    not env_var_contains('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention'),
+    reason="This test expects the (naming_convention) experimental feature turned on")
+class TestNamingConventionsTypeAndFieldNamesGraphqlDefault:
+
+    @classmethod
+    def dir(cls):
+        return "queries/naming_conventions"
+
+    def test_type_and_field_names(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/type_and_field_names_graphql_default.yaml')
+
+@pytest.mark.skipif(
+    not env_var_contains('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention'),
+    reason="This test expects the (naming_convention) experimental feature turned on")
+class TestNamingConventionsTypeAndFieldNamesHasuraDefault:
+
+    @classmethod
+    def dir(cls):
+        return "queries/naming_conventions"
+
+    def test_type_and_field_names(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/type_and_field_names_hasura_default.yaml')
+
+@pytest.mark.skipif(
+    not env_var_contains('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention'),
+    reason="This test expects the (naming_convention) experimental feature turned on")
+class TestNamingConventionsTypeAndFieldNamesGraphqlDefaultWithPrefixAndSuffix:
+
+    @classmethod
+    def dir(cls):
+        return "queries/naming_conventions"
+
     def test_type_and_field_names_with_prefix_and_suffix(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/type_and_field_names_with_prefix_and_suffix.yaml')
+        check_query_f(hge_ctx, self.dir() + '/type_and_field_names_graphql_default_with_prefix_and_suffix.yaml')
+
+@pytest.mark.skipif(
+    not env_var_contains('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention'),
+    reason="This test expects the (naming_convention) experimental feature turned on")
+class TestNamingConventionsTypeAndFieldNamesHasuraDefaultWithPrefixAndSuffix:
+
+    @classmethod
+    def dir(cls):
+        return "queries/naming_conventions"
+
+    def test_type_and_field_names_with_prefix_and_suffix(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/type_and_field_names_hasura_default_with_prefix_and_suffix.yaml')
 
 @pytest.mark.backend('mssql')
 class TestNamingConventionsFailure:

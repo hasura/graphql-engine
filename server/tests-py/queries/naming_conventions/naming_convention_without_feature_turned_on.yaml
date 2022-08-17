@@ -49,19 +49,18 @@
       table: author_local
       source: pg1
 
-
 - description: Simple GraphQL query to fetch items from the source table
   url: /v1/graphql
   status: 200
   response:
     data:
       author_local:
-      - id: 1
-        author_name: 'Author 1'
-        __typename: author_local
-      - id: 2
-        author_name: 'Author 2'
-        __typename: author_local
+        - id: 1
+          author_name: "Author 1"
+          __typename: author_local
+        - id: 2
+          author_name: "Author 2"
+          __typename: author_local
   query:
     query: |
       query {
@@ -79,7 +78,7 @@
     data:
       author_local_by_pk:
         id: 1
-        author_name: 'Author 1'
+        author_name: "Author 1"
         __typename: author_local
   query:
     query: |
@@ -121,9 +120,9 @@
       insert_author_local:
         __typename: author_local_mutation_response
         returning:
-        - __typename: author_local
-          id: 3
-          author_name: Author 3
+          - __typename: author_local
+            id: 3
+            author_name: Author 3
   query:
     query: |
       mutation MyMutation {

@@ -736,7 +736,7 @@ naming-conventions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py::TestNamingConventionWithoutExperimentalFeature
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py
 
 	kill_hge_servers
 
@@ -744,7 +744,7 @@ naming-conventions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py::TestNamingConventions
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py
 
 	kill_hge_servers
 
@@ -756,8 +756,7 @@ naming-conventions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py::TestDefaultNamingConvention
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py
 
 	unset HASURA_GRAPHQL_ADMIN_SECRET
 	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
