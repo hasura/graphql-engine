@@ -1229,6 +1229,7 @@ test-suite tests-hspec
     Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.BigQuery.Queries.SpatialTypesSpec
+    Test.BigQuery.Schema.RunSQLSpec
     Test.BigQuery.TypeInterpretationSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
@@ -1245,11 +1246,11 @@ test-suite tests-hspec
     Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
     Test.EventTrigger.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.EventTriggersExtensionSchemaSpec
     Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec
     Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
     Test.EventTrigger.EventTriggersRecreationSpec
     Test.EventTrigger.EventTriggersRunSQLSpec
-    Test.EventTrigger.EventTriggersExtensionSchemaSpec
     Test.HelloWorldSpec
     Test.InsertDefaultsSpec
     Test.LongIdentifiersSpec
@@ -1271,6 +1272,7 @@ test-suite tests-hspec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
+    Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
@@ -1282,18 +1284,17 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-    Test.RunSQLSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
-    Test.SQLServer.InsertVarcharColumnSpec
+    Test.Schema.DataValidation.Permissions.InsertSpec
+    Test.Schema.DataValidation.Permissions.SelectSpec
     Test.Schema.DefaultValuesSpec
     Test.Schema.EnumSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.ViewsSpec
     Test.ServiceLivenessSpec
+    Test.SQLServer.InsertVarcharColumnSpec
     Test.Subscriptions.CustomFieldsSpec
 
 test-suite tests-dc-api
