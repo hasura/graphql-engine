@@ -14,6 +14,7 @@ import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
@@ -311,7 +312,20 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoPort result `Hspec.shouldSatisfy` \case
-        Opt.Success port -> port == Just 420
+        Opt.Success port -> port == Just (UUT.unsafePort 420)
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False
+
+    Hspec.it "It accepts '--server-port' 0" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--server-port", "0"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap UUT.rsoPort result `Hspec.shouldSatisfy` \case
+        Opt.Success port -> port == Just (UUT.unsafePort 0)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -333,6 +347,32 @@ serveParserSpec =
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--server-port", "four"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--server-port' fails on a negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--server-port", "-1"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--server-port' fails on > 65535" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--server-port", "65536"]
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
@@ -376,9 +416,83 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoConnParams result `Hspec.shouldSatisfy` \case
-        Opt.Success rawConnParams -> rawConnParams == UUT.ConnParamsRaw (Just 3) (Just 2) (Just 40) (Just 400) (Just True) (Just 45)
+        Opt.Success rawConnParams ->
+          rawConnParams
+            == UUT.ConnParamsRaw
+              { rcpStripes = Just $ Numeric.unsafeNonNegativeInt 3,
+                rcpConns = Just $ Numeric.unsafeNonNegativeInt 2,
+                rcpIdleTime = Just $ Numeric.unsafeNonNegativeInt 40,
+                rcpConnLifetime = Just $ Numeric.unsafeNonNegative 400,
+                rcpAllowPrepare = Just True,
+                rcpPoolTimeout = Just (Numeric.unsafeNonNegative 45)
+              }
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
+
+    Hspec.it "It fails '--stripes' must be a non-negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--stripes", "-3", "--connections", "2", "--timeout", "40", "--conn-lifetime", "400", "--use-prepared-statements", "true", "--pool-timeout", "45"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--connections' must be a non-negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--stripes", "3", "--connections", "-2", "--timeout", "40", "--conn-lifetime", "400", "--use-prepared-statements", "true", "--pool-timeout", "45"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--timeout' must be a non-negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--stripes", "3", "--connections", "2", "--timeout", "-40", "--conn-lifetime", "400", "--use-prepared-statements", "true", "--pool-timeout", "45"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--conn-lifetime' must be a non-negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--stripes", "3", "--connections", "2", "--timeout", "40", "--conn-lifetime", "-400", "--use-prepared-statements", "true", "--pool-timeout", "45"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--pool-timeout' must be a non-negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--stripes", "3", "--connections", "2", "--timeout", "40", "--conn-lifetime", "400", "--use-prepared-statements", "true", "--pool-timeout", "-45"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
 
     Hspec.it "It accepts '--tx-iso'" $ do
       let -- Given
@@ -1288,7 +1402,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEventsHttpPoolSize result `Hspec.shouldSatisfy` \case
-        Opt.Success eventsHttpPoolSize -> eventsHttpPoolSize == Just 50
+        Opt.Success eventsHttpPoolSize -> eventsHttpPoolSize == Just (Numeric.unsafePositiveInt 50)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1327,7 +1441,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEventsFetchInterval result `Hspec.shouldSatisfy` \case
-        Opt.Success eventsFetchInterval -> eventsFetchInterval == Just 634
+        Opt.Success eventsFetchInterval -> eventsFetchInterval == Just (Numeric.unsafeNonNegative 634)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1357,6 +1471,19 @@ serveParserSpec =
         Opt.Failure _pf -> pure ()
         Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
 
+    Hspec.it "It fails '--events-fetch-interval' expects an non-negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--events-fetch-interval", "-10"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
     Hspec.it "It accepts '--async-actions-fetch-interval'" $ do
       let -- Given
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
@@ -1366,7 +1493,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoAsyncActionsFetchInterval result `Hspec.shouldSatisfy` \case
-        Opt.Success asyncActionsFetchInterval -> asyncActionsFetchInterval == Just (UUT.Interval 123)
+        Opt.Success asyncActionsFetchInterval -> asyncActionsFetchInterval == Just (UUT.Interval $ Numeric.unsafeNonNegative 123)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1388,6 +1515,19 @@ serveParserSpec =
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--async-actions-fetch-interval", "true"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--async-actions-fetch-interval' expects a non-negative integer argument" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--async-actions-fetch-interval", "-10"]
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
@@ -1457,9 +1597,22 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketKeepAlive result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketKeepAlive -> webSocketKeepAlive == Just (UUT.KeepAliveDelay 8)
+        Opt.Success webSocketKeepAlive -> webSocketKeepAlive == Just (UUT.KeepAliveDelay $ Numeric.unsafeNonNegative 8)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
+
+    Hspec.it "It fails '--websocket-keepalive' expects a non-negative integer" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--websocket-keepalive", "-10"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
 
     Hspec.it "It fails '--websocket-keepalive' expects an argument" $ do
       let -- Given
@@ -1561,7 +1714,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoSchemaPollInterval result `Hspec.shouldSatisfy` \case
-        Opt.Success schemaPollInterval -> schemaPollInterval == Just (UUT.Interval 5432)
+        Opt.Success schemaPollInterval -> schemaPollInterval == Just (UUT.Interval $ Numeric.unsafeNonNegative 5432)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1583,6 +1736,19 @@ serveParserSpec =
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--schema-sync-poll-interval", "true"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--schema-sync-poll-interval' expects a non-negative integer argument" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--schema-sync-poll-interval", "-10"]
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
@@ -1639,7 +1805,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEventsFetchBatchSize result `Hspec.shouldSatisfy` \case
-        Opt.Success eventsFetchBatchSize -> eventsFetchBatchSize == Just 40
+        Opt.Success eventsFetchBatchSize -> eventsFetchBatchSize == Just (Numeric.unsafeNonNegativeInt 40)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1678,7 +1844,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoGracefulShutdownTimeout result `Hspec.shouldSatisfy` \case
-        Opt.Success gracefulShutdownTimeout -> gracefulShutdownTimeout == Just 52
+        Opt.Success gracefulShutdownTimeout -> gracefulShutdownTimeout == Just (Numeric.unsafeNonNegative 52)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1708,6 +1874,19 @@ serveParserSpec =
         Opt.Failure _pf -> pure ()
         Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
 
+    Hspec.it "It fails '--graceful-shutdown-timeout' expects a non-negative integer argument" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--graceful-shutdown-timeout", "-10"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
     Hspec.it "It accepts '--websocket-connection-init-timeout'" $ do
       let -- Given
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
@@ -1717,7 +1896,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketConnectionInitTimeout result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketConnectionInitTimeout -> webSocketConnectionInitTimeout == Just (UUT.WSConnectionInitTimeout 34)
+        Opt.Success webSocketConnectionInitTimeout -> webSocketConnectionInitTimeout == Just (UUT.WSConnectionInitTimeout (Numeric.unsafeNonNegative 34))
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1739,6 +1918,19 @@ serveParserSpec =
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-connection-init-timeout", "true"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It fails '--websocket-connection-init-timeout' expects a non-negative integer argument" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--websocket-connection-init-timeout", "-10"]
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 

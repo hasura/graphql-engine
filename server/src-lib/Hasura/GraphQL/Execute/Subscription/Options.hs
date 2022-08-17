@@ -12,7 +12,8 @@ where
 
 import Data.Aeson qualified as J
 import Hasura.Prelude
-import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Numeric (NonNegativeDiffTime, NonNegativeInt)
+import Hasura.RQL.Types.Numeric qualified as Numeric
 
 data SubscriptionsOptions = SubscriptionsOptions
   { _lqoBatchSize :: !BatchSize,
@@ -27,7 +28,7 @@ type StreamQueriesOptions = SubscriptionsOptions
 mkSubscriptionsOptions :: Maybe BatchSize -> Maybe RefetchInterval -> SubscriptionsOptions
 mkSubscriptionsOptions batchSize refetchInterval =
   SubscriptionsOptions
-    { _lqoBatchSize = fromMaybe (BatchSize 100) batchSize,
+    { _lqoBatchSize = fromMaybe (BatchSize $ Numeric.unsafeNonNegativeInt 100) batchSize,
       _lqoRefetchInterval = fromMaybe (RefetchInterval 1) refetchInterval
     }
 
@@ -47,7 +48,7 @@ newtype BatchSize = BatchSize {unBatchSize :: NonNegativeInt}
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 mkBatchSize :: Int -> Maybe BatchSize
-mkBatchSize x = BatchSize <$> mkNonNegativeInt x
+mkBatchSize x = BatchSize <$> Numeric.mkNonNegativeInt x
 
 -- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON.
 --      ideally this would have e.g. ... unRefetchInterval :: Milliseconds
@@ -55,4 +56,4 @@ newtype RefetchInterval = RefetchInterval {unRefetchInterval :: NonNegativeDiffT
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 mkRefetchInterval :: DiffTime -> Maybe RefetchInterval
-mkRefetchInterval x = RefetchInterval <$> mkNonNegativeDiffTime x
+mkRefetchInterval x = RefetchInterval <$> Numeric.mkNonNegativeDiffTime x

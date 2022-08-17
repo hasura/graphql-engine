@@ -681,6 +681,7 @@ library
                      , Hasura.RQL.Types.Metadata.Object
                      , Hasura.RQL.Types.Metadata.Serialization
                      , Hasura.RQL.Types.Network
+                     , Hasura.RQL.Types.Numeric
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.QueryTags
@@ -993,7 +994,7 @@ test-suite graphql-engine-tests
     Control.Concurrent.ExtendedSpec
     Control.Monad.CircularSpec
     Data.HashMap.Strict.ExtendedSpec
-    Data.NonNegativeIntSpec
+    Data.NumericSpec
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
     Data.Parser.RemoteRelationshipSpec

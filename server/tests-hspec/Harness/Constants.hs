@@ -46,6 +46,7 @@ import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
@@ -207,7 +208,7 @@ httpHealthCheckIntervalSeconds = 1
 serveOptions :: ServeOptions L.Hasura
 serveOptions =
   ServeOptions
-    { soPort = 12345, -- The server runner will typically be generating
+    { soPort = Init.unsafePort 12345, -- The server runner will typically be generating
     -- a random port, so this isn't particularly
     -- important.
       soHost = "0.0.0.0",
@@ -239,11 +240,11 @@ serveOptions =
       soInferFunctionPermissions = Options.InferFunctionPermissions,
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
-      soSchemaPollInterval = Interval 10,
+      soSchemaPollInterval = Interval (Numeric.unsafeNonNegative 10),
       soExperimentalFeatures = Set.singleton EFStreamingSubscriptions,
-      soEventsFetchBatchSize = 1,
+      soEventsFetchBatchSize = Numeric.unsafeNonNegativeInt 1,
       soDevMode = True,
-      soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
+      soGracefulShutdownTimeout = Numeric.unsafeNonNegative 0, -- Don't wait to shutdown.
       soWebSocketConnectionInitTimeout = Init._default Init.webSocketConnectionInitTimeoutOption,
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,

@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: require non-negative integers for '--stripes', '--connections', '--timeout', 'conn-lifetime', '--pool-timeout', '--events-fetch-interval', '--async-actions-fetch-interval', '--websocket-keepalive', '--schema-sync-poll-interval', '--events-fetch-batch-size', '--graceful-shutdown-timeout', and '--websocket-connection-init-timeout'
 - cli: add  `--disallow-inconsistent-metadata`  flag in `hasura metadata apply`. Setting this flag will prevent applying metadata which can introduce inconsistencies.
 
 ## v2.10.1

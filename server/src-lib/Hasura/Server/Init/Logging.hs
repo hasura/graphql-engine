@@ -23,42 +23,36 @@ import Data.ByteString.Char8 qualified as Char8
 import Data.HashSet qualified as HashSet
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text.Encoding
-import Database.PG.Query (ConnInfo)
 import Database.PG.Query qualified as Query
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Logging (EngineLogType, LogLevel)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.Server.Auth qualified as Auth
-import Hasura.Server.Init.Config (ServeOptions)
 import Hasura.Server.Init.Config qualified as Config
-import Hasura.Server.Logging (StartupLog)
 import Hasura.Server.Logging qualified as Server.Logging
-import Network.HTTP.Types.URI (Query, QueryItem)
 import Network.HTTP.Types.URI qualified as URI
-import Network.URI (URI)
 import Network.URI qualified as URI
 import Network.WebSockets qualified as WebSockets
 
 --------------------------------------------------------------------------------
 
-censorQueryItem :: Text -> URI.QueryItem -> QueryItem
+censorQueryItem :: Text -> URI.QueryItem -> URI.QueryItem
 censorQueryItem sensitive (key, Just _) | key == Text.Encoding.encodeUtf8 sensitive = (key, Just "...")
 censorQueryItem _ qi = qi
 
 censorQuery :: Text -> URI.Query -> URI.Query
 censorQuery sensitive = fmap (censorQueryItem sensitive)
 
-updateQuery :: (URI.Query -> Query) -> URI -> URI.URI
+updateQuery :: (URI.Query -> URI.Query) -> URI.URI -> URI.URI
 updateQuery f uri =
   let queries = URI.parseQuery $ Char8.pack $ URI.uriQuery uri
    in uri {URI.uriQuery = Char8.unpack (URI.renderQuery True $ f queries)}
 
-censorURI :: Text -> URI -> URI
+censorURI :: Text -> URI.URI -> URI.URI
 censorURI sensitive uri = updateQuery (censorQuery sensitive) uri
 
 -- | Generate a 'StartupLog' from the Postgres 'ConnInfo'.
-connInfoToLog :: ConnInfo -> StartupLog
+connInfoToLog :: Query.ConnInfo -> Server.Logging.StartupLog
 connInfoToLog connInfo =
   Server.Logging.StartupLog Logging.LevelInfo "postgres_connection" infoVal
   where
@@ -86,7 +80,7 @@ connInfoToLog connInfo =
             ]
 
 -- | Generate a 'StartupLog' from the final 'ServeOptions'.
-serveOptsToLog :: ToJSON (EngineLogType impl) => ServeOptions impl -> StartupLog
+serveOptsToLog :: ToJSON (Logging.EngineLogType impl) => Config.ServeOptions impl -> Server.Logging.StartupLog
 serveOptsToLog so =
   Server.Logging.StartupLog Logging.LevelInfo "server_configuration" infoVal
   where
@@ -126,11 +120,11 @@ serveOptsToLog so =
           "enable_metadata_query_logging" .= Config.soEnableMetadataQueryLogging so
         ]
 
-mkGenericStrLog :: LogLevel -> Text -> String -> StartupLog
+mkGenericStrLog :: Logging.LogLevel -> Text -> String -> Server.Logging.StartupLog
 mkGenericStrLog logLevel k msg =
   Server.Logging.StartupLog logLevel k $ Aeson.toJSON msg
 
-mkGenericLog :: ToJSON a => LogLevel -> Text -> a -> StartupLog
+mkGenericLog :: ToJSON a => Logging.LogLevel -> Text -> a -> Server.Logging.StartupLog
 mkGenericLog logLevel k msg =
   Server.Logging.StartupLog logLevel k $ Aeson.toJSON msg
 

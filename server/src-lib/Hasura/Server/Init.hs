@@ -28,17 +28,15 @@ where
 
 import Data.HashSet qualified as HashSet
 import Data.Text qualified as Text
-import Database.PG.Query (TxE)
 import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection qualified as Connection
-import Hasura.Base.Error (QErr)
 import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Logging (EnabledLogTypes)
+import Hasura.Logging qualified as Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (UrlConf)
 import Hasura.RQL.Types.Common qualified as Common
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg
@@ -46,15 +44,36 @@ import Hasura.Server.Init.Config
 import Hasura.Server.Init.Env
 import Hasura.Server.Init.Logging
 import Hasura.Server.Logging qualified as Server.Logging
-import Hasura.Server.Types (MetadataDbId)
 import Hasura.Server.Types qualified as Types
 import Network.WebSockets qualified as WebSockets
+
+--------------------------------------------------------------------------------
+-- TODO(SOLOMON): Where does this note belong?
+
+{- Note [ReadOnly Mode]
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This mode starts the server in a (database) read-only mode. That is, only
+read-only queries are allowed on users' database sources, and write
+queries throw a runtime error. The use-case is for failsafe operations.
+Metadata APIs are also disabled.
+
+Following is the precise behaviour -
+  1. For any GraphQL API (relay/hasura; http/websocket) - disable execution of
+  mutations
+  2. Metadata API is disabled
+  3. /v2/query API - insert, delete, update, run_sql are disabled
+  4. /v1/query API - insert, delete, update, run_sql are disabled
+  5. No source catalog migrations are run
+  6. During build schema cache phase, building event triggers are disabled (as
+  they create corresponding database triggers)
+-}
 
 --------------------------------------------------------------------------------
 
 -- | Query the Metadata DB for the Metadata DB UUID.
 -- TODO: Move into a dedicated Metadata module (ala Pro).
-getDbId :: TxE QErr MetadataDbId
+getDbId :: Query.TxE Error.QErr Types.MetadataDbId
 getDbId =
   Types.MetadataDbId . runIdentity . Query.getRow
     <$> Query.withQE
@@ -75,7 +94,7 @@ getPgVersion = Types.PGVersion <$> Query.serverVersion
 -- command parser, then process the subcommand raw values if
 -- necessary.
 mkHGEOptions ::
-  EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
+  Logging.EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
 mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
   dbUrl <- processPostgresConnInfo rawDbUrl
   metadataDbUrl <- withOption rawMetadataDbUrl metadataDbUrlOption
@@ -94,7 +113,7 @@ mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
 -- vars.
 processPostgresConnInfo ::
   PostgresConnInfo (Maybe PostgresConnInfoRaw) ->
-  WithEnv (PostgresConnInfo (Maybe UrlConf))
+  WithEnv (PostgresConnInfo (Maybe Common.UrlConf))
 processPostgresConnInfo PostgresConnInfo {..} = do
   withEnvRetries <- withOption _pciRetries retriesNumOption
   databaseUrl <- rawConnInfoToUrlConf _pciDatabaseConn
@@ -103,7 +122,7 @@ processPostgresConnInfo PostgresConnInfo {..} = do
 -- | A helper function for 'processPostgresConnInfo' which fetches
 -- postgres connection info from the 'WithEnv' and merges it with the
 -- arg parser result.
-rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe UrlConf)
+rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe Common.UrlConf)
 rawConnInfoToUrlConf maybeRawConnInfo = do
   env <- ask
   let databaseUrlEnvVar = _envVar databaseUrlOption
@@ -126,7 +145,7 @@ rawConnInfoToUrlConf maybeRawConnInfo = do
 
 -- | Merge the results of the serve subcommmand arg parser with
 -- corresponding values from the 'WithEnv' context.
-mkServeOptions :: forall impl. EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
+mkServeOptions :: forall impl. Logging.EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
 mkServeOptions ServeOptionsRaw {..} = do
   soPort <- withOptionDefault rsoPort servePortOption
   soHost <- withOptionDefault rsoHost serveHostOption
@@ -185,23 +204,22 @@ mkServeOptions ServeOptionsRaw {..} = do
   soDefaultNamingConvention <- withOption rsoDefaultNamingConvention defaultNamingConventionOption
   soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption
 
-  pure $
-    ServeOptions {..}
+  pure ServeOptions {..}
   where
     mkConnParams ConnParamsRaw {..} = do
-      cpStripes <- withOptionDefault rcpStripes pgStripesOption
+      cpStripes <- Numeric.getNonNegativeInt <$> withOptionDefault rcpStripes pgStripesOption
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
-      cpConns <- withOptionDefault rcpConns pgConnsOption
-      cpIdleTime <- withOptionDefault rcpIdleTime pgTimeoutOption
+      cpConns <- Numeric.getNonNegativeInt <$> withOptionDefault rcpConns pgConnsOption
+      cpIdleTime <- Numeric.getNonNegativeInt <$> withOptionDefault rcpIdleTime pgTimeoutOption
       cpAllowPrepare <- withOptionDefault rcpAllowPrepare pgUsePreparedStatementsOption
       -- TODO: Add newtype to allow this:
       cpMbLifetime <- do
-        lifetime <- withOptionDefault rcpConnLifetime pgConnLifetimeOption
+        lifetime <- Numeric.getNonNegative <$> withOptionDefault rcpConnLifetime pgConnLifetimeOption
         if lifetime == 0
           then pure Nothing
           else pure (Just lifetime)
-      cpTimeout <- withOption rcpPoolTimeout pgPoolTimeoutOption
+      cpTimeout <- fmap Numeric.getNonNegative <$> withOption rcpPoolTimeout pgPoolTimeoutOption
       let cpCancel = True
       return $
         Query.ConnParams {..}
@@ -209,7 +227,7 @@ mkServeOptions ServeOptionsRaw {..} = do
     mkAuthHook (AuthHookRaw mUrl mType) = do
       mUrlEnv <- withOption mUrl authHookOption
       -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
-      -- TODO (from master):- drop this in next major update (2020-08-21)
+      -- TODO (from master):- drop this in next major update <--- (NOTE: This comment is from 2020-08-21)
       authMode <-
         onNothing
           mType
