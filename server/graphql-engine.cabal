@@ -1254,7 +1254,6 @@ test-suite tests-hspec
     Test.InsertDefaultsSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
-    Test.ObjectRelationshipsLimitSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
     Test.Queries.Directives.IncludeAndSkipSpec
@@ -1274,6 +1273,7 @@ test-suite tests-hspec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.InsertOnConflict8260Spec
     Test.Regression.NullsOrderParsing8780Spec
+    Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
