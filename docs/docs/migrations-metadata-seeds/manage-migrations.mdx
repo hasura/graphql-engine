@@ -47,8 +47,12 @@ Migrations are saved in a series or "versions" of Unix nanosecond timestamped di
 Usually Migrations are created step-by-step whenever you make a change to our database schema on the Console served by
 the Hasura CLI.
 
-:::info Note Only changes to the database schema made using the Console served by the Hasura CLI will be tracked with
-Migrations. Changes made using the Console served by the Hasura Server itself at `/console` will not be tracked. :::
+:::info Note
+
+Only changes to the database schema made using the Console served by the Hasura CLI will be tracked with
+Migrations. Changes made using the Console served by the Hasura Server itself at `/console` will not be tracked.
+
+:::
 
 ### Create an initial Migration with the current database schema
 
