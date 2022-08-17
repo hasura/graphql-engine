@@ -289,9 +289,13 @@ hasura deploy --endpoint http://another-server-instance.hasura.app
 This command will apply Migrations and Metadata on the new Hasura instance and make sure that the Metadata is consistent
 with the underlying database schema.
 
-:::info Note If you need an automated way of applying Migrations and Metadata, take a look at the
+:::info Note
+
+If you need an automated way of applying Migrations and Metadata, take a look at the
 [cli-migrations](/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply
-Migrations and Metadata and then start the Hasura Server. :::
+Migrations and Metadata and then start the Hasura Server.
+
+:::
 
 If you open the Console of the new instance, you can see that our three tables have been created and tracked:
 
