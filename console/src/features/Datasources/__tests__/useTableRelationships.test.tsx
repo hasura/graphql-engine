@@ -72,11 +72,13 @@ const server = setupServer(
     if (
       (req.body as { type: string; args: Record<string, any> }).type ===
       'export_metadata'
-    )
+    ) {
       return res(
         ctx.status(200),
         ctx.json(export_metadata_response_to_get_source_kind)
       );
+    }
+    return Promise.resolve();
   }),
   rest.post('http://localhost/v2/query', (req, res, ctx) => {
     if (
@@ -94,7 +96,7 @@ describe('@features/Datasources/useTableRelationships hook', () => {
   beforeAll(() => server.listen());
   afterAll(() => server.close());
 
-  it('should return success when all the correct paramters are passed for a postgres table', async () => {
+  it('should return success when all the correct parameters are passed for a postgres table', async () => {
     const { result, waitFor } = renderHook(
       () =>
         useTableRelationships({

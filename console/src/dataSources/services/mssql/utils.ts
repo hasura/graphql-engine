@@ -77,10 +77,12 @@ const getFormattedValue = (
   if (
     SQLServerTypes.character.includes(type) ||
     SQLServerTypes.dateTime.includes(type)
-  )
+  ) {
     return `"${value}"`;
+  }
 
   if (SQLServerTypes.numeric.includes(type)) return value;
+  return undefined;
 };
 
 const RqlToGraphQlOp = (op: string) => {

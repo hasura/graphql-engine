@@ -372,7 +372,9 @@ const getRemoteFieldObject = (
   depth: number,
   maxDepth: number
 ): RemoteField | InputArgumentsType | undefined => {
-  if (depth > maxDepth) return;
+  if (depth > maxDepth) {
+    return;
+  }
   const obj: RemoteField | InputArgumentsType = {};
   const depthRemoteFields: string[] = ukSplit.map(uk => uk[depth] ?? '');
 

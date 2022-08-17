@@ -430,8 +430,10 @@ export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
 export const isFeatureSupported = (
   feature: Path<DeepRequired<SupportedFeaturesType>>
 ) => {
-  if (dataSource.supportedFeatures)
+  if (dataSource.supportedFeatures) {
     return get(dataSource.supportedFeatures, feature);
+  }
+  return false;
 };
 
 export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>

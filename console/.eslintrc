@@ -33,6 +33,7 @@
         "properties": "never"
       }
     ],
+    "consistent-return": "off",
     "indent": "off",
     "no-console": 0,
     "arrow-parens": 0,
@@ -50,7 +51,6 @@
     "no-prototype-builtins": 0,
     "array-callback-return": 0,
     "no-useless-concat": 0,
-    "consistent-return": 0,
     "class-methods-use-this": 0,
     "arrow-body-style": 0,
     "prefer-template": 0,
@@ -174,7 +174,8 @@
         "camelcase": "off",
         "no-param-reassign": "off",
         "no-use-before-define": "off",
-        "consistent-return": "off","import/no-extraneous-dependencies": [
+        "consistent-return": "off",
+        "import/no-extraneous-dependencies": [
           "error",
           {
             "devDependencies": [

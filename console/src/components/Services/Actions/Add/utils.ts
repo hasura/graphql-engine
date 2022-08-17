@@ -38,6 +38,7 @@ const getArgObjFromDefinition = (
       [name]: obj,
     };
   }
+  return {};
 };
 
 export const getActionRequestSampleInput = (

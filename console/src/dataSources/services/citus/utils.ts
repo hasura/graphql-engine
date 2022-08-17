@@ -84,10 +84,12 @@ const getFormattedValue = (
   if (
     CitusDataTypes.character.includes(type) ||
     CitusDataTypes.dateTime.includes(type)
-  )
+  ) {
     return `"${value}"`;
+  }
 
   if (CitusDataTypes.numeric.includes(type)) return value;
+  return undefined;
 };
 
 const getFullQueryName = getFullQueryNameBase('public');
@@ -501,8 +503,9 @@ const getDeleteRowRequestBody = ({
 const processDeleteRowData = (data: Record<string, any>) => {
   try {
     if (data.errors) throw new Error(data.errors[0].message);
-    if (data?.data?.delete_row?.affected_rows)
+    if (data?.data?.delete_row?.affected_rows) {
       return data?.data?.delete_row?.affected_rows;
+    }
     throw new Error('Invalid response');
   } catch (err) {
     if (isConsoleError(err)) {
@@ -561,7 +564,9 @@ const getBulkDeleteRowRequestBody = ({
 
 const processBulkDeleteRowData = (data: Record<string, any>) => {
   try {
-    if (data.errors) throw new Error(data.errors[0].message);
+    if (data.errors) {
+      throw new Error(data.errors[0].message);
+    }
 
     if (data.data) {
       const res = Object.keys(data.data)
@@ -575,6 +580,7 @@ const processBulkDeleteRowData = (data: Record<string, any>) => {
       throw err;
     }
   }
+  return undefined;
 };
 
 export const generateBulkDeleteRowRequest =

@@ -31,7 +31,9 @@ interface Props {
 const getIcon = (
   icon: React.ReactElement | React.ReactElement[] | undefined
 ) => {
-  if (!icon) return;
+  if (!icon) {
+    return undefined;
+  }
 
   try {
     if ((icon as React.ReactElement[])?.length)

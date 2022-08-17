@@ -61,7 +61,7 @@ Array [
 ]
 `;
 
-exports[`@features/Datasources/useTableRelationships hook should return success when all the correct paramters are passed for a postgres table 1`] = `
+exports[`@features/Datasources/useTableRelationships hook should return success when all the correct parameters are passed for a postgres table 1`] = `
 Array [
   Object {
     "from": Object {

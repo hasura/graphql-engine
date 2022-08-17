@@ -80,20 +80,20 @@ const Dropdown: React.VFC<DropdownProps> = ({
   const dismissDropdown = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const dataElement = getParentNodeByAttribute(e.target, 'data-element');
+      if (!dataElement || dataElement.getAttribute('data-element') !== nodeId) {
+        setIsOpen(false);
+      }
+    };
     if (isOpen) {
-      const handler = (e: MouseEvent) => {
-        const dataElement = getParentNodeByAttribute(e.target, 'data-element');
-        if (
-          !dataElement ||
-          dataElement.getAttribute('data-element') !== nodeId
-        ) {
-          setIsOpen(false);
-        }
-      };
       document.addEventListener('click', handler);
-
-      return () => document.removeEventListener('click', handler);
     }
+    return () => {
+      if (isOpen) {
+        document.removeEventListener('click', handler);
+      }
+    };
   }, [isOpen, nodeId]);
 
   return (

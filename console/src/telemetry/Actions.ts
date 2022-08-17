@@ -330,6 +330,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
               return error;
             });
         }
+        return null;
       })
       .catch(err => {
         console.error(
@@ -400,6 +401,7 @@ const loadConsoleOpts =
           }
           return Promise.resolve();
         }
+        return null;
       },
       (error: Error) => {
         console.error(

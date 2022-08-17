@@ -32,6 +32,7 @@ const getRelationIcon = (type: RelationshipSourceType) => {
         title="Remote schema"
       />
     );
+  return null;
 };
 
 type SourceColumnCellType = {

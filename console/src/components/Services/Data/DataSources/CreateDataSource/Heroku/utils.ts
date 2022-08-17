@@ -59,6 +59,7 @@ const installPostgresOnApp = (herokuApp: HerokuApp, session: HerokuSession) => {
         throw new Error(`Error from Heroku: ${errorBody.message || ''}`);
       });
     }
+    return Promise.resolve();
   });
 };
 
