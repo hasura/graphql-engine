@@ -36,7 +36,8 @@ capabilities =
             API.cMutations = Nothing,
             API.cSubscriptions = Nothing,
             API.cFiltering = Nothing,
-            API.cRelationships = Just API.RelationshipCapabilities {}
+            API.cRelationships = Just API.RelationshipCapabilities {},
+            API.cMetrics = Just API.MetricsCapabilities {}
           },
       crConfigSchemaResponse =
         API.ConfigSchemaResponse
@@ -340,12 +341,16 @@ mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ 
 healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
 healthcheckHandler _sourceName _config = pure NoContent
 
+metricsHandler :: Handler Text
+metricsHandler = pure "# NOTE: Metrics would go here."
+
 dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> Server API.Api
 dcMockableServer mcfg mquery mQueryConfig =
   mockCapabilitiesHandler mcfg
     :<|> mockSchemaHandler mcfg mQueryConfig
     :<|> mockQueryHandler mcfg mquery mQueryConfig
     :<|> healthcheckHandler
+    :<|> metricsHandler
 
 mockAgentPort :: Warp.Port
 mockAgentPort = 65006

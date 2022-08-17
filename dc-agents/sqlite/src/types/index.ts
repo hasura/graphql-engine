@@ -24,6 +24,7 @@ export type { ConfigSchemaResponse } from './models/ConfigSchemaResponse';
 export type { Expression } from './models/Expression';
 export type { Field } from './models/Field';
 export type { FilteringCapabilities } from './models/FilteringCapabilities';
+export type { MetricsCapabilities } from './models/MetricsCapabilities';
 export type { MutationCapabilities } from './models/MutationCapabilities';
 export type { NotExpression } from './models/NotExpression';
 export type { NullColumnFieldValue } from './models/NullColumnFieldValue';

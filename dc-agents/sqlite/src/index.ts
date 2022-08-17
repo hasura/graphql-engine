@@ -1,15 +1,15 @@
-﻿import Fastify                                         from 'fastify';
-import FastifyCors                                     from '@fastify/cors';
-import { getSchema }                                   from './schema';
-import { queryData }                                   from './query';
-import { getConfig }                                   from './config';
-import { CapabilitiesResponse, capabilitiesResponse}   from './capabilities';
-import { connect }                                     from './db';
-import { envToBool }                                   from './util';
-import { QueryResponse, SchemaResponse, QueryRequest } from './types';
-import metrics                                         from 'fastify-metrics';
-import prometheus                                      from 'prom-client';
-import * as fs                                         from 'fs'
+﻿import Fastify from 'fastify';
+import FastifyCors from '@fastify/cors';
+import { getSchema } from './schema';
+import { queryData } from './query';
+import { getConfig } from './config';
+import { capabilitiesResponse } from './capabilities';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse } from './types';
+import { connect } from './db';
+import { envToBool } from './util';
+import metrics from 'fastify-metrics';
+import prometheus from 'prom-client';
+import * as fs from 'fs'
 
 const port = Number(process.env.PORT) || 8100;
 

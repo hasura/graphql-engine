@@ -4,10 +4,12 @@ import Command (AgentCapabilities (..), Command (..), TestOptions (..), parseCom
 import Control.Exception (throwIO)
 import Control.Monad ((>=>))
 import Data.Aeson.Text (encodeToLazyText)
+import Data.Foldable (for_)
 import Data.Proxy (Proxy (..))
 import Data.Text.Lazy.IO qualified as Text
 import Hasura.Backends.DataConnector.API (Routes (..), apiClient, openApiSchema)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.API.V0.Capabilities as API
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
@@ -17,6 +19,7 @@ import Test.Hspec (Spec)
 import Test.Hspec.Core.Runner (runSpec)
 import Test.Hspec.Core.Util (filterPredicate)
 import Test.Hspec.Runner (Config (..), defaultConfig, evaluateSummary)
+import Test.MetricsSpec qualified
 import Test.QuerySpec qualified
 import Test.SchemaSpec qualified
 import Prelude
@@ -30,6 +33,7 @@ tests api sourceName agentConfig capabilities = do
   Test.CapabilitiesSpec.spec api agentConfig capabilities
   Test.SchemaSpec.spec api sourceName agentConfig
   Test.QuerySpec.spec api sourceName agentConfig capabilities
+  for_ (API.cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
 
 main :: IO ()
 main = do

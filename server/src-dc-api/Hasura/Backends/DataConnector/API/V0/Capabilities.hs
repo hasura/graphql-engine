@@ -10,6 +10,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     BooleanOperators (..),
     ComparisonOperators (..),
     RelationshipCapabilities (..),
+    MetricsCapabilities (..),
     CapabilitiesResponse (..),
     emptyCapabilities,
   )
@@ -35,14 +36,15 @@ data Capabilities = Capabilities
     cMutations :: Maybe MutationCapabilities,
     cSubscriptions :: Maybe SubscriptionCapabilities,
     cFiltering :: Maybe FilteringCapabilities,
-    cRelationships :: Maybe RelationshipCapabilities
+    cRelationships :: Maybe RelationshipCapabilities,
+    cMetrics :: Maybe MetricsCapabilities
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 emptyCapabilities :: Capabilities
-emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing
+emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -53,6 +55,7 @@ instance HasCodec Capabilities where
         <*> optionalField "subscriptions" "The agent's subscription capabilities" .= cSubscriptions
         <*> optionalField "filtering" "The agent's filtering capabilities" .= cFiltering
         <*> optionalField "relationships" "The agent's relationship capabilities" .= cRelationships
+        <*> optionalField "metrics" "The agent's metrics capabilities" .= cMetrics
 
 data QueryCapabilities = QueryCapabilities
   { qcSupportsPrimaryKeys :: Bool
@@ -90,6 +93,15 @@ data RelationshipCapabilities = RelationshipCapabilities {}
 
 instance HasCodec RelationshipCapabilities where
   codec = object "RelationshipCapabilities" $ pure RelationshipCapabilities
+
+data MetricsCapabilities = MetricsCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec MetricsCapabilities
+
+instance HasCodec MetricsCapabilities where
+  codec =
+    object "MetricsCapabilities" $ pure MetricsCapabilities
 
 data FilteringCapabilities = FilteringCapabilities
   { fcBooleanOperators :: BooleanOperators,

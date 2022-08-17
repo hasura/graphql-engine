@@ -1,17 +1,19 @@
-import { ConfigSchemaResponse, configSchema } from "./config"
-
-export type Relationships = {}
-
-export type Capabilities = {
-  relationships: Relationships
-}
-
-export type CapabilitiesResponse = {
-  capabilities: Capabilities,
-  configSchemas: ConfigSchemaResponse,
-}
+import { configSchema } from "./config"
+import { CapabilitiesResponse } from "./types"
+import { envToBool } from "./util"
 
 export const capabilitiesResponse: CapabilitiesResponse = {
-  capabilities: { relationships: {}},
-  configSchemas: configSchema
+  configSchemas: configSchema,
+  capabilities: {
+    filtering: {
+      booleanOperators: {},
+      comparisonOperators: {}
+    },
+    queries: {
+      supportsPrimaryKeys: true
+    },
+    relationships: {},
+    ... ( envToBool('METRICS') ?  { metrics: {} } : {} )
+  },
 }
+
