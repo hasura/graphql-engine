@@ -79,6 +79,7 @@ const DBCreation: React.FC<Props> = ({
                   envVar,
                   dbName,
                 },
+                extensionsSchema: 'heroku_ext',
               }),
               () => {
                 startHerokuDBURLSync(envVar, appName, appID);
