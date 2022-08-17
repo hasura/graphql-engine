@@ -118,7 +118,7 @@ You can create a table containing the values of a PG enum by executing the follo
 
 ```sql
 CREATE TABLE "<my_enum_table>" (value TEXT PRIMARY KEY);
-INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>")))::text);
+INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>"))::text);
 ```
 
 :::
