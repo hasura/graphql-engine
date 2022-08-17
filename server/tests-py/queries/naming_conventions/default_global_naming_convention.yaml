@@ -56,12 +56,12 @@
   response:
     data:
       authorLocal:
-      - authorId: 1
-        name: 'Author 1'
-        __typename: AuthorLocal
-      - authorId: 2
-        name: 'Author 2'
-        __typename: AuthorLocal
+        - authorId: 1
+          name: "Author 1"
+          __typename: AuthorLocal
+        - authorId: 2
+          name: "Author 2"
+          __typename: AuthorLocal
   query:
     query: |
       query {
@@ -77,12 +77,12 @@
   status: 200
   response:
     data:
-        a:
+      a:
         - b: 1
-          c: 'Author 1'
+          c: "Author 1"
           d: AuthorLocal
         - b: 2
-          c: 'Author 2'
+          c: "Author 2"
           d: AuthorLocal
   query:
     query: |
@@ -101,7 +101,7 @@
     data:
       authorLocalByPk:
         authorId: 1
-        name: 'Author 1'
+        name: "Author 1"
         __typename: AuthorLocal
   query:
     query: |
@@ -143,9 +143,9 @@
       insertAuthorLocal:
         __typename: AuthorLocalMutationResponse
         returning:
-        - __typename: AuthorLocal
-          authorId: 3
-          name: Author 3
+          - __typename: AuthorLocal
+            authorId: 3
+            name: Author 3
   query:
     query: |
       mutation MyMutation {
