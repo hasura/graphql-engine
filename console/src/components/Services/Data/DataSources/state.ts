@@ -84,6 +84,7 @@ type DefaultStateProps = {
     envVar?: string;
     dbName?: string;
   };
+  extensionsSchema?: string;
 };
 
 export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
@@ -97,6 +98,9 @@ export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
     envVarState: {
       envVar: props?.dbConnection.envVar || '',
     },
+    ...(props?.extensionsSchema && {
+      extensionsSchema: props?.extensionsSchema,
+    }),
   };
 };
 
