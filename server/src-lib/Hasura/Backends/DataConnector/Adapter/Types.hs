@@ -3,7 +3,6 @@
 module Hasura.Backends.DataConnector.Adapter.Types
   ( ConnSourceConfig (..),
     SourceConfig (..),
-    DataConnectorBackendConfig,
     DataConnectorName (..),
     DataConnectorOptions (..),
     CountType (..),
@@ -110,8 +109,6 @@ newtype DataConnectorName = DataConnectorName {unDataConnectorName :: NonEmptyTe
   deriving anyclass (Cacheable, NFData)
 
 instance Witch.From DataConnectorName NonEmptyText
-
-type DataConnectorBackendConfig = InsOrdHashMap DataConnectorName DataConnectorOptions
 
 data DataConnectorOptions = DataConnectorOptions
   {_dcoUri :: BaseUrl}

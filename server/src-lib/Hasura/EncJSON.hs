@@ -9,6 +9,8 @@ module Hasura.EncJSON
     encJFromJValue,
     encJFromChar,
     encJFromText,
+    encJFromNonEmptyText,
+    encJFromBool,
     encJFromBS,
     encJFromLBS,
     encJFromList,
@@ -26,6 +28,8 @@ import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Encoding qualified as TE
+import Data.Text.NonEmpty (NonEmptyText)
+import Data.Text.NonEmpty qualified as NET
 import Data.Vector qualified as V
 import Hasura.Prelude
 
@@ -78,6 +82,16 @@ encJFromChar = EncJSON . BB.charUtf8
 encJFromText :: Text -> EncJSON
 encJFromText = encJFromBuilder . TE.encodeUtf8Builder
 {-# INLINE encJFromText #-}
+
+encJFromNonEmptyText :: NonEmptyText -> EncJSON
+encJFromNonEmptyText = encJFromBuilder . TE.encodeUtf8Builder . NET.unNonEmptyText
+{-# INLINE encJFromNonEmptyText #-}
+
+encJFromBool :: Bool -> EncJSON
+encJFromBool = \case
+  False -> encJFromText "false"
+  True -> encJFromText "true"
+{-# INLINE encJFromBool #-}
 
 encJFromList :: [EncJSON] -> EncJSON
 encJFromList =
