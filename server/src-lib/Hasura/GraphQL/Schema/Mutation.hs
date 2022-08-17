@@ -44,6 +44,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -174,9 +175,10 @@ tableFieldsInput ::
   m (Parser 'Input n (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)))
 tableFieldsInput sourceInfo tableInfo =
   P.memoizeOn 'tableFieldsInput (_siName sourceInfo, tableName) do
-    tableGQLName <- getTableGQLName tableInfo
+    tCase <- asks getter
+    tableGQLName <- getTableIdentifierName tableInfo
     objectFields <- traverse mkFieldParser (Map.elems allFields)
-    objectName <- mkTypename $ tableGQLName <> Name.__insert_input
+    objectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableInsertInputTypeName tableGQLName
     let objectDesc = G.Description $ "input type for inserting data into table " <>> tableName
     pure $ P.object objectName (Just objectDesc) $ coalesceFields objectFields
   where
@@ -263,15 +265,16 @@ objectRelationshipInput ::
   TableInfo b ->
   m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (IR.UnpreparedValue b))))
 objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
+  tCase <- asks getter
   roleName <- retrieve scRole
   let permissions = getRolePermInfo roleName tableInfo
       updatePerms = _permUpd permissions
   insertPerms <- hoistMaybe $ _permIns permissions
   lift $ P.memoizeOn 'objectRelationshipInput (_siName sourceInfo, tableName) do
-    tableGQLName <- getTableGQLName tableInfo
+    tableGQLName <- getTableIdentifierName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
-    inputName <- mkTypename $ tableGQLName <> Name.__obj_rel_insert_input
+    inputName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableObjRelInsertInputTypeName $ tableGQLName
     let objectName = Name._data
         inputDesc = G.Description $ "input type for inserting object relation for remote table " <>> tableName
         inputParser = do
@@ -297,15 +300,16 @@ arrayRelationshipInput ::
   TableInfo b ->
   m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (IR.UnpreparedValue b))))
 arrayRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
+  tCase <- asks getter
   roleName <- retrieve scRole
   let permissions = getRolePermInfo roleName tableInfo
       updatePerms = _permUpd permissions
   insertPerms <- hoistMaybe $ _permIns permissions
   lift $ P.memoizeOn 'arrayRelationshipInput (_siName sourceInfo, tableName) do
-    tableGQLName <- getTableGQLName tableInfo
+    tableGQLName <- getTableIdentifierName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
-    inputName <- mkTypename $ tableGQLName <> Name.__arr_rel_insert_input
+    inputName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableArrRelInsertInputTypeName tableGQLName
     let objectsName = Name._data
         inputDesc = G.Description $ "input type for inserting array relation for remote table " <>> tableName
         inputParser = do
@@ -446,14 +450,15 @@ mutationSelectionSet ::
 mutationSelectionSet sourceInfo tableInfo =
   P.memoizeOn 'mutationSelectionSet (_siName sourceInfo, tableName) do
     roleName <- retrieve scRole
-    tableGQLName <- getTableGQLName tableInfo
+    tCase <- asks getter
+    tableGQLName <- getTableIdentifierName tableInfo
     returning <- runMaybeT do
       _permissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       tableSet <- MaybeT $ tableSelectionList sourceInfo tableInfo
       let returningName = Name._returning
           returningDesc = "data from the rows affected by the mutation"
       pure $ IR.MRet <$> P.subselection_ returningName (Just returningDesc) tableSet
-    selectionName <- mkTypename $ tableGQLName <> Name.__mutation_response
+    selectionName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableMutationResponseTypeName tableGQLName
     let affectedRowsName = Name._affected_rows
         affectedRowsDesc = "number of rows affected by the mutation"
         selectionDesc = G.Description $ "response of any mutation on the table " <>> tableName

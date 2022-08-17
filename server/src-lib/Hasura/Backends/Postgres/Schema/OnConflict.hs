@@ -37,7 +37,7 @@ import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -80,12 +80,12 @@ conflictObjectParser ::
   NonEmpty (UniqueConstraint ('Postgres pgKind)) ->
   m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 conflictObjectParser sourceInfo tableInfo maybeUpdatePerms constraints = do
+  tCase <- asks getter
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
   constraintParser <- conflictConstraint constraints sourceInfo tableInfo
   whereExpParser <- boolExp sourceInfo tableInfo
-  tableGQLName <- getTableGQLName tableInfo
-  objectName <- mkTypename $ tableGQLName <> Name.__on_conflict
-
+  tableGQLName <- getTableIdentifierName tableInfo
+  objectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkOnConflictTypeName tableGQLName
   let objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
       (presetColumns, updateFilter) = fromMaybe (HM.empty, IR.gBoolExpTrue) $ do
         UpdPermInfo {..} <- maybeUpdatePerms
@@ -138,7 +138,8 @@ conflictConstraint ::
   m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 conflictConstraint constraints sourceInfo tableInfo =
   P.memoizeOn 'conflictConstraint (_siName sourceInfo, tableName) $ do
-    tableGQLName <- getTableGQLName tableInfo
+    tCase <- asks getter
+    tableGQLName <- getTableIdentifierName tableInfo
     constraintEnumValues <- for
       constraints
       \c@(UniqueConstraint (Constraint {_cName}) cCols) -> do
@@ -152,7 +153,7 @@ conflictConstraint constraints sourceInfo tableInfo =
               P.EnumValueInfo,
             c
           )
-    enumName <- mkTypename $ tableGQLName <> Name.__constraint
+    enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableConstraintTypeName tableGQLName
     let enumDesc = G.Description $ "unique or primary key constraints on table " <>> tableName
     pure $ P.enum enumName (Just enumDesc) constraintEnumValues
   where

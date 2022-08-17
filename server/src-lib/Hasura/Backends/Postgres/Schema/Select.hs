@@ -15,6 +15,7 @@ import Control.Lens hiding (index)
 import Data.Has (getter)
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Sequence qualified as Seq
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Data.Traversable (mapAccumL)
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
@@ -43,7 +44,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (MkRootFieldName (..))
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -114,11 +115,11 @@ selectFunctionAggregate mkRootFieldName sourceInfo fi@FunctionInfo {..} descript
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
-    tableGQLName <- getTableGQLName tableInfo
+    tableGQLName <- getTableIdentifierName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLAggregateName _fiGQLArgsName
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- mkTypename =<< pure (tableGQLName <> Name.__aggregate)
+    selectionName <- mkTypename =<< pure (applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName)
     let aggregateFieldName = runMkRootFieldName mkRootFieldName _fiGQLAggregateName
         argsParser = liftA2 (,) functionArgsParser tableArgsParser
         aggregationParser =
@@ -311,6 +312,7 @@ functionArgs ::
   Seq.Seq (FunctionInputArgument ('Postgres pgKind)) ->
   m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
+  tCase <- asks getter
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
   -- parsers, in three groups: session argument, optional arguments, and
@@ -332,15 +334,15 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
         -- There are user-provided arguments: we need to parse an args object.
         argumentParsers <- sequenceA $ optional <> mandatory
         objectName <-
-          mkTypename
+          mkTypename . applyTypeNameCaseIdentifier tCase
             =<< case functionTrackedAs of
               FTAComputedField computedFieldName _sourceName tableName -> do
                 tableInfo <- askTableInfo sourceInfo tableName
                 computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
-                tableGQLName <- getTableGQLName @('Postgres pgKind) tableInfo
-                pure $ computedFieldGQLName <> Name.__ <> tableGQLName <> Name.__args
+                tableGQLName <- getTableIdentifierName @('Postgres pgKind) tableInfo
+                pure $ mkFunctionArgsTypeName computedFieldGQLName tableGQLName
               FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
-                pure cfnArgsName
+                pure $ C.fromCustomName cfnArgsName
         let fieldName = Name._args
             fieldDesc =
               case functionTrackedAs of

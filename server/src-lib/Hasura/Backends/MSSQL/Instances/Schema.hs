@@ -182,7 +182,7 @@ msTableArgs sourceName tableInfo = do
 -- * Individual components
 
 msColumnParser ::
-  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'MSSQL ->
   G.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))

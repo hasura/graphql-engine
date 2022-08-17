@@ -36,6 +36,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
+import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
@@ -45,6 +46,7 @@ import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options (OptimizePermissionFilters (..))
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.OrderBy
@@ -274,10 +276,10 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift $ P.memoizeOn 'defaultSelectTableAggregate (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
-    tableGQLName <- getTableGQLName tableInfo
+    tableGQLName <- getTableIdentifierName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- mkTypename $ tableGQLName <> Name.__aggregate
+    selectionName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName
     let aggregationParser =
           P.nonNullableParser $
             parsedSelectionsToFields IR.TAFExp
@@ -375,6 +377,7 @@ defaultTableSelectionSet ::
   m (Maybe (Parser 'Output n (AnnotatedFields b)))
 defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
   roleName <- retrieve scRole
+  tCase <- asks getter
   _selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   schemaKind <- lift $ retrieve scSchemaKind
   -- If this check fails, it means we're attempting to build a Relay schema, but
@@ -383,8 +386,8 @@ defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
   -- must happen first, since we can't memoize a @Maybe Parser@.
   guard $ isHasuraSchema schemaKind || isJust (relayExtension @b)
   lift $ P.memoizeOn 'defaultTableSelectionSet (sourceName, tableName) do
-    tableGQLName <- getTableGQLName tableInfo
-    objectTypename <- mkTypename tableGQLName
+    tableGQLName <- getTableIdentifierName tableInfo
+    objectTypename <- mkTypename $ applyTypeNameCaseIdentifier tCase tableGQLName
     let xRelay = relayExtension @b
         tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
         tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
@@ -480,7 +483,9 @@ tableConnectionSelectionSet ::
   m (Maybe (Parser 'Output n (ConnectionFields b)))
 tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
   roleName <- retrieve scRole
-  tableGQLName <- lift $ getTableGQLName tableInfo
+  tCase <- asks getter
+  tableIdentifierName <- lift $ getTableIdentifierName tableInfo
+  let tableGQLName = applyTypeNameCaseIdentifier tCase tableIdentifierName
   void $ hoistMaybe $ tableSelectPermissions roleName tableInfo
   edgesParser <- MaybeT $ tableEdgesSelectionSet tableGQLName
   lift $ P.memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
@@ -870,13 +875,13 @@ tableAggregationFields ::
   m (Parser 'Output n (IR.AggregateFields b))
 tableAggregationFields sourceInfo tableInfo =
   P.memoizeOn 'tableAggregationFields (_siName sourceInfo, tableInfoName tableInfo) do
-    tableGQLName <- getTableGQLName tableInfo
     tCase <- asks getter
+    tableGQLName <- getTableIdentifierName tableInfo
     allColumns <- tableSelectColumns sourceInfo tableInfo
     let numericColumns = onlyNumCols allColumns
         comparableColumns = onlyComparableCols allColumns
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
-    selectName <- mkTypename $ tableGQLName <> Name.__aggregate_fields
+    selectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateFieldTypeName tableGQLName
     count <- countField
     makeTypename <- asks getter
     numericAndComparable <-
@@ -890,7 +895,7 @@ tableAggregationFields sourceInfo tableInfo =
                   for numericAggOperators $ \operator -> do
                     let fieldNameCase = applyFieldNameCaseCust tCase operator
                     numFields <- mkNumericAggFields operator numericColumns
-                    pure $ parseAggOperator makeTypename operator fieldNameCase tableGQLName numFields,
+                    pure $ parseAggOperator makeTypename operator fieldNameCase tCase tableGQLName numFields,
               -- operators on comparable columns
               if null comparableColumns
                 then Nothing
@@ -899,7 +904,7 @@ tableAggregationFields sourceInfo tableInfo =
                   pure $
                     comparisonAggOperators & map \operator ->
                       let fieldNameCase = applyFieldNameCaseCust tCase operator
-                       in parseAggOperator makeTypename operator fieldNameCase tableGQLName comparableFields
+                       in parseAggOperator makeTypename operator fieldNameCase tCase tableGQLName comparableFields
             ]
     let aggregateFields = count : numericAndComparable
     pure $
@@ -947,12 +952,13 @@ tableAggregationFields sourceInfo tableInfo =
       MkTypename ->
       G.Name ->
       G.Name ->
-      G.Name ->
+      NamingCase ->
+      GQLNameIdentifier ->
       [FieldParser n (IR.ColFld b)] ->
       FieldParser n (IR.AggregateField b)
-    parseAggOperator makeTypename operator fieldName tableGQLName columns =
+    parseAggOperator makeTypename operator fieldName tCase tableGQLName columns =
       let opText = G.unName operator
-          setName = runMkTypename makeTypename $ tableGQLName <> Name.__ <> operator <> Name.__fields
+          setName = runMkTypename makeTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggOperatorTypeName tableGQLName operator
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
