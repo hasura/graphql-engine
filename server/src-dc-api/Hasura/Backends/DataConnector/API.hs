@@ -5,6 +5,7 @@ module Hasura.Backends.DataConnector.API
     SchemaApi,
     QueryApi,
     ConfigHeader,
+    Prometheus,
     SourceNameHeader,
     SourceName,
     openApiSchema,
@@ -13,14 +14,20 @@ module Hasura.Backends.DataConnector.API
   )
 where
 
+import Control.Arrow (left)
+import Data.ByteString.Lazy as BL
 import Data.Data (Proxy (..))
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.OpenApi (OpenApi)
 import Data.Text (Text)
+import Data.Text.Encoding as TE
 import Hasura.Backends.DataConnector.API.V0 as V0
+import Network.HTTP.Media ((//), (/:))
 import Servant.API
 import Servant.API.Generic
 import Servant.Client (Client, ClientM, client)
 import Servant.OpenApi
+import Prelude (show)
 
 --------------------------------------------------------------------------------
 -- Servant Routes
@@ -48,6 +55,24 @@ type HealthApi =
     :> ConfigHeader Optional
     :> GetNoContent
 
+data Prometheus
+
+-- NOTE: This seems like quite a brittle definition and we may want to be
+--       more permissive about the allowed content-types. However for now
+--       we can just demand that agent authors pick one of the following.
+instance Accept Prometheus where
+  contentTypes _ =
+    "text" // "plain" /: ("version", "0.0.4") /: ("charset", "utf-8")
+      :| ["application" // "openmetrics-text" /: ("version", "0.0.1")]
+
+instance MimeRender Prometheus Text where
+  mimeRender _ t = BL.fromStrict (TE.encodeUtf8 t)
+
+instance MimeUnrender Prometheus Text where
+  mimeUnrender _ bs = left show (TE.decodeUtf8' (BL.toStrict bs))
+
+type MetricsApi = "metrics" :> Get '[Prometheus] Text
+
 type ConfigHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-Config" V0.Config
 
 type SourceNameHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-SourceName" SourceName
@@ -62,13 +87,15 @@ data Routes mode = Routes
     -- | 'POST /query'
     _query :: mode :- QueryApi,
     -- | 'GET /health'
-    _health :: mode :- HealthApi
+    _health :: mode :- HealthApi,
+    -- | 'GET /metrics'
+    _metrics :: mode :- MetricsApi
   }
   deriving stock (Generic)
 
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> HealthApi
+type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> HealthApi :<|> MetricsApi
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi

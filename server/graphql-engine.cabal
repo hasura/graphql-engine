@@ -368,6 +368,7 @@ library dc-api
                      , servant-openapi3
                      , text
                      , unordered-containers
+                     , http-media
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -1344,6 +1345,7 @@ test-suite tests-dc-api
     , Test.CapabilitiesSpec
     , Test.Expectations
     , Test.HealthSpec
+    , Test.MetricsSpec
     , Test.QuerySpec
     , Test.QuerySpec.AggregatesSpec
     , Test.QuerySpec.BasicSpec

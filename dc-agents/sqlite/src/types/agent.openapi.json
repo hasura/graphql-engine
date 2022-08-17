@@ -139,6 +139,22 @@
           }
         }
       }
+    },
+    "/metrics": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain;version=0.0.4;charset=utf-8": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -163,6 +179,9 @@
         "properties": {
           "filtering": {
             "$ref": "#/components/schemas/FilteringCapabilities"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/MetricsCapabilities"
           },
           "mutations": {
             "$ref": "#/components/schemas/MutationCapabilities"
@@ -211,6 +230,7 @@
         "type": "object"
       },
       "RelationshipCapabilities": {},
+      "MetricsCapabilities": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
