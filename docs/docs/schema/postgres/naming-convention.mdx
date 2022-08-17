@@ -151,6 +151,21 @@ For the above schema, a sample GraphQL query will look like the following with t
 `}
 />
 
+:::tip Behaviour of custom table name
+
+For the `graphql-default` naming convention and a [custom table name](/api-reference/syntax-defs.mdx#table-config)  for a given
+table/view, the following rules are followed:
+- The custom table name will not be modified (change of case) if it is the first entity for a given name.
+- The custom table name may be modified if the name is being prefixed by something.
+
+| Sl. no. | Custom table name | Select    | Select by pk  | Typename | Insert table one   |
+| ------- | ----------------- | --------- | ------------- | -------- | ------------------ |
+| 1       | table_one         | table_one | table_oneByPk | tableOne | insertTable_oneOne |
+| 2       | tableOne          | tableOne  | tableOneByPk  | tableOne | insertTableOneOne  |
+| 3       | TableOne          | TableOne  | TableOneByPk  | TableOne | insertTableOneOne  |
+
+:::
+
 ## Set default naming convention for all sources {#pg-default-naming-convention}
 
 For setting the default naming convention for all sources, set the environment variable

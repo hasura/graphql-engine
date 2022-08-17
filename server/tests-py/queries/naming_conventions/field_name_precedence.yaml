@@ -82,10 +82,10 @@
       authorDetails:
         - id: 1
           name: "Author 1"
-          __typename: AuthorDetails
+          __typename: authorDetails
         - id: 2
           name: "Author 2"
-          __typename: AuthorDetails
+          __typename: authorDetails
       articleLocal:
         - id: 1
           title: "Article 1"
@@ -116,7 +116,7 @@
       author_detail:
         id: 1
         name: "Author 1"
-        __typename: AuthorDetails
+        __typename: authorDetails
       articleLocalByPk:
         title: "New Article 1"
         __typename: ArticleLocal
@@ -162,7 +162,7 @@
   response:
     data:
       add_author:
-        __typename: AuthorDetails
+        __typename: authorDetails
         id: 3
         name: Author 3
   query:
@@ -181,7 +181,7 @@
   response:
     data:
       delete_one_author:
-        __typename: AuthorDetails
+        __typename: authorDetails
         id: 3
         name: Author 3
   query:

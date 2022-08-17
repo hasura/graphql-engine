@@ -16,7 +16,7 @@ where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
-import Data.Text.Casing
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Schema.Backend
@@ -32,6 +32,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization (applyTypeNameCaseIdentifier, mkTableSelectColumnTypeName, mkTableUpdateColumnTypeName)
 import Hasura.RQL.Types.Table
 import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -63,15 +64,14 @@ getTableIdentifierName ::
   forall b m.
   (Backend b, MonadError QErr m) =>
   TableInfo b ->
-  m (GQLNameIdentifier)
+  m (C.GQLNameIdentifier)
 getTableIdentifierName tableInfo =
   let coreInfo = _tiCoreInfo tableInfo
       tableName = _tciName coreInfo
-      tableCustomName = _tcCustomName $ _tciCustomConfig coreInfo
-   in maybe
-        (liftEither $ getTableIdentifier @b tableName)
-        (pure . (`Identifier` []))
+      tableCustomName = fmap C.fromCustomName $ _tcCustomName $ _tciCustomConfig coreInfo
+   in onNothing
         tableCustomName
+        (liftEither $ getTableIdentifier @b tableName)
 
 -- | Table select columns enum
 --
@@ -88,9 +88,10 @@ tableSelectColumnsEnum ::
   TableInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
 tableSelectColumnsEnum sourceInfo tableInfo = do
-  tableGQLName <- getTableGQLName @b tableInfo
+  tCase <- asks getter
+  tableGQLName <- getTableIdentifierName @b tableInfo
   columns <- tableSelectColumns sourceInfo tableInfo
-  enumName <- mkTypename $ tableGQLName <> Name.__select_column
+  enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableSelectColumnTypeName tableGQLName
   let description =
         Just $
           G.Description $
@@ -119,8 +120,9 @@ tableUpdateColumnsEnum ::
   m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum tableInfo = do
   roleName <- retrieve scRole
-  tableGQLName <- getTableGQLName tableInfo
-  enumName <- mkTypename $ tableGQLName <> Name.__update_column
+  tCase <- asks getter
+  tableGQLName <- getTableIdentifierName tableInfo
+  enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableUpdateColumnTypeName tableGQLName
   let tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
       enumValues = do
@@ -138,12 +140,13 @@ updateColumnsPlaceholderParser ::
   TableInfo backend ->
   m (Parser 'Both n (Maybe (Column backend)))
 updateColumnsPlaceholderParser tableInfo = do
+  tCase <- asks getter
   maybeEnum <- tableUpdateColumnsEnum tableInfo
   case maybeEnum of
     Just e -> pure $ Just <$> e
     Nothing -> do
-      tableGQLName <- getTableGQLName tableInfo
-      enumName <- mkTypename $ tableGQLName <> Name.__update_column
+      tableGQLName <- getTableIdentifierName tableInfo
+      enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableUpdateColumnTypeName tableGQLName
       pure $
         P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
           pure
