@@ -67,7 +67,7 @@ resolveSourceConfig' ::
   SourceName ->
   DC.ConnSourceConfig ->
   BackendSourceKind 'DataConnector ->
-  DC.DataConnectorBackendConfig ->
+  InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions ->
   Environment ->
   HTTP.Manager ->
   m (Either QErr DC.SourceConfig)

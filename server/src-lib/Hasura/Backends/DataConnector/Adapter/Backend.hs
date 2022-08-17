@@ -36,7 +36,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 type Unimplemented = ()
 
 instance Backend 'DataConnector where
-  type BackendConfig 'DataConnector = Adapter.DataConnectorBackendConfig
+  type BackendConfig 'DataConnector = InsOrdHashMap Adapter.DataConnectorName Adapter.DataConnectorOptions
   type SourceConfig 'DataConnector = Adapter.SourceConfig
   type SourceConnConfiguration 'DataConnector = Adapter.ConnSourceConfig
 
