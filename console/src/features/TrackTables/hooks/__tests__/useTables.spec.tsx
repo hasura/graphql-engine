@@ -1,23 +1,10 @@
-import React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
-import { QueryClient, QueryClientProvider } from 'react-query';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useTables, UseTablesProps, TrackableTable } from '../useTables';
 import { RunSQLResponse } from '../../../Datasources/types';
 import { Metadata } from '../../../../features/DataSource/types';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
-const createWrapper =
-  () =>
-  ({ children }: { children: React.ReactNode }) =>
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
 const metadataStub: Metadata = {
   version: 3,
@@ -74,6 +61,8 @@ describe('useTables', () => {
         })
       );
     });
+    console.log('in before block');
+
     it('returns the tracked tables', async () => {
       const dataSource: UseTablesProps['dataSource'] = {
         name: 'default',
@@ -81,7 +70,7 @@ describe('useTables', () => {
       const { result, waitForNextUpdate } = renderHook(
         () => useTables({ dataSource }),
         {
-          wrapper: createWrapper(),
+          wrapper,
         }
       );
 
@@ -127,11 +116,10 @@ describe('useTables', () => {
       };
       const { result, waitForNextUpdate } = renderHook(
         () => useTables({ dataSource }),
-        { wrapper: createWrapper() }
+        { wrapper }
       );
 
       await waitForNextUpdate();
-
       expect(result.current.error).toEqual(
         Error(`useTables.metadataSource not found`)
       );

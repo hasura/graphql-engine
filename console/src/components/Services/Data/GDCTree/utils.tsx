@@ -1,14 +1,12 @@
 import React from 'react';
 import { FaTable, FaDatabase, FaFolder } from 'react-icons/fa';
-import { DataSource, exportMetadata } from '@/features/DataSource';
-// eslint-disable-next-line no-restricted-imports
-import { httpClient } from '@/features/DataSource/api';
+import { DataSource, exportMetadata, NetworkArgs } from '@/features/DataSource';
 import { DataNode } from 'antd/lib/tree';
 import { GDC_TREE_VIEW_DEV } from '@/utils/featureFlags';
 import { GDCSource } from './types';
 
-const getSources = async () => {
-  const metadata = await exportMetadata();
+const getSources = async ({ httpClient }: NetworkArgs) => {
+  const metadata = await exportMetadata({ httpClient });
   const nativeDrivers = await DataSource(httpClient).getNativeDrivers();
   return metadata.sources
     .filter(source => !nativeDrivers.includes(source.kind))
@@ -66,8 +64,10 @@ const nest = (
   ];
 };
 
-export const getTreeData = async (): Promise<DataNode[]> => {
-  const sources = await getSources();
+export const getTreeData = async ({
+  httpClient,
+}: NetworkArgs): Promise<DataNode[]> => {
+  const sources = await getSources({ httpClient });
 
   const tree = sources.map(async source => {
     const tables = source.tables;

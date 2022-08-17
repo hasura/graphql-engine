@@ -1,9 +1,10 @@
 import { DataSource, Feature, exportMetadata } from '@/features/DataSource';
 import type { IntrospectedTable, MetadataTable } from '@/features/DataSource';
 import type { MetadataDataSource } from '@/metadata/types';
-import axios from 'axios';
 import uniqueId from 'lodash.uniqueid';
 import { useQuery } from 'react-query';
+import { useHttpClient } from '@/features/Network';
+import { useAppSelector } from '@/store';
 
 type DataSource = Pick<MetadataDataSource, 'name'>;
 
@@ -105,11 +106,15 @@ const getTrackableTables = (
     return trackableTable;
   });
 
-export const useTables = ({ dataSource }: UseTablesProps) =>
-  useQuery<TrackableTable[], Error>({
+export const useTables = ({ dataSource }: UseTablesProps) => {
+  const headers = useAppSelector(state => state.tables.dataHeaders);
+  const httpClient = useHttpClient({ headers });
+  return useQuery<TrackableTable[], Error>({
     queryKey: [dataSource.name, 'tables'],
     queryFn: async () => {
-      const metadata = await exportMetadata();
+      const metadata = await exportMetadata({
+        httpClient,
+      });
       const currentMetadataSource = metadata.sources?.find(
         source => source.name === dataSource.name
       );
@@ -117,7 +122,7 @@ export const useTables = ({ dataSource }: UseTablesProps) =>
       if (!currentMetadataSource)
         throw Error(`useTables.metadataSource not found`);
 
-      const introspectedTables = await DataSource(axios).introspectTables({
+      const introspectedTables = await DataSource(httpClient).introspectTables({
         dataSourceName: dataSource.name,
       });
 
@@ -136,3 +141,4 @@ export const useTables = ({ dataSource }: UseTablesProps) =>
       return trackableTables;
     },
   });
+};

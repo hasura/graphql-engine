@@ -15,10 +15,12 @@ import type {
   Table,
   SupportedDrivers,
   TableColumn,
+  GetTrackableTablesProps,
+  GetTableColumnsProps,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
-import { exportMetadata } from './api';
+import { exportMetadata, NetworkArgs } from './api';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -37,13 +39,11 @@ export type Database = {
       | Feature.NotImplemented
     >;
     getTrackableTables: (
-      dataSourceName: string,
-      configuration: any
+      props: GetTrackableTablesProps
     ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
     getDatabaseHierarchy: () => Promise<string[] | Feature.NotImplemented>;
     getTableColumns: (
-      dataSourceName: string,
-      table: Table
+      props: GetTableColumnsProps
     ) => Promise<TableColumn[] | Feature.NotImplemented>;
   };
   query?: {
@@ -60,8 +60,11 @@ const drivers: Record<SupportedDrivers, Database> = {
   gdc,
 };
 
-const getDatabaseMethods = async (dataSourceName: string) => {
-  const metadata = await exportMetadata();
+const getDatabaseMethods = async ({
+  dataSourceName,
+  httpClient,
+}: { dataSourceName: string } & NetworkArgs) => {
+  const metadata = await exportMetadata({ httpClient });
 
   const dataSource = metadata.sources.find(
     source => source.name === dataSourceName
@@ -76,7 +79,7 @@ const getDatabaseMethods = async (dataSourceName: string) => {
   return drivers[dataSource.kind];
 };
 
-export const DataSource = (hasuraFetch: AxiosInstance) => ({
+export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
     getSupportedDrivers: async () => {
       return supportedDrivers;
@@ -88,13 +91,13 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
   connectDB: {
     getConfigSchema: async (driver: SupportedDrivers) => {
       return drivers[driver].introspection?.getDatabaseConfiguration(
-        hasuraFetch
+        httpClient
       );
     },
     getFormSchema: async () => {
       const schemas = await Promise.all(
         Object.values(drivers).map(database =>
-          database.introspection?.getDatabaseConfiguration(hasuraFetch)
+          database.introspection?.getDatabaseConfiguration(httpClient)
         )
       );
 
@@ -127,7 +130,7 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
     },
   },
   introspectTables: async ({ dataSourceName }: { dataSourceName: string }) => {
-    const metadata = await exportMetadata();
+    const metadata = await exportMetadata({ httpClient });
 
     const dataSource = metadata.sources.find(
       source => source.name === dataSourceName
@@ -146,10 +149,11 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
     const getTrackableTables =
       drivers[dataSource.kind].introspection?.getTrackableTables;
     if (getTrackableTables)
-      return getTrackableTables(
-        dataSource.name,
-        (dataSource as any).configuration
-      );
+      return getTrackableTables({
+        dataSourceName: dataSource.name,
+        configuration: (dataSource as any).configuration,
+        httpClient,
+      });
     return Feature.NotImplemented;
   },
   getDatabaseHierarchy: async ({
@@ -157,7 +161,7 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
   }: {
     dataSourceName: string;
   }) => {
-    const metadata = await exportMetadata();
+    const metadata = await exportMetadata({ httpClient });
 
     const dataSource = metadata.sources.find(
       source => source.name === dataSourceName
@@ -187,13 +191,17 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
     dataSourceName: string;
     table: Table;
   }) => {
-    const database = await getDatabaseMethods(dataSourceName);
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
     if (!database) return [];
 
     const introspection = database.introspection;
     if (!introspection) return [];
 
-    const result = await introspection.getTableColumns(dataSourceName, table);
+    const result = await introspection.getTableColumns({
+      dataSourceName,
+      table,
+      httpClient,
+    });
     if (result === Feature.NotImplemented) return [];
 
     return result;
@@ -209,4 +217,5 @@ export type {
   IntrospectedTable,
   Table,
   MetadataTable,
+  NetworkArgs,
 };

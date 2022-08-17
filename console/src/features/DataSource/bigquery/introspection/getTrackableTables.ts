@@ -1,4 +1,5 @@
 import { runSQL } from '../../api';
+import { GetTrackableTablesProps } from '../../types';
 import { adaptIntrospectedBigQueryTables } from './utils';
 
 type BigQueryConfiguration = {
@@ -18,10 +19,11 @@ const getIntrospectionSqlQuery = (
 ) =>
   datasets.map(dataset => getDatasetIntrospectQuery(dataset)).join('union all');
 
-export const getTrackableTables = async (
-  dataSourceName: string,
-  configuration: BigQueryConfiguration
-) => {
+export const getTrackableTables = async ({
+  dataSourceName,
+  configuration,
+  httpClient,
+}: GetTrackableTablesProps) => {
   const introspectionSql = getIntrospectionSqlQuery(configuration.datasets);
 
   const tables = await runSQL({
@@ -30,6 +32,7 @@ export const getTrackableTables = async (
       kind: 'bigquery',
     },
     sql: introspectionSql,
+    httpClient,
   });
 
   return adaptIntrospectedBigQueryTables(tables);
