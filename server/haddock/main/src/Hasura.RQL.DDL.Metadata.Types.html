@@ -62,7 +62,7 @@
 </span><span id="line-62"></span><span class="hs-comment">-- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-clear-metadata</span><span>
 </span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="ClearMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ClearMetadata"><span class="hs-identifier hs-var">ClearMetadata</span></a></span></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ClearMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ClearMetadata"><span class="hs-identifier hs-var">ClearMetadata</span></a></span></span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689338086"><span id="local-6989586621689338088"><span id="local-6989586621689338090"><span class="annot"><span class="annottext">Int -&gt; ClearMetadata -&gt; ShowS
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357746"><span id="local-6989586621689357748"><span id="local-6989586621689357750"><span class="annot"><span class="annottext">Int -&gt; ClearMetadata -&gt; ShowS
 [ClearMetadata] -&gt; ShowS
 ClearMetadata -&gt; String
 (Int -&gt; ClearMetadata -&gt; ShowS)
@@ -77,7 +77,7 @@ show :: ClearMetadata -&gt; String
 $cshow :: ClearMetadata -&gt; String
 showsPrec :: Int -&gt; ClearMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; ClearMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689338081"><span id="local-6989586621689338083"><span class="annot"><span class="annottext">ClearMetadata -&gt; ClearMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357741"><span id="local-6989586621689357743"><span class="annot"><span class="annottext">ClearMetadata -&gt; ClearMetadata -&gt; Bool
 (ClearMetadata -&gt; ClearMetadata -&gt; Bool)
 -&gt; (ClearMetadata -&gt; ClearMetadata -&gt; Bool) -&gt; Eq ClearMetadata
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -87,10 +87,10 @@ $c/= :: ClearMetadata -&gt; ClearMetadata -&gt; Bool
 $c== :: ClearMetadata -&gt; ClearMetadata -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-special">$(</span><span id="local-6989586621689338072"><span id="local-6989586621689338074"><span id="local-6989586621689338076"><span id="local-6989586621689338078"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ClearMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span class="hs-special">$(</span><span id="local-6989586621689357732"><span id="local-6989586621689357734"><span id="local-6989586621689357736"><span id="local-6989586621689357738"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ClearMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689338066"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ClearMetadata"><span class="hs-identifier hs-type">ClearMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621689338064"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ClearMetadata
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357726"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ClearMetadata"><span class="hs-identifier hs-type">ClearMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621689357724"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ClearMetadata
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ClearMetadata -&gt; Parser ClearMetadata
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -101,7 +101,7 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-73"></span><span class="hs-comment">-- server as a JSON file.</span><span>
 </span><span id="line-74"></span><span class="hs-comment">--</span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-export-metadata</span><span>
-</span><span id="line-76"></span><span class="hs-keyword">data</span><span> </span><span id="ExportMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-var">ExportMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExportMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-var">ExportMetadata</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689338056"><span id="local-6989586621689338058"><span id="local-6989586621689338060"><span class="annot"><span class="annottext">Int -&gt; ExportMetadata -&gt; ShowS
+</span><span id="line-76"></span><span class="hs-keyword">data</span><span> </span><span id="ExportMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-var">ExportMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExportMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-var">ExportMetadata</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357716"><span id="local-6989586621689357718"><span id="local-6989586621689357720"><span class="annot"><span class="annottext">Int -&gt; ExportMetadata -&gt; ShowS
 [ExportMetadata] -&gt; ShowS
 ExportMetadata -&gt; String
 (Int -&gt; ExportMetadata -&gt; ShowS)
@@ -116,7 +116,7 @@ show :: ExportMetadata -&gt; String
 $cshow :: ExportMetadata -&gt; String
 showsPrec :: Int -&gt; ExportMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; ExportMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689338052"><span id="local-6989586621689338054"><span class="annot"><span class="annottext">ExportMetadata -&gt; ExportMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357712"><span id="local-6989586621689357714"><span class="annot"><span class="annottext">ExportMetadata -&gt; ExportMetadata -&gt; Bool
 (ExportMetadata -&gt; ExportMetadata -&gt; Bool)
 -&gt; (ExportMetadata -&gt; ExportMetadata -&gt; Bool) -&gt; Eq ExportMetadata
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -126,24 +126,24 @@ $c/= :: ExportMetadata -&gt; ExportMetadata -&gt; Bool
 $c== :: ExportMetadata -&gt; ExportMetadata -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689338045"><span id="local-6989586621689338047"><span id="local-6989586621689338049"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-type">ExportMetadata</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621689338044"><span class="annot"><span class="annottext">toJSON :: ExportMetadata -&gt; Value
-</span><a href="#local-6989586621689338044"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">ExportMetadata
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357705"><span id="local-6989586621689357707"><span id="local-6989586621689357709"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-type">ExportMetadata</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621689357704"><span class="annot"><span class="annottext">toJSON :: ExportMetadata -&gt; Value
+</span><a href="#local-6989586621689357704"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">ExportMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-var">ExportMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689338040"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-type">ExportMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621689338039"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ExportMetadata
-</span><a href="#local-6989586621689338039"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357700"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-type">ExportMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621689357699"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ExportMetadata
+</span><a href="#local-6989586621689357699"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExportMetadata -&gt; Parser ExportMetadata
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ExportMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-var">ExportMetadata</span></a></span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span class="hs-keyword">data</span><span> </span><span id="ReloadSpec"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSpec"><span class="hs-identifier hs-var">ReloadSpec</span></a></span></span><span> </span><span id="local-6989586621689338167"><span class="annot"><a href="#local-6989586621689338167"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-84"></span><span class="hs-keyword">data</span><span> </span><span id="ReloadSpec"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSpec"><span class="hs-identifier hs-var">ReloadSpec</span></a></span></span><span> </span><span id="local-6989586621689357827"><span class="annot"><a href="#local-6989586621689357827"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-85"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RSReloadAll"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadAll"><span class="hs-identifier hs-var">RSReloadAll</span></a></span></span><span>
-</span><span id="line-86"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RSReloadList"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadList"><span class="hs-identifier hs-var">RSReloadList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689338167"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689338031"><span id="local-6989586621689338033"><span id="local-6989586621689338035"><span class="annot"><span class="annottext">Int -&gt; ReloadSpec a -&gt; ShowS
+</span><span id="line-86"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RSReloadList"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadList"><span class="hs-identifier hs-var">RSReloadList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689357827"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357691"><span id="local-6989586621689357693"><span id="local-6989586621689357695"><span class="annot"><span class="annottext">Int -&gt; ReloadSpec a -&gt; ShowS
 [ReloadSpec a] -&gt; ShowS
 ReloadSpec a -&gt; String
 (Int -&gt; ReloadSpec a -&gt; ShowS)
@@ -161,7 +161,7 @@ show :: ReloadSpec a -&gt; String
 $cshow :: forall a. Show a =&gt; ReloadSpec a -&gt; String
 showsPrec :: Int -&gt; ReloadSpec a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; ReloadSpec a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689338027"><span id="local-6989586621689338029"><span class="annot"><span class="annottext">ReloadSpec a -&gt; ReloadSpec a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357687"><span id="local-6989586621689357689"><span class="annot"><span class="annottext">ReloadSpec a -&gt; ReloadSpec a -&gt; Bool
 (ReloadSpec a -&gt; ReloadSpec a -&gt; Bool)
 -&gt; (ReloadSpec a -&gt; ReloadSpec a -&gt; Bool) -&gt; Eq (ReloadSpec a)
 forall a. Eq a =&gt; ReloadSpec a -&gt; ReloadSpec a -&gt; Bool
@@ -172,37 +172,37 @@ $c/= :: forall a. Eq a =&gt; ReloadSpec a -&gt; ReloadSpec a -&gt; Bool
 $c== :: forall a. Eq a =&gt; ReloadSpec a -&gt; ReloadSpec a -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span id="local-6989586621689338026"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689338019"><span id="local-6989586621689338021"><span id="local-6989586621689338023"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689338026"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSpec"><span class="hs-identifier hs-type">ReloadSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689338026"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621689338018"><span class="annot"><span class="annottext">toJSON :: ReloadSpec a -&gt; Value
-</span><a href="#local-6989586621689338018"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-89"></span><span id="local-6989586621689357686"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357679"><span id="local-6989586621689357681"><span id="local-6989586621689357683"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689357686"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSpec"><span class="hs-identifier hs-type">ReloadSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689357686"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621689357678"><span class="annot"><span class="annottext">toJSON :: ReloadSpec a -&gt; Value
+</span><a href="#local-6989586621689357678"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-91"></span><span>    </span><span class="annot"><span class="annottext">ReloadSpec a
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadAll"><span class="hs-identifier hs-var">RSReloadAll</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
-</span><span id="line-92"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadList"><span class="hs-identifier hs-type">RSReloadList</span></a></span><span> </span><span id="local-6989586621689338016"><span class="annot"><span class="annottext">HashSet a
-</span><a href="#local-6989586621689338016"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashSet a -&gt; Value
+</span><span id="line-92"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadList"><span class="hs-identifier hs-type">RSReloadList</span></a></span><span> </span><span id="local-6989586621689357676"><span class="annot"><span class="annottext">HashSet a
+</span><a href="#local-6989586621689357676"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashSet a -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">HashSet a
-</span><a href="#local-6989586621689338016"><span class="hs-identifier hs-var">l</span></a></span></span><span>
+</span><a href="#local-6989586621689357676"><span class="hs-identifier hs-var">l</span></a></span></span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span id="local-6989586621689338015"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689338012"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689338015"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689338015"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689338015"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSpec"><span class="hs-identifier hs-type">ReloadSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689338015"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-95"></span><span>  </span><span id="local-6989586621689338011"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (ReloadSpec a)
-</span><a href="#local-6989586621689338011"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.Bool</span></span><span> </span><span id="local-6989586621689338010"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689338010"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReloadSpec a -&gt; Parser (ReloadSpec a)
+</span><span id="line-94"></span><span id="local-6989586621689357675"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357672"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689357675"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689357675"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689357675"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSpec"><span class="hs-identifier hs-type">ReloadSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689357675"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621689357671"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (ReloadSpec a)
+</span><a href="#local-6989586621689357671"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.Bool</span></span><span> </span><span id="local-6989586621689357670"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689357670"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReloadSpec a -&gt; Parser (ReloadSpec a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ReloadSpec a -&gt; Parser (ReloadSpec a))
 -&gt; ReloadSpec a -&gt; Parser (ReloadSpec a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689338010"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ReloadSpec a
+</span><a href="#local-6989586621689357670"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ReloadSpec a
 forall a. ReloadSpec a
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadAll"><span class="hs-identifier hs-var">RSReloadAll</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">HashSet a -&gt; ReloadSpec a
 forall a. HashSet a -&gt; ReloadSpec a
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadList"><span class="hs-identifier hs-var">RSReloadList</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet a
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-96"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621689338009"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689338009"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet a -&gt; ReloadSpec a
+</span><span id="line-96"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621689357669"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689357669"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet a -&gt; ReloadSpec a
 forall a. HashSet a -&gt; ReloadSpec a
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RSReloadList"><span class="hs-identifier hs-var">RSReloadList</span></a></span><span> </span><span class="annot"><span class="annottext">(HashSet a -&gt; ReloadSpec a)
 -&gt; Parser (HashSet a) -&gt; Parser (ReloadSpec a)
@@ -210,7 +210,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (HashSet a)
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689338009"><span class="hs-identifier hs-var">v</span></a></span></span><span>
+</span><a href="#local-6989586621689357669"><span class="hs-identifier hs-var">v</span></a></span></span><span>
 </span><span id="line-97"></span><span>
 </span><span id="line-98"></span><span class="hs-keyword">type</span><span> </span><span id="ReloadRemoteSchemas"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadRemoteSchemas"><span class="hs-identifier hs-var">ReloadRemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSpec"><span class="hs-identifier hs-type">ReloadSpec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span>
 </span><span id="line-99"></span><span>
@@ -247,7 +247,7 @@ forall a. ReloadSpec a
 </span><span id="line-122"></span><span>    </span><span id="_rmRecreateEventTriggers"><span class="annot"><span class="annottext">ReloadMetadata -&gt; ReloadSources
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#_rmRecreateEventTriggers"><span class="hs-identifier hs-var hs-var">_rmRecreateEventTriggers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadSources"><span class="hs-identifier hs-type">ReloadSources</span></a></span><span>
 </span><span id="line-123"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337996"><span id="local-6989586621689337998"><span id="local-6989586621689338000"><span class="annot"><span class="annottext">Int -&gt; ReloadMetadata -&gt; ShowS
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357656"><span id="local-6989586621689357658"><span id="local-6989586621689357660"><span class="annot"><span class="annottext">Int -&gt; ReloadMetadata -&gt; ShowS
 [ReloadMetadata] -&gt; ShowS
 ReloadMetadata -&gt; String
 (Int -&gt; ReloadMetadata -&gt; ShowS)
@@ -262,7 +262,7 @@ show :: ReloadMetadata -&gt; String
 $cshow :: ReloadMetadata -&gt; String
 showsPrec :: Int -&gt; ReloadMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; ReloadMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689337992"><span id="local-6989586621689337994"><span class="annot"><span class="annottext">ReloadMetadata -&gt; ReloadMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357652"><span id="local-6989586621689357654"><span class="annot"><span class="annottext">ReloadMetadata -&gt; ReloadMetadata -&gt; Bool
 (ReloadMetadata -&gt; ReloadMetadata -&gt; Bool)
 -&gt; (ReloadMetadata -&gt; ReloadMetadata -&gt; Bool) -&gt; Eq ReloadMetadata
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -272,11 +272,11 @@ $c/= :: ReloadMetadata -&gt; ReloadMetadata -&gt; Bool
 $c== :: ReloadMetadata -&gt; ReloadMetadata -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span class="hs-special">$(</span><span id="local-6989586621689337984"><span id="local-6989586621689337986"><span id="local-6989586621689337988"><span id="local-6989586621689337990"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ReloadMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span class="hs-special">$(</span><span id="local-6989586621689357644"><span id="local-6989586621689357646"><span id="local-6989586621689357648"><span id="local-6989586621689357650"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ReloadMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337981"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadMetadata"><span class="hs-identifier hs-type">ReloadMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-129"></span><span>  </span><span id="local-6989586621689337980"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReloadMetadata
-</span><a href="#local-6989586621689337980"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357641"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadMetadata"><span class="hs-identifier hs-type">ReloadMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621689357640"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReloadMetadata
+</span><a href="#local-6989586621689357640"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser ReloadMetadata)
 -&gt; Value
 -&gt; Parser ReloadMetadata
@@ -288,8 +288,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser ReloadMetadata
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689337978"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337978"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689357638"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357638"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-130"></span><span>    </span><span class="annot"><span class="annottext">ReloadRemoteSchemas
 -&gt; ReloadSources -&gt; ReloadSources -&gt; ReloadMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#ReloadMetadata"><span class="hs-identifier hs-var">ReloadMetadata</span></a></span><span>
@@ -299,7 +299,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Parser (ReloadSources -&gt; ReloadSources -&gt; ReloadMetadata)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337978"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe ReloadRemoteSchemas)
+</span><a href="#local-6989586621689357638"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe ReloadRemoteSchemas)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;reload_remote_schemas&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe ReloadRemoteSchemas)
@@ -311,7 +311,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser ReloadSources -&gt; Parser (ReloadSources -&gt; ReloadMetadata)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337978"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe ReloadSources)
+</span><a href="#local-6989586621689357638"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe ReloadSources)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;reload_sources&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe ReloadSources)
@@ -323,7 +323,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser ReloadSources -&gt; Parser ReloadMetadata
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337978"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe ReloadSources)
+</span><a href="#local-6989586621689357638"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe ReloadSources)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;recreate_event_triggers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe ReloadSources)
@@ -339,7 +339,7 @@ forall a. Monoid a =&gt; a
 </span><span id="line-136"></span><span class="hs-comment">-- 'SchemaCache'.</span><span>
 </span><span id="line-137"></span><span class="hs-keyword">data</span><span> </span><span id="DumpInternalState"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DumpInternalState"><span class="hs-identifier hs-var">DumpInternalState</span></a></span></span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DumpInternalState"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DumpInternalState"><span class="hs-identifier hs-var">DumpInternalState</span></a></span></span><span>
-</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337971"><span id="local-6989586621689337973"><span id="local-6989586621689337975"><span class="annot"><span class="annottext">Int -&gt; DumpInternalState -&gt; ShowS
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357631"><span id="local-6989586621689357633"><span id="local-6989586621689357635"><span class="annot"><span class="annottext">Int -&gt; DumpInternalState -&gt; ShowS
 [DumpInternalState] -&gt; ShowS
 DumpInternalState -&gt; String
 (Int -&gt; DumpInternalState -&gt; ShowS)
@@ -354,7 +354,7 @@ show :: DumpInternalState -&gt; String
 $cshow :: DumpInternalState -&gt; String
 showsPrec :: Int -&gt; DumpInternalState -&gt; ShowS
 $cshowsPrec :: Int -&gt; DumpInternalState -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689337967"><span id="local-6989586621689337969"><span class="annot"><span class="annottext">DumpInternalState -&gt; DumpInternalState -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357627"><span id="local-6989586621689357629"><span class="annot"><span class="annottext">DumpInternalState -&gt; DumpInternalState -&gt; Bool
 (DumpInternalState -&gt; DumpInternalState -&gt; Bool)
 -&gt; (DumpInternalState -&gt; DumpInternalState -&gt; Bool)
 -&gt; Eq DumpInternalState
@@ -365,11 +365,11 @@ $c/= :: DumpInternalState -&gt; DumpInternalState -&gt; Bool
 $c== :: DumpInternalState -&gt; DumpInternalState -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-140"></span><span>
-</span><span id="line-141"></span><span class="hs-special">$(</span><span id="local-6989586621689337959"><span id="local-6989586621689337961"><span id="local-6989586621689337963"><span id="local-6989586621689337965"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DumpInternalState</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span class="hs-special">$(</span><span id="local-6989586621689357619"><span id="local-6989586621689357621"><span id="local-6989586621689357623"><span id="local-6989586621689357625"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DumpInternalState</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337956"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DumpInternalState"><span class="hs-identifier hs-type">DumpInternalState</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-144"></span><span>  </span><span id="local-6989586621689337955"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DumpInternalState
-</span><a href="#local-6989586621689337955"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span id="line-143"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357616"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DumpInternalState"><span class="hs-identifier hs-type">DumpInternalState</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621689357615"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DumpInternalState
+</span><a href="#local-6989586621689357615"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DumpInternalState -&gt; Parser DumpInternalState
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">DumpInternalState
@@ -380,7 +380,7 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-148"></span><span class="hs-comment">-- https://hasura.io/docs/latest/api-reference/schema-metadata-api/manage-metadata/#schema-metadata-get-inconsistent-metadata</span><span>
 </span><span id="line-149"></span><span class="hs-keyword">data</span><span> </span><span id="GetInconsistentMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#GetInconsistentMetadata"><span class="hs-identifier hs-var">GetInconsistentMetadata</span></a></span></span><span>
 </span><span id="line-150"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GetInconsistentMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#GetInconsistentMetadata"><span class="hs-identifier hs-var">GetInconsistentMetadata</span></a></span></span><span>
-</span><span id="line-151"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337948"><span id="local-6989586621689337950"><span id="local-6989586621689337952"><span class="annot"><span class="annottext">Int -&gt; GetInconsistentMetadata -&gt; ShowS
+</span><span id="line-151"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357608"><span id="local-6989586621689357610"><span id="local-6989586621689357612"><span class="annot"><span class="annottext">Int -&gt; GetInconsistentMetadata -&gt; ShowS
 [GetInconsistentMetadata] -&gt; ShowS
 GetInconsistentMetadata -&gt; String
 (Int -&gt; GetInconsistentMetadata -&gt; ShowS)
@@ -395,7 +395,7 @@ show :: GetInconsistentMetadata -&gt; String
 $cshow :: GetInconsistentMetadata -&gt; String
 showsPrec :: Int -&gt; GetInconsistentMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; GetInconsistentMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689337944"><span id="local-6989586621689337946"><span class="annot"><span class="annottext">GetInconsistentMetadata -&gt; GetInconsistentMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357604"><span id="local-6989586621689357606"><span class="annot"><span class="annottext">GetInconsistentMetadata -&gt; GetInconsistentMetadata -&gt; Bool
 (GetInconsistentMetadata -&gt; GetInconsistentMetadata -&gt; Bool)
 -&gt; (GetInconsistentMetadata -&gt; GetInconsistentMetadata -&gt; Bool)
 -&gt; Eq GetInconsistentMetadata
@@ -406,11 +406,11 @@ $c/= :: GetInconsistentMetadata -&gt; GetInconsistentMetadata -&gt; Bool
 $c== :: GetInconsistentMetadata -&gt; GetInconsistentMetadata -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-152"></span><span>
-</span><span id="line-153"></span><span class="hs-special">$(</span><span id="local-6989586621689337936"><span id="local-6989586621689337938"><span id="local-6989586621689337940"><span id="local-6989586621689337942"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GetInconsistentMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-153"></span><span class="hs-special">$(</span><span id="local-6989586621689357596"><span id="local-6989586621689357598"><span id="local-6989586621689357600"><span id="local-6989586621689357602"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GetInconsistentMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-154"></span><span>
-</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337933"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#GetInconsistentMetadata"><span class="hs-identifier hs-type">GetInconsistentMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-156"></span><span>  </span><span id="local-6989586621689337932"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GetInconsistentMetadata
-</span><a href="#local-6989586621689337932"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357593"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#GetInconsistentMetadata"><span class="hs-identifier hs-type">GetInconsistentMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-156"></span><span>  </span><span id="local-6989586621689357592"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GetInconsistentMetadata
+</span><a href="#local-6989586621689357592"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GetInconsistentMetadata -&gt; Parser GetInconsistentMetadata
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">GetInconsistentMetadata
@@ -422,7 +422,7 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-161"></span><span class="hs-comment">-- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-drop-inconsistent-metadata</span><span>
 </span><span id="line-162"></span><span class="hs-keyword">data</span><span> </span><span id="DropInconsistentMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DropInconsistentMetadata"><span class="hs-identifier hs-var">DropInconsistentMetadata</span></a></span></span><span>
 </span><span id="line-163"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DropInconsistentMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DropInconsistentMetadata"><span class="hs-identifier hs-var">DropInconsistentMetadata</span></a></span></span><span>
-</span><span id="line-164"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337925"><span id="local-6989586621689337927"><span id="local-6989586621689337929"><span class="annot"><span class="annottext">Int -&gt; DropInconsistentMetadata -&gt; ShowS
+</span><span id="line-164"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357585"><span id="local-6989586621689357587"><span id="local-6989586621689357589"><span class="annot"><span class="annottext">Int -&gt; DropInconsistentMetadata -&gt; ShowS
 [DropInconsistentMetadata] -&gt; ShowS
 DropInconsistentMetadata -&gt; String
 (Int -&gt; DropInconsistentMetadata -&gt; ShowS)
@@ -437,7 +437,7 @@ show :: DropInconsistentMetadata -&gt; String
 $cshow :: DropInconsistentMetadata -&gt; String
 showsPrec :: Int -&gt; DropInconsistentMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropInconsistentMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689337921"><span id="local-6989586621689337923"><span class="annot"><span class="annottext">DropInconsistentMetadata -&gt; DropInconsistentMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357581"><span id="local-6989586621689357583"><span class="annot"><span class="annottext">DropInconsistentMetadata -&gt; DropInconsistentMetadata -&gt; Bool
 (DropInconsistentMetadata -&gt; DropInconsistentMetadata -&gt; Bool)
 -&gt; (DropInconsistentMetadata -&gt; DropInconsistentMetadata -&gt; Bool)
 -&gt; Eq DropInconsistentMetadata
@@ -448,11 +448,11 @@ $c/= :: DropInconsistentMetadata -&gt; DropInconsistentMetadata -&gt; Bool
 $c== :: DropInconsistentMetadata -&gt; DropInconsistentMetadata -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-165"></span><span>
-</span><span id="line-166"></span><span class="hs-special">$(</span><span id="local-6989586621689337913"><span id="local-6989586621689337915"><span id="local-6989586621689337917"><span id="local-6989586621689337919"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropInconsistentMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-166"></span><span class="hs-special">$(</span><span id="local-6989586621689357573"><span id="local-6989586621689357575"><span id="local-6989586621689357577"><span id="local-6989586621689357579"><span class="hs-identifier">Aeson.TH.deriveToJSON</span><span> </span><span class="hs-identifier">Aeson.TH.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropInconsistentMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-167"></span><span>
-</span><span id="line-168"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337910"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DropInconsistentMetadata"><span class="hs-identifier hs-type">DropInconsistentMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-169"></span><span>  </span><span id="local-6989586621689337909"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropInconsistentMetadata
-</span><a href="#local-6989586621689337909"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span id="line-168"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357570"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#DropInconsistentMetadata"><span class="hs-identifier hs-type">DropInconsistentMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-169"></span><span>  </span><span id="local-6989586621689357569"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropInconsistentMetadata
+</span><a href="#local-6989586621689357569"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DropInconsistentMetadata -&gt; Parser DropInconsistentMetadata
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">DropInconsistentMetadata
@@ -461,7 +461,7 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-171"></span><span class="hs-keyword">data</span><span> </span><span id="AllowInconsistentMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-var">AllowInconsistentMetadata</span></a></span></span><span>
 </span><span id="line-172"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AllowInconsistentMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-var">AllowInconsistentMetadata</span></a></span></span><span>
 </span><span id="line-173"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NoAllowInconsistentMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#NoAllowInconsistentMetadata"><span class="hs-identifier hs-var">NoAllowInconsistentMetadata</span></a></span></span><span>
-</span><span id="line-174"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337901"><span id="local-6989586621689337903"><span id="local-6989586621689337905"><span class="annot"><span class="annottext">Int -&gt; AllowInconsistentMetadata -&gt; ShowS
+</span><span id="line-174"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357561"><span id="local-6989586621689357563"><span id="local-6989586621689357565"><span class="annot"><span class="annottext">Int -&gt; AllowInconsistentMetadata -&gt; ShowS
 [AllowInconsistentMetadata] -&gt; ShowS
 AllowInconsistentMetadata -&gt; String
 (Int -&gt; AllowInconsistentMetadata -&gt; ShowS)
@@ -476,7 +476,7 @@ show :: AllowInconsistentMetadata -&gt; String
 $cshow :: AllowInconsistentMetadata -&gt; String
 showsPrec :: Int -&gt; AllowInconsistentMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; AllowInconsistentMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689337897"><span id="local-6989586621689337899"><span class="annot"><span class="annottext">AllowInconsistentMetadata -&gt; AllowInconsistentMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689357557"><span id="local-6989586621689357559"><span class="annot"><span class="annottext">AllowInconsistentMetadata -&gt; AllowInconsistentMetadata -&gt; Bool
 (AllowInconsistentMetadata -&gt; AllowInconsistentMetadata -&gt; Bool)
 -&gt; (AllowInconsistentMetadata -&gt; AllowInconsistentMetadata -&gt; Bool)
 -&gt; Eq AllowInconsistentMetadata
@@ -487,9 +487,9 @@ $c/= :: AllowInconsistentMetadata -&gt; AllowInconsistentMetadata -&gt; Bool
 $c== :: AllowInconsistentMetadata -&gt; AllowInconsistentMetadata -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-175"></span><span>
-</span><span id="line-176"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337894"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-type">AllowInconsistentMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-177"></span><span>  </span><span id="local-6989586621689337893"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser AllowInconsistentMetadata
-</span><a href="#local-6989586621689337893"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-176"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357554"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-type">AllowInconsistentMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-177"></span><span>  </span><span id="local-6989586621689357553"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser AllowInconsistentMetadata
+</span><a href="#local-6989586621689357553"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-178"></span><span>    </span><span class="annot"><span class="annottext">String
 -&gt; (Bool -&gt; Parser AllowInconsistentMetadata)
 -&gt; Value
@@ -517,9 +517,9 @@ forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#NoAllowInconsistentMetadata"><span class="hs-identifier hs-var">NoAllowInconsistentMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">AllowInconsistentMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-var">AllowInconsistentMetadata</span></a></span><span>
 </span><span id="line-180"></span><span>
-</span><span id="line-181"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337883"><span id="local-6989586621689337885"><span id="local-6989586621689337887"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-type">AllowInconsistentMetadata</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-182"></span><span>  </span><span id="local-6989586621689337882"><span class="annot"><span class="annottext">toJSON :: AllowInconsistentMetadata -&gt; Value
-</span><a href="#local-6989586621689337882"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span id="line-181"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357543"><span id="local-6989586621689357545"><span id="local-6989586621689357547"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-type">AllowInconsistentMetadata</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-182"></span><span>  </span><span id="local-6989586621689357542"><span class="annot"><span class="annottext">toJSON :: AllowInconsistentMetadata -&gt; Value
+</span><a href="#local-6989586621689357542"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Value)
 -&gt; (AllowInconsistentMetadata -&gt; Bool)
@@ -527,13 +527,13 @@ forall a. ToJSON a =&gt; a -&gt; Value
 -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AllowInconsistentMetadata -&gt; Bool
-</span><a href="#local-6989586621689337881"><span class="hs-identifier hs-var">toBool</span></a></span><span>
+</span><a href="#local-6989586621689357541"><span class="hs-identifier hs-var">toBool</span></a></span><span>
 </span><span id="line-183"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-184"></span><span>      </span><span id="local-6989586621689337881"><span class="annot"><span class="annottext">toBool :: AllowInconsistentMetadata -&gt; Bool
-</span><a href="#local-6989586621689337881"><span class="hs-identifier hs-var hs-var">toBool</span></a></span></span><span> </span><span class="annot"><span class="annottext">AllowInconsistentMetadata
+</span><span id="line-184"></span><span>      </span><span id="local-6989586621689357541"><span class="annot"><span class="annottext">toBool :: AllowInconsistentMetadata -&gt; Bool
+</span><a href="#local-6989586621689357541"><span class="hs-identifier hs-var hs-var">toBool</span></a></span></span><span> </span><span class="annot"><span class="annottext">AllowInconsistentMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#AllowInconsistentMetadata"><span class="hs-identifier hs-var">AllowInconsistentMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
-</span><span id="line-185"></span><span>      </span><span class="annot"><a href="#local-6989586621689337881"><span class="hs-identifier hs-var">toBool</span></a></span><span> </span><span class="annot"><span class="annottext">AllowInconsistentMetadata
+</span><span id="line-185"></span><span>      </span><span class="annot"><a href="#local-6989586621689357541"><span class="hs-identifier hs-var">toBool</span></a></span><span> </span><span class="annot"><span class="annottext">AllowInconsistentMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#NoAllowInconsistentMetadata"><span class="hs-identifier hs-var">NoAllowInconsistentMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-186"></span><span>
@@ -541,7 +541,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-188"></span><span class="hs-keyword">data</span><span> </span><span id="ReplaceMetadataV1"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV1"><span class="hs-identifier hs-var">ReplaceMetadataV1</span></a></span></span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RMWithSources"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithSources"><span class="hs-identifier hs-var">RMWithSources</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span>
 </span><span id="line-190"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RMWithoutSources"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithoutSources"><span class="hs-identifier hs-var">RMWithoutSources</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataNoSources"><span class="hs-identifier hs-type">MetadataNoSources</span></a></span><span>
-</span><span id="line-191"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337875"><span id="local-6989586621689337877"><span class="annot"><span class="annottext">ReplaceMetadataV1 -&gt; ReplaceMetadataV1 -&gt; Bool
+</span><span id="line-191"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357535"><span id="local-6989586621689357537"><span class="annot"><span class="annottext">ReplaceMetadataV1 -&gt; ReplaceMetadataV1 -&gt; Bool
 (ReplaceMetadataV1 -&gt; ReplaceMetadataV1 -&gt; Bool)
 -&gt; (ReplaceMetadataV1 -&gt; ReplaceMetadataV1 -&gt; Bool)
 -&gt; Eq ReplaceMetadataV1
@@ -552,9 +552,9 @@ $c/= :: ReplaceMetadataV1 -&gt; ReplaceMetadataV1 -&gt; Bool
 $c== :: ReplaceMetadataV1 -&gt; ReplaceMetadataV1 -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-192"></span><span>
-</span><span id="line-193"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337872"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV1"><span class="hs-identifier hs-type">ReplaceMetadataV1</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-194"></span><span>  </span><span id="local-6989586621689337871"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceMetadataV1
-</span><a href="#local-6989586621689337871"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-193"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357532"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV1"><span class="hs-identifier hs-type">ReplaceMetadataV1</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-194"></span><span>  </span><span id="local-6989586621689357531"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceMetadataV1
+</span><a href="#local-6989586621689357531"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser ReplaceMetadataV1)
 -&gt; Value
 -&gt; Parser ReplaceMetadataV1
@@ -566,11 +566,11 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser ReplaceMetadataV1
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689337870"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337870"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-195"></span><span>    </span><span id="local-6989586621689337869"><span class="annot"><span class="annottext">MetadataVersion
-</span><a href="#local-6989586621689337869"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337870"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe MetadataVersion)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689357530"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357530"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621689357529"><span class="annot"><span class="annottext">MetadataVersion
+</span><a href="#local-6989586621689357529"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357530"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe MetadataVersion)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe MetadataVersion)
@@ -579,7 +579,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">MetadataVersion
 </span><a href="Hasura.RQL.Types.Metadata.html#MVVersion1"><span class="hs-identifier hs-var">Metadata.MVVersion1</span></a></span><span>
 </span><span id="line-196"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MetadataVersion
-</span><a href="#local-6989586621689337869"><span class="hs-identifier hs-var">version</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689357529"><span class="hs-identifier hs-var">version</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-197"></span><span>      </span><span class="annot"><span class="annottext">MetadataVersion
 </span><a href="Hasura.RQL.Types.Metadata.html#MVVersion3"><span class="hs-identifier hs-var">Metadata.MVVersion3</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; ReplaceMetadataV1
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithSources"><span class="hs-identifier hs-var">RMWithSources</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; ReplaceMetadataV1)
@@ -589,7 +589,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.Object</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337870"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689357530"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-198"></span><span>      </span><span class="annot"><span class="annottext">MetadataVersion
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataNoSources -&gt; ReplaceMetadataV1
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithoutSources"><span class="hs-identifier hs-var">RMWithoutSources</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataNoSources -&gt; ReplaceMetadataV1)
@@ -599,21 +599,21 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.Object</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337870"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689357530"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-199"></span><span>
-</span><span id="line-200"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337859"><span id="local-6989586621689337861"><span id="local-6989586621689337863"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV1"><span class="hs-identifier hs-type">ReplaceMetadataV1</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-201"></span><span>  </span><span id="local-6989586621689337858"><span class="annot"><span class="annottext">toJSON :: ReplaceMetadataV1 -&gt; Value
-</span><a href="#local-6989586621689337858"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-202"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithSources"><span class="hs-identifier hs-type">RMWithSources</span></a></span><span> </span><span id="local-6989586621689337857"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689337857"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Value
+</span><span id="line-200"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357519"><span id="local-6989586621689357521"><span id="local-6989586621689357523"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV1"><span class="hs-identifier hs-type">ReplaceMetadataV1</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621689357518"><span class="annot"><span class="annottext">toJSON :: ReplaceMetadataV1 -&gt; Value
+</span><a href="#local-6989586621689357518"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-202"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithSources"><span class="hs-identifier hs-type">RMWithSources</span></a></span><span> </span><span id="local-6989586621689357517"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621689357517"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689337857"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-203"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithoutSources"><span class="hs-identifier hs-type">RMWithoutSources</span></a></span><span> </span><span id="local-6989586621689337856"><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621689337856"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataNoSources -&gt; Value
+</span><a href="#local-6989586621689357517"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-203"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMWithoutSources"><span class="hs-identifier hs-type">RMWithoutSources</span></a></span><span> </span><span id="local-6989586621689357516"><span class="annot"><span class="annottext">MetadataNoSources
+</span><a href="#local-6989586621689357516"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataNoSources -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621689337856"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689357516"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-204"></span><span>
 </span><span id="line-205"></span><span class="hs-comment">-- | Replace metadata while allowing for inconsitency in the metadata object.</span><span>
 </span><span id="line-206"></span><span class="hs-comment">--</span><span>
@@ -624,7 +624,7 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><span id="line-210"></span><span>    </span><span id="_rmv2Metadata"><span class="annot"><span class="annottext">ReplaceMetadataV2 -&gt; ReplaceMetadataV1
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#_rmv2Metadata"><span class="hs-identifier hs-var hs-var">_rmv2Metadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV1"><span class="hs-identifier hs-type">ReplaceMetadataV1</span></a></span><span>
 </span><span id="line-211"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-212"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337849"><span id="local-6989586621689337851"><span class="annot"><span class="annottext">ReplaceMetadataV2 -&gt; ReplaceMetadataV2 -&gt; Bool
+</span><span id="line-212"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357509"><span id="local-6989586621689357511"><span class="annot"><span class="annottext">ReplaceMetadataV2 -&gt; ReplaceMetadataV2 -&gt; Bool
 (ReplaceMetadataV2 -&gt; ReplaceMetadataV2 -&gt; Bool)
 -&gt; (ReplaceMetadataV2 -&gt; ReplaceMetadataV2 -&gt; Bool)
 -&gt; Eq ReplaceMetadataV2
@@ -635,9 +635,9 @@ $c/= :: ReplaceMetadataV2 -&gt; ReplaceMetadataV2 -&gt; Bool
 $c== :: ReplaceMetadataV2 -&gt; ReplaceMetadataV2 -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-213"></span><span>
-</span><span id="line-214"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337846"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-215"></span><span>  </span><span id="local-6989586621689337845"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceMetadataV2
-</span><a href="#local-6989586621689337845"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-214"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357506"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-215"></span><span>  </span><span id="local-6989586621689357505"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceMetadataV2
+</span><a href="#local-6989586621689357505"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser ReplaceMetadataV2)
 -&gt; Value
 -&gt; Parser ReplaceMetadataV2
@@ -649,8 +649,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser ReplaceMetadataV2
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689337844"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337844"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689357504"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357504"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-216"></span><span>    </span><span class="annot"><span class="annottext">AllowInconsistentMetadata -&gt; ReplaceMetadataV1 -&gt; ReplaceMetadataV2
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-var">ReplaceMetadataV2</span></a></span><span>
 </span><span id="line-217"></span><span>      </span><span class="annot"><span class="annottext">(AllowInconsistentMetadata
@@ -659,7 +659,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Parser (ReplaceMetadataV1 -&gt; ReplaceMetadataV2)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe AllowInconsistentMetadata)
+</span><a href="#local-6989586621689357504"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe AllowInconsistentMetadata)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;allow_inconsistent_metadata&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AllowInconsistentMetadata)
@@ -671,32 +671,32 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser ReplaceMetadataV1 -&gt; Parser ReplaceMetadataV2
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser ReplaceMetadataV1
+</span><a href="#local-6989586621689357504"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser ReplaceMetadataV1
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;metadata&quot;</span></span><span>
 </span><span id="line-219"></span><span>
-</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337837"><span id="local-6989586621689337839"><span id="local-6989586621689337841"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-221"></span><span>  </span><span id="local-6989586621689337836"><span class="annot"><span class="annottext">toJSON :: ReplaceMetadataV2 -&gt; Value
-</span><a href="#local-6989586621689337836"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689337834"><span id="local-6989586621689337835"><span class="annot"><span class="annottext">ReplaceMetadataV1
+</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357497"><span id="local-6989586621689357499"><span id="local-6989586621689357501"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-221"></span><span>  </span><span id="local-6989586621689357496"><span class="annot"><span class="annottext">toJSON :: ReplaceMetadataV2 -&gt; Value
+</span><a href="#local-6989586621689357496"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689357494"><span id="local-6989586621689357495"><span class="annot"><span class="annottext">ReplaceMetadataV1
 AllowInconsistentMetadata
 _rmv2Metadata :: ReplaceMetadataV1
 _rmv2AllowInconsistentMetadata :: AllowInconsistentMetadata
 _rmv2Metadata :: ReplaceMetadataV2 -&gt; ReplaceMetadataV1
 _rmv2AllowInconsistentMetadata :: ReplaceMetadataV2 -&gt; AllowInconsistentMetadata
-</span><a href="#local-6989586621689337834"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689357494"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-222"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
 </span><span id="line-223"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;allow_inconsistent_metadata&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; AllowInconsistentMetadata -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">AllowInconsistentMetadata
-</span><a href="#local-6989586621689337835"><span class="hs-identifier hs-var">_rmv2AllowInconsistentMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689357495"><span class="hs-identifier hs-var">_rmv2AllowInconsistentMetadata</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-224"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;metadata&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; ReplaceMetadataV1 -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV1
-</span><a href="#local-6989586621689337834"><span class="hs-identifier hs-var">_rmv2Metadata</span></a></span><span>
+</span><a href="#local-6989586621689357494"><span class="hs-identifier hs-var">_rmv2Metadata</span></a></span><span>
 </span><span id="line-225"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-226"></span><span>
 </span><span id="line-227"></span><span class="hs-comment">-- | 'ReplaceMetadata' is used to replace/import metadata into</span><span>
@@ -709,7 +709,7 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span id="line-234"></span><span class="hs-keyword">data</span><span> </span><span id="ReplaceMetadata"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadata"><span class="hs-identifier hs-var">ReplaceMetadata</span></a></span></span><span>
 </span><span id="line-235"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RMReplaceMetadataV1"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV1"><span class="hs-identifier hs-var">RMReplaceMetadataV1</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV1"><span class="hs-identifier hs-type">ReplaceMetadataV1</span></a></span><span>
 </span><span id="line-236"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RMReplaceMetadataV2"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV2"><span class="hs-identifier hs-var">RMReplaceMetadataV2</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span><span>
-</span><span id="line-237"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337828"><span id="local-6989586621689337830"><span class="annot"><span class="annottext">ReplaceMetadata -&gt; ReplaceMetadata -&gt; Bool
+</span><span id="line-237"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357488"><span id="local-6989586621689357490"><span class="annot"><span class="annottext">ReplaceMetadata -&gt; ReplaceMetadata -&gt; Bool
 (ReplaceMetadata -&gt; ReplaceMetadata -&gt; Bool)
 -&gt; (ReplaceMetadata -&gt; ReplaceMetadata -&gt; Bool)
 -&gt; Eq ReplaceMetadata
@@ -720,9 +720,9 @@ $c/= :: ReplaceMetadata -&gt; ReplaceMetadata -&gt; Bool
 $c== :: ReplaceMetadata -&gt; ReplaceMetadata -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-238"></span><span>
-</span><span id="line-239"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337825"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadata"><span class="hs-identifier hs-type">ReplaceMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-240"></span><span>  </span><span id="local-6989586621689337824"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceMetadata
-</span><a href="#local-6989586621689337824"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-239"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357485"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadata"><span class="hs-identifier hs-type">ReplaceMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-240"></span><span>  </span><span id="local-6989586621689357484"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceMetadata
+</span><a href="#local-6989586621689357484"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser ReplaceMetadata)
 -&gt; Value
 -&gt; Parser ReplaceMetadata
@@ -734,13 +734,13 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser ReplaceMetadata
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689337823"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337823"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689357483"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357483"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-241"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Bool
 forall a. Key -&gt; KeyMap a -&gt; Bool
 </span><span class="hs-identifier hs-var">KeyMap.member</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;metadata&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337823"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621689357483"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-242"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV2 -&gt; ReplaceMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV2"><span class="hs-identifier hs-var">RMReplaceMetadataV2</span></a></span><span> </span><span class="annot"><span class="annottext">(ReplaceMetadataV2 -&gt; ReplaceMetadata)
 -&gt; Parser ReplaceMetadataV2 -&gt; Parser ReplaceMetadata
@@ -749,7 +749,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.Object</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337823"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689357483"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-243"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV1 -&gt; ReplaceMetadata
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV1"><span class="hs-identifier hs-var">RMReplaceMetadataV1</span></a></span><span> </span><span class="annot"><span class="annottext">(ReplaceMetadataV1 -&gt; ReplaceMetadata)
 -&gt; Parser ReplaceMetadataV1 -&gt; Parser ReplaceMetadata
@@ -758,24 +758,24 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.Object</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337823"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689357483"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-244"></span><span>
-</span><span id="line-245"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337815"><span id="local-6989586621689337817"><span id="local-6989586621689337819"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadata"><span class="hs-identifier hs-type">ReplaceMetadata</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-246"></span><span>  </span><span id="local-6989586621689337814"><span class="annot"><span class="annottext">toJSON :: ReplaceMetadata -&gt; Value
-</span><a href="#local-6989586621689337814"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-247"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV1"><span class="hs-identifier hs-type">RMReplaceMetadataV1</span></a></span><span> </span><span id="local-6989586621689337813"><span class="annot"><span class="annottext">ReplaceMetadataV1
-</span><a href="#local-6989586621689337813"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV1 -&gt; Value
+</span><span id="line-245"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357475"><span id="local-6989586621689357477"><span id="local-6989586621689357479"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadata"><span class="hs-identifier hs-type">ReplaceMetadata</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-246"></span><span>  </span><span id="local-6989586621689357474"><span class="annot"><span class="annottext">toJSON :: ReplaceMetadata -&gt; Value
+</span><a href="#local-6989586621689357474"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-247"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV1"><span class="hs-identifier hs-type">RMReplaceMetadataV1</span></a></span><span> </span><span id="local-6989586621689357473"><span class="annot"><span class="annottext">ReplaceMetadataV1
+</span><a href="#local-6989586621689357473"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV1 -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV1
-</span><a href="#local-6989586621689337813"><span class="hs-identifier hs-var">v1</span></a></span><span>
-</span><span id="line-248"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV2"><span class="hs-identifier hs-type">RMReplaceMetadataV2</span></a></span><span> </span><span id="local-6989586621689337812"><span class="annot"><span class="annottext">ReplaceMetadataV2
-</span><a href="#local-6989586621689337812"><span class="hs-identifier hs-var">v2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV2 -&gt; Value
+</span><a href="#local-6989586621689357473"><span class="hs-identifier hs-var">v1</span></a></span><span>
+</span><span id="line-248"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#RMReplaceMetadataV2"><span class="hs-identifier hs-type">RMReplaceMetadataV2</span></a></span><span> </span><span id="local-6989586621689357472"><span class="annot"><span class="annottext">ReplaceMetadataV2
+</span><a href="#local-6989586621689357472"><span class="hs-identifier hs-var">v2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV2 -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ReplaceMetadataV2
-</span><a href="#local-6989586621689337812"><span class="hs-identifier hs-var">v2</span></a></span><span>
+</span><a href="#local-6989586621689357472"><span class="hs-identifier hs-var">v2</span></a></span><span>
 </span><span id="line-249"></span><span>
 </span><span id="line-250"></span><span class="hs-keyword">data</span><span> </span><span id="WebHookUrl"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#WebHookUrl"><span class="hs-identifier hs-var">WebHookUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EnvVar"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#EnvVar"><span class="hs-identifier hs-var">EnvVar</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="URL"><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#URL"><span class="hs-identifier hs-var">URL</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-251"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337806"><span id="local-6989586621689337808"><span class="annot"><span class="annottext">WebHookUrl -&gt; WebHookUrl -&gt; Bool
+</span><span id="line-251"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357466"><span id="local-6989586621689357468"><span class="annot"><span class="annottext">WebHookUrl -&gt; WebHookUrl -&gt; Bool
 (WebHookUrl -&gt; WebHookUrl -&gt; Bool)
 -&gt; (WebHookUrl -&gt; WebHookUrl -&gt; Bool) -&gt; Eq WebHookUrl
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -785,13 +785,13 @@ $c/= :: WebHookUrl -&gt; WebHookUrl -&gt; Bool
 $c== :: WebHookUrl -&gt; WebHookUrl -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-252"></span><span>
-</span><span id="line-253"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337803"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#WebHookUrl"><span class="hs-identifier hs-type">WebHookUrl</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-254"></span><span>  </span><span id="local-6989586621689337802"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser WebHookUrl
-</span><a href="#local-6989586621689337802"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.Object</span></span><span> </span><span id="local-6989586621689337801"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337801"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-255"></span><span>    </span><span id="local-6989586621689337800"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689337800"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337801"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
+</span><span id="line-253"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357463"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#WebHookUrl"><span class="hs-identifier hs-type">WebHookUrl</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-254"></span><span>  </span><span id="local-6989586621689357462"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser WebHookUrl
+</span><a href="#local-6989586621689357462"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.Object</span></span><span> </span><span id="local-6989586621689357461"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357461"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-255"></span><span>    </span><span id="local-6989586621689357460"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689357460"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357461"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span>
@@ -802,35 +802,35 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; WebHookUrl
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#EnvVar"><span class="hs-identifier hs-var">EnvVar</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689337800"><span class="hs-identifier hs-var">var</span></a></span><span>
-</span><span id="line-257"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.String</span></span><span> </span><span id="local-6989586621689337798"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689337798"><span class="hs-identifier hs-var">str</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">WebHookUrl -&gt; Parser WebHookUrl
+</span><a href="#local-6989586621689357460"><span class="hs-identifier hs-var">var</span></a></span><span>
+</span><span id="line-257"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.String</span></span><span> </span><span id="local-6989586621689357458"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689357458"><span class="hs-identifier hs-var">str</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">WebHookUrl -&gt; Parser WebHookUrl
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(WebHookUrl -&gt; Parser WebHookUrl)
 -&gt; WebHookUrl -&gt; Parser WebHookUrl
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; WebHookUrl
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#URL"><span class="hs-identifier hs-var">URL</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689337798"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><a href="#local-6989586621689357458"><span class="hs-identifier hs-var">str</span></a></span><span>
 </span><span id="line-258"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser WebHookUrl
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a
 </span><span class="hs-identifier hs-var">empty</span></span><span>
 </span><span id="line-259"></span><span>
-</span><span id="line-260"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337790"><span id="local-6989586621689337792"><span id="local-6989586621689337794"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#WebHookUrl"><span class="hs-identifier hs-type">WebHookUrl</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-261"></span><span>  </span><span id="local-6989586621689337789"><span class="annot"><span class="annottext">toJSON :: WebHookUrl -&gt; Value
-</span><a href="#local-6989586621689337789"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#EnvVar"><span class="hs-identifier hs-type">EnvVar</span></a></span><span> </span><span id="local-6989586621689337788"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689337788"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-260"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357450"><span id="local-6989586621689357452"><span id="local-6989586621689357454"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#WebHookUrl"><span class="hs-identifier hs-type">WebHookUrl</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-261"></span><span>  </span><span id="local-6989586621689357449"><span class="annot"><span class="annottext">toJSON :: WebHookUrl -&gt; Value
+</span><a href="#local-6989586621689357449"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#EnvVar"><span class="hs-identifier hs-type">EnvVar</span></a></span><span> </span><span id="local-6989586621689357448"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689357448"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689337788"><span class="hs-identifier hs-var">var</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-262"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#URL"><span class="hs-identifier hs-type">URL</span></a></span><span> </span><span id="local-6989586621689337787"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689337787"><span class="hs-identifier hs-var">url</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621689357448"><span class="hs-identifier hs-var">var</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-262"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#URL"><span class="hs-identifier hs-type">URL</span></a></span><span> </span><span id="local-6989586621689357447"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689357447"><span class="hs-identifier hs-var">url</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689337787"><span class="hs-identifier hs-var">url</span></a></span><span>
+</span><a href="#local-6989586621689357447"><span class="hs-identifier hs-var">url</span></a></span><span>
 </span><span id="line-263"></span><span>
 </span><span id="line-264"></span><span class="hs-comment">-- | 'TestWebhookTransform' can be used to test out request</span><span>
 </span><span id="line-265"></span><span class="hs-comment">-- transformations using mock data.</span><span>
@@ -852,7 +852,7 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><span id="line-275"></span><span>    </span><span id="_twtSessionVariables"><span class="annot"><span class="annottext">TestWebhookTransform -&gt; Maybe SessionVariables
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#_twtSessionVariables"><span class="hs-identifier hs-var hs-var">_twtSessionVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span>
 </span><span id="line-276"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-277"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689337775"><span id="local-6989586621689337777"><span class="annot"><span class="annottext">TestWebhookTransform -&gt; TestWebhookTransform -&gt; Bool
+</span><span id="line-277"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689357435"><span id="local-6989586621689357437"><span class="annot"><span class="annottext">TestWebhookTransform -&gt; TestWebhookTransform -&gt; Bool
 (TestWebhookTransform -&gt; TestWebhookTransform -&gt; Bool)
 -&gt; (TestWebhookTransform -&gt; TestWebhookTransform -&gt; Bool)
 -&gt; Eq TestWebhookTransform
@@ -876,16 +876,16 @@ $c== :: TestWebhookTransform -&gt; TestWebhookTransform -&gt; Bool
      RequestTransform
 forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
 </span><span class="hs-identifier hs-var">Lens.lens</span></span><span> </span><span class="annot"><span class="annottext">TestWebhookTransform -&gt; RequestTransform
-</span><a href="Hasura.RQL.DDL.Metadata.Types.html#_twtTransformer"><span class="hs-identifier hs-var hs-var">_twtTransformer</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689337773"><span class="annot"><span class="annottext">TestWebhookTransform
-</span><a href="#local-6989586621689337773"><span class="hs-identifier hs-var">twt</span></a></span></span><span> </span><span id="local-6989586621689337772"><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689337772"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TestWebhookTransform
-</span><a href="#local-6989586621689337773"><span class="hs-identifier hs-var">twt</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_twtTransformer :: RequestTransform
+</span><a href="Hasura.RQL.DDL.Metadata.Types.html#_twtTransformer"><span class="hs-identifier hs-var hs-var">_twtTransformer</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689357433"><span class="annot"><span class="annottext">TestWebhookTransform
+</span><a href="#local-6989586621689357433"><span class="hs-identifier hs-var">twt</span></a></span></span><span> </span><span id="local-6989586621689357432"><span class="annot"><span class="annottext">RequestTransform
+</span><a href="#local-6989586621689357432"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TestWebhookTransform
+</span><a href="#local-6989586621689357433"><span class="hs-identifier hs-var">twt</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_twtTransformer :: RequestTransform
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#_twtTransformer"><span class="hs-identifier hs-var">_twtTransformer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689337772"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689357432"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-281"></span><span>
-</span><span id="line-282"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337769"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#TestWebhookTransform"><span class="hs-identifier hs-type">TestWebhookTransform</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-283"></span><span>  </span><span id="local-6989586621689337768"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TestWebhookTransform
-</span><a href="#local-6989586621689337768"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-282"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357429"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#TestWebhookTransform"><span class="hs-identifier hs-type">TestWebhookTransform</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-283"></span><span>  </span><span id="local-6989586621689357428"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TestWebhookTransform
+</span><a href="#local-6989586621689357428"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser TestWebhookTransform)
 -&gt; Value
 -&gt; Parser TestWebhookTransform
@@ -897,10 +897,10 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser TestWebhookTransform
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689337767"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-284"></span><span>    </span><span id="local-6989586621689337766"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689337766"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Maybe Environment -&gt; Environment)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689357427"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-284"></span><span>    </span><span id="local-6989586621689357426"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689357426"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Maybe Environment -&gt; Environment)
 -&gt; Parser (Maybe Environment) -&gt; Parser Environment
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Environment -&gt; Maybe Environment -&gt; Environment
@@ -911,12 +911,12 @@ forall a. Monoid a =&gt; a
 -&gt; Parser (Maybe Environment) -&gt; Parser Environment
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Environment)
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Environment)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;env&quot;</span></span><span>
-</span><span id="line-285"></span><span>    </span><span id="local-6989586621689337764"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689337764"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">([(ByteString, ByteString)] -&gt; [Header])
+</span><span id="line-285"></span><span>    </span><span id="local-6989586621689357424"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689357424"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">([(ByteString, ByteString)] -&gt; [Header])
 -&gt; Parser [(ByteString, ByteString)] -&gt; Parser [Header]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((ByteString, ByteString) -&gt; Header)
@@ -932,40 +932,40 @@ forall s. FoldCase s =&gt; s -&gt; CI s
 -&gt; Parser [(ByteString, ByteString)] -&gt; Parser [Header]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [(ByteString, ByteString)])
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [(ByteString, ByteString)])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request_headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [(ByteString, ByteString)])
 -&gt; [(ByteString, ByteString)] -&gt; Parser [(ByteString, ByteString)]
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-286"></span><span>    </span><span id="local-6989586621689337762"><span class="annot"><span class="annottext">WebHookUrl
-</span><a href="#local-6989586621689337762"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser WebHookUrl
+</span><span id="line-286"></span><span>    </span><span id="local-6989586621689357422"><span class="annot"><span class="annottext">WebHookUrl
+</span><a href="#local-6989586621689357422"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser WebHookUrl
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;webhook_url&quot;</span></span><span>
-</span><span id="line-287"></span><span>    </span><span id="local-6989586621689337761"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689337761"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Value
+</span><span id="line-287"></span><span>    </span><span id="local-6989586621689357421"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689357421"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Value
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;body&quot;</span></span><span>
-</span><span id="line-288"></span><span>    </span><span id="local-6989586621689337760"><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689337760"><span class="hs-identifier hs-var">reqTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RequestTransform
+</span><span id="line-288"></span><span>    </span><span id="local-6989586621689357420"><span class="annot"><span class="annottext">RequestTransform
+</span><a href="#local-6989586621689357420"><span class="hs-identifier hs-var">reqTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RequestTransform
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request_transform&quot;</span></span><span>
-</span><span id="line-289"></span><span>    </span><span id="local-6989586621689337759"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689337759"><span class="hs-identifier hs-var">respTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe MetadataResponseTransform)
+</span><span id="line-289"></span><span>    </span><span id="local-6989586621689357419"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
+</span><a href="#local-6989586621689357419"><span class="hs-identifier hs-var">respTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe MetadataResponseTransform)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;response_transform&quot;</span></span><span>
-</span><span id="line-290"></span><span>    </span><span id="local-6989586621689337758"><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621689337758"><span class="hs-identifier hs-var">sessionVars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689337767"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SessionVariables)
+</span><span id="line-290"></span><span>    </span><span id="local-6989586621689357418"><span class="annot"><span class="annottext">Maybe SessionVariables
+</span><a href="#local-6989586621689357418"><span class="hs-identifier hs-var">sessionVars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689357427"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SessionVariables)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;session_variables&quot;</span></span><span>
@@ -983,31 +983,31 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe SessionVariables
 -&gt; TestWebhookTransform
 </span><a href="Hasura.RQL.DDL.Metadata.Types.html#TestWebhookTransform"><span class="hs-identifier hs-var">TestWebhookTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689337766"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689337764"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">WebHookUrl
-</span><a href="#local-6989586621689337762"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689337761"><span class="hs-identifier hs-var">payload</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689337760"><span class="hs-identifier hs-var">reqTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689337759"><span class="hs-identifier hs-var">respTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621689337758"><span class="hs-identifier hs-var">sessionVars</span></a></span><span>
+</span><a href="#local-6989586621689357426"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689357424"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">WebHookUrl
+</span><a href="#local-6989586621689357422"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689357421"><span class="hs-identifier hs-var">payload</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransform
+</span><a href="#local-6989586621689357420"><span class="hs-identifier hs-var">reqTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
+</span><a href="#local-6989586621689357419"><span class="hs-identifier hs-var">respTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
+</span><a href="#local-6989586621689357418"><span class="hs-identifier hs-var">sessionVars</span></a></span><span>
 </span><span id="line-292"></span><span>
-</span><span id="line-293"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689337751"><span id="local-6989586621689337753"><span id="local-6989586621689337755"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#TestWebhookTransform"><span class="hs-identifier hs-type">TestWebhookTransform</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-294"></span><span>  </span><span id="local-6989586621689337750"><span class="annot"><span class="annottext">toJSON :: TestWebhookTransform -&gt; Value
-</span><a href="#local-6989586621689337750"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#TestWebhookTransform"><span class="hs-identifier hs-type">TestWebhookTransform</span></a></span><span> </span><span id="local-6989586621689337749"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689337749"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621689337748"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689337748"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621689337747"><span class="annot"><span class="annottext">WebHookUrl
-</span><a href="#local-6989586621689337747"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621689337746"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689337746"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span id="local-6989586621689337745"><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689337745"><span class="hs-identifier hs-var">mt</span></a></span></span><span> </span><span id="local-6989586621689337744"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689337744"><span class="hs-identifier hs-var">mrt</span></a></span></span><span> </span><span id="local-6989586621689337743"><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621689337743"><span class="hs-identifier hs-var">sv</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-293"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689357411"><span id="local-6989586621689357413"><span id="local-6989586621689357415"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#TestWebhookTransform"><span class="hs-identifier hs-type">TestWebhookTransform</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-294"></span><span>  </span><span id="local-6989586621689357410"><span class="annot"><span class="annottext">toJSON :: TestWebhookTransform -&gt; Value
+</span><a href="#local-6989586621689357410"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#TestWebhookTransform"><span class="hs-identifier hs-type">TestWebhookTransform</span></a></span><span> </span><span id="local-6989586621689357409"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689357409"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621689357408"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689357408"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621689357407"><span class="annot"><span class="annottext">WebHookUrl
+</span><a href="#local-6989586621689357407"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621689357406"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689357406"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span id="local-6989586621689357405"><span class="annot"><span class="annottext">RequestTransform
+</span><a href="#local-6989586621689357405"><span class="hs-identifier hs-var">mt</span></a></span></span><span> </span><span id="local-6989586621689357404"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
+</span><a href="#local-6989586621689357404"><span class="hs-identifier hs-var">mrt</span></a></span></span><span> </span><span id="local-6989586621689357403"><span class="annot"><span class="annottext">Maybe SessionVariables
+</span><a href="#local-6989586621689357403"><span class="hs-identifier hs-var">sv</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-295"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
 </span><span id="line-296"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Environment -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689337749"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689357409"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-297"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request_headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [(ByteString, ByteString)] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -1021,31 +1021,31 @@ a b c -&gt; a (b, d) (c, d)
 </span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; ByteString
 forall s. CI s -&gt; s
 </span><span class="hs-identifier hs-var hs-var">CI.original</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689337748"><span class="hs-identifier hs-var">headers</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689357408"><span class="hs-identifier hs-var">headers</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-298"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;webhook_url&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; WebHookUrl -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">WebHookUrl
-</span><a href="#local-6989586621689337747"><span class="hs-identifier hs-var">url</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689357407"><span class="hs-identifier hs-var">url</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-299"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;body&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689337746"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689357406"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-300"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request_transform&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RequestTransform -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689337745"><span class="hs-identifier hs-var">mt</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689357405"><span class="hs-identifier hs-var">mt</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-301"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;response_transform&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe MetadataResponseTransform -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689337744"><span class="hs-identifier hs-var">mrt</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689357404"><span class="hs-identifier hs-var">mrt</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-302"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;session_variables&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe SessionVariables -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621689337743"><span class="hs-identifier hs-var">sv</span></a></span><span>
+</span><a href="#local-6989586621689357403"><span class="hs-identifier hs-var">sv</span></a></span><span>
 </span><span id="line-303"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-304"></span></pre></body></html>
