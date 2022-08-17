@@ -1,11 +1,11 @@
 This note is in [Hasura.RQL.DDL.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Permission.hs#L61).
 It is referenced at:
-  - line 79 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L79)
-  - line 130 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L130)
-  - line 370 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L370)
-  - line 407 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L407)
-  - line 278 of [Hasura.GraphQL.Schema.Update](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Update.hs#L278)
-  - line 316 of [Hasura.GraphQL.Schema.Update](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Update.hs#L316)
+  - line 80 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L80)
+  - line 131 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L131)
+  - line 374 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L374)
+  - line 411 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L411)
+  - line 283 of [Hasura.GraphQL.Schema.Update](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Update.hs#L283)
+  - line 321 of [Hasura.GraphQL.Schema.Update](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Update.hs#L321)
   - line 225 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L225)
   - line 344 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L344)
   - line 372 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L372)
