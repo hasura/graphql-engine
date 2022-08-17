@@ -40,6 +40,7 @@ export const composeOnEnterHooks = (hooks: Array<onEnterHook>) => {
         nextHook.call(this, nextState, replaceState);
         executeRemainingHooks(remainingHooks.slice(1));
       }
+      return undefined;
     };
     // initial execute with all the hooks.
     executeRemainingHooks(hooks);

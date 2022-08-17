@@ -60,6 +60,7 @@ const getQueryString = (
     // eslint-disable-next-line array-callback-return
     const fragmentDef = fragmentDefs.find(fd => {
       if (fd.name) return fd.name.value === qf;
+      return undefined;
     });
 
     if (fragmentDef) {

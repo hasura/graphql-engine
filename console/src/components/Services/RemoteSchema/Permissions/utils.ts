@@ -458,6 +458,7 @@ const isList = (gqlArg: GraphQLInputField, value: string) =>
 const serialiseArgs = (args: ArgTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
+
   Object.entries(args).forEach(([key, value]) => {
     if (isEmpty(value) || isEmpty(children)) {
       return;
@@ -525,6 +526,7 @@ export const checkDefaultGQLScalarType = (typeName: string): boolean => {
 const checkEmptyType = (type: RemoteSchemaFields) => {
   const isChecked = (element: FieldType | CustomFieldType) => element.checked;
   if (type.children) return type.children.some(isChecked);
+  return undefined;
 };
 
 interface FormatParamArgs {
@@ -655,6 +657,7 @@ const getSDLField = (
         result = `${result}
       ${fieldStr}`;
       }
+      return true;
     });
   return `${result}\n}`;
 };
@@ -795,6 +798,7 @@ const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
 
     return res;
   }
+  return undefined;
 };
 
 const getDirectives = (field: InputValueDefinitionNode) => {

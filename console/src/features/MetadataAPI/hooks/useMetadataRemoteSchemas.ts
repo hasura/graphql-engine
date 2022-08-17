@@ -61,6 +61,7 @@ export const useRemoteSchema = () => {
         setIsLoading(false);
         setError(e as APIError);
         setIsError(true);
+        return undefined;
       }
     },
     [client, headers]

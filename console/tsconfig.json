@@ -15,6 +15,7 @@
     "resolveJsonModule": true,
     "target": "es5",
     "baseUrl": ".",
+    "noImplicitReturns": true,
     "paths": {
       "@/*": ["./src/*"]
     }

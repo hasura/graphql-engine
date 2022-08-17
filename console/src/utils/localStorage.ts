@@ -36,6 +36,7 @@ export const removeLSItem = (key: string) => {
   }
 
   window.localStorage.removeItem(key);
+  return true;
 };
 
 type expiryValue = {

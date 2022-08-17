@@ -31,6 +31,8 @@ const server = setupServer(
         ctx.json({ message: 'mock success response from server' })
       );
     }
+
+    return Promise.resolve();
   })
 );
 

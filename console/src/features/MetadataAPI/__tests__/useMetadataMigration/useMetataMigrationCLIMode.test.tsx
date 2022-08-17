@@ -54,6 +54,7 @@ const server = setupServer(
         ctx.json({ message: 'mock success response from cli server' })
       );
     }
+    return undefined;
   })
 );
 
