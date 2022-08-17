@@ -388,6 +388,7 @@ type TreeViewProps = {
   schemaLoading: boolean;
   preLoadState: boolean;
   gdcItemClick: (value: Key[]) => void;
+  headers: any;
 };
 const TreeView: React.FC<TreeViewProps> = ({
   items,
@@ -400,6 +401,7 @@ const TreeView: React.FC<TreeViewProps> = ({
   schemaLoading,
   preLoadState,
   gdcItemClick,
+  headers,
 }) => {
   const handleSelectDataSource = (dataSource: string) => {
     onDatabaseChange(dataSource);
@@ -451,7 +453,7 @@ const TreeView: React.FC<TreeViewProps> = ({
       ))}
       {GDC_TREE_VIEW_DEV === 'enabled' ? (
         <div id="tree-container" className="inline-block">
-          <GDCTree onSelect={gdcItemClick} />
+          <GDCTree onSelect={gdcItemClick} headers={headers} />
         </div>
       ) : null}
     </div>

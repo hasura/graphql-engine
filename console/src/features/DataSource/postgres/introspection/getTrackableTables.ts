@@ -1,7 +1,11 @@
 import { runSQL } from '../../api';
 import { adaptIntrospectedTables } from '../../common/utils';
+import { GetTrackableTablesProps } from '../../types';
 
-export const getTrackableTables = async (dataSourceName: string) => {
+export const getTrackableTables = async ({
+  dataSourceName,
+  httpClient,
+}: GetTrackableTablesProps) => {
   const sql = `
   WITH partitions as (
     SELECT array(
@@ -25,6 +29,7 @@ export const getTrackableTables = async (dataSourceName: string) => {
       kind: 'postgres',
     },
     sql,
+    httpClient,
   });
 
   return adaptIntrospectedTables(tables);

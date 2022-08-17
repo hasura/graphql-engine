@@ -1,23 +1,21 @@
 import { getRunSqlType } from '@/components/Common/utils/v1QueryUtils';
-import { baseUrl as baseURL } from '@/Endpoints';
-import globals from '@/Globals';
-import axios from 'axios';
+import { AxiosInstance } from 'axios';
 import { Metadata, Source } from './types';
 
-export const httpClient = axios.create({
-  baseURL,
-  headers: {
-    'x-hasura-admin-secret': globals.adminSecret ?? '',
-  },
-});
+export interface NetworkArgs {
+  httpClient: AxiosInstance;
+}
 
-export const exportMetadata = async (): Promise<Metadata> =>
-  (
-    await httpClient.post('v1/metadata', {
+export const exportMetadata = async ({
+  httpClient,
+}: NetworkArgs): Promise<Metadata> => {
+  return (
+    await httpClient.post('/v1/metadata', {
       type: 'export_metadata',
       args: {},
     })
   ).data;
+};
 
 type RunSqlArgs = {
   source: Omit<Source, 'tables'>;
@@ -37,7 +35,8 @@ export type RunSQLResponse =
 export const runSQL = async ({
   source,
   sql,
-}: RunSqlArgs): Promise<RunSQLResponse> => {
+  httpClient,
+}: RunSqlArgs & NetworkArgs): Promise<RunSQLResponse> => {
   if (source.kind === 'gdc') throw Error('GDC does not support run sql');
 
   const type = getRunSqlType(source.kind);

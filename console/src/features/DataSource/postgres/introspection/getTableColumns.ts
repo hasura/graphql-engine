@@ -1,11 +1,13 @@
 import { PostgresTable } from '..';
 import { runSQL } from '../../api';
 import { adaptTableColumns } from '../../common/utils';
+import { GetTableColumnsProps } from '../../types';
 
-export const getTableColumns = async (
-  dataSourceName: string,
-  table: unknown
-) => {
+export const getTableColumns = async ({
+  dataSourceName,
+  table,
+  httpClient,
+}: GetTableColumnsProps) => {
   const { schema, name } = table as PostgresTable;
 
   const sql = `
@@ -23,6 +25,7 @@ export const getTableColumns = async (
       kind: 'postgres',
     },
     sql,
+    httpClient,
   });
 
   return adaptTableColumns(tables.result);

@@ -7,7 +7,17 @@ import { Provider } from 'react-redux';
 const HookTestProvider: React.FC = ({ children }) => {
   return (
     <Provider store={store}>
-      <QueryClientProvider client={new QueryClient()}>
+      <QueryClientProvider
+        client={
+          new QueryClient({
+            defaultOptions: {
+              queries: {
+                retry: false,
+              },
+            },
+          })
+        }
+      >
         {children}
       </QueryClientProvider>
     </Provider>

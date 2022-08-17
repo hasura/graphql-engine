@@ -1,3 +1,5 @@
+import { NetworkArgs } from './api';
+
 export type Ref = { $ref: string };
 
 export type OneOf = { oneOf: (Property | Ref)[]; description?: string };
@@ -89,3 +91,12 @@ export type TableColumn = {
  * expected in APIs the server provides when it asks for a table property.
  */
 export type Table = unknown;
+
+export type GetTrackableTablesProps = {
+  dataSourceName: string;
+  configuration: any;
+} & NetworkArgs;
+export type GetTableColumnsProps = {
+  dataSourceName: string;
+  table: Table;
+} & NetworkArgs;
