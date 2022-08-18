@@ -63,7 +63,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   const maybeError = get(errors, name) as FieldError | undefined;
   return (
     <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
-      <div className={clsx('relative flex')}>
+      <div className={clsx('relative flex max-w-xl')}>
         {prependLabel !== '' ? (
           <span className="inline-flex items-center h-input rounded-l text-muted font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50 whitespace-nowrap shadow-sm">
             {prependLabel}
@@ -83,7 +83,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           aria-label={wrapperProps.label}
           data-test={dataTest}
           className={clsx(
-            'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500',
+            'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500',
             prependLabel !== '' ? 'rounded-l-none' : '',
             appendLabel !== '' ? 'rounded-r-none' : '',
             maybeError

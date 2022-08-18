@@ -24,6 +24,7 @@ export const IconTooltip: React.VFC<IconTooltipProps> = ({
     tooltipContentChildren={message}
     side={side}
     defaultOpen={defaultOpen}
+    className="flex items-center"
   >
     <FaQuestionCircle
       className={`h-4 text-muted cursor-pointer ${className}`}
