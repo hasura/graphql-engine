@@ -6,7 +6,8 @@
   },
   "files": [
     "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../node_modules/@nrwl/react/typings/image.d.ts",
+    "../../types/graphiql-code-exporter.d.ts"
   ],
   "exclude": [
     "jest.config.ts",
