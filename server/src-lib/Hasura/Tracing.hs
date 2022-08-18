@@ -58,8 +58,9 @@ newtype Reporter = Reporter
 noReporter :: Reporter
 noReporter = Reporter \_ _ -> fmap fst
 
--- | A type class for monads which support some
--- way to report execution traces.
+-- | A type class for monads which support some way to report execution traces.
+--
+-- See @instance Tracing.HasReporter (AppM impl)@ in @HasuraPro.App@.
 class Monad m => HasReporter m where
   -- | Get the current tracer
   askReporter :: m Reporter
@@ -76,7 +77,8 @@ instance HasReporter m => HasReporter (ExceptT e m) where
 -- the active span within that trace, and the span's parent,
 -- unless the current span is the root.
 data TraceContext = TraceContext
-  { tcCurrentTrace :: !Word64,
+  { -- | TODO what is this exactly? The topmost span id?
+    tcCurrentTrace :: !Word64,
     tcCurrentSpan :: !Word64,
     tcCurrentParent :: !(Maybe Word64)
   }
@@ -188,6 +190,8 @@ interpTraceT f (TraceT rwma) = do
 -- | If the underlying monad can report trace data, then 'TraceT' will
 -- collect it and hand it off to that reporter.
 instance MonadIO m => MonadTrace (TraceT m) where
+  -- Note: this implementation is so awkward because we don't want to give the
+  -- derived MonadReader/Writer instances to TraceT
   trace name ma = TraceT . ReaderT $ \(ctx, rep) -> do
     spanId <- liftIO (Rand.randomIO :: IO Word64)
     let subCtx =
@@ -277,6 +281,10 @@ extractEventContext e = do
 
 -- | Perform HTTP request which supports Trace headers using a
 -- HTTP.Request value
+--
+-- TODO REFACTOR:
+--   - inline 'HTTP.performRequest' so that we can be sure a trace is always logged
+--   - Inline 'try' here since we always use that at call sites
 tracedHttpRequest ::
   MonadTrace m =>
   -- | http request that needs to be made

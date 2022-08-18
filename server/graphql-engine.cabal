@@ -425,6 +425,7 @@ library
                      , Database.MSSQL.Pool
                      , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
+                     , GHC.Generics.Extended
                      , Hasura.App
                      , Hasura.Metadata.Class
 
