@@ -9,12 +9,11 @@ module Test.Schema.DefaultValuesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
-import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql, postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -29,15 +28,15 @@ spec =
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Postgres.setupTablesAction schema testEnvironment
+                [ Postgres.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Postgres testEnvironment
                 ]
-                  <> setupMetadata Fixture.Postgres testEnvironment
             },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Sqlserver.setupTablesAction schema testEnvironment
+                [ Sqlserver.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.SQLServer testEnvironment
                 ]
-                  <> setupMetadata Fixture.SQLServer testEnvironment
             }
         ]
     )
@@ -89,7 +88,7 @@ tests opts = do
               ]
               [graphql|
                 mutation author {
-                  insert_hasura_author(objects: { name: "Author 1" }) {
+                  insert_hasura_author(objects: [{ name: "Author 1" }]) {
                     returning {
                       uuid
                       name
@@ -210,74 +209,69 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> [Fixture.SetupAction]
-setupMetadata backendType testEnvironment =
-  let backend = T.pack $ Fixture.defaultBackendTypeString backendType
+setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendType testEnvironment = do
+  let backend :: String
+      backend = Fixture.defaultBackendTypeString backendType
+
+      schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
-      createSelect = backend <> "_create_select_permission"
-      dropSelect = backend <> "_drop_select_permission"
-      createInsert = backend <> "_create_insert_permission"
-      dropInsert = backend <> "_drop_insert_permission"
-   in [ Fixture.SetupAction
-          { Fixture.setupAction =
-              postMetadata_
-                testEnvironment
-                [yaml|
-                type: *createSelect
-                args:
-                  source: *backend
-                  table:
-                    schema: *schemaName
-                    name: author
-                  role: user
-                  permission:
-                    filter:
-                      uuid: X-Hasura-User-Id
-                    columns: '*'
-              |],
-            Fixture.teardownAction = \_ ->
-              postMetadata_
-                testEnvironment
-                [yaml|
-                type: *dropSelect
-                args:
-                  source: *backend
-                  table:
-                    schema: *schemaName
-                    name: author
-                  role: user
-                |]
-          },
-        Fixture.SetupAction
-          { Fixture.setupAction =
-              postMetadata_
-                testEnvironment
-                [yaml|
-            type: *createInsert
+
+      setup :: IO ()
+      setup =
+        postMetadata_
+          testEnvironment
+          [interpolateYaml|
+            type: bulk
             args:
-              source: *backend
-              table:
-                schema: *schemaName
-                name: author
-              role: user
-              permission:
-                check: {}
-                set:
-                  uuid: X-Hasura-User-Id
-                  company: hasura
-                columns: '*'
-          |],
-            Fixture.teardownAction = \_ ->
-              postMetadata_
-                testEnvironment
-                [yaml|
-                type: *dropInsert
-                args:
-                  source: *backend
-                  table:
-                    schema: *schemaName
-                    name: author
-                  role: user
-                |]
-          }
-      ]
+            - type: #{backend}_create_select_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+                permission:
+                  filter:
+                    uuid: X-Hasura-User-Id
+                  columns: '*'
+
+            - type: #{backend}_create_insert_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+                permission:
+                  check: {}
+                  set:
+                    uuid: X-Hasura-User-Id
+                    company: hasura
+                  columns: '*'
+          |]
+
+      teardown :: IO ()
+      teardown =
+        postMetadata_
+          testEnvironment
+          [interpolateYaml|
+            type: bulk
+            args:
+            - type: #{backend}_drop_select_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+            - type: #{backend}_drop_insert_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+          |]
+
+  Fixture.SetupAction setup \_ -> teardown

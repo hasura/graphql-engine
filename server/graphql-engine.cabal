@@ -1258,9 +1258,9 @@ test-suite tests-hspec
     Test.EventTrigger.EventTriggersRecreationSpec
     Test.EventTrigger.EventTriggersRunSQLSpec
     Test.HelloWorldSpec
-    Test.InsertDefaultsSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
+    Test.Postgres.DefaultValuesSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
     Test.Queries.Directives.IncludeAndSkipSpec
@@ -1292,6 +1292,7 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
+    Test.SQLServer.DefaultValuesSpec
     Test.Schema.DataValidation.Permissions.InsertSpec
     Test.Schema.DataValidation.Permissions.SelectSpec
     Test.Schema.DefaultValuesSpec
