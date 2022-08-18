@@ -27,14 +27,14 @@ spec :: SpecWith TestEnvironment
 spec =
   Context.runWithLocalTestEnvironment
     [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              -- setup the webhook server as the local test environment,
-              -- so that the server can be referenced while testing
-              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
-            }
+        { name = Context.Backend Context.Postgres,
+          -- setup the webhook server as the local test environment,
+          -- so that the server can be referenced while testing
+          mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+          setup = postgresSetup,
+          teardown = postgresTeardown,
+          customOptions = Nothing
+        }
     ]
     tests
 
