@@ -24,14 +24,14 @@ spec =
           table = Expect.mkTable "test",
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
-          where_ = [(P.idColumn, [AEQ True P.integerValue])],
-          update = Expect.UpdateTable [(P.nameColumn, UpdateSet P.textValue)],
+          where_ = [(P.idColumn, [AEQ True P.integerOne])],
+          update = Expect.UpdateTable [(P.nameColumn, UpdateSet P.textNew)],
           expectedSQL =
             [QQ.sql|
 UPDATE "public"."test"
-  SET "name" = $1
+  SET "name" = ('new name'):: text
   WHERE
-    (("public"."test"."id") = ($0))
+    (("public"."test"."id") = (('1')::integer))
   RETURNING * , ('true')::boolean AS "check__constraint"
               |]
         }
@@ -42,18 +42,18 @@ UPDATE "public"."test"
           table = Expect.mkTable "test",
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
-          where_ = [(P.idColumn, [AEQ True P.integerValue])],
+          where_ = [(P.idColumn, [AEQ True P.integerOne])],
           update =
             Expect.UpdateTable
-              [ (P.nameColumn, UpdateSet P.textValue),
-                (P.descColumn, UpdateSet P.textValue)
+              [ (P.nameColumn, UpdateSet P.textNew),
+                (P.descColumn, UpdateSet P.textOther)
               ],
           expectedSQL =
             [QQ.sql|
 UPDATE "public"."test"
-  SET "name" = $1, "description" = $2
+  SET "name" = ('new name')::text, "description" = ('other')::text
   WHERE
-    (("public"."test"."id") = ($0))
+    (("public"."test"."id") = (('1')::integer))
   RETURNING * , ('true')::boolean AS "check__constraint"
               |]
         }
@@ -65,21 +65,21 @@ UPDATE "public"."test"
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           where_ =
-            [ (P.idColumn, [AEQ True P.integerValue]),
-              (P.nameColumn, [AEQ False P.textValue])
+            [ (P.idColumn, [AEQ True P.integerOne]),
+              (P.nameColumn, [AEQ False P.textOld])
             ],
-          update = Expect.UpdateTable [(P.nameColumn, UpdateSet P.textValue)],
+          update = Expect.UpdateTable [(P.nameColumn, UpdateSet P.textNew)],
           expectedSQL =
             [QQ.sql|
 UPDATE "public"."test"
-  SET "name" = $2
+  SET "name" = ('new name')::text
   WHERE
-    ((("public"."test"."id") = ($0))
+    ((("public"."test"."id") = (('1')::integer))
       AND
-     ((("public"."test"."name") = ($1))
+     ((("public"."test"."name") = (('old name')::text))
        OR
       ((("public"."test"."name") IS NULL)
-        AND (($1) IS NULL))
+        AND ((('old name')::text) IS NULL))
       ))
   RETURNING * , ('true')::boolean AS "check__constraint"
               |]
@@ -96,35 +96,35 @@ UPDATE "public"."test"
             Expect.UpdateMany $
               [ Expect.MultiRowUpdateBuilder
                   { mrubWhere =
-                      [ (P.idColumn, [AEQ True P.integerValue]),
-                        (P.nameColumn, [AEQ False P.integerValue])
+                      [ (P.idColumn, [AEQ True P.integerOne]),
+                        (P.nameColumn, [AEQ False P.textNew])
                       ],
-                    mrubUpdate = [(P.nameColumn, UpdateSet P.textValue)]
+                    mrubUpdate = [(P.nameColumn, UpdateSet P.textNew)]
                   },
                 Expect.MultiRowUpdateBuilder
-                  { mrubWhere = [(P.idColumn, [AEQ True P.integerValue])],
-                    mrubUpdate = [(P.descColumn, UpdateSet P.textValue)]
+                  { mrubWhere = [(P.idColumn, [AEQ True P.integerOne])],
+                    mrubUpdate = [(P.descColumn, UpdateSet P.textNew)]
                   }
               ],
           expectedSQL =
             [ [QQ.sql|
 UPDATE "public"."test"
-  SET "name" = $2
+  SET "name" = ('new name')::text
   WHERE
-    ((("public"."test"."id") = ($0))
+    ((("public"."test"."id") = (('1')::integer))
       AND
-     ((("public"."test"."name") = ($1))
+     ((("public"."test"."name") = (('new name')::text))
        OR
       ((("public"."test"."name") IS NULL)
-        AND (($1) IS NULL))
+        AND ((('new name')::text) IS NULL))
       ))
   RETURNING * , ('true')::boolean AS "check__constraint"
               |],
               [QQ.sql|
 UPDATE "public"."test"
-  SET "description" = $4
+  SET "description" = ('new name')::text
   WHERE
-    (("public"."test"."id") = ($3))
+    (("public"."test"."id") = (('1')::integer))
   RETURNING * , ('true')::boolean AS "check__constraint"
               |]
             ]
