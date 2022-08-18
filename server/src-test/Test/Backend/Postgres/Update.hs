@@ -20,14 +20,13 @@ import Hasura.RQL.IR.BoolExp (OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnInfo)
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
+import Hasura.SQL.Backend (PostgresKind (Vanilla))
 import Hasura.SQL.Types (toSQLTxt)
+import Test.Backend.Postgres.Misc (PG)
 import Test.HUnit.Base (assertFailure)
 import Test.Hspec
 import Test.Parser.Expectation qualified as Expect
 import Test.SIString qualified as SI
-
-type PG = 'Postgres 'Vanilla
 
 -- | Describes a /mkUpdateCTE/ test.
 data TestBuilder e = TestBuilder
