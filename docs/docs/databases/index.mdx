@@ -30,6 +30,12 @@ Hasura GraphQL engine supports:
 - [BigQuery](/databases/bigquery/index.mdx)
 - **MySQL** (in preview) - See the [preview guide](/guides/mysql-preview.mdx)
 
+:::tip Tip
+
+Although it is safe to use Hasura with a serverless database, caution must be maintained because some functionalities - such as subscriptions or event triggers - will force a serverless database to be always on.
+
+:::
+
 ### Feature support
 
 The below matrices show the database wise support for the different GraphQL features under schema, queries, mutations
