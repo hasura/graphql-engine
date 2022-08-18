@@ -1,3 +1,5 @@
+-- | Our HTTP client library, with better ergonomics for logging and so on (see
+-- 'Request').
 module Network.HTTP.Client.Transformable
   ( Request,
     mkRequestThrow,
@@ -79,6 +81,8 @@ import Prelude
 -- ...or
 --
 -- >  import qualified Network.HTTP.Client.Transformable as Transformable
+--
+-- Use 'performRequest' to execute the request.
 data Request = Request
   { rdRequest :: Client.Request,
     rdBody :: Maybe BL.ByteString
@@ -283,5 +287,7 @@ toRequest Request {rdRequest, rdBody} = case rdBody of
   Nothing -> rdRequest
   Just body' -> NHS.setRequestBody (Client.RequestBodyLBS body') rdRequest
 
+-- | NOTE: for now, please always wrap this in @tracedHttpRequest@ to make sure
+-- a trace is logged.
 performRequest :: Request -> Client.Manager -> IO (Client.Response BL.ByteString)
 performRequest req manager = Client.httpLbs (toRequest req) manager

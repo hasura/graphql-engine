@@ -17,6 +17,7 @@ import Data.Environment qualified as Env
 import Data.Has (Has)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import GHC.Generics.Extended (constrName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
@@ -197,6 +198,10 @@ data RQLMetadataV1
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
+  deriving (Generic)
+
+-- NOTE! If you add a new request type here that is read-only, make sure to
+--       update queryModifiesMetadata
 
 instance FromJSON RQLMetadataV1 where
   parseJSON = withObject "RQLMetadataV1" \o -> do
@@ -310,6 +315,9 @@ instance FromJSON RQLMetadataRequest where
       VIVersion1 -> RMV1 <$> parseJSON val
       VIVersion2 -> RMV2 <$> parseJSON val
 
+-- | The payload for the @/v1/metadata@ endpoint. See:
+--
+-- https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/
 data RQLMetadata = RQLMetadata
   { _rqlMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
     _rqlMetadata :: !RQLMetadataRequest
@@ -338,7 +346,7 @@ runMetadataQuery ::
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
-  (metadata, currentResourceVersion) <- fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM env currentResourceVersion _rqlMetadata
       & flip runReaderT logger
@@ -352,16 +360,20 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
-        newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        newResourceVersion <-
+          Tracing.trace "setMetadata" $
+            setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
 
         -- notify schema cache sync
-        notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+        Tracing.trace "notifySchemaCacheSync" $
+          notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
         (_, modSchemaCache', _) <-
-          setMetadataResourceVersionInSchemaCache newResourceVersion
-            & runCacheRWT modSchemaCache
-            & peelRun (RunCtx userInfo httpManager serverConfigCtx)
-            & runExceptT
-            & liftEitherM
+          Tracing.trace "setMetadataResourceVersionInSchemaCache" $
+            setMetadataResourceVersionInSchemaCache newResourceVersion
+              & runCacheRWT modSchemaCache
+              & peelRun (RunCtx userInfo httpManager serverConfigCtx)
+              & runExceptT
+              & liftEitherM
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -391,7 +403,7 @@ queryModifiesMetadata = \case
       RMDeleteScheduledEvent _ -> False
       RMTestWebhookTransform _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
-      _ -> True
+      _ -> True -- NOTE: Making the fall-through 'True' is defensive
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -416,8 +428,14 @@ runMetadataQueryM ::
   m EncJSON
 runMetadataQueryM env currentResourceVersion =
   withPathK "args" . \case
-    RMV1 q -> runMetadataQueryV1M env currentResourceVersion q
-    RMV2 q -> runMetadataQueryV2M currentResourceVersion q
+    -- NOTE: This is a good place to install tracing, since it's involved in
+    -- the recursive case via "bulk":
+    RMV1 q ->
+      Tracing.trace ("v1 " <> T.pack (constrName q)) $
+        runMetadataQueryV1M env currentResourceVersion q
+    RMV2 q ->
+      Tracing.trace ("v2 " <> T.pack (constrName q)) $
+        runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M ::
   forall m r.
