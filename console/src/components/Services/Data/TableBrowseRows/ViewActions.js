@@ -16,6 +16,7 @@ import {
   isFeatureSupported,
 } from '../../../../dataSources';
 import { getTableConfiguration } from './utils';
+import { reloadDataSource } from '@/metadata/actions';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -85,6 +86,29 @@ const vMakeRowsRequest = () => {
 
     return dispatch(requestAction(endpoint, options)).then(
       data => {
+        if (data?.errors) {
+          Promise.all([
+            dispatch(
+              showErrorNotification(
+                'Browse query failed',
+                data?.errors?.[0]?.message || '',
+                {
+                  callToAction: 'reload-metadata',
+                  callback: () => {
+                    dispatch(
+                      reloadDataSource({
+                        driver: tables.driver,
+                        name: tables.currentDataSource,
+                      })
+                    );
+                  },
+                }
+              )
+            ),
+            dispatch({ type: V_REQUEST_PROGRESS, data: false }),
+          ]);
+          return;
+        }
         const { currentSchema, currentTable: originalTable } = tables;
         const { rows, estimatedCount } = processTableRowData(data, {
           currentSchema,
