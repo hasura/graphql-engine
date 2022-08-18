@@ -1040,6 +1040,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.SQL.Select.RenameIdentifiersSpec
     Hasura.Backends.Postgres.SQL.ValueSpec
     Hasura.Backends.Postgres.Translate.DeleteSpec
+    Hasura.Backends.Postgres.Translate.InsertSpec
     Hasura.Backends.Postgres.Translate.UpdateSpec
     Hasura.EventingSpec
     Hasura.Generator.Common
@@ -1073,11 +1074,13 @@ test-suite graphql-engine-tests
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Utils
     Test.Backend.Postgres.Delete
+    Test.Backend.Postgres.Insert
     Test.Backend.Postgres.Misc
     Test.Backend.Postgres.Update
     Test.Parser.Delete
     Test.Parser.Expectation
     Test.Parser.Field
+    Test.Parser.Insert
     Test.Parser.Internal
     Test.Parser.Monad
     Test.QuickCheck.Extended
