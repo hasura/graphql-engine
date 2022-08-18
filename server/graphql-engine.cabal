@@ -1073,6 +1073,7 @@ test-suite graphql-engine-tests
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Utils
     Test.Backend.Postgres.Delete
+    Test.Backend.Postgres.Misc
     Test.Backend.Postgres.Update
     Test.Parser.Delete
     Test.Parser.Expectation
