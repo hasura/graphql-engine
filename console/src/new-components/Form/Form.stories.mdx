@@ -286,7 +286,7 @@ export const TemplateManuallyTriggerFormValidation = args => {
 
 ### 💠 Manually focus a field
 
-In this example, the form `inputFieldName` field is automatically focused when `args.focus` is `true` thanks to a
+In this example, the form `codeEditorFieldName` field is automatically focused when `args.focus` is `true` thanks to a
 `useImperativeHandle` hook:
 
 ```tsx
@@ -295,7 +295,7 @@ const TemplateManuallyFocusField = args => {
   useEffect(() => {
     if (args && args.focus) {
       // Use useEffect hook to wait for the form to be rendered before focusing field
-      formRef.current.setFocus('inputFieldName');
+      formRef.current.setFocus('codeEditorFieldName');
     }
   });
   return (
@@ -308,10 +308,10 @@ const TemplateManuallyFocusField = args => {
       {({ control }) => (
         <div className="space-y-2">
           <h1 className="text-xl font-semibold mb-xs">Manually focus field</h1>
-          <InputField
-            name="inputFieldName"
-            label="The input field label"
-            placeholder="Input field placeholder"
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="The code editor field label"
+            placeholder="Code editor field placeholder"
           />
           <Button type={'submit'} mode={'primary'}>
             Submit
@@ -330,7 +330,7 @@ export const TemplateManuallyFocusField = args => {
   useEffect(() => {
     if (args && args.focus) {
       // Use useEffect hook to wait for the form to be rendered before before focusing field
-      formRef.current.setFocus('inputFieldName');
+      formRef.current.setFocus('codeEditorFieldName');
     }
   });
   return (
@@ -343,10 +343,10 @@ export const TemplateManuallyFocusField = args => {
       {({ control }) => (
         <div className="space-y-2">
           <h1 className="text-xl font-semibold mb-xs">Manually focus field</h1>
-          <InputField
-            name="inputFieldName"
-            label="The input field label"
-            placeholder="Input field placeholder"
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="The code editor field label"
+            placeholder="Code editor field placeholder"
           />
           <Button type={'submit'} mode={'primary'}>
             Submit

@@ -1,5 +1,6 @@
 import React from 'react';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
+import clsx from 'clsx';
 
 export type TooltipProps = {
   /**
@@ -10,18 +11,23 @@ export type TooltipProps = {
    * The tooltip content children
    */
   tooltipContentChildren: React.ReactNode;
+  /**
+   * The tooltip classes
+   */
+  className?: string;
 } & Pick<RadixTooltip.TooltipContentProps, 'side'> &
   Pick<RadixTooltip.TooltipProps, 'defaultOpen'>;
 
 export const Tooltip: React.VFC<TooltipProps> = ({
   children,
   tooltipContentChildren,
+  className,
   side = 'right',
   defaultOpen = false,
 }) => (
   <RadixTooltip.Root delayDuration={0} defaultOpen={defaultOpen}>
     <RadixTooltip.Trigger
-      className="ml-xs inline"
+      className={clsx('ml-xs inline', className)}
       data-testid="tooltip-trigger"
     >
       {children}

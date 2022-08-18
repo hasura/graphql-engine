@@ -99,9 +99,10 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     <div
       className={clsx(
         className,
-        'max-w-screen-md',
         size === 'medium' ? 'w-1/2' : 'w-full',
-        horizontal && 'flex flex-row flex-wrap w-full justify-between'
+        horizontal
+          ? 'flex flex-row flex-wrap w-full max-w-screen-md justify-between'
+          : 'max-w-xl'
       )}
     >
       <label
@@ -128,7 +129,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
           {tooltip ? <IconTooltip message={tooltip} /> : null}
         </span>
         {description ? (
-          <span className="text-gray-600 mb-xs font-normal text-sm">
+          <span className="text-muted mb-xs font-normal text-sm">
             {description}
           </span>
         ) : null}
