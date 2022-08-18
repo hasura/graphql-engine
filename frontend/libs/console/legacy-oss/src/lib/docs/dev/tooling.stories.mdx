@@ -1,0 +1,93 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Dev/Tooling" />
+
+# Hasura Console Development Tooling
+
+This document explains different toolings that we use at Hasura console team.
+
+### Storybook
+
+[Storybook](https://storybook.js.org/) is used to ease isolated component development. Idea is to have component stories for the new components with/without business logic.
+
+#### What is a story?
+
+A story captures the rendered state of a UI component. It’s a function that returns a component’s state given a set of arguments.
+
+Stories can have mock data to render the component that handles different type of UI rendering and user events. Mocks are mainly used as props or network mocks to simulate constant data.
+
+It can be considered as a documentation + example instances of a UI component.
+
+When there are hooks inside the component (side effects) that fetches the data from network call, [MSW](https://mswjs.io) is used to mock the API call.
+
+#### How to start storybook?
+
+```bash
+npm run storybook
+```
+
+### React-Query
+
+[React-query](https://react-query.tanstack.com/) is used for data fetching and related state management purpose.
+
+#### Debugging (React-Query DevTools)
+
+Console code has enabled [DevTools](https://react-query.tanstack.com/devtools) on development environment. This helps developers to understand the state of each queries with visualisation.
+
+### Redux
+
+[Redux](https://redux.js.org/) is currently used in the console code for global state management, data fetching etc. but we are trying reduce redux usage and increase component level states and react query for API states.
+
+#### Debugging (Redux DevTools)
+
+Console development server can be debugged with the [redux devtools](https://github.com/reduxjs/redux-devtools) for debugging redux state changes.
+
+### XState
+
+[XState](https://xstate.js.org/) is introduced to simplify the state management, we use it mostly at the component level to make component development easier.
+
+### Tailwind CSS
+
+[Tailwind CSS](https://tailwindcss.com/) is used as the main CSS framework
+
+### Mock Service Worker
+
+[MSW](https://mswjs.io) is used to mock network calls for testing purpose. It is mainly used to test hooks, components, and on component stories.
+
+### react-hook-form
+
+[react-hook-form](https://react-hook-form.com/) is used to build new form components.
+
+### Zod
+
+[Zod](https://github.com/colinhacks/zod) is used for schema validation.
+
+### Linter and Formatter
+
+Pre-commit git-hook that runs linter and formatter is by default disabled. You can enable it by adding `HUSKY_PRE_COMMIT=true` to your `.env` file.
+
+- [ESlint](https://eslint.org/) is used as the linter on console code.
+  If you want to run a linter for all files, you can do:
+
+  ```bash
+  npm run lint
+  ```
+
+- [Prettier](https://prettier.io/) is used as the code formatter on console code.
+  To format all files, you can run:
+
+  ```bash
+  npm run format
+  ```
+
+### Testing
+
+Refer to the [Test Tooling doc](./testing/2-test-tooling.mdx).
+
+### Webpack
+
+[Webpack](https://webpack.js.org/) is used for module bundling. Different webpack configurations are used to optimise production build and development server.
+
+### Husky
+
+[Husky](https://github.com/typicode/husky) is used to configure pre-commit git-hook that runs linter and formatter. You can enable it by adding `HUSKY_PRE_COMMIT=true` to your `.env` file.

@@ -1,0 +1,228 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import {
+  userEvent,
+  waitFor,
+  waitForElementToBeRemoved,
+  within,
+} from '@storybook/testing-library';
+import { screen } from '@testing-library/dom';
+import { expect } from '@storybook/jest';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { Tooltip } from '@/new-components/Tooltip';
+
+<Meta
+  title="components/Tooltip ✨"
+  component={Tooltip}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+  decorators={[
+    Story => <div className={'p-16 w-full flex justify-center'}>{Story()}</div>,
+  ]}
+/>
+
+export const ChildrenExample = (
+  <div
+    className={
+      'text-black dark:text-white text-center bg-gray-200 dark:bg-gray-700 py-1 rounded'
+    }
+    style={{ backgroundImage: '100%' }}
+  >
+    &lt;--SLOT--&gt;
+  </div>
+);
+
+# Tooltip
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Tooltip/Tooltip.tsx)
+
+## 🧰 Overview
+
+This component is wrapping a [radix-ui tooltip component](https://www.radix-ui.com/docs/primitives/components/tooltip)
+triggered when one of its children is hovered. The side of the tooltip is determined by the `side` prop.
+
+Default CSS display is `inline`, provided without padding and margin (displayed here with `padding: 2rem;`).
+
+### Basic usage
+
+```ts
+import { Tooltip } from '@/new-components/Tooltip';
+```
+
+```tsx
+<Tooltip
+  tooltipContentChildren="The tooltip tooltipContentChildren"
+  children={ChildrenExample}
+/>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <Tooltip
+      tooltipContentChildren="The tooltip tooltipContentChildren"
+      children={ChildrenExample}
+    />
+  </Story>
+</Canvas>
+
+export const Template = args => <Tooltip {...args} />;
+
+export const CustomTemplateStoriesFactory = Template =>
+  TemplateStoriesFactory(Template, 'py-20 flex justify-center');
+
+export const stories = {
+  'States - Hovered': {
+    tooltipContentChildren: 'The tooltip tooltipContentChildren',
+    children: ChildrenExample,
+  },
+  'Variant - Side Top': {
+    side: 'top',
+    tooltipContentChildren: 'The tooltip tooltipContentChildren',
+    children: ChildrenExample,
+  },
+  'Variant - Side Right': {
+    side: 'right',
+    tooltipContentChildren: 'The tooltip tooltipContentChildren',
+    children: ChildrenExample,
+  },
+  'Variant - Side Bottom': {
+    side: 'bottom',
+    tooltipContentChildren: 'The tooltip tooltipContentChildren',
+    children: ChildrenExample,
+  },
+  'Variant - Side Left': {
+    side: 'left',
+    tooltipContentChildren: 'The tooltip tooltipContentChildren',
+    children: ChildrenExample,
+  },
+  'Variant - Default Open': {
+    defaultOpen: true,
+    tooltipContentChildren: 'The tooltip tooltipContentChildren',
+    children: ChildrenExample,
+  },
+  'API playground': {
+    tooltipContentChildren: 'The tooltip tooltipContentChildren',
+    children: ChildrenExample,
+  },
+  'Testing - Scalability': {
+    children: ChildrenExample,
+    tooltipContentChildren: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.`,
+  },
+};
+
+## 🔁 States
+
+### 🔁 Hovered
+
+<Canvas>
+  <Story
+    name="States - Hovered"
+    args={stories['States - Hovered']}
+    play={async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+      await waitFor(async () => {
+        await userEvent.hover(canvas.getByTestId('tooltip-trigger'));
+      });
+      await waitFor(() => {
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      });
+      await waitFor(async () => {
+        await userEvent.unhover(canvas.getByTestId('tooltip-trigger'));
+      });
+      await waitFor(() => {
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      });
+    }}
+  >
+    >{Template.bind({})}
+  </Story>
+</Canvas>
+
+## 🎭 Variants
+
+### 🎭 Side
+
+<Canvas>
+  <Story
+    name="Variant - Side"
+    args={{
+      'Variant - Side Top': stories['Variant - Side Top'],
+      'Variant - Side Right': stories['Variant - Side Right'],
+      'Variant - Side Bottom': stories['Variant - Side Bottom'],
+      'Variant - Side Left': stories['Variant - Side Left'],
+    }}
+  >
+    {CustomTemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+### 🎭 Default Open
+
+<Canvas>
+  <Story name="Variant - Default Open" args={stories['Variant - Default Open']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+## 🧪 Testing
+
+### 🧪 Scalability
+
+<Canvas>
+  <Story name="Testing - Scalability" args={stories['Testing - Scalability']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={Object.keys(stories).reduce((accumulator, storyId) => ({
+      ...accumulator,
+      [storyId]: {
+        ...stories[storyId],
+        defaultOpen: true,
+      },
+    }))}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {CustomTemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

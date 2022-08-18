@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@hasura/console/legacy-oss": ["libs/console/legacy-oss/src/index.ts"],
-      "@hasura/console/legacy-pro": ["libs/console/legacy-pro/src/index.js"]
+      "@hasura/console/legacy-pro": ["libs/console/legacy-pro/src/index.js"],
+      "@/*": ["libs/console/legacy-oss/src/lib/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

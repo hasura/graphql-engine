@@ -1,0 +1,77 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta
+  title="dev/Component docs"
+  parameters={{ docs: { source: { type: 'code' } } }}
+/>
+
+Documentation for component docs with description of each section, see [template](/docs/components-componentdoctemplate-✨--overview) for quick start:
+
+# Component
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/)
+
+## 🧰 Overview
+
+Component description with optional links to useful docs (MDN, dedicated docs, ...).
+
+Define the default component display (`inline`/`block`) and provided `padding`/`margins`, example:
+
+_Default CSS display is `block`, provided without padding and margin._
+
+### Basic usage
+
+Provide minimal code example to use the component, example:
+
+```ts
+import { Component } from '@/new-components/Component';
+```
+
+```tsx
+<Component prop1={'prop1 value'} prop2={{ item1: 'item1' }} />
+```
+
+## 🔁 States
+
+Describe the component states and their corresponding props thanks to `<Story>`. The states are the different configuration for
+one component during its lifecycle, ex:
+
+- for an items list: empty, loading, error, with data, paginated ...
+- for form input: empty, with value, disabled, with errors ...
+
+## 🎭 Variants
+
+Describe the components variants and their corresponding props thanks to `<Story>`. The variants are the different variations for a component, they should not be lifecycle dependent
+and should be used to change the component style or behaviour, ex:
+
+- the size of the component: small, medium, large ...
+- the color of the component: primary, secondary, success, danger ...
+- the orientation of the component: vertical, horizontal ...
+
+For each variant, it is possible to add the matching use cases, example for the red variant of the `<Button>` component:
+
+#### 🚦 Usage
+
+Describe when a variation is eligible to be used.
+
+## ⚙️ API
+
+Provide a component `<Story>` with the component props `<ArgsTable>` documentation.
+
+## 🧪 Testing
+
+Here are special `<Story>` for testing the component.
+
+### 🧪 Scalability
+
+The scalability testing is to ensure the component will correctly render with very long labels, items list, image size...
+
+### 🧪 Snapshot 📸
+
+The snapshot `<Story>` is a merge of all stories defined in this document allowing to make only one snapshot to test them
+all with Chromatic.

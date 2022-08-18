@@ -1,0 +1,575 @@
+import { Meta, Canvas } from '@storybook/addon-docs';
+
+<Meta title="Design system/Input Fields" />
+
+# Inputs
+
+## Standard Input Fields
+
+### Inputs
+
+A standard input should always have at-least a descriptive label and placeholder.
+
+We should refrain from using a placeholder-only as the field's label as 1) the user won't know what the field is once it's filled and 2) different browsers render placeholder's differently (less of a problem).
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block mb-xs font-semibold text-muted">Sample Input</label>
+    <input
+      type="text"
+      class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+      placeholder="This is a sample input..."
+    />
+  </div>
+</Canvas>
+
+From a tooltip perspective - we should use them sparingly.
+
+Anything which is important enough to be included in tooltip copy should be important enough to display as hinting text.
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block font-semibold text-muted">Sample Input</label>
+    <p class="text-muted text-sm text-wide mb-xs">
+      This is a subheader which will describe the input...
+    </p>
+    <input
+      type="text"
+      class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+      placeholder="This is a sample input..."
+    />
+  </div>
+</Canvas>
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <div class="flex items-center">
+      <label class="block font-semibold text-muted mr-xs">Sample Input</label>
+      <svg
+        class="cursor-pointer w-5 h-5 text-gray-400 fill-current"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+      >
+        <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 16h-2v-2h2v2zm.976-4.885c-.196.158-.385.309-.535.459-.408.407-.44.777-.441.793v.133h-2v-.167c0-.118.029-1.177 1.026-2.174.195-.195.437-.393.691-.599.734-.595 1.216-1.029 1.216-1.627a1.934 1.934 0 0 0-3.867.001h-2C8.066 7.765 9.831 6 12 6s3.934 1.765 3.934 3.934c0 1.597-1.179 2.55-1.958 3.181z"></path>
+      </svg>
+    </div>
+    <p class="text-muted text-sm text-wide mb-xs">
+      This is a subheader which will describe the input...
+    </p>
+    <input
+      type="text"
+      class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+      placeholder="This is a sample input..."
+    />
+  </div>
+</Canvas>
+
+### Prepend and Append Inputs
+
+Helps identify input row context (best used for things like the search control).
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block mb-xs font-semibold text-muted">Prepend Input</label>
+    <div class="relative mb-xs">
+      <svg
+        class="absolute left-2 top-2 w-6 h-6 text-gray-400 fill-current"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+      >
+        <path d="M10 18a7.952 7.952 0 0 0 4.897-1.688l4.396 4.396 1.414-1.414-4.396-4.396A7.952 7.952 0 0 0 18 10c0-4.411-3.589-8-8-8s-8 3.589-8 8 3.589 8 8 8zm0-14c3.309 0 6 2.691 6 6s-2.691 6-6 6-6-2.691-6-6 2.691-6 6-6z"></path>
+      </svg>
+      <input
+        type="text"
+        class="block w-full pl-9 h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+        placeholder="This is a sample input..."
+      />
+    </div>
+  </div>
+</Canvas>
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block mb-xs font-semibold text-muted">Append Input</label>
+    <div class="relative mb-xs">
+      <svg
+        class="absolute right-2 top-2 w-6 h-6 text-gray-400 fill-current"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+      >
+        <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 15v-4H7v-2h5V7l5 5-5 5z"></path>
+      </svg>
+      <input
+        type="text"
+        class="block w-full pr-9 h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+        placeholder="This is a sample input..."
+      />
+    </div>
+  </div>
+</Canvas>
+
+### Prepend and Append Box Mask
+
+Masks static content. More effective than input-masking/hacking, but should still be used sparingly.
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block mb-xs font-semibold text-muted">Sample Input</label>
+    <div class="flex shadow-sm rounded w-full">
+      <span class="inline-flex items-center h-onput rounded-l text-muted font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50">
+        x-hasura-
+      </span>
+      <input
+        type="text"
+        class="flex-1 min-w-0 rounded-r w-full h-input border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+        placeholder="user-id"
+      />
+    </div>
+  </div>
+</Canvas>
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block mb-xs font-semibold text-muted">Sample Input</label>
+    <div class="flex shadow-sm rounded w-full">
+      <input
+        type="text"
+        class="flex-1 min-w-0 rounded-l w-full h-input border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+        placeholder="user-id"
+      />
+      <span class="inline-flex items-center h-onput rounded-r text-muted font-semibold px-sm border border-l-0 border-gray-300 bg-gray-50">
+        -to-the-append
+      </span>
+    </div>
+  </div>
+</Canvas>
+
+### Error Input Error State
+
+Each input should have its own error state and error hinting.
+
+We include error hinting below the field to not break up the label and input by inserting it in the middle.
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block mb-xs font-semibold text-muted">Sample Input</label>
+    <div class="relative mb-xs">
+      <svg
+        class="absolute right-2 top-2 w-6 h-6 text-red-600 fill-current"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+      >
+        <path d="M11.953 2C6.465 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.493 2 11.953 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+      </svg>
+      <input
+        type="text"
+        class="block w-full pr-9 h-input rounded ring-2 ring-red-200 border border-red-600 focus:outline-0 focus:ring-2 focus:ring-red-200 focus:border-red-800"
+        placeholder="This is a sample input..."
+      />
+    </div>
+    <p class="text-red-700 mb-xs">
+      There was a probelm with your field entry...
+    </p>
+  </div>
+</Canvas>
+
+### Disabled Fields
+
+Gray'd out and shadow removed to differentiate from active inputs.
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <label class="block mb-xs font-semibold text-muted">Sample Input</label>
+    <input
+      disabled
+      type="text"
+      class="block w-full h-input cursor-not-allowed rounded border bg-gray-100 border-gray-100"
+      placeholder="This is a sample input..."
+    />
+  </div>
+</Canvas>
+
+### Inline Forms Fields
+
+Used sparingly, usually in cases where the form (or sub-form) is table-based.
+In these cases the main concern is that the labels and the form fields align on the x-axis.
+
+#### Standard Inline Form
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <div class="space-y-sm">
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form row 1</label>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form row 2</label>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form row 3</label>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form row 4</label>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</Canvas>
+
+#### Inline form with Alternate Input Fields
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <div class="space-y-sm">
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form append</label>
+        </div>
+        <div class="col-span-6">
+          <div class="relative">
+            <svg
+              class="absolute right-2 top-2 w-6 h-6 text-gray-400 fill-current"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 15v-4H7v-2h5V7l5 5-5 5z"></path>
+            </svg>
+            <input
+              type="text"
+              class="block w-full pr-9 h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+              placeholder="This is a sample input..."
+            />
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form prepend</label>
+        </div>
+        <div class="col-span-6">
+          <div class="relative mb-xs">
+            <svg
+              class="absolute left-2 top-2 w-6 h-6 text-gray-400 fill-current"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path d="M10 18a7.952 7.952 0 0 0 4.897-1.688l4.396 4.396 1.414-1.414-4.396-4.396A7.952 7.952 0 0 0 18 10c0-4.411-3.589-8-8-8s-8 3.589-8 8 3.589 8 8 8zm0-14c3.309 0 6 2.691 6 6s-2.691 6-6 6-6-2.691-6-6 2.691-6 6-6z"></path>
+            </svg>
+            <input
+              type="text"
+              class="block w-full pl-9 h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+              placeholder="This is a sample input..."
+            />
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form row 3</label>
+        </div>
+        <div class="col-span-6">
+          <div class="flex shadow-sm rounded w-full">
+            <span class="inline-flex items-center h-onput rounded-l text-muted font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50">
+              Prepend Box
+            </span>
+            <input
+              type="text"
+              class="flex-1 min-w-0 rounded-r w-full h-input border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+              placeholder="This is a sample input..."
+            />
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <label class="block mb-xs text-muted">Inline form row 4</label>
+        </div>
+        <div class="col-span-6">
+          <div class="flex shadow-sm rounded w-full">
+            <input
+              type="text"
+              class="flex-1 min-w-0 rounded-l w-full h-input border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+              placeholder="This is a sample input..."
+            />
+            <span class="inline-flex items-center h-onput rounded-r text-muted font-semibold px-sm border border-l-0 border-gray-300 bg-gray-50">
+              Append Box
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Canvas>
+
+#### Inline Form with Descriptors / Tooltips
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <div class="space-y-sm">
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <div class="flex items-center">
+              <label class="block text-muted mr-xs">Inline form row 1</label>
+              <svg
+                class="cursor-pointer w-5 h-5 text-gray-400 fill-current"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 16h-2v-2h2v2zm.976-4.885c-.196.158-.385.309-.535.459-.408.407-.44.777-.441.793v.133h-2v-.167c0-.118.029-1.177 1.026-2.174.195-.195.437-.393.691-.599.734-.595 1.216-1.029 1.216-1.627a1.934 1.934 0 0 0-3.867.001h-2C8.066 7.765 9.831 6 12 6s3.934 1.765 3.934 3.934c0 1.597-1.179 2.55-1.958 3.181z"></path>
+              </svg>
+            </div>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <div class="flex items-center">
+              <label class="block text-muted mr-xs">Inline form row 2</label>
+              <svg
+                class="cursor-pointer w-5 h-5 text-gray-400 fill-current"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 16h-2v-2h2v2zm.976-4.885c-.196.158-.385.309-.535.459-.408.407-.44.777-.441.793v.133h-2v-.167c0-.118.029-1.177 1.026-2.174.195-.195.437-.393.691-.599.734-.595 1.216-1.029 1.216-1.627a1.934 1.934 0 0 0-3.867.001h-2C8.066 7.765 9.831 6 12 6s3.934 1.765 3.934 3.934c0 1.597-1.179 2.55-1.958 3.181z"></path>
+              </svg>
+            </div>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <div class="flex items-center">
+              <label class="block text-muted mr-xs">Inline form row 3</label>
+              <svg
+                class="cursor-pointer w-5 h-5 text-gray-400 fill-current"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 16h-2v-2h2v2zm.976-4.885c-.196.158-.385.309-.535.459-.408.407-.44.777-.441.793v.133h-2v-.167c0-.118.029-1.177 1.026-2.174.195-.195.437-.393.691-.599.734-.595 1.216-1.029 1.216-1.627a1.934 1.934 0 0 0-3.867.001h-2C8.066 7.765 9.831 6 12 6s3.934 1.765 3.934 3.934c0 1.597-1.179 2.55-1.958 3.181z"></path>
+              </svg>
+            </div>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <div class="flex items-center">
+              <label class="block text-muted mr-xs">Inline form row 4</label>
+              <svg
+                class="cursor-pointer w-5 h-5 text-gray-400 fill-current"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 16h-2v-2h2v2zm.976-4.885c-.196.158-.385.309-.535.459-.408.407-.44.777-.441.793v.133h-2v-.167c0-.118.029-1.177 1.026-2.174.195-.195.437-.393.691-.599.734-.595 1.216-1.029 1.216-1.627a1.934 1.934 0 0 0-3.867.001h-2C8.066 7.765 9.831 6 12 6s3.934 1.765 3.934 3.934c0 1.597-1.179 2.55-1.958 3.181z"></path>
+              </svg>
+            </div>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</Canvas>
+
+#### Inline Form with Inline Errors
+
+<Canvas>
+  <div class="mb-md bg-legacybg">
+    <div class="space-y-sm">
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <label class="block text-muted">Inline form row 1</label>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <label class="block text-muted">Inline form row 2</label>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <div class="relative mb-1">
+            <svg
+              class="absolute right-2 top-2 w-6 h-6 text-red-600 fill-current"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path d="M11.953 2C6.465 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.493 2 11.953 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+            </svg>
+            <input
+              type="text"
+              class="block w-full pr-9 h-input rounded ring-2 ring-red-200 border border-red-600 focus:outline-0 focus:ring-2 focus:ring-red-200 focus:border-red-800"
+              placeholder="Sample input row..."
+            />
+          </div>
+          <p class="text-red-700">
+            There was a problem with your field entry...
+          </p>
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <label class="block text-muted">Inline form row 3</label>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <input
+            type="text"
+            class="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+            placeholder="Sample input row..."
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-6 flex items-center">
+          <div>
+            <label class="block text-muted">Inline form row 4</label>
+            <p class="text-muted text-sm text-wide">
+              This is a subheader which will describe the input...
+            </p>
+          </div>
+        </div>
+        <div class="col-span-6">
+          <div class="relative mb-1">
+            <svg
+              class="absolute right-2 top-2 w-6 h-6 text-red-600 fill-current"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path d="M11.953 2C6.465 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.493 2 11.953 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+            </svg>
+            <input
+              type="text"
+              class="block w-full pr-9 h-input rounded ring-2 ring-red-200 border border-red-600 focus:outline-0 focus:ring-2 focus:ring-red-200 focus:border-red-800"
+              placeholder="Sample input row..."
+            />
+          </div>
+          <p class="text-red-700">
+            There was a problem with your field entry...
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Canvas>
