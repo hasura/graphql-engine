@@ -79,56 +79,129 @@ export const getNotificationDetails = (
     </div>
   );
 };
+
+// NOTE: this type has been created by reverse-engineering the original getErrorMessage function
+type Error =
+  | undefined
+  | null
+  | string
+  | {
+      message?:
+        | {
+            code?: number | string;
+            error?:
+              | {
+                  message?: string;
+                  code?: number | string;
+                }
+              | string;
+            internal?: {
+              error: {
+                message?: string;
+              };
+            };
+          }
+        | string;
+      info?: string;
+      code?: number | string;
+      error?:
+        | {
+            message: string;
+          }
+        | string;
+      custom?: string;
+      internal?: {
+        error?: {
+          message?: string;
+          description: string;
+        };
+      };
+      path?: string;
+      callToAction?: string;
+    };
+
 export const getErrorMessage = (
   message: string | null,
-  error?: Record<string, any>
-) => {
-  let notificationMessage;
-
-  if (error) {
-    if (isString(error)) {
-      notificationMessage = error;
-    } else if (
-      error.message &&
-      (error.message.error === 'postgres query error' ||
-        error.message.error === 'query execution failed')
-    ) {
-      if (error.message.internal) {
-        notificationMessage = `${error.message.code}: ${error.message.internal.error.message}`;
-      } else {
-        notificationMessage = `${error.code}: ${error.message.error}`;
-      }
-    } else if ('info' in error) {
-      notificationMessage = error.info;
-    } else if ('message' in error) {
-      if (error.code) {
-        if (error.message.error) {
-          notificationMessage = error.message.error.message;
-        } else {
-          notificationMessage = error.message;
-        }
-      } else if (error.message && isString(error.message)) {
-        notificationMessage = error.message;
-      } else if (error.message && 'code' in error.message) {
-        notificationMessage = `${error.message.code} : ${message}`;
-      } else {
-        notificationMessage = error.code;
-      }
-    } else if ('internal' in error && 'error' in error.internal) {
-      notificationMessage = `${error.internal.error.message}.
-      ${error.internal.error.description}`;
-    } else if ('custom' in error) {
-      notificationMessage = error.custom;
-    } else if ('code' in error && 'error' in error && 'path' in error) {
-      // Data API error
-      notificationMessage = error.error;
-    }
-  } else {
-    notificationMessage = message;
+  error?: Error
+): string => {
+  if (!error) {
+    return message ?? '';
   }
 
-  return notificationMessage;
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (
+    typeof error?.message !== 'string' &&
+    (error?.message?.error === 'postgres query error' ||
+      error?.message?.error === 'query execution failed')
+  ) {
+    if (error.message?.internal) {
+      return `${error.message.code}: ${error.message.internal.error.message}`;
+    }
+
+    return `${error.code}: ${error.message.error}`;
+  }
+
+  if (error?.info) {
+    return error.info ?? '';
+  }
+
+  if (error?.message) {
+    if (error.code) {
+      if (
+        typeof error?.message !== 'string' &&
+        error?.message?.error &&
+        typeof error.message.error !== 'string'
+      ) {
+        return error.message.error?.message ?? '';
+      }
+
+      if (typeof error.message === 'string') {
+        return error.message;
+      }
+    }
+
+    if (typeof error.message === 'string') {
+      return error.message;
+    }
+
+    if (typeof error?.message !== 'string' && error?.message?.code) {
+      return `${error.message.code} : ${message}`;
+    }
+
+    if (typeof error.code === 'string') {
+      return error.code ?? '';
+    }
+
+    if (typeof error.code === 'number') {
+      return String(error.code);
+    }
+  }
+
+  if (error?.internal && error?.internal && error?.internal?.error) {
+    return `${error.internal?.error?.message}.${error.internal?.error?.description}`;
+  }
+
+  if (error?.custom) {
+    return error.custom ?? '';
+  }
+
+  if (error?.code && error?.error && error?.path) {
+    // Data API error
+    if (typeof error.error === 'object') return error.error.message ?? '';
+
+    return error.error ?? '';
+  }
+
+  if (error?.callToAction && message) {
+    return message;
+  }
+
+  return '';
 };
+
 const showErrorNotification = (
   title: string,
   message?: string | null,
@@ -199,11 +272,21 @@ const showErrorNotification = (
       }
 
       const isAddTableView = window.location.pathname.includes('table/add');
-      if (errorMessage.includes('found duplicate fields') && !isAddTableView) {
+      if (errorMessage?.includes('found duplicate fields') && !isAddTableView) {
         const action = {
           label: 'Resolve Conflict',
           callback: () => {
             dispatch(showModal(TableTrackingCustomizationModalKey));
+          },
+        };
+        return action;
+      }
+
+      if (error?.callToAction === 'reload-metadata') {
+        const action = {
+          label: 'Reload database metadata',
+          callback: () => {
+            error?.callback();
           },
         };
         return action;
