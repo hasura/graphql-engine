@@ -4,19 +4,15 @@ module Test.Parser.Insert
   )
 where
 
-import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types (PGScalarType, QualifiedTable)
-import Hasura.Backends.Postgres.SQL.Value (txtEncoder, withScalarTypeAnn)
+import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..))
 import Hasura.RQL.IR.Insert (InsertQueryP1 (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
-import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnType (..), ColumnValue (..))
+import Hasura.RQL.Types.Column (ColumnInfo (..))
 import Hasura.RQL.Types.Instances ()
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
-
-type PG = 'Postgres 'Vanilla
+import Test.Backend.Postgres.Misc
 
 type Output = MutationOutputG PG Void (UnpreparedValue PG)
 
@@ -48,14 +44,3 @@ mkInsertQuery InsertQueryBuilder {..} =
       iqp1Output = unpreparedValueToSQLExp <$> iqbOutput,
       iqp1AllCols = iqbAllColumns
     }
-
-unpreparedValueToSQLExp :: UnpreparedValue PG -> S.SQLExp
-unpreparedValueToSQLExp = \case
-  UVLiteral sqlExp -> sqlExp
-  UVParameter _varInfo cval -> withScalarTypeAnn (go $ cvType cval) (txtEncoder $ cvValue cval)
-  _ -> error "unexpected value"
-  where
-    go :: ColumnType PG -> PGScalarType
-    go = \case
-      ColumnScalar t -> t
-      ColumnEnumReference _ -> error "unexpected enum in translating column type"

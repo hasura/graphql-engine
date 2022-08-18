@@ -1,12 +1,11 @@
 module Test.Backend.Postgres.Misc
-  ( idColumn,
+  ( unpreparedValueToSQLExp,
+    idColumn,
     nameColumn,
     descColumn,
     idColumnBuilder,
     nameColumnBuilder,
     descColumnBuilder,
-    integerValue,
-    textValue,
     textOld,
     textNew,
     textOther,
@@ -16,8 +15,9 @@ module Test.Backend.Postgres.Misc
   )
 where
 
+import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
-import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
+import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..), txtEncoder, withScalarTypeAnn)
 import Hasura.Prelude
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnInfo, ColumnType (..), ColumnValue (..))
@@ -25,6 +25,17 @@ import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Test.Parser.Expectation qualified as Expect
 
 type PG = 'Postgres 'Vanilla
+
+unpreparedValueToSQLExp :: UnpreparedValue PG -> S.SQLExp
+unpreparedValueToSQLExp = \case
+  UVLiteral sqlExp -> sqlExp
+  UVParameter _varInfo cval -> withScalarTypeAnn (go $ cvType cval) (txtEncoder $ cvValue cval)
+  _ -> error "unexpected value"
+  where
+    go :: ColumnType PG -> PGScalarType
+    go = \case
+      ColumnScalar t -> t
+      ColumnEnumReference _ -> error "unexpected enum in translating column type"
 
 idColumnBuilder :: Expect.ColumnInfoBuilder
 idColumnBuilder =
@@ -61,22 +72,6 @@ nameColumn = Expect.mkColumnInfo nameColumnBuilder
 
 descColumn :: ColumnInfo PG
 descColumn = Expect.mkColumnInfo descColumnBuilder
-
-integerValue :: UnpreparedValue PG
-integerValue =
-  UVParameter Nothing $
-    ColumnValue
-      { cvType = ColumnScalar PGInteger,
-        cvValue = PGValInteger 1
-      }
-
-textValue :: UnpreparedValue PG
-textValue =
-  UVParameter Nothing $
-    ColumnValue
-      { cvType = ColumnScalar PGText,
-        cvValue = PGValText "new name"
-      }
 
 textOld :: UnpreparedValue PG
 textOld =

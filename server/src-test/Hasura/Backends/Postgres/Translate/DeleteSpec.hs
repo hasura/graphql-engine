@@ -23,12 +23,12 @@ spec =
           table = Expect.mkTable "test",
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
-          where_ = [(P.idColumn, [AEQ True P.integerValue])],
+          where_ = [(P.idColumn, [AEQ True P.integerOne])],
           expectedSQL =
             [QQ.sql|
 DELETE FROM "public"."test"
   WHERE
-    (("public"."test"."id") = ($0))
+    (("public"."test"."id") = (('1')::integer))
   RETURNING *
               |]
         }
@@ -39,12 +39,12 @@ DELETE FROM "public"."test"
           table = Expect.mkTable "test",
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
-          where_ = [(P.nameColumn, [AEQ True P.textValue])],
+          where_ = [(P.nameColumn, [AEQ True P.textOld])],
           expectedSQL =
             [QQ.sql|
 DELETE FROM "public"."test"
   WHERE
-    (("public"."test"."name") = ($0))
+    (("public"."test"."name") = (('old name')::text))
   RETURNING *
               |]
         }
