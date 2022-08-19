@@ -11,8 +11,8 @@
 </span><span id="line-11"></span><span>
 </span><span id="line-12"></span><span class="hs-comment">-- | Represents the different possible type cases for fields and types, i.e.</span><span>
 </span><span id="line-13"></span><span class="hs-comment">--   @HasuraCase@ and @GraphqlCase@ (@CamelCase@ fields and @PascalCase@ types).</span><span>
-</span><span id="line-14"></span><span id="local-6989586621689296526"><span id="local-6989586621689296527"></span></span><span class="hs-keyword">data</span><span> </span><span id="NamingCase"><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-var">NamingCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HasuraCase"><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#HasuraCase"><span class="hs-identifier hs-var">HasuraCase</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="GraphqlCase"><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#GraphqlCase"><span class="hs-identifier hs-var">GraphqlCase</span></a></span></span><span>
-</span><span id="line-15"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689296520"><span id="local-6989586621689296522"><span class="annot"><span class="annottext">NamingCase -&gt; NamingCase -&gt; Bool
+</span><span id="line-14"></span><span id="local-6989586621689331346"><span id="local-6989586621689331347"></span></span><span class="hs-keyword">data</span><span> </span><span id="NamingCase"><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-var">NamingCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HasuraCase"><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#HasuraCase"><span class="hs-identifier hs-var">HasuraCase</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="GraphqlCase"><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#GraphqlCase"><span class="hs-identifier hs-var">GraphqlCase</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689331340"><span id="local-6989586621689331342"><span class="annot"><span class="annottext">NamingCase -&gt; NamingCase -&gt; Bool
 (NamingCase -&gt; NamingCase -&gt; Bool)
 -&gt; (NamingCase -&gt; NamingCase -&gt; Bool) -&gt; Eq NamingCase
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -20,7 +20,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: NamingCase -&gt; NamingCase -&gt; Bool
 == :: NamingCase -&gt; NamingCase -&gt; Bool
 $c== :: NamingCase -&gt; NamingCase -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689296513"><span id="local-6989586621689296515"><span id="local-6989586621689296517"><span class="annot"><span class="annottext">Int -&gt; NamingCase -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331333"><span id="local-6989586621689331335"><span id="local-6989586621689331337"><span class="annot"><span class="annottext">Int -&gt; NamingCase -&gt; ShowS
 [NamingCase] -&gt; ShowS
 NamingCase -&gt; String
 (Int -&gt; NamingCase -&gt; ShowS)
@@ -45,10 +45,10 @@ $cto :: forall x. Rep NamingCase x -&gt; NamingCase
 $cfrom :: forall x. NamingCase -&gt; Rep NamingCase x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-16"></span><span>
-</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689296506"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689331326"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689296498"><span id="local-6989586621689296500"><span id="local-6989586621689296502"><span class="annot"><span class="hs-identifier hs-type">Aeson.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621689296496"><span class="annot"><span class="annottext">toJSON :: NamingCase -&gt; Value
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689331318"><span id="local-6989586621689331320"><span id="local-6989586621689331322"><span class="annot"><span class="hs-identifier hs-type">Aeson.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621689331316"><span class="annot"><span class="annottext">toJSON :: NamingCase -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><span class="annottext">NamingCase
 </span><a href="Hasura.GraphQL.Schema.NamingCase.html#HasuraCase"><span class="hs-identifier hs-var">HasuraCase</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -58,28 +58,28 @@ $cfrom :: forall x. NamingCase -&gt; Rep NamingCase x
 </span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;graphql-default&quot;</span></span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689296491"><span class="annot"><span class="hs-identifier hs-type">Aeson.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>  </span><span id="local-6989586621689296489"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NamingCase
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689331311"><span class="annot"><span class="hs-identifier hs-type">Aeson.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621689331309"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NamingCase
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser NamingCase) -&gt; Value -&gt; Parser NamingCase
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Aeson.withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;NamingCase&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser NamingCase) -&gt; Value -&gt; Parser NamingCase)
 -&gt; (Text -&gt; Parser NamingCase) -&gt; Value -&gt; Parser NamingCase
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689296486"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689296486"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String NamingCase
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689331306"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689331306"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String NamingCase
 </span><a href="Hasura.GraphQL.Schema.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier hs-var">parseNamingConventionFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689296486"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-25"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689296485"><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689296485"><span class="hs-identifier hs-var">nc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Parser NamingCase
+</span><a href="#local-6989586621689331306"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689331305"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689331305"><span class="hs-identifier hs-var">nc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Parser NamingCase
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689296485"><span class="hs-identifier hs-var">nc</span></a></span><span>
-</span><span id="line-26"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689296484"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689296484"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser NamingCase
+</span><a href="#local-6989586621689331305"><span class="hs-identifier hs-var">nc</span></a></span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689331304"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689331304"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser NamingCase
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689296484"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621689331304"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span class="hs-comment">-- Used for both the environment variable and JSON.</span><span>
 </span><span id="line-29"></span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier hs-type">parseNamingConventionFromText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span>
