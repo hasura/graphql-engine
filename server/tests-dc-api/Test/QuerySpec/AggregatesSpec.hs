@@ -130,7 +130,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
 
     it "can get the max total from all rows, after applying pagination, filtering and ordering" $ do
       let where' = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "BillingCountry") (ScalarValue (String "USA"))
-      let orderBy = OrderBy (ColumnName "BillingPostalCode") Descending :| [OrderBy (ColumnName "InvoiceId") Ascending]
+      let orderBy = OrderBy mempty $ Data.orderByColumn [] "BillingPostalCode" Descending :| [Data.orderByColumn [] "InvoiceId" Ascending]
       let aggregates = KeyMap.fromList [("max", SingleColumn $ SingleColumnAggregate Max (ColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ 20 >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- (api // _query) sourceName config queryRequest
@@ -231,7 +231,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
                 ("BillingCountry", Data.columnField "BillingCountry")
               ]
       let where' = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "BillingCountry") (ScalarValue (String "Canada"))
-      let orderBy = OrderBy (ColumnName "BillingAddress") Ascending :| [OrderBy (ColumnName "InvoiceId") Ascending]
+      let orderBy = OrderBy mempty $ Data.orderByColumn [] "BillingAddress" Ascending :| [Data.orderByColumn [] "InvoiceId" Ascending]
       let aggregates = KeyMap.fromList [("min", SingleColumn $ SingleColumnAggregate Min (ColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ 30 >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- (api // _query) sourceName config queryRequest
@@ -369,7 +369,7 @@ artistsWithAlbumsQuery modifySubquery =
             ("Name", Data.columnField "Name"),
             ("Albums", RelField $ RelationshipField Data.albumsRelationshipName albumsSubquery)
           ]
-      artistOrderBy = OrderBy (ColumnName "ArtistId") Ascending :| []
+      artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "ArtistId" Ascending :| []
       artistQuery = Data.emptyQuery & qFields ?~ artistFields & qOrderBy ?~ artistOrderBy
       artistsTableRelationships = Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships
    in QueryRequest Data.artistsTableName [artistsTableRelationships] artistQuery
@@ -419,7 +419,7 @@ deeplyNestedArtistsQuery =
           ]
       tracksAggregates = KeyMap.fromList [("aggregate_count", StarCount)]
       tracksWhere = ApplyBinaryComparisonOperator LessThan (Data.localComparisonColumn "Milliseconds") (ScalarValue $ Number 300000)
-      tracksOrderBy = OrderBy (ColumnName "Name") Descending :| []
+      tracksOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
       tracksSubquery = Query (Just tracksFields) (Just tracksAggregates) Nothing Nothing (Just tracksWhere) (Just tracksOrderBy)
       albumsFields =
         KeyMap.fromList
@@ -437,7 +437,7 @@ deeplyNestedArtistsQuery =
           [ ApplyBinaryComparisonOperator GreaterThan (Data.localComparisonColumn "Name") (ScalarValue $ String "A"),
             ApplyBinaryComparisonOperator LessThan (Data.localComparisonColumn "Name") (ScalarValue $ String "B")
           ]
-      artistOrderBy = OrderBy (ColumnName "Name") Descending :| []
+      artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
       artistQuery = Query (Just artistFields) Nothing (Just 3) (Just 1) (Just artistWhere) (Just artistOrderBy)
    in QueryRequest
         Data.artistsTableName

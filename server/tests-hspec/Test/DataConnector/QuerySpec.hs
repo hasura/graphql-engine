@@ -129,56 +129,6 @@ tests opts = describe "Queries" $ do
                 title: For Those About To Rock We Salute You
         |]
 
-    it "works with order_by id asc" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
-              query getAlbum {
-                albums(limit: 3, order_by: {id: asc}) {
-                  id
-                  title
-                }
-              }
-            |]
-        )
-        [yaml|
-          data:
-            albums:
-              - id: 1
-                title: For Those About To Rock We Salute You
-              - id: 2
-                title: Balls to the Wall
-              - id: 3
-                title: Restless and Wild
-        |]
-
-    it "works with order_by id desc" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
-              query getAlbum {
-                albums(limit: 3, order_by: {id: desc}) {
-                  id
-                  title
-                }
-              }
-            |]
-        )
-        [yaml|
-          data:
-            albums:
-              - id: 347
-                title: Koyaanisqatsi (Soundtrack from the Motion Picture)
-              - id: 346
-                title: 'Mozart: Chamber Music'
-              - id: 345
-                title: 'Monteverdi: L''Orfeo'
-        |]
-
     it "works with a primary key" $ \(testEnvironment, _) ->
       shouldReturnYaml
         opts
@@ -246,26 +196,26 @@ tests opts = describe "Queries" $ do
                 Name: "Balls to the Wall"
         |]
 
-  it "works with pagination" $ \(testEnvironment, _) ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnvironment
-          [graphql|
-            query getAlbum {
-              albums (limit: 3, offset: 2) {
-                id
+    it "works with pagination" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getAlbum {
+                albums (limit: 3, offset: 2) {
+                  id
+                }
               }
-            }
-          |]
-      )
-      [yaml|
-        data:
-          albums:
-            - id: 3
-            - id: 4
-            - id: 5
-      |]
+            |]
+        )
+        [yaml|
+          data:
+            albums:
+              - id: 3
+              - id: 4
+              - id: 5
+        |]
 
   describe "Array Relationships" $ do
     it "joins on album id" $ \(testEnvironment, _) ->
@@ -501,4 +451,123 @@ tests opts = describe "Queries" $ do
                 name: Nash Ensemble
               - id: 275
                 name: Philip Glass Ensemble
+        |]
+
+  describe "Order By Tests" $ do
+    it "works with order_by id asc" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getAlbum {
+                albums(limit: 3, order_by: {id: asc}) {
+                  id
+                  title
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            albums:
+              - id: 1
+                title: For Those About To Rock We Salute You
+              - id: 2
+                title: Balls to the Wall
+              - id: 3
+                title: Restless and Wild
+        |]
+
+    it "works with order_by id desc" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getAlbum {
+                albums(limit: 3, order_by: {id: desc}) {
+                  id
+                  title
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            albums:
+              - id: 347
+                title: Koyaanisqatsi (Soundtrack from the Motion Picture)
+              - id: 346
+                title: 'Mozart: Chamber Music'
+              - id: 345
+                title: 'Monteverdi: L''Orfeo'
+        |]
+
+    it "can order by an aggregate" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getArtists {
+                artists(limit: 3, order_by: {albums_aggregate: {count: desc}}) {
+                  name
+                  albums_aggregate {
+                    aggregate {
+                      count
+                    }
+                  }
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            artists:
+              - name: Iron Maiden
+                albums_aggregate:
+                  aggregate:
+                    count: 21
+              - name: Led Zeppelin
+                albums_aggregate:
+                  aggregate:
+                    count: 14
+              - name: Deep Purple
+                albums_aggregate:
+                  aggregate:
+                    count: 11
+        |]
+
+    it "can order by a related field" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getAlbums {
+                albums(limit: 4, order_by: [{artist: {name: asc}}, {title: desc}]) {
+                  artist {
+                    name
+                  }
+                  title
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            albums:
+              - artist:
+                  name: AC/DC
+                title: Let There Be Rock
+              - artist:
+                  name: AC/DC
+                title: For Those About To Rock We Salute You
+              - artist:
+                  name: Aaron Copland & London Symphony Orchestra
+                title: A Copland Celebration, Vol. I
+              - artist:
+                  name: Aaron Goldberg
+                title: Worlds
         |]
