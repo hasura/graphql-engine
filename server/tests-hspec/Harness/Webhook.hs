@@ -5,7 +5,7 @@ module Harness.Webhook
   )
 where
 
-import Control.Concurrent (forkIO)
+import Control.Concurrent.Async as Async
 import Control.Concurrent.Chan qualified as Chan
 import Control.Exception.Safe (bracket)
 import Data.Aeson qualified as Aeson
@@ -42,7 +42,7 @@ run = do
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   eventsQueueChan <- Chan.newChan
   let eventsQueue = EventsQueue eventsQueueChan
-  threadId <- forkIO $
+  thread <- Async.async $
     Spock.runSpockNoBanner port $
       Spock.spockT id $ do
         Spock.get "/" $
@@ -63,6 +63,6 @@ run = do
               fromMaybe (error "error in parsing the event data from the body") eventDataPayload
           Spock.setHeader "Content-Type" "application/json; charset=utf-8"
           Spock.json $ Aeson.object ["success" Aeson..= True]
-  let server = Server {port = fromIntegral port, urlPrefix, threadId}
+  let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck $ serverUrl server
   pure (server, eventsQueue)

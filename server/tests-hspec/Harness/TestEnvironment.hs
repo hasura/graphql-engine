@@ -11,7 +11,8 @@ module Harness.TestEnvironment
   )
 where
 
-import Control.Concurrent (ThreadId, killThread)
+import Control.Concurrent.Async (Async)
+import Control.Concurrent.Async qualified as Async
 import Data.UUID (UUID)
 import Data.Word
 import Harness.Test.BackendType
@@ -44,7 +45,7 @@ data Server = Server
     -- | The full URI prefix e.g. http://localhost
     urlPrefix :: String,
     -- | The thread that the server is running on, so we can stop it later.
-    threadId :: ThreadId
+    thread :: Async ()
   }
 
 -- | Retrieve the 'Server' associated with some 'TestEnvironment'.
@@ -62,4 +63,4 @@ serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
 
 -- | Forcibly stop a given 'Server'.
 stopServer :: Server -> IO ()
-stopServer Server {threadId} = killThread threadId
+stopServer Server {thread} = Async.cancel thread
