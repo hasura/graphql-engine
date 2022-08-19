@@ -153,6 +153,7 @@ data RQLMetadataV1
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
     RMCreateQueryCollection !CreateCollection
+  | RMRenameQueryCollection !RenameCollection
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
@@ -234,6 +235,7 @@ instance FromJSON RQLMetadataV1 where
       "create_action_permission" -> RMCreateActionPermission <$> args
       "drop_action_permission" -> RMDropActionPermission <$> args
       "create_query_collection" -> RMCreateQueryCollection <$> args
+      "rename_query_collection" -> RMRenameQueryCollection <$> args
       "drop_query_collection" -> RMDropQueryCollection <$> args
       "add_query_to_collection" -> RMAddQueryToCollection <$> args
       "drop_query_from_collection" -> RMDropQueryFromCollection <$> args
@@ -534,6 +536,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateActionPermission q -> runCreateActionPermission q
   RMDropActionPermission q -> runDropActionPermission q
   RMCreateQueryCollection q -> runCreateCollection q
+  RMRenameQueryCollection q -> runRenameCollection q
   RMDropQueryCollection q -> runDropCollection q
   RMAddQueryToCollection q -> runAddQueryToCollection q
   RMDropQueryFromCollection q -> runDropQueryFromCollection q

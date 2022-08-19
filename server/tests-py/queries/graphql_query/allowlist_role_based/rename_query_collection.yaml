@@ -1,0 +1,68 @@
+- description: rename query collection 
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: rename_query_collection
+    args:
+      name: collection_2
+      new_name: collection_2_renamed
+
+- description: Add query to new collection name
+  url: /v1/metadata
+  status: 200
+  query:
+    type: add_query_to_collection
+    args:
+      collection_name: collection_2_renamed
+      query_name: query_4
+      query: |
+        query {
+          author{
+            id
+            first_name
+          }
+        }
+
+- description: Delete query from collection_2_renamed
+  url: /v1/metadata
+  status: 200
+  query:
+    type: drop_query_from_collection
+    args:
+      collection_name: collection_2_renamed
+      query_name: query_4
+
+- description: Add query to old collection name
+  url: /v1/metadata
+  status: 400
+  headers:
+    X-Hasura-Role: admin
+  response:
+    code: not-exists
+    error: query collection with name "collection_2" does not exist
+    path: "$.args"
+  query:
+    type: add_query_to_collection
+    args:
+      collection_name: collection_2
+      query_name: query_4
+      query: |
+        query {
+          author{
+            id
+            first_name
+          }
+        }
+
+- description: revert query collection name 
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: rename_query_collection
+    args:
+      name: collection_2_renamed
+      new_name: collection_2
