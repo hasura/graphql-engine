@@ -1,15 +1,40 @@
-import { useCallback, useEffect, useState } from "react";
-import { gql, useSubscription } from "@apollo/client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { gql, useLazyQuery, useQuery, useSubscription } from "@apollo/client";
 import "../App.js";
 import Banner from "./Banner";
 import MessageList from "./MessageList";
 
+const fetchOldMessages = gql`
+  query ($last_received_ts: timestamptz) {
+    message(
+      limit: 10
+      order_by: { timestamp: desc }
+      where: { timestamp: { _lt: $last_received_ts } }
+    ) {
+      id
+      text
+      username
+      timestamp
+    }
+  }
+`;
+
 const fetchMessages = gql`
-  # We can pass in how far back we want to fetch messages
+  {
+    message(limit: 1, order_by: { timestamp: desc }, offset: 9) {
+      id
+      text
+      username
+      timestamp
+    }
+  }
+`;
+
+const subscribeToNewMessages = gql`
   subscription ($last_received_ts: timestamptz) {
     message_stream(
       cursor: { initial_value: { timestamp: $last_received_ts } }
-      batch_size: 100
+      batch_size: 10
     ) {
       id
       username
@@ -27,6 +52,12 @@ export default function RenderMessages({
   const [messages, setMessages] = useState([]);
   const [newMessages, setNewMessages] = useState([]);
   const [bottom, setBottom] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(false);
+  const [initialTimestamp, setInitialTimestamp] = useState(
+    "2018-08-21T19:58:46.987552+00:00"
+  );
+
+  const listInnerRef = useRef();
 
   // add old (read) messages to state
   const addOldMessages = (newMessages) => {
@@ -35,20 +66,41 @@ export default function RenderMessages({
     setNewMessages([]);
   };
 
-  useSubscription(fetchMessages, {
-    variables: {
-      // Arbitrary large date to fetch all messages
-      last_received_ts: "2018-08-21T19:58:46.987552+00:00",
+  const { loading } = useQuery(fetchMessages, {
+    onCompleted: (data) => {
+      addOldMessages(data.message);
+      setInitialLoad(true);
+      setInitialTimestamp(
+        data.message[0]?.timestamp || "2018-08-21T19:58:46.987552+00:00"
+      );
     },
-    onSubscriptionData: async ({ subscriptionData }) => {
-      if (subscriptionData) {
-        if (!isViewScrollable()) {
-          addOldMessages(subscriptionData.data.message_stream);
-        } else {
-          if (bottom) {
+  });
+
+  const [loadOldMessages, { loading: loadingOldMessages }] = useLazyQuery(
+    fetchOldMessages,
+    {
+      onCompleted: (data) => {
+        setMessages([...[...data.message].reverse(), ...messages]);
+      },
+    }
+  );
+
+  useSubscription(subscribeToNewMessages, {
+    skip: !initialLoad,
+    variables: {
+      last_received_ts: initialTimestamp,
+    },
+    onSubscriptionData: ({ subscriptionData }) => {
+      if (!loading) {
+        if (subscriptionData.data) {
+          if (!isViewScrollable()) {
             addOldMessages(subscriptionData.data.message_stream);
           } else {
-            addNewMessages(subscriptionData.data.message_stream);
+            if (bottom) {
+              addOldMessages(subscriptionData.data.message_stream);
+            } else {
+              addNewMessages(subscriptionData.data.message_stream);
+            }
           }
         }
       }
@@ -69,7 +121,7 @@ export default function RenderMessages({
       ?.scrollIntoView({ behavior: "instant" });
   };
 
-  if (newMessages.length === 0) {
+  if (newMessages.length === 0 && bottom) {
     scrollToBottom();
   }
 
@@ -84,36 +136,17 @@ export default function RenderMessages({
   }, [messages, newMessages]);
 
   // scroll handler
-  const handleScroll = useCallback(() => {
-    return (e) => {
-      const windowHeight =
-        "innerHeight" in window
-          ? window.innerHeight
-          : document.documentElement.offsetHeight;
-      const body = document.getElementById("chatbox");
-      const html = document.documentElement;
-      const docHeight = Math.max(
-        body.scrollHeight,
-        body.offsetHeight,
-        html.clientHeight,
-        html.scrollHeight,
-        html.offsetHeight
-      );
-      const windowBottom = windowHeight + window.pageYOffset;
-      if (windowBottom >= docHeight) {
-        setBottom(true);
-      } else {
-        if (bottom) {
-          setBottom(false);
-        }
-      }
-    };
-  }, [bottom]);
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+    if (Math.abs(scrollTop + clientHeight - scrollHeight) < 10) {
+      setBottom(true);
+    } else {
+      setBottom(false);
+      if (bottom) {
+      }
+    }
+  };
 
   useEffect(() => {
     setMutationCallback(mutationCallback);
@@ -128,7 +161,7 @@ export default function RenderMessages({
         allNewMessages.push(m);
       }
     });
-    setNewMessages(newMessages);
+    setNewMessages(allNewMessages);
   };
 
   // check if the view is scrollable
@@ -151,7 +184,7 @@ export default function RenderMessages({
   };
 
   return (
-    <div id="chatbox">
+    <div id="chatbox" onScroll={handleScroll} ref={listInnerRef}>
       {/* show "unread messages" banner if not at bottom */}
       {!bottom && newMessages.length > 0 && isViewScrollable() ? (
         <Banner
@@ -159,6 +192,24 @@ export default function RenderMessages({
           numOfNewMessages={newMessages.length}
         />
       ) : null}
+
+      <div
+        style={{
+          margin: "auto",
+          textAlign: "center",
+        }}
+      >
+        <button
+          onClick={() =>
+            loadOldMessages({
+              variables: { last_received_ts: messages[0].timestamp },
+            })
+          }
+          disabled={loadingOldMessages}
+        >
+          {loadingOldMessages === true ? "Loading..." : "Load More"}{" "}
+        </button>
+      </div>
 
       {/* Render old messages */}
       <MessageList messages={messages} isNew={false} username={username} />
