@@ -124,3 +124,4 @@ stop-everything:
 .PHONY: remove-tix-file
 remove-tix-file:
 	@ rm -f tests-hspec.tix
+	@ rm -f graphql-engine-tests.tix
