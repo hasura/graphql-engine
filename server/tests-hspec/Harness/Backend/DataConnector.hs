@@ -32,7 +32,7 @@ import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.MockAgent
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Http (healthCheck)
+import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture (BackendType (DataConnector), Options, SetupAction (..), defaultBackendTypeString)
 import Harness.TestEnvironment (TestEnvironment)
@@ -157,6 +157,8 @@ data TestCase = TestCase
     _given :: MockConfig,
     -- | The Graphql Query to test
     _whenRequest :: Aeson.Value,
+    -- | The headers to use on the Graphql Query request
+    _whenRequestHeaders :: RequestHeaders,
     -- | The expected HGE 'API.Query' value to be provided to the
     -- agent. A @Nothing@ value indicates that the 'API.Query'
     -- assertion should be skipped.
@@ -181,6 +183,7 @@ defaultTestCase TestCaseRequired {..} =
   TestCase
     { _given = _givenRequired,
       _whenRequest = _whenRequestRequired,
+      _whenRequestHeaders = [],
       _whenQuery = Nothing,
       _whenConfig = Nothing,
       _then = _thenRequired
@@ -197,8 +200,9 @@ runMockedTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = 
   -- Execute the GQL Query and assert on the result
   shouldReturnYaml
     opts
-    ( GraphqlEngine.postGraphql
+    ( GraphqlEngine.postGraphqlWithHeaders
         testEnvironment
+        _whenRequestHeaders
         _whenRequest
     )
     _then

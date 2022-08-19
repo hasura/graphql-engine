@@ -250,7 +250,7 @@ and here is the resulting query request payload:
       "expressions": [],
       "type": "and"
     },
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "offset": null,
     "fields": {
@@ -412,27 +412,6 @@ Here's another example, which corresponds to the predicate "`first_name` is the 
 }
 ```
 
-#### Ordering
-
-The `order_by` field specifies an array of zero-or-more _orderings_, each of which consists of a field to order records by, and an order which is either `asc` (ascending) or `desc` (descending).
-
-If there are multiple orderings specified then records should be ordered lexicographically, with earlier orderings taking precedence.
-
-For example, to order records principally by `last_name`, delegating to `first_name` in the case where two last names are equal, we would use the following `order_by` structure:
-
-```json
-[
-  {
-    "field": "last_name",
-    "order_type": "asc"
-  },
-  {
-    "field": "first_name",
-    "order_type": "asc"
-  }
-]
-```
-
 #### Relationships
 
 If the call to `GET /capabilities` returns a `capabilities` record with a `relationships` field then the query structure may include fields corresponding to relationships.
@@ -483,7 +462,7 @@ This will generate the following JSON query if the agent supports relationships:
       "type": "and"
     },
     "offset": null,
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "fields": {
       "Albums": {
@@ -495,7 +474,7 @@ This will generate the following JSON query if the agent supports relationships:
             "type": "and"
           },
           "offset": null,
-          "order_by": [],
+          "order_by": null,
           "limit": null,
           "fields": {
             "Title": {
@@ -526,7 +505,7 @@ Note the `Albums` field in particular, which traverses the `Artists` -> `Albums`
       "type": "and"
     },
     "offset": null,
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "fields": {
       "Title": {
@@ -980,6 +959,176 @@ This would be expected to return the following response, with the rows from the 
       "Name": "Aerosmith"
     }
   ]
+}
+```
+
+#### Ordering
+
+The `order_by` field can either be null, which means no particular ordering is required, or an object with two properties:
+
+```json
+{
+  "relations": {},
+  "elements": [
+    {
+      "target_path": [],
+      "target": {
+        "type": "column",
+        "column": "last_name"
+      },
+      "order_direction": "asc"
+    },
+    {
+      "target_path": [],
+      "target": {
+        "type": "column",
+        "column": "first_name"
+      },
+      "order_direction": "desc"
+    }
+  ]
+}
+```
+
+The `elements` field specifies an array of one-or-more ordering elements. Each element represents a "target" to order, and a direction to order by. The direction can either be `asc` (ascending) or `desc` (descending). If there are multiple elements specified, then rows should be ordered with earlier elements in the array taking precedence. In the above example, rows are principally ordered by `last_name`, delegating to `first_name` in the case where two last names are equal.
+
+The order by element `target` is specified as an object, whose `type` property specifies a different sort of ordering target:
+
+| type | Additional fields | Description |
+|------|-------------------|-------------|
+| `column` | `column` | Sort by the `column` specified |
+| `star_count_aggregate` | - | Sort by the count of all rows on the related target table (a non-empty `target_path` will always be specified) |
+| `single_column_aggregate` | `function`, `column` | Sort by the value of applying the specified aggregate function to the column values of the rows in the related target table (a non-empty `target_path` will always be specified) |
+
+The `target_path` property is a list of relationships to navigate before finding the `target` to sort on. This is how sorting on columns or aggregates on related tables is expressed. Note that aggregate-typed targets will never be found on the current table (ie. a `target_path` of `[]`) and are always applied to a related table.
+
+Here's an example of applying an ordering by a related table; the Album table is being queried and sorted by the Album's Artist's Name.
+
+```json
+{
+  "table": ["Album"],
+  "table_relationships": [
+    {
+      "source_table": ["Album"],
+      "relationships": {
+        "Artist": {
+          "target_table": ["Artist"],
+          "relationship_type": "object",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Title": { "type": "column", "column": "Title" }
+    },
+    "order_by": {
+      "relations": {
+        "Artist": {
+          "where": null,
+          "subrelations": {}
+        }
+      },
+      "elements": [
+        {
+          "target_path": ["Artist"],
+          "target": {
+            "type": "column",
+            "column": "Name"
+          },
+          "order_direction": "desc"
+        }
+      ]
+    }
+  }
+}
+```
+
+Note that the `target_path` specifies the relationship path of `["Artist"]`, and that this relationship is defined in the top-level `table_relationships`. The ordering element target column `Name` would therefore be found on the `Artist` table after joining to it from each `Album`. (See the [Relationships](#Relationships) section for more information about relationships.)
+
+The `relations` property of `order_by` will contain all the relations used in the order by, for the purpose of specifying filters that must be applied to the joined tables before using them for sorting. The `relations` property captures all `target_path`s used in the `order_by` in a recursive fashion, so for example, if the following `target_path`s were used in the `order_by`'s `elements`:
+
+* `["Artist", "Albums"]`
+* `["Artist"]`
+* `["Tracks"]`
+
+Then the value of the `relations` property would look like this:
+
+```json
+{
+  "Artist": {
+    "where": null,
+    "subrelations": {
+      "Albums": {
+        "where": null,
+        "subrelations": {}
+      }
+    }
+  },
+  "Tracks": {
+    "where": null,
+    "subrelations": {}
+  }
+}
+```
+
+The `where` properties may contain filtering expressions that must be applied to the joined table before using it for sorting. The filtering expressions are defined in the same manner as specified in the [Filters](#Filters) section of this document, where they are used on the `where` property of Queries.
+
+For example, here's a query that retrieves artists ordered descending by the count of all their albums where the album title is greater than 'T'.
+
+```json
+{
+  "table": ["Artist"],
+  "table_relationships": [
+    {
+      "source_table": ["Artist"],
+      "relationships": {
+        "Albums": {
+          "target_table": ["Album"],
+          "relationship_type": "array",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Name": { "type": "column", "column": "Name" }
+    },
+    "order_by": {
+      "relations": {
+        "Albums": {
+          "where": {
+            "type": "binary_op",
+            "operator": "greater_than",
+            "column": {
+              "path": [],
+              "name": "Title"
+            },
+            "value": {
+              "type": "scalar",
+              "value": "T"
+            }
+          },
+          "subrelations": {}
+        }
+      },
+      "elements": [
+        {
+          "target_path": ["Albums"],
+          "target": {
+            "type": "star_count_aggregate"
+          },
+          "order_direction": "desc"
+        }
+      ]
+    }
+  }
 }
 ```
 

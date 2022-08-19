@@ -3,6 +3,7 @@
 module Hasura.Backends.DataConnector.API.V0.Aggregate
   ( Aggregate (..),
     SingleColumnAggregate (..),
+    singleColumnAggregateObjectCodec,
     ColumnCountAggregate (..),
     SingleColumnAggregateFunction (..),
   )

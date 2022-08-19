@@ -197,7 +197,7 @@ tests opts = do
                                 _qLimit = Just 3,
                                 _qOffset = Nothing,
                                 _qWhere = Just (API.And []),
-                                _qOrderBy = Just (API.OrderBy (API.ColumnName "AlbumId") API.Ascending NE.:| [])
+                                _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
                               }
                         }
                     )

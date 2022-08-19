@@ -24,10 +24,7 @@ export type Query = {
    * Optionally offset from the Nth result
    */
   offset?: number | null;
-  /**
-   * Optionally order the results by the value of one or more fields
-   */
-  order_by?: Array<OrderBy> | null;
+  order_by?: OrderBy;
   where?: Expression;
 };
 

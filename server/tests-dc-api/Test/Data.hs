@@ -13,6 +13,7 @@ module Test.Data
     albumsTableName,
     albumsRelationshipName,
     albumsRows,
+    albumsRowsById,
     albumsTableRelationships,
     artistRelationshipName,
     tracksRelationshipName,
@@ -42,6 +43,7 @@ module Test.Data
     tracksTableRelationships,
     invoiceLinesRelationshipName,
     mediaTypeRelationshipName,
+    albumRelationshipName,
     -- = Utilities
     emptyQuery,
     sortBy,
@@ -59,6 +61,7 @@ module Test.Data
     columnField,
     comparisonColumn,
     localComparisonColumn,
+    orderByColumn,
   )
 where
 
@@ -169,6 +172,10 @@ albumsTableName = mkTableName "Album"
 albumsRows :: [KeyMap API.FieldValue]
 albumsRows = sortBy "AlbumId" $ readTableFromXmlIntoRows albumsTableName
 
+albumsRowsById :: HashMap Scientific (KeyMap API.FieldValue)
+albumsRowsById =
+  HashMap.fromList $ mapMaybe (\album -> (,album) <$> album ^? ix "AlbumId" . _ColumnFieldNumber) albumsRows
+
 albumsTableRelationships :: API.TableRelationships
 albumsTableRelationships =
   let artistsJoinFieldMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
@@ -257,11 +264,13 @@ tracksTableRelationships :: API.TableRelationships
 tracksTableRelationships =
   let invoiceLinesJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
       mediaTypeJoinFieldMapping = HashMap.fromList [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
+      albumJoinFieldMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
    in API.TableRelationships
         tracksTableName
         ( HashMap.fromList
             [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
-              (mediaTypeRelationshipName, API.Relationship mediaTypesTableName API.ObjectRelationship mediaTypeJoinFieldMapping)
+              (mediaTypeRelationshipName, API.Relationship mediaTypesTableName API.ObjectRelationship mediaTypeJoinFieldMapping),
+              (albumRelationshipName, API.Relationship albumsTableName API.ObjectRelationship albumJoinFieldMapping)
             ]
         )
 
@@ -270,6 +279,9 @@ invoiceLinesRelationshipName = API.RelationshipName "InvoiceLines"
 
 mediaTypeRelationshipName :: API.RelationshipName
 mediaTypeRelationshipName = API.RelationshipName "MediaType"
+
+albumRelationshipName :: API.RelationshipName
+albumRelationshipName = API.RelationshipName "Album"
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
@@ -332,3 +344,7 @@ comparisonColumn path columnName = API.ComparisonColumn path $ API.ColumnName co
 
 localComparisonColumn :: Text -> API.ComparisonColumn
 localComparisonColumn columnName = comparisonColumn [] columnName
+
+orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
+orderByColumn targetPath columnName orderDirection =
+  API.OrderByElement targetPath (API.OrderByColumn $ API.ColumnName columnName) orderDirection

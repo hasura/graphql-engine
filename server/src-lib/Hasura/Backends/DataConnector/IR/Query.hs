@@ -63,7 +63,7 @@ data Query = Query
     -- | Optionally constrain the results to satisfy some predicate.
     _qWhere :: Maybe IR.E.Expression,
     -- | Optionally order the results by the value of one or more fields.
-    _qOrderBy :: [IR.O.OrderBy]
+    _qOrderBy :: Maybe IR.O.OrderBy
   }
   deriving stock (Data, Eq, Generic, Ord, Show)
 
@@ -79,7 +79,7 @@ instance Witch.From Query API.Query where
         _qLimit = _qLimit,
         _qOffset = _qOffset,
         _qWhere = fmap Witch.from _qWhere,
-        _qOrderBy = nonEmpty $ fmap Witch.from _qOrderBy
+        _qOrderBy = Witch.from <$> _qOrderBy
       }
 
 memptyToNothing :: (Monoid m, Eq m) => m -> Maybe m

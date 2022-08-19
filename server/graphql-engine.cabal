@@ -1358,5 +1358,6 @@ test-suite tests-dc-api
     , Test.QuerySpec
     , Test.QuerySpec.AggregatesSpec
     , Test.QuerySpec.BasicSpec
+    , Test.QuerySpec.OrderBySpec
     , Test.QuerySpec.RelationshipsSpec
     , Test.SchemaSpec

@@ -264,3 +264,56 @@ tests opts = describe "SelectPermissionsSpec" $ do
                 FirstName: Martha
                 LastName: Silk
       |]
+
+  it "Query that orders by a related table that has a permissions filter" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithHeaders
+          testEnvironment
+          [("X-Hasura-Role", testRoleName)]
+          [graphql|
+            query getEmployee {
+              Employee(order_by: {SupportRepForCustomers_aggregate: {count: desc}}) {
+                FirstName
+                LastName
+                Country
+                SupportRepForCustomers {
+                  Country
+                  CustomerId
+                }
+              }
+            }
+          |]
+      )
+      [yaml|
+        data:
+          Employee:
+            - FirstName: Jane
+              LastName: Peacock
+              Country: Canada
+              SupportRepForCustomers:
+                - Country: Canada
+                  CustomerId: 3
+                - Country: Canada
+                  CustomerId: 15
+                - Country: Canada
+                  CustomerId: 29
+                - Country: Canada
+                  CustomerId: 30
+                - Country: Canada
+                  CustomerId: 33
+            - FirstName: Steve
+              LastName: Johnson
+              Country: Canada
+              SupportRepForCustomers:
+                - Country: Canada
+                  CustomerId: 14
+                - Country: Canada
+                  CustomerId: 31
+            - FirstName: Margaret
+              LastName: Park
+              Country: Canada
+              SupportRepForCustomers:
+                - Country: Canada
+                  CustomerId: 32
+      |]

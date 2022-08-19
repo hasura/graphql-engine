@@ -157,7 +157,7 @@ albumsWithArtistQuery modifySubquery =
 artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
 artistsWithAlbumsQuery modifySubquery =
   let albumFields = KeyMap.fromList [("AlbumId", Data.columnField "AlbumId"), ("Title", Data.columnField "Title")]
-      albumsSort = OrderBy (ColumnName "AlbumId") Ascending :| []
+      albumsSort = OrderBy mempty $ Data.orderByColumn [] "AlbumId" Ascending :| []
       albumsSubquery = albumsQuery & qFields ?~ albumFields & qOrderBy ?~ albumsSort & modifySubquery
       fields =
         KeyMap.fromList
@@ -170,7 +170,7 @@ artistsWithAlbumsQuery modifySubquery =
 
 employeesWithCustomersQuery :: (Query -> Query) -> QueryRequest
 employeesWithCustomersQuery modifySubquery =
-  let customersSort = OrderBy (ColumnName "CustomerId") Ascending :| []
+  let customersSort = OrderBy mempty $ Data.orderByColumn [] "CustomerId" Ascending :| []
       customersSubquery = customersQuery & qOrderBy ?~ customersSort & modifySubquery
       fields =
         Data.queryFields employeesQuery
