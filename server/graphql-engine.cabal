@@ -1232,7 +1232,6 @@ test-suite tests-hspec
 
  -- Test
     Test.ArrayParamPermissionSpec
-    Test.BackendOnlyPermissionsSpec
     Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.BigQuery.Queries.SpatialTypesSpec
@@ -1261,6 +1260,7 @@ test-suite tests-hspec
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
+    Test.Postgres.BackendOnlyPermissionsSpec
     Test.Postgres.DefaultValuesSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
