@@ -501,21 +501,24 @@ instance
   ) =>
   Hashable (AnnComputedFieldBoolExp b a)
 
--- | This type is used for boolean terms in GBoolExp in the schema; there are two kinds boolean
+-- | This type is used for boolean terms in GBoolExp in the schema; there are four kinds boolean
 -- terms:
 --   - operators on a column of the current table, using the 'OpExpG' kind of operators
 --   - arbitrary expressions on columns of tables in relationships (in the same source)
 --   - A computed field of the current table
+--   - aggregation operations on array relationships on the current tables.
 --
 -- This type is parameterized over the type of leaf values, the values on which we operate.
 data AnnBoolExpFld (backend :: BackendType) leaf
   = AVColumn (ColumnInfo backend) [OpExpG backend leaf]
   | AVRelationship (RelInfo backend) (AnnBoolExp backend leaf)
   | AVComputedField (AnnComputedFieldBoolExp backend leaf)
+  | AVAggregationPredicates (AggregationPredicates backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance
   ( Backend b,
+    Eq (AggregationPredicates b a),
     Eq (AnnBoolExp b a),
     Eq (AnnComputedFieldBoolExp b a),
     Eq (OpExpG b a)
@@ -524,6 +527,7 @@ deriving instance
 
 deriving instance
   ( Backend b,
+    Show (AggregationPredicates b a),
     Show (AnnBoolExp b a),
     Show (AnnComputedFieldBoolExp b a),
     Show (OpExpG b a)
@@ -532,6 +536,7 @@ deriving instance
 
 instance
   ( Backend b,
+    NFData (AggregationPredicates b a),
     NFData (AnnBoolExp b a),
     NFData (AnnComputedFieldBoolExp b a),
     NFData (OpExpG b a)
@@ -540,6 +545,7 @@ instance
 
 instance
   ( Backend b,
+    Cacheable (AggregationPredicates b a),
     Cacheable (AnnBoolExp b a),
     Cacheable (AnnComputedFieldBoolExp b a),
     Cacheable (OpExpG b a)
@@ -548,6 +554,7 @@ instance
 
 instance
   ( Backend b,
+    Hashable (AggregationPredicates b a),
     Hashable (AnnBoolExp b a),
     Hashable (AnnComputedFieldBoolExp b a),
     Hashable (OpExpG b a)
@@ -556,6 +563,7 @@ instance
 
 instance
   ( Backend b,
+    ToJSONKeyValue (AggregationPredicates b a),
     ToJSONKeyValue (OpExpG b a),
     ToJSON a
   ) =>
@@ -577,6 +585,7 @@ instance
               CFBEScalar opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)
               CFBETable _ boolExp -> toJSON (function, toJSON boolExp)
       )
+    AVAggregationPredicates avAggregationPredicates -> toJSONKeyValue avAggregationPredicates
 
 -- | A simple alias for the kind of boolean expressions used in the schema, that ties together
 -- 'GBoolExp', 'OpExpG', and 'AnnBoolExpFld'.

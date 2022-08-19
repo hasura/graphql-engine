@@ -82,6 +82,7 @@ import Hasura.RQL.Types.Roles.Internal (CheckPermission (..))
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCache.Instances ()
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
@@ -477,7 +478,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         ArrowWriter (Seq CollectedInfo) arr,
         HasServerConfigCtx m,
         MonadError QErr m,
-        BackendMetadata b
+        BackendMetadata b,
+        GetAggregationPredicatesDeps b
       ) =>
       ( HashMap SourceName (AB.AnyBackend PartiallyResolvedSource),
         SourceMetadata b,
@@ -710,7 +712,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         (|
           Inc.keyed
             ( \_ exists ->
-                AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata
+                -- Note that it's a bit of a coincidence that
+                -- 'AB.dispatchAnyBackendArrow' accepts exactly two constraints,
+                -- and that we happen to want to apply to exactly two
+                -- constraints.
+                -- Ideally the function should be able to take an arbitrary
+                -- number of constraints.
+                AB.dispatchAnyBackendArrow @BackendMetadata @GetAggregationPredicatesDeps
                   ( proc
                       ( partiallyResolvedSource :: PartiallyResolvedSource b,
                         (allResolvedSources, remoteSchemaCtxMap, orderedRoles)

@@ -443,6 +443,7 @@ library
                      , Hasura.Backends.BigQuery.Instances.API
                      , Hasura.Backends.BigQuery.Instances.Execute
                      , Hasura.Backends.BigQuery.Instances.Schema
+                     , Hasura.Backends.BigQuery.Instances.SchemaCache
                      , Hasura.Backends.BigQuery.Instances.Transport
                      , Hasura.Backends.BigQuery.Instances.Types
                      , Hasura.Backends.BigQuery.Instances.Metadata
@@ -477,6 +478,7 @@ library
                      , Hasura.Backends.MSSQL.Instances.Execute
                      , Hasura.Backends.MSSQL.Instances.Metadata
                      , Hasura.Backends.MSSQL.Instances.Schema
+                     , Hasura.Backends.MSSQL.Instances.SchemaCache
                      , Hasura.Backends.MSSQL.Instances.Transport
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
@@ -512,6 +514,7 @@ library
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
                      , Hasura.Backends.Postgres.Instances.Schema
+                     , Hasura.Backends.Postgres.Instances.SchemaCache
                      , Hasura.Backends.Postgres.Instances.Transport
                      , Hasura.Backends.Postgres.Instances.Types
                      , Hasura.Backends.Postgres.Schema.OnConflict
@@ -563,6 +566,7 @@ library
                      , Hasura.Backends.MySQL.Instances.Types
                      , Hasura.Backends.MySQL.Instances.Metadata
                      , Hasura.Backends.MySQL.Instances.Schema
+                     , Hasura.Backends.MySQL.Instances.SchemaCache
                      , Hasura.Backends.MySQL.Instances.Execute
                      , Hasura.Backends.MySQL.Instances.Transport
                      , Hasura.Backends.MySQL.SQL
@@ -576,6 +580,7 @@ library
                      , Hasura.Backends.DataConnector.Adapter.ConfigTransform
                      , Hasura.Backends.DataConnector.Adapter.Metadata
                      , Hasura.Backends.DataConnector.Adapter.Schema
+                     , Hasura.Backends.DataConnector.Adapter.SchemaCache
                      , Hasura.Backends.DataConnector.Adapter.Transport
                      , Hasura.Backends.DataConnector.Adapter.Types
                      , Hasura.Backends.DataConnector.Agent.Client
@@ -697,7 +702,9 @@ library
                      , Hasura.RQL.Types.Roles.Internal
                      , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.SchemaCache.AggregationPredicates
                      , Hasura.RQL.Types.SchemaCache.Build
+                     , Hasura.RQL.Types.SchemaCache.Instances
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.SourceCustomization
@@ -758,6 +765,7 @@ library
                      , Hasura.RQL.DML.Types
                      , Hasura.RQL.IR.Action
                      , Hasura.RQL.IR.BoolExp
+                     , Hasura.RQL.IR.BoolExp.AggregationPredicates
                      , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
