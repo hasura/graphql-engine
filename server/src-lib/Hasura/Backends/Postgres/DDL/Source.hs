@@ -57,7 +57,7 @@ import Hasura.Server.Migrate.Version (MetadataCatalogVersion (..))
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 
--- | We differentiate the handling of metadata between Citus and Vanilla
+-- | We differentiate the handling of metadata between Citus, Cockroach and Vanilla
 -- Postgres because Citus imposes limitations on the types of joins that it
 -- permits, which then limits the types of relations that we can track.
 class ToMetadataFetchQuery (pgKind :: PostgresKind) where
@@ -68,6 +68,9 @@ instance ToMetadataFetchQuery 'Vanilla where
 
 instance ToMetadataFetchQuery 'Citus where
   tableMetadata = $(makeRelativeToProject "src-rsr/citus_table_metadata.sql" >>= Q.sqlFromFile)
+
+instance ToMetadataFetchQuery 'Cockroach where
+  tableMetadata = $(makeRelativeToProject "src-rsr/cockroach_table_metadata.sql" >>= Q.sqlFromFile)
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>

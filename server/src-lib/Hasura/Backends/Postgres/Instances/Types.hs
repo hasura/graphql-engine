@@ -54,6 +54,9 @@ instance PostgresBackend 'Vanilla where
 instance PostgresBackend 'Citus where
   type PgExtraTableMetadata 'Citus = Citus.ExtraTableMetadata
 
+instance PostgresBackend 'Cockroach where
+  type PgExtraTableMetadata 'Cockroach = ()
+
 ----------------------------------------------------------------
 -- Backend instance
 

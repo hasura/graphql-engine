@@ -136,6 +136,7 @@ import Hasura.SQL.Tag
 data AnyBackend (i :: BackendType -> Type)
   = PostgresVanillaValue (i ('Postgres 'Vanilla))
   | PostgresCitusValue (i ('Postgres 'Citus))
+  | PostgresCockroachValue (i ('Postgres 'Cockroach))
   | MSSQLValue (i 'MSSQL)
   | BigQueryValue (i 'BigQuery)
   | MySQLValue (i 'MySQL)
@@ -146,6 +147,7 @@ data AnyBackend (i :: BackendType -> Type)
 type AllBackendsSatisfy (c :: BackendType -> Constraint) =
   ( c ('Postgres 'Vanilla),
     c ('Postgres 'Citus),
+    c ('Postgres 'Cockroach),
     c 'MSSQL,
     c 'BigQuery,
     c 'MySQL,
@@ -158,6 +160,7 @@ type SatisfiesForAllBackends
   (c :: Type -> Constraint) =
   ( c (i ('Postgres 'Vanilla)),
     c (i ('Postgres 'Citus)),
+    c (i ('Postgres 'Cockroach)),
     c (i 'MSSQL),
     c (i 'BigQuery),
     c (i 'MySQL),
@@ -172,6 +175,7 @@ type SatisfiesForAllBackends
 liftTag :: BackendType -> AnyBackend BackendTag
 liftTag (Postgres Vanilla) = PostgresVanillaValue PostgresVanillaTag
 liftTag (Postgres Citus) = PostgresCitusValue PostgresCitusTag
+liftTag (Postgres Cockroach) = PostgresCockroachValue PostgresCockroachTag
 liftTag MSSQL = MSSQLValue MSSQLTag
 liftTag BigQuery = BigQueryValue BigQueryTag
 liftTag MySQL = MySQLValue MySQLTag
@@ -188,6 +192,7 @@ mapBackend ::
 mapBackend e f = case e of
   PostgresVanillaValue x -> PostgresVanillaValue (f x)
   PostgresCitusValue x -> PostgresCitusValue (f x)
+  PostgresCockroachValue x -> PostgresCockroachValue (f x)
   MSSQLValue x -> MSSQLValue (f x)
   BigQueryValue x -> BigQueryValue (f x)
   MySQLValue x -> MySQLValue (f x)
@@ -207,6 +212,7 @@ traverseBackend ::
 traverseBackend e f = case e of
   PostgresVanillaValue x -> PostgresVanillaValue <$> f x
   PostgresCitusValue x -> PostgresCitusValue <$> f x
+  PostgresCockroachValue x -> PostgresCockroachValue <$> f x
   MSSQLValue x -> MSSQLValue <$> f x
   BigQueryValue x -> BigQueryValue <$> f x
   MySQLValue x -> MySQLValue <$> f x
@@ -223,6 +229,7 @@ mkAnyBackend ::
 mkAnyBackend x = case backendTag @b of
   PostgresVanillaTag -> PostgresVanillaValue x
   PostgresCitusTag -> PostgresCitusValue x
+  PostgresCockroachTag -> PostgresCockroachValue x
   MSSQLTag -> MSSQLValue x
   BigQueryTag -> BigQueryValue x
   MySQLTag -> MySQLValue x
@@ -240,6 +247,7 @@ runBackend ::
 runBackend b f = case b of
   PostgresVanillaValue x -> f x
   PostgresCitusValue x -> f x
+  PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
   MySQLValue x -> f x
@@ -261,6 +269,7 @@ dispatchAnyBackend ::
 dispatchAnyBackend e f = case e of
   PostgresVanillaValue x -> f x
   PostgresCitusValue x -> f x
+  PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
   MySQLValue x -> f x
@@ -280,6 +289,7 @@ dispatchAnyBackendWithTwoConstraints ::
 dispatchAnyBackendWithTwoConstraints e f = case e of
   PostgresVanillaValue x -> f x
   PostgresCitusValue x -> f x
+  PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
   MySQLValue x -> f x
@@ -299,6 +309,7 @@ dispatchAnyBackend' ::
 dispatchAnyBackend' e f = case e of
   PostgresVanillaValue x -> f x
   PostgresCitusValue x -> f x
+  PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
   MySQLValue x -> f x
@@ -320,6 +331,7 @@ dispatchAnyBackend'' ::
 dispatchAnyBackend'' e f = case e of
   PostgresVanillaValue x -> f x
   PostgresCitusValue x -> f x
+  PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
   MySQLValue x -> f x
@@ -342,6 +354,7 @@ composeAnyBackend ::
 composeAnyBackend f e1 e2 owise = case (e1, e2) of
   (PostgresVanillaValue x, PostgresVanillaValue y) -> f x y
   (PostgresCitusValue x, PostgresCitusValue y) -> f x y
+  (PostgresCockroachValue x, PostgresCockroachValue y) -> f x y
   (MSSQLValue x, MSSQLValue y) -> f x y
   (BigQueryValue x, BigQueryValue y) -> f x y
   (MySQLValue x, MySQLValue y) -> f x y
@@ -363,6 +376,7 @@ unpackAnyBackend ::
 unpackAnyBackend exists = case (backendTag @b, exists) of
   (PostgresVanillaTag, PostgresVanillaValue x) -> Just x
   (PostgresCitusTag, PostgresCitusValue x) -> Just x
+  (PostgresCockroachTag, PostgresCockroachValue x) -> Just x
   (MSSQLTag, MSSQLValue x) -> Just x
   (BigQueryTag, BigQueryValue x) -> Just x
   (MySQLTag, MySQLValue x) -> Just x
@@ -401,6 +415,8 @@ dispatchAnyBackendArrow arrow = proc (ab, x) -> do
       arrow @('Postgres 'Vanilla) -< (val, x)
     PostgresCitusValue val ->
       arrow @('Postgres 'Citus) -< (val, x)
+    PostgresCockroachValue val ->
+      arrow @('Postgres 'Cockroach) -< (val, x)
     MSSQLValue val ->
       arrow @'MSSQL -< (val, x)
     BigQueryValue val ->
@@ -424,6 +440,7 @@ parseAnyBackendFromJSON ::
 parseAnyBackendFromJSON backendKind value = case backendKind of
   Postgres Vanilla -> PostgresVanillaValue <$> parseJSON value
   Postgres Citus -> PostgresCitusValue <$> parseJSON value
+  Postgres Cockroach -> PostgresCockroachValue <$> parseJSON value
   MSSQL -> MSSQLValue <$> parseJSON value
   BigQuery -> BigQueryValue <$> parseJSON value
   MySQL -> MySQLValue <$> parseJSON value
@@ -454,6 +471,7 @@ backendSourceKindFromText :: Text -> Maybe (AnyBackend BackendSourceKind)
 backendSourceKindFromText text =
   PostgresVanillaValue <$> staticKindFromText PostgresVanillaKind
     <|> PostgresCitusValue <$> staticKindFromText PostgresCitusKind
+    <|> PostgresCockroachValue <$> staticKindFromText PostgresCockroachKind
     <|> MSSQLValue <$> staticKindFromText MSSQLKind
     <|> BigQueryValue <$> staticKindFromText BigQueryKind
     <|> MySQLValue <$> staticKindFromText MySQLKind
@@ -470,6 +488,7 @@ parseBackendSourceKindFromJSON :: Value -> Parser (AnyBackend BackendSourceKind)
 parseBackendSourceKindFromJSON value =
   PostgresVanillaValue <$> parseJSON @(BackendSourceKind ('Postgres 'Vanilla)) value
     <|> PostgresCitusValue <$> parseJSON @(BackendSourceKind ('Postgres 'Citus)) value
+    <|> PostgresCockroachValue <$> parseJSON @(BackendSourceKind ('Postgres 'Cockroach)) value
     <|> MSSQLValue <$> parseJSON @(BackendSourceKind ('MSSQL)) value
     <|> BigQueryValue <$> parseJSON @(BackendSourceKind ('BigQuery)) value
     <|> MySQLValue <$> parseJSON @(BackendSourceKind ('MySQL)) value

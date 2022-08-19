@@ -38,3 +38,15 @@ instance BackendAPI ('Postgres 'Citus) where
         relationshipCommands @('Postgres 'Citus),
         remoteRelationshipCommands @('Postgres 'Citus)
       ]
+
+instance BackendAPI ('Postgres 'Cockroach) where
+  metadataV1CommandParsers =
+    concat
+      [ sourceCommands @('Postgres 'Cockroach),
+        tableCommands @('Postgres 'Cockroach),
+        tablePermissionsCommands @('Postgres 'Cockroach),
+        functionCommands @('Postgres 'Cockroach),
+        functionPermissionsCommands @('Postgres 'Cockroach),
+        relationshipCommands @('Postgres 'Cockroach),
+        remoteRelationshipCommands @('Postgres 'Cockroach)
+      ]

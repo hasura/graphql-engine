@@ -79,7 +79,7 @@ import Hasura.RQL.Types.Function (FunctionInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (CustomRootField (..), RolePermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..), ViewInfo (..), getRolePermInfo, isMutable, tableInfoName)
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
+import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Cockroach, Vanilla))
 import Hasura.SQL.Tag (HasTag)
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -129,6 +129,11 @@ instance PostgresSchema 'Citus where
   pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
   pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
+
+instance PostgresSchema 'Cockroach where
+  pgkBuildTableRelayQueryFields = buildTableRelayQueryFields
+  pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
+  pgkRelayExtension = Just ()
 
 -- postgres schema
 
