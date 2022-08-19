@@ -23206,6 +23206,55 @@ instance GHC.Base.Applicative Hasura.Backends.MSSQL.FromIr.FromIr
 instance GHC.Base.Functor Hasura.Backends.MSSQL.FromIr.FromIr
 
 
+-- | This module translates the IR of boolean expressions into TSQL boolean
+--   expressions.
+--   
+--   Boolean expressions typically arise from permissions and where-clause
+--   filters.
+module Hasura.Backends.MSSQL.FromIr.Expression
+
+-- | Translate boolean expressions into TSQL <a>Expression</a>s.
+--   
+--   The <a>AnnBoolExpFld</a> references fields and columns. The entity
+--   (e.g. table) that binds these columns is supplied in the `ReaderT
+--   EntityAlias` environment, such that the columns can be referred to
+--   unambiguously.
+fromGBoolExp :: GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression) -> ReaderT EntityAlias FromIr Expression
+
+-- | Translate boolean expressions into TSQL <a>Expression</a>s.
+--   
+--   The <a>AnnBoolExpFld</a> references fields and columns. The entity
+--   (e.g. table) that binds these columns is supplied in the `ReaderT
+--   EntityAlias` environment, such that the columns can be referred to
+--   unambiguously.
+fromAnnBoolExpFld :: AnnBoolExpFld 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
+
+-- | Scope a translation action to the table bound in a FROM clause.
+scopedTo :: From -> ReaderT EntityAlias FromIr a -> ReaderT EntityAlias FromIr a
+
+-- | Translate a column reference occurring in a boolean expression into an
+--   equivalent <a>Expression</a>.
+--   
+--   Different text types support different operators. Therefore we cast
+--   some text types to "varchar(max)", which supports the most operators.
+fromColumnInfo :: ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr Expression
+
+-- | Get FieldSource from a TAFExp type table aggregate field
+fromColumn :: ColumnName -> ReaderT EntityAlias FromIr FieldName
+
+-- | Translate a single <a>OpExpG</a> operation on a column into an
+--   expression.
+fromOpExpG :: ColumnInfo 'MSSQL -> OpExpG 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
+nullableBoolEquality :: Expression -> Expression -> Expression
+nullableBoolInequality :: Expression -> Expression -> Expression
+aliasQualifiedTable :: TableName -> FromIr From
+
+
+-- | This module defines the translation functions for update mutations.
+module Hasura.Backends.MSSQL.FromIr.Update
+fromUpdate :: AnnotatedUpdate 'MSSQL -> FromIr Update
+
+
 -- | This module defines translation functions for queries which select
 --   data. Principally this includes translating the <tt>query</tt> root
 --   field, but parts are also reused for serving the responses for
@@ -23243,25 +23292,6 @@ Args :: Where -> Maybe (NonEmpty OrderBy) -> [Join] -> Top -> Maybe Expression -
 [argsExistingJoins] :: Args -> Map TableName EntityAlias
 fromSelectArgsG :: SelectArgsG 'MSSQL Expression -> ReaderT EntityAlias FromIr Args
 fromQualifiedTable :: TableName -> FromIr From
-
--- | Translate an <tt>AnnBoolExpFld</tt> within an <a>EntityAlias</a>
---   context referring to the table the <tt>AnnBoolExpFld</tt> field
---   belongs to.
---   
---   This is mutually recursive with <a>fromGBoolExp</a>, mirroring the
---   mutually recursive structure between <tt>AnnBoolExpFld</tt> and
---   'AnnBoolExp b a' (alias of 'GBoolExp b (AnnBoolExpFld b a)').
-fromAnnBoolExpFld :: AnnBoolExpFld 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
-
--- | For boolean operators, various comparison operators used need special
---   handling to ensure that SQL Server won't outright reject the
---   comparison. See also <a>shouldCastToVarcharMax</a>.
-fromColumnInfoForBoolExp :: ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr Expression
-
--- | There's a problem of comparing text fields with =, &lt;, etc. that SQL
---   Server completely refuses to do so. So one way to workaround this
---   restriction is to automatically cast such text fields to varchar(max).
-shouldCastToVarcharMax :: ColumnType 'MSSQL -> Bool
 data FieldSource
 ExpressionFieldSource :: Aliased Expression -> FieldSource
 JoinFieldSource :: JsonCardinality -> Aliased Join -> FieldSource
@@ -23306,27 +23336,11 @@ fromRelName :: RelName -> FromIr Text
 --   Therefore left=remote, right=local in this context.
 fromMapping :: From -> HashMap ColumnName ColumnName -> ReaderT EntityAlias FromIr [Expression]
 selectFromMapping :: Select -> HashMap ColumnName ColumnName -> ReaderT EntityAlias FromIr [Expression]
-fromOpExpG :: Expression -> OpExpG 'MSSQL Expression -> FromIr Expression
-nullableBoolEquality :: Expression -> Expression -> Expression
-nullableBoolInequality :: Expression -> Expression -> Expression
-
--- | Translate a <tt>GBoolExp</tt> of a <tt>AnnBoolExpFld</tt>, within an
---   <a>EntityAlias</a> context.
---   
---   It is mutually recursive with <a>fromAnnBoolExpFld</a> and
---   <tt>fromGExists</tt>.
-fromGBoolExp :: GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression) -> ReaderT EntityAlias FromIr Expression
-trueExpression :: Expression
 
 -- | A version of <tt>JSON_QUERY(..)</tt> that returns a proper json
 --   literal, rather than SQL null, which does not compose properly with
 --   <tt>FOR JSON</tt> clauses.
 safeJsonQueryExpression :: JsonCardinality -> Expression -> Expression
-nullExpression :: Expression
-emptyArrayExpression :: Expression
-jsonFieldName :: Text
-aggSubselectName :: Text
-existsFieldName :: Text
 data UnfurledJoin
 UnfurledJoin :: Join -> Maybe (TableName, EntityAlias) -> UnfurledJoin
 [unfurledJoin] :: UnfurledJoin -> Join
@@ -23341,7 +23355,6 @@ fromAnnotatedOrderByItemG :: AnnotatedOrderByItemG 'MSSQL Expression -> WriterT 
 unfurlAnnotatedOrderByElement :: AnnotatedOrderByElement 'MSSQL Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe ScalarType)
 tableNameText :: TableName -> Text
 fromColumnInfo :: ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr FieldName
-aggFieldName :: Text
 instance GHC.Show.Show Hasura.Backends.MSSQL.FromIr.Query.Args
 instance GHC.Show.Show Hasura.Backends.MSSQL.FromIr.Query.FieldSource
 instance GHC.Classes.Eq Hasura.Backends.MSSQL.FromIr.Query.FieldSource
@@ -23435,55 +23448,6 @@ mkMutationOutputSelect :: StringifyNumbers -> Text -> MutationOutputG 'MSSQL Voi
 --     (&lt;check_constraint_select&gt;) AS [check_constraint_select]
 --   </pre>
 selectMutationOutputAndCheckCondition :: Text -> Select -> Expression -> Select
-
-
--- | This module translates the IR of boolean expressions into TSQL boolean
---   expressions.
---   
---   Boolean expressions typically arise from permissions and where-clause
---   filters.
-module Hasura.Backends.MSSQL.FromIr.Expression
-
--- | Translate boolean expressions into TSQL <a>Expression</a>s.
---   
---   The <a>AnnBoolExpFld</a> references fields and columns. The entity
---   (e.g. table) that binds these columns is supplied in the `ReaderT
---   EntityAlias` environment, such that the columns can be referred to
---   unambiguously.
-fromGBoolExp :: GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression) -> ReaderT EntityAlias FromIr Expression
-
--- | Translate boolean expressions into TSQL <a>Expression</a>s.
---   
---   The <a>AnnBoolExpFld</a> references fields and columns. The entity
---   (e.g. table) that binds these columns is supplied in the `ReaderT
---   EntityAlias` environment, such that the columns can be referred to
---   unambiguously.
-fromAnnBoolExpFld :: AnnBoolExpFld 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
-
--- | Scope a translation action to the table bound in a FROM clause.
-scopedTo :: From -> ReaderT EntityAlias FromIr a -> ReaderT EntityAlias FromIr a
-
--- | Translate a column reference occurring in a boolean expression into an
---   equivalent <a>Expression</a>.
---   
---   Different text types support different operators. Therefore we cast
---   some text types to "varchar(max)", which supports the most operators.
-fromColumnInfo :: ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr Expression
-
--- | Get FieldSource from a TAFExp type table aggregate field
-fromColumn :: ColumnName -> ReaderT EntityAlias FromIr FieldName
-
--- | Translate a single <a>OpExpG</a> operation on a column into an
---   expression.
-fromOpExpG :: ColumnInfo 'MSSQL -> OpExpG 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
-nullableBoolEquality :: Expression -> Expression -> Expression
-nullableBoolInequality :: Expression -> Expression -> Expression
-aliasQualifiedTable :: TableName -> FromIr From
-
-
--- | This module defines the translation functions for update mutations.
-module Hasura.Backends.MSSQL.FromIr.Update
-fromUpdate :: AnnotatedUpdate 'MSSQL -> FromIr Update
 
 
 -- | This module defines the translation functions for insert and upsert
@@ -25499,9 +25463,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axGvM. Lens' (QueryParametersInfo b_axGvM) (Seq (ColumnValue b_axGvM))
-qpiReusableVariableValues :: forall b_axGvM. Lens' (QueryParametersInfo b_axGvM) (HashMap Name (ColumnValue b_axGvM))
-qpiReferencedSessionVariables :: forall b_axGvM. Lens' (QueryParametersInfo b_axGvM) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axF3U. Lens' (QueryParametersInfo b_axF3U) (Seq (ColumnValue b_axF3U))
+qpiReusableVariableValues :: forall b_axF3U. Lens' (QueryParametersInfo b_axF3U) (HashMap Name (ColumnValue b_axF3U))
+qpiReferencedSessionVariables :: forall b_axF3U. Lens' (QueryParametersInfo b_axF3U) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
