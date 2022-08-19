@@ -29,3 +29,8 @@ test-citus: spawn-postgres spawn-citus wait-for-postgres wait-for-citus remove-t
 test-backends: start-backends remove-tix-file
 	$(call stop_after, \
 		cabal run tests-hspec)
+
+.PHONY: test-unit
+## test-unit: run unit tests from main suite
+test-unit: remove-tix-file
+	cabal run graphql-engine-tests -- unit
