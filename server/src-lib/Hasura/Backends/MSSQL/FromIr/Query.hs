@@ -26,6 +26,8 @@ import Hasura.Backends.MSSQL.FromIr
     NameTemplate (..),
     generateAlias,
   )
+import Hasura.Backends.MSSQL.FromIr.Constants
+import Hasura.Backends.MSSQL.FromIr.Expression
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
@@ -444,62 +446,6 @@ fromQualifiedTable schemadTableName@(TableName {tableName}) = do
         )
     )
 
--- | Translate an 'AnnBoolExpFld' within an 'EntityAlias' context referring to the table the `AnnBoolExpFld` field belongs to.
---
--- This is mutually recursive with 'fromGBoolExp', mirroring the mutually recursive structure between 'AnnBoolExpFld' and 'AnnBoolExp b a' (alias of 'GBoolExp b (AnnBoolExpFld b a)').
-fromAnnBoolExpFld ::
-  IR.AnnBoolExpFld 'MSSQL Expression ->
-  ReaderT EntityAlias FromIr Expression
-fromAnnBoolExpFld =
-  \case
-    IR.AVColumn columnInfo opExpGs -> do
-      expression <- fromColumnInfoForBoolExp columnInfo
-      expressions <- traverse (lift . fromOpExpG expression) opExpGs
-      pure (AndExpression expressions)
-    IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
-      selectFrom <- lift (fromQualifiedTable table)
-      foreignKeyConditions <- fromMapping selectFrom mapping
-      whereExpression <-
-        local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp)
-      pure
-        ( ExistsExpression
-            emptySelect
-              { selectOrderBy = Nothing,
-                selectProjections =
-                  [ ExpressionProjection
-                      ( Aliased
-                          { aliasedThing = trueExpression,
-                            aliasedAlias = existsFieldName
-                          }
-                      )
-                  ],
-                selectFrom = Just selectFrom,
-                selectJoins = mempty,
-                selectWhere = Where (foreignKeyConditions <> [whereExpression]),
-                selectTop = NoTop,
-                selectFor = NoFor,
-                selectOffset = Nothing
-              }
-        )
-
--- | For boolean operators, various comparison operators used need
--- special handling to ensure that SQL Server won't outright reject
--- the comparison. See also 'shouldCastToVarcharMax'.
-fromColumnInfoForBoolExp :: IR.ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr Expression
-fromColumnInfoForBoolExp IR.ColumnInfo {ciColumn = column, ciType} = do
-  fieldName <- columnNameToFieldName column <$> ask
-  if shouldCastToVarcharMax ciType -- See function commentary.
-    then pure (CastExpression (ColumnExpression fieldName) WvarcharType DataLengthMax)
-    else pure (ColumnExpression fieldName)
-
--- | There's a problem of comparing text fields with =, <, etc. that
--- SQL Server completely refuses to do so. So one way to workaround
--- this restriction is to automatically cast such text fields to
--- varchar(max).
-shouldCastToVarcharMax :: IR.ColumnType 'MSSQL -> Bool
-shouldCastToVarcharMax typ =
-  typ == IR.ColumnScalar TextType || typ == IR.ColumnScalar WtextType
-
 --------------------------------------------------------------------------------
 -- Sources of projected fields
 --
@@ -874,106 +820,6 @@ selectFromMapping ::
 selectFromMapping Select {selectFrom = Nothing} = const (pure [])
 selectFromMapping Select {selectFrom = Just from} = fromMapping from
 
---------------------------------------------------------------------------------
--- Basic SQL expression types
-
-fromOpExpG :: Expression -> IR.OpExpG 'MSSQL Expression -> FromIr Expression
-fromOpExpG expression op =
-  case op of
-    IR.ANISNULL -> pure $ TSQL.IsNullExpression expression
-    IR.ANISNOTNULL -> pure $ TSQL.IsNotNullExpression expression
-    IR.AEQ False val -> pure $ nullableBoolEquality expression val
-    IR.AEQ True val -> pure $ OpExpression TSQL.EQ' expression val
-    IR.ANE False val -> pure $ nullableBoolInequality expression val
-    IR.ANE True val -> pure $ OpExpression TSQL.NEQ' expression val
-    IR.AGT val -> pure $ OpExpression TSQL.GT expression val
-    IR.ALT val -> pure $ OpExpression TSQL.LT expression val
-    IR.AGTE val -> pure $ OpExpression TSQL.GTE expression val
-    IR.ALTE val -> pure $ OpExpression TSQL.LTE expression val
-    IR.AIN val -> pure $ OpExpression TSQL.IN expression val
-    IR.ANIN val -> pure $ OpExpression TSQL.NIN expression val
-    IR.ALIKE val -> pure $ OpExpression TSQL.LIKE expression val
-    IR.ANLIKE val -> pure $ OpExpression TSQL.NLIKE expression val
-    IR.ABackendSpecific o -> case o of
-      ASTContains val -> pure $ TSQL.STOpExpression TSQL.STContains expression val
-      ASTCrosses val -> pure $ TSQL.STOpExpression TSQL.STCrosses expression val
-      ASTEquals val -> pure $ TSQL.STOpExpression TSQL.STEquals expression val
-      ASTIntersects val -> pure $ TSQL.STOpExpression TSQL.STIntersects expression val
-      ASTOverlaps val -> pure $ TSQL.STOpExpression TSQL.STOverlaps expression val
-      ASTTouches val -> pure $ TSQL.STOpExpression TSQL.STTouches expression val
-      ASTWithin val -> pure $ TSQL.STOpExpression TSQL.STWithin expression val
-    -- As of March 2021, only geometry/geography casts are supported
-    IR.ACast _casts -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-
-    -- We do not yet support column names in permissions
-    IR.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    IR.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    IR.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    IR.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    IR.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    IR.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
-
-nullableBoolEquality :: Expression -> Expression -> Expression
-nullableBoolEquality x y =
-  OrExpression
-    [ OpExpression TSQL.EQ' x y,
-      AndExpression [IsNullExpression x, IsNullExpression y]
-    ]
-
-nullableBoolInequality :: Expression -> Expression -> Expression
-nullableBoolInequality x y =
-  OrExpression
-    [ OpExpression TSQL.NEQ' x y,
-      AndExpression [IsNotNullExpression x, IsNullExpression y]
-    ]
-
--- | Translate a 'GBoolExp' of a 'AnnBoolExpFld', within an 'EntityAlias' context.
---
--- It is mutually recursive with 'fromAnnBoolExpFld' and 'fromGExists'.
-fromGBoolExp ::
-  IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression) ->
-  ReaderT EntityAlias FromIr Expression
-fromGBoolExp =
-  \case
-    IR.BoolAnd expressions ->
-      fmap AndExpression (traverse fromGBoolExp expressions)
-    IR.BoolOr expressions ->
-      fmap OrExpression (traverse fromGBoolExp expressions)
-    IR.BoolNot expression ->
-      fmap NotExpression (fromGBoolExp expression)
-    IR.BoolExists gExists ->
-      fromGExists gExists
-    IR.BoolField expression ->
-      fromAnnBoolExpFld expression
-  where
-    fromGExists :: IR.GExists 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression) -> ReaderT EntityAlias FromIr Expression
-    fromGExists IR.GExists {_geTable, _geWhere} = do
-      selectFrom <- lift (fromQualifiedTable _geTable)
-      whereExpression <-
-        local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
-      pure $
-        ExistsExpression $
-          emptySelect
-            { selectOrderBy = Nothing,
-              selectProjections =
-                [ ExpressionProjection
-                    ( Aliased
-                        { aliasedThing = trueExpression,
-                          aliasedAlias = existsFieldName
-                        }
-                    )
-                ],
-              selectFrom = Just selectFrom,
-              selectJoins = mempty,
-              selectWhere = Where [whereExpression],
-              selectTop = NoTop,
-              selectFor = NoFor,
-              selectOffset = Nothing
-            }
-
-trueExpression :: Expression
-trueExpression = ValueExpression (ODBC.BoolValue True)
-
 -- | A version of @JSON_QUERY(..)@ that returns a proper json literal, rather
 -- than SQL null, which does not compose properly with @FOR JSON@ clauses.
 safeJsonQueryExpression :: JsonCardinality -> Expression -> Expression
@@ -983,24 +829,6 @@ safeJsonQueryExpression expectedType jsonQuery =
     jsonTypeExpression = case expectedType of
       JsonSingleton -> nullExpression
       JsonArray -> emptyArrayExpression
-
-nullExpression :: Expression
-nullExpression = ValueExpression $ ODBC.TextValue "null"
-
-emptyArrayExpression :: Expression
-emptyArrayExpression = ValueExpression $ ODBC.TextValue "[]"
-
---------------------------------------------------------------------------------
--- Constants
-
-jsonFieldName :: Text
-jsonFieldName = "json"
-
-aggSubselectName :: Text
-aggSubselectName = "agg_sub"
-
-existsFieldName :: Text
-existsFieldName = "exists_placeholder"
 
 data UnfurledJoin = UnfurledJoin
   { unfurledJoin :: Join,
@@ -1140,6 +968,3 @@ tableNameText (TableName {tableName}) = tableName
 fromColumnInfo :: IR.ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr FieldName
 fromColumnInfo IR.ColumnInfo {ciColumn = column} =
   columnNameToFieldName column <$> ask
-
-aggFieldName :: Text
-aggFieldName = "agg"
