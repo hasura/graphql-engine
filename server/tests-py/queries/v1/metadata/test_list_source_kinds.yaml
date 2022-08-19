@@ -10,6 +10,8 @@
     - builtin: true
       kind: citus
     - builtin: true
+      kind: cockroach
+    - builtin: true
       kind: mssql
     - builtin: true
       kind: bigquery

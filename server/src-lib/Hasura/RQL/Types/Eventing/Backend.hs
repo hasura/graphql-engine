@@ -249,6 +249,21 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
 
+instance BackendEventTrigger ('Postgres 'Cockroach) where
+  insertManualEvent = PG.insertManualEvent
+  fetchUndeliveredEvents = PG.fetchUndeliveredEvents
+  setRetry = PG.setRetry
+  getMaintenanceModeVersion = PG.getMaintenanceModeVersion
+  recordSuccess = PG.recordSuccess
+  recordError = PG.recordError
+  recordError' = PG.recordError'
+  dropTriggerAndArchiveEvents = PG.dropTriggerAndArchiveEvents
+  dropDanglingSQLTrigger = PG.dropDanglingSQLTrigger
+  redeliverEvent = PG.redeliverEvent
+  unlockEventsInSource = PG.unlockEventsInSource
+  createTableEventTrigger = PG.createTableEventTrigger
+  createMissingSQLTriggers = PG.createMissingSQLTriggers
+
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent = MSSQL.insertManualEvent
   fetchUndeliveredEvents = MSSQL.fetchUndeliveredEvents

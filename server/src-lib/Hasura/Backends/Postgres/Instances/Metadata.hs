@@ -109,6 +109,9 @@ instance PostgresMetadata 'Citus where
                   <> ")"
               )
 
+instance PostgresMetadata 'Cockroach where
+  validateRel _ _ _ = pure ()
+
 ----------------------------------------------------------------
 -- BackendMetadata instance
 

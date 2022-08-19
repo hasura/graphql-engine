@@ -11,6 +11,7 @@ import Hasura.SQL.Backend
 data BackendTag (b :: BackendType) where
   PostgresVanillaTag :: BackendTag ('Postgres 'Vanilla)
   PostgresCitusTag :: BackendTag ('Postgres 'Citus)
+  PostgresCockroachTag :: BackendTag ('Postgres 'Cockroach)
   MSSQLTag :: BackendTag 'MSSQL
   BigQueryTag :: BackendTag 'BigQuery
   MySQLTag :: BackendTag 'MySQL
@@ -26,6 +27,9 @@ instance HasTag ('Postgres 'Vanilla) where
 
 instance HasTag ('Postgres 'Citus) where
   backendTag = PostgresCitusTag
+
+instance HasTag ('Postgres 'Cockroach) where
+  backendTag = PostgresCockroachTag
 
 instance HasTag 'MSSQL where
   backendTag = MSSQLTag
@@ -43,6 +47,7 @@ instance HasTag 'DataConnector where
 reify :: BackendTag b -> BackendType
 reify PostgresVanillaTag = Postgres Vanilla
 reify PostgresCitusTag = Postgres Citus
+reify PostgresCockroachTag = Postgres Cockroach
 reify MSSQLTag = MSSQL
 reify BigQueryTag = BigQuery
 reify MySQLTag = MySQL
