@@ -64,6 +64,22 @@ module.exports = {
       width: {
         inherit: 'inherit',
       },
+      keyframes: {
+        onboardingWizardFadeIn: {
+          '0%': {
+            opacity: '0',
+            scale: '.9',
+          },
+          '50%': {
+            opacity: '.5',
+            scale: '.95',
+          },
+          '100%': {
+            opacity: '1',
+            scale: '1',
+          },
+        },
+      },
     },
   },
   plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
