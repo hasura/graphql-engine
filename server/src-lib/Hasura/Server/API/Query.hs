@@ -114,6 +114,7 @@ data RQLQueryV1
   | RQCreateScheduledEvent !CreateScheduledEvent
   | -- query collections, allow list related
     RQCreateQueryCollection !CreateCollection
+  | RQRenameQueryCollection !RenameCollection
   | RQDropQueryCollection !DropCollection
   | RQAddQueryToCollection !AddQueryToCollection
   | RQDropQueryFromCollection !DropQueryFromCollection
@@ -275,6 +276,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQDeleteCronTrigger _ -> True
   RQCreateScheduledEvent _ -> False
   RQCreateQueryCollection _ -> True
+  RQRenameQueryCollection _ -> True
   RQDropQueryCollection _ -> True
   RQAddQueryToCollection _ -> True
   RQDropQueryFromCollection _ -> True
@@ -351,6 +353,7 @@ queryModifiesUserDB (RQV1 qi) = case qi of
   RQDeleteCronTrigger _ -> False
   RQCreateScheduledEvent _ -> False
   RQCreateQueryCollection _ -> False
+  RQRenameQueryCollection _ -> False
   RQDropQueryCollection _ -> False
   RQAddQueryToCollection _ -> False
   RQDropQueryFromCollection _ -> False
@@ -446,6 +449,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQDeleteCronTrigger q -> runDeleteCronTrigger q
       RQCreateScheduledEvent q -> runCreateScheduledEvent q
       RQCreateQueryCollection q -> runCreateCollection q
+      RQRenameQueryCollection q -> runRenameCollection q
       RQDropQueryCollection q -> runDropCollection q
       RQAddQueryToCollection q -> runAddQueryToCollection q
       RQDropQueryFromCollection q -> runDropQueryFromCollection q
@@ -522,6 +526,7 @@ requiresAdmin = \case
     RQDeleteCronTrigger _ -> True
     RQCreateScheduledEvent _ -> True
     RQCreateQueryCollection _ -> True
+    RQRenameQueryCollection _ -> True
     RQDropQueryCollection _ -> True
     RQAddQueryToCollection _ -> True
     RQDropQueryFromCollection _ -> True

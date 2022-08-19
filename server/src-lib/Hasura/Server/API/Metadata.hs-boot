@@ -108,6 +108,7 @@ data RQLMetadataV1
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
     RMCreateQueryCollection !CreateCollection
+  | RMRenameQueryCollection !RenameCollection
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
