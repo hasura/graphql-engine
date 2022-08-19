@@ -151,7 +151,7 @@ tests opts = do
 
     actual `shouldBe` expected
 
-  it "User role can select published articles only" $ \testEnvironment -> do
+  it "User role can select published articles only" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
         schemaName = Schema.getSchemaName testEnvironment
 

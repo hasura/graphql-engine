@@ -1239,7 +1239,6 @@ test-suite tests-hspec
     Harness.Quoter.Yaml.InterpolateYaml
 
  -- Test
-    Test.ArrayParamPermissionSpec
     Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.BigQuery.Queries.SpatialTypesSpec
@@ -1268,6 +1267,7 @@ test-suite tests-hspec
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
+    Test.Postgres.DataValidation.PermissionSpec
     Test.Postgres.BackendOnlyPermissionsSpec
     Test.Postgres.DefaultValuesSpec
     Test.Postgres.TimestampSpec
@@ -1299,6 +1299,8 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
+    Test.Schema.DataValidation.Permissions.InsertSpec
+    Test.Schema.DataValidation.Permissions.SelectSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
     Test.SQLServer.DefaultValuesSpec
