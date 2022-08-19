@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module defines the schema dependency gathering aspect of the default</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- implementation of aggregation predicates.</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.AggregationPredicates</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.AggregationPredicates.html#defaultGetAggregationPredicateDeps"><span class="hs-identifier">defaultGetAggregationPredicateDeps</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier">PartialSQLExp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp.AggregationPredicates</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier">AggregationPredicate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier">AggregationPredicatesImplementation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier">AggregationPredicatesImplementation</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Local</span></a></span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier">RelInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCacheTypes</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.AggregationPredicates.html#defaultGetAggregationPredicateDeps"><span class="hs-identifier hs-type">defaultGetAggregationPredicateDeps</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689538575"><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#GetAggregationPredicatesDeps"><span class="hs-identifier hs-type">GetAggregationPredicatesDeps</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#BoolExpM"><span class="hs-identifier hs-type">BoolExpM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-27"></span><span id="defaultGetAggregationPredicateDeps"><span class="annot"><span class="annottext">defaultGetAggregationPredicateDeps :: AggregationPredicatesImplementation b (PartialSQLExp b)
+-&gt; BoolExpM b [SchemaDependency]
+</span><a href="Hasura.RQL.Types.SchemaCache.AggregationPredicates.html#defaultGetAggregationPredicateDeps"><span class="hs-identifier hs-var hs-var">defaultGetAggregationPredicateDeps</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span id="local-6989586621689538574"><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621689538574"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span id="local-6989586621689538573"><span class="annot"><span class="annottext">[AggregationPredicate b (PartialSQLExp b)]
+</span><a href="#local-6989586621689538573"><span class="hs-identifier hs-var">functions</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#BoolExpCtx"><span class="hs-identifier hs-type">BoolExpCtx</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689538571"><span class="annot"><span class="annottext">SourceName
+source :: forall (b :: BackendType). BoolExpCtx b -&gt; SourceName
+source :: SourceName
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#source"><span class="hs-identifier hs-var hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689538569"><span class="annot"><span class="annottext">TableName b
+currTable :: forall (b :: BackendType). BoolExpCtx b -&gt; TableName b
+currTable :: TableName b
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#currTable"><span class="hs-identifier hs-var hs-var">currTable</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BoolExpM b (BoolExpCtx b)
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689538566"><span class="annot"><span class="annottext">relationshipName :: RelName
+</span><a href="#local-6989586621689538566"><span class="hs-identifier hs-var hs-var">relationshipName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; RelName
+forall (b :: BackendType). RelInfo b -&gt; RelName
+</span><a href="Hasura.RQL.Types.Relationships.Local.html#riName"><span class="hs-identifier hs-var hs-var">riName</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621689538574"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621689538564"><span class="annot"><span class="annottext">relationshipTable :: TableName b
+</span><a href="#local-6989586621689538564"><span class="hs-identifier hs-var hs-var">relationshipTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; TableName b
+forall (b :: BackendType). RelInfo b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Relationships.Local.html#riRTable"><span class="hs-identifier hs-var hs-var">riRTable</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621689538574"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621689538562"><span class="annot"><span class="annottext">schemaDependency :: SchemaDependency
+</span><a href="#local-6989586621689538562"><span class="hs-identifier hs-var hs-var">schemaDependency</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-32"></span><span>        </span><span class="annot"><span class="annottext">SchemaObjId -&gt; DependencyReason -&gt; SchemaDependency
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-var">SchemaDependency</span></a></span><span>
+</span><span id="line-33"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-var">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689538571"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend SourceObjId -&gt; SchemaObjId)
+-&gt; AnyBackend SourceObjId -&gt; SchemaObjId
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-34"></span><span>              </span><span class="annot"><span class="annottext">SourceObjId b -&gt; AnyBackend SourceObjId
+forall (b :: BackendType) (i :: BackendType -&gt; *).
+HasTag b =&gt;
+i b -&gt; AnyBackend i
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">(SourceObjId b -&gt; AnyBackend SourceObjId)
+-&gt; SourceObjId b -&gt; AnyBackend SourceObjId
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-35"></span><span>                </span><span class="annot"><span class="annottext">TableName b -&gt; TableObjId b -&gt; SourceObjId b
+forall (b :: BackendType).
+TableName b -&gt; TableObjId b -&gt; SourceObjId b
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITableObj"><span class="hs-identifier hs-var">SOITableObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689538569"><span class="hs-identifier hs-var">currTable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; TableObjId b
+forall (b :: BackendType). RelName -&gt; TableObjId b
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#TORel"><span class="hs-identifier hs-var">TORel</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689538566"><span class="hs-identifier hs-var">relationshipName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>          </span><span class="annot"><span class="annottext">DependencyReason
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DROnType"><span class="hs-identifier hs-var">DROnType</span></a></span><span>
+</span><span id="line-38"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaDependency
+</span><a href="#local-6989586621689538562"><span class="hs-identifier hs-var">schemaDependency</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaDependency -&gt; [SchemaDependency] -&gt; [SchemaDependency]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([SchemaDependency] -&gt; [SchemaDependency])
+-&gt; BoolExpM b [SchemaDependency] -&gt; BoolExpM b [SchemaDependency]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(BoolExpCtx b -&gt; BoolExpCtx b)
+-&gt; BoolExpM b [SchemaDependency] -&gt; BoolExpM b [SchemaDependency]
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689538553"><span class="annot"><span class="annottext">BoolExpCtx b
+</span><a href="#local-6989586621689538553"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BoolExpCtx b
+</span><a href="#local-6989586621689538553"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">currTable :: TableName b
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#currTable"><span class="hs-identifier hs-var">currTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689538564"><span class="hs-identifier hs-var">relationshipTable</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[[SchemaDependency]] -&gt; [SchemaDependency]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">concat</span></span><span> </span><span class="annot"><span class="annottext">([[SchemaDependency]] -&gt; [SchemaDependency])
+-&gt; BoolExpM b [[SchemaDependency]] -&gt; BoolExpM b [SchemaDependency]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(AggregationPredicate b (PartialSQLExp b)
+ -&gt; BoolExpM b [SchemaDependency])
+-&gt; [AggregationPredicate b (PartialSQLExp b)]
+-&gt; BoolExpM b [[SchemaDependency]]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">AggregationPredicate b (PartialSQLExp b)
+-&gt; BoolExpM b [SchemaDependency]
+</span><a href="#local-6989586621689538550"><span class="hs-identifier hs-var">getFunctionDeps</span></a></span><span> </span><span class="annot"><span class="annottext">[AggregationPredicate b (PartialSQLExp b)]
+</span><a href="#local-6989586621689538573"><span class="hs-identifier hs-var">functions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><a href="#local-6989586621689538550"><span class="hs-identifier hs-type">getFunctionDeps</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#BoolExpM"><span class="hs-identifier hs-type">BoolExpM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689538575"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-41"></span><span>    </span><span id="local-6989586621689538550"><span class="annot"><span class="annottext">getFunctionDeps :: AggregationPredicate b (PartialSQLExp b)
+-&gt; BoolExpM b [SchemaDependency]
+</span><a href="#local-6989586621689538550"><span class="hs-identifier hs-var hs-var">getFunctionDeps</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689538544"><span id="local-6989586621689538545"><span id="local-6989586621689538546"><span id="local-6989586621689538547"><span id="local-6989586621689538548"><span class="annot"><span class="annottext">Bool
+[OpExpG b (PartialSQLExp b)]
+Maybe (AnnBoolExp b (PartialSQLExp b))
+Text
+AggregationPredicateArguments b
+aggPredPredicate :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; [OpExpG b field]
+aggPredArguments :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; AggregationPredicateArguments b
+aggPredFilter :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; Maybe (AnnBoolExp b field)
+aggPredDistinct :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; Bool
+aggPredFunctionName :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; Text
+aggPredPredicate :: [OpExpG b (PartialSQLExp b)]
+aggPredArguments :: AggregationPredicateArguments b
+aggPredFilter :: Maybe (AnnBoolExp b (PartialSQLExp b))
+aggPredDistinct :: Bool
+aggPredFunctionName :: Text
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredPredicate"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>      </span><span class="hs-keyword">do</span><span>
+</span><span id="line-43"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#BoolExpCtx"><span class="hs-identifier hs-type">BoolExpCtx</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689538538"><span class="annot"><span class="annottext">SourceName
+source :: SourceName
+source :: forall (b :: BackendType). BoolExpCtx b -&gt; SourceName
+</span><a href="#local-6989586621689538538"><span class="hs-identifier hs-var hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689538537"><span class="annot"><span class="annottext">TableName b
+currTable :: TableName b
+currTable :: forall (b :: BackendType). BoolExpCtx b -&gt; TableName b
+</span><a href="#local-6989586621689538537"><span class="hs-identifier hs-var hs-var">currTable</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BoolExpM b (BoolExpCtx b)
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-44"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689538536"><span class="annot"><span class="annottext">filterDeps :: [SchemaDependency]
+</span><a href="#local-6989586621689538536"><span class="hs-identifier hs-var hs-var">filterDeps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[SchemaDependency]
+-&gt; (AnnBoolExp b (PartialSQLExp b) -&gt; [SchemaDependency])
+-&gt; Maybe (AnnBoolExp b (PartialSQLExp b))
+-&gt; [SchemaDependency]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName
+-&gt; TableName b
+-&gt; AnnBoolExp b (PartialSQLExp b)
+-&gt; [SchemaDependency]
+forall (b :: BackendType).
+GetAggregationPredicatesDeps b =&gt;
+SourceName
+-&gt; TableName b -&gt; AnnBoolExpPartialSQL b -&gt; [SchemaDependency]
+</span><a href="Hasura.RQL.Types.SchemaCache.html#getBoolExpDeps"><span class="hs-identifier hs-var">getBoolExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689538538"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689538537"><span class="hs-identifier hs-var">currTable</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp b (PartialSQLExp b))
+</span><a href="#local-6989586621689538546"><span class="hs-identifier hs-var">aggPredFilter</span></a></span><span>
+</span><span id="line-45"></span><span>        </span><span id="local-6989586621689538533"><span class="annot"><span class="annottext">[SchemaDependency]
+</span><a href="#local-6989586621689538533"><span class="hs-identifier hs-var">predicateDeps</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[OpExpG b (PartialSQLExp b)] -&gt; BoolExpM b [SchemaDependency]
+forall (b :: BackendType).
+Backend b =&gt;
+[OpExpG b (PartialSQLExp b)] -&gt; BoolExpM b [SchemaDependency]
+</span><a href="Hasura.RQL.Types.SchemaCache.html#getOpExpDeps"><span class="hs-identifier hs-var">getOpExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">[OpExpG b (PartialSQLExp b)]
+</span><a href="#local-6989586621689538544"><span class="hs-identifier hs-var">aggPredPredicate</span></a></span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">[SchemaDependency] -&gt; BoolExpM b [SchemaDependency]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">([SchemaDependency] -&gt; BoolExpM b [SchemaDependency])
+-&gt; [SchemaDependency] -&gt; BoolExpM b [SchemaDependency]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[SchemaDependency]
+</span><a href="#local-6989586621689538536"><span class="hs-identifier hs-var">filterDeps</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaDependency] -&gt; [SchemaDependency] -&gt; [SchemaDependency]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[SchemaDependency]
+</span><a href="#local-6989586621689538533"><span class="hs-identifier hs-var">predicateDeps</span></a></span><span>
+</span><span id="line-47"></span></pre></body></html>
