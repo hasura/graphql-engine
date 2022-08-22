@@ -49,7 +49,7 @@
  customize part of this tree without having to reimplement all of it. For
  instance, a backend that supports a different set ot table arguments can
  choose to reimplement <code><a href="Hasura-GraphQL-Schema-Backend.html#v:tableArguments" title="Hasura.GraphQL.Schema.Backend">tableArguments</a></code>, but can still use
- <code><a href="Hasura-GraphQL-Schema-Select.html#v:tableWhereArg" title="Hasura.GraphQL.Schema.Select">tableWhereArg</a></code> in its custom implementation.</p><p>Applying the above modelling guidelines has pros and cons:</p><ul><li>Pro: You can specify both shared and diverging behavior.</li><li>Pro: You can specify a lot of behavior implicitly, i.e. it's easy to write.</li><li>Con: You can specify a lot of behavior implicitly, i.e. it's hard do
+ <code><a href="Hasura-GraphQL-Schema-Select.html#v:tableWhereArg" title="Hasura.GraphQL.Schema.Select">tableWhereArg</a></code> in its custom implementation.</p><p>Applying the above modelling guidelines has pros and cons:</p><ul><li>Pro: You can specify both shared and diverging behavior.</li><li>Pro: You can specify a lot of behavior implicitly, i.e. it's easy to write.</li><li>Con: You can specify a lot of behavior implicitly, i.e. it's hard to
    understand without tracing through implementations.</li><li>Con: You get a proliferation of type class methods and it's difficult to
    understand how they fit together.</li></ul><h2>Going forward, we want to follow some different modelling guidelines:</h2><p>We should break up / refactor the building blocks (in
  <a href="Hasura-GraphQL-Schema-Build.html">Hasura.GraphQL.Schema.Build</a> etc.) which are used to implement the top-level
@@ -57,7 +57,7 @@
  <code>GSB.</code><code><a href="Hasura-GraphQL-Schema-Build.html#v:buildTableQueryAndSubscriptionFields" title="Hasura.GraphQL.Schema.Build">buildTableQueryAndSubscriptionFields</a></code>, etc.) and have them
  invoke the backend-specific behaviors they rely on via <em>function arguments</em>
  instead of other type class methods.</p><p>When we do this, the function call sites (which will often be in <code>instance
- BackendSchema ...</code>) becomes the centralised place where we decide which behavior
+ BackendSchema ...</code>) become the centralised places where we decide which behavior
  variation to follow.</p><p>When faced with answering the question of &quot;what does this method do, and how does
  it do it?&quot;, at least you will have listed the other components it depends on
  front and center without having to trace through its implementation.</p><p>That is of course, if we refactor our building blocks mindfully into

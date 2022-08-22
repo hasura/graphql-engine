@@ -45,10 +45,10 @@
 </span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span id="local-6989586621689455619"><span id="local-6989586621689455620"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getRoleTxt"><span class="annot"><span class="annottext">RoleName -&gt; NonEmptyText
+</span><span id="line-48"></span><span id="local-6989586621689464098"><span id="local-6989586621689464099"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getRoleTxt"><span class="annot"><span class="annottext">RoleName -&gt; NonEmptyText
 </span><a href="Hasura.Session.html#getRoleTxt"><span class="hs-identifier hs-var hs-var">getRoleTxt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-50"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689455611"><span id="local-6989586621689455613"><span id="local-6989586621689455615"><span class="annot"><span class="annottext">Int -&gt; RoleName -&gt; ShowS
+</span><span id="line-50"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689464090"><span id="local-6989586621689464092"><span id="local-6989586621689464094"><span class="annot"><span class="annottext">Int -&gt; RoleName -&gt; ShowS
 [RoleName] -&gt; ShowS
 RoleName -&gt; String
 (Int -&gt; RoleName -&gt; ShowS)
@@ -62,7 +62,7 @@ $cshow :: RoleName -&gt; String
 showsPrec :: Int -&gt; RoleName -&gt; ShowS
 $cshowsPrec :: Int -&gt; RoleName -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-51"></span><span>      </span><span id="local-6989586621689455606"><span id="local-6989586621689455608"><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
+</span><span id="line-51"></span><span>      </span><span id="local-6989586621689464085"><span id="local-6989586621689464087"><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
 (RoleName -&gt; RoleName -&gt; Bool)
 -&gt; (RoleName -&gt; RoleName -&gt; Bool) -&gt; Eq RoleName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -71,7 +71,7 @@ $c/= :: RoleName -&gt; RoleName -&gt; Bool
 == :: RoleName -&gt; RoleName -&gt; Bool
 $c== :: RoleName -&gt; RoleName -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-52"></span><span>      </span><span id="local-6989586621689455590"><span id="local-6989586621689455592"><span id="local-6989586621689455594"><span id="local-6989586621689455596"><span id="local-6989586621689455598"><span id="local-6989586621689455600"><span id="local-6989586621689455602"><span class="annot"><span class="annottext">Eq RoleName
+</span><span id="line-52"></span><span>      </span><span id="local-6989586621689464069"><span id="local-6989586621689464071"><span id="local-6989586621689464073"><span id="local-6989586621689464075"><span id="local-6989586621689464077"><span id="local-6989586621689464079"><span id="local-6989586621689464081"><span class="annot"><span class="annottext">Eq RoleName
 Eq RoleName
 -&gt; (RoleName -&gt; RoleName -&gt; Ordering)
 -&gt; (RoleName -&gt; RoleName -&gt; Bool)
@@ -110,7 +110,7 @@ compare :: RoleName -&gt; RoleName -&gt; Ordering
 $ccompare :: RoleName -&gt; RoleName -&gt; Ordering
 $cp1Ord :: Eq RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-53"></span><span>      </span><span id="local-6989586621689455585"><span id="local-6989586621689455587"><span class="annot"><span class="annottext">Int -&gt; RoleName -&gt; Int
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621689464064"><span id="local-6989586621689464066"><span class="annot"><span class="annottext">Int -&gt; RoleName -&gt; Int
 RoleName -&gt; Int
 (Int -&gt; RoleName -&gt; Int) -&gt; (RoleName -&gt; Int) -&gt; Hashable RoleName
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -119,7 +119,7 @@ $chash :: RoleName -&gt; Int
 hashWithSalt :: Int -&gt; RoleName -&gt; Int
 $chashWithSalt :: Int -&gt; RoleName -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-54"></span><span>      </span><span id="local-6989586621689455580"><span id="local-6989586621689455582"><span class="annot"><span class="annottext">FromJSONKeyFunction [RoleName]
+</span><span id="line-54"></span><span>      </span><span id="local-6989586621689464059"><span id="local-6989586621689464061"><span class="annot"><span class="annottext">FromJSONKeyFunction [RoleName]
 FromJSONKeyFunction RoleName
 FromJSONKeyFunction RoleName
 -&gt; FromJSONKeyFunction [RoleName] -&gt; FromJSONKey RoleName
@@ -130,7 +130,7 @@ $cfromJSONKeyList :: FromJSONKeyFunction [RoleName]
 fromJSONKey :: FromJSONKeyFunction RoleName
 $cfromJSONKey :: FromJSONKeyFunction RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-55"></span><span>      </span><span id="local-6989586621689455575"><span id="local-6989586621689455577"><span class="annot"><span class="annottext">ToJSONKeyFunction [RoleName]
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621689464054"><span id="local-6989586621689464056"><span class="annot"><span class="annottext">ToJSONKeyFunction [RoleName]
 ToJSONKeyFunction RoleName
 ToJSONKeyFunction RoleName
 -&gt; ToJSONKeyFunction [RoleName] -&gt; ToJSONKey RoleName
@@ -141,7 +141,7 @@ $ctoJSONKeyList :: ToJSONKeyFunction [RoleName]
 toJSONKey :: ToJSONKeyFunction RoleName
 $ctoJSONKey :: ToJSONKeyFunction RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-56"></span><span>      </span><span id="local-6989586621689455570"><span id="local-6989586621689455572"><span class="annot"><span class="annottext">Value -&gt; Parser [RoleName]
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621689464049"><span id="local-6989586621689464051"><span class="annot"><span class="annottext">Value -&gt; Parser [RoleName]
 Value -&gt; Parser RoleName
 (Value -&gt; Parser RoleName)
 -&gt; (Value -&gt; Parser [RoleName]) -&gt; FromJSON RoleName
@@ -152,7 +152,7 @@ $cparseJSONList :: Value -&gt; Parser [RoleName]
 parseJSON :: Value -&gt; Parser RoleName
 $cparseJSON :: Value -&gt; Parser RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-57"></span><span>      </span><span id="local-6989586621689455561"><span id="local-6989586621689455563"><span id="local-6989586621689455565"><span id="local-6989586621689455567"><span class="annot"><span class="annottext">[RoleName] -&gt; Value
+</span><span id="line-57"></span><span>      </span><span id="local-6989586621689464040"><span id="local-6989586621689464042"><span id="local-6989586621689464044"><span id="local-6989586621689464046"><span class="annot"><span class="annottext">[RoleName] -&gt; Value
 [RoleName] -&gt; Encoding
 RoleName -&gt; Value
 RoleName -&gt; Encoding
@@ -176,13 +176,13 @@ $ctoEncoding :: RoleName -&gt; Encoding
 toJSON :: RoleName -&gt; Value
 $ctoJSON :: RoleName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>      </span><span id="local-6989586621689455558"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RoleName
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621689464037"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RoleName
 (Maybe ByteString -&gt; Either Text RoleName) -&gt; FromCol RoleName
 forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
 fromCol :: Maybe ByteString -&gt; Either Text RoleName
 $cfromCol :: Maybe ByteString -&gt; Either Text RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.FromCol</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-59"></span><span>      </span><span id="local-6989586621689455555"><span class="annot"><span class="annottext">RoleName -&gt; PrepArg
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621689464034"><span class="annot"><span class="annottext">RoleName -&gt; PrepArg
 (RoleName -&gt; PrepArg) -&gt; ToPrepArg RoleName
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 toPrepVal :: RoleName -&gt; PrepArg
@@ -197,13 +197,13 @@ forall a.
 $cto :: forall x. Rep RoleName x -&gt; RoleName
 $cfrom :: forall x. RoleName -&gt; Rep RoleName x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>      </span><span id="local-6989586621689455549"><span class="annot"><span class="annottext">RoleName -&gt; ()
+</span><span id="line-61"></span><span>      </span><span id="local-6989586621689464028"><span class="annot"><span class="annottext">RoleName -&gt; ()
 (RoleName -&gt; ()) -&gt; NFData RoleName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: RoleName -&gt; ()
 $crnf :: RoleName -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>      </span><span id="local-6989586621689455545"><span class="annot"><span class="annottext">Eq RoleName
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621689464024"><span class="annot"><span class="annottext">Eq RoleName
 Eq RoleName
 -&gt; (Accesses -&gt; RoleName -&gt; RoleName -&gt; Bool) -&gt; Cacheable RoleName
 Accesses -&gt; RoleName -&gt; RoleName -&gt; Bool
@@ -224,7 +224,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.Session.html#getRoleTxt"><span class="hs-identifier hs-var hs-var">getRoleTxt</span></a></span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-69"></span><span>  </span><span id="local-6989586621689455539"><span class="annot"><span class="annottext">toTxt :: RoleName -&gt; Text
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621689464018"><span class="annot"><span class="annottext">toTxt :: RoleName -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text
 </span><a href="Hasura.Session.html#roleNameToTxt"><span class="hs-identifier hs-var">roleNameToTxt</span></a></span><span>
 </span><span id="line-70"></span><span>
@@ -255,7 +255,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-keyword">newtype</span><span> </span><span id="SessionVariable"><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-var">SessionVariable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SessionVariable"><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-var">SessionVariable</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unSessionVariable"><span class="annot"><span class="annottext">SessionVariable -&gt; CI Text
 </span><a href="Hasura.Session.html#unSessionVariable"><span class="hs-identifier hs-var hs-var">unSessionVariable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CI.CI</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689455528"><span id="local-6989586621689455530"><span id="local-6989586621689455532"><span class="annot"><span class="annottext">Int -&gt; SessionVariable -&gt; ShowS
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689464007"><span id="local-6989586621689464009"><span id="local-6989586621689464011"><span class="annot"><span class="annottext">Int -&gt; SessionVariable -&gt; ShowS
 [SessionVariable] -&gt; ShowS
 SessionVariable -&gt; String
 (Int -&gt; SessionVariable -&gt; ShowS)
@@ -270,7 +270,7 @@ show :: SessionVariable -&gt; String
 $cshow :: SessionVariable -&gt; String
 showsPrec :: Int -&gt; SessionVariable -&gt; ShowS
 $cshowsPrec :: Int -&gt; SessionVariable -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455524"><span id="local-6989586621689455526"><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariable -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689464003"><span id="local-6989586621689464005"><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariable -&gt; Bool
 (SessionVariable -&gt; SessionVariable -&gt; Bool)
 -&gt; (SessionVariable -&gt; SessionVariable -&gt; Bool)
 -&gt; Eq SessionVariable
@@ -279,7 +279,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: SessionVariable -&gt; SessionVariable -&gt; Bool
 == :: SessionVariable -&gt; SessionVariable -&gt; Bool
 $c== :: SessionVariable -&gt; SessionVariable -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455520"><span id="local-6989586621689455522"><span class="annot"><span class="annottext">Int -&gt; SessionVariable -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463999"><span id="local-6989586621689464001"><span class="annot"><span class="annottext">Int -&gt; SessionVariable -&gt; Int
 SessionVariable -&gt; Int
 (Int -&gt; SessionVariable -&gt; Int)
 -&gt; (SessionVariable -&gt; Int) -&gt; Hashable SessionVariable
@@ -288,12 +288,12 @@ hash :: SessionVariable -&gt; Int
 $chash :: SessionVariable -&gt; Int
 hashWithSalt :: Int -&gt; SessionVariable -&gt; Int
 $chashWithSalt :: Int -&gt; SessionVariable -&gt; Int
-</span><a href="#local-6989586621689455520"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455518"><span class="annot"><span class="annottext">String -&gt; SessionVariable
+</span><a href="#local-6989586621689463999"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463997"><span class="annot"><span class="annottext">String -&gt; SessionVariable
 (String -&gt; SessionVariable) -&gt; IsString SessionVariable
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; SessionVariable
 $cfromString :: String -&gt; SessionVariable
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455514"><span class="annot"><span class="annottext">Eq SessionVariable
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463993"><span class="annot"><span class="annottext">Eq SessionVariable
 Eq SessionVariable
 -&gt; (Accesses -&gt; SessionVariable -&gt; SessionVariable -&gt; Bool)
 -&gt; Cacheable SessionVariable
@@ -302,7 +302,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; SessionVariable -&gt; SessionVariable -&gt; Bool
 $cunchanged :: Accesses -&gt; SessionVariable -&gt; SessionVariable -&gt; Bool
 $cp1Cacheable :: Eq SessionVariable
-</span><a href="#local-6989586621689455514"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="%24cSessionVariable"><span id="%24tSessionVariable"><span id="local-6989586621689455485"><span id="local-6989586621689455487"><span id="local-6989586621689455489"><span id="local-6989586621689455491"><span id="local-6989586621689455493"><span id="local-6989586621689455495"><span id="local-6989586621689455497"><span id="local-6989586621689455499"><span id="local-6989586621689455501"><span id="local-6989586621689455503"><span id="local-6989586621689455505"><span id="local-6989586621689455507"><span id="local-6989586621689455509"><span id="local-6989586621689455511"><span class="annot"><span class="annottext">Typeable SessionVariable
+</span><a href="#local-6989586621689463993"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="%24cSessionVariable"><span id="%24tSessionVariable"><span id="local-6989586621689463964"><span id="local-6989586621689463966"><span id="local-6989586621689463968"><span id="local-6989586621689463970"><span id="local-6989586621689463972"><span id="local-6989586621689463974"><span id="local-6989586621689463976"><span id="local-6989586621689463978"><span id="local-6989586621689463980"><span id="local-6989586621689463982"><span id="local-6989586621689463984"><span id="local-6989586621689463986"><span id="local-6989586621689463988"><span id="local-6989586621689463990"><span class="annot"><span class="annottext">Typeable SessionVariable
 DataType
 Constr
 Typeable SessionVariable
@@ -478,12 +478,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; SessionVariable -&gt; c SessionVariable
 $cp1Data :: Typeable SessionVariable
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455480"><span class="annot"><span class="annottext">SessionVariable -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463959"><span class="annot"><span class="annottext">SessionVariable -&gt; ()
 (SessionVariable -&gt; ()) -&gt; NFData SessionVariable
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: SessionVariable -&gt; ()
 $crnf :: SessionVariable -&gt; ()
-</span><a href="#local-6989586621689455480"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455465"><span id="local-6989586621689455467"><span id="local-6989586621689455469"><span id="local-6989586621689455471"><span id="local-6989586621689455473"><span id="local-6989586621689455475"><span id="local-6989586621689455477"><span class="annot"><span class="annottext">Eq SessionVariable
+</span><a href="#local-6989586621689463959"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463944"><span id="local-6989586621689463946"><span id="local-6989586621689463948"><span id="local-6989586621689463950"><span id="local-6989586621689463952"><span id="local-6989586621689463954"><span id="local-6989586621689463956"><span class="annot"><span class="annottext">Eq SessionVariable
 Eq SessionVariable
 -&gt; (SessionVariable -&gt; SessionVariable -&gt; Ordering)
 -&gt; (SessionVariable -&gt; SessionVariable -&gt; Bool)
@@ -523,8 +523,8 @@ $ccompare :: SessionVariable -&gt; SessionVariable -&gt; Ordering
 $cp1Ord :: Eq SessionVariable
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455458"><span id="local-6989586621689455460"><span id="local-6989586621689455462"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621689455457"><span class="annot"><span class="annottext">toJSON :: SessionVariable -&gt; Value
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463937"><span id="local-6989586621689463939"><span id="local-6989586621689463941"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621689463936"><span class="annot"><span class="annottext">toJSON :: SessionVariable -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
@@ -538,16 +538,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; CI Text
 </span><a href="Hasura.Session.html#unSessionVariable"><span class="hs-identifier hs-var hs-var">unSessionVariable</span></a></span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455452"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621689455451"><span class="annot"><span class="annottext">toJSONKey :: ToJSONKeyFunction SessionVariable
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463931"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621689463930"><span class="annot"><span class="annottext">toJSONKey :: ToJSONKeyFunction SessionVariable
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKey</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SessionVariable -&gt; Text) -&gt; ToJSONKeyFunction SessionVariable
 forall a. (a -&gt; Text) -&gt; ToJSONKeyFunction a
 </span><span class="hs-identifier hs-var">toJSONKeyText</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span>
 </span><span id="line-88"></span><span>
 </span><span id="line-89"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621689455448"><span class="annot"><span class="annottext">toTxt :: SessionVariable -&gt; Text
-</span><a href="#local-6989586621689455448"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621689463927"><span class="annot"><span class="annottext">toTxt :: SessionVariable -&gt; Text
+</span><a href="#local-6989586621689463927"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span class="hs-comment">-- | Converts a `SessionVariable` value to a GraphQL name.</span><span>
@@ -571,11 +571,11 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="annot"><a href="Hasura.Session.html#parseSessionVariable"><span class="hs-identifier hs-type">parseSessionVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span>
 </span><span id="line-100"></span><span id="parseSessionVariable"><span class="annot"><span class="annottext">parseSessionVariable :: Text -&gt; Parser SessionVariable
-</span><a href="Hasura.Session.html#parseSessionVariable"><span class="hs-identifier hs-var hs-var">parseSessionVariable</span></a></span></span><span> </span><span id="local-6989586621689455444"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689455444"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Session.html#parseSessionVariable"><span class="hs-identifier hs-var hs-var">parseSessionVariable</span></a></span></span><span> </span><span id="local-6989586621689463923"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689463923"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-101"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><a href="Hasura.Server.Utils.html#isSessionVariable"><span class="hs-identifier hs-var">isSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689455444"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689463923"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-102"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Parser SessionVariable
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SessionVariable -&gt; Parser SessionVariable)
@@ -583,7 +583,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SessionVariable
 </span><a href="Hasura.Session.html#mkSessionVariable"><span class="hs-identifier hs-var">mkSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689455444"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689463923"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-103"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser SessionVariable
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser SessionVariable)
@@ -592,13 +592,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689455444"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621689463923"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; is not a Hasura session variable&quot;</span></span><span>
 </span><span id="line-104"></span><span>
-</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455439"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-106"></span><span>  </span><span id="local-6989586621689455438"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SessionVariable
+</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463918"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621689463917"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SessionVariable
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser SessionVariable)
 -&gt; Value
@@ -608,8 +608,8 @@ forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-string">&quot;String&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser SessionVariable
 </span><a href="Hasura.Session.html#parseSessionVariable"><span class="hs-identifier hs-var">parseSessionVariable</span></a></span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455433"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-109"></span><span>  </span><span id="local-6989586621689455432"><span class="annot"><span class="annottext">fromJSONKey :: FromJSONKeyFunction SessionVariable
+</span><span id="line-108"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463912"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-109"></span><span>  </span><span id="local-6989586621689463911"><span class="annot"><span class="annottext">fromJSONKey :: FromJSONKeyFunction SessionVariable
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromJSONKey</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parser SessionVariable)
 -&gt; FromJSONKeyFunction SessionVariable
 forall a. (Text -&gt; Parser a) -&gt; FromJSONKeyFunction a
@@ -644,7 +644,7 @@ forall s. FoldCase s =&gt; s -&gt; CI s
 </span><span id="line-118"></span><span>
 </span><span id="line-119"></span><span class="hs-keyword">newtype</span><span> </span><span id="SessionVariables"><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-var">SessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SessionVariables"><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-var">SessionVariables</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unSessionVariables"><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.Session.html#unSessionVariables"><span class="hs-identifier hs-var hs-var">unSessionVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariableValue"><span class="hs-identifier hs-type">SessionVariableValue</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689455420"><span id="local-6989586621689455422"><span id="local-6989586621689455424"><span class="annot"><span class="annottext">Int -&gt; SessionVariables -&gt; ShowS
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689463899"><span id="local-6989586621689463901"><span id="local-6989586621689463903"><span class="annot"><span class="annottext">Int -&gt; SessionVariables -&gt; ShowS
 [SessionVariables] -&gt; ShowS
 SessionVariables -&gt; String
 (Int -&gt; SessionVariables -&gt; ShowS)
@@ -659,7 +659,7 @@ show :: SessionVariables -&gt; String
 $cshow :: SessionVariables -&gt; String
 showsPrec :: Int -&gt; SessionVariables -&gt; ShowS
 $cshowsPrec :: Int -&gt; SessionVariables -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455416"><span id="local-6989586621689455418"><span class="annot"><span class="annottext">SessionVariables -&gt; SessionVariables -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463895"><span id="local-6989586621689463897"><span class="annot"><span class="annottext">SessionVariables -&gt; SessionVariables -&gt; Bool
 (SessionVariables -&gt; SessionVariables -&gt; Bool)
 -&gt; (SessionVariables -&gt; SessionVariables -&gt; Bool)
 -&gt; Eq SessionVariables
@@ -668,7 +668,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: SessionVariables -&gt; SessionVariables -&gt; Bool
 == :: SessionVariables -&gt; SessionVariables -&gt; Bool
 $c== :: SessionVariables -&gt; SessionVariables -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455412"><span id="local-6989586621689455414"><span class="annot"><span class="annottext">Int -&gt; SessionVariables -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463891"><span id="local-6989586621689463893"><span class="annot"><span class="annottext">Int -&gt; SessionVariables -&gt; Int
 SessionVariables -&gt; Int
 (Int -&gt; SessionVariables -&gt; Int)
 -&gt; (SessionVariables -&gt; Int) -&gt; Hashable SessionVariables
@@ -677,7 +677,7 @@ hash :: SessionVariables -&gt; Int
 $chash :: SessionVariables -&gt; Int
 hashWithSalt :: Int -&gt; SessionVariables -&gt; Int
 $chashWithSalt :: Int -&gt; SessionVariables -&gt; Int
-</span><a href="#local-6989586621689455412"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455406"><span id="local-6989586621689455408"><span id="local-6989586621689455410"><span class="annot"><span class="annottext">b -&gt; SessionVariables -&gt; SessionVariables
+</span><a href="#local-6989586621689463891"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463885"><span id="local-6989586621689463887"><span id="local-6989586621689463889"><span class="annot"><span class="annottext">b -&gt; SessionVariables -&gt; SessionVariables
 NonEmpty SessionVariables -&gt; SessionVariables
 SessionVariables -&gt; SessionVariables -&gt; SessionVariables
 (SessionVariables -&gt; SessionVariables -&gt; SessionVariables)
@@ -698,7 +698,7 @@ sconcat :: NonEmpty SessionVariables -&gt; SessionVariables
 $csconcat :: NonEmpty SessionVariables -&gt; SessionVariables
 &lt;&gt; :: SessionVariables -&gt; SessionVariables -&gt; SessionVariables
 $c&lt;&gt; :: SessionVariables -&gt; SessionVariables -&gt; SessionVariables
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455398"><span id="local-6989586621689455400"><span id="local-6989586621689455402"><span class="annot"><span class="annottext">Semigroup SessionVariables
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463877"><span id="local-6989586621689463879"><span id="local-6989586621689463881"><span class="annot"><span class="annottext">Semigroup SessionVariables
 SessionVariables
 Semigroup SessionVariables
 -&gt; SessionVariables
@@ -724,8 +724,8 @@ $cp1Monoid :: Semigroup SessionVariables
 </span><span id="line-125"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span>
 </span><span id="line-126"></span><span id="filterSessionVariables"><span class="annot"><span class="annottext">filterSessionVariables :: (SessionVariable -&gt; Text -&gt; Bool)
 -&gt; SessionVariables -&gt; SessionVariables
-</span><a href="Hasura.Session.html#filterSessionVariables"><span class="hs-identifier hs-var hs-var">filterSessionVariables</span></a></span></span><span> </span><span id="local-6989586621689455396"><span class="annot"><span class="annottext">SessionVariable -&gt; Text -&gt; Bool
-</span><a href="#local-6989586621689455396"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap SessionVariable Text -&gt; SessionVariables
+</span><a href="Hasura.Session.html#filterSessionVariables"><span class="hs-identifier hs-var hs-var">filterSessionVariables</span></a></span></span><span> </span><span id="local-6989586621689463875"><span class="annot"><span class="annottext">SessionVariable -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621689463875"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap SessionVariable Text -&gt; SessionVariables
 </span><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-var">SessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap SessionVariable Text -&gt; SessionVariables)
 -&gt; (SessionVariables -&gt; HashMap SessionVariable Text)
 -&gt; SessionVariables
@@ -735,7 +735,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; HashMap SessionVariable Text -&gt; HashMap SessionVariable Text
 forall k v. (k -&gt; v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.filterWithKey</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text -&gt; Bool
-</span><a href="#local-6989586621689455396"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap SessionVariable Text -&gt; HashMap SessionVariable Text)
+</span><a href="#local-6989586621689463875"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap SessionVariable Text -&gt; HashMap SessionVariable Text)
 -&gt; (SessionVariables -&gt; HashMap SessionVariable Text)
 -&gt; SessionVariables
 -&gt; HashMap SessionVariable Text
@@ -743,10 +743,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.Session.html#unSessionVariables"><span class="hs-identifier hs-var hs-var">unSessionVariables</span></a></span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455388"><span id="local-6989586621689455390"><span id="local-6989586621689455392"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-129"></span><span>  </span><span id="local-6989586621689455387"><span class="annot"><span class="annottext">toJSON :: SessionVariables -&gt; Value
-</span><a href="#local-6989586621689455387"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span id="local-6989586621689455386"><span class="annot"><span class="annottext">HashMap SessionVariable Text
-</span><a href="#local-6989586621689455386"><span class="hs-identifier hs-var">varMap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463867"><span id="local-6989586621689463869"><span id="local-6989586621689463871"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621689463866"><span class="annot"><span class="annottext">toJSON :: SessionVariables -&gt; Value
+</span><a href="#local-6989586621689463866"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span id="local-6989586621689463865"><span class="annot"><span class="annottext">HashMap SessionVariable Text
+</span><a href="#local-6989586621689463865"><span class="hs-identifier hs-var">varMap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-130"></span><span>    </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Text -&gt; Value) -&gt; HashMap Text Text -&gt; Value
@@ -758,19 +758,19 @@ forall k2 k1 v.
 (k1 -&gt; k2) -&gt; HashMap k1 v -&gt; HashMap k2 v
 </span><span class="hs-identifier hs-var">mapKeys</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap SessionVariable Text
-</span><a href="#local-6989586621689455386"><span class="hs-identifier hs-var">varMap</span></a></span><span>
+</span><a href="#local-6989586621689463865"><span class="hs-identifier hs-var">varMap</span></a></span><span>
 </span><span id="line-131"></span><span>
-</span><span id="line-132"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455382"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-133"></span><span>  </span><span id="local-6989586621689455381"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SessionVariables
-</span><a href="#local-6989586621689455381"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689455380"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689455380"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; SessionVariables
+</span><span id="line-132"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463861"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-133"></span><span>  </span><span id="local-6989586621689463860"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SessionVariables
+</span><a href="#local-6989586621689463860"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689463859"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689463859"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; SessionVariables
 </span><a href="Hasura.Session.html#mkSessionVariablesText"><span class="hs-identifier hs-var">mkSessionVariablesText</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Text -&gt; SessionVariables)
 -&gt; Parser (HashMap Text Text) -&gt; Parser SessionVariables
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (HashMap Text Text)
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689455380"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689463859"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-134"></span><span>
 </span><span id="line-135"></span><span class="annot"><a href="Hasura.Session.html#mkSessionVariablesText"><span class="hs-identifier hs-type">mkSessionVariablesText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span>
 </span><span id="line-136"></span><span id="mkSessionVariablesText"><span class="annot"><span class="annottext">mkSessionVariablesText :: HashMap Text Text -&gt; SessionVariables
@@ -921,11 +921,11 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-157"></span><span>
 </span><span id="line-158"></span><span class="annot"><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-type">getSessionVariableValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariableValue"><span class="hs-identifier hs-type">SessionVariableValue</span></a></span><span>
 </span><span id="line-159"></span><span id="getSessionVariableValue"><span class="annot"><span class="annottext">getSessionVariableValue :: SessionVariable -&gt; SessionVariables -&gt; Maybe Text
-</span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var hs-var">getSessionVariableValue</span></a></span></span><span> </span><span id="local-6989586621689455370"><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689455370"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; HashMap SessionVariable Text -&gt; Maybe Text
+</span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var hs-var">getSessionVariableValue</span></a></span></span><span> </span><span id="local-6989586621689463849"><span class="annot"><span class="annottext">SessionVariable
+</span><a href="#local-6989586621689463849"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; HashMap SessionVariable Text -&gt; Maybe Text
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689455370"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap SessionVariable Text -&gt; Maybe Text)
+</span><a href="#local-6989586621689463849"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap SessionVariable Text -&gt; Maybe Text)
 -&gt; (SessionVariables -&gt; HashMap SessionVariable Text)
 -&gt; SessionVariables
 -&gt; Maybe Text
@@ -939,7 +939,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-164"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UAdminSecretSent"><span class="annot"><a href="Hasura.Session.html#UAdminSecretSent"><span class="hs-identifier hs-var">UAdminSecretSent</span></a></span></span><span>
 </span><span id="line-165"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UAdminSecretNotSent"><span class="annot"><a href="Hasura.Session.html#UAdminSecretNotSent"><span class="hs-identifier hs-var">UAdminSecretNotSent</span></a></span></span><span>
 </span><span id="line-166"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UAuthNotSet"><span class="annot"><a href="Hasura.Session.html#UAuthNotSet"><span class="hs-identifier hs-var">UAuthNotSet</span></a></span></span><span>
-</span><span id="line-167"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689455360"><span id="local-6989586621689455362"><span id="local-6989586621689455364"><span class="annot"><span class="annottext">Int -&gt; UserAdminSecret -&gt; ShowS
+</span><span id="line-167"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689463839"><span id="local-6989586621689463841"><span id="local-6989586621689463843"><span class="annot"><span class="annottext">Int -&gt; UserAdminSecret -&gt; ShowS
 [UserAdminSecret] -&gt; ShowS
 UserAdminSecret -&gt; String
 (Int -&gt; UserAdminSecret -&gt; ShowS)
@@ -954,7 +954,7 @@ show :: UserAdminSecret -&gt; String
 $cshow :: UserAdminSecret -&gt; String
 showsPrec :: Int -&gt; UserAdminSecret -&gt; ShowS
 $cshowsPrec :: Int -&gt; UserAdminSecret -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455356"><span id="local-6989586621689455358"><span class="annot"><span class="annottext">UserAdminSecret -&gt; UserAdminSecret -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463835"><span id="local-6989586621689463837"><span class="annot"><span class="annottext">UserAdminSecret -&gt; UserAdminSecret -&gt; Bool
 (UserAdminSecret -&gt; UserAdminSecret -&gt; Bool)
 -&gt; (UserAdminSecret -&gt; UserAdminSecret -&gt; Bool)
 -&gt; Eq UserAdminSecret
@@ -968,10 +968,10 @@ $c== :: UserAdminSecret -&gt; UserAdminSecret -&gt; Bool
 </span><span id="line-169"></span><span class="hs-comment">-- | Represents the 'X-Hasura-Use-Backend-Only-Permissions' session variable</span><span>
 </span><span id="line-170"></span><span class="hs-comment">-- and request made with 'X-Hasura-Admin-Secret' if any auth configured.</span><span>
 </span><span id="line-171"></span><span class="hs-comment">-- For more details see Note [Backend only permissions]</span><span>
-</span><span id="line-172"></span><span id="local-6989586621689455354"><span id="local-6989586621689455355"></span></span><span class="hs-keyword">data</span><span> </span><span id="BackendOnlyFieldAccess"><span class="annot"><a href="Hasura.Session.html#BackendOnlyFieldAccess"><span class="hs-identifier hs-var">BackendOnlyFieldAccess</span></a></span></span><span>
+</span><span id="line-172"></span><span id="local-6989586621689463833"><span id="local-6989586621689463834"></span></span><span class="hs-keyword">data</span><span> </span><span id="BackendOnlyFieldAccess"><span class="annot"><a href="Hasura.Session.html#BackendOnlyFieldAccess"><span class="hs-identifier hs-var">BackendOnlyFieldAccess</span></a></span></span><span>
 </span><span id="line-173"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="BOFAAllowed"><span class="annot"><a href="Hasura.Session.html#BOFAAllowed"><span class="hs-identifier hs-var">BOFAAllowed</span></a></span></span><span>
 </span><span id="line-174"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BOFADisallowed"><span class="annot"><a href="Hasura.Session.html#BOFADisallowed"><span class="hs-identifier hs-var">BOFADisallowed</span></a></span></span><span>
-</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689455346"><span id="local-6989586621689455348"><span id="local-6989586621689455350"><span class="annot"><span class="annottext">Int -&gt; BackendOnlyFieldAccess -&gt; ShowS
+</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689463825"><span id="local-6989586621689463827"><span id="local-6989586621689463829"><span class="annot"><span class="annottext">Int -&gt; BackendOnlyFieldAccess -&gt; ShowS
 [BackendOnlyFieldAccess] -&gt; ShowS
 BackendOnlyFieldAccess -&gt; String
 (Int -&gt; BackendOnlyFieldAccess -&gt; ShowS)
@@ -986,7 +986,7 @@ show :: BackendOnlyFieldAccess -&gt; String
 $cshow :: BackendOnlyFieldAccess -&gt; String
 showsPrec :: Int -&gt; BackendOnlyFieldAccess -&gt; ShowS
 $cshowsPrec :: Int -&gt; BackendOnlyFieldAccess -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455342"><span id="local-6989586621689455344"><span class="annot"><span class="annottext">BackendOnlyFieldAccess -&gt; BackendOnlyFieldAccess -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463821"><span id="local-6989586621689463823"><span class="annot"><span class="annottext">BackendOnlyFieldAccess -&gt; BackendOnlyFieldAccess -&gt; Bool
 (BackendOnlyFieldAccess -&gt; BackendOnlyFieldAccess -&gt; Bool)
 -&gt; (BackendOnlyFieldAccess -&gt; BackendOnlyFieldAccess -&gt; Bool)
 -&gt; Eq BackendOnlyFieldAccess
@@ -1007,9 +1007,9 @@ $cto :: forall x. Rep BackendOnlyFieldAccess x -&gt; BackendOnlyFieldAccess
 $cfrom :: forall x. BackendOnlyFieldAccess -&gt; Rep BackendOnlyFieldAccess x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455336"><span id="local-6989586621689455338"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#BackendOnlyFieldAccess"><span class="hs-identifier hs-type">BackendOnlyFieldAccess</span></a></span></span></span><span>
+</span><span id="line-177"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463815"><span id="local-6989586621689463817"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#BackendOnlyFieldAccess"><span class="hs-identifier hs-type">BackendOnlyFieldAccess</span></a></span></span></span><span>
 </span><span id="line-178"></span><span>
-</span><span id="line-179"></span><span id="local-6989586621689455334"><span id="local-6989586621689455335"></span></span><span class="hs-keyword">data</span><span> </span><span id="UserInfo"><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-var">UserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UserInfo"><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-var">UserInfo</span></a></span></span><span>
+</span><span id="line-179"></span><span id="local-6989586621689463813"><span id="local-6989586621689463814"></span></span><span class="hs-keyword">data</span><span> </span><span id="UserInfo"><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-var">UserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UserInfo"><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-var">UserInfo</span></a></span></span><span>
 </span><span id="line-180"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_uiRole"><span class="annot"><span class="annottext">UserInfo -&gt; RoleName
 </span><a href="Hasura.Session.html#_uiRole"><span class="hs-identifier hs-var hs-var">_uiRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-181"></span><span>    </span><span id="_uiSession"><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
@@ -1017,7 +1017,7 @@ $cfrom :: forall x. BackendOnlyFieldAccess -&gt; Rep BackendOnlyFieldAccess x
 </span><span id="line-182"></span><span>    </span><span id="_uiBackendOnlyFieldAccess"><span class="annot"><span class="annottext">UserInfo -&gt; BackendOnlyFieldAccess
 </span><a href="Hasura.Session.html#_uiBackendOnlyFieldAccess"><span class="hs-identifier hs-var hs-var">_uiBackendOnlyFieldAccess</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#BackendOnlyFieldAccess"><span class="hs-identifier hs-type">BackendOnlyFieldAccess</span></a></span><span>
 </span><span id="line-183"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-184"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689455324"><span id="local-6989586621689455326"><span id="local-6989586621689455328"><span class="annot"><span class="annottext">Int -&gt; UserInfo -&gt; ShowS
+</span><span id="line-184"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689463803"><span id="local-6989586621689463805"><span id="local-6989586621689463807"><span class="annot"><span class="annottext">Int -&gt; UserInfo -&gt; ShowS
 [UserInfo] -&gt; ShowS
 UserInfo -&gt; String
 (Int -&gt; UserInfo -&gt; ShowS)
@@ -1030,7 +1030,7 @@ show :: UserInfo -&gt; String
 $cshow :: UserInfo -&gt; String
 showsPrec :: Int -&gt; UserInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; UserInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455320"><span id="local-6989586621689455322"><span class="annot"><span class="annottext">UserInfo -&gt; UserInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463799"><span id="local-6989586621689463801"><span class="annot"><span class="annottext">UserInfo -&gt; UserInfo -&gt; Bool
 (UserInfo -&gt; UserInfo -&gt; Bool)
 -&gt; (UserInfo -&gt; UserInfo -&gt; Bool) -&gt; Eq UserInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1048,14 +1048,14 @@ $cto :: forall x. Rep UserInfo x -&gt; UserInfo
 $cfrom :: forall x. UserInfo -&gt; Rep UserInfo x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-185"></span><span>
-</span><span id="line-186"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689455314"><span id="local-6989586621689455316"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span></span></span><span>
+</span><span id="line-186"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689463793"><span id="local-6989586621689463795"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span></span></span><span>
 </span><span id="line-187"></span><span>
-</span><span id="line-188"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689455670"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="UserInfoM"><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-var">UserInfoM</span></a></span></span><span> </span><span id="local-6989586621689455670"><span class="annot"><a href="#local-6989586621689455670"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-189"></span><span>  </span><span id="askUserInfo"><span class="annot"><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-type">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689455670"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span>
+</span><span id="line-188"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689464149"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="UserInfoM"><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-var">UserInfoM</span></a></span></span><span> </span><span id="local-6989586621689464149"><span class="annot"><a href="#local-6989586621689464149"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-189"></span><span>  </span><span id="askUserInfo"><span class="annot"><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-type">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689464149"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span>
 </span><span id="line-190"></span><span>
-</span><span id="line-191"></span><span id="local-6989586621689455311"><span id="local-6989586621689455312"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455312"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621689455311"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455312"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-192"></span><span>  </span><span id="local-6989586621689455307"><span class="annot"><span class="annottext">askUserInfo :: ReaderT r m UserInfo
-</span><a href="#local-6989586621689455307"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; ReaderT r m UserInfo
+</span><span id="line-191"></span><span id="local-6989586621689463790"><span id="local-6989586621689463791"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463791"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621689463790"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463791"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621689463786"><span class="annot"><span class="annottext">askUserInfo :: ReaderT r m UserInfo
+</span><a href="#local-6989586621689463786"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; ReaderT r m UserInfo
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -1063,9 +1063,9 @@ m a -&gt; t m a
 forall (m :: * -&gt; *). UserInfoM m =&gt; m UserInfo
 </span><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-var">askUserInfo</span></a></span></span></span><span>
 </span><span id="line-193"></span><span>
-</span><span id="line-194"></span><span id="local-6989586621689455304"><span id="local-6989586621689455305"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455305"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621689455304"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455305"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-195"></span><span>  </span><span id="local-6989586621689455301"><span class="annot"><span class="annottext">askUserInfo :: ExceptT r m UserInfo
-</span><a href="#local-6989586621689455301"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; ExceptT r m UserInfo
+</span><span id="line-194"></span><span id="local-6989586621689463783"><span id="local-6989586621689463784"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463784"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621689463783"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463784"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-195"></span><span>  </span><span id="local-6989586621689463780"><span class="annot"><span class="annottext">askUserInfo :: ExceptT r m UserInfo
+</span><a href="#local-6989586621689463780"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; ExceptT r m UserInfo
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -1073,9 +1073,9 @@ m a -&gt; t m a
 forall (m :: * -&gt; *). UserInfoM m =&gt; m UserInfo
 </span><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-var">askUserInfo</span></a></span></span></span><span>
 </span><span id="line-196"></span><span>
-</span><span id="line-197"></span><span id="local-6989586621689455299"><span id="local-6989586621689455300"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455300"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="#local-6989586621689455299"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455300"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-198"></span><span>  </span><span id="local-6989586621689455296"><span class="annot"><span class="annottext">askUserInfo :: StateT s m UserInfo
-</span><a href="#local-6989586621689455296"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; StateT s m UserInfo
+</span><span id="line-197"></span><span id="local-6989586621689463778"><span id="local-6989586621689463779"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463779"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="#local-6989586621689463778"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463779"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-198"></span><span>  </span><span id="local-6989586621689463775"><span class="annot"><span class="annottext">askUserInfo :: StateT s m UserInfo
+</span><a href="#local-6989586621689463775"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; StateT s m UserInfo
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -1083,9 +1083,9 @@ m a -&gt; t m a
 forall (m :: * -&gt; *). UserInfoM m =&gt; m UserInfo
 </span><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-var">askUserInfo</span></a></span></span></span><span>
 </span><span id="line-199"></span><span>
-</span><span id="line-200"></span><span id="local-6989586621689455295"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455295"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455295"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-201"></span><span>  </span><span id="local-6989586621689455292"><span class="annot"><span class="annottext">askUserInfo :: TraceT m UserInfo
-</span><a href="#local-6989586621689455292"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; TraceT m UserInfo
+</span><span id="line-200"></span><span id="local-6989586621689463774"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463774"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463774"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621689463771"><span class="annot"><span class="annottext">askUserInfo :: TraceT m UserInfo
+</span><a href="#local-6989586621689463771"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; TraceT m UserInfo
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -1093,7 +1093,7 @@ m a -&gt; t m a
 forall (m :: * -&gt; *). UserInfoM m =&gt; m UserInfo
 </span><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-var">askUserInfo</span></a></span></span><span>
 </span><span id="line-202"></span><span>
-</span><span id="line-203"></span><span id="local-6989586621689455291"><span class="annot"><a href="Hasura.Session.html#askCurRole"><span class="hs-identifier hs-type">askCurRole</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455291"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689455291"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span></span><span>
+</span><span id="line-203"></span><span id="local-6989586621689463770"><span class="annot"><a href="Hasura.Session.html#askCurRole"><span class="hs-identifier hs-type">askCurRole</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463770"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689463770"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span></span><span>
 </span><span id="line-204"></span><span id="askCurRole"><span class="annot"><span class="annottext">askCurRole :: m RoleName
 </span><a href="Hasura.Session.html#askCurRole"><span class="hs-identifier hs-var hs-var">askCurRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; RoleName
 </span><a href="Hasura.Session.html#_uiRole"><span class="hs-identifier hs-var hs-var">_uiRole</span></a></span><span> </span><span class="annot"><span class="annottext">(UserInfo -&gt; RoleName) -&gt; m UserInfo -&gt; m RoleName
@@ -1110,7 +1110,7 @@ forall (m :: * -&gt; *). UserInfoM m =&gt; m UserInfo
 </span><span id="line-211"></span><span>    </span><span id="URBFromSessionVariablesFallback"><span class="annot"><a href="Hasura.Session.html#URBFromSessionVariablesFallback"><span class="hs-identifier hs-var">URBFromSessionVariablesFallback</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
 </span><span id="line-212"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Use only the pre-determined role</span><span>
 </span><span id="line-213"></span><span>    </span><span id="URBPreDetermined"><span class="annot"><a href="Hasura.Session.html#URBPreDetermined"><span class="hs-identifier hs-var">URBPreDetermined</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
-</span><span id="line-214"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689455282"><span id="local-6989586621689455284"><span id="local-6989586621689455286"><span class="annot"><span class="annottext">Int -&gt; UserRoleBuild -&gt; ShowS
+</span><span id="line-214"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689463761"><span id="local-6989586621689463763"><span id="local-6989586621689463765"><span class="annot"><span class="annottext">Int -&gt; UserRoleBuild -&gt; ShowS
 [UserRoleBuild] -&gt; ShowS
 UserRoleBuild -&gt; String
 (Int -&gt; UserRoleBuild -&gt; ShowS)
@@ -1125,7 +1125,7 @@ show :: UserRoleBuild -&gt; String
 $cshow :: UserRoleBuild -&gt; String
 showsPrec :: Int -&gt; UserRoleBuild -&gt; ShowS
 $cshowsPrec :: Int -&gt; UserRoleBuild -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689455278"><span id="local-6989586621689455280"><span class="annot"><span class="annottext">UserRoleBuild -&gt; UserRoleBuild -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689463757"><span id="local-6989586621689463759"><span class="annot"><span class="annottext">UserRoleBuild -&gt; UserRoleBuild -&gt; Bool
 (UserRoleBuild -&gt; UserRoleBuild -&gt; Bool)
 -&gt; (UserRoleBuild -&gt; UserRoleBuild -&gt; Bool) -&gt; Eq UserRoleBuild
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1137,26 +1137,26 @@ $c== :: UserRoleBuild -&gt; UserRoleBuild -&gt; Bool
 </span><span id="line-215"></span><span>
 </span><span id="line-216"></span><span class="hs-comment">-- | Build @'UserInfo' from @'SessionVariables'</span><span>
 </span><span id="line-217"></span><span class="annot"><a href="Hasura.Session.html#mkUserInfo"><span class="hs-identifier hs-type">mkUserInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-218"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689455277"><span class="annot"><a href="#local-6989586621689455277"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-219"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689455277"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-218"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689463756"><span class="annot"><a href="#local-6989586621689463756"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-219"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689463756"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-220"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserRoleBuild"><span class="hs-identifier hs-type">UserRoleBuild</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-221"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserAdminSecret"><span class="hs-identifier hs-type">UserAdminSecret</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-222"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-223"></span><span>  </span><span class="annot"><a href="#local-6989586621689455277"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span>
+</span><span id="line-223"></span><span>  </span><span class="annot"><a href="#local-6989586621689463756"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span>
 </span><span id="line-224"></span><span id="mkUserInfo"><span class="annot"><span class="annottext">mkUserInfo :: UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
-</span><a href="Hasura.Session.html#mkUserInfo"><span class="hs-identifier hs-var hs-var">mkUserInfo</span></a></span></span><span> </span><span id="local-6989586621689455274"><span class="annot"><span class="annottext">UserRoleBuild
-</span><a href="#local-6989586621689455274"><span class="hs-identifier hs-var">roleBuild</span></a></span></span><span> </span><span id="local-6989586621689455273"><span class="annot"><span class="annottext">UserAdminSecret
-</span><a href="#local-6989586621689455273"><span class="hs-identifier hs-var">userAdminSecret</span></a></span></span><span> </span><span id="local-6989586621689455272"><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689455272"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-225"></span><span>  </span><span id="local-6989586621689455271"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455271"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UserRoleBuild
-</span><a href="#local-6989586621689455274"><span class="hs-identifier hs-var">roleBuild</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="Hasura.Session.html#mkUserInfo"><span class="hs-identifier hs-var hs-var">mkUserInfo</span></a></span></span><span> </span><span id="local-6989586621689463753"><span class="annot"><span class="annottext">UserRoleBuild
+</span><a href="#local-6989586621689463753"><span class="hs-identifier hs-var">roleBuild</span></a></span></span><span> </span><span id="local-6989586621689463752"><span class="annot"><span class="annottext">UserAdminSecret
+</span><a href="#local-6989586621689463752"><span class="hs-identifier hs-var">userAdminSecret</span></a></span></span><span> </span><span id="local-6989586621689463751"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621689463751"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-225"></span><span>  </span><span id="local-6989586621689463750"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689463750"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UserRoleBuild
+</span><a href="#local-6989586621689463753"><span class="hs-identifier hs-var">roleBuild</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-226"></span><span>    </span><span class="annot"><span class="annottext">UserRoleBuild
 </span><a href="Hasura.Session.html#URBFromSessionVariables"><span class="hs-identifier hs-var">URBFromSessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-227"></span><span>      </span><span class="annot"><span class="annottext">Maybe RoleName -&gt; m RoleName -&gt; m RoleName
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689455269"><span class="hs-identifier hs-var">maybeSessionRole</span></a></span><span> </span><span class="annot"><span class="annottext">(m RoleName -&gt; m RoleName) -&gt; m RoleName -&gt; m RoleName
+</span><a href="#local-6989586621689463748"><span class="hs-identifier hs-var">maybeSessionRole</span></a></span><span> </span><span class="annot"><span class="annottext">(m RoleName -&gt; m RoleName) -&gt; m RoleName -&gt; m RoleName
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-228"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m RoleName
@@ -1170,48 +1170,48 @@ forall a. IsString a =&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found in session variables&quot;</span></span><span>
-</span><span id="line-229"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#URBFromSessionVariablesFallback"><span class="hs-identifier hs-type">URBFromSessionVariablesFallback</span></a></span><span> </span><span id="local-6989586621689455265"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455265"><span class="hs-identifier hs-var">roleName'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; m RoleName
+</span><span id="line-229"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#URBFromSessionVariablesFallback"><span class="hs-identifier hs-type">URBFromSessionVariablesFallback</span></a></span><span> </span><span id="local-6989586621689463744"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689463744"><span class="hs-identifier hs-var">roleName'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; m RoleName
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(RoleName -&gt; m RoleName) -&gt; RoleName -&gt; m RoleName
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Maybe RoleName -&gt; RoleName
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455265"><span class="hs-identifier hs-var">roleName'</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689455269"><span class="hs-identifier hs-var">maybeSessionRole</span></a></span><span>
-</span><span id="line-230"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#URBPreDetermined"><span class="hs-identifier hs-type">URBPreDetermined</span></a></span><span> </span><span id="local-6989586621689455263"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455263"><span class="hs-identifier hs-var">roleName'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; m RoleName
+</span><a href="#local-6989586621689463744"><span class="hs-identifier hs-var">roleName'</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621689463748"><span class="hs-identifier hs-var">maybeSessionRole</span></a></span><span>
+</span><span id="line-230"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#URBPreDetermined"><span class="hs-identifier hs-type">URBPreDetermined</span></a></span><span> </span><span id="local-6989586621689463742"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689463742"><span class="hs-identifier hs-var">roleName'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; m RoleName
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455263"><span class="hs-identifier hs-var">roleName'</span></a></span><span>
-</span><span id="line-231"></span><span>  </span><span id="local-6989586621689455262"><span class="annot"><span class="annottext">BackendOnlyFieldAccess
-</span><a href="#local-6989586621689455262"><span class="hs-identifier hs-var">backendOnlyFieldAccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m BackendOnlyFieldAccess
-</span><a href="#local-6989586621689455261"><span class="hs-identifier hs-var">getBackendOnlyFieldAccess</span></a></span><span>
-</span><span id="line-232"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689455260"><span class="annot"><span class="annottext">modifiedSession :: SessionVariables
-</span><a href="#local-6989586621689455260"><span class="hs-identifier hs-var hs-var">modifiedSession</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; SessionVariables -&gt; SessionVariables
-</span><a href="#local-6989586621689455259"><span class="hs-identifier hs-var">modifySessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455271"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689455272"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
+</span><a href="#local-6989586621689463742"><span class="hs-identifier hs-var">roleName'</span></a></span><span>
+</span><span id="line-231"></span><span>  </span><span id="local-6989586621689463741"><span class="annot"><span class="annottext">BackendOnlyFieldAccess
+</span><a href="#local-6989586621689463741"><span class="hs-identifier hs-var">backendOnlyFieldAccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m BackendOnlyFieldAccess
+</span><a href="#local-6989586621689463740"><span class="hs-identifier hs-var">getBackendOnlyFieldAccess</span></a></span><span>
+</span><span id="line-232"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689463739"><span class="annot"><span class="annottext">modifiedSession :: SessionVariables
+</span><a href="#local-6989586621689463739"><span class="hs-identifier hs-var hs-var">modifiedSession</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; SessionVariables -&gt; SessionVariables
+</span><a href="#local-6989586621689463738"><span class="hs-identifier hs-var">modifySessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689463750"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621689463751"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
 </span><span id="line-233"></span><span>  </span><span class="annot"><span class="annottext">UserInfo -&gt; m UserInfo
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(UserInfo -&gt; m UserInfo) -&gt; UserInfo -&gt; m UserInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; SessionVariables -&gt; BackendOnlyFieldAccess -&gt; UserInfo
 </span><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-var">UserInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455271"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689455260"><span class="hs-identifier hs-var">modifiedSession</span></a></span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess
-</span><a href="#local-6989586621689455262"><span class="hs-identifier hs-var">backendOnlyFieldAccess</span></a></span><span>
+</span><a href="#local-6989586621689463750"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621689463739"><span class="hs-identifier hs-var">modifiedSession</span></a></span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess
+</span><a href="#local-6989586621689463741"><span class="hs-identifier hs-var">backendOnlyFieldAccess</span></a></span><span>
 </span><span id="line-234"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-235"></span><span>    </span><span id="local-6989586621689455269"><span class="annot"><span class="annottext">maybeSessionRole :: Maybe RoleName
-</span><a href="#local-6989586621689455269"><span class="hs-identifier hs-var hs-var">maybeSessionRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; Maybe RoleName
+</span><span id="line-235"></span><span>    </span><span id="local-6989586621689463748"><span class="annot"><span class="annottext">maybeSessionRole :: Maybe RoleName
+</span><a href="#local-6989586621689463748"><span class="hs-identifier hs-var hs-var">maybeSessionRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; Maybe RoleName
 </span><a href="Hasura.Session.html#maybeRoleFromSessionVariables"><span class="hs-identifier hs-var">maybeRoleFromSessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689455272"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
+</span><a href="#local-6989586621689463751"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
 </span><span id="line-236"></span><span>
-</span><span id="line-237"></span><span>    </span><span class="annot"><a href="#local-6989586621689455259"><span class="hs-identifier hs-type">modifySessionVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span>
-</span><span id="line-238"></span><span>    </span><span id="local-6989586621689455259"><span class="annot"><span class="annottext">modifySessionVariables :: RoleName -&gt; SessionVariables -&gt; SessionVariables
-</span><a href="#local-6989586621689455259"><span class="hs-identifier hs-var hs-var">modifySessionVariables</span></a></span></span><span> </span><span id="local-6989586621689455257"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455257"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-237"></span><span>    </span><span class="annot"><a href="#local-6989586621689463738"><span class="hs-identifier hs-type">modifySessionVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span>
+</span><span id="line-238"></span><span>    </span><span id="local-6989586621689463738"><span class="annot"><span class="annottext">modifySessionVariables :: RoleName -&gt; SessionVariables -&gt; SessionVariables
+</span><a href="#local-6989586621689463738"><span class="hs-identifier hs-var hs-var">modifySessionVariables</span></a></span></span><span> </span><span id="local-6989586621689463736"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689463736"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-239"></span><span>      </span><span class="annot"><span class="annottext">HashMap SessionVariable Text -&gt; SessionVariables
 </span><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-var">SessionVariables</span></a></span><span>
 </span><span id="line-240"></span><span>        </span><span class="annot"><span class="annottext">(HashMap SessionVariable Text -&gt; SessionVariables)
@@ -1230,7 +1230,7 @@ k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#userRoleHeader"><span class="hs-identifier hs-var">userRoleHeader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; Text
 </span><a href="Hasura.Session.html#roleNameToTxt"><span class="hs-identifier hs-var">roleNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689455257"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689463736"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-241"></span><span>        </span><span class="annot"><span class="annottext">(HashMap SessionVariable Text -&gt; HashMap SessionVariable Text)
 -&gt; (SessionVariables -&gt; HashMap SessionVariable Text)
 -&gt; SessionVariables
@@ -1261,10 +1261,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.Session.html#unSessionVariables"><span class="hs-identifier hs-var hs-var">unSessionVariables</span></a></span><span>
 </span><span id="line-244"></span><span>
-</span><span id="line-245"></span><span>    </span><span class="annot"><a href="#local-6989586621689455261"><span class="hs-identifier hs-type">getBackendOnlyFieldAccess</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689455277"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#BackendOnlyFieldAccess"><span class="hs-identifier hs-type">BackendOnlyFieldAccess</span></a></span><span>
-</span><span id="line-246"></span><span>    </span><span id="local-6989586621689455261"><span class="annot"><span class="annottext">getBackendOnlyFieldAccess :: m BackendOnlyFieldAccess
-</span><a href="#local-6989586621689455261"><span class="hs-identifier hs-var hs-var">getBackendOnlyFieldAccess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
-</span><a href="#local-6989586621689455273"><span class="hs-identifier hs-var">userAdminSecret</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-245"></span><span>    </span><span class="annot"><a href="#local-6989586621689463740"><span class="hs-identifier hs-type">getBackendOnlyFieldAccess</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689463756"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#BackendOnlyFieldAccess"><span class="hs-identifier hs-type">BackendOnlyFieldAccess</span></a></span><span>
+</span><span id="line-246"></span><span>    </span><span id="local-6989586621689463740"><span class="annot"><span class="annottext">getBackendOnlyFieldAccess :: m BackendOnlyFieldAccess
+</span><a href="#local-6989586621689463740"><span class="hs-identifier hs-var hs-var">getBackendOnlyFieldAccess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
+</span><a href="#local-6989586621689463752"><span class="hs-identifier hs-var">userAdminSecret</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-247"></span><span>      </span><span class="annot"><span class="annottext">UserAdminSecret
 </span><a href="Hasura.Session.html#UAdminSecretNotSent"><span class="hs-identifier hs-var">UAdminSecretNotSent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess -&gt; m BackendOnlyFieldAccess
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -1272,31 +1272,31 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Hasura.Session.html#BOFADisallowed"><span class="hs-identifier hs-var">BOFADisallowed</span></a></span><span>
 </span><span id="line-248"></span><span>      </span><span class="annot"><span class="annottext">UserAdminSecret
 </span><a href="Hasura.Session.html#UAdminSecretSent"><span class="hs-identifier hs-var">UAdminSecretSent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m BackendOnlyFieldAccess
-</span><a href="#local-6989586621689455252"><span class="hs-identifier hs-var">lookForBackendOnlyPermissionsConfig</span></a></span><span>
+</span><a href="#local-6989586621689463731"><span class="hs-identifier hs-var">lookForBackendOnlyPermissionsConfig</span></a></span><span>
 </span><span id="line-249"></span><span>      </span><span class="annot"><span class="annottext">UserAdminSecret
 </span><a href="Hasura.Session.html#UAuthNotSet"><span class="hs-identifier hs-var">UAuthNotSet</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m BackendOnlyFieldAccess
-</span><a href="#local-6989586621689455252"><span class="hs-identifier hs-var">lookForBackendOnlyPermissionsConfig</span></a></span><span>
+</span><a href="#local-6989586621689463731"><span class="hs-identifier hs-var">lookForBackendOnlyPermissionsConfig</span></a></span><span>
 </span><span id="line-250"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-251"></span><span>        </span><span id="local-6989586621689455252"><span class="annot"><span class="annottext">lookForBackendOnlyPermissionsConfig :: m BackendOnlyFieldAccess
-</span><a href="#local-6989586621689455252"><span class="hs-identifier hs-var hs-var">lookForBackendOnlyPermissionsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-251"></span><span>        </span><span id="local-6989586621689463731"><span class="annot"><span class="annottext">lookForBackendOnlyPermissionsConfig :: m BackendOnlyFieldAccess
+</span><a href="#local-6989586621689463731"><span class="hs-identifier hs-var hs-var">lookForBackendOnlyPermissionsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-252"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe Text
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var">getSessionVariableValue</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#useBackendOnlyPermissionsHeader"><span class="hs-identifier hs-var">useBackendOnlyPermissionsHeader</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689455272"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689463751"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-253"></span><span>            </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess -&gt; m BackendOnlyFieldAccess
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess
 </span><a href="Hasura.Session.html#BOFADisallowed"><span class="hs-identifier hs-var">BOFADisallowed</span></a></span><span>
-</span><span id="line-254"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689455250"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689455250"><span class="hs-identifier hs-var">varVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-254"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689463729"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689463729"><span class="hs-identifier hs-var">varVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-255"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Bool
 </span><a href="Hasura.Server.Utils.html#parseStringAsBool"><span class="hs-identifier hs-var">parseStringAsBool</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689455250"><span class="hs-identifier hs-var">varVal</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-256"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689455247"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689455247"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689463729"><span class="hs-identifier hs-var">varVal</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-256"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689463726"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689463726"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-257"></span><span>                  </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m BackendOnlyFieldAccess
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -1313,28 +1313,28 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689455247"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-259"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689455244"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689455244"><span class="hs-identifier hs-var">privilege</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess -&gt; m BackendOnlyFieldAccess
+</span><a href="#local-6989586621689463726"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-259"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689463723"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689463723"><span class="hs-identifier hs-var">privilege</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess -&gt; m BackendOnlyFieldAccess
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(BackendOnlyFieldAccess -&gt; m BackendOnlyFieldAccess)
 -&gt; BackendOnlyFieldAccess -&gt; m BackendOnlyFieldAccess
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689455244"><span class="hs-identifier hs-var">privilege</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess
+</span><a href="#local-6989586621689463723"><span class="hs-identifier hs-var">privilege</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess
 </span><a href="Hasura.Session.html#BOFAAllowed"><span class="hs-identifier hs-var">BOFAAllowed</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">BackendOnlyFieldAccess
 </span><a href="Hasura.Session.html#BOFADisallowed"><span class="hs-identifier hs-var">BOFADisallowed</span></a></span><span>
 </span><span id="line-260"></span><span>
 </span><span id="line-261"></span><span class="annot"><a href="Hasura.Session.html#maybeRoleFromSessionVariables"><span class="hs-identifier hs-type">maybeRoleFromSessionVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
 </span><span id="line-262"></span><span id="maybeRoleFromSessionVariables"><span class="annot"><span class="annottext">maybeRoleFromSessionVariables :: SessionVariables -&gt; Maybe RoleName
-</span><a href="Hasura.Session.html#maybeRoleFromSessionVariables"><span class="hs-identifier hs-var hs-var">maybeRoleFromSessionVariables</span></a></span></span><span> </span><span id="local-6989586621689455243"><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689455243"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Session.html#maybeRoleFromSessionVariables"><span class="hs-identifier hs-var hs-var">maybeRoleFromSessionVariables</span></a></span></span><span> </span><span id="local-6989586621689463722"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621689463722"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-263"></span><span>  </span><span class="hs-comment">-- returns Nothing if x-hasura-role is an empty string</span><span>
 </span><span id="line-264"></span><span>  </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe Text
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var">getSessionVariableValue</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#userRoleHeader"><span class="hs-identifier hs-var">userRoleHeader</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689455243"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Maybe RoleName) -&gt; Maybe RoleName
+</span><a href="#local-6989586621689463722"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Maybe RoleName) -&gt; Maybe RoleName
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe RoleName
 </span><a href="Hasura.Session.html#mkRoleName"><span class="hs-identifier hs-var">mkRoleName</span></a></span><span>
