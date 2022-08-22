@@ -4,7 +4,9 @@ import { env } from "process";
 import { envToBool } from "./util";
 import SQLite from 'sqlite3';
 
-export function connect(config: Config): Sequelize {
+export type SqlLogger = (sql: string) => void
+
+export function connect(config: Config, sqlLogger: SqlLogger): Sequelize {
   if(env.DB_ALLOW_LIST != null) {
     if(!env.DB_ALLOW_LIST.split(',').includes(config.db)) {
       throw new Error(`Database ${config.db} is not present in DB_ALLOW_LIST 😭`);
@@ -29,7 +31,8 @@ export function connect(config: Config): Sequelize {
   const db = new Sequelize({
     dialect: 'sqlite',
     storage: config.db,
-    dialectOptions: { mode: mode }
+    dialectOptions: { mode: mode },
+    logging: sqlLogger
   });
 
   return db;

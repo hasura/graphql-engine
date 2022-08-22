@@ -6,7 +6,7 @@ import { getConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
 import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse } from './types';
 import { connect } from './db';
-import { envToBool } from './util';
+import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
 import * as fs from 'fs'
@@ -19,9 +19,14 @@ const port = Number(process.env.PORT) || 8100;
 // dev dependency installed as per the package.json settings.
 const server = Fastify({
   logger:
-      (envToBool('PRETTY_PRINT_LOGS')) ?
-        { transport: { target: 'pino-pretty' } } :
-        true
+    {
+      level: envToString("LOG_LEVEL", "info"),
+      ...(
+        (envToBool('PRETTY_PRINT_LOGS'))
+          ? { transport: { target: 'pino-pretty' } }
+          : {}
+      )
+    }
 })
 
 const METRICS_ENABLED = envToBool('METRICS');
@@ -56,7 +61,7 @@ if(envToBool('PERMISSIVE_CORS')) {
   const requestCounter = new prometheus.Counter({
     name: 'http_request_count',
     help: 'Number of requests',
-    labelNames: ['route'] as const,
+    labelNames: ['route'],
   });
 
   // Register a global request counting metric
@@ -75,8 +80,12 @@ const queryHistogram = new prometheus.Histogram({
   name: 'query_durations',
   help: 'Histogram of the duration of query response times.',
   buckets: prometheus.exponentialBuckets(0.0001, 10, 8),
-  labelNames: ['route'] as const,
+  labelNames: ['route'],
 });
+
+const sqlLogger = (sql: string): void => {
+  server.log.debug({sql}, "Executed SQL");
+};
 
 server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
@@ -86,14 +95,14 @@ server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _re
 server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "schema.request");
   const config = getConfig(request);
-  return getSchema(config);
+  return getSchema(config, sqlLogger);
 });
 
 server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const end = queryHistogram.startTimer()
   const config = getConfig(request);
-  const result = queryData(config, request.body);
+  const result = queryData(config, sqlLogger, request.body);
   end();
   return result;
 });
@@ -108,7 +117,7 @@ server.get("/health", async (request, response) => {
     return { "status": "ok" };
   } else {
     server.log.info({ headers: request.headers, query: request.body, }, "health.db.request");
-    const db = connect(config);
+    const db = connect(config, sqlLogger);
     const [r, m] = await db.query('select 1 where 1 = 1');
     if(r && JSON.stringify(r) == '[{"1":1}]') {
       response.statusCode = 204;
@@ -159,7 +168,7 @@ process.on('SIGINT', () => {
 
 const start = async () => {
   try {
-    console.log(`STARTING on port ${port}`);
+    server.log.info(`STARTING on port ${port}`);
     await server.listen({port: port, host: "0.0.0.0"});
   }
   catch (err) {
