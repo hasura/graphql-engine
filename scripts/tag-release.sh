@@ -2,11 +2,11 @@
 #
 # tag-release.sh
 #
-# This script is executed before every OSS and Pro releases.
+# This script is executed before every OSS release.
 #
-# Usage: ./tag-release.sh <oss_tag> <pro_tag>
+# Usage: ./tag-release.sh <oss_tag>
 #
-# Example: ./tag-release.sh v1.1.0 v1.1.0-pro.1
+# Example: ./tag-release.sh v2.10.0 release/v2.10
 #
 
 # exit on error
@@ -17,35 +17,24 @@ ROOT="$(readlink -f "${BASH_SOURCE[0]%/*}/../")"
 
 # assign arguments to variables
 OSS_TAG="$1"
-PRO_TAG="$2"
+RELEASE_BRANCH="$2"
 
 # check if required argument is set
-if [[ -z "$OSS_TAG" || -z "$PRO_TAG" ]]; then
-    echo "Please mention both OSS_TAG and PRO_TAG"
+if [[ -z "$OSS_TAG" || -z "$RELEASE_BRANCH" ]]; then
+    echo "Please mention both OSS_TAG and RELEASE_BRANCH"
     echo ""
-    echo "Usage: ./tag-release.sh <oss_tag> <pro_tag>"
+    echo "Usage: ./tag-release.sh <oss_tag> <release_branch>"
     exit 1
 fi
 
+echo "Please make that your $RELEASE_BRANCH is up-to date with hasura/graphql-engine-mono repo."
+
 # add the latest tag to the catalog_versions file
+pushd "$ROOT"
 [ -n "$(tail -c1 "$ROOT/server/src-rsr/catalog_versions.txt")" ] && echo >> "$ROOT/server/src-rsr/catalog_versions.txt"
-echo "$OSS_TAG $(cat "$ROOT/server/src-rsr/catalog_version.txt")" >> "$ROOT/server/src-rsr/catalog_versions.txt"
+echo "$OSS_TAG $(git show "${RELEASE_BRANCH}:server/src-rsr/catalog_version.txt")" >> "$ROOT/server/src-rsr/catalog_versions.txt"
+popd
 
-# update OSS changelog
-OSS_VERSION_ENTRY="## Next release\n\n### Bug fixes and improvements\n\n## $OSS_TAG"
-sed -i "s/## Next release/${OSS_VERSION_ENTRY}/" "$ROOT/CHANGELOG.md"
+git add "$ROOT/server/src-rsr"
 
-# update Pro changelog
-PRO_NEXT_RELEASE_TEXT="## Next release\n(Add entries below in the order of multitenant, server, console, cli, docs, others)"
-sed -i "N;s/${PRO_NEXT_RELEASE_TEXT}/${PRO_NEXT_RELEASE_TEXT}\n\n## ${PRO_TAG}/" "$ROOT/pro/CHANGELOG.md"
-
-git add "$ROOT/server/src-rsr" \
-    "$ROOT/CHANGELOG.md" \
-    "$ROOT/pro/CHANGELOG.md"
-
-git commit -m "ci: tag release $OSS_TAG and $PRO_TAG"
-
-git tag -a "$OSS_TAG" -m "tag release $OSS_TAG"
-git tag -a "$PRO_TAG" -m "tag release $PRO_TAG"
-
-echo "tagged $OSS_TAG and $PRO_TAG"
+git commit -m "ci: tag release $OSS_TAG"
