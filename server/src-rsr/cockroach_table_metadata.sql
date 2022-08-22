@@ -228,7 +228,7 @@ LEFT JOIN
     GROUP BY foreign_key.table_schema, foreign_key.table_name
   ) foreign_key_constraints
     ON "table".table_name = foreign_key_constraints.table_name
-       AND "table".table_schema = foreign_key_constraints.table_schema
+       AND "table".table_schema = foreign_key_constraints.table_schema;
 
 -- -- all these identify table-like things
 -- WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p')
