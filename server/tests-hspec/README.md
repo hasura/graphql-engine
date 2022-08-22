@@ -135,6 +135,24 @@ added ad-hoc in test specs, to improve readability and reuse.
 Modules under the [Test/](Test/) namespace define integration test specifications for various
 features and backends.
 
+The [feature matrix](https://hasura.io/docs/latest/databases/index/#schema)
+defines the shape of this test suite. If we are writing a test for aggregation
+queries, that test should live in `Test/Queries/AggregationSpec.hs`. If that
+module becomes unwieldy, it should live in a module under the
+`Test/Queries/Aggregation` directory.
+
+Sometimes, tests are backend-specific. Particularly in the case of Postgres,
+there are features we support that aren't available on other backends. In other
+cases (such as BigQuery's handling of stringified numbers), there are
+backend-specific behaviours we wish to verify. In these cases, these tests
+should live under backend directories such as `Test/Postgres` or
+`Test/BigQuery`. Note that a feature matrix test currently only running on one
+backend should _still_ be in the feature matrix structure.
+
+When tests are written to verify that a particular bug has been fixed, these
+tests should be placed in the `Test/Regression` directory. They should contain
+both a descriptive name _and_ the issue number that they address.
+
 ## Adding a new test
 
 Tests are written using [`hspec`](http://hspec.github.io/) and
