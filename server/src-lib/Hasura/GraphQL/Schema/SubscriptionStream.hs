@@ -14,6 +14,7 @@ import Data.Text.Extended ((<>>))
 import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -218,7 +219,9 @@ tableStreamCursorArg sourceInfo tableInfo = do
 -- > table_stream (cursor: [table_stream_cursor_input]!, batch_size: Int!, where: table_bool_exp)
 tableStreamArguments ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( AggregationPredicatesSchema b,
+    MonadBuildSchema b r m n
+  ) =>
   SourceInfo b ->
   TableInfo b ->
   m (InputFieldsParser n (SelectStreamArgs b))
@@ -241,6 +244,7 @@ tableStreamArguments sourceInfo tableInfo = do
 selectStreamTable ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   SourceInfo b ->

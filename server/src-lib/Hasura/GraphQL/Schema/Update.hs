@@ -25,7 +25,7 @@ import Data.Text.Extended (toTxt, (<>>))
 import Hasura.Base.Error (QErr)
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSchema (..), MonadBuildSchema, columnParser)
-import Hasura.GraphQL.Schema.BoolExp (boolExp)
+import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema, boolExp)
 import Hasura.GraphQL.Schema.Common (Scenario (..), SchemaContext (..), mapField, partialSQLExpToUnpreparedValue, retrieve)
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
 import Hasura.GraphQL.Schema.NamingCase
@@ -256,6 +256,7 @@ incOp = UpdateOperator {..}
 updateTable ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   -- | backend-specific data needed to perform an update mutation

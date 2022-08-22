@@ -2,7 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Schema.BoolExp
-  ( boolExp,
+  ( AggregationPredicatesSchema (..),
+    boolExp,
     mkBoolOperator,
     equalityOperators,
     comparisonOperators,
@@ -15,7 +16,7 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common (SchemaContext (..), askTableInfo, partialSQLExpToUnpreparedValue, retrieve)
+import Hasura.GraphQL.Schema.Common (MonadBuildSchemaBase, SchemaContext (..), askTableInfo, partialSQLExpToUnpreparedValue, retrieve)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
@@ -39,7 +40,34 @@ import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend (BackendType)
 import Language.GraphQL.Draft.Syntax qualified as G
+
+-- | Backends implement this type class to specify the schema of
+-- aggregation predicates.
+--
+-- The default implementation results in a parser that does not parse anything.
+--
+-- The scope of this class is local to the function 'boolExp'. In particular,
+-- methods in `class BackendSchema` and `type MonadBuildSchema` should *NOT*
+-- include this class as a constraint.
+class AggregationPredicatesSchema (b :: BackendType) where
+  aggregationPredicatesParser ::
+    forall r m n.
+    MonadBuildSchemaBase r m n =>
+    SourceInfo b ->
+    TableInfo b ->
+    m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+
+-- Overlapping instance for backends that do not implement Aggregation Predicates.
+instance {-# OVERLAPPABLE #-} (AggregationPredicates b ~ Const Void) => AggregationPredicatesSchema (b :: BackendType) where
+  aggregationPredicatesParser ::
+    forall r m n.
+    (MonadBuildSchemaBase r m n) =>
+    SourceInfo b ->
+    TableInfo b ->
+    m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+  aggregationPredicatesParser _ _ = return Nothing
 
 -- |
 -- > input type_bool_exp {
@@ -51,7 +79,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- > }
 boolExp ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =>
   SourceInfo b ->
   TableInfo b ->
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
@@ -66,10 +94,12 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
 
   fieldInfos <- tableSelectFields sourceInfo tableInfo
   tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos
+  -- TODO: This naming is somewhat unsatifactory..
+  aggregationPredicatesParser' <- fromMaybe (pure []) <$> aggregationPredicatesParser sourceInfo tableInfo
   recur <- boolExp sourceInfo tableInfo
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
-  let specialFieldParsers =
+  let connectiveFieldParsers =
         [ P.fieldOptional Name.__or Nothing (BoolOr <$> P.list recur),
           P.fieldOptional Name.__and Nothing (BoolAnd <$> P.list recur),
           P.fieldOptional Name.__not Nothing (BoolNot <$> recur)
@@ -78,8 +108,9 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
   pure $
     BoolAnd <$> P.object name (Just description) do
       tableFields <- map BoolField . catMaybes <$> sequenceA tableFieldParsers
-      specialFields <- catMaybes <$> sequenceA specialFieldParsers
-      pure (tableFields ++ specialFields)
+      specialFields <- catMaybes <$> sequenceA connectiveFieldParsers
+      aggregationPredicateFields <- map (BoolField . AVAggregationPredicates) <$> aggregationPredicatesParser'
+      pure (tableFields ++ specialFields ++ aggregationPredicateFields)
   where
     tableName = tableInfoName tableInfo
 

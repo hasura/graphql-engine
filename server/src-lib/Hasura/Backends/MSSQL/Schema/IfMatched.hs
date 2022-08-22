@@ -55,7 +55,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- @tablename@ defined /and/ these grant non-empty column permissions.
 ifMatchedFieldParser ::
   forall r m n.
-  MonadBuildSchema 'MSSQL r m n =>
+  ( MonadBuildSchema 'MSSQL r m n,
+    AggregationPredicatesSchema 'MSSQL
+  ) =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
@@ -66,7 +68,9 @@ ifMatchedFieldParser sourceInfo tableInfo = do
 -- | Parse a @tablename_if_matched@ object.
 ifMatchedObjectParser ::
   forall r m n.
-  MonadBuildSchema 'MSSQL r m n =>
+  ( MonadBuildSchema 'MSSQL r m n,
+    AggregationPredicatesSchema 'MSSQL
+  ) =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
