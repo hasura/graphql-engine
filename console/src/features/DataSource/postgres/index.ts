@@ -3,6 +3,7 @@ import {
   getDatabaseConfiguration,
   getTrackableTables,
   getTableColumns,
+  getFKRelationships,
 } from './introspection';
 
 export type PostgresTable = { name: string; schema: string };
@@ -15,5 +16,6 @@ export const postgres: Database = {
       return ['schema', 'name'];
     },
     getTableColumns,
+    getFKRelationships,
   },
 };

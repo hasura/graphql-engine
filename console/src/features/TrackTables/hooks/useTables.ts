@@ -4,7 +4,6 @@ import type { MetadataDataSource } from '@/metadata/types';
 import uniqueId from 'lodash.uniqueid';
 import { useQuery } from 'react-query';
 import { useHttpClient } from '@/features/Network';
-import { useAppSelector } from '@/store';
 
 type DataSource = Pick<MetadataDataSource, 'name'>;
 
@@ -76,7 +75,7 @@ const getTrackableTables = (
 ) =>
   introspectedTables.map(introspectedTable => {
     const trackedTable = trackedTables.find(
-      _trackedTable =>
+      (_trackedTable: any) =>
         `${_trackedTable.table.schema}.${_trackedTable.table.name}` ===
         introspectedTable.name
     );
@@ -107,8 +106,7 @@ const getTrackableTables = (
   });
 
 export const useTables = ({ dataSource }: UseTablesProps) => {
-  const headers = useAppSelector(state => state.tables.dataHeaders);
-  const httpClient = useHttpClient({ headers });
+  const httpClient = useHttpClient();
   return useQuery<TrackableTable[], Error>({
     queryKey: [dataSource.name, 'tables'],
     queryFn: async () => {

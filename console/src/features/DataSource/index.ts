@@ -8,15 +8,14 @@ import { gdc } from './gdc';
 import * as utils from './common/utils';
 import type {
   Property,
-  Ref,
-  OneOf,
   IntrospectedTable,
-  MetadataTable,
   Table,
   SupportedDrivers,
   TableColumn,
   GetTrackableTablesProps,
   GetTableColumnsProps,
+  TableFkRelationships,
+  GetFKRelationshipProps,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
@@ -45,6 +44,9 @@ export type Database = {
     getTableColumns: (
       props: GetTableColumnsProps
     ) => Promise<TableColumn[] | Feature.NotImplemented>;
+    getFKRelationships: (
+      props: GetFKRelationshipProps
+    ) => Promise<TableFkRelationships[] | Feature.NotImplemented>;
   };
   query?: {
     getTableData: () => void;
@@ -206,16 +208,32 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     return result;
   },
+  getTableFkRelationships: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    if (!database) return [];
+
+    const introspection = database.introspection;
+    if (!introspection) return [];
+
+    const result = await introspection.getFKRelationships({
+      dataSourceName,
+      table,
+      httpClient,
+    });
+
+    if (result === Feature.NotImplemented) return [];
+
+    return result;
+  },
 });
 
 export { exportMetadata, utils };
-export type {
-  Property,
-  Ref,
-  OneOf,
-  SupportedDrivers,
-  IntrospectedTable,
-  Table,
-  MetadataTable,
-  NetworkArgs,
-};
+
+export * from './types';
+export * from './guards';

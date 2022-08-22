@@ -13,5 +13,6 @@ export const bigquery: Database = {
       return ['dataset', 'name'];
     },
     getTableColumns,
+    getFKRelationships: async () => Feature.NotImplemented,
   },
 };
