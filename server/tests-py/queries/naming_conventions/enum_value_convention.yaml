@@ -41,26 +41,25 @@
         );
         INSERT INTO users (favourite_day)
           VALUES ('Sunday');
-        
 
 - description: Track tables
   url: /v1/query
   status: 200
   response:
-  - message: success
-  - message: success
+    - message: success
+    - message: success
   query:
     type: bulk
     args:
-    - type: track_table
-      args:
-        table: days_of_the_week
-        source: pg1
-        is_enum: true
-    - type: track_table
-      args:
-        source: pg1
-        table: users
+      - type: track_table
+        args:
+          table: days_of_the_week
+          source: pg1
+          is_enum: true
+      - type: track_table
+        args:
+          source: pg1
+          table: users
 
 - description: Check the enum values (should be uppercased)
   url: /v1/graphql
@@ -69,13 +68,13 @@
     data:
       __type:
         enumValues:
-        - name: FRIDAY
-        - name: MONDAY
-        - name: SATURDAY
-        - name: SUNDAY
-        - name: THURSDAY
-        - name: TUESDAY
-        - name: WEDNESDAY
+          - name: FRIDAY
+          - name: MONDAY
+          - name: SATURDAY
+          - name: SUNDAY
+          - name: THURSDAY
+          - name: TUESDAY
+          - name: WEDNESDAY
   query:
     query: |
       {
@@ -93,14 +92,14 @@
     data:
       insertUsers:
         returning:
-        - id: 2
-          favouriteDay: SUNDAY
-        - id: 3
-          favouriteDay: FRIDAY
-        - id: 4
-          favouriteDay: MONDAY
-        - id: 5
-          favouriteDay: SATURDAY
+          - id: 2
+            favouriteDay: SUNDAY
+          - id: 3
+            favouriteDay: FRIDAY
+          - id: 4
+            favouriteDay: MONDAY
+          - id: 5
+            favouriteDay: SATURDAY
 
   query:
     query: |
@@ -120,10 +119,10 @@
     data:
       updateUsers:
         returning:
-        - id: 1
-          favouriteDay: MONDAY
-        - id: 2
-          favouriteDay: MONDAY
+          - id: 1
+            favouriteDay: MONDAY
+          - id: 2
+            favouriteDay: MONDAY
 
   query:
     query: |
@@ -143,12 +142,12 @@
     data:
       deleteUsers:
         returning:
-        - id: 4
-          favouriteDay: MONDAY
-        - id: 1
-          favouriteDay: MONDAY
-        - id: 2
-          favouriteDay: MONDAY
+          - id: 4
+            favouriteDay: MONDAY
+          - id: 1
+            favouriteDay: MONDAY
+          - id: 2
+            favouriteDay: MONDAY
 
   query:
     query: |
@@ -219,19 +218,19 @@
   url: /v1/metadata
   status: 200
   response:
-  - message: success
-  - message: success
+    - message: success
+    - message: success
   query:
     type: bulk
     args:
-    - type: pg_untrack_table
-      args:
-        table: days_of_the_week
-        source: pg1
-    - type: pg_untrack_table
-      args:
-        source: pg1
-        table: users
+      - type: pg_untrack_table
+        args:
+          table: days_of_the_week
+          source: pg1
+      - type: pg_untrack_table
+        args:
+          source: pg1
+          table: users
 
 - description: drop table
   url: /v1/query

@@ -57,9 +57,10 @@ import Database.PG.Query qualified as Q
 import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
-import Hasura.RQL.Types.Common (InputWebhook (..), NonNegativeDiffTime, unsafeNonNegativeDiffTime)
+import Hasura.RQL.Types.Common (InputWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Numeric (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
 import PostgreSQL.Binary.Decoding qualified as PD
 import System.Cron.Types
 

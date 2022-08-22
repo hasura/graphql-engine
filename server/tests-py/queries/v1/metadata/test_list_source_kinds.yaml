@@ -1,0 +1,22 @@
+- description: Test List Source Kinds
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    sources:
+    - builtin: true
+      kind: pg
+    - builtin: true
+      kind: citus
+    - builtin: true
+      kind: cockroach
+    - builtin: true
+      kind: mssql
+    - builtin: true
+      kind: bigquery
+    - builtin: true
+      kind: mysql
+  query:
+    type: list_source_kinds
+    args: {}

@@ -1,7 +1,7 @@
 import React, { FormEvent } from 'react';
 import { Button } from '../../../Common';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
 
 interface DataSourceFormWrapperProps extends ConnectDatabaseFormProps {
   loading: boolean;
@@ -32,6 +32,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = ({
           }}
           disabled={loading}
           data-test="connect-database-btn"
+          data-trackid="data-tab-connect-db-button"
         >
           {!isEditState ? 'Connect Database' : 'Update Connection'}
         </Button>

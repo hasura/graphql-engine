@@ -17,6 +17,7 @@ import Data.Environment qualified as Env
 import Data.Has (Has)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import GHC.Generics.Extended (constrName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
@@ -26,6 +27,7 @@ import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
+import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.GraphqlSchemaIntrospection
@@ -42,6 +44,7 @@ import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
+import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -150,6 +153,7 @@ data RQLMetadataV1
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
     RMCreateQueryCollection !CreateCollection
+  | RMRenameQueryCollection !RenameCollection
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
@@ -159,6 +163,10 @@ data RQLMetadataV1
   | -- Rest endpoints
     RMCreateRestEndpoint !CreateEndpoint
   | RMDropRestEndpoint !DropEndpoint
+  | -- GraphQL Data Connectors
+    RMDCAddAgent !DCAddAgent
+  | RMDCDeleteAgent !DCDeleteAgent
+  | RMListSourceKinds !ListSourceKinds
   | -- Custom types
     RMSetCustomTypes !CustomTypes
   | -- Api limits
@@ -191,6 +199,10 @@ data RQLMetadataV1
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
+  deriving (Generic)
+
+-- NOTE! If you add a new request type here that is read-only, make sure to
+--       update queryModifiesMetadata
 
 instance FromJSON RQLMetadataV1 where
   parseJSON = withObject "RQLMetadataV1" \o -> do
@@ -223,6 +235,7 @@ instance FromJSON RQLMetadataV1 where
       "create_action_permission" -> RMCreateActionPermission <$> args
       "drop_action_permission" -> RMDropActionPermission <$> args
       "create_query_collection" -> RMCreateQueryCollection <$> args
+      "rename_query_collection" -> RMRenameQueryCollection <$> args
       "drop_query_collection" -> RMDropQueryCollection <$> args
       "add_query_to_collection" -> RMAddQueryToCollection <$> args
       "drop_query_from_collection" -> RMDropQueryFromCollection <$> args
@@ -231,6 +244,9 @@ instance FromJSON RQLMetadataV1 where
       "update_scope_of_collection_in_allowlist" -> RMUpdateScopeOfCollectionInAllowlist <$> args
       "create_rest_endpoint" -> RMCreateRestEndpoint <$> args
       "drop_rest_endpoint" -> RMDropRestEndpoint <$> args
+      "dc_add_agent" -> RMDCAddAgent <$> args
+      "dc_delete_agent" -> RMDCDeleteAgent <$> args
+      "list_source_kinds" -> RMListSourceKinds <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
       "set_api_limits" -> RMSetApiLimits <$> args
       "remove_api_limits" -> pure RMRemoveApiLimits
@@ -301,6 +317,9 @@ instance FromJSON RQLMetadataRequest where
       VIVersion1 -> RMV1 <$> parseJSON val
       VIVersion2 -> RMV2 <$> parseJSON val
 
+-- | The payload for the @/v1/metadata@ endpoint. See:
+--
+-- https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/
 data RQLMetadata = RQLMetadata
   { _rqlMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
     _rqlMetadata :: !RQLMetadataRequest
@@ -329,7 +348,7 @@ runMetadataQuery ::
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
-  (metadata, currentResourceVersion) <- fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM env currentResourceVersion _rqlMetadata
       & flip runReaderT logger
@@ -343,16 +362,20 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
-        newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        newResourceVersion <-
+          Tracing.trace "setMetadata" $
+            setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
 
         -- notify schema cache sync
-        notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+        Tracing.trace "notifySchemaCacheSync" $
+          notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
         (_, modSchemaCache', _) <-
-          setMetadataResourceVersionInSchemaCache newResourceVersion
-            & runCacheRWT modSchemaCache
-            & peelRun (RunCtx userInfo httpManager serverConfigCtx)
-            & runExceptT
-            & liftEitherM
+          Tracing.trace "setMetadataResourceVersionInSchemaCache" $
+            setMetadataResourceVersionInSchemaCache newResourceVersion
+              & runCacheRWT modSchemaCache
+              & peelRun (RunCtx userInfo httpManager serverConfigCtx)
+              & runExceptT
+              & liftEitherM
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -382,7 +405,7 @@ queryModifiesMetadata = \case
       RMDeleteScheduledEvent _ -> False
       RMTestWebhookTransform _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
-      _ -> True
+      _ -> True -- NOTE: Making the fall-through 'True' is defensive
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -407,8 +430,14 @@ runMetadataQueryM ::
   m EncJSON
 runMetadataQueryM env currentResourceVersion =
   withPathK "args" . \case
-    RMV1 q -> runMetadataQueryV1M env currentResourceVersion q
-    RMV2 q -> runMetadataQueryV2M currentResourceVersion q
+    -- NOTE: This is a good place to install tracing, since it's involved in
+    -- the recursive case via "bulk":
+    RMV1 q ->
+      Tracing.trace ("v1 " <> T.pack (constrName q)) $
+        runMetadataQueryV1M env currentResourceVersion q
+    RMV2 q ->
+      Tracing.trace ("v2 " <> T.pack (constrName q)) $
+        runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M ::
   forall m r.
@@ -507,6 +536,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateActionPermission q -> runCreateActionPermission q
   RMDropActionPermission q -> runDropActionPermission q
   RMCreateQueryCollection q -> runCreateCollection q
+  RMRenameQueryCollection q -> runRenameCollection q
   RMDropQueryCollection q -> runDropCollection q
   RMAddQueryToCollection q -> runAddQueryToCollection q
   RMDropQueryFromCollection q -> runDropQueryFromCollection q
@@ -515,6 +545,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMUpdateScopeOfCollectionInAllowlist q -> runUpdateScopeOfCollectionInAllowlist q
   RMCreateRestEndpoint q -> runCreateEndpoint q
   RMDropRestEndpoint q -> runDropEndpoint q
+  RMDCAddAgent q -> runAddDataConnectorAgent q
+  RMDCDeleteAgent q -> runDeleteDataConnectorAgent q
+  RMListSourceKinds q -> runListSourceKinds q
   RMSetCustomTypes q -> runSetCustomTypes q
   RMSetApiLimits q -> runSetApiLimits q
   RMRemoveApiLimits -> runRemoveApiLimits

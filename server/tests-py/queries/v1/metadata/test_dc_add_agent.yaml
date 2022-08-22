@@ -1,0 +1,12 @@
+- description: Test DC Add Agent
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    message: success
+  query:
+    type: dc_add_agent
+    args:
+      name: test_agent
+      url: "http://www.google.com"

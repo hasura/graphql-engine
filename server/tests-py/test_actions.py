@@ -89,8 +89,8 @@ class TestActionsSync:
 
     def test_expecting_array_response_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
-    
-    # Scalar webhook response tests.    
+
+    # Scalar webhook response tests.
     def test_expecting_scalar_output_type_success(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_scalar_action_output_type_success.yaml')
 
@@ -105,29 +105,29 @@ class TestActionsSync:
 
     def test_object_response_action_transformed_output(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/object_response_action_transformed_output.yaml')
-    
+
     # Scalar array tests
     def test_expecting_string_scalar_array_output_type_success(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_string_scalar_array_action_output_type_success.yaml')
-    
+
     def test_expecting_number_scalar_array_output_type_got_string_array(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_string_scalar_array_action_output_type_expecting_number_array.yaml')
-    
+
     def test_scalar_array_field_nullability_check(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_null_field_expecting_non_nullable_field_array.yaml')
 
     def test_expecting_object_response_with_nested_null(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_object_response_with_nested_null.yaml')
-    
+
     def test_expecting_jsonb_response_success(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_jsonb_response_success.yaml')
-       
+
     def test_expecting_custom_scalar_response_success(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_custom_scalar_response_success.yaml')
-    
+
     def test_expecting_custom_scalar_array_response_success(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_custom_scalar_array_response_success.yaml')
-    
+
     def test_expecting_custom_scalar_array_response_got_different_type(self, hge_ctx):
         query_obj = {
             "query": """
@@ -798,7 +798,7 @@ class TestCreateActionNestedTypeWithRelation:
     def test_create_sync_action_with_nested_output_and_nested_relation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')
 
-@pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.usefixtures('postgis', 'per_class_tests_db_state')
 class TestSetCustomTypes:
 
     @classmethod
@@ -912,9 +912,9 @@ class TestActionTimeout:
         # of the handler's execution. So, total time taken for this test will be 4 seconds.
         time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
-                
+
         assert 'errors' in response['data']['create_user']
         assert 'Response timeout' == response['data']['create_user']['errors']['internal']['error']['message']
-        
+
         # tests that actions webhook url environment variable template did not serialize in the error message
         assert "{{ACTION_WEBHOOK_HANDLER}}/create-user-timeout" == response['data']['create_user']['errors']['internal']['request']['url']

@@ -208,7 +208,8 @@ buildTablePermissions ::
     ArrowWriter (Seq CollectedInfo) arr,
     BackendMetadata b,
     HasServerConfigCtx m,
-    Inc.Cacheable (Proxy b)
+    Inc.Cacheable (Proxy b),
+    GetAggregationPredicatesDeps b
   ) =>
   ( Proxy b,
     SourceName,
@@ -334,7 +335,8 @@ buildPermission ::
     Inc.Cacheable (Proxy b),
     MonadError QErr m,
     HasServerConfigCtx m,
-    BackendMetadata b
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
   ) =>
   ( Proxy b,
     Inc.Dependency (TableCoreCache b),

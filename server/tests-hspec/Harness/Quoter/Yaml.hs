@@ -6,6 +6,7 @@
 module Harness.Quoter.Yaml
   ( yaml,
     interpolateYaml,
+    ToYamlString (..),
   )
 where
 

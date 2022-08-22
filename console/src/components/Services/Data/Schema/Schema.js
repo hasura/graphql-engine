@@ -41,7 +41,7 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import styles from '../../../Common/Common.scss';
+import styles from '../../../Common/Common.module.scss';
 import { getConsistentFunctions } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
@@ -284,6 +284,7 @@ class Schema extends Component {
             size="sm"
             className={styles.add_mar_left}
             onClick={handleClick}
+            data-trackid="data-tab-create-table-button"
           >
             Create Table
           </Button>
@@ -358,6 +359,7 @@ class Schema extends Component {
               color="white"
               size="xs"
               onClick={trackAllTables}
+              data-trackid="data-tab-track-all-button"
             >
               Track All
             </Button>
@@ -406,6 +408,7 @@ class Schema extends Component {
                     color="white"
                     size="xs"
                     onClick={handleTrackTable}
+                    data-trackid="data-tab-track-table-button"
                   >
                     Track
                   </Button>

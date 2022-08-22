@@ -1,6 +1,6 @@
-const CommonScss = require('../src/components/Common/Common.scss');
-const filterQueryScss = require('../src/components/Common/FilterQuery/FilterQuery.scss');
-const tableScss = require('../src/components/Common/TableCommon/Table.scss');
+const CommonScss = require('../src/components/Common/Common.module.scss');
+const filterQueryScss = require('../src/components/Common/FilterQuery/FilterQuery.module.scss');
+const tableScss = require('../src/components/Common/TableCommon/Table.module.scss');
 
 import * as EndpointNamedExps from '../src/Endpoints';
 

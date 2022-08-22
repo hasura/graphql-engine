@@ -1,7 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
 
 module Hasura.Server.Init.Arg
-  ( -- * Main Parser
+  ( -- * Main Opt.Parser
     parseHgeOpts,
     parsePostgresConnInfo,
     parseMetadataDbUrl,
@@ -10,7 +10,7 @@ module Hasura.Server.Init.Arg
     retriesNumOption,
     databaseUrlOption,
 
-    -- * Command Parsers
+    -- * Command Opt.Parsers
     module Downgrade,
     module Serve,
   )
@@ -19,27 +19,28 @@ where
 --------------------------------------------------------------------------------
 
 import Data.URL.Template qualified as Template
-import Hasura.Logging qualified as L
+import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.Server.Init.Arg.Command.Downgrade as Downgrade
 import Hasura.Server.Init.Arg.Command.Serve as Serve
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
+import Hasura.Server.Init.Config (HGECommand, HGEOptionsRaw, Option, PostgresConnDetailsRaw, PostgresConnInfo, PostgresConnInfoRaw, ServeOptionsRaw)
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Init.Env qualified as Env
 import Options.Applicative qualified as Opt
 
 --------------------------------------------------------------------------------
 
--- | The Main Arg Parser. It constructs a 'Config.HGEOptionsRaw' term:
+-- | The Main Arg 'Opt.Parser'. It constructs a 'HGEOptionsRaw' term:
 --
 -- 1. '(Config.PostgresConnInfo (Maybe PostgresConnInfoRaw))' - The DB connection.
 -- 2: 'Maybe String' - Representing the metadata connection.
 -- 3: 'Config.HGECommand' @a@ - The result of the supplied Subcommand.
-parseHgeOpts :: L.EnabledLogTypes impl => Opt.Parser (Config.HGEOptionsRaw (Config.ServeOptionsRaw impl))
+parseHgeOpts :: Logging.EnabledLogTypes impl => Opt.Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 parseHgeOpts =
   Config.HGEOptionsRaw <$> parsePostgresConnInfo <*> parseMetadataDbUrl <*> parseHGECommand
 
-parseHGECommand :: L.EnabledLogTypes impl => Opt.Parser (Config.HGECommand (Config.ServeOptionsRaw impl))
+parseHGECommand :: Logging.EnabledLogTypes impl => Opt.Parser (HGECommand (ServeOptionsRaw impl))
 parseHGECommand =
   Opt.subparser
     ( Opt.command
@@ -78,7 +79,7 @@ parseHGECommand =
 
 --------------------------------------------------------------------------------
 
-parsePostgresConnInfo :: Opt.Parser (Config.PostgresConnInfo (Maybe Config.PostgresConnInfoRaw))
+parsePostgresConnInfo :: Opt.Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 parsePostgresConnInfo = do
   retries' <- retries
   maybeRawConnInfo <-
@@ -95,7 +96,7 @@ parsePostgresConnInfo = do
               <> Opt.help (Config._helpMessage retriesNumOption)
           )
 
-retriesNumOption :: Config.Option ()
+retriesNumOption :: Option ()
 retriesNumOption =
   Config.Option
     { Config._default = (),
@@ -113,7 +114,7 @@ parseDatabaseUrl =
           <> Opt.help (Config._helpMessage databaseUrlOption)
       )
 
-databaseUrlOption :: Config.Option ()
+databaseUrlOption :: Option ()
 databaseUrlOption =
   Config.Option
     { Config._default = (),
@@ -121,7 +122,7 @@ databaseUrlOption =
       Config._helpMessage = "Postgres database URL. Example postgres://foo:bar@example.com:2345/database"
     }
 
-parseRawConnDetails :: Opt.Parser (Maybe Config.PostgresConnDetailsRaw)
+parseRawConnDetails :: Opt.Parser (Maybe PostgresConnDetailsRaw)
 parseRawConnDetails = do
   host' <- host
   port' <- port
@@ -201,7 +202,7 @@ parseMetadataDbUrl =
           <> Opt.help (Config._helpMessage metadataDbUrlOption)
       )
 
-metadataDbUrlOption :: Config.Option ()
+metadataDbUrlOption :: Option ()
 metadataDbUrlOption =
   Config.Option
     { Config._default = (),

@@ -145,6 +145,7 @@ import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
@@ -365,12 +366,12 @@ processScheduledEvent eventId eventHeaders retryCtx payload webhookUrl type' =
     let retryConf = _rctxConf retryCtx
         scheduledTime = sewpScheduledTime payload
     if convertDuration (diffUTCTime currentTime scheduledTime)
-      > unNonNegativeDiffTime (strcToleranceSeconds retryConf)
+      > Numeric.unNonNegativeDiffTime (strcToleranceSeconds retryConf)
       then processDead eventId type'
       else do
         let timeoutSeconds =
               round $
-                unNonNegativeDiffTime $
+                Numeric.unNonNegativeDiffTime $
                   strcTimeoutSeconds retryConf
             httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
             (headers, decodedHeaders) = prepareHeaders eventHeaders
@@ -450,7 +451,7 @@ retryOrMarkError eventId retryCtx err type' = do
       let delay =
             fromMaybe
               ( round $
-                  unNonNegativeDiffTime $
+                  Numeric.unNonNegativeDiffTime $
                     strcRetryIntervalSeconds retryConf
               )
               mRetryHeaderSeconds

@@ -29,6 +29,7 @@ const table: NormalizedTable = {
 export const Primary = () => (
   <DatabaseRelationshipsTab
     table={table}
+    metadataTable={{ name: 'user', schema: 'public' }}
     currentSource="default"
     migrationMode
     driver="postgres"

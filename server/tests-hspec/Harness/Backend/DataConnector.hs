@@ -19,6 +19,8 @@ module Harness.Backend.DataConnector
     mkLocalTestEnvironmentMock,
     setupMock,
     teardownMock,
+    setupFixtureAction,
+    setupMockAction,
   )
 where
 
@@ -30,9 +32,9 @@ import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.MockAgent
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Http (healthCheck)
+import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Fixture (BackendType (DataConnector), Options, defaultBackendTypeString)
+import Harness.Test.Fixture (BackendType (DataConnector), Options, SetupAction (..), defaultBackendTypeString)
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -62,6 +64,12 @@ dataconnector:
 
 --------------------------------------------------------------------------------
 -- Chinook Agent
+
+setupFixtureAction :: Aeson.Value -> Aeson.Value -> TestEnvironment -> SetupAction
+setupFixtureAction sourceMetadata backendConfig testEnv =
+  SetupAction
+    (setupFixture sourceMetadata backendConfig (testEnv, ()))
+    (const $ teardown (testEnv, ()))
 
 -- | Setup the schema given source metadata and backend config.
 setupFixture :: Aeson.Value -> Aeson.Value -> (TestEnvironment, ()) -> IO ()
@@ -125,6 +133,12 @@ mkLocalTestEnvironmentMock _ = do
   healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health"
   pure $ MockAgentEnvironment {..}
 
+setupMockAction :: Aeson.Value -> Aeson.Value -> (TestEnvironment, MockAgentEnvironment) -> SetupAction
+setupMockAction sourceMetadata backendConfig testEnv =
+  SetupAction
+    (setupMock sourceMetadata backendConfig testEnv)
+    (const $ teardownMock testEnv)
+
 -- | Load the agent schema into HGE.
 setupMock :: Aeson.Value -> Aeson.Value -> (TestEnvironment, MockAgentEnvironment) -> IO ()
 setupMock sourceMetadata backendConfig (testEnvironment, _mockAgentEnvironment) = do
@@ -143,6 +157,8 @@ data TestCase = TestCase
     _given :: MockConfig,
     -- | The Graphql Query to test
     _whenRequest :: Aeson.Value,
+    -- | The headers to use on the Graphql Query request
+    _whenRequestHeaders :: RequestHeaders,
     -- | The expected HGE 'API.Query' value to be provided to the
     -- agent. A @Nothing@ value indicates that the 'API.Query'
     -- assertion should be skipped.
@@ -167,6 +183,7 @@ defaultTestCase TestCaseRequired {..} =
   TestCase
     { _given = _givenRequired,
       _whenRequest = _whenRequestRequired,
+      _whenRequestHeaders = [],
       _whenQuery = Nothing,
       _whenConfig = Nothing,
       _then = _thenRequired
@@ -183,8 +200,9 @@ runMockedTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = 
   -- Execute the GQL Query and assert on the result
   shouldReturnYaml
     opts
-    ( GraphqlEngine.postGraphql
+    ( GraphqlEngine.postGraphqlWithHeaders
         testEnvironment
+        _whenRequestHeaders
         _whenRequest
     )
     _then

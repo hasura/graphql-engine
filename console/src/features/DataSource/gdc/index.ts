@@ -8,5 +8,15 @@ export const gdc: Database = {
     getTrackableTables: async () => {
       return Feature.NotImplemented;
     },
+    getDatabaseHierarchy: async () => {
+      /**
+       * Once we have the API for fetching the hierarchy info via HGE, we can add that logic here
+       */
+      return Feature.NotImplemented;
+    },
+    getTableColumns: async () => {
+      return Feature.NotImplemented;
+    },
+    getFKRelationships: async () => Feature.NotImplemented,
   },
 };

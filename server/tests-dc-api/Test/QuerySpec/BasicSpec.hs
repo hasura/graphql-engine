@@ -3,9 +3,6 @@ module Test.QuerySpec.BasicSpec (spec) where
 import Control.Arrow ((>>>))
 import Control.Lens (ix, (%~), (&), (?~), (^?))
 import Data.Aeson.KeyMap qualified as KeyMap
-import Data.List (sortOn)
-import Data.List.NonEmpty (NonEmpty (..))
-import Data.Ord (Down (..))
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
@@ -67,36 +64,6 @@ spec api sourceName config = describe "Basic Queries" $ do
 
       page1Artists `rowsShouldBe` take 10 allArtists
       page2Artists `rowsShouldBe` take 10 (drop 10 allArtists)
-
-  describe "Order By" $ do
-    it "can use order by to order results in ascending order" $ do
-      let orderBy = OrderBy (ColumnName "Title") Ascending :| []
-      let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
-      receivedAlbums <- (api // _query) sourceName config query
-
-      let expectedAlbums = sortOn (^? ix "Title") Data.albumsRows
-      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
-
-    it "can use order by to order results in descending order" $ do
-      let orderBy = OrderBy (ColumnName "Title") Descending :| []
-      let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
-      receivedAlbums <- (api // _query) sourceName config query
-
-      let expectedAlbums = sortOn (Down . (^? ix "Title")) Data.albumsRows
-      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
-
-    it "can use multiple order bys to order results" $ do
-      let orderBy = OrderBy (ColumnName "ArtistId") Ascending :| [OrderBy (ColumnName "Title") Descending]
-      let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
-      receivedAlbums <- (api // _query) sourceName config query
-
-      let expectedAlbums =
-            sortOn (\album -> (album ^? ix "ArtistId", Down (album ^? ix "Title"))) Data.albumsRows
-
-      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
-      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   describe "Where" $ do
     it "can filter using an equality expression" $ do
@@ -160,6 +127,14 @@ spec api sourceName config = describe "Basic Queries" $ do
       Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
+    it "treats an empty and expression as 'true'" $ do
+      let where' = And []
+      let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
+      receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
+
+      Data.responseRows receivedAlbums `rowsShouldBe` Data.albumsRows
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
     it "can combine filters using an or expression" $ do
       let where1 = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 2))
       let where2 = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "AlbumId") (ScalarValue (Number 3))
@@ -171,6 +146,14 @@ spec api sourceName config = describe "Basic Queries" $ do
             filter (flip elem [Just 2, Just 3] . (^? ix "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
 
       Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
+    it "treats an empty or expression as 'false'" $ do
+      let where' = Or []
+      let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
+      receivedAlbums <- (api // _query) sourceName config query
+
+      Data.responseRows receivedAlbums `rowsShouldBe` []
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can filter by applying the greater than operator" $ do

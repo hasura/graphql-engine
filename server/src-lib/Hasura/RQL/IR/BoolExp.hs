@@ -222,19 +222,19 @@ deriving instance (Backend b) => Show (PartialSQLExp b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b))
+    NFData (SQLExpression b)
   ) =>
   NFData (PartialSQLExp b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b))
+    Hashable (SQLExpression b)
   ) =>
   Hashable (PartialSQLExp b)
 
 instance
   ( Backend b,
-    Cacheable (BooleanOperators b (PartialSQLExp b))
+    Cacheable (SQLExpression b)
   ) =>
   Cacheable (PartialSQLExp b)
 
@@ -404,41 +404,36 @@ data ComputedFieldBoolExp (backend :: BackendType) scalar
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
-    Eq a
+    Eq (AnnBoolExp b a),
+    Eq (OpExpG b a)
   ) =>
   Eq (ComputedFieldBoolExp b a)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b a),
-    Show (FunctionArgumentExp b a),
-    Show a
+    Show (AnnBoolExp b a),
+    Show (OpExpG b a)
   ) =>
   Show (ComputedFieldBoolExp b a)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b a),
-    NFData (FunctionArgumentExp b a),
-    NFData a
+    NFData (AnnBoolExp b a),
+    NFData (OpExpG b a)
   ) =>
   NFData (ComputedFieldBoolExp b a)
 
 instance
   ( Backend b,
-    Cacheable (BooleanOperators b a),
-    Cacheable (FunctionArgumentExp b a),
-    Cacheable a
+    Cacheable (AnnBoolExp b a),
+    Cacheable (OpExpG b a)
   ) =>
   Cacheable (ComputedFieldBoolExp b a)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b a),
-    Hashable (FunctionArgumentExp b a),
-    Hashable a
+    Hashable (AnnBoolExp b a),
+    Hashable (OpExpG b a)
   ) =>
   Hashable (ComputedFieldBoolExp b a)
 
@@ -473,100 +468,103 @@ deriving instance (Backend b) => Traversable (AnnComputedFieldBoolExp b)
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
-    Eq a
+    Eq (ComputedFieldBoolExp b a),
+    Eq (FunctionArgsExp b a)
   ) =>
   Eq (AnnComputedFieldBoolExp b a)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b a),
-    Show (FunctionArgumentExp b a),
-    Show a
+    Show (ComputedFieldBoolExp b a),
+    Show (FunctionArgsExp b a)
   ) =>
   Show (AnnComputedFieldBoolExp b a)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b a),
-    NFData (FunctionArgumentExp b a),
-    NFData a
+    NFData (ComputedFieldBoolExp b a),
+    NFData (FunctionArgsExp b a)
   ) =>
   NFData (AnnComputedFieldBoolExp b a)
 
 instance
   ( Backend b,
-    Cacheable (BooleanOperators b a),
-    Cacheable (FunctionArgumentExp b a),
-    Cacheable a
+    Cacheable (ComputedFieldBoolExp b a),
+    Cacheable (FunctionArgsExp b a)
   ) =>
   Cacheable (AnnComputedFieldBoolExp b a)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b a),
-    Hashable (FunctionArgumentExp b a),
-    Hashable a
+    Hashable (ComputedFieldBoolExp b a),
+    Hashable (FunctionArgsExp b a)
   ) =>
   Hashable (AnnComputedFieldBoolExp b a)
 
--- | This type is used for boolean terms in GBoolExp in the schema; there are two kinds boolean
+-- | This type is used for boolean terms in GBoolExp in the schema; there are four kinds boolean
 -- terms:
 --   - operators on a column of the current table, using the 'OpExpG' kind of operators
 --   - arbitrary expressions on columns of tables in relationships (in the same source)
 --   - A computed field of the current table
+--   - aggregation operations on array relationships on the current tables.
 --
 -- This type is parameterized over the type of leaf values, the values on which we operate.
 data AnnBoolExpFld (backend :: BackendType) leaf
   = AVColumn (ColumnInfo backend) [OpExpG backend leaf]
   | AVRelationship (RelInfo backend) (AnnBoolExp backend leaf)
   | AVComputedField (AnnComputedFieldBoolExp backend leaf)
+  | AVAggregationPredicates (AggregationPredicates backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
-    Eq a
+    Eq (AggregationPredicates b a),
+    Eq (AnnBoolExp b a),
+    Eq (AnnComputedFieldBoolExp b a),
+    Eq (OpExpG b a)
   ) =>
   Eq (AnnBoolExpFld b a)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b a),
-    Show (FunctionArgumentExp b a),
-    Show a
+    Show (AggregationPredicates b a),
+    Show (AnnBoolExp b a),
+    Show (AnnComputedFieldBoolExp b a),
+    Show (OpExpG b a)
   ) =>
   Show (AnnBoolExpFld b a)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b a),
-    NFData (FunctionArgumentExp b a),
-    NFData a
+    NFData (AggregationPredicates b a),
+    NFData (AnnBoolExp b a),
+    NFData (AnnComputedFieldBoolExp b a),
+    NFData (OpExpG b a)
   ) =>
   NFData (AnnBoolExpFld b a)
 
 instance
   ( Backend b,
-    Cacheable (BooleanOperators b a),
-    Cacheable (FunctionArgumentExp b a),
-    Cacheable a
+    Cacheable (AggregationPredicates b a),
+    Cacheable (AnnBoolExp b a),
+    Cacheable (AnnComputedFieldBoolExp b a),
+    Cacheable (OpExpG b a)
   ) =>
   Cacheable (AnnBoolExpFld b a)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b a),
-    Hashable (FunctionArgumentExp b a),
-    Hashable a
+    Hashable (AggregationPredicates b a),
+    Hashable (AnnBoolExp b a),
+    Hashable (AnnComputedFieldBoolExp b a),
+    Hashable (OpExpG b a)
   ) =>
   Hashable (AnnBoolExpFld b a)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b a),
+    ToJSONKeyValue (AggregationPredicates b a),
+    ToJSONKeyValue (OpExpG b a),
     ToJSON a
   ) =>
   ToJSONKeyValue (AnnBoolExpFld b a)
@@ -587,6 +585,7 @@ instance
               CFBEScalar opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)
               CFBETable _ boolExp -> toJSON (function, toJSON boolExp)
       )
+    AVAggregationPredicates avAggregationPredicates -> toJSONKeyValue avAggregationPredicates
 
 -- | A simple alias for the kind of boolean expressions used in the schema, that ties together
 -- 'GBoolExp', 'OpExpG', and 'AnnBoolExpFld'.
@@ -682,49 +681,40 @@ newtype AnnColumnCaseBoolExpField (backend :: BackendType) field = AnnColumnCase
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance
-  ( Backend b,
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
-    Eq a
+  ( Eq (AnnBoolExpFld b a)
   ) =>
   Eq (AnnColumnCaseBoolExpField b a)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b a),
-    Show (FunctionArgumentExp b a),
+    Show (AnnBoolExpFld b a),
     Show a
   ) =>
   Show (AnnColumnCaseBoolExpField b a)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b a),
-    NFData (FunctionArgumentExp b a),
+    NFData (AnnBoolExpFld b a),
     NFData a
   ) =>
   NFData (AnnColumnCaseBoolExpField b a)
 
 instance
   ( Backend b,
-    Cacheable (BooleanOperators b a),
-    Cacheable (FunctionArgumentExp b a),
+    Cacheable (AnnBoolExpFld b a),
     Cacheable a
   ) =>
   Cacheable (AnnColumnCaseBoolExpField b a)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b a),
-    Hashable (FunctionArgumentExp b a),
+    Hashable (AnnBoolExpFld b a),
     Hashable a
   ) =>
   Hashable (AnnColumnCaseBoolExpField b a)
 
 instance
-  ( Backend b,
-    ToJSONKeyValue (BooleanOperators b a),
-    ToJSON a
+  ( ToJSONKeyValue (AnnBoolExpFld b a)
   ) =>
   ToJSONKeyValue (AnnColumnCaseBoolExpField b a)
   where

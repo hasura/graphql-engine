@@ -446,7 +446,7 @@ v1MetadataHandler ::
   ) =>
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler query = do
+v1MetadataHandler query = Tracing.trace "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   userInfo <- asks hcUser
   scRef <- asks (scCacheRef . hcServerCtx)
@@ -492,7 +492,7 @@ v2QueryHandler ::
   ) =>
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
-v2QueryHandler query = do
+v2QueryHandler query = Tracing.trace "v2 Query" $ do
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   scRef <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)

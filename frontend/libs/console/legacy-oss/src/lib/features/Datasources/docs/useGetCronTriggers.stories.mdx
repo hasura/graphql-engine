@@ -1,0 +1,111 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Hooks/useGetCronTriggers" />
+
+<h1 class="text-xl font-semibold mb-md">useGetCronTriggers</h1>
+
+<h2 class="text-lg font-semibold mb-xs">Description</h2>
+<p class="mb-md text-muted mb-0">Get Cron Triggers</p>
+<p class="mb-md text-muted mb-sm">
+  Gets an array of all the cron trigger whether they are included in metadata or
+  not. This hooks gives us all the cron triggers.
+</p>
+
+<br />
+
+<h2 class="text-lg font-semibold mb-xs">Usage</h2>
+
+```javascript
+const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
+```
+
+<br />
+
+<h2 class="text-lg font-semibold mb-xs">Response</h2>
+<p class="mb-md text-muted mb-sm">
+  The `query.data` resolves into an object of type
+</p>
+
+```typescript
+
+{schedule: string;
+  payload: unknown;
+  headers: ServerHeader[];
+  name: string;
+  retry_conf: {
+    num_retries: number;
+    timeout_seconds: number;
+    tolerance_seconds: number;
+    retry_interval_seconds: number;
+  };
+  webhook: string;
+  include_in_metadata: boolean;
+  comment: Nullable<string>;}[]
+```
+
+<br />
+
+<p class="mb-md text-muted mb-sm">A sample response would be - </p>
+
+```javascript
+{
+    "cron_triggers": [
+        {
+            "schedule": "* * * * *",
+            "payload": {},
+            "headers": [],
+            "name": "cron1",
+            "retry_conf": {
+                "num_retries": 0,
+                "timeout_seconds": 60,
+                "tolerance_seconds": 21600,
+                "retry_interval_seconds": 10
+            },
+            "webhook": "http://httpbin.org/post",
+            "include_in_metadata": true
+        },
+        {
+            "schedule": "* * * * *",
+            "payload": {},
+            "headers": [],
+            "name": "cron2",
+            "retry_conf": {
+                "num_retries": 0,
+                "timeout_seconds": 60,
+                "tolerance_seconds": 21600,
+                "retry_interval_seconds": 10
+            },
+            "webhook": "http://httpbin.org/post",
+            "include_in_metadata": true
+        },
+        {
+            "schedule": "* * * * *",
+            "payload": {},
+            "headers": [],
+            "name": "cron3",
+            "retry_conf": {
+                "num_retries": 0,
+                "timeout_seconds": 60,
+                "tolerance_seconds": 21600,
+                "retry_interval_seconds": 10
+            },
+            "webhook": "http://httpbin.org/post",
+            "include_in_metadata": true
+        },
+        {
+            "schedule": "* * * * *",
+            "payload": {},
+            "headers": [],
+            "name": "cron4",
+            "retry_conf": {
+                "num_retries": 0,
+                "timeout_seconds": 60,
+                "tolerance_seconds": 21600,
+                "retry_interval_seconds": 10
+            },
+            "webhook": "http://httpbin.org/post",
+            "include_in_metadata": false
+        }
+    ]
+}
+```

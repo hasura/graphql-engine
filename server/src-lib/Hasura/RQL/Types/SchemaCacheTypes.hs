@@ -1,7 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SchemaCacheTypes
-  ( DependencyReason (..),
+  ( BoolExpM (..),
+    GetAggregationPredicatesDeps (..),
+    BoolExpCtx (..),
+    DependencyReason (..),
     SchemaDependency (..),
     SchemaObjId (..),
     SourceObjId (..),
@@ -12,17 +16,20 @@ module Hasura.RQL.Types.SchemaCacheTypes
     reportDependentObjectsExist,
     reportSchemaObj,
     reportSchemaObjs,
+    runBoolExpM,
   )
 where
 
 import Data.Aeson
 import Data.Aeson.TH
 import Data.Aeson.Types
+import Data.Functor.Const
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp (PartialSQLExp)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -215,3 +222,33 @@ purgeDependentObject source sourceObjId = case sourceObjId of
     throw500 $
       "unexpected dependent object: "
         <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
+
+-- | Type class to collect schema dependencies from backend-specific aggregation predicates.
+class Backend b => GetAggregationPredicatesDeps b where
+  getAggregationPredicateDeps ::
+    AggregationPredicates b (PartialSQLExp b) ->
+    BoolExpM b [SchemaDependency]
+  default getAggregationPredicateDeps ::
+    (AggregationPredicates b ~ Const Void) =>
+    AggregationPredicates b (PartialSQLExp b) ->
+    BoolExpM b [SchemaDependency]
+  getAggregationPredicateDeps = absurd . getConst
+
+-- | The monad for doing schema dependency discovery for boolean expressions.
+-- maintains the table context of the expressions being translated.
+newtype BoolExpM b a = BoolExpM {unBoolExpM :: Reader (BoolExpCtx b) a}
+  deriving (Functor, Applicative, Monad, MonadReader (BoolExpCtx b))
+
+-- | The table type context of schema dependency discovery. Boolean expressions
+-- may refer to a so-called 'root table' (identified by a '$'-sign in the
+-- expression input syntax) or the 'current' table.
+data BoolExpCtx b = BoolExpCtx
+  { source :: SourceName,
+    -- | Reference to the 'current' table type.
+    currTable :: TableName b,
+    -- | Reference to the 'root' table type.
+    rootTable :: TableName b
+  }
+
+runBoolExpM :: BoolExpCtx b -> BoolExpM b a -> a
+runBoolExpM ctx = flip runReader ctx . unBoolExpM

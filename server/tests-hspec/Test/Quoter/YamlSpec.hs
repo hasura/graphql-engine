@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE QuasiQuotes #-}
 
--- who tests the test franework?
+-- who tests the test framework?
 module Test.Quoter.YamlSpec (spec) where
 
 import Data.Aeson qualified as Aeson
@@ -140,5 +140,17 @@ spec = describe "Yaml quasiquoters" $ do
               type: pg_create_select_permission
               args:
                 limit: 6
+            |]
+      input `shouldBe` expected
+
+    it "Interpolation does not fail when parsing a '*'" $ const do
+      let input :: Aeson.Value
+          input =
+            [interpolateYaml|
+              "*"
+            |]
+          expected =
+            [yaml|
+              "*"
             |]
       input `shouldBe` expected

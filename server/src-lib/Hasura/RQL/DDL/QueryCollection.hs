@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.QueryCollection
   ( runCreateCollection,
+    runRenameCollection,
     runDropCollection,
     runAddQueryToCollection,
     runDropQueryFromCollection,
@@ -56,6 +57,31 @@ runCreateCollection cc = do
   return successMsg
   where
     CreateCollection collName def _ = cc
+
+runRenameCollection ::
+  (QErrM m, CacheRWM m, MetadataM m) =>
+  RenameCollection ->
+  m EncJSON
+runRenameCollection (RenameCollection oldName newName) = do
+  _ <- getCollectionDef oldName
+  newCollDefM <- getCollectionDefM newName
+  withPathK "new_name" $
+    onJust newCollDefM $
+      const $
+        throw400 AlreadyExists $
+          "query collection with name " <> newName <<> " already exists"
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaQueryCollections %~ changeCollectionName oldName newName
+  return successMsg
+  where
+    changeCollectionName :: CollectionName -> CollectionName -> QueryCollections -> QueryCollections
+    changeCollectionName oldKey newKey oMap = case OMap.lookup oldKey oMap of
+      Nothing -> oMap
+      Just oldVal ->
+        let newVal = oldVal & ccName .~ newKey
+         in OMap.insert newKey newVal (OMap.delete oldKey oMap)
 
 runAddQueryToCollection ::
   (CacheRWM m, MonadError QErr m, MetadataM m) =>

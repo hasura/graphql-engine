@@ -1,13 +1,19 @@
 import { Database, Feature } from '..';
-import { runSQL } from '../api';
+import { NetworkArgs, runSQL } from '../api';
 import { adaptIntrospectedTables } from '../common/utils';
+import { getTableColumns, getFKRelationships } from './introspection';
+
+export type MssqlTable = { schema: string; name: string };
 
 export const mssql: Database = {
   introspection: {
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
-    getTrackableTables: async (dataSourceName: string) => {
+    getTrackableTables: async ({
+      dataSourceName,
+      httpClient,
+    }: { dataSourceName: string } & NetworkArgs) => {
       const sql = `
       select table_name, table_schema, table_type
       from information_schema.tables
@@ -22,9 +28,15 @@ export const mssql: Database = {
           kind: 'mssql',
         },
         sql,
+        httpClient,
       });
 
       return adaptIntrospectedTables(tables);
     },
+    getDatabaseHierarchy: async () => {
+      return ['schema', 'name'];
+    },
+    getTableColumns,
+    getFKRelationships,
   },
 };

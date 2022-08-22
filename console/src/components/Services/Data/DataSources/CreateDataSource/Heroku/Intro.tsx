@@ -1,5 +1,5 @@
 import * as React from 'react';
-import styles from '../styles.scss';
+import styles from '../styles.module.scss';
 import Button from '../../../../../Common/Button';
 import { HerokuSession } from './types';
 import { Dispatch } from '../../../../../../types';
@@ -59,6 +59,7 @@ const Intro: React.FC<Props> = ({ session, startCreation, dispatch }) => {
                     startCreation();
                   }
                 }}
+                data-trackid="data-tab-heroku-db-button"
               >
                 Create Database
               </Button>

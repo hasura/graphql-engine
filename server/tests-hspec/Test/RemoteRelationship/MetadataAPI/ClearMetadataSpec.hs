@@ -28,7 +28,7 @@ module Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec (spec) where
 import Data.List.NonEmpty qualified as NE
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Test.Hspec (SpecWith, describe, it)
@@ -38,24 +38,24 @@ import Test.RemoteRelationship.MetadataAPI.Common qualified as Common
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Context.runWithLocalTestEnvironment contexts tests
+spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
     contexts =
       NE.fromList
-        [ Common.dbTodbRemoteRelationshipContext,
-          Common.dbToRemoteSchemaRemoteRelationshipContext,
-          Common.remoteSchemaToDBRemoteRelationshipContext,
-          Common.remoteSchemaToremoteSchemaRemoteRelationshipContext
+        [ Common.dbTodbRemoteRelationshipFixture,
+          Common.dbToRemoteSchemaRemoteRelationshipFixture,
+          Common.remoteSchemaToDBRemoteRelationshipFixture,
+          Common.remoteSchemaToremoteSchemaRemoteRelationshipFixture
         ]
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
 tests opts = describe "clear-metadata-metadata-tests" do
   clearMetadataTests opts
 
-clearMetadataTests :: Context.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
+clearMetadataTests :: Fixture.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
 clearMetadataTests opts = describe "clear_metadata" do
   it "clears the metadata" \(testEnvironment, _) -> do
     let query =

@@ -76,15 +76,23 @@ X-Hasura-Role: admin
 
 | Key                   | Required | Schema                                                                                   | Description                                                                                                                           |
 |-----------------------|----------|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                     | Name of the Postgres database                                                                                                         |
-| configuration         | true     | [PGConfiguration](/api-reference/syntax-defs.mdx#pgconfiguration)           | Database connection configuration                                                                                                     |
+| name                  | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                     | Name of the Postgres database                                                                                                                      |
+| configuration         | true     | [PGConfiguration](/api-reference/syntax-defs.mdx#pgconfiguration)           | Database connection configuration                                                                                                                  |
 | replace_configuration | false    | Boolean                                                                                  | If set to `true` the configuration and customization will be replaced if the source with given name already exists (default: `false`) |
-| customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization)   | Customize root fields and type names for the source                                                                                   |
+| customization         | false    | [SourceCustomization](/api-reference/syntax-defs.mdx#sourcecustomization)   | Customize root fields and type names for the source                                                                                                |
+
 
 :::tip Deprecated field
 
 The `replace_configuration` field is deprecated in favour of the
 [pg_update_source API](/api-reference/metadata-api/source.mdx#metadata-pg-update-source).
+
+:::
+
+:::tip Note
+
+The schema specified in the `extensions_schema` is expected to exist in the [search path](https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH)
+of your database.
 
 :::
 

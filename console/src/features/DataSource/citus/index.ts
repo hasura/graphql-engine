@@ -1,13 +1,20 @@
 import { Database, Feature } from '..';
 import { runSQL } from '../api';
 import { adaptIntrospectedTables } from '../common/utils';
+import { GetTrackableTablesProps } from '../types';
+import { getTableColumns, getFKRelationships } from './introspection';
+
+export type CitusTable = { name: string; schema: string };
 
 export const citus: Database = {
   introspection: {
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
-    getTrackableTables: async (dataSourceName: string) => {
+    getTrackableTables: async ({
+      dataSourceName,
+      httpClient,
+    }: GetTrackableTablesProps) => {
       const sql = `
       WITH partitions as (
         SELECT array(
@@ -25,15 +32,22 @@ export const citus: Database = {
         AND NOT (info_schema.table_name = ANY (partitions.names)) 
         AND info_schema.table_name NOT IN ('citus_tables')    
       `;
+
       const tables = await runSQL({
         source: {
           name: dataSourceName,
-          kind: 'citus',
+          kind: 'postgres',
         },
         sql,
+        httpClient,
       });
 
       return adaptIntrospectedTables(tables);
     },
+    getDatabaseHierarchy: async () => {
+      return ['schema', 'name'];
+    },
+    getTableColumns,
+    getFKRelationships,
   },
 };

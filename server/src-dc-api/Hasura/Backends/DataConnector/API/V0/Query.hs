@@ -38,7 +38,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Data (Data)
 import Data.HashMap.Strict qualified as HashMap
-import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -78,7 +77,7 @@ data Query = Query
     _qLimit :: Maybe Int,
     _qOffset :: Maybe Int,
     _qWhere :: Maybe API.V0.Expression,
-    _qOrderBy :: Maybe (NonEmpty API.V0.OrderBy)
+    _qOrderBy :: Maybe API.V0.OrderBy
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Query

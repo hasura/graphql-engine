@@ -65,6 +65,7 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (scApiLimits)
@@ -298,7 +299,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
       liftIO $
         forever $ do
           kaAction wsConn
-          sleep $ seconds (unKeepAliveDelay keepAliveDelay)
+          sleep $ seconds (Numeric.getNonNegative $ unKeepAliveDelay keepAliveDelay)
 
     tokenExpiryHandler wsConn = do
       expTime <- liftIO $

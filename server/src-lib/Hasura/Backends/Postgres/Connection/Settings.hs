@@ -16,9 +16,11 @@ module Hasura.Backends.Postgres.Connection.Settings
     DefaultPostgresPoolSettings (..),
     getDefaultPGPoolSettingIfNotExists,
     defaultPostgresPoolSettings,
+    defaultPostgresExtensionsSchema,
     setPostgresPoolSettings,
     pccConnectionInfo,
     pccReadReplicas,
+    pccExtensionsSchema,
     psciDatabaseUrl,
     psciPoolSettings,
     psciUsePreparedStatements,
@@ -45,6 +47,7 @@ import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf (..))
+import Hasura.SQL.Types (ExtensionsSchema (..))
 import Hasura.Server.Utils (parseConnLifeTime, readIsoLevel)
 import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
@@ -259,9 +262,13 @@ instance FromJSON PostgresSourceConnInfo where
       <*> o .:? "isolation_level" .!= Q.ReadCommitted
       <*> o .:? "ssl_configuration"
 
+defaultPostgresExtensionsSchema :: ExtensionsSchema
+defaultPostgresExtensionsSchema = ExtensionsSchema "public"
+
 data PostgresConnConfiguration = PostgresConnConfiguration
   { _pccConnectionInfo :: PostgresSourceConnInfo,
-    _pccReadReplicas :: Maybe (NonEmpty PostgresSourceConnInfo)
+    _pccReadReplicas :: Maybe (NonEmpty PostgresSourceConnInfo),
+    _pccExtensionsSchema :: ExtensionsSchema
   }
   deriving (Show, Eq, Generic)
 
@@ -271,5 +278,18 @@ instance Hashable PostgresConnConfiguration
 
 instance NFData PostgresConnConfiguration
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''PostgresConnConfiguration)
+instance FromJSON PostgresConnConfiguration where
+  parseJSON = withObject "PostgresConnConfiguration" $ \o ->
+    PostgresConnConfiguration
+      <$> o .: "connection_info"
+      <*> o .:? "read_replicas"
+      <*> o .:? "extensions_schema" .!= defaultPostgresExtensionsSchema
+
+instance ToJSON PostgresConnConfiguration where
+  toJSON PostgresConnConfiguration {..} =
+    object $
+      ["connection_info" .= _pccConnectionInfo]
+        <> maybe mempty (\readReplicas -> ["read_replicas" .= readReplicas]) _pccReadReplicas
+        <> bool mempty (["extensions_schema" .= _pccExtensionsSchema]) (_pccExtensionsSchema /= defaultPostgresExtensionsSchema)
+
 $(makeLenses ''PostgresConnConfiguration)

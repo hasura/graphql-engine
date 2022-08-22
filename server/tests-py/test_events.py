@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
-
+import os
 import pytest
 import queue
+import sqlalchemy
 import time
-import json
+
 import utils
 from utils import *
-from validate import check_query, check_query_f, check_event, check_event_transformed, check_events
+from validate import check_query_f, check_event, check_event_transformed, check_events
 
 usefixtures = pytest.mark.usefixtures
 
@@ -131,6 +131,32 @@ class TestEventCreateAndResetNonDefaultSource:
 
     def test_create_reset_non_default_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset_non_default_source.yaml")
+
+        non_default_source_url = os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2')
+        assert non_default_source_url, 'HASURA_GRAPHQL_PG_SOURCE_URL_2 was not set'
+        non_default_source = sqlalchemy.create_engine(non_default_source_url)
+
+        with non_default_source.connect() as connection:
+            # Check that the event log table exists.
+            # This must be run against the source database.
+            result = connection.execute("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log')")
+            row = result.first()
+            assert row == (True,), f'Result: {row!r}'
+
+            # We plan on clearing the metadata in code in the future, so this is not run as YAML input.
+            hge_ctx.v1metadataq({
+                "type": "clear_metadata",
+                "args": {}
+            })
+
+            # Check that the event log table has been dropped.
+            # This must be run against the source database.
+            result = connection.execute("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log')")
+            row = result.first()
+            assert row == (False,), f'Result: {row!r}'
+
+            # Cleanup; will not be required in the future.
+            connection.execute("DROP TABLE IF EXISTS hge_tests.test_t1")
 
     @classmethod
     def dir(cls):
@@ -260,7 +286,7 @@ class TestEventFloodPostgresMSSQL(object):
         ns.sort()
         assert ns == list(payload)
 
-@usefixtures("per_class_tests_db_state")
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestEventDataFormat(object):
 
     @classmethod

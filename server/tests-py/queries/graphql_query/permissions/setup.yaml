@@ -80,17 +80,6 @@ args:
       INSERT INTO books (id, author_name, book_name, published_on)
         VALUES (1, 'J.K. Rowling', 'Harry Porter', '1997-06-26');
 
-      CREATE EXTENSION IF NOT EXISTS postgis;
-
-      DO $$
-      BEGIN
-        IF PostGIS_lib_version() ~ '^3.*' THEN
-          CREATE EXTENSION IF NOT EXISTS postgis_raster;
-        END IF;
-      END$$;
-
-      CREATE EXTENSION IF NOT EXISTS postgis_topology;
-
       CREATE TABLE geom_table(
         id SERIAL PRIMARY KEY,
         type TEXT NOT NULL,

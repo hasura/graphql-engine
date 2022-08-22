@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22.5" height="22.499" viewBox="0 0 22.5 22.499">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#1eb4d4;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px}
+        </style>
+    </defs>
+    <g id="prefix__streamline-icon-computer-chip_24x24" data-name="streamline-icon-computer-chip@24x24" transform="translate(.75 .75)">
+        <path id="prefix__Path_3021" d="M5.25 3.75h13.5a1.5 1.5 0 0 1 1.5 1.5v13.5a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V5.25a1.5 1.5 0 0 1 1.5-1.5z" class="prefix__cls-1" data-name="Path 3021" transform="translate(-1.5 -1.5)"/>
+        <path id="prefix__Path_3022" d="M12 3.75V1.5" class="prefix__cls-1" data-name="Path 3022" transform="translate(-1.5 -1.5)"/>
+        <path id="prefix__Path_3023" d="M6.75 3.75V1.5" class="prefix__cls-1" data-name="Path 3023" transform="translate(-1.5 -1.5)"/>
+        <path id="prefix__Path_3024" d="M17.25 3.75V1.5" class="prefix__cls-1" data-name="Path 3024" transform="translate(-1.5 -1.5)"/>
+        <path id="prefix__Path_3025" d="M12 22.5v-2.25" class="prefix__cls-1" data-name="Path 3025" transform="translate(-1.5 -1.501)"/>
+        <path id="prefix__Path_3026" d="M6.75 22.5v-2.25" class="prefix__cls-1" data-name="Path 3026" transform="translate(-1.5 -1.501)"/>
+        <path id="prefix__Path_3027" d="M17.25 22.5v-2.25" class="prefix__cls-1" data-name="Path 3027" transform="translate(-1.5 -1.501)"/>
+        <path id="prefix__Path_3028" d="M22.5 12h-2.25" class="prefix__cls-1" data-name="Path 3028" transform="translate(-1.5 -1.501)"/>
+        <path id="prefix__Path_3029" d="M22.5 17.25h-2.25" class="prefix__cls-1" data-name="Path 3029" transform="translate(-1.5 -1.501)"/>
+        <path id="prefix__Path_3030" d="M22.5 6.75h-2.25" class="prefix__cls-1" data-name="Path 3030" transform="translate(-1.5 -1.5)"/>
+        <path id="prefix__Path_3031" d="M3.75 12H1.5" class="prefix__cls-1" data-name="Path 3031" transform="translate(-1.5 -1.501)"/>
+        <path id="prefix__Path_3032" d="M3.75 17.25H1.5" class="prefix__cls-1" data-name="Path 3032" transform="translate(-1.5 -1.501)"/>
+        <path id="prefix__Path_3033" d="M3.75 6.75H1.5" class="prefix__cls-1" data-name="Path 3033" transform="translate(-1.5 -1.5)"/>
+        <path id="prefix__Path_3034" d="M8.25 6.75h7.5a1.5 1.5 0 0 1 1.5 1.5v7.5a1.5 1.5 0 0 1-1.5 1.5h-7.5a1.5 1.5 0 0 1-1.5-1.5v-7.5a1.5 1.5 0 0 1 1.5-1.5z" class="prefix__cls-1" data-name="Path 3034" transform="translate(-1.5 -1.5)"/>
+        <path id="prefix__Path_3035" d="M14.25 14.25H12" class="prefix__cls-1" data-name="Path 3035" transform="translate(-1.5 -1.501)"/>
+    </g>
+</svg>

@@ -44,6 +44,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table

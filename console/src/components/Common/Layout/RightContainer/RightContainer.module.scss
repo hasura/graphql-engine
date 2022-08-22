@@ -1,0 +1,77 @@
+@import "../../Common.module";
+
+.container {
+}
+
+.flexRow {
+  display: flex;
+}
+
+.padd_left_remove {
+  padding-left: 0;
+}
+
+.add_btn {
+  margin: 10px 0;
+}
+
+.account {
+  padding: 20px 0;
+  line-height: 26px;
+}
+
+.sidebar {
+  height: $mainContainerHeight;
+  overflow: auto;
+  background: #444;
+  /* Taken from boostrap navbar-inverse-color variables */
+  color: lighten(lighten(#000, 46.7%), 15%);
+
+  hr {
+    margin: 0;
+    /* taken from bootsrap $navbar-inverse-color variable */
+    border-color: lighten(lighten(#000, 46.7%), 15%);
+  }
+
+  ul {
+    list-style-type: none;
+    padding-top: 10px;
+    padding-left: 7px;
+
+    li {
+      padding: 7px 0;
+      transition: color 0.5s;
+
+      a,a:visited {
+        /* Taken from boostrap navbar-inverse-link-color variables */
+        color: lighten(lighten(#000, 46.7%), 15%);
+      }
+
+      a:hover {
+        /* taken from bootsrap $navbar-inverse-link-hover-color variable */
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+
+    li:hover {
+      padding: 7px 0;
+      /* taken from bootsrap $navbar-inverse-link-hover-color variable */
+      color: #fff;
+      transition: color 0.5s;
+      pointer: cursor;
+    }
+   }
+}
+
+.main {
+  padding: 0;
+  padding-left: 15px;
+  height: $mainContainerHeight;
+  overflow: auto;
+  padding-right: 15px;
+}
+
+.rightBar {
+  padding-left: 15px;
+}

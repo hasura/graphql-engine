@@ -1,11 +1,19 @@
-﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName } from "./types";
+﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName, OrderByElement, OrderByRelation } from "./types";
 import { coerceUndefinedToNull, crossProduct, tableNameEquals, unreachable, zip } from "./util";
 import * as math from "mathjs";
 
 type RelationshipName = string
 
+// This is a more constrained type for response rows that knows that the reference
+// agent never returns custom scalars that are JSON objects
 type ProjectedRow = {
   [fieldName: string]: ScalarValue | QueryResponse
+}
+
+// We need a more constrained version of QueryResponse that uses ProjectedRow for rows
+type QueryResponse = {
+  aggregates?: Record<string, ScalarValue> | null,
+  rows?: ProjectedRow[] | null
 }
 
 const prettyPrintBinaryComparisonOperator = (operator: BinaryComparisonOperator): string => {
@@ -152,28 +160,141 @@ const makeFilterPredicate = (expression: Expression | null, getComparisonColumnV
   return expression ? evaluate(expression) : true;
 };
 
-const sortRows = (rows: Record<string, ScalarValue>[], orderBy: OrderBy[]): Record<string, ScalarValue>[] =>
-  rows.sort((lhs, rhs) =>
-    orderBy.reduce((accum, { column, ordering }) => {
-      if (accum !== 0) {
-        return accum;
+const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, orderByRelations: Record<RelationshipName, OrderByRelation>): Query => {
+  const [relationshipName, ...remainingPath] = orderByElement.target_path;
+  if (relationshipName === undefined) {
+    switch (orderByElement.target.type) {
+      case "column":
+        return {
+          fields: {
+            [orderByElement.target.column]: { type: "column", column: orderByElement.target.column }
+          }
+        };
+      case "single_column_aggregate":
+        return {
+          aggregates: {
+            [orderByElement.target.column]: { type: "single_column", column: orderByElement.target.column, function: orderByElement.target.function }
+          }
+        };
+      case "star_count_aggregate":
+        return {
+          aggregates: {
+            "count": { type: "star_count" }
+          }
+        };
+      default:
+        return unreachable(orderByElement.target["type"]);
+    }
+  } else {
+    const innerOrderByElement = { ...orderByElement, target_path: remainingPath };
+    const orderByRelation = orderByRelations[relationshipName];
+    const subquery = {
+      ...buildQueryForPathedOrderByElement(innerOrderByElement, orderByRelation.subrelations),
+      where: orderByRelation.where
+    }
+    return {
+      fields: {
+        [relationshipName]: { type: "relationship", relationship: relationshipName, query: subquery }
       }
-      const leftVal: ScalarValue = coerceUndefinedToNull(lhs[column]);
-      const rightVal: ScalarValue = coerceUndefinedToNull(rhs[column]);
-      const compared =
-        leftVal === null
-          ? 1
-          : rightVal === null
-            ? -1
-            : leftVal === rightVal
-              ? 0
-              : leftVal < rightVal
-                ? -1
-                : 1;
+    };
+  }
+};
 
-      return ordering === "desc" ? -compared : compared;
-    }, 0)
-  );
+const extractResultFromOrderByElementQueryResponse = (orderByElement: OrderByElement, response: QueryResponse): ScalarValue => {
+  const [relationshipName, ...remainingPath] = orderByElement.target_path;
+  const rows = response.rows ?? [];
+  const aggregates = response.aggregates ?? {};
+
+  if (relationshipName === undefined) {
+    switch (orderByElement.target.type) {
+      case "column":
+        if (rows.length > 1)
+          throw new Error(`Unexpected number of rows (${rows.length}) returned by order by element query`);
+
+        const fieldValue = rows.length === 1 ? rows[0][orderByElement.target.column] : null;
+        if (fieldValue !== null && typeof fieldValue === "object")
+          throw new Error("Column order by target path did not end in a column field value");
+
+        return coerceUndefinedToNull(fieldValue);
+
+      case "single_column_aggregate":
+        return aggregates[orderByElement.target.column];
+
+      case "star_count_aggregate":
+        return aggregates["count"];
+
+      default:
+        return unreachable(orderByElement.target["type"]);
+    }
+  } else {
+    if (rows.length > 1)
+      throw new Error(`Unexpected number of rows (${rows.length}) returned by order by element query`);
+
+    const fieldValue = rows.length === 1 ? rows[0][relationshipName] : null;
+    if (fieldValue === null || typeof fieldValue !== "object")
+      throw new Error(`Found a column field value in the middle of a order by target path: ${orderByElement.target_path}`);
+
+    const innerOrderByElement = { ...orderByElement, target_path: remainingPath };
+    return extractResultFromOrderByElementQueryResponse(innerOrderByElement, fieldValue);
+  }
+};
+
+const makeGetOrderByElementValue = (findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => QueryResponse) => (orderByElement: OrderByElement, row: Record<string, ScalarValue>, orderByRelations: Record<RelationshipName, OrderByRelation>): ScalarValue => {
+  const [relationshipName, ...remainingPath] = orderByElement.target_path;
+  if (relationshipName === undefined) {
+    if (orderByElement.target.type !== "column")
+      throw new Error(`Cannot perform an order by target of type ${orderByElement.target.type} on the current table. Only column-typed targets are supported.`)
+    return coerceUndefinedToNull(row[orderByElement.target.column]);
+  } else {
+    const relationship = findRelationship(relationshipName);
+    const orderByRelation = orderByRelations[relationshipName];
+    const innerOrderByElement = { ...orderByElement, target_path: remainingPath };
+    const query = {
+      ...buildQueryForPathedOrderByElement(innerOrderByElement, orderByRelation.subrelations),
+      where: orderByRelation.where
+    };
+    const subquery = addRelationshipFilterToQuery(row, relationship, query);
+
+    if (subquery === null) {
+      return null;
+    } else {
+      const queryResponse = performQuery(relationship.target_table, subquery);
+      return extractResultFromOrderByElementQueryResponse(innerOrderByElement, queryResponse);
+    }
+  }
+};
+
+const sortRows = (rows: Record<string, ScalarValue>[], orderBy: OrderBy, getOrderByElementValue: (orderByElement: OrderByElement, row: Record<string, ScalarValue>, orderByRelations: Record<RelationshipName, OrderByRelation>) => ScalarValue): Record<string, ScalarValue>[] =>
+  rows
+    .map<[Record<string, ScalarValue>, ScalarValue[]]>(row => [row, []])
+    .sort(([lhs, lhsValueCache], [rhs, rhsValueCache]) => {
+      return orderBy.elements.reduce((accum, orderByElement, orderByElementIndex) => {
+        if (accum !== 0) {
+          return accum;
+        }
+        const leftVal: ScalarValue =
+          lhsValueCache[orderByElementIndex] !== undefined
+            ? lhsValueCache[orderByElementIndex]
+            : lhsValueCache[orderByElementIndex] = getOrderByElementValue(orderByElement, lhs, orderBy.relations);
+        const rightVal: ScalarValue =
+          rhsValueCache[orderByElementIndex] !== undefined
+          ? rhsValueCache[orderByElementIndex]
+          : rhsValueCache[orderByElementIndex] = getOrderByElementValue(orderByElement, rhs, orderBy.relations);
+        const compared =
+          leftVal === null
+            ? 1
+            : rightVal === null
+              ? -1
+              : leftVal === rightVal
+                ? 0
+                : leftVal < rightVal
+                  ? -1
+                  : 1;
+
+        return orderByElement.order_direction === "desc" ? -compared : compared;
+      }, 0)
+    })
+    .map(([row, _valueCache]) => row);
 
 const paginateRows = (rows: Record<string, ScalarValue>[], offset: number | null, limit: number | null): Record<string, ScalarValue>[] => {
   const start = offset ?? 0;
@@ -380,9 +501,10 @@ export const queryData = (getTable: (tableName: TableName) => Record<string, Sca
     }
     const findRelationship = makeFindRelationship(queryRequest.table_relationships, tableName);
     const getComparisonColumnValues = makeGetComparisonColumnValues(findRelationship, performQuery);
+    const getOrderByElementValue = makeGetOrderByElementValue(findRelationship, performQuery);
 
     const filteredRows = rows.filter(makeFilterPredicate(query.where ?? null, getComparisonColumnValues));
-    const sortedRows = sortRows(filteredRows, query.order_by ?? []);
+    const sortedRows = query.order_by ? sortRows(filteredRows, query.order_by, getOrderByElementValue) : filteredRows;
     const paginatedRows = paginateRows(sortedRows, query.offset ?? null, query.limit ?? null);
     const projectedRows = query.fields
       ? paginatedRows.map(projectRow(query.fields, findRelationship, performQuery))

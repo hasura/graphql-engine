@@ -4,15 +4,42 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "@nrwl/nx/enforce-module-boundaries": [
+          "error",
+          {
+            "allowCircularSelfDependency": true
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/no-empty-function": "warn",
+        "@typescript-eslint/ban-types": "warn",
+        "@typescript-eslint/no-namespace": "warn",
+        "@typescript-eslint/no-empty-interface": "warn",
+        "@typescript-eslint/no-var-requires": "warn",
+        "no-case-declarations": "warn",
+        "no-unsafe-optional-chaining": "warn",
+        "no-useless-catch": "warn"
+      }
     },
     {
       "files": ["*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/no-empty-function": "warn",
+        "@typescript-eslint/no-empty-interface": "warn",
+        "no-case-declarations": "warn",
+        "import/first": "warn",
+        "no-undef": "warn",
+        "no-restricted-globals": "warn",
+        "no-prototype-builtins": "warn",
+        "@typescript-eslint/no-this-alias": "warn",
+        "no-unsafe-optional-chaining": "warn",
+        "no-useless-catch": "warn"
+      }
     }
   ]
 }

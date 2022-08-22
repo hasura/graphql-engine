@@ -7,6 +7,10 @@ module Hasura.GraphQL.Schema.Common
     NodeInterfaceParserBuilder (..),
     MonadBuildSchemaBase,
     retrieve,
+    MonadBuildSourceSchema,
+    MonadBuildRemoteSchema,
+    runSourceSchema,
+    runRemoteSchema,
     ignoreRemoteRelationship,
     isHasuraSchema,
     AggSelectExp,
@@ -48,6 +52,7 @@ import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
+import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
@@ -152,6 +157,42 @@ retrieve ::
   (a -> b) ->
   m b
 retrieve f = asks $ f . getter
+
+-------------------------------------------------------------------------------
+
+type MonadBuildSourceSchema r m n = MonadBuildSchemaBase r m n
+
+runSourceSchema ::
+  SchemaContext ->
+  SchemaOptions ->
+  ReaderT
+    ( SchemaContext,
+      SchemaOptions,
+      MkTypename,
+      CustomizeRemoteFieldName,
+      NamingCase
+    )
+    m
+    a ->
+  m a
+runSourceSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
+
+type MonadBuildRemoteSchema r m n = MonadBuildSchemaBase r m n
+
+runRemoteSchema ::
+  SchemaContext ->
+  SchemaOptions ->
+  ReaderT
+    ( SchemaContext,
+      SchemaOptions,
+      MkTypename,
+      CustomizeRemoteFieldName,
+      NamingCase
+    )
+    m
+    a ->
+  m a
+runRemoteSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
 
 -------------------------------------------------------------------------------
 
@@ -300,13 +341,14 @@ optionalFieldParser ::
 optionalFieldParser = fmap . fmap . fmap
 
 -- | Builds the type name for referenced enum tables.
-mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m) => EnumReference b -> m G.Name
+mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m, Has NamingCase r) => EnumReference b -> m G.Name
 mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
-  enumTableGQLName <- tableGraphQLName @b enumTableName `onLeft` throwError
-  addEnumSuffix enumTableGQLName enumTableCustomName
+  tCase <- asks getter
+  enumTableGQLName <- getTableIdentifier @b enumTableName `onLeft` throwError
+  addEnumSuffix enumTableGQLName enumTableCustomName tCase
 
-addEnumSuffix :: (MonadReader r m, Has MkTypename r) => G.Name -> Maybe G.Name -> m G.Name
-addEnumSuffix enumTableGQLName enumTableCustomName = mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> Name.__enum
+addEnumSuffix :: (MonadReader r m, Has MkTypename r) => GQLNameIdentifier -> Maybe G.Name -> NamingCase -> m G.Name
+addEnumSuffix enumTableGQLName enumTableCustomName tCase = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkEnumTableTypeName enumTableGQLName enumTableCustomName
 
 -- TODO: figure out what the purpose of this method is.
 peelWithOrigin :: P.MonadParse m => P.Parser 'P.Both m a -> P.Parser 'P.Both m (IR.ValueWithOrigin a)

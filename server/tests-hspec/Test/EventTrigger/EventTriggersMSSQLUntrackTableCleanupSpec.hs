@@ -10,7 +10,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment, stopServer)
@@ -26,16 +26,18 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.SQLServer,
-              -- setup the webhook server as the local test environment,
+        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              setup = mssqlSetup,
-              teardown = mssqlTeardown,
-              customOptions = Nothing
+              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+              Fixture.setupTeardown = \testEnv ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction = mssqlSetup testEnv,
+                      Fixture.teardownAction = \_ -> mssqlTeardown testEnv
+                    }
+                ]
             }
         ]
     )
@@ -67,11 +69,11 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
   cleanupEventTriggersWhenTableUntracked opts
 
-cleanupEventTriggersWhenTableUntracked :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+cleanupEventTriggersWhenTableUntracked :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 cleanupEventTriggersWhenTableUntracked opts =
   describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $

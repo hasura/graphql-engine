@@ -32,7 +32,7 @@ For the `graphql-engine` command these are the available flags and environment v
 <table>
 <thead>
 <tr>
-<th>Flag and ENV Variable</th>
+<th style={{ width: `45%` }}>Flag and ENV Variable</th>
 <th>Details</th>
 </tr>
 </thead>
@@ -126,7 +126,7 @@ only on Hasura EE, reference [this table](#EE-flags) at the bottom of the page.
 <table>
 <thead>
 <tr>
-<th>Flag and ENV Variable</th>
+<th style={{ width: `45%` }}>Flag and ENV Variable</th>
 <th>Details</th>
 </tr>
 </thead>
@@ -312,6 +312,25 @@ Set the value to `/srv/console-assets` for the console to load assets from the s
 
 CSV of list of domains, including scheme (http/https) and port, to allow for CORS. Wildcard domains are allowed. (See
 [Configure CORS](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors))
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Flag:**
+
+`--metadata-database-extensions-schema`
+
+**ENV variable:**
+
+`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`
+
+</td>
+<td>
+
+The schema in which Hasura can install extensions in the metadata database. Default: `public`.
 
 </td>
 </tr>
@@ -1188,7 +1207,7 @@ Used to set the default naming convention for all sources. See
 
 </td>
 </tr>
-  
+
 </tbody>
 </table>
 
@@ -1205,7 +1224,7 @@ The following `serve` sub-commands are available **only** on Hasura EE.
 <table>
 <thead>
 <tr>
-<th>Flag</th>
+<th style={{ width: `45%` }}>Flag and ENV Variable</th>
 <th>Details</th>
 </tr>
 </thead>
@@ -1350,6 +1369,7 @@ The pro key that you have received.
 <tr>
 <td>
 
+
 **Flag:**
 
 `--rate-limit-redis-tls-hostname <HOSTNAME>`
@@ -1357,6 +1377,7 @@ The pro key that you have received.
 **ENV variable:**
 
 `HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME`
+
 
 </td>
 <td>

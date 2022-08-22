@@ -11,6 +11,7 @@
   },
   "parser": "babel-eslint",
   "rules": {
+    "no-useless-escape": 0,
     "allowForLoopAfterthoughts": 0,
     "react/no-multi-comp": 0,
     "import/order": 0,
@@ -32,6 +33,7 @@
         "properties": "never"
       }
     ],
+    "consistent-return": "off",
     "indent": "off",
     "no-console": 0,
     "arrow-parens": 0,
@@ -49,7 +51,6 @@
     "no-prototype-builtins": 0,
     "array-callback-return": 0,
     "no-useless-concat": 0,
-    "consistent-return": 0,
     "class-methods-use-this": 0,
     "arrow-body-style": 0,
     "prefer-template": 0,
@@ -143,6 +144,7 @@
         "*.tsx"
       ],
       "rules": {
+        "no-useless-escape": 0,
         "no-restricted-imports": [
           "error",
           {
@@ -172,7 +174,8 @@
         "camelcase": "off",
         "no-param-reassign": "off",
         "no-use-before-define": "off",
-        "consistent-return": "off","import/no-extraneous-dependencies": [
+        "consistent-return": "off",
+        "import/no-extraneous-dependencies": [
           "error",
           {
             "devDependencies": [

@@ -46,6 +46,9 @@ genFilteringCapabilities =
 genRelationshipCapabilities :: MonadGen m => m RelationshipCapabilities
 genRelationshipCapabilities = pure RelationshipCapabilities {}
 
+genMetricsCapabilities :: MonadGen m => m MetricsCapabilities
+genMetricsCapabilities = pure MetricsCapabilities {}
+
 genCapabilities :: MonadGen m => m Capabilities
 genCapabilities =
   Capabilities
@@ -54,6 +57,7 @@ genCapabilities =
     <*> Gen.maybe genSubscriptionCapabilities
     <*> Gen.maybe genFilteringCapabilities
     <*> Gen.maybe genRelationshipCapabilities
+    <*> Gen.maybe genMetricsCapabilities
 
 emptyConfigSchemaResponse :: ConfigSchemaResponse
 emptyConfigSchemaResponse = ConfigSchemaResponse mempty mempty

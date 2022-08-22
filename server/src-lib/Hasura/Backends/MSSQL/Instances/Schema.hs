@@ -7,10 +7,13 @@
 -- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
+import Data.Char qualified as Char
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Data.Text.Casing qualified as C
+import Data.Text.Encoding as TE
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Schema.IfMatched
@@ -41,13 +44,9 @@ import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend hiding (BackendInsert)
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName (..))
@@ -62,31 +61,41 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'MSSQL where
   -- top level parsers
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields = msBuildTableRelayQueryFields
+  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
 
-  buildFunctionQueryFields = msBuildFunctionQueryFields
-  buildFunctionRelayQueryFields = msBuildFunctionRelayQueryFields
-  buildFunctionMutationFields = msBuildFunctionMutationFields
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
 
-  mkRelationshipParser = msMkRelationshipParser
+  -- When we support nested inserts, we also need to ensure we limit ourselves
+  -- to inserting into tables whch supports inserts:
+  {-
+    import Hasura.GraphQL.Schema.Mutation qualified as GSB
+
+    runMaybeT $ do
+      let otherTableName = riRTable relationshipInfo
+      otherTableInfo <- lift $ askTableInfo sourceName otherTableName
+      guard (supportsInserts otherTableInfo)
+  -}
+  mkRelationshipParser _ _ = pure Nothing
 
   -- individual components
   columnParser = msColumnParser
-  scalarSelectionArgumentsParser = msScalarSelectionArgumentsParser
+  scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = msOrderByOperators
   comparisonExps = msComparisonExps
   countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
-  computedField = msComputedField
+  computedField _ _ _ _ = pure Nothing
 
 instance BackendTableSelectSchema 'MSSQL where
   tableArguments = msTableArgs
@@ -97,18 +106,6 @@ instance BackendTableSelectSchema 'MSSQL where
 ----------------------------------------------------------------
 
 -- * Top level parsers
-
-msBuildTableRelayQueryFields ::
-  MonadBuildSchema 'MSSQL r m n =>
-  MkRootFieldName ->
-  SourceInfo 'MSSQL ->
-  TableName 'MSSQL ->
-  TableInfo 'MSSQL ->
-  C.GQLNameIdentifier ->
-  NESeq (ColumnInfo 'MSSQL) ->
-  m [P.FieldParser n a]
-msBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
-  pure []
 
 backendInsertParser ::
   forall m r n.
@@ -155,40 +152,6 @@ msBuildTableUpdateMutationFields mkRootFieldName scenario sourceName tableName t
         gqlName
   pure . fold @Maybe @[_] $ fieldParsers
 
-msBuildFunctionQueryFields ::
-  MonadBuildSchema 'MSSQL r m n =>
-  MkRootFieldName ->
-  SourceInfo 'MSSQL ->
-  FunctionName 'MSSQL ->
-  FunctionInfo 'MSSQL ->
-  TableName 'MSSQL ->
-  m [P.FieldParser n a]
-msBuildFunctionQueryFields _ _ _ _ _ =
-  pure []
-
-msBuildFunctionRelayQueryFields ::
-  MonadBuildSchema 'MSSQL r m n =>
-  MkRootFieldName ->
-  SourceInfo 'MSSQL ->
-  FunctionName 'MSSQL ->
-  FunctionInfo 'MSSQL ->
-  TableName 'MSSQL ->
-  NESeq (ColumnInfo 'MSSQL) ->
-  m [P.FieldParser n a]
-msBuildFunctionRelayQueryFields _mkRootFieldName _sourceName _functionName _functionInfo _tableName _pkeyColumns =
-  pure []
-
-msBuildFunctionMutationFields ::
-  MonadBuildSchema 'MSSQL r m n =>
-  MkRootFieldName ->
-  SourceInfo 'MSSQL ->
-  FunctionName 'MSSQL ->
-  FunctionInfo 'MSSQL ->
-  TableName 'MSSQL ->
-  m [P.FieldParser n a]
-msBuildFunctionMutationFields _ _ _ _ _ =
-  pure []
-
 ----------------------------------------------------------------
 
 -- * Table arguments
@@ -217,31 +180,12 @@ msTableArgs sourceName tableInfo = do
           IR._saDistinct = Nothing
         }
 
-msMkRelationshipParser ::
-  forall r m n.
-  MonadBuildSchema 'MSSQL r m n =>
-  SourceInfo 'MSSQL ->
-  RelInfo 'MSSQL ->
-  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
-msMkRelationshipParser _sourceName _relationshipInfo = do
-  -- When we support nested inserts, we also need to ensure we limit ourselves
-  -- to inserting into tables whch supports inserts:
-  {-
-    import Hasura.GraphQL.Schema.Mutation qualified as GSB
-
-    runMaybeT $ do
-      let otherTableName = riRTable relationshipInfo
-      otherTableInfo <- lift $ askTableInfo sourceName otherTableName
-      guard (supportsInserts otherTableInfo)
-  -}
-  return Nothing
-
 ----------------------------------------------------------------
 
 -- * Individual components
 
 msColumnParser ::
-  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'MSSQL ->
   G.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
@@ -253,8 +197,8 @@ msColumnParser columnType (G.Nullability isNullable) =
     ColumnScalar scalarType ->
       possiblyNullable scalarType <$> case scalarType of
         -- text
-        MSSQL.CharType -> pure $ ODBC.TextValue <$> P.string
-        MSSQL.VarcharType -> pure $ ODBC.TextValue <$> P.string
+        MSSQL.CharType -> pure $ mkCharValue <$> P.string
+        MSSQL.VarcharType -> pure $ mkCharValue <$> P.string
         MSSQL.WcharType -> pure $ ODBC.TextValue <$> P.string
         MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
         MSSQL.WtextType -> pure $ ODBC.TextValue <$> P.string
@@ -291,17 +235,35 @@ msColumnParser columnType (G.Nullability isNullable) =
     possiblyNullable _scalarType
       | isNullable = fmap (fromMaybe ODBC.NullValue) . P.nullable
       | otherwise = id
+
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
       ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
         ODBC.TextValue $ G.unName value
       )
 
-msScalarSelectionArgumentsParser ::
-  MonadParse n =>
-  ColumnType 'MSSQL ->
-  InputFieldsParser n (Maybe (ScalarSelectionArguments 'MSSQL))
-msScalarSelectionArgumentsParser _columnType = pure Nothing
+    -- CHAR/VARCHAR in MSSQL _can_ represent the full UCS (Universal Coded Character Set),
+    -- but might not always if the collation used is not UTF-8 enabled
+    -- https://docs.microsoft.com/en-us/sql/t-sql/data-types/char-and-varchar-transact-sql?view=sql-server-ver16
+    --
+    -- NCHAR/NVARCHAR in MSSQL are always able to represent the full UCS
+    -- https://docs.microsoft.com/en-us/sql/t-sql/data-types/nchar-and-nvarchar-transact-sql?view=sql-server-ver16
+    --
+    -- We'd prefer to encode as CHAR/VARCHAR literals to CHAR/VARCHAR columns, as this
+    -- means better index performance, BUT as we don't know what the collation
+    -- the column is set to (an example is 'SQL_Latin1_General_CP437_BIN') and thus
+    -- what characters are available in order to do this safely.
+    --
+    -- Therefore, we are conservative and only convert on the HGE side when the
+    -- characters are all ASCII and guaranteed to be in the target character
+    -- set, if not we pass an NCHAR/NVARCHAR and let MSSQL implicitly convert it.
+
+    -- resolves https://github.com/hasura/graphql-engine/issues/8735
+    mkCharValue :: Text -> ODBC.Value
+    mkCharValue txt =
+      if T.all Char.isAscii txt
+        then ODBC.ByteStringValue (TE.encodeUtf8 txt) -- an ODBC.ByteStringValue becomes a VARCHAR
+        else ODBC.TextValue txt -- an ODBC.TextValue becomes an NVARCHAR
 
 msOrderByOperators ::
   NamingCase ->
@@ -449,26 +411,3 @@ msCountTypeInput = \case
     mkCountType _ Nothing = MSSQL.StarCountable
     mkCountType IR.SelectCountDistinct (Just col) = MSSQL.DistinctCountable col
     mkCountType IR.SelectCountNonDistinct (Just col) = MSSQL.NonNullFieldCountable col
-
--- | Computed field parser.
--- Currently unsupported: returns Nothing for now.
-msComputedField ::
-  MonadBuildSchema 'MSSQL r m n =>
-  SourceInfo 'MSSQL ->
-  ComputedFieldInfo 'MSSQL ->
-  TableName 'MSSQL ->
-  TableInfo 'MSSQL ->
-  m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
-msComputedField _sourceName _fieldInfo _table _tableInfo = pure Nothing
-
-{-
-NOTE: Unused, should we remove?
-
--- | Remote join field parser.
--- Currently unsupported: returns Nothing for now.
-msRemoteRelationshipField ::
-  MonadBuildSchema 'MSSQL r m n =>
-  RemoteFieldInfo (DBJoinField 'MSSQL) ->
-  m (Maybe [FieldParser n (AnnotatedField 'MSSQL)])
-msRemoteRelationshipField _remoteFieldInfo = pure Nothing
--}

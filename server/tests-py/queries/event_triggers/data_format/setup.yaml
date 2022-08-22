@@ -4,8 +4,6 @@ args:
 - type: run_sql
   args:
     sql: |
-      CREATE EXTENSION IF NOT EXISTS postgis;
-
       create table hge_tests.test_bigint(
           id bigint,
           name text

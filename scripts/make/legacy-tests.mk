@@ -25,6 +25,15 @@ $(LEGACY_TESTS)/requirements.txt: $(LEGACY_TESTS)/requirements-top-level.txt
 		pip3 install -r $<; \
 		( \
 			echo '# Do not modify this file directly. Instead, modify $<.'; \
-			echo '# Then, run `make` in this directory to regenerate this file.'; \
+			echo '# Then, run `make server/tests-py/requirements.txt` to regenerate this file.'; \
+			echo; \
 			pip3 freeze \
 		) > $@
+
+$(LEGACY_TESTS)/node_modules: $(LEGACY_TESTS)/package-lock.json
+	@ cd $(LEGACY_TESTS); \
+	npm_config_loglevel=error npm ci
+
+$(LEGACY_TESTS)/package-lock.json: $(LEGACY_TESTS)/remote_schemas/nodejs/package.json
+	@ cd $(LEGACY_TESTS); \
+	npm_config_loglevel=error npm install --package-lock-only

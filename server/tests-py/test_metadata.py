@@ -398,6 +398,15 @@ class TestMetadata:
     def test_pg_multisource_table_name_conflict(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_table_name_conflict.yaml')
 
+    def test_dc_add_agent(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_dc_add_agent.yaml')
+
+    def test_dc_delete_agent(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_dc_delete_agent.yaml')
+
+    def test_list_source_kinds(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_list_source_kinds.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/metadata"

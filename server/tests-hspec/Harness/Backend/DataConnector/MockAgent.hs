@@ -36,7 +36,8 @@ capabilities =
             API.cMutations = Nothing,
             API.cSubscriptions = Nothing,
             API.cFiltering = Nothing,
-            API.cRelationships = Just API.RelationshipCapabilities {}
+            API.cRelationships = Just API.RelationshipCapabilities {},
+            API.cMetrics = Just API.MetricsCapabilities {}
           },
       crConfigSchemaResponse =
         API.ConfigSchemaResponse
@@ -107,6 +108,188 @@ schema =
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "AlbumId"],
               API.dtiDescription = Just "Collection of music albums created by artists"
+            },
+          API.TableInfo
+            { API.dtiName = mkTableName "Customer",
+              API.dtiColumns =
+                [ API.ColumnInfo
+                    { API.dciName = API.ColumnName "CustomerId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "Customer primary key identifier"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "FirstName",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The customer's first name"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "LastName",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The customer's last name"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Company",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's company name"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Address",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's address line (street number, street)"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "City",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's address city"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "State",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's address state"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Country",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's address country"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "PostalCode",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's address postal code"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Phone",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's phone number"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Fax",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The customer's fax number"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Email",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The customer's email address"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "SupportRepId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The ID of the Employee who is this customer's support representative"
+                    }
+                ],
+              API.dtiPrimaryKey = Just [API.ColumnName "CustomerId"],
+              API.dtiDescription = Just "Collection of customers who can buy tracks"
+            },
+          API.TableInfo
+            { API.dtiName = mkTableName "Employee",
+              API.dtiColumns =
+                [ API.ColumnInfo
+                    { API.dciName = API.ColumnName "EmployeeId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "Employee primary key identifier"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "LastName",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The employee's last name"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "FirstName",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The employee's first name"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Title",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's job title"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "ReportsTo",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's report"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "BirthDate",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's birth date"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "HireDate",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's hire date"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Address",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's address line (street number, street)"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "City",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's address city"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "State",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's address state"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Country",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's address country"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "PostalCode",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's address postal code"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Phone",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's phone number"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Fax",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's fax number"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Email",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The employee's email address"
+                    }
+                ],
+              API.dtiPrimaryKey = Just [API.ColumnName "EmployeeId"],
+              API.dtiDescription = Just "Collection of employees who work for the business"
             },
           API.TableInfo
             { API.dtiName = mkTableName "Genre",
@@ -340,12 +523,16 @@ mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ 
 healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
 healthcheckHandler _sourceName _config = pure NoContent
 
+metricsHandler :: Handler Text
+metricsHandler = pure "# NOTE: Metrics would go here."
+
 dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> Server API.Api
 dcMockableServer mcfg mquery mQueryConfig =
   mockCapabilitiesHandler mcfg
     :<|> mockSchemaHandler mcfg mQueryConfig
     :<|> mockQueryHandler mcfg mquery mQueryConfig
     :<|> healthcheckHandler
+    :<|> metricsHandler
 
 mockAgentPort :: Warp.Port
 mockAgentPort = 65006

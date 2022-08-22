@@ -1,0 +1,247 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries:
+      customization:
+        root_fields:
+          prefix: test
+          suffix: query
+        naming_convention: graphql-default
+
+- description: create table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        create table author_local(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author_local (name)
+          VALUES ('Author 1'), ('Author 2');
+
+- description: track table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author_local
+      source: pg1
+
+- description: Simple GraphQL query to fetch items from the source table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      testAuthorLocalQuery:
+        - id: 1
+          name: "Author 1"
+          __typename: AuthorLocal
+        - id: 2
+          name: "Author 2"
+          __typename: AuthorLocal
+  query:
+    query: |
+      query {
+        testAuthorLocalQuery {
+          id
+          name
+          __typename
+        }
+      }
+
+- description: Simple GraphQL query with field aliases to fetch items from the source table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      a:
+        - b: 1
+          c: "Author 1"
+          d: AuthorLocal
+        - b: 2
+          c: "Author 2"
+          d: AuthorLocal
+  query:
+    query: |
+      query {
+        a: testAuthorLocalQuery {
+          b: id
+          c: name
+          d: __typename
+        }
+      }
+
+- description: Lookup by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      testAuthorLocalByPkQuery:
+        id: 1
+        name: "Author 1"
+        __typename: AuthorLocal
+  query:
+    query: |
+      query {
+        testAuthorLocalByPkQuery(id: 1) {
+          id
+          name
+          __typename
+        }
+      }
+
+- description: Aggregate
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      testAuthorLocalAggregateQuery:
+        __typename: AuthorLocalAggregate
+        aggregate:
+          __typename: AuthorLocalAggregateFields
+          count: 1
+  query:
+    query: |
+      query MyQuery {
+        testAuthorLocalAggregateQuery(where: {name: {_eq: "Author 2"}}) {
+          __typename
+          aggregate {
+            __typename
+            count
+          }
+        }
+      }
+
+- description: Insert
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      testInsertAuthorLocalQuery:
+        __typename: AuthorLocalMutationResponse
+        returning:
+          - __typename: AuthorLocal
+            id: 3
+            name: Author 3
+  query:
+    query: |
+      mutation MyMutation {
+        testInsertAuthorLocalQuery(objects: {name: "Author 3", id: 3}) {
+          __typename
+          returning {
+            __typename
+            id
+            name
+          }
+        }
+      }
+
+- description: Delete by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      testDeleteAuthorLocalByPkQuery:
+        __typename: AuthorLocal
+        id: 3
+        name: Author 3
+  query:
+    query: |
+      mutation MyMutation {
+        testDeleteAuthorLocalByPkQuery(id: 3) {
+          __typename
+          id
+          name
+        }
+      }
+
+- description: PG update source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_update_source
+    args:
+      name: pg1
+      customization:
+        root_fields:
+          prefix: Test
+          suffix: query
+        naming_convention: graphql-default
+
+- description: Lookup by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      TestAuthorLocalByPkQuery:
+        id: 1
+        name: "Author 1"
+        __typename: AuthorLocal
+  query:
+    query: |
+      query {
+        TestAuthorLocalByPkQuery(id: 1) {
+          id
+          name
+          __typename
+        }
+      }
+
+- description: untrack table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author_local
+      source: pg1
+
+- description: drop table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table author_local;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1

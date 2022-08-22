@@ -12,7 +12,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -20,14 +20,15 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.DataConnector,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = DataConnector.setupFixture sourceMetadata DataConnector.defaultBackendConfig,
-              teardown = DataConnector.teardown,
-              customOptions = Nothing
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ DataConnector.setupFixtureAction
+                    sourceMetadata
+                    DataConnector.defaultBackendConfig
+                    testEnv
+                ]
             }
         ]
     )
@@ -78,7 +79,7 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Context.Options -> SpecWith (TestEnvironment, a)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "Aggregate Query Tests" $ do
   describe "Nodes Tests" $ do
     it "works with simple query" $ \(testEnvironment, _) ->

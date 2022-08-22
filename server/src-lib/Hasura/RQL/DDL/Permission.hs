@@ -52,6 +52,7 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
@@ -213,7 +214,11 @@ addPermissionToMetadata permDef = case _pdPermission permDef of
   DelPerm' _ -> tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
 
 buildPermInfo ::
-  (BackendMetadata b, QErrM m, TableCoreInfoRM b m) =>
+  ( BackendMetadata b,
+    QErrM m,
+    TableCoreInfoRM b m,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -292,7 +297,11 @@ runDropPerm permType (DropPerm source table role) = do
 
 buildInsPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -394,7 +403,11 @@ validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {.
 
 buildSelPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -455,7 +468,11 @@ buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withP
 
 buildUpdPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -498,7 +515,11 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
 
 buildDelPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->

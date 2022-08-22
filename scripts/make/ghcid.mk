@@ -20,6 +20,21 @@ define run_ghcid_hspec_tests
 	fi
 endef
 
+define run_ghcid_main_tests
+	@if [[ $$(uname -p) == 'arm' ]]; then \
+		HSPEC_MATCH="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+			--test "main" \
+			--setup ":set args $(2)" \
+			--width=$(PANE_WIDTH) \
+			--height=$(PANE_HEIGHT); \
+	else \
+  	HSPEC_MATCH="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  		--test "main" \
+			--setup ":set args $(2)"; \
+	fi
+endef
+
+
 define run_ghcid
 	@if [[ $$(uname -p) == 'arm' ]]; then \
 		ghcid -c "cabal repl $(1) $(GHCID_FLAGS)" --width=$(PANE_WIDTH) --height=$(PANE_HEIGHT); \
@@ -32,6 +47,11 @@ endef
 ## ghcid-library: build and watch library in ghcid
 ghcid-library:
 	$(call run_ghcid,graphql-engine:lib:graphql-engine)
+
+.PHONY: ghcid-tests
+## ghcid-tests: build and watch main tests in ghcid
+ghcid-tests:
+	$(call run_ghcid,graphql-engine:test:graphql-engine-tests)
 
 .PHONY: ghcid-hspec
 ## ghcid-hspec: build and watch tests-hspec in ghcid
@@ -63,4 +83,15 @@ ghcid-test-mysql: start-postgres start-mysql remove-tix-file
 ## ghcid-test-citus: run tests for Citus backend in ghcid
 ghcid-test-citus: start-postgres start-citus remove-tix-file
 	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Citus)
+
+.PHONY: ghcid-library-pro
+## ghcid-library-pro: build and watch pro library in ghcid
+ghcid-library-pro:
+	$(call run_ghcid,graphql-engine-pro:lib:graphql-engine-pro)
+
+.PHONY: ghcid-test-unit
+## ghcid-test-unit: build and run unit tests in ghcid
+ghcid-test-unit: remove-tix-file
+	$(call run_ghcid_main_tests,graphql-engine:graphql-engine-tests,unit)
+
 

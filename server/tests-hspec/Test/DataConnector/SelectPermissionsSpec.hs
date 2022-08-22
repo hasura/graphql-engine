@@ -15,7 +15,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -26,14 +26,11 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.DataConnector,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = DataConnector.setupFixture sourceMetadata defaultBackendConfig,
-              teardown = DataConnector.teardown,
-              customOptions = Nothing
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [DataConnector.setupFixtureAction sourceMetadata defaultBackendConfig testEnv]
             }
         ]
     )
@@ -94,7 +91,7 @@ sourceMetadata =
         configuration: {}
 |]
 
-tests :: Context.Options -> SpecWith (TestEnvironment, a)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "SelectPermissionsSpec" $ do
   it "permissions filter using _ceq that traverses an object relationship" $ \(testEnvironment, _) ->
     shouldReturnYaml
@@ -266,4 +263,57 @@ tests opts = describe "SelectPermissionsSpec" $ do
                 CustomerId: 31
                 FirstName: Martha
                 LastName: Silk
+      |]
+
+  it "Query that orders by a related table that has a permissions filter" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithHeaders
+          testEnvironment
+          [("X-Hasura-Role", testRoleName)]
+          [graphql|
+            query getEmployee {
+              Employee(order_by: {SupportRepForCustomers_aggregate: {count: desc}}) {
+                FirstName
+                LastName
+                Country
+                SupportRepForCustomers {
+                  Country
+                  CustomerId
+                }
+              }
+            }
+          |]
+      )
+      [yaml|
+        data:
+          Employee:
+            - FirstName: Jane
+              LastName: Peacock
+              Country: Canada
+              SupportRepForCustomers:
+                - Country: Canada
+                  CustomerId: 3
+                - Country: Canada
+                  CustomerId: 15
+                - Country: Canada
+                  CustomerId: 29
+                - Country: Canada
+                  CustomerId: 30
+                - Country: Canada
+                  CustomerId: 33
+            - FirstName: Steve
+              LastName: Johnson
+              Country: Canada
+              SupportRepForCustomers:
+                - Country: Canada
+                  CustomerId: 14
+                - Country: Canada
+                  CustomerId: 31
+            - FirstName: Margaret
+              LastName: Park
+              Country: Canada
+              SupportRepForCustomers:
+                - Country: Canada
+                  CustomerId: 32
       |]

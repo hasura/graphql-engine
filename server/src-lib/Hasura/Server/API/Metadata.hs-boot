@@ -5,6 +5,7 @@ where
 
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Permission
@@ -14,6 +15,7 @@ import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
+import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -106,6 +108,7 @@ data RQLMetadataV1
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
     RMCreateQueryCollection !CreateCollection
+  | RMRenameQueryCollection !RenameCollection
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
@@ -115,6 +118,10 @@ data RQLMetadataV1
   | -- Rest endpoints
     RMCreateRestEndpoint !CreateEndpoint
   | RMDropRestEndpoint !DropEndpoint
+  | -- GraphQL Data Connectors
+    RMDCAddAgent !DCAddAgent
+  | RMDCDeleteAgent !DCDeleteAgent
+  | RMListSourceKinds !ListSourceKinds
   | -- Custom types
     RMSetCustomTypes !CustomTypes
   | -- Api limits

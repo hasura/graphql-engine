@@ -52,7 +52,7 @@ spec = do
               _qLimit = Just 10,
               _qOffset = Just 20,
               _qWhere = Just $ And [],
-              _qOrderBy = Just [OrderBy (ColumnName "my_column_name") Ascending]
+              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (ColumnName "my_column_name")) Ascending :| [])
             }
     testToFromJSONToSchema
       query
@@ -62,7 +62,18 @@ spec = do
           "limit": 10,
           "offset": 20,
           "where": {"type": "and", "expressions": []},
-          "order_by": [{"column": "my_column_name", "ordering": "asc"}]
+          "order_by": {
+            "relations": {},
+            "elements": [
+              { "target_path": [],
+                "target": {
+                  "type": "column",
+                  "column": "my_column_name"
+                },
+                "order_direction": "asc"
+              }
+            ]
+          }
         }
       |]
     jsonOpenApiProperties genQuery
@@ -152,7 +163,7 @@ genQuery =
     <*> Gen.maybe (Gen.int (linear 0 5))
     <*> Gen.maybe (Gen.int (linear 0 5))
     <*> Gen.maybe genExpression
-    <*> Gen.maybe (Gen.nonEmpty (linear 0 5) genOrderBy)
+    <*> Gen.maybe genOrderBy
 
 genQueryRequest :: MonadGen m => m QueryRequest
 genQueryRequest =

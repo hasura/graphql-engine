@@ -11,16 +11,28 @@ module Harness.TestEnvironment
   )
 where
 
-import Control.Concurrent (ThreadId, killThread)
+import Control.Concurrent.Async (Async)
+import Control.Concurrent.Async qualified as Async
+import Data.UUID (UUID)
 import Data.Word
+import Harness.Test.BackendType
 import Hasura.Prelude
 import System.Log.FastLogger qualified as FL
 
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
-  { server :: Server,
+  { -- | connection details for the instance of HGE we're connecting to
+    server :: Server,
+    -- | shared function to log information from tests
     logger :: FL.LogStr -> IO (),
-    loggerCleanup :: IO ()
+    -- | action to clean up logger
+    loggerCleanup :: IO (),
+    -- | a uuid generated for each test suite used to generate a unique
+    -- `SchemaName`
+    uniqueTestId :: UUID,
+    -- | the main backend type of the test, if applicable (ie, where we are not
+    -- testing `remote <-> remote` joins or someting similarly esoteric)
+    backendType :: Maybe BackendType
   }
 
 instance Show TestEnvironment where
@@ -33,7 +45,7 @@ data Server = Server
     -- | The full URI prefix e.g. http://localhost
     urlPrefix :: String,
     -- | The thread that the server is running on, so we can stop it later.
-    threadId :: ThreadId
+    thread :: Async ()
   }
 
 -- | Retrieve the 'Server' associated with some 'TestEnvironment'.
@@ -51,4 +63,4 @@ serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
 
 -- | Forcibly stop a given 'Server'.
 stopServer :: Server -> IO ()
-stopServer Server {threadId} = killThread threadId
+stopServer Server {thread} = Async.cancel thread

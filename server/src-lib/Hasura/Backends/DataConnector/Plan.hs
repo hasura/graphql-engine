@@ -151,8 +151,8 @@ mkPlan session (SourceConfig {}) ir = do
             case _saWhere (_asnArgs selectG) of
               Just expr -> BoolAnd [expr, _tpFilter (_asnPerm selectG)]
               Nothing -> _tpFilter (_asnPerm selectG)
-      whereClause <- translateBoolExp [] tableName whereClauseWithPermissions
-      orderBy <- lift $ translateOrderBy (_saOrderBy $ _asnArgs selectG)
+      whereClause <- translateBoolExpToExpression [] tableName whereClauseWithPermissions
+      orderBy <- traverse (translateOrderBy tableName) (_saOrderBy $ _asnArgs selectG)
       pure
         IR.Q.Query
           { _qFields = _faaFields,
@@ -165,30 +165,107 @@ mkPlan session (SourceConfig {}) ir = do
                     _tpLimit (_asnPerm selectG)
                   ],
             _qOffset = fmap fromIntegral (_saOffset (_asnArgs selectG)),
-            _qWhere = Just whereClause,
+            _qWhere = whereClause,
             _qOrderBy = orderBy
           }
 
     translateOrderBy ::
-      Maybe (NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector))) ->
-      m [IR.O.OrderBy]
-    translateOrderBy = \case
-      Nothing -> pure []
-      Just orderBys ->
-        do
-          NE.toList
-          <$> for orderBys \OrderByItemG {..} -> case obiColumn of
-            AOCColumn (ColumnInfo {ciColumn = dynColumnName}) ->
-              pure
-                IR.O.OrderBy
-                  { column = dynColumnName,
-                    -- NOTE: Picking a default ordering.
-                    ordering = fromMaybe IR.O.Ascending obiType
-                  }
-            AOCObjectRelation {} ->
-              throw400 NotSupported "translateOrderBy: AOCObjectRelation unsupported in the Data Connector backend"
-            AOCArrayAggregation {} ->
-              throw400 NotSupported "translateOrderBy: AOCArrayAggregation unsupported in the Data Connector backend"
+      IR.T.Name ->
+      NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector)) ->
+      CPS.WriterT IR.R.TableRelationships m IR.O.OrderBy
+    translateOrderBy sourceTableName orderByItems = do
+      orderByElementsAndRelations <- for orderByItems \OrderByItemG {..} -> do
+        let orderDirection = fromMaybe IR.O.Ascending obiType
+        translateOrderByElement sourceTableName orderDirection [] obiColumn
+      relations <- lift . mergeOrderByRelations $ snd <$> orderByElementsAndRelations
+      pure
+        IR.O.OrderBy
+          { _obRelations = relations,
+            _obElements = fst <$> orderByElementsAndRelations
+          }
+
+    translateOrderByElement ::
+      IR.T.Name ->
+      IR.O.OrderDirection ->
+      [IR.R.RelationshipName] ->
+      AnnotatedOrderByElement 'DataConnector (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m (IR.O.OrderByElement, HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+    translateOrderByElement sourceTableName orderDirection targetReversePath = \case
+      AOCColumn (ColumnInfo {..}) ->
+        pure
+          ( IR.O.OrderByElement
+              { _obeTargetPath = reverse targetReversePath,
+                _obeTarget = IR.O.OrderByColumn ciColumn,
+                _obeOrderDirection = orderDirection
+              },
+            mempty
+          )
+      AOCObjectRelation relationshipInfo filterExp orderByElement -> do
+        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement _rTargetTable orderDirection (relationshipName : targetReversePath) orderByElement
+
+        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp subOrderByRelations)]
+
+        pure (translatedOrderByElement, orderByRelations)
+      AOCArrayAggregation relationshipInfo filterExp aggregateOrderByElement -> do
+        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        orderByTarget <- case aggregateOrderByElement of
+          AAOCount ->
+            pure IR.O.OrderByStarCountAggregate
+          AAOOp aggFunctionTxt ColumnInfo {..} -> do
+            aggFunction <- lift $ translateSingleColumnAggregateFunction aggFunctionTxt
+            pure . IR.O.OrderBySingleColumnAggregate $ IR.A.SingleColumnAggregate aggFunction ciColumn
+
+        let translatedOrderByElement =
+              IR.O.OrderByElement
+                { _obeTargetPath = reverse (relationshipName : targetReversePath),
+                  _obeTarget = orderByTarget,
+                  _obeOrderDirection = orderDirection
+                }
+
+        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp mempty)]
+        pure (translatedOrderByElement, orderByRelations)
+
+    mergeOrderByRelations ::
+      Foldable f =>
+      f (HashMap IR.R.RelationshipName IR.O.OrderByRelation) ->
+      m (HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+    mergeOrderByRelations orderByRelationsList =
+      foldM mergeMap mempty orderByRelationsList
+      where
+        mergeMap :: HashMap IR.R.RelationshipName IR.O.OrderByRelation -> HashMap IR.R.RelationshipName IR.O.OrderByRelation -> m (HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+        mergeMap left right = foldM (\targetMap (relName, orderByRel) -> HashMap.alterF (maybe (pure $ Just orderByRel) (fmap Just . mergeOrderByRelation orderByRel)) relName targetMap) left $ HashMap.toList right
+
+        mergeOrderByRelation :: IR.O.OrderByRelation -> IR.O.OrderByRelation -> m IR.O.OrderByRelation
+        mergeOrderByRelation right left =
+          if IR.O._obrWhere left == IR.O._obrWhere right
+            then do
+              mergedSubrelations <- mergeMap (IR.O._obrSubrelations left) (IR.O._obrSubrelations right)
+              pure $ IR.O.OrderByRelation (IR.O._obrWhere left) mergedSubrelations
+            else throw500 "mergeOrderByRelations: Differing filter expressions found for the same table"
+
+    recordTableRelationshipFromRelInfo ::
+      IR.T.Name ->
+      RelInfo 'DataConnector ->
+      CPS.WriterT IR.R.TableRelationships m (IR.R.RelationshipName, IR.R.Relationship)
+    recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
+      let relationshipName = IR.R.mkRelationshipName riName
+      let relationshipType = case riType of
+            ObjRel -> IR.R.ObjectRelationship
+            ArrRel -> IR.R.ArrayRelationship
+      let relationship =
+            IR.R.Relationship
+              { _rTargetTable = riRTable,
+                _rRelationshipType = relationshipType,
+                _rColumnMapping = riMapping
+              }
+      recordTableRelationship
+        sourceTableName
+        relationshipName
+        relationship
+      pure (relationshipName, relationship)
 
     translateAnnFields ::
       FieldPrefix ->
@@ -216,7 +293,7 @@ mkPlan session (SourceConfig {}) ir = do
         let targetTable = _aosTableFrom (_aarAnnSelect objRel)
         let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName objRel
         FieldsAndAggregates {..} <- translateAnnFields noPrefix targetTable (_aosFields (_aarAnnSelect objRel))
-        whereClause <- translateBoolExp [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
+        whereClause <- translateBoolExpToExpression [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
 
         recordTableRelationship
           sourceTableName
@@ -233,10 +310,10 @@ mkPlan session (SourceConfig {}) ir = do
             ( IR.Q.Query
                 { _qFields = _faaFields,
                   _qAggregates = _faaAggregates,
-                  _qWhere = Just whereClause,
+                  _qWhere = whereClause,
                   _qLimit = Nothing,
                   _qOffset = Nothing,
-                  _qOrderBy = []
+                  _qOrderBy = Nothing
                 }
             )
       AFArrayRelation (ASSimple arrayRelationSelect) -> do
@@ -310,18 +387,7 @@ mkPlan session (SourceConfig {}) ir = do
       AFCount countAggregate -> pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) (IR.A.Count countAggregate)
       AFOp AggregateOp {..} -> do
         let fieldPrefix' = fieldPrefix <> prefixWith fieldName
-        aggFunction <- case _aoOp of
-          "avg" -> pure IR.A.Average
-          "max" -> pure IR.A.Max
-          "min" -> pure IR.A.Min
-          "stddev_pop" -> pure IR.A.StandardDeviationPopulation
-          "stddev_samp" -> pure IR.A.StandardDeviationSample
-          "stddev" -> pure IR.A.StandardDeviationSample
-          "sum" -> pure IR.A.Sum
-          "var_pop" -> pure IR.A.VariancePopulation
-          "var_samp" -> pure IR.A.VarianceSample
-          "variance" -> pure IR.A.VarianceSample
-          unknownFunc -> throw500 $ "translateAggregateField: Unknown aggregate function encountered: " <> unknownFunc
+        aggFunction <- translateSingleColumnAggregateFunction _aoOp
 
         fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
           case columnField of
@@ -338,6 +404,20 @@ mkPlan session (SourceConfig {}) ir = do
         -- to us
         pure mempty
 
+    translateSingleColumnAggregateFunction :: Text -> m IR.A.SingleColumnAggregateFunction
+    translateSingleColumnAggregateFunction = \case
+      "avg" -> pure IR.A.Average
+      "max" -> pure IR.A.Max
+      "min" -> pure IR.A.Min
+      "stddev_pop" -> pure IR.A.StandardDeviationPopulation
+      "stddev_samp" -> pure IR.A.StandardDeviationSample
+      "stddev" -> pure IR.A.StandardDeviationSample
+      "sum" -> pure IR.A.Sum
+      "var_pop" -> pure IR.A.VariancePopulation
+      "var_samp" -> pure IR.A.VarianceSample
+      "variance" -> pure IR.A.VarianceSample
+      unknownFunc -> throw500 $ "translateSingleColumnAggregateFunction: Unknown aggregate function encountered: " <> unknownFunc
+
     prepareLiterals ::
       UnpreparedValue 'DataConnector ->
       m IR.S.Literal
@@ -349,6 +429,14 @@ mkPlan session (SourceConfig {}) ir = do
         Nothing -> throw400 NotSupported ("prepareLiterals: session var not found: " <>> v)
         Just s -> pure (IR.S.ValueLiteral (IR.S.String s))
 
+    translateBoolExpToExpression ::
+      [IR.R.RelationshipName] ->
+      IR.T.Name ->
+      AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m (Maybe IR.E.Expression)
+    translateBoolExpToExpression columnRelationshipReversePath sourceTableName boolExp = do
+      removeAlwaysTrueExpression <$> translateBoolExp columnRelationshipReversePath sourceTableName boolExp
+
     translateBoolExp ::
       [IR.R.RelationshipName] ->
       IR.T.Name ->
@@ -356,28 +444,16 @@ mkPlan session (SourceConfig {}) ir = do
       CPS.WriterT IR.R.TableRelationships m IR.E.Expression
     translateBoolExp columnRelationshipReversePath sourceTableName = \case
       BoolAnd xs ->
-        mkIfZeroOrMany IR.E.And <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolOr xs ->
-        mkIfZeroOrMany IR.E.Or <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolNot x ->
         IR.E.Not <$> (translateBoolExp columnRelationshipReversePath sourceTableName) x
       BoolField (AVColumn c xs) ->
         lift $ mkIfZeroOrMany IR.E.And <$> traverse (translateOp columnRelationshipReversePath (ciColumn c)) xs
       BoolField (AVRelationship relationshipInfo boolExp) -> do
-        let relationshipName = IR.R.mkRelationshipName $ riName relationshipInfo
-        let targetTable = riRTable relationshipInfo
-        let relationshipType = case riType relationshipInfo of
-              ObjRel -> IR.R.ObjectRelationship
-              ArrRel -> IR.R.ArrayRelationship
-        recordTableRelationship
-          sourceTableName
-          relationshipName
-          IR.R.Relationship
-            { _rTargetTable = targetTable,
-              _rRelationshipType = relationshipType,
-              _rColumnMapping = riMapping relationshipInfo
-            }
-        translateBoolExp (relationshipName : columnRelationshipReversePath) targetTable boolExp
+        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        translateBoolExp (relationshipName : columnRelationshipReversePath) _rTargetTable boolExp
       BoolExists _ ->
         lift $ throw400 NotSupported "The BoolExists expression type is not supported by the Data Connector backend"
       where
@@ -387,6 +463,18 @@ mkPlan session (SourceConfig {}) ir = do
         mkIfZeroOrMany mk = \case
           [singleExp] -> singleExp
           zeroOrManyExps -> mk zeroOrManyExps
+
+    removeAlwaysTrueExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysTrueExpression = \case
+      IR.E.And [] -> Nothing
+      IR.E.Not (IR.E.Or []) -> Nothing
+      other -> Just other
+
+    removeAlwaysFalseExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysFalseExpression = \case
+      IR.E.Or [] -> Nothing
+      IR.E.Not (IR.E.And []) -> Nothing
+      other -> Just other
 
     translateOp ::
       [IR.R.RelationshipName] ->

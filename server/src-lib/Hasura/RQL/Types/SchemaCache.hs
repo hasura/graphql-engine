@@ -83,7 +83,6 @@ module Hasura.RQL.Types.SchemaCache
     getCols,
     getRels,
     getComputedFieldInfos,
-    RelInfo (..),
     RolePermInfoMap,
     InsPermInfo (..),
     UpdPermInfo (..),
@@ -112,6 +111,9 @@ module Hasura.RQL.Types.SchemaCache
     initialResourceVersion,
     getBoolExpDeps,
     InlinedAllowlist,
+    BoolExpM (..),
+    BoolExpCtx (..),
+    getOpExpDeps,
   )
 where
 
@@ -711,21 +713,10 @@ getRemoteDependencies schemaCache sourceName =
       SORemoteSchemaPermission {} -> False
       SORole {} -> False
 
--- | The table type context of schema dependency discovery. Boolean expressions
--- may refer to a so-called 'root table' (identified by a '$'-sign in the
--- expression input syntax) or the 'current' table.
-data BoolExpCtx b = BoolExpCtx
-  { source :: SourceName,
-    -- | Reference to the 'current' table type.
-    currTable :: TableName b,
-    -- | Reference to the 'root' table type.
-    rootTable :: TableName b
-  }
-
 -- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
   forall b.
-  Backend b =>
+  (GetAggregationPredicatesDeps b) =>
   SourceName ->
   TableName b ->
   AnnBoolExpPartialSQL b ->
@@ -733,17 +724,9 @@ getBoolExpDeps ::
 getBoolExpDeps source tableName =
   runBoolExpM (BoolExpCtx {source = source, currTable = tableName, rootTable = tableName}) . getBoolExpDeps'
 
--- | The monad for doing schema dependency discovery for boolean expressions.
--- maintains the table context of the expressions being translated.
-newtype BoolExpM b a = BoolExpM {unBoolExpM :: Reader (BoolExpCtx b) a}
-  deriving (Functor, Applicative, Monad, MonadReader (BoolExpCtx b))
-
-runBoolExpM :: BoolExpCtx b -> BoolExpM b a -> a
-runBoolExpM ctx = flip runReader ctx . unBoolExpM
-
 getBoolExpDeps' ::
   forall b.
-  Backend b =>
+  (Backend b, GetAggregationPredicatesDeps b) =>
   AnnBoolExpPartialSQL b ->
   BoolExpM b [SchemaDependency]
 getBoolExpDeps' = \case
@@ -767,7 +750,7 @@ getBoolExpDeps' = \case
 
 getColExpDeps ::
   forall b.
-  Backend b =>
+  (Backend b, GetAggregationPredicatesDeps b) =>
   AnnBoolExpFld b (PartialSQLExp b) ->
   BoolExpM b [SchemaDependency]
 getColExpDeps bexp = do
@@ -777,7 +760,7 @@ getColExpDeps bexp = do
       let columnName = ciColumn colInfo
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
-       in (colDep :) <$> mkOpExpDeps opExps
+       in (colDep :) <$> getOpExpDeps opExps
     AVRelationship relInfo relBoolExp ->
       let relationshipName = riName relInfo
           relationshipTable = riRTable relInfo
@@ -797,19 +780,24 @@ getColExpDeps bexp = do
               let computedFieldDep =
                     mkComputedFieldDep' $
                       bool DRSessionVariable DROnType $ any hasStaticExp opExps
-               in (computedFieldDep :) <$> mkOpExpDeps opExps
+               in (computedFieldDep :) <$> getOpExpDeps opExps
             CFBETable cfTable cfTableBoolExp ->
               (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
-  where
-    mkOpExpDeps :: [OpExpG b (PartialSQLExp b)] -> BoolExpM b [SchemaDependency]
-    mkOpExpDeps opExps = do
-      BoolExpCtx {source, rootTable, currTable} <- ask
-      pure $ do
-        RootOrCurrentColumn rootOrCol col <- mapMaybe opExpDepCol opExps
-        let table = case rootOrCol of
-              IsRoot -> rootTable
-              IsCurrent -> currTable
-        pure $ mkColDep @b DROnType source table col
+    AVAggregationPredicates aggPreds -> getAggregationPredicateDeps aggPreds
+
+getOpExpDeps ::
+  forall b.
+  (Backend b) =>
+  [OpExpG b (PartialSQLExp b)] ->
+  BoolExpM b [SchemaDependency]
+getOpExpDeps opExps = do
+  BoolExpCtx {source, rootTable, currTable} <- ask
+  pure $ do
+    RootOrCurrentColumn rootOrCol col <- mapMaybe opExpDepCol opExps
+    let table = case rootOrCol of
+          IsRoot -> rootTable
+          IsCurrent -> currTable
+    pure $ mkColDep @b DROnType source table col
 
 -- | Asking for a table's fields info without explicit @'SourceName' argument.
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.

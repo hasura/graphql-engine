@@ -11,7 +11,6 @@ module Harness.Test.Fixture
     BackendType (..),
     defaultSource,
     defaultBackendTypeString,
-    defaultSchema,
     noLocalTestEnvironment,
     SetupAction (..),
     Options (..),
@@ -21,11 +20,12 @@ module Harness.Test.Fixture
   )
 where
 
+import Data.UUID.V4 (nextRandom)
 import Harness.Exceptions
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.Hspec.Extended
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
 import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (mapSpecItem)
@@ -43,14 +43,14 @@ import Test.Hspec.Core.Spec (mapSpecItem)
 --
 -- For a more general version that can run tests for any 'Fixture'@ a@, see
 -- 'runWithLocalTestEnvironment'.
-run :: [Fixture ()] -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
-run contexts tests = do
+run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
+run fixtures tests = do
   let mappedTests opts =
         mapSpecItem
           actionWithTestEnvironmentMapping
           (mapItemAction actionWithTestEnvironmentMapping)
           (tests opts)
-  runWithLocalTestEnvironment contexts mappedTests
+  runWithLocalTestEnvironment fixtures mappedTests
 
 -- | Observe that there is a direct correspondance (i.e. an isomorphism) from
 -- @TestEnvironment@ to @(TestEnvironment, ())@ within 'ActionWith'.
@@ -77,7 +77,7 @@ actionWithTestEnvironmentMapping actionWith (testEnvironment, _) = actionWith te
 -- See 'Fixture' for details.
 runWithLocalTestEnvironment ::
   forall a.
-  [Fixture a] ->
+  NonEmpty (Fixture a) ->
   (Options -> SpecWith (TestEnvironment, a)) ->
   SpecWith TestEnvironment
 runWithLocalTestEnvironment fixtures tests =
@@ -91,10 +91,22 @@ runWithLocalTestEnvironment fixtures tests =
 -- and at teardown, which is why we use a custom re-implementation of
 -- @bracket@.
 fixtureBracket :: Fixture b -> ((TestEnvironment, b) -> IO a) -> TestEnvironment -> IO ()
-fixtureBracket Fixture {mkLocalTestEnvironment, setupTeardown} actionWith globalTestEnvironment =
+fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith globalTestEnvironment =
   mask \restore -> do
     localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
-    let testEnvironment = (globalTestEnvironment, localTestEnvironment)
+
+    -- create a unique id to differentiate this set of tests
+    uniqueTestId <- nextRandom
+
+    let globalTestEnvWithUnique =
+          globalTestEnvironment
+            { backendType = case name of
+                Backend db -> Just db
+                _ -> Nothing,
+              uniqueTestId = uniqueTestId
+            }
+
+    let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
 
     cleanup <- runSetupActions (setupTeardown testEnvironment)
 

@@ -44,7 +44,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Source (SourceInfo)
-import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -55,14 +54,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'BigQuery where
   -- top level parsers
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields = bqBuildTableRelayQueryFields
+  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields = bqBuildTableInsertMutationFields
-  buildTableUpdateMutationFields = bqBuildTableUpdateMutationFields
-  buildTableDeleteMutationFields = bqBuildTableDeleteMutationFields
-  buildFunctionQueryFields = bqBuildFunctionQueryFields
-  buildFunctionRelayQueryFields = bqBuildFunctionRelayQueryFields
-  buildFunctionMutationFields = bqBuildFunctionMutationFields
+  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -71,7 +70,7 @@ instance BackendSchema 'BigQuery where
 
   -- individual components
   columnParser = bqColumnParser
-  scalarSelectionArgumentsParser = bqScalarSelectionArgumentsParser
+  scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = bqOrderByOperators
   comparisonExps = bqComparisonExps
   countTypeInput = bqCountTypeInput
@@ -85,95 +84,10 @@ instance BackendTableSelectSchema 'BigQuery where
   tableSelectionSet = defaultTableSelectionSet
 
 ----------------------------------------------------------------
--- Top level parsers
-
-bqBuildTableRelayQueryFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  NESeq (ColumnInfo 'BigQuery) ->
-  m [P.FieldParser n a]
-bqBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
-  pure []
-
-bqBuildTableInsertMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  Scenario ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-bqBuildTableInsertMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
-  pure []
-
-bqBuildTableUpdateMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  Scenario ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-bqBuildTableUpdateMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
-  pure []
-
-bqBuildTableDeleteMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  Scenario ->
-  SourceInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  TableInfo 'BigQuery ->
-  C.GQLNameIdentifier ->
-  m [P.FieldParser n a]
-bqBuildTableDeleteMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
-  pure []
-
-bqBuildFunctionQueryFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  FunctionName 'BigQuery ->
-  FunctionInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  m [P.FieldParser n a]
-bqBuildFunctionQueryFields _ _ _ _ _ =
-  pure []
-
-bqBuildFunctionRelayQueryFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  FunctionName 'BigQuery ->
-  FunctionInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  NESeq (ColumnInfo 'BigQuery) ->
-  m [P.FieldParser n a]
-bqBuildFunctionRelayQueryFields _mkRootFieldName _sourceName _functionName _functionInfo _tableName _pkeyColumns =
-  pure []
-
-bqBuildFunctionMutationFields ::
-  MonadBuildSchema 'BigQuery r m n =>
-  MkRootFieldName ->
-  SourceInfo 'BigQuery ->
-  FunctionName 'BigQuery ->
-  FunctionInfo 'BigQuery ->
-  TableName 'BigQuery ->
-  m [P.FieldParser n a]
-bqBuildFunctionMutationFields _ _ _ _ _ =
-  pure []
-
-----------------------------------------------------------------
 -- Individual components
 
 bqColumnParser ::
-  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'BigQuery ->
   G.Nullability ->
   m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
@@ -230,12 +144,6 @@ bqColumnParser columnType (G.Nullability isNullable) =
     stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
     stringBased scalarName =
       P.string {P.pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar}
-
-bqScalarSelectionArgumentsParser ::
-  MonadParse n =>
-  ColumnType 'BigQuery ->
-  InputFieldsParser n (Maybe (ScalarSelectionArguments 'BigQuery))
-bqScalarSelectionArgumentsParser _columnType = pure Nothing
 
 bqOrderByOperators ::
   NamingCase ->
@@ -318,13 +226,13 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName Name.__like)
+                       (C.fromAutogeneratedName Name.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName Name.__nlike)
+                       (C.fromAutogeneratedName Name.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . IR.mkParameter <$> typedParser)
                    ],
@@ -333,13 +241,13 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName Name.__like)
+                       (C.fromAutogeneratedName Name.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName Name.__nlike)
+                       (C.fromAutogeneratedName Name.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . IR.mkParameter <$> typedParser)
                    ],
@@ -348,37 +256,37 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "contains"]))
+                       (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_st", "contains"]))
                        (Just "does the column contain the given geography value")
                        (ABackendSpecific . BigQuery.ASTContains . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "equals"]))
+                       (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_st", "equals"]))
                        (Just "is the column equal to given geography value (directionality is ignored)")
                        (ABackendSpecific . BigQuery.ASTEquals . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "touches"]))
+                       (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_st", "touches"]))
                        (Just "does the column have at least one point in common with the given geography value")
                        (ABackendSpecific . BigQuery.ASTTouches . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "within"]))
+                       (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_st", "within"]))
                        (Just "is the column contained in the given geography value")
                        (ABackendSpecific . BigQuery.ASTWithin . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects"]))
+                       (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_st", "intersects"]))
                        (Just "does the column spatially intersect the given geography value")
                        (ABackendSpecific . BigQuery.ASTIntersects . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "d", "within"]))
+                       (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_st", "d", "within"]))
                        (Just "is the column within a given distance from the given geometry value")
                        (ABackendSpecific . BigQuery.ASTDWithin <$> dWithinGeogOpParser)
                    ]
@@ -403,7 +311,7 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadMemoize m, MonadBuildSchema 'BigQuery r m n) =>
   m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
@@ -524,14 +432,3 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       fieldName <- textToName argumentName
       let argParser = P.field fieldName Nothing typedParser
       pure $ argParser `P.bindFields` \inputValue -> pure ((argumentName, BigQuery.AEInput $ IR.mkParameter inputValue))
-
-{-
-NOTE: Unused. Should we remove?
--- | Remote join field parser.
--- Currently unsupported: returns Nothing for now.
-bqRemoteRelationshipField ::
-  MonadBuildSchema 'BigQuery r m n =>
-  RemoteFieldInfo (DBJoinField 'BigQuery) ->
-  m (Maybe [FieldParser n (AnnotatedField 'BigQuery)])
-bqRemoteRelationshipField _remoteFieldInfo = pure Nothing
--}

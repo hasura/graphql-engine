@@ -37,7 +37,7 @@
         );
         INSERT INTO author_local (name)
           VALUES ('Author 1'), ('Author 2');
-        
+
         create table article_local(
             id serial primary key,
             author_id serial,
@@ -80,19 +80,19 @@
   response:
     data:
       authorDetails:
-      - id: 1
-        name: 'Author 1'
-        __typename: AuthorDetails
-      - id: 2
-        name: 'Author 2'
-        __typename: AuthorDetails
+        - id: 1
+          name: "Author 1"
+          __typename: authorDetails
+        - id: 2
+          name: "Author 2"
+          __typename: authorDetails
       articleLocal:
-      - id: 1
-        title: 'Article 1'
-        __typename: ArticleLocal
-      - id: 2
-        title: 'Article 2'
-        __typename: ArticleLocal
+        - id: 1
+          title: "Article 1"
+          __typename: ArticleLocal
+        - id: 2
+          title: "Article 2"
+          __typename: ArticleLocal
   query:
     query: |
       query {
@@ -115,10 +115,10 @@
     data:
       author_detail:
         id: 1
-        name: 'Author 1'
-        __typename: AuthorDetails
+        name: "Author 1"
+        __typename: authorDetails
       articleLocalByPk:
-        title: 'New Article 1'
+        title: "New Article 1"
         __typename: ArticleLocal
   query:
     query: |
@@ -162,7 +162,7 @@
   response:
     data:
       add_author:
-        __typename: AuthorDetails
+        __typename: authorDetails
         id: 3
         name: Author 3
   query:
@@ -181,7 +181,7 @@
   response:
     data:
       delete_one_author:
-        __typename: AuthorDetails
+        __typename: authorDetails
         id: 3
         name: Author 3
   query:
@@ -217,7 +217,6 @@
       source: pg1
       sql: |
         drop table author_local;
-
 
 - description: untrack table
   url: /v1/metadata

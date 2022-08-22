@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | In order to avoid circular dependencies while splitting
 -- 'Hasura.RQL.Types.Metadata' into multiple modules, some definitions must be
@@ -418,7 +419,16 @@ mkSourceMetadata ::
   SourceCustomization ->
   BackendSourceMetadata
 mkSourceMetadata name backendSourceKind config customization =
-  AB.mkAnyBackend $ SourceMetadata @b name backendSourceKind mempty mempty config Nothing customization
+  AB.mkAnyBackend $
+    SourceMetadata
+      @b
+      name
+      backendSourceKind
+      mempty
+      mempty
+      config
+      Nothing
+      customization
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
@@ -489,6 +499,10 @@ deriving newtype instance (Backend b) => Eq (BackendConfigWrapper b)
 deriving newtype instance (Backend b) => ToJSON (BackendConfigWrapper b)
 
 deriving newtype instance (Backend b) => FromJSON (BackendConfigWrapper b)
+
+deriving newtype instance (Semigroup (BackendConfig b)) => Semigroup (BackendConfigWrapper b)
+
+deriving newtype instance (Monoid (BackendConfig b)) => Monoid (BackendConfigWrapper b)
 
 data CatalogStateType
   = CSTCli

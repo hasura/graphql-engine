@@ -1,6 +1,6 @@
 ﻿import { Config }  from "./config";
-import { connect } from "./db";
-import { coerceUndefinedOrNullToEmptyArray, coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, stringToBool, logDeep, isEmptyObject, tableNameEquals } from "./util";
+import { connect, SqlLogger } from "./db";
+import { coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -16,6 +16,8 @@ import {
     Field,
     Aggregate,
     TableName,
+    OrderDirection,
+    UnaryComparisonOperator,
   } from "./types";
 
 const SqlString = require('sqlstring-sqlite');
@@ -56,85 +58,61 @@ function extractRawTableName(tableName: TableName): string {
   return escapeIdentifier(extractRawTableName(tableName));
 }
 
-function json_object(ts: Array<TableRelationships>, fields: Fields, table: TableName): string {
-  const result = omap(fields, (k,v) => {
-    switch(v.type) {
+function json_object(relationships: Array<TableRelationships>, fields: Fields, table: TableName): string {
+  const result = omap(fields, (fieldName, field) => {
+    switch(field.type) {
       case "column":
-        return [`${escapeString(k)}, ${escapeIdentifier(v.column)}`];
+        return `${escapeString(fieldName)}, ${escapeIdentifier(field.column)}`;
       case "relationship":
-        const result = ts.flatMap((x) => {
-          if(tableNameEquals(x.source_table)(table)) {
-            const rel = x.relationships[v.relationship];
-            if(rel) {
-              return [`'${k}', ${relationship(ts, rel, v, table)}`];
-            }
-          }
-          return [];
-        });
-        if(result.length < 1) {
-          console.log("Couldn't find relationship for field", k, v, ts);
+        const tableRelationships = relationships.find(tr => tableNameEquals(tr.source_table)(table));
+        if (tableRelationships === undefined) {
+          throw new Error(`Couldn't find table relationships for table ${table}`);
         }
-        return result;
+        const rel = tableRelationships.relationships[field.relationship];
+        if(rel === undefined) {
+          throw new Error(`Couldn't find relationship ${field.relationship} for field ${fieldName} on table ${table}`);
+        }
+        return `'${fieldName}', ${relationship(relationships, rel, field, table)}`;
+      default:
+        return unreachable(field["type"]);
     }
-  }).flatMap((e) => e).join(", ");
+  }).join(", ");
 
   return tag('json_object', `JSON_OBJECT(${result})`);
 }
 
-function where_clause(ts: Array<TableRelationships>, w: Expression | null, t: TableName): Array<string> {
-  if(w === null) {
-    return [];
-  } else {
-    switch(w.type) {
-      case "not":
-        const aNot = where_clause(ts, w.expression, t);
-        if(aNot.length > 0) {
-          return [`(NOT ${aNot})`];
-        }
-        break;
-      case "and":
-        const aAnd = w.expressions.flatMap(x => where_clause(ts, x, t));
-        if(aAnd.length > 0) {
-          return [`(${aAnd.join(" AND ")})`];
-        }
-        break;
-      case "or":
-        const aOr = w.expressions.flatMap(x => where_clause(ts, x, t));
-        if(aOr.length > 0) {
-          return [`(${aOr.join(" OR ")})`];
-        }
-        break;
-      case "unary_op":
-        switch(w.operator) {
-          case 'is_null':
-            if(w.column.path.length < 1) {
-              return [`(${escapeIdentifier(w.column.name)} IS NULL)`];
-            } else {
-              return [exists(ts, w.column, t, 'IS NULL')];
-            }
-          default:
-            if(w.column.path.length < 1) {
-              return [`(${escapeIdentifier(w.column.name)} ${w.operator})`];
-            } else {
-              return [exists(ts, w.column, t, w.operator)];
-            }
-        }
-      case "binary_op":
-        const bop = bop_op(w.operator);
-        if(w.column.path.length < 1) {
-          return [`${escapeIdentifier(w.column.name)} ${bop} ${bop_val(w.value, t)}`];
-        } else {
-          return [exists(ts, w.column, t, `${bop} ${bop_val(w.value, t)}`)];
-        }
-      case "binary_arr_op":
-        const bopA = bop_array(w.operator);
-        if(w.column.path.length < 1) {
-          return [`(${escapeIdentifier(w.column.name)} ${bopA} (${w.values.map(v => escapeString(v)).join(", ")}))`];
-        } else {
-          return [exists(ts,w.column,t, `${bopA} (${w.values.map(v => escapeString(v)).join(", ")})`)];
-        }
-    }
-    return [];
+function where_clause(relationships: Array<TableRelationships>, expression: Expression, tableName: TableName): string {
+  switch(expression.type) {
+    case "not":
+      const aNot = where_clause(relationships, expression.expression, tableName);
+        return `(NOT ${aNot})`;
+    case "and":
+      const aAnd = expression.expressions.flatMap(x => where_clause(relationships, x, tableName));
+      return aAnd.length > 0
+        ? `(${aAnd.join(" AND ")})`
+        : "(1 = 1)" // true
+    case "or":
+      const aOr = expression.expressions.flatMap(x => where_clause(relationships, x, tableName));
+      return aOr.length > 0
+        ? `(${aOr.join(" OR ")})`
+        : "(1 = 0)" // false
+    case "unary_op":
+      const uop = uop_op(expression.operator);
+      return expression.column.path.length < 1
+        ? `(${escapeIdentifier(expression.column.name)} ${uop})`
+        : exists(relationships, expression.column, tableName, uop);
+    case "binary_op":
+      const bop = bop_op(expression.operator);
+      return expression.column.path.length < 1
+        ? `${escapeIdentifier(expression.column.name)} ${bop} ${bop_val(expression.value, tableName)}`
+        : exists(relationships, expression.column, tableName, `${bop} ${bop_val(expression.value, tableName)}`);
+    case "binary_arr_op":
+      const bopA = bop_array(expression.operator);
+      return expression.column.path.length < 1
+        ? `(${escapeIdentifier(expression.column.name)} ${bopA} (${expression.values.map(v => escapeString(v)).join(", ")}))`
+        : exists(relationships,expression.column,tableName, `${bopA} (${expression.values.map(v => escapeString(v)).join(", ")})`);
+    default:
+      return unreachable(expression['type']);
   }
 }
 
@@ -260,7 +238,7 @@ function array_relationship(
     wWhere: Expression | null,
     wLimit: number | null,
     wOffset: number | null,
-    wOrder: Array<OrderBy>,
+    wOrder: OrderBy | null,
   ): string {
     const innerFromClauses = `${where(ts, wWhere, wJoin, table)} ${order(wOrder)} ${limit(wLimit)} ${offset(wOffset)}`;
     const aggregateSelect  = aggregates_query(table, aggregates, innerFromClauses);
@@ -268,7 +246,7 @@ function array_relationship(
     const fieldFrom        = isEmptyObject(fields)     ? '' : (() => {
       // NOTE: The order of table prefixes are currently assumed to be from "parent" to "child".
       // NOTE: The reuse of the 'j' identifier should be safe due to scoping. This is confirmed in testing.
-      if(wOrder.length < 1) {
+      if(wOrder === null || wOrder.elements.length < 1) {
         return `FROM ( SELECT ${json_object(ts, fields, table)} AS j FROM ${escapeTableName(table)} ${innerFromClauses})`;
       } else {
         const innerSelect = `SELECT * FROM ${escapeTableName(table)} ${innerFromClauses}`;
@@ -316,7 +294,7 @@ function relationship(ts: Array<TableRelationships>, r: Relationship, field: Rel
         coerceUndefinedToNull(field.query.where),
         coerceUndefinedToNull(field.query.limit),
         coerceUndefinedToNull(field.query.offset),
-        coerceUndefinedOrNullToEmptyArray(field.query.order_by),
+        coerceUndefinedToNull(field.query.order_by),
       ));
   }
 }
@@ -349,6 +327,14 @@ function bop_op(o: BinaryComparisonOperator): string {
   return tag('bop_op',result);
 }
 
+function uop_op(o: UnaryComparisonOperator): string {
+  let result = o;
+  switch(o) {
+    case 'is_null':               result = "IS NULL"; break;
+  }
+  return tag('uop_op',result);
+}
+
 function bop_val(v: ComparisonValue, t: TableName): string {
   switch(v.type) {
     case "column": return tag('bop_val', bop_col(v.column, t));
@@ -356,11 +342,31 @@ function bop_val(v: ComparisonValue, t: TableName): string {
   }
 }
 
-function order(o: Array<OrderBy>): string {
-  if(o.length < 1) {
+function orderDirection(orderDirection: OrderDirection): string {
+  switch (orderDirection) {
+    case "asc":
+    case "desc":
+      return orderDirection.toUpperCase();
+    default:
+      return unreachable(orderDirection);
+  }
+}
+
+function order(orderBy: OrderBy | null): string {
+  if (orderBy === null || orderBy.elements.length < 1) {
     return "";
   }
-  const result = o.map(e => `${e.column} ${e.ordering}`).join(', ');
+
+  const result =
+    orderBy.elements
+      .map(orderByElement => {
+        if (orderByElement.target_path.length > 0 || orderByElement.target.type !== "column") {
+          throw new Error("Unsupported OrderByElement. Relations and aggregates and not supported.");
+        }
+        return `${orderByElement.target.column} ${orderDirection(orderByElement.order_direction)}`;
+      })
+      .join(', ');
+
   return tag('order',`ORDER BY ${result}`);
 }
 
@@ -370,12 +376,11 @@ function order(o: Array<OrderBy>): string {
  * @returns string representing the combined where clause
  */
 function where(ts: Array<TableRelationships>, whereExpression: Expression | null, joinArray: Array<string>, t: TableName): string {
-  const clauses = [...where_clause(ts, whereExpression, t), ...joinArray];
-  if(clauses.length < 1) {
-    return "";
-  } else {
-    return tag('where',`WHERE ${clauses.join(" AND ")}`);
-  }
+  const whereClause = whereExpression !== null ? [where_clause(ts, whereExpression, t)] : [];
+  const clauses = [...whereClause, ...joinArray];
+  return clauses.length < 1
+    ? ""
+    : tag('where',`WHERE ${clauses.join(" AND ")}`);
 }
 
 function limit(l: number | null): string {
@@ -406,7 +411,7 @@ function query(request: QueryRequest): string {
     coerceUndefinedToNull(request.query.where),
     coerceUndefinedToNull(request.query.limit),
     coerceUndefinedToNull(request.query.offset),
-    coerceUndefinedOrNullToEmptyArray(request.query.order_by),
+    coerceUndefinedToNull(request.query.order_by),
     );
   return tag('query', `SELECT ${result} as data`);
 }
@@ -419,7 +424,7 @@ function output(rows: any): QueryResponse {
   return JSON.parse(rows[0].data);
 }
 
-const DEBUGGING_TAGS = stringToBool(process.env['DEBUGGING_TAGS']);
+const DEBUGGING_TAGS = envToBool('DEBUGGING_TAGS');
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
  *
  * comment('a','b') => '/*\<a>\*\/ b /*\</a>*\/'
@@ -478,8 +483,8 @@ function tag(t: string, s: string): string {
  * ```
  *
  */
-export async function queryData(config: Config, queryRequest: QueryRequest): Promise<QueryResponse> {
-  const db = connect(config); // TODO: Should this be cached?
+export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse> {
+  const db = connect(config, sqlLogger); // TODO: Should this be cached?
   const q = query(queryRequest);
   const [result, metadata] = await db.query(q);
 

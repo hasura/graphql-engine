@@ -8,7 +8,7 @@ import Harness.GraphqlEngine (postV2Query_)
 import Harness.GraphqlEngine qualified as GraphQLEngine
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment, stopServer)
@@ -22,14 +22,16 @@ import Test.Hspec (SpecWith, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+              Fixture.setupTeardown = \testEnv ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnv,
+                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    }
+                ]
             }
         ]
     )
@@ -178,7 +180,7 @@ webhookServerMkLocalTestEnvironment _ = do
 
 -- * Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
   it "Creating an event trigger should create the SQL triggers" $ \(testEnvironment, (webhookServer, _)) -> do
     let webhookEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/hello"

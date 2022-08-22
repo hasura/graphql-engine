@@ -13,9 +13,8 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql, postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (Options (..))
-import Harness.Test.Context qualified as Context
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -25,21 +24,19 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
+  Fixture.run
     ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = Postgres.setup schema <> setupMetadata "postgres",
-              teardown = Postgres.teardown schema,
-              customOptions = Nothing
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Postgres.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Postgres testEnvironment
+                ]
             },
-          Context.Context
-            { name = Context.Backend Context.SQLServer,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = Sqlserver.setup schema <> setupMetadata "mssql",
-              teardown = Sqlserver.teardown schema,
-              customOptions = Nothing
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlserver.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.SQLServer testEnvironment
+                ]
             }
         ]
     )
@@ -64,7 +61,7 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
@@ -91,7 +88,7 @@ tests opts = do
               ]
               [graphql|
                 mutation author {
-                  insert_hasura_author(objects: { name: "Author 1" }) {
+                  insert_hasura_author(objects: [{ name: "Author 1" }]) {
                     returning {
                       uuid
                       name
@@ -212,41 +209,69 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Text -> (TestEnvironment, ()) -> IO ()
-setupMetadata backend (testEnvironment, _) = do
-  let select = backend <> "_create_select_permission"
-      insert = backend <> "_create_insert_permission"
+setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendType testEnvironment = do
+  let backend :: String
+      backend = Fixture.defaultBackendTypeString backendType
 
-  postMetadata_
-    testEnvironment
-    [yaml|
-      type: *select
-      args:
-        source: *backend
-        table:
-          schema: hasura
-          name: author
-        role: user
-        permission:
-          filter:
-            uuid: X-Hasura-User-Id
-          columns: '*'
-    |]
+      schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
 
-  postMetadata_
-    testEnvironment
-    [yaml|
-      type: *insert
-      args:
-        source: *backend
-        table:
-          schema: hasura
-          name: author
-        role: user
-        permission:
-          check: {}
-          set:
-            uuid: X-Hasura-User-Id
-            company: hasura
-          columns: '*'
-    |]
+      setup :: IO ()
+      setup =
+        postMetadata_
+          testEnvironment
+          [interpolateYaml|
+            type: bulk
+            args:
+            - type: #{backend}_create_select_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+                permission:
+                  filter:
+                    uuid: X-Hasura-User-Id
+                  columns: '*'
+
+            - type: #{backend}_create_insert_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+                permission:
+                  check: {}
+                  set:
+                    uuid: X-Hasura-User-Id
+                    company: hasura
+                  columns: '*'
+          |]
+
+      teardown :: IO ()
+      teardown =
+        postMetadata_
+          testEnvironment
+          [interpolateYaml|
+            type: bulk
+            args:
+            - type: #{backend}_drop_select_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+            - type: #{backend}_drop_insert_permission
+              args:
+                source: #{backend}
+                table:
+                  schema: #{schemaName}
+                  name: author
+                role: user
+          |]
+
+  Fixture.SetupAction setup \_ -> teardown

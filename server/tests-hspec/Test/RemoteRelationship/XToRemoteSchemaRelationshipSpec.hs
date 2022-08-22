@@ -26,8 +26,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.Test.Context (Context (..))
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
@@ -39,58 +38,49 @@ import Test.Hspec (SpecWith, describe, it)
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Context.runWithLocalTestEnvironment contexts tests
+spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    contexts = NE.fromList $ map mkContext [lhsPostgres, lhsSQLServer, lhsRemoteServer]
+    contexts = NE.fromList $ map mkFixture [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     lhsPostgres =
-      Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
-          setup = lhsPostgresSetup,
-          teardown = lhsPostgresTeardown,
-          customOptions = Nothing
+      (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
+          Fixture.setupTeardown = \(testEnv, _localEnv) ->
+            [lhsPostgresSetupAction testEnv]
         }
     lhsSQLServer =
-      Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
-          setup = lhsSQLServerSetup,
-          teardown = lhsSQLServerTeardown,
-          customOptions = Nothing
+      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
+          Fixture.setupTeardown = \(testEnv, _localEnv) ->
+            [lhsSQLServerSetupAction testEnv]
         }
     lhsRemoteServer =
-      Context
-        { name = Context.RemoteGraphQLServer,
-          mkLocalTestEnvironment = lhsRemoteServerMkLocalTestEnvironment,
-          setup = lhsRemoteServerSetup,
-          teardown = lhsRemoteServerTeardown,
-          customOptions = Nothing
+      (Fixture.fixture $ Fixture.RemoteGraphQLServer)
+        { Fixture.mkLocalTestEnvironment = lhsRemoteServerMkLocalTestEnvironment,
+          Fixture.setupTeardown = \(testEnv, localEnv) ->
+            [lhsRemoteServerSetupAction (testEnv, localEnv)]
         }
 
 -- | Uses a given RHS context to create a combined context.
-mkContext :: Context (Maybe Server) -> Context LocalTestTestEnvironment
-mkContext lhs =
-  Context
-    { name = lhsName,
-      mkLocalTestEnvironment = \testEnvironment -> do
+mkFixture :: Fixture.Fixture (Maybe Server) -> Fixture.Fixture LocalTestTestEnvironment
+mkFixture lhs =
+  Fixture.Fixture
+    { Fixture.name = lhsName,
+      Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         rhsServer <- rhsRemoteServerMkLocalTestEnvironment testEnvironment
         lhsServer <- lhsMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment lhsServer rhsServer,
-      setup = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) -> do
-        rhsRemoteSchemaSetup (testEnvironment, rhsServer)
-        lhsSetup (testEnvironment, lhsServer),
-      teardown = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) -> do
-        lhsTeardown (testEnvironment, lhsServer)
-        rhsRemoteSchemaTeardown (testEnvironment, rhsServer)
-        GraphqlEngine.clearMetadata testEnvironment,
-      customOptions = lhsOptions
+      Fixture.setupTeardown = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) ->
+        [ clearMetadataSetupAction testEnvironment,
+          rhsRemoteSchemaSetupAction (testEnvironment, rhsServer)
+        ]
+          <> lhsSetupTeardown (testEnvironment, lhsServer),
+      Fixture.customOptions = lhsOptions
     }
   where
-    Context
+    Fixture.Fixture
       { name = lhsName,
         mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-        setup = lhsSetup,
-        teardown = lhsTeardown,
+        setupTeardown = lhsSetupTeardown,
         customOptions = lhsOptions
       } = lhs
 
@@ -130,6 +120,12 @@ track =
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
+lhsPostgresSetupAction :: TestEnvironment -> Fixture.SetupAction
+lhsPostgresSetupAction testEnv =
+  Fixture.SetupAction
+    (lhsPostgresSetup (testEnv, Nothing))
+    (const $ lhsPostgresTeardown (testEnv, Nothing))
+
 lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
@@ -137,7 +133,7 @@ lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.Postgres
+      schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -148,9 +144,9 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable track
+  Postgres.createTable testEnvironment track
   Postgres.insertTable track
-  Schema.trackTable Context.Postgres sourceName track testEnvironment
+  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -176,7 +172,7 @@ args:
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresTeardown (testEnvironment, _) = do
   let sourceName = "source"
-  Schema.untrackTable Context.Postgres sourceName track testEnvironment
+  Schema.untrackTable Fixture.Postgres sourceName track testEnvironment
   Postgres.dropTable track
 
 --------------------------------------------------------------------------------
@@ -185,11 +181,18 @@ lhsPostgresTeardown (testEnvironment, _) = do
 lhsSQLServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
 lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
+lhsSQLServerSetupAction :: TestEnvironment -> Fixture.SetupAction
+lhsSQLServerSetupAction testEnv =
+  Fixture.SetupAction
+    (lhsSQLServerSetup (testEnv, Nothing))
+    (const $ lhsSQLServerTeardown (testEnv, Nothing))
+
 lhsSQLServerSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.SQLServer
+      schemaName = Schema.getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -202,7 +205,7 @@ args:
   -- setup tables only
   SQLServer.createTable track
   SQLServer.insertTable track
-  Schema.trackTable Context.SQLServer sourceName track testEnvironment
+  Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -228,7 +231,7 @@ args:
 lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerTeardown (testEnvironment, _) = do
   let sourceName = "source"
-  Schema.untrackTable Context.SQLServer sourceName track testEnvironment
+  Schema.untrackTable Fixture.SQLServer sourceName track testEnvironment
   SQLServer.dropTable track
 
 --------------------------------------------------------------------------------
@@ -403,6 +406,12 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
           t_album_id = pure albumId
         }
 
+lhsRemoteServerSetupAction :: (TestEnvironment, Maybe Server) -> Fixture.SetupAction
+lhsRemoteServerSetupAction (testEnv, server) =
+  Fixture.SetupAction
+    (lhsRemoteServerSetup (testEnv, server))
+    (const $ lhsRemoteServerTeardown (testEnv, server))
+
 lhsRemoteServerSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBObjectRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
@@ -471,6 +480,19 @@ rhsRemoteServerMkLocalTestEnvironment _ =
           artist_id = pure artist_id
         }
 
+rhsRemoteSchemaSetupAction :: (TestEnvironment, Server) -> Fixture.SetupAction
+rhsRemoteSchemaSetupAction (testEnv, server) =
+  Fixture.SetupAction
+    (rhsRemoteSchemaSetup (testEnv, server))
+    ( const $ rhsRemoteSchemaTeardown (testEnv, server)
+    )
+
+clearMetadataSetupAction :: TestEnvironment -> Fixture.SetupAction
+clearMetadataSetupAction testEnv =
+  Fixture.SetupAction
+    (pure ())
+    (const $ GraphqlEngine.clearMetadata testEnv)
+
 rhsRemoteSchemaSetup :: (TestEnvironment, Server) -> IO ()
 rhsRemoteSchemaSetup (testEnvironment, remoteServer) = do
   let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
@@ -490,13 +512,13 @@ rhsRemoteSchemaTeardown (_, server) = stopServer server
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 tests opts = describe "remote-schema-relationship" do
   schemaTests opts
   executionTests opts
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Context.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
+executionTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 executionTests opts = describe "execution" do
   -- fetches the relationship data
   it "related-data" \(testEnvironment, _) -> do
@@ -585,7 +607,7 @@ executionTests opts = describe "execution" do
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-schemaTests :: Context.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
+schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 schemaTests opts =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table

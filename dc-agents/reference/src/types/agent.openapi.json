@@ -139,6 +139,22 @@
           }
         }
       }
+    },
+    "/metrics": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain;version=0.0.4;charset=utf-8": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -163,6 +179,9 @@
         "properties": {
           "filtering": {
             "$ref": "#/components/schemas/FilteringCapabilities"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/MetricsCapabilities"
           },
           "mutations": {
             "$ref": "#/components/schemas/MutationCapabilities"
@@ -211,6 +230,7 @@
         "type": "object"
       },
       "RelationshipCapabilities": {},
+      "MetricsCapabilities": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
@@ -759,12 +779,7 @@
             "type": "number"
           },
           "order_by": {
-            "description": "Optionally order the results by the value of one or more fields",
-            "items": {
-              "$ref": "#/components/schemas/OrderBy"
-            },
-            "nullable": true,
-            "type": "array"
+            "$ref": "#/components/schemas/OrderBy"
           },
           "where": {
             "$ref": "#/components/schemas/Expression"
@@ -1214,26 +1229,151 @@
         ],
         "type": "object"
       },
-      "OrderType": {
+      "OrderByRelation": {
+        "properties": {
+          "subrelations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderByRelation"
+            },
+            "description": "Further relationships to follow from the relationship's target table. The key of the map is the relationship name.",
+            "type": "object"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "required": [
+          "subrelations"
+        ],
+        "type": "object"
+      },
+      "OrderByStarCountAggregate": {
+        "properties": {
+          "type": {
+            "enum": [
+              "star_count_aggregate"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "OrderBySingleColumnAggregate": {
+        "properties": {
+          "column": {
+            "description": "The column to apply the aggregation function to",
+            "type": "string"
+          },
+          "function": {
+            "$ref": "#/components/schemas/SingleColumnAggregateFunction"
+          },
+          "type": {
+            "enum": [
+              "single_column_aggregate"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "function",
+          "column",
+          "type"
+        ],
+        "type": "object"
+      },
+      "OrderByColumn": {
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "type"
+        ],
+        "type": "object"
+      },
+      "OrderByTarget": {
+        "discriminator": {
+          "mapping": {
+            "column": "OrderByColumn",
+            "single_column_aggregate": "OrderBySingleColumnAggregate",
+            "star_count_aggregate": "OrderByStarCountAggregate"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/OrderByStarCountAggregate"
+          },
+          {
+            "$ref": "#/components/schemas/OrderBySingleColumnAggregate"
+          },
+          {
+            "$ref": "#/components/schemas/OrderByColumn"
+          }
+        ]
+      },
+      "OrderDirection": {
         "enum": [
           "asc",
           "desc"
         ],
         "type": "string"
       },
-      "OrderBy": {
+      "OrderByElement": {
         "properties": {
-          "column": {
-            "description": "Column to order by",
-            "type": "string"
+          "order_direction": {
+            "$ref": "#/components/schemas/OrderDirection"
           },
-          "ordering": {
-            "$ref": "#/components/schemas/OrderType"
+          "target": {
+            "$ref": "#/components/schemas/OrderByTarget"
+          },
+          "target_path": {
+            "description": "The relationship path from the current query table to the table that contains the target to order by. This is always non-empty for aggregate order by targets",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
-          "column",
-          "ordering"
+          "target_path",
+          "target",
+          "order_direction"
+        ],
+        "type": "object"
+      },
+      "OrderBy": {
+        "nullable": true,
+        "properties": {
+          "elements": {
+            "description": "The elements to order by, in priority order",
+            "items": {
+              "$ref": "#/components/schemas/OrderByElement"
+            },
+            "type": "array"
+          },
+          "relations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderByRelation"
+            },
+            "description": "A map of relationships from the current query table to target tables. The key of the map is the relationship name. The relationships are used within the order by elements.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "relations",
+          "elements"
         ],
         "type": "object"
       }

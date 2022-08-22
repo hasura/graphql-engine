@@ -8,6 +8,9 @@ module Hasura.RQL.Types.QueryCollection
     ccName,
     ccDefinition,
     ccComment,
+    RenameCollection (..),
+    rcName,
+    rcNewName,
     AddQueryToCollection (..),
     DropQueryFromCollection (..),
     DropCollection (..),
@@ -103,6 +106,15 @@ $(makeLenses ''CreateCollection)
 
 collectionQueries :: CreateCollection -> [G.ExecutableDocument G.Name]
 collectionQueries = map (unGQLQuery . getGQLQuery . _lqQuery) . _cdQueries . _ccDefinition
+
+data RenameCollection = RenameCollection
+  { _rcName :: CollectionName,
+    _rcNewName :: CollectionName
+  }
+  deriving (Show, Eq, Generic)
+
+$(deriveJSON hasuraJSON ''RenameCollection)
+$(makeLenses ''RenameCollection)
 
 data DropCollection = DropCollection
   { _dcCollection :: CollectionName,

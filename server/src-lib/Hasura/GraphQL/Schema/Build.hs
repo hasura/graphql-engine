@@ -66,7 +66,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
-import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectPermissions)
+import Hasura.GraphQL.Schema.Table (getTableIdentifierName, tableSelectPermissions)
 import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.GraphQL.Schema.Update (updateTable, updateTableByPk)
 import Hasura.Prelude
@@ -94,8 +94,8 @@ setFieldNameCase ::
 setFieldNameCase tCase tInfo crf getFieldName tableName =
   (applyFieldNameCaseIdentifier tCase fieldIdentifier)
   where
-    tccName = fmap (`C.Identifier` []) . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
-    crfName = fmap (`C.Identifier` []) (_crfName crf)
+    tccName = fmap C.fromCustomName . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
+    crfName = fmap C.fromCustomName (_crfName crf)
     fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName
 
 -- | buildTableQueryAndSubscriptionFields builds the field parsers of a table.
@@ -173,8 +173,8 @@ buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableI
         stringifyNumbers <- retrieve Options.soStringifyNumbers
         primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
         let tableSelPerm = tablePermissionsInfo selectPerm
-        tableGQLName <- getTableGQLName tableInfo
-        objectTypename <- mkTypename tableGQLName
+        tableGQLName <- getTableIdentifierName tableInfo
+        objectTypename <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableTypeName $ tableGQLName
         pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo tableSelPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
 
       pure (queryRootFields, subscriptionRootFields, apolloFedTableParser)

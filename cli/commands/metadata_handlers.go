@@ -57,7 +57,7 @@ func (m *metadataModeDirectoryHandler) Apply(o *MetadataApplyOptions) error {
 			}
 			o.EC.Logger.Debug("metadata applied using v1 replace_metadata")
 		} else {
-			r, err := metadataHandler.V2ApplyMetadata()
+			r, err := metadataHandler.V2ApplyMetadata(o.DisallowInconsistencies)
 			if err != nil {
 				return errorApplyingMetadata(err)
 			}
@@ -273,7 +273,7 @@ func apply(o *MetadataApplyOptions, mode cli.MetadataMode) error {
 		return nil
 	}
 	r, err := o.EC.APIClient.V1Metadata.V2ReplaceMetadata(hasura.V2ReplaceMetadataArgs{
-		AllowInconsistentMetadata: true,
+		AllowInconsistentMetadata: !o.DisallowInconsistencies,
 		Metadata:                  metadata,
 	})
 	if err != nil {

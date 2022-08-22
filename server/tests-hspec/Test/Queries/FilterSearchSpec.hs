@@ -9,6 +9,7 @@
 module Test.Queries.FilterSearchSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql qualified as Mysql
@@ -16,8 +17,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (Options (..))
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -32,37 +32,39 @@ import Test.Hspec (SpecWith, it)
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Mysql.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Citus.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Sqlserver.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ BigQuery.setupTablesAction schema testEnv
-            ],
-          Fixture.customOptions =
-            Just $
-              Fixture.Options
-                { stringifyNumbers = True
-                }
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Mysql.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Citus.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlserver.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ BigQuery.setupTablesAction schema testEnv
+                ],
+              Fixture.customOptions =
+                Just $
+                  Fixture.Options
+                    { stringifyNumbers = True
+                    }
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------
@@ -94,11 +96,13 @@ tests opts = do
       shouldBe = shouldReturnYaml opts
 
   it "Select by id" \testEnvironment -> do
+    let schemaName = Schema.getSchemaName testEnvironment
+
     let expected :: Value
         expected =
-          [yaml|
+          [interpolateYaml|
             data:
-              hasura_author:
+              #{schemaName}_author:
               - name: Author 1
                 id: 1
           |]
@@ -109,7 +113,7 @@ tests opts = do
             testEnvironment
             [graphql|
               query {
-                hasura_author(where: {id: {_eq: 1}}) {
+                #{schemaName}_author(where: {id: {_eq: 1}}) {
                   name
                   id
                 }

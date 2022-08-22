@@ -16,7 +16,18 @@ sidebar_label: Heroku URL Sync
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Cloud: Heroku database integration <HeadingIcon icon={`cloud`} size={36} />
+# Heroku database integration
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+
+:::warning Warning
+
+Recently, Heroku introduced a [change to Postgres extensions](https://devcenter.heroku.com/changelog-items/2446) that
+affects our integration and the use of event triggers. If you're having trouble creating event triggers with a database
+hosted on Heroku, you can find more information
+[in this GitHub issue](https://github.com/hasura/graphql-engine/issues/8734).
+
+:::
 
 ## Introduction
 

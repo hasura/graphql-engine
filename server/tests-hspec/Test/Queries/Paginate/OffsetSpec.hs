@@ -9,6 +9,7 @@
 module Test.Queries.Paginate.OffsetSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql qualified as Mysql
@@ -16,8 +17,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (Options (..))
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -32,37 +32,39 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
-    [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Mysql.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Postgres.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Citus.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ Sqlserver.setupTablesAction schema testEnv
-            ]
-        },
-      (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
-        { Fixture.setupTeardown = \(testEnv, _) ->
-            [ BigQuery.setupTablesAction schema testEnv
-            ],
-          Fixture.customOptions =
-            Just $
-              Fixture.Options
-                { stringifyNumbers = True
-                }
-        }
-    ]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Mysql.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Citus.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlserver.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ BigQuery.setupTablesAction schema testEnv
+                ],
+              Fixture.customOptions =
+                Just $
+                  Fixture.Options
+                    { stringifyNumbers = True
+                    }
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------
@@ -95,11 +97,13 @@ tests opts = do
 
   describe "Paginate query results" do
     it "Offsets results by one element" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_author:
+                #{schemaName}_author:
                 - name: Author 2
                   id: 2
                 - name: Author 3
@@ -114,7 +118,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author(order_by: [{ id: asc }], offset: 1) {
+                  #{schemaName}_author(order_by: [{ id: asc }], offset: 1) {
                     name
                     id
                   }
@@ -124,11 +128,13 @@ tests opts = do
       actual `shouldBe` expected
 
     it "Correctly handles ordering, offsets, and limits" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
       let expected :: Value
           expected =
-            [yaml|
+            [interpolateYaml|
               data:
-                hasura_author:
+                #{schemaName}_author:
                 - id: 2
                   name: Author 2
             |]
@@ -139,7 +145,7 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  hasura_author(limit: 1, offset: 2, order_by: [{ id: desc }]) {
+                  #{schemaName}_author(limit: 1, offset: 2, order_by: [{ id: desc }]) {
                     id
                     name
                   }

@@ -12,11 +12,10 @@ module Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipS
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
-import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -29,21 +28,19 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
+  Fixture.run
     ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = postgresTeardown,
-              customOptions = Nothing
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+                  <> postgresSetupPermissions testEnv
             },
-          Context.Context
-            { name = Context.Backend Context.SQLServer,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = sqlServerSetup,
-              teardown = sqlServerTeardown,
-              customOptions = Nothing
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ SQLServer.setupTablesAction schema testEnv
+                ]
+                  <> sqlserverSetupPermissions testEnv
             }
         ]
     )
@@ -99,161 +96,159 @@ article =
 --------------------------------------------------------------------------------
 -- Setting up Postgres
 
-postgresSetup :: (TestEnvironment, ()) -> IO ()
-postgresSetup (testEnvironment, localTestEnvironment) = do
-  Postgres.setup schema (testEnvironment, localTestEnvironment)
-  postgresCreatePermissions testEnvironment
-
-postgresTeardown :: (TestEnvironment, ()) -> IO ()
-postgresTeardown (testEnvironment, localTestEnvironment) = do
-  finally
-    (postgresDropPermissions testEnvironment)
-    (Postgres.teardown schema (testEnvironment, localTestEnvironment))
-
 -- No 'article' root fields will be exposed.
 -- This scenario tests, when we want to disable querying a specific table but allow
 -- it's row's and columns to be accessible when used from within a relationship.
-postgresCreatePermissions :: TestEnvironment -> IO ()
-postgresCreatePermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: pg_create_select_permission
-  args:
-    source: postgres
-    table:
-      schema: hasura
-      name: article
-    role: user
-    permission:
-      filter: {}
-      columns: '*'
-      query_root_fields: []
-      subscription_root_fields: []
-- type: pg_create_select_permission
-  args:
-    source: postgres
-    table:
-      schema: hasura
-      name: author
-    role: user
-    permission:
-      filter:
-        articles_by_id_to_author_id:
-          author_id:
-            _eq:  X-Hasura-User-Id
-      columns: '*'
-      allow_aggregations: true
-      query_root_fields: ["select", "select_by_pk", "select_aggregate"]
-      subscription_root_fields: ["select_stream"]
-|]
-
-postgresDropPermissions :: TestEnvironment -> IO ()
-postgresDropPermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: pg_drop_select_permission
-  args:
-    source: postgres
-    table:
-      schema: hasura
-      name: article
-    role: user
-- type: pg_drop_select_permission
-  args:
-    source: postgres
-    table:
-      schema: hasura
-      name: author
-    role: user
-|]
+postgresSetupPermissions :: TestEnvironment -> [Fixture.SetupAction]
+postgresSetupPermissions testEnv =
+  [ Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: pg_create_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: article
+            role: user
+            permission:
+              filter: {}
+              columns: '*'
+              query_root_fields: []
+              subscription_root_fields: []
+          |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: pg_drop_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: article
+            role: user
+          |]
+      },
+    Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: pg_create_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: author
+            role: user
+            permission:
+              filter:
+                articles_by_id_to_author_id:
+                  author_id:
+                    _eq:  X-Hasura-User-Id
+              columns: '*'
+              allow_aggregations: true
+              query_root_fields: ["select", "select_by_pk", "select_aggregate"]
+              subscription_root_fields: ["select_stream"]
+          |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: pg_drop_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: author
+            role: user
+          |]
+      }
+  ]
 
 --------------------------------------------------------------------------------
 -- Setting up SQL server
 
-sqlServerSetup :: (TestEnvironment, ()) -> IO ()
-sqlServerSetup (testEnvironment, localTestEnvironment) = do
-  SQLServer.setup schema (testEnvironment, localTestEnvironment)
-  mssqlCreatePermissions testEnvironment
-
-sqlServerTeardown :: (TestEnvironment, ()) -> IO ()
-sqlServerTeardown (testEnvironment, localTestEnvironment) = do
-  finally
-    (mssqlDropPermissions testEnvironment)
-    (SQLServer.teardown schema (testEnvironment, localTestEnvironment))
-
 -- No 'article' root fields will be exposed.
 -- This scenario tests, when we want to disable querying a specific table but allow
 -- it's row's and columns to be accessible when used from within a relationship.
-mssqlCreatePermissions :: TestEnvironment -> IO ()
-mssqlCreatePermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: mssql_create_select_permission
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: article
-    role: user
-    permission:
-      filter: {}
-      columns: '*'
-      query_root_fields: []
-      subscription_root_fields: []
-- type: mssql_create_select_permission
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: author
-    role: user
-    permission:
-      filter:
-        articles_by_id_to_author_id:
-          author_id:
-            _eq:  X-Hasura-User-Id
-      columns: '*'
-      allow_aggregations: true
-      query_root_fields: ["select", "select_by_pk", "select_aggregate"]
-      subscription_root_fields: ["select_stream"]
-|]
-
-mssqlDropPermissions :: TestEnvironment -> IO ()
-mssqlDropPermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: mssql_drop_select_permission
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: article
-    role: user
-- type: mssql_drop_select_permission
-  args:
-    source: mssql
-    table:
-      schema: hasura
-      name: author
-    role: user
-|]
+sqlserverSetupPermissions :: TestEnvironment -> [Fixture.SetupAction]
+sqlserverSetupPermissions testEnv =
+  [ Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: mssql_create_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: article
+            role: user
+            permission:
+              filter: {}
+              columns: '*'
+              query_root_fields: []
+              subscription_root_fields: []
+          |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: mssql_drop_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: article
+            role: user
+          |]
+      },
+    Fixture.SetupAction
+      { setupAction =
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: mssql_create_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+            permission:
+              filter:
+                articles_by_id_to_author_id:
+                  author_id:
+                    _eq:  X-Hasura-User-Id
+              columns: '*'
+              allow_aggregations: true
+              query_root_fields: ["select", "select_by_pk", "select_aggregate"]
+              subscription_root_fields: ["select_stream"]
+          |],
+        teardownAction = \_ ->
+          GraphqlEngine.postMetadata_
+            testEnv
+            [yaml|
+          type: mssql_drop_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+          |]
+      }
+  ]
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = describe "DisableAllRootFieldsRelationshipSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
   it "query root: 'list' root field for 'author' is accessible" $ \testEnvironment -> do

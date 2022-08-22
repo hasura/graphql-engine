@@ -27,6 +27,8 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Catalog
+import Hasura.RQL.Types.Numeric (NonNegative)
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -147,14 +149,14 @@ startSchemaSyncListenerThread ::
   Logger Hasura ->
   Q.PGPool ->
   InstanceId ->
-  Milliseconds ->
+  NonNegative Milliseconds ->
   STM.TMVar MetadataResourceVersion ->
   ManagedT m (Immortal.Thread)
 startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = do
   -- Start listener thread
   listenerThread <-
     C.forkManagedT "SchemeUpdate.listener" logger $
-      listener logger pool metaVersionRef interval
+      listener logger pool metaVersionRef (Numeric.getNonNegative interval)
   logThreadStarted logger instanceId TTListener listenerThread
   pure listenerThread
 

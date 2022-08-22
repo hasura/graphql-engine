@@ -8,7 +8,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -22,21 +22,19 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
+  Fixture.run
     ( NE.fromList
-        [ Context.Context
-            { name = Context.Backend Context.Postgres,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = postgresSetup,
-              teardown = Postgres.teardown schema,
-              customOptions = Nothing
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv,
+                  postgresSetupPermissions testEnv
+                ]
             },
-          Context.Context
-            { name = Context.Backend Context.SQLServer,
-              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-              setup = mssqlSetup,
-              teardown = SQLServer.teardown schema,
-              customOptions = Nothing
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ SQLServer.setupTablesAction schema testEnv,
+                  sqlserverSetupPermissions testEnv
+                ]
             }
         ]
     )
@@ -63,65 +61,85 @@ schema =
 --------------------------------------------------------------------------------
 -- Setting up Postgres
 
-postgresSetup :: (TestEnvironment, ()) -> IO ()
-postgresSetup (testEnvironment, localTestEnvironment) = do
-  Postgres.setup schema (testEnvironment, localTestEnvironment)
-  postgresCreatePermissions testEnvironment
-
-postgresCreatePermissions :: TestEnvironment -> IO ()
-postgresCreatePermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: pg_create_select_permission
-args:
-  source: postgres
-  table:
-    schema: hasura
-    name: author
-  role: user
-  permission:
-    filter:
-      id: X-Hasura-User-Id
-    columns: '*'
-    allow_aggregations: true
-    query_root_fields: ["select", "select_by_pk", "select_aggregate"]
-    subscription_root_fields: ["select", "select_by_pk", "select_aggregate", "select_stream"]
-|]
+postgresSetupPermissions :: TestEnvironment -> Fixture.SetupAction
+postgresSetupPermissions testEnv =
+  Fixture.SetupAction
+    { setupAction =
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: pg_create_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: author
+            role: user
+            permission:
+              filter:
+                id: X-Hasura-User-Id
+              columns: '*'
+              allow_aggregations: true
+              query_root_fields: ["select", "select_by_pk", "select_aggregate"]
+              subscription_root_fields: ["select", "select_by_pk", "select_aggregate", "select_stream"]
+          |],
+      teardownAction = \_ ->
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: pg_drop_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: author
+            role: user
+          |]
+    }
 
 --------------------------------------------------------------------------------
 -- Setting up SQL Server
 
-mssqlSetup :: (TestEnvironment, ()) -> IO ()
-mssqlSetup (testEnvironment, localTestEnvironment) = do
-  SQLServer.setup schema (testEnvironment, localTestEnvironment)
-  mssqlCreatePermissions testEnvironment
-
-mssqlCreatePermissions :: TestEnvironment -> IO ()
-mssqlCreatePermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: mssql_create_select_permission
-args:
-  source: mssql
-  table:
-    schema: hasura
-    name: author
-  role: user
-  permission:
-    filter:
-      id: X-Hasura-User-Id
-    columns: '*'
-    allow_aggregations: true
-    query_root_fields: ["select", "select_by_pk", "select_aggregate"]
-    subscription_root_fields: ["select", "select_by_pk", "select_aggregate", "select_stream"]
-|]
+sqlserverSetupPermissions :: TestEnvironment -> Fixture.SetupAction
+sqlserverSetupPermissions testEnv =
+  Fixture.SetupAction
+    { setupAction =
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: mssql_create_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+            permission:
+              filter:
+                id: X-Hasura-User-Id
+              columns: '*'
+              allow_aggregations: true
+              query_root_fields: ["select", "select_by_pk", "select_aggregate"]
+              subscription_root_fields: ["select", "select_by_pk", "select_aggregate", "select_stream"]
+          |],
+      teardownAction = \_ ->
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: mssql_drop_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+          |]
+    }
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = describe "EnableAllRootFieldsSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
   it "query root: 'list' root field is accessible" $ \testEnvironment -> do

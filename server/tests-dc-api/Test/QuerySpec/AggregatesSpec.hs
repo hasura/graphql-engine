@@ -2,13 +2,14 @@ module Test.QuerySpec.AggregatesSpec (spec) where
 
 import Control.Arrow ((>>>))
 import Control.Lens (ix, (%~), (&), (?~), (^?))
+import Control.Monad (when)
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.HashSet qualified as HashSet
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
-import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Maybe (fromMaybe, isJust, mapMaybe)
 import Data.Ord (Down (..))
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
@@ -18,8 +19,8 @@ import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
 import Prelude
 
-spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
-spec api sourceName config = describe "Aggregate Queries" $ do
+spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe RelationshipCapabilities -> Spec
+spec api sourceName config relationshipCapabilities = describe "Aggregate Queries" $ do
   describe "Star Count" $ do
     it "counts all rows" $ do
       let aggregates = KeyMap.fromList [("count_all", StarCount)]
@@ -129,7 +130,7 @@ spec api sourceName config = describe "Aggregate Queries" $ do
 
     it "can get the max total from all rows, after applying pagination, filtering and ordering" $ do
       let where' = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "BillingCountry") (ScalarValue (String "USA"))
-      let orderBy = OrderBy (ColumnName "BillingPostalCode") Descending :| [OrderBy (ColumnName "InvoiceId") Ascending]
+      let orderBy = OrderBy mempty $ Data.orderByColumn [] "BillingPostalCode" Descending :| [Data.orderByColumn [] "InvoiceId" Ascending]
       let aggregates = KeyMap.fromList [("max", SingleColumn $ SingleColumnAggregate Max (ColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ 20 >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- (api // _query) sourceName config queryRequest
@@ -230,7 +231,7 @@ spec api sourceName config = describe "Aggregate Queries" $ do
                 ("BillingCountry", Data.columnField "BillingCountry")
               ]
       let where' = ApplyBinaryComparisonOperator Equal (Data.localComparisonColumn "BillingCountry") (ScalarValue (String "Canada"))
-      let orderBy = OrderBy (ColumnName "BillingAddress") Ascending :| [OrderBy (ColumnName "InvoiceId") Ascending]
+      let orderBy = OrderBy mempty $ Data.orderByColumn [] "BillingAddress" Ascending :| [Data.orderByColumn [] "InvoiceId" Ascending]
       let aggregates = KeyMap.fromList [("min", SingleColumn $ SingleColumnAggregate Min (ColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ 30 >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- (api // _query) sourceName config queryRequest
@@ -252,110 +253,111 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       Data.responseRows response `rowsShouldBe` expectedRows
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
 
-  describe "Aggregates via Relationships" $ do
-    it "can query aggregates via an array relationship" $ do
-      let query = artistsWithAlbumsQuery id & qrQuery . qLimit ?~ 5
-      receivedArtists <- (api // _query) sourceName config query
+  when (isJust relationshipCapabilities) $
+    describe "Aggregates via Relationships" $ do
+      it "can query aggregates via an array relationship" $ do
+        let query = artistsWithAlbumsQuery id & qrQuery . qLimit ?~ 5
+        receivedArtists <- (api // _query) sourceName config query
 
-      let joinInAlbums (artist :: KeyMap FieldValue) = fromMaybe artist $ do
-            artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
-            let albums =
-                  Data.albumsRows
-                    & filter ((^? ix "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
-            let aggregates = KeyMap.fromList [("count", Number . fromIntegral $ length albums)]
-            pure $ KeyMap.insert "Albums" (mkSubqueryResponse Nothing (Just aggregates)) artist
+        let joinInAlbums (artist :: KeyMap FieldValue) = fromMaybe artist $ do
+              artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
+              let albums =
+                    Data.albumsRows
+                      & filter ((^? ix "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
+              let aggregates = KeyMap.fromList [("count", Number . fromIntegral $ length albums)]
+              pure $ KeyMap.insert "Albums" (mkSubqueryResponse Nothing (Just aggregates)) artist
 
-      let expectedArtists =
-            Data.artistsRows
-              & take 5
-              & fmap joinInAlbums
+        let expectedArtists =
+              Data.artistsRows
+                & take 5
+                & fmap joinInAlbums
 
-      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
-      Data.responseAggregates receivedArtists `jsonShouldBe` mempty
+        Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+        Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
-    it "can query aggregates via an array relationship and include the rows in that relationship" $ do
-      let albumFields =
-            KeyMap.fromList
-              [ ("AlbumId", Data.columnField "AlbumId"),
-                ("Title", Data.columnField "Title")
-              ]
-      let query = artistsWithAlbumsQuery (qFields ?~ albumFields) & qrQuery . qLimit ?~ 5
-      receivedArtists <- (api // _query) sourceName config query
+      it "can query aggregates via an array relationship and include the rows in that relationship" $ do
+        let albumFields =
+              KeyMap.fromList
+                [ ("AlbumId", Data.columnField "AlbumId"),
+                  ("Title", Data.columnField "Title")
+                ]
+        let query = artistsWithAlbumsQuery (qFields ?~ albumFields) & qrQuery . qLimit ?~ 5
+        receivedArtists <- (api // _query) sourceName config query
 
-      let joinInAlbums (artist :: KeyMap FieldValue) = fromMaybe artist $ do
-            artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
-            let albums =
-                  Data.albumsRows
-                    & filter ((^? ix "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
-                    & Data.filterColumns ["AlbumId", "Title"]
-            let aggregates = KeyMap.fromList [("count", Number . fromIntegral $ length albums)]
-            pure $ KeyMap.insert "Albums" (mkSubqueryResponse (Just albums) (Just aggregates)) artist
+        let joinInAlbums (artist :: KeyMap FieldValue) = fromMaybe artist $ do
+              artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
+              let albums =
+                    Data.albumsRows
+                      & filter ((^? ix "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
+                      & Data.filterColumns ["AlbumId", "Title"]
+              let aggregates = KeyMap.fromList [("count", Number . fromIntegral $ length albums)]
+              pure $ KeyMap.insert "Albums" (mkSubqueryResponse (Just albums) (Just aggregates)) artist
 
-      let expectedArtists =
-            Data.artistsRows
-              & take 5
-              & fmap joinInAlbums
+        let expectedArtists =
+              Data.artistsRows
+                & take 5
+                & fmap joinInAlbums
 
-      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
-      Data.responseAggregates receivedArtists `jsonShouldBe` mempty
+        Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+        Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
-    it "can query with many nested relationships, with aggregates at multiple levels, with filtering, pagination and ordering" $ do
-      receivedArtists <- (api // _query) sourceName config deeplyNestedArtistsQuery
+      it "can query with many nested relationships, with aggregates at multiple levels, with filtering, pagination and ordering" $ do
+        receivedArtists <- (api // _query) sourceName config deeplyNestedArtistsQuery
 
-      let joinInMediaType (track :: KeyMap FieldValue) = fromMaybe track $ do
-            mediaTypeId <- track ^? ix "MediaTypeId" . Data._ColumnFieldNumber
-            let mediaTypes =
-                  Data.mediaTypesRows
-                    & filter ((^? ix "MediaTypeId" . Data._ColumnFieldNumber) >>> (== Just mediaTypeId))
-                    & Data.filterColumns ["Name"]
-            pure $ KeyMap.insert "nodes_MediaType" (mkSubqueryResponse (Just mediaTypes) Nothing) track
+        let joinInMediaType (track :: KeyMap FieldValue) = fromMaybe track $ do
+              mediaTypeId <- track ^? ix "MediaTypeId" . Data._ColumnFieldNumber
+              let mediaTypes =
+                    Data.mediaTypesRows
+                      & filter ((^? ix "MediaTypeId" . Data._ColumnFieldNumber) >>> (== Just mediaTypeId))
+                      & Data.filterColumns ["Name"]
+              pure $ KeyMap.insert "nodes_MediaType" (mkSubqueryResponse (Just mediaTypes) Nothing) track
 
-      let joinInInvoiceLines (track :: KeyMap FieldValue) = fromMaybe track $ do
-            trackId <- track ^? ix "TrackId" . Data._ColumnFieldNumber
-            let invoiceLines =
-                  Data.invoiceLinesRows
-                    & filter ((^? ix "TrackId" . Data._ColumnFieldNumber) >>> (== Just trackId))
-            let getQuantity invoiceLine = invoiceLine ^? ix "Quantity" . Data._ColumnFieldNumber
-            let invoiceLinesAggregates = KeyMap.fromList [("aggregate_sum_Quantity", aggregate (Number . sum) $ mapMaybe getQuantity invoiceLines)]
-            pure $ KeyMap.insert "nodes_InvoiceLines_aggregate" (mkSubqueryResponse Nothing (Just invoiceLinesAggregates)) track
+        let joinInInvoiceLines (track :: KeyMap FieldValue) = fromMaybe track $ do
+              trackId <- track ^? ix "TrackId" . Data._ColumnFieldNumber
+              let invoiceLines =
+                    Data.invoiceLinesRows
+                      & filter ((^? ix "TrackId" . Data._ColumnFieldNumber) >>> (== Just trackId))
+              let getQuantity invoiceLine = invoiceLine ^? ix "Quantity" . Data._ColumnFieldNumber
+              let invoiceLinesAggregates = KeyMap.fromList [("aggregate_sum_Quantity", aggregate (Number . sum) $ mapMaybe getQuantity invoiceLines)]
+              pure $ KeyMap.insert "nodes_InvoiceLines_aggregate" (mkSubqueryResponse Nothing (Just invoiceLinesAggregates)) track
 
-      let joinInTracks (album :: KeyMap FieldValue) = fromMaybe album $ do
-            albumId <- album ^? ix "AlbumId" . Data._ColumnFieldNumber
-            let tracks =
-                  Data.tracksRows
-                    & filter
-                      ( \track ->
-                          track ^? ix "AlbumId" . Data._ColumnFieldNumber == Just albumId
-                            && track ^? ix "Milliseconds" . Data._ColumnFieldNumber < Just 300000
-                      )
-                    & sortOn (Down . (^? ix "Name" . Data._ColumnFieldString))
-                    & fmap (joinInMediaType >>> joinInInvoiceLines)
-                    & Data.renameColumns [("Name", "nodes_Name")]
-                    & Data.filterColumns ["nodes_Name", "nodes_MediaType", "nodes_InvoiceLines_aggregate"]
-            let tracksAggregates = KeyMap.fromList [("aggregate_count", Number . fromIntegral $ length tracks)]
-            pure $ KeyMap.insert "nodes_Tracks_aggregate" (mkSubqueryResponse (Just tracks) (Just tracksAggregates)) album
+        let joinInTracks (album :: KeyMap FieldValue) = fromMaybe album $ do
+              albumId <- album ^? ix "AlbumId" . Data._ColumnFieldNumber
+              let tracks =
+                    Data.tracksRows
+                      & filter
+                        ( \track ->
+                            track ^? ix "AlbumId" . Data._ColumnFieldNumber == Just albumId
+                              && track ^? ix "Milliseconds" . Data._ColumnFieldNumber < Just 300000
+                        )
+                      & sortOn (Down . (^? ix "Name" . Data._ColumnFieldString))
+                      & fmap (joinInMediaType >>> joinInInvoiceLines)
+                      & Data.renameColumns [("Name", "nodes_Name")]
+                      & Data.filterColumns ["nodes_Name", "nodes_MediaType", "nodes_InvoiceLines_aggregate"]
+              let tracksAggregates = KeyMap.fromList [("aggregate_count", Number . fromIntegral $ length tracks)]
+              pure $ KeyMap.insert "nodes_Tracks_aggregate" (mkSubqueryResponse (Just tracks) (Just tracksAggregates)) album
 
-      let joinInAlbums (artist :: KeyMap FieldValue) = fromMaybe artist $ do
-            artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
-            let albums =
-                  Data.albumsRows
-                    & filter ((^? ix "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
-                    & fmap joinInTracks
-                    & Data.renameColumns [("Title", "nodes_Title")]
-                    & Data.filterColumns ["nodes_Title", "nodes_Tracks_aggregate"]
-            pure $ KeyMap.insert "Albums_aggregate" (mkSubqueryResponse (Just albums) Nothing) artist
+        let joinInAlbums (artist :: KeyMap FieldValue) = fromMaybe artist $ do
+              artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
+              let albums =
+                    Data.albumsRows
+                      & filter ((^? ix "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
+                      & fmap joinInTracks
+                      & Data.renameColumns [("Title", "nodes_Title")]
+                      & Data.filterColumns ["nodes_Title", "nodes_Tracks_aggregate"]
+              pure $ KeyMap.insert "Albums_aggregate" (mkSubqueryResponse (Just albums) Nothing) artist
 
-      let expectedArtists =
-            Data.artistsRows
-              & sortOn (Down . (^? ix "Name"))
-              & filter ((^? ix "Name" . Data._ColumnFieldString) >>> (\name -> name > Just "A" && name < Just "B"))
-              & drop 1
-              & take 3
-              & fmap joinInAlbums
-              & Data.filterColumns ["Name", "Albums_aggregate"]
+        let expectedArtists =
+              Data.artistsRows
+                & sortOn (Down . (^? ix "Name"))
+                & filter ((^? ix "Name" . Data._ColumnFieldString) >>> (\name -> name > Just "A" && name < Just "B"))
+                & drop 1
+                & take 3
+                & fmap joinInAlbums
+                & Data.filterColumns ["Name", "Albums_aggregate"]
 
-      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
-      Data.responseAggregates receivedArtists `jsonShouldBe` mempty
+        Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+        Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
 artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
 artistsWithAlbumsQuery modifySubquery =
@@ -367,7 +369,7 @@ artistsWithAlbumsQuery modifySubquery =
             ("Name", Data.columnField "Name"),
             ("Albums", RelField $ RelationshipField Data.albumsRelationshipName albumsSubquery)
           ]
-      artistOrderBy = OrderBy (ColumnName "ArtistId") Ascending :| []
+      artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "ArtistId" Ascending :| []
       artistQuery = Data.emptyQuery & qFields ?~ artistFields & qOrderBy ?~ artistOrderBy
       artistsTableRelationships = Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships
    in QueryRequest Data.artistsTableName [artistsTableRelationships] artistQuery
@@ -417,7 +419,7 @@ deeplyNestedArtistsQuery =
           ]
       tracksAggregates = KeyMap.fromList [("aggregate_count", StarCount)]
       tracksWhere = ApplyBinaryComparisonOperator LessThan (Data.localComparisonColumn "Milliseconds") (ScalarValue $ Number 300000)
-      tracksOrderBy = OrderBy (ColumnName "Name") Descending :| []
+      tracksOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
       tracksSubquery = Query (Just tracksFields) (Just tracksAggregates) Nothing Nothing (Just tracksWhere) (Just tracksOrderBy)
       albumsFields =
         KeyMap.fromList
@@ -435,7 +437,7 @@ deeplyNestedArtistsQuery =
           [ ApplyBinaryComparisonOperator GreaterThan (Data.localComparisonColumn "Name") (ScalarValue $ String "A"),
             ApplyBinaryComparisonOperator LessThan (Data.localComparisonColumn "Name") (ScalarValue $ String "B")
           ]
-      artistOrderBy = OrderBy (ColumnName "Name") Descending :| []
+      artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
       artistQuery = Query (Just artistFields) Nothing (Just 3) (Just 1) (Just artistWhere) (Just artistOrderBy)
    in QueryRequest
         Data.artistsTableName

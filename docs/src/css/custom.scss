@@ -640,6 +640,9 @@
 
 .markdown {
   --ifm-h1-vertical-rhythm-top: 2.5;
+  h1 {
+    margin-top: 25px;
+  }
   h1:first-child {
     --ifm-h1-font-size: 2.5rem; /* 40px */
   }
@@ -902,6 +905,10 @@ div[class*='codeBlockTitle_'] {
   path {
     stroke: var(--ifm-link-color);
   }
+}
+
+.heading-badge {
+  font-size: 0.9rem;
 }
 
 // Table body fix for longer types and args
