@@ -220,7 +220,7 @@ tests opts = do
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
                                                     _qOffset = Nothing,
-                                                    _qWhere = Just (API.And []),
+                                                    _qWhere = Nothing,
                                                     _qOrderBy = Nothing
                                                   }
                                             )
@@ -238,7 +238,7 @@ tests opts = do
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
                                                     _qOffset = Nothing,
-                                                    _qWhere = Just (API.And []),
+                                                    _qWhere = Nothing,
                                                     _qOrderBy = Nothing
                                                   }
                                             )
@@ -247,7 +247,7 @@ tests opts = do
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And []),
+                                _qWhere = Nothing,
                                 _qOrderBy = Nothing
                               }
                         }
@@ -358,7 +358,7 @@ tests opts = do
                                                                         _qAggregates = Nothing,
                                                                         _qLimit = Nothing,
                                                                         _qOffset = Nothing,
-                                                                        _qWhere = Just (API.And []),
+                                                                        _qWhere = Nothing,
                                                                         _qOrderBy = Nothing
                                                                       }
                                                                 )
@@ -367,7 +367,7 @@ tests opts = do
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
                                                     _qOffset = Nothing,
-                                                    _qWhere = Just (API.And []),
+                                                    _qWhere = Nothing,
                                                     _qOrderBy = Nothing
                                                   }
                                             )
@@ -376,18 +376,18 @@ tests opts = do
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And []),
+                                _qWhere = Nothing,
                                 _qOrderBy =
                                   Just $
                                     API.OrderBy
                                       ( HashMap.fromList
                                           [ ( API.RelationshipName "Album",
                                               API.OrderByRelation
-                                                (Just $ API.And [])
+                                                Nothing
                                                 ( HashMap.fromList
                                                     [ ( API.RelationshipName "Artist",
                                                         API.OrderByRelation
-                                                          (Just $ API.And [])
+                                                          Nothing
                                                           mempty
                                                       )
                                                     ]
