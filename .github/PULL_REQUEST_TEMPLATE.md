@@ -7,19 +7,27 @@
 
 ### Changelog
 
-- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR. If no changelog is required, then add the `no-changelog-required` label.
+<!-- Fill this section if this is a user facing change. -->
 
-### Affected components
-<!-- Remove non-affected components from the list -->
+__Component__ : server / cli / console / build <!-- choose one -->
 
-- [ ] Server
-- [ ] Console
-- [ ] CLI
-- [ ] Docs
-- [ ] Community Content
-- [ ] Build System
-- [ ] Tests
-- [ ] Other (list it)
+__Type__: bugfix / feature / enhancement <!-- choose one -->
+
+__Product__: community-edition
+
+#### Short Changelog
+
+<!-- One line description of this change. (optional if you choose to fill the Long Changelog section instead) -->
+
+#### Long Changelog
+
+<!--
+  Detailed description of this change. This might contain links to documentation, blogposts, images. Use markdown for formatting.
+  (optional if you choose to fill the Short Changelog section instead)
+-->
+
+
+<!-- Changelog Section End -->
 
 ### Related Issues
 <!-- Please make sure you have an issue associated with this Pull Request -->

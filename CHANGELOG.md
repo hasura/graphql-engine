@@ -17,6 +17,7 @@
 - server: fix long identifiers in insert with parameters (fix #8741)
 - server: fix 'nulls: first' and 'nulls: last' parsing for Postgres
 - server: accept `extensions_schema` while adding a PostgreSQL source for the graphql-engine to install database extensions in the specified schema
+- server: accept a default extensions schema (`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`) for the metadata database where graphql-engine will install database extensions
 - console: add support extensions_schema on postgres connect/edit DB form
 
 ## v2.11.0-beta.1
