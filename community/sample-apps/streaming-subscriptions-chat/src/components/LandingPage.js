@@ -1,12 +1,12 @@
-import PropTypes from 'prop-types';
-import { gql, useMutation } from '@apollo/client';
-import '../App.css';
+import PropTypes from "prop-types";
+import { gql, useMutation } from "@apollo/client";
+import { useRef } from "react";
+import "../App.css";
 
-import reactLogo from '../images/React-logo.png';
-import graphql from '../images/graphql.png';
-import hasuraLogo from '../images/green-logo-white.svg';
-import apolloLogo from '../images/apollo.png';
-import rightImg from '../images/chat-app.png';
+import reactLogo from "../images/React-logo.png";
+import graphql from "../images/graphql.png";
+import hasuraLogo from "../images/green-logo-white.svg";
+import rightImg from "../images/chat-app.png";
 
 const addUser = gql`
   mutation ($username: String!) {
@@ -18,6 +18,8 @@ const addUser = gql`
 `;
 
 const LandingPage = (props) => {
+  const usernameInput = useRef(null);
+
   const [addUserHandler, { loading }] = useMutation(addUser, {
     variables: {
       username: props.username,
@@ -25,9 +27,10 @@ const LandingPage = (props) => {
     onCompleted: (data) => {
       props.login(data.insert_user_one.id);
     },
-    onError: () => {
-      alert('Please try again with a different username.');
-      props.setUsername('');
+    onError: (err) => {
+      console.log(err);
+      alert("Please try again with a different username.");
+      props.setUsername("");
     },
   });
   const handleKeyPress = (key, mutate, loading) => {
@@ -40,7 +43,9 @@ const LandingPage = (props) => {
       <div className="bgImage"></div>
       <div>
         <div className="headerWrapper">
-          <div className="headerDescription">Realtime Chat App</div>
+          <div className="headerDescription">
+            Realtime chat app that can scale to millions of subscriptions
+          </div>
         </div>
         <div className="mainWrapper">
           <div className="col-md-5 col-sm-6 col-xs-12 noPadd">
@@ -82,15 +87,6 @@ const LandingPage = (props) => {
                 <div className="col-md-11 col-sm-11 col-xs-10 noPadd">
                   <div className="description">Powered by</div>
                   <div className="appStackIconWrapper">
-                    <div className="col-md-4 col-sm-4 col-xs-4 noPadd">
-                      <div className="appStackIcon">
-                        <img
-                          className="img-responsive"
-                          src={apolloLogo}
-                          alt="apollo logo"
-                        />
-                      </div>
-                    </div>
                     <div className="col-md-4 col-sm-4 col-xs-4 noPadd">
                       <div className="appStackIcon">
                         <img
@@ -162,11 +158,17 @@ const LandingPage = (props) => {
                   className="form-control"
                   placeholder="Enter your username"
                   value={props.username}
-                  onChange={(e) => props.setUsername(e.target.value)}
+                  onChange={(e) => {
+                    props.setUsername(e.target.value);
+                  }}
                   onKeyPress={(key) =>
                     handleKeyPress(key, addUserHandler, loading)
                   }
                   disabled={loading}
+                  minLength={3}
+                  maxLength={15}
+                  pattern={"^[a-z0-9_-]{3,15}$"}
+                  ref={usernameInput}
                 />
                 <div className="input-group-append groupAppend">
                   <button
@@ -178,14 +180,18 @@ const LandingPage = (props) => {
                         addUserHandler();
                       } else {
                         alert(
-                          'Invalid username. Spaces and special characters not allowed. Please try again'
+                          "Invalid username. Spaces and special characters not allowed. Please try again"
                         );
-                        props.setUsername('');
+                        props.setUsername("");
                       }
                     }}
-                    disabled={loading || props.username === ''}
+                    disabled={
+                      loading ||
+                      props.username === "" ||
+                      !usernameInput.current.validity.valid
+                    }
                   >
-                    {loading ? 'Please wait ...' : 'Get Started'}
+                    {loading ? "Please wait ..." : "Get Started"}
                   </button>
                 </div>
               </div>

@@ -1,10 +1,10 @@
-import '../App.js';
-import '../App.css';
-import moment from 'moment';
+import "../App.js";
+import "../App.css";
+import formatDistanceToNow from "date-fns/formatDistanceToNow";
 
 export default function MessageList(props) {
   return (
-    <div className={props.isNew ? 'messageWrapperNew' : 'messageWrapper'}>
+    <div className={props.isNew ? "messageWrapperNew" : "messageWrapper"}>
       {props.messages.map((m) => {
         return (
           <div key={m.id} className="message">
@@ -13,7 +13,11 @@ export default function MessageList(props) {
                 <b>{m.username}</b>
               </div>
               <div className="messsageTime">
-                <i>{moment(m.timestamp).fromNow()} </i>
+                <i>
+                  {formatDistanceToNow(new Date(m.timestamp), {
+                    addSuffix: true,
+                  })}{" "}
+                </i>
               </div>
             </div>
             <div className="messageText">{m.text}</div>

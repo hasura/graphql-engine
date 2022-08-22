@@ -1,7 +1,7 @@
-import { gql } from '@apollo/client';
-import ChatWrapper from './ChatWrapper';
-import '../App.css';
-import { useInterval } from '../hooks/useInterval';
+import { gql } from "@apollo/client";
+import ChatWrapper from "./ChatWrapper";
+import "../App.css";
+import { useInterval } from "../hooks/useInterval";
 
 const emitOnlineEvent = gql`
   mutation ($userId: Int!) {
@@ -33,21 +33,13 @@ function Chat(props) {
       <footer className="App-footer">
         <div className="hasura-logo">
           <img
-            src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg"
-            onClick={() => window.open('https://hasura.io')}
+            src="https://hasura.io/brand-assets/powered-by-hasura-primary-dark.svg"
+            onClick={() => window.open("https://hasura.io")}
             alt="Powered by Hasura"
           />
           &nbsp; | &nbsp;
           <a
-            href="https://realtime-chat.hasura.app/console"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Backend
-          </a>
-          &nbsp; | &nbsp;
-          <a
-            href="https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat"
+            href="https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/streaming-subscriptions-chat"
             target="_blank"
             rel="noopener noreferrer"
           >
