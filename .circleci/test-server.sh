@@ -61,9 +61,15 @@ init_jwt() {
 # The first argument is the relative path of the jwt-key-file. the jwt-key-file can be RSA or EdDSA
 # The second argument is the test to run, eg. test_jwt_claims_map.py::TestJWTClaimsMapBasic, test_jwt.py, etc.
 init_hge_and_test_jwt() {
+	local key_file
+	key_file="${OUTPUT_FOLDER}/${1}"
+	shift
+
 	run_hge_with_args serve
 	wait_for_port 8080
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/$1" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" $2
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$key_file" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" \
+		"$@"
 	kill_hge_servers
 }
 
@@ -199,6 +205,24 @@ export GRAPHQL_SERVICE_1="http://localhost:4020"
 export GRAPHQL_SERVICE_2="http://localhost:4021"
 export GRAPHQL_SERVICE_3="http://localhost:4022"
 
+PYTEST_REPORTING_ARGS=(
+	'-vv'     # show all passes and the full assertion text
+	'-r' 'a'  # show extra test summary info for every test except passes
+)
+
+PYTEST_COMMON_ARGS=(
+	"${PYTEST_REPORTING_ARGS[@]}"
+	--hge-urls="$HGE_URL"
+	--pg-urls="$HASURA_GRAPHQL_DATABASE_URL"
+)
+
+PYTEST_PARALLEL_ARGS=(
+	"${PYTEST_REPORTING_ARGS[@]}"
+	-n 2
+	--hge-urls "$HGE_URL" "${HGE_URL_2:-}"
+	--pg-urls "$HASURA_GRAPHQL_DATABASE_URL" "${HASURA_GRAPHQL_DATABASE_URL_2}"
+)
+
 HGE_PIDS=""
 WH_PID=""
 WHC_PID=""
@@ -212,11 +236,11 @@ run_pytest_parallel() {
 	trap stop_services ERR
 	if [ -n "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ]; then
 		set -x
-		pytest --hge-urls "$HGE_URL" "${HGE_URL_2:-}" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" "${HASURA_GRAPHQL_DATABASE_URL_2:-}" -n 2 --dist=loadfile "$@"
+		pytest "${PYTEST_PARALLEL_ARGS[@]}" "$@"
 		set +x
 	else
 		set -x
-		pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -n 1 "$@"
+		pytest "${PYTEST_COMMON_ARGS[@]}" "$@"
 		set +x
 	fi
 }
@@ -259,7 +283,10 @@ admin-secret-unauthorized-role)
 
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-unauthorized-role test_graphql_queries.py::TestUnauthorizedRolePermission
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-unauthorized-role \
+		test_graphql_queries.py::TestUnauthorizedRolePermission
 
 	kill_hge_servers
 
@@ -512,7 +539,10 @@ jwt-cookie-unauthorized-role)
 	run_hge_with_args serve
 
 	wait_for_port 8080
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" --test-unauthorized-role test_graphql_queries.py::TestFallbackUnauthorizedRoleCookie
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" \
+		--test-unauthorized-role \
+		test_graphql_queries.py::TestFallbackUnauthorizedRoleCookie
 
 	kill_hge_servers
 
@@ -521,7 +551,10 @@ jwt-cookie-unauthorized-role)
 	run_hge_with_args serve
 
 	wait_for_port 8080
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" --test-no-cookie-and-unauth-role test_graphql_queries.py::TestMissingUnauthorizedRoleAndCookie
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" \
+		--test-no-cookie-and-unauth-role \
+		test_graphql_queries.py::TestMissingUnauthorizedRoleAndCookie
 
 	kill_hge_servers
 
@@ -537,7 +570,10 @@ cors-domains)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-cors test_cors.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-cors \
+		test_cors.py
 
 	kill_hge_servers
 
@@ -558,7 +594,10 @@ auth-webhook-cookie)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-auth-webhook-header test_auth_webhook_cookie.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
+		--test-auth-webhook-header \
+		test_auth_webhook_cookie.py
 
 	kill_hge_servers
 	;;
@@ -579,7 +618,10 @@ ws-init-cookie-read-cors-enabled)
 	wait_for_port 8080
 
 	echo "$(time_elapsed): testcase 1: read cookie, cors enabled"
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-ws-init-cookie=read \
+		test_websocket_init_cookie.py
 
 	kill_hge_servers
 	;;
@@ -598,7 +640,10 @@ ws-init-cookie-noread)
 	WHC_PID=$!
 	wait_for_port 9876
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=noread test_websocket_init_cookie.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-ws-init-cookie=noread \
+		test_websocket_init_cookie.py
 
 	kill_hge_servers
 	;;
@@ -617,7 +662,9 @@ ws-init-cookie-read-cors-disabled)
 	WHC_PID=$!
 	wait_for_port 9876
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-ws-init-cookie=read test_websocket_init_cookie.py
 
 	kill_hge_servers
 	;;
@@ -636,7 +683,10 @@ ws-graphql-api-disabled)
 	WHC_PID=$!
 	wait_for_port 9876
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-graphql-disabled test_apis_disabled.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-graphql-disabled \
+		test_apis_disabled.py
 
 	kill_hge_servers
 
@@ -645,7 +695,10 @@ ws-graphql-api-disabled)
 	run_hge_with_args serve --enabled-apis metadata
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-graphql-disabled test_apis_disabled.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-graphql-disabled \
+		test_apis_disabled.py
 
 	kill_hge_servers
 	;;
@@ -665,7 +718,10 @@ ws-metadata-api-disabled)
 	WHC_PID=$!
 	wait_for_port 9876
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-metadata-disabled \
+		test_apis_disabled.py
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_ENABLED_APIS
@@ -673,7 +729,10 @@ ws-metadata-api-disabled)
 	run_hge_with_args serve --enabled-apis graphql
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-metadata-disabled \
+		test_apis_disabled.py
 
 	kill_hge_servers
 	;;
@@ -686,7 +745,10 @@ remote-schema-permissions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --enable-remote-schema-permissions test_remote_schema_permissions.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--enable-remote-schema-permissions \
+		test_remote_schema_permissions.py
 
 	unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
 
@@ -701,8 +763,14 @@ function-permissions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-function-permissions test_graphql_queries.py::TestGraphQLQueryFunctionPermissions
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-function-permissions test_graphql_mutations.py::TestGraphQLMutationFunctions
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-function-permissions \
+		test_graphql_queries.py::TestGraphQLQueryFunctionPermissions
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-function-permissions \
+		test_graphql_mutations.py::TestGraphQLMutationFunctions
 
 	unset HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS
 	unset HASURA_GRAPHQL_ADMIN_SECRET
@@ -720,7 +788,11 @@ roles-inheritance)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --enable-remote-schema-permissions --test-function-permissions test_roles_inheritance.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--enable-remote-schema-permissions \
+		--test-function-permissions \
+		test_roles_inheritance.py
 
 	unset HASURA_GRAPHQL_ADMIN_SECRET
 	unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
@@ -736,7 +808,9 @@ naming-conventions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		test_naming_conventions.py
 
 	kill_hge_servers
 
@@ -744,7 +818,9 @@ naming-conventions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		test_naming_conventions.py
 
 	kill_hge_servers
 
@@ -756,7 +832,9 @@ naming-conventions)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		test_naming_conventions.py
 
 	unset HASURA_GRAPHQL_ADMIN_SECRET
 	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
@@ -774,7 +852,10 @@ streaming-subscriptions)
   wait_for_port 8080
 
   # run all the subscriptions tests with streaming subscriptions enabled
-	pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_subscriptions.py --test-streaming-subscriptions
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-streaming-subscriptions \
+		test_subscriptions.py
 
   unset HASURA_GRAPHQL_ADMIN_SECRET
   unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
@@ -789,7 +870,9 @@ query-caching)
 	# use only one capability to disable cache striping
 	run_hge_with_args +RTS -N1 -RTS serve
 	wait_for_port 8080
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_graphql_queries.py::TestGraphQLQueryCaching
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		test_graphql_queries.py::TestGraphQLQueryCaching
 	kill_hge_servers
 	;;
 
@@ -811,7 +894,10 @@ query-logs)
 
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-logging test_logging.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-logging \
+		test_logging.py
 
 	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
 	kill_hge_servers
@@ -843,7 +929,10 @@ startup-db-calls)
 	# see https://github.com/hasura/graphql-engine-mono/pull/3813 for more information
 	run_hge_with_args serve
 	wait_for_port 8080
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-startup-db-calls test_startup_db_calls.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-startup-db-calls \
+		test_startup_db_calls.py
 
 	kill_hge_servers
 
@@ -887,7 +976,8 @@ EOF
 	wait_for_port 8080
 
 	# and then test graphql queries work
-	pytest -n 1 --hge-urls "$HGE_URL" \
+	pytest "${PYTEST_REPORTING_ARGS[@]}" \
+		--hge-urls "$HGE_URL" \
 		--pg-urls "$HASURA_GRAPHQL_PG_SOURCE_URL_1" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
 		--test-read-only-source \
@@ -915,7 +1005,7 @@ remote-schema-https)
 
 	wait_for_port 5001
 
-	pytest -n 1 --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" test_schema_stitching.py::TestRemoteSchemaBasic
+	pytest "${PYTEST_COMMON_ARGS[@]}" test_schema_stitching.py::TestRemoteSchemaBasic
 
 	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="${OLD_REMOTE_SCHEMAS_WEBHOOK_DOMAIN}"
 	kill_hge_servers
@@ -955,7 +1045,11 @@ webhook-request-context)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -s -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-request-context test_webhook_request_context.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
+		--test-webhook-request-context \
+		test_webhook_request_context.py
 
 	kill_hge_servers
 	;;
@@ -1000,7 +1094,11 @@ insecure-webhook)
 	echo -e "webhook pid $WH_PID"
 	wait_for_port 9090
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
+		--test-webhook-insecure \
+		test_webhook_insecure.py
 
 	kill_hge_servers
 	;;
@@ -1024,7 +1122,11 @@ insecure-webhook-with-admin-secret)
 	echo -e "webhook pid $WH_PID"
 	wait_for_port 9090
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
+		--test-webhook-insecure \
+		test_webhook_insecure.py
 
 	kill_hge_servers
 
@@ -1039,7 +1141,9 @@ apollo-federation)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_apollo_federation.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		test_apollo_federation.py
 
 	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
 	unset HASURA_GRAPHQL_ADMIN_SECRET
@@ -1061,7 +1165,10 @@ allowlist-queries)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-allowlist-queries test_allowlist_queries.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-allowlist-queries \
+		test_allowlist_queries.py
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_ENABLE_ALLOWLIST
@@ -1069,7 +1176,10 @@ allowlist-queries)
 	run_hge_with_args serve --enable-allowlist
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-allowlist-queries test_allowlist_queries.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-allowlist-queries \
+		test_allowlist_queries.py
 
 	kill_hge_servers
 	# end allowlist queries test
@@ -1083,7 +1193,9 @@ developer-api-tests)
 	run_hge_with_args serve --enabled-apis "$HASURA_GRAPHQL_ENABLED_APIS"
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-developer-api-enabled test_dev_endpoints.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-developer-api-enabled test_dev_endpoints.py
 
 	unset HASURA_GRAPHQL_ENABLED_APIS
 
@@ -1111,7 +1223,10 @@ jwk-url)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_max_age'
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-jwk-url \
+		-k 'test_cache_control_header_max_age'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
@@ -1121,7 +1236,10 @@ jwk-url)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_max_age'
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-jwk-url \
+		-k 'test_cache_control_header_max_age'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
@@ -1131,7 +1249,10 @@ jwk-url)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-jwk-url \
+		-k 'test_cache_control_header_no_caching'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
@@ -1141,7 +1262,10 @@ jwk-url)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-jwk-url \
+		-k 'test_cache_control_header_no_caching'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
@@ -1151,7 +1275,10 @@ jwk-url)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-jwk-url \
+		-k 'test_cache_control_header_no_caching'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
@@ -1161,7 +1288,10 @@ jwk-url)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_expires_header'
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-jwk-url \
+		-k 'test_expires_header'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
@@ -1230,7 +1360,9 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 	wait_for_port 8081
 
 	# run test
-	pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--test-hge-scale-url="http://localhost:8081" \
+		test_horizontal_scale.py
 
 	# Shutdown pgbouncer
 	psql "postgresql://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
@@ -1246,7 +1378,9 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 	sleep 20
 
 	# run test
-	pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--test-hge-scale-url="http://localhost:8081" \
+		test_horizontal_scale.py
 
 	# Shutdown pgbouncer
 	psql "postgresql://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
@@ -1272,7 +1406,7 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 # avoids an increasingly negative impact on our test run
 # time as we add more backends and tests.
 #
-# https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests
+# https://docs..org/en/6.2.x/usage.html#specifying-tests-selecting-tests
 # https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
 #
 backend-mssql)
@@ -1286,18 +1420,24 @@ backend-mssql)
 	add_mssql_source 8080 "$HASURA_GRAPHQL_MSSQL_SOURCE_URL"
 
 	# See note [Specifying Pytests with -k flag]
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql -k "MSSQL"
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--backend=mssql \
+		-k "MSSQL"
 
 	# start inherited roles test
 	echo -e "\n$(time_elapsed): <########## TEST INHERITED-ROLES WITH SQL SERVER BACKEND ###########################################>\n"
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -k TestGraphQLInheritedRolesMSSQL --backend mssql
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--backend=mssql \
+		-k TestGraphQLInheritedRolesMSSQL
 
 	# end inherited roles test
 
 	# start naming conventions test (failure for other than postgres backend)
 	echo -e "\n$(time_elapsed): <########## TEST NAMING CONVENTIONS WITH SQL SERVER BACKEND ###########################################>\n"
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -k TestNamingConventionsFailure --backend mssql
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--backend mssql \
+		-k TestNamingConventionsFailure
 	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
 	# end naming conventions test
 
@@ -1313,7 +1453,9 @@ backend-citus)
 	add_citus_source 8080 "$HASURA_GRAPHQL_CITUS_SOURCE_URL"
 
 	# See note [Specifying Pytests with -k flag]
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend citus -k "Citus"
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--backend=citus \
+		-k "Citus"
 
 	kill_hge_servers
 	;;
@@ -1329,7 +1471,9 @@ backend-bigquery)
 	add_bigquery_source 8080
 
 	# See note [Specifying Pytests with -k flag]
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend bigquery -k "Bigquery"
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--backend=bigquery \
+		-k "Bigquery"
 
 	kill_hge_servers
 	;;
