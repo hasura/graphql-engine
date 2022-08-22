@@ -14,7 +14,7 @@ export const zip = <T, U>(arr1: T[], arr2: U[]): [T, U][] => {
 };
 
 export const crossProduct = <T, U>(arr1: T[], arr2: U[]): [T, U][] => {
-  return arr1.flatMap(a1 => arr2.map(a2 => [a1, a2]) as [T, U][]);
+  return arr1.flatMap(a1 => arr2.map<[T,U]>(a2 => [a1, a2]));
 };
 
 export const tableNameEquals = (tableName1: TableName) => (tableName2: TableName): boolean => {

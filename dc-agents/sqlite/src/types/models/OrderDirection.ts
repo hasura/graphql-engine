@@ -2,4 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type OrderType = 'asc' | 'desc';
+export type OrderDirection = 'asc' | 'desc';

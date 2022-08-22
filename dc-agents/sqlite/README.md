@@ -55,6 +55,7 @@ Note: Boolean flags `{FLAG}` can be provided as `1`, `true`, `yes`, or omitted a
 | `DB_PRIVATECACHE` | `{FLAG}` | Shared | Keep caches between connections private. |
 | `DEBUGGING_TAGS` | `{FLAG}` | `false` | Outputs xml style tags in query comments for deugging purposes. |
 | `PRETTY_PRINT_LOGS` | `{FLAG}` | `false` | Uses `pino-pretty` to pretty print request logs |
+| `LOG_LEVEL` | `fatal` \| `error` \| `info` \| `debug` \| `trace` \| `silent` | `info` | The minimum log level to output |
 | `METRICS` | `{FLAG}` | `false` | Enables a `/metrics` prometheus metrics endpoint.
 
 ## Agent usage

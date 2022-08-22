@@ -1,6 +1,6 @@
 import { SchemaResponse, ScalarType, ColumnInfo, TableInfo } from "./types"
 import { Config } from "./config";
-import { connect } from './db';
+import { connect, SqlLogger } from './db';
 
 var sqliteParser = require('sqlite-parser');
 
@@ -148,10 +148,10 @@ function ddlPKs(ddl: any): Array<any> {
   })
 }
 
-export async function getSchema(config: Config): Promise<SchemaResponse> {
-  const db                                        = connect(config);
+export async function getSchema(config: Config, sqlLogger: SqlLogger): Promise<SchemaResponse> {
+  const db                                        = connect(config, sqlLogger);
   const [results, metadata]                       = await db.query("SELECT * from sqlite_schema");
-  const resultsT: Array<TableInfoInternal>        = results as unknown as Array<TableInfoInternal>;
+  const resultsT: Array<TableInfoInternal>        = results as Array<TableInfoInternal>;
   const filtered: Array<TableInfoInternal>        = resultsT.filter(table => includeTable(config,table));
   const result:   Array<TableInfo>                = filtered.map(formatTableInfo);
 
