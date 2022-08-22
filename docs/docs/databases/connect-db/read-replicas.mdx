@@ -1,16 +1,17 @@
 ---
-description: Hasura Cloud read replicas
-title: 'Cloud: Read replicas on Hasura Cloud'
+description: Hasura Cloud and Hasura Enterprise read replicas
+title: 'Cloud and EE: Read replicas on Hasura Cloud'
 keywords:
   - hasura
   - docs
   - cloud
+  - enterprise
   - read replicas
   - connections
   - pool
 sidebar_label: Read replicas
 sidebar_position: 1
-sidebar_class_name: cloud-icon
+sidebar_class_name: cloud-and-enterprise-icon
 ---
 
 import Tabs from '@theme/Tabs';
@@ -18,12 +19,14 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Cloud: Read replicas on Hasura Cloud <HeadingIcon icon={`cloud`} size={36} />
+# Read replicas
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
 
 ## Introduction
 
-Hasura Cloud can load balance queries and subscriptions across _read replicas_ while sending all mutations and metadata
-API calls to the primary.
+Hasura Cloud and Hasura Enterprise can load balance queries and subscriptions across _read replicas_ while sending all
+mutations and metadata API calls to the primary.
 
 ## Adding read replica URLs
 

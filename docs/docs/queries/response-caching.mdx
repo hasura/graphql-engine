@@ -9,17 +9,19 @@ keywords:
   - response
   - caching
 sidebar_position: 3
-sidebar_class_name: cloud-icon
+sidebar_class_name: cloud-and-enterprise-icon
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Cloud: Query response caching <HeadingIcon icon={`cloud`} size={36} />
+# Query response caching
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
 
 ## Introduction
 
-Hasura Cloud provides support for caching query responses, in order to improve performance for queries which are
-executed frequently. This includes actions and queries against remote schemas.
+Hasura Cloud and Enterprise Edition provide support for caching query responses, in order to improve performance for
+queries which are executed frequently. This includes actions and queries against remote schemas.
 
 Cached responses are stored in for a period of time in a LRU (least-recently used) cache, and removed from the cache as
 needed based on usage.

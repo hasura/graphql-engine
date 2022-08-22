@@ -14,7 +14,11 @@ keywords:
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# EE: Enable HTTPS for the Hasura EE Control Plane dashboard <HeadingIcon icon={`ee`} size={36} />
+# Enable HTTPS for the Hasura EE Control Plane dashboard
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Overview
 
 Modify the `global.uriScheme` value to `https` in the `overrides-values.yaml` and redeploy both lux and hge-pro using
 earlier instructions. Restart all non-stateful services to enable https.
