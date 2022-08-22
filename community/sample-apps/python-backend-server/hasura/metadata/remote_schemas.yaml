@@ -1,0 +1,5 @@
+- name: python
+  definition:
+    url: http://python-backend-server:8000/graphql
+    timeout_seconds: 60
+  comment: ""

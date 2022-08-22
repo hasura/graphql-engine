@@ -108,24 +108,6 @@ Let's send a webhook when a new user is created and print out their name.
 
     ```go
     func NewUserHandler(w http.ResponseWriter, r *http.Request) {
-        var user EventTriggerPayload[interface{}, struct {
-            Id   string
-            Name string
-        }]
-
-        err := json.NewDecoder(r.Body).Decode(&user)
-
-        if err != nil {
-            http.Error(w, err.Error(), http.StatusBadRequest)
-            return
-        }
-
-        fmt.Println("Hello", user.Event.Data.New.Name)
-
-        w.WriteHeader(200)
-    }
-
-    func NewUserHandler(w http.ResponseWriter, r *http.Request) {
         var u EventTriggerPayload[interface{}, struct {
             Id   string
             Name string

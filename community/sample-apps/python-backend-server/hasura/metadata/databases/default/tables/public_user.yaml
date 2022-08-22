@@ -1,0 +1,14 @@
+table:
+  name: user
+  schema: public
+event_triggers:
+  - name: newUser
+    definition:
+      enable_manual: true
+      insert:
+        columns: "*"
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: http://python-backend-server:8000/event
