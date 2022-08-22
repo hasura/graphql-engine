@@ -7,10 +7,13 @@
 -- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
+import Data.Char qualified as Char
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Data.Text.Casing qualified as C
+import Data.Text.Encoding as TE
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Schema.IfMatched
@@ -194,8 +197,8 @@ msColumnParser columnType (G.Nullability isNullable) =
     ColumnScalar scalarType ->
       possiblyNullable scalarType <$> case scalarType of
         -- text
-        MSSQL.CharType -> pure $ ODBC.TextValue <$> P.string
-        MSSQL.VarcharType -> pure $ ODBC.TextValue <$> P.string
+        MSSQL.CharType -> pure $ mkCharValue <$> P.string
+        MSSQL.VarcharType -> pure $ mkCharValue <$> P.string
         MSSQL.WcharType -> pure $ ODBC.TextValue <$> P.string
         MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
         MSSQL.WtextType -> pure $ ODBC.TextValue <$> P.string
@@ -232,11 +235,35 @@ msColumnParser columnType (G.Nullability isNullable) =
     possiblyNullable _scalarType
       | isNullable = fmap (fromMaybe ODBC.NullValue) . P.nullable
       | otherwise = id
+
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
       ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
         ODBC.TextValue $ G.unName value
       )
+
+    -- CHAR/VARCHAR in MSSQL _can_ represent the full UCS (Universal Coded Character Set),
+    -- but might not always if the collation used is not UTF-8 enabled
+    -- https://docs.microsoft.com/en-us/sql/t-sql/data-types/char-and-varchar-transact-sql?view=sql-server-ver16
+    --
+    -- NCHAR/NVARCHAR in MSSQL are always able to represent the full UCS
+    -- https://docs.microsoft.com/en-us/sql/t-sql/data-types/nchar-and-nvarchar-transact-sql?view=sql-server-ver16
+    --
+    -- We'd prefer to encode as CHAR/VARCHAR literals to CHAR/VARCHAR columns, as this
+    -- means better index performance, BUT as we don't know what the collation
+    -- the column is set to (an example is 'SQL_Latin1_General_CP437_BIN') and thus
+    -- what characters are available in order to do this safely.
+    --
+    -- Therefore, we are conservative and only convert on the HGE side when the
+    -- characters are all ASCII and guaranteed to be in the target character
+    -- set, if not we pass an NCHAR/NVARCHAR and let MSSQL implicitly convert it.
+
+    -- resolves https://github.com/hasura/graphql-engine/issues/8735
+    mkCharValue :: Text -> ODBC.Value
+    mkCharValue txt =
+      if T.all Char.isAscii txt
+        then ODBC.ByteStringValue (TE.encodeUtf8 txt) -- an ODBC.ByteStringValue becomes a VARCHAR
+        else ODBC.TextValue txt -- an ODBC.TextValue becomes an NVARCHAR
 
 msOrderByOperators ::
   NamingCase ->

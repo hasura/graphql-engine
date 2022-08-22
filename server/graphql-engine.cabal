@@ -1306,6 +1306,8 @@ test-suite tests-hspec
     Test.SQLServer.DefaultValuesSpec
     Test.Schema.DataValidation.Permissions.InsertSpec
     Test.Schema.DataValidation.Permissions.SelectSpec
+    Test.SQLServer.InsertVarcharColumnSpec
+    Test.SQLServer.VarcharLiteralsSpec
     Test.Schema.DefaultValuesSpec
     Test.Schema.EnumSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
