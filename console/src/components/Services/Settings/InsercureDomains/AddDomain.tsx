@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { addInsecureDomain } from '../../../../metadata/actions';
 
 import { inputStyles } from '../constants';
@@ -43,8 +43,6 @@ const AddDomain: React.FC<Props> = props => {
         </div>
         <Button
           className="mr-sm"
-          color="white"
-          size="xm"
           data-test="cancel-domain"
           onClick={() => {
             setToggle((toggle: boolean) => !toggle);
@@ -54,8 +52,7 @@ const AddDomain: React.FC<Props> = props => {
         </Button>
         <Button
           type="submit"
-          color="yellow"
-          size="sm"
+          mode="primary"
           data-test="add-tls-allow-list"
           onClick={saveWithToggle}
         >

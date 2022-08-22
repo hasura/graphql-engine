@@ -3,7 +3,7 @@ import Common from '../Common/Common';
 
 import { addRemoteSchema, RESET } from './addRemoteSchemaReducer';
 import Helmet from 'react-helmet';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { RemoteSchema } from '@/features/RemoteSchema';
 import { appPrefix, pageTitle } from '../constants';
 import {
@@ -58,8 +58,7 @@ const Add = ({ isRequesting, dispatch, ...props }) => {
         <div className={'item-center pt-md pb-sm'}>
           <Button
             type="submit"
-            color="yellow"
-            size="sm"
+            mode="primary"
             data-test="add-remote-schema-submit"
           >
             {isRequesting ? 'Adding...' : 'Add Remote Schema'}

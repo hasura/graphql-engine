@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
 import {
   showSuccessNotification,
@@ -62,10 +62,11 @@ class ExportMetadata extends Component {
           data-test="data-export-metadata"
           className="mr-md"
           size="sm"
-          color="white"
+          isLoading={isExporting}
+          loadingText="Exporting..."
           onClick={handleExport}
         >
-          {isExporting ? 'Exporting...' : 'Export metadata'}
+          Export metadata
         </Button>
       </div>
     );

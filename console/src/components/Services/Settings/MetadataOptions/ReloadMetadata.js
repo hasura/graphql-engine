@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
+import { IconTooltip } from '@/new-components/Tooltip';
 import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { reloadMetadata } from '../../../../metadata/actions';
 import { focusYellowRing } from '../../Data/constants';
 
@@ -36,7 +36,6 @@ class ReloadMetadata extends Component {
     const {
       dispatch,
       btnTooltipMessage,
-      tooltipStyle,
       showReloadRemoteSchemas = true,
     } = this.props;
     const { isReloading, shouldReloadRemoteSchemas, shouldReloadAllSources } =
@@ -67,24 +66,20 @@ class ReloadMetadata extends Component {
 
     const buttonText = isReloading ? 'Reloading' : 'Reload';
     return (
-      <>
+      <div className="flex items-center gap-6">
         <Button
           data-test="data-reload-metadata"
-          color="white"
           size="sm"
           disabled={this.state.isReloading}
           onClick={reloadMetadataAndLoadInconsistentMetadata}
-          className="mr-sm"
         >
           {this.props.buttonText || buttonText}
         </Button>
-        {btnTooltipMessage && (
-          <Tooltip message={btnTooltipMessage} tooltipStyle={tooltipStyle} />
-        )}
+        {btnTooltipMessage && <IconTooltip message={btnTooltipMessage} />}
         {showReloadRemoteSchemas && (
           <div className="items-center flex">
             <label
-              className="cursor-pointer mr-xs ml-md mb-0"
+              className="cursor-pointer flex items-center"
               disabled={this.state.isReloading}
             >
               <input
@@ -92,16 +87,16 @@ class ReloadMetadata extends Component {
                 onChange={this.toggleShouldReloadRemoteSchemas}
                 checked={shouldReloadRemoteSchemas}
                 readOnly
-                className={`mr-xs cursor-pointer ${focusYellowRing} rounded-sm !mr-xs`}
+                className={`cursor-pointer ${focusYellowRing} rounded-sm !mr-1 !mt-0`}
               />
               Reload all remote schemas
             </label>
-            <Tooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
+            <IconTooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
           </div>
         )}
         <div className="items-center flex">
           <label
-            className="cursor-pointer mr-xs ml-md mb-0"
+            className="cursor-pointer flex items-center"
             disabled={this.state.isReloading}
           >
             <input
@@ -109,13 +104,13 @@ class ReloadMetadata extends Component {
               onChange={this.toggleShouldReloadAllSources}
               checked={shouldReloadAllSources}
               readOnly
-              className={`mr-xs cursor-pointer ${focusYellowRing} rounded-sm !mr-xs`}
+              className={`cursor-pointer ${focusYellowRing} rounded-sm !mr-1 !mt-0`}
             />
             Reload all databases
           </label>
-          <Tooltip message="Check this if you have inconsistent databases." />
+          <IconTooltip message="Check this if you have inconsistent databases." />
         </div>
-      </>
+      </div>
     );
   }
 }

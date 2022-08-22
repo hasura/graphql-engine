@@ -1,6 +1,7 @@
 import React, { ComponentProps } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { FaArrowRight, FaBell, FaTimes } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import {
@@ -18,7 +19,6 @@ import {
   setPreReleaseNotificationOptOutInDB,
   updateConsoleNotificationsState,
 } from '../../telemetry/Actions';
-import Button from '../Common/Button';
 import {
   getReadAllNotificationsState,
   getConsoleScope,
@@ -757,7 +757,7 @@ const HasuraNotifications: React.FC<
             disabled={!numberNotifications || !consoleNotifications.length}
             className={styles.markAllAsReadBtn}
           >
-            mark all as read
+            Mark all as read
           </Button>
           <div
             className={styles.closeNotificationIcon}

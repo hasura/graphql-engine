@@ -162,3 +162,9 @@ input[id*='react-select'][id$='-input']:focus {
   width: calc(100% + 16px) !important;
   padding: 10px !important;
 }
+
+/* Fix bug due to the removal of a label style in ApiExplorer.scss which was impacting the whole UI */
+label {
+  font-weight: normal;
+  margin-bottom: 0;
+}

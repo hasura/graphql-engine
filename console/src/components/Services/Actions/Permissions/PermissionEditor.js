@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { saveActionPermission, removeActionPermission } from '../ServerIO';
 import { permCloseEdit } from './reducer';
 
@@ -30,8 +30,6 @@ const PermissionEditor = ({
     );
   }
 
-  const buttonStyle = 'mr-5';
-
   const closeEditor = () => {
     dispatch(permCloseEdit());
   };
@@ -44,8 +42,7 @@ const PermissionEditor = ({
     return (
       <Button
         onClick={saveFunc}
-        color="yellow"
-        className={buttonStyle}
+        mode="primary"
         disabled={isFetching}
         data-test="save-permissions-for-action"
       >
@@ -62,8 +59,8 @@ const PermissionEditor = ({
     return (
       <Button
         onClick={removeFunc}
-        color="red"
-        className={buttonStyle}
+        mode="destructive"
+        size="md"
         disabled={isFetching}
       >
         Remove
@@ -73,18 +70,22 @@ const PermissionEditor = ({
 
   const getCancelButton = () => {
     return (
-      <Button color="white" className={buttonStyle} onClick={closeEditor}>
-        Cancel
-      </Button>
+      <div className="ml-sm">
+        <Button mode="default" onClick={closeEditor}>
+          Cancel
+        </Button>
+      </div>
     );
   };
 
   return (
     <div className="bg-white mb-15 border-gray-300 p-3 border">
       <div className="mb-5">{permText}</div>
-      {getSaveButton()}
-      {getRemoveButton()}
-      {getCancelButton()}
+      <div className="flex">
+        {getSaveButton()}
+        {getRemoveButton()}
+        {getCancelButton()}
+      </div>
     </div>
   );
 };

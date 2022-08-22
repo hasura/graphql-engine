@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Button } from '@/new-components/Button';
 import PopUp from './PopUp';
 
 class TryItOut extends React.Component {
@@ -40,14 +41,14 @@ class TryItOut extends React.Component {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <button className={styles.default_button}>
+              <Button>
                 Try it with Glitch{' '}
                 <img
                   className={'img-responsive ' + styles.externalLinkImg}
                   src={externalLink}
                   alt={'externalLink'}
                 />
-              </button>
+              </Button>
             </a>
             <div className={styles.displayFlex + ' ' + commonStyle}>
               <span

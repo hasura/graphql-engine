@@ -1,4 +1,3 @@
-export { default as Button } from './Button/Button';
 export { default as CollapsibleToggle } from './CollapsibleToggle/CollapsibleToggle';
 export { default as CustomInputAutoSuggest } from './CustomInputAutoSuggest/CustomInputAutoSuggest';
 export { default as CustomInputTypesText } from './CustomInputTypes/TextInput.js';

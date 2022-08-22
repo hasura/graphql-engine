@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { FieldType } from './types';
 
 interface CollapsedFieldProps {
@@ -17,11 +18,16 @@ export const CollapsedField: React.FC<CollapsedFieldProps> = ({
     {i.return ? (
       <span className="pl-xs font-normal">{i.name}</span>
     ) : (
-      <button data-test={`field-${i.typeName}`} onClick={onExpand} id={i.name}>
+      <Button
+        size="sm"
+        data-test={`field-${i.typeName}`}
+        onClick={onExpand}
+        id={i.name}
+      >
         <span className={`pl-xs ${expanded ? 'font-semibold' : 'font-normal'}`}>
           {i.name}
         </span>
-      </button>
+      </Button>
     )}
     {i.return && (
       <>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GraphQLSchema } from 'graphql';
 import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '../../../../Common';
+import { Button } from '@/new-components/Button';
 import { graphQLCustomization as GType } from '../../types';
 import TypeMapping from './TypeMapping';
 import FieldNames from './FieldNames';
@@ -132,21 +132,22 @@ const GraphQLCustomizationEdit = ({
     <>
       <br />
       {!openEditor ? (
-        <Button
-          size="xs"
-          className="mt-md"
-          onClick={() => setOpenEditor(true)}
-          disabled={isDisabled}
-          data-test="remote-schema-customization-editor-expand-btn"
-        >
-          {!graphQLCustomization ? 'Add' : 'Edit'}
-        </Button>
+        <div className="mt-md">
+          <Button
+            size="sm"
+            onClick={() => setOpenEditor(true)}
+            disabled={isDisabled}
+            data-test="remote-schema-customization-editor-expand-btn"
+          >
+            {!graphQLCustomization ? 'Add' : 'Edit'}
+          </Button>
+        </div>
       ) : (
         <div
           className="border border-gray-300 p-md mt-xs w-[700px] bg-white"
           data-test="remote-schema-editor"
         >
-          <Button size="xs" onClick={() => setOpenEditor(false)}>
+          <Button size="sm" onClick={() => setOpenEditor(false)}>
             close
           </Button>
 
@@ -283,14 +284,16 @@ const GraphQLCustomizationEdit = ({
 
           {/* Adding a new field name */}
           {showFieldCustomizationBtn ? (
-            <Button
-              size="xs"
-              className="mt-md"
-              onClick={() => updateShowFieldCustomizationBtn(false)}
-              data-test="remote-schema-customization-open-field-mapping"
-            >
-              Add Field Mapping
-            </Button>
+            <div className="mt-md">
+              <Button
+                size="md"
+                mode="primary"
+                onClick={() => updateShowFieldCustomizationBtn(false)}
+                data-test="remote-schema-customization-open-field-mapping"
+              >
+                Add Field Mapping
+              </Button>
+            </div>
           ) : (
             <FieldNames
               mode="create"

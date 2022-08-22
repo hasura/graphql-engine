@@ -1,10 +1,6 @@
 import React from 'react';
-import {
-  buttonShadow,
-  inputStyles,
-  focusYellowRing,
-  addPlaceholderValue,
-} from '../utils';
+import { Button } from '@/new-components/Button';
+import { inputStyles, addPlaceholderValue } from '../utils';
 import { KeyValuePair } from '../stateDefaults';
 
 interface KeyValueInputProps {
@@ -69,14 +65,14 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({
             </div>
             {i < pairs.length - 1 ? (
               <div className="flex items-end">
-                <button
+                <Button
                   type="button"
+                  mode="destructive"
                   onClick={removePair}
                   data-test={`transform-${testId}-kv-remove-button-${i.toString()}`}
-                  className={`flex items-center text-sm font-medium h-btn px-3 ${buttonShadow} ${focusYellowRing}`}
                 >
                   Remove
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex items-end" />

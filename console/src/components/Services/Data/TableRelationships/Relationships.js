@@ -7,6 +7,7 @@ import {
   availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
+import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,
@@ -23,7 +24,6 @@ import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
-import Button from '../../../Common/Button/Button';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
@@ -91,8 +91,7 @@ const addRelationshipCellView = (
       <div className={styles.textNoNewLine}>
         {selectedRelationship === rel ? null : (
           <Button
-            size="xs"
-            color="yellow"
+            mode="primary"
             onClick={onAdd}
             data-test={
               relMetaData[0] === 'object'
@@ -120,8 +119,7 @@ const addRelationshipCellView = (
             &nbsp;
             <Button
               type="submit"
-              color="yellow"
-              size="xs"
+              mode="primary"
               data-test={
                 relMetaData[0] === 'object'
                   ? `obj-rel-save-${relMetaData[1]}`
@@ -295,7 +293,6 @@ const AddRelationship = ({
       </div>
       <Button
         className="hide"
-        color="white"
         size="sm"
         onClick={e => {
           e.preventDefault();
@@ -498,7 +495,6 @@ const Relationships = ({
       addRelSection = (
         <Button
           type="submit"
-          color="white"
           size="sm"
           onClick={() => {
             dispatch(addNewRelClicked());

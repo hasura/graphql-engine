@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { clearAdminSecretState } from '../../../AppState';
 
 import { showSuccessNotification } from '../../Common/Notification';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
 class ClearAdminSecret extends Component {
   constructor() {
@@ -23,23 +23,19 @@ class ClearAdminSecret extends Component {
         <Button
           data-test="data-clear-access-key"
           className="mr-md"
-          color="white"
           size="sm"
+          isLoading={isClearing}
+          loadingText="Clearing..."
           onClick={e => {
             e.preventDefault();
-
             this.setState({ isClearing: true });
-
             clearAdminSecretState();
-
             dispatch(showSuccessNotification('Cleared admin-secret'));
-
             this.setState({ isClearing: false });
-
             this.props.router.push('/login');
           }}
         >
-          {isClearing ? 'Clearing...' : 'Logout (clear admin-secret)'}
+          Logout (clear admin-secret)
         </Button>
       </div>
     );

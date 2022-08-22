@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import { getAllDataTypeMap } from '../Common/utils';
 import {
@@ -17,7 +18,6 @@ import {
   RESET_COLUMN_TYPE_INFO,
   fetchFunctionInit,
 } from '../DataActions';
-import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
@@ -124,7 +124,6 @@ class ModifyTable extends React.Component {
       <Button
         type="submit"
         className="mr-sm"
-        color="white"
         size="sm"
         onClick={() => {
           const confirmMessage = `This will remove the table "${tableName}" from the GraphQL schema`;
@@ -142,7 +141,7 @@ class ModifyTable extends React.Component {
     const deleteBtn = (
       <Button
         type="submit"
-        color="red"
+        mode="destructive"
         size="sm"
         onClick={() => {
           const confirmMessage = `This will permanently delete the table "${tableName}" from the database`;

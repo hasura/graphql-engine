@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useContext, useState } from 'react';
-import Button from '../../../Common/Button';
+import { Button } from '@/new-components/Button';
 import { ActionContext } from './InheritedRoles';
 import { InheritedRole } from '../../../../metadata/types';
 import { inputStyles } from '../constants';
@@ -29,7 +29,6 @@ const TableRow: React.FC<TableRowProps> = ({ inheritedRole }) => {
         <div className="w-full border-l p-xs -left-1" key="actions">
           <Button
             size="sm"
-            color="white"
             className="mr-md"
             onClick={() => context?.onEdit(inheritedRole)}
           >
@@ -37,7 +36,7 @@ const TableRow: React.FC<TableRowProps> = ({ inheritedRole }) => {
           </Button>
           <Button
             size="sm"
-            color="red"
+            mode="destructive"
             onClick={() => context?.onDelete(inheritedRole)}
           >
             Remove
@@ -57,7 +56,7 @@ const TableRow: React.FC<TableRowProps> = ({ inheritedRole }) => {
         value={roleName}
       />
       <Button
-        color="yellow"
+        mode="primary"
         disabled={roleName.length === 0}
         onClick={() => context?.onAdd(roleName)}
       >

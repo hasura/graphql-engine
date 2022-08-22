@@ -1,9 +1,9 @@
 import React, { useReducer } from 'react';
 
+import { Button } from '@/new-components/Button';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { Dispatch, ReduxState } from '../../../../types';
 import { addExistingFunction } from '../Add/AddExistingTableViewActions';
-import Button from '../../../Common/Button';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import { Note } from '../../../Common/Note';
 import styles from './styles.module.scss';
@@ -52,7 +52,7 @@ const FuncNote: React.FC<FuncNoteProps> = ({
       )}
       <div className={styles.buttonsSection}>
         <Button
-          color="yellow"
+          mode="primary"
           onClick={onClickMainAction}
           data-test="track-as-mutation"
         >
@@ -65,7 +65,7 @@ const FuncNote: React.FC<FuncNoteProps> = ({
         >
           {thirdActionText}
         </Button>
-        <button
+        <Button
           className={`${styles.btnBlank} ${styles.queryButton}`}
           onClick={
             showTrackVolatileNote ? onClickSecondaryAction : onCancelClick
@@ -73,7 +73,7 @@ const FuncNote: React.FC<FuncNoteProps> = ({
           data-test="track-as-query"
         >
           {secondaryActionText}
-        </button>
+        </Button>
       </div>
       {showQueryNote ? (
         <div className={styles.nestedBox}>
