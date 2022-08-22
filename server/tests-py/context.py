@@ -840,7 +840,8 @@ class HGECtx:
 
         # Postgres version
         if self.is_default_backend:
-            pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+            with self.sql_query('show server_version_num') as result:
+                pg_version_text = result.first()['server_version_num']
             self.pg_version = int(pg_version_text)
 
     def reflect_tables(self):
@@ -902,9 +903,14 @@ class HGECtx:
         # Returning response headers to get the request id from response
         return resp.status_code, resp.json(object_pairs_hook=OrderedDict), resp.headers
 
+    # Executes a query, but does not return the result.
     def sql(self, q):
         with self.engine.connect() as conn:
-            return conn.execute(q)
+            conn.execute(q)
+
+    # This allows us to use the result of the query in a callback, before closing the connection.
+    def sql_query(self, q):
+        return HGECtxQuery(self.engine, q)
 
     def execute_query(self, q, url_path, headers = {}, expected_status_code = 200):
         h = headers.copy()
@@ -979,3 +985,16 @@ class HGECtx:
 
     def v1GraphqlExplain(self, q, headers = {}, expected_status_code = 200):
         return self.execute_query(q, '/v1/graphql/explain', headers, expected_status_code)
+
+class HGECtxQuery:
+    def __init__(self, engine: sqlalchemy.engine.Engine, query: str):
+        self.engine = engine
+        self.query = query
+
+    def __enter__(self):
+        self.connection = self.engine.connect()
+        return self.connection.execute(self.query)
+
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
+        if self.connection:
+            self.connection.close()
