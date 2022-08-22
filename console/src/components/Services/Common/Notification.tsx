@@ -7,7 +7,7 @@ import {
 } from 'react-notification-system-redux';
 import { showModal } from '@/store/modal/modal.actions';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
-import Button from '../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { Thunk } from '../../../types';
 import { Json } from '../../Common/utils/tsUtils';
 
@@ -211,9 +211,8 @@ const showErrorNotification = (
     if (error && 'action' in error) {
       return (
         <Button
+          mode="primary"
           className={styles.add_mar_top_small}
-          color="yellow"
-          size="sm"
           onClick={e => {
             e.preventDefault();
             window.location.reload();

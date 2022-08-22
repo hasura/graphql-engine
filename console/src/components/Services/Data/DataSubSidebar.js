@@ -19,7 +19,7 @@ import {
   getDatabaseTableTypeInfoForAllSources,
 } from './DataActions';
 import _push from './push';
-import Button from '../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
 // import { useGDCTreeClick } from './GDCTree/hooks/useGDCTreeClick';
@@ -302,11 +302,7 @@ const DataSubSidebar = props => {
             className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
           >
             <Link className={styles.padd_remove_full} to={manageDatabasesRoute}>
-              <Button
-                size="xs"
-                color="white"
-                data-test="sidebar-manage-database"
-              >
+              <Button size="sm" data-test="sidebar-manage-database">
                 Manage
               </Button>
             </Link>

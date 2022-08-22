@@ -4,6 +4,7 @@ import { screen, waitFor as testLibWaitFor } from '@testing-library/react';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { useMetadataVersion } from '../../hooks/useMetadataVersion';
 import { useMetadataMigration } from '../../hooks/useMetadataMigration';
 import {
@@ -64,15 +65,15 @@ describe('using the mutation in server mode', () => {
 
       return (
         <>
-          <button
+          <Button
             onClick={() => {
               mutation.mutate({
                 query: { type: 'pg_create_remote_relationship', args: {} },
               });
             }}
           >
-            mutate
-          </button>
+            Mutate
+          </Button>
           <h1>{query.isSuccess ? JSON.stringify(query.data) : 'NA'}</h1>
         </>
       );

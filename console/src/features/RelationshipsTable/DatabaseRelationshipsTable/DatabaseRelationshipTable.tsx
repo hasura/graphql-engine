@@ -11,6 +11,7 @@ import {
   FaTable,
   FaTrash,
 } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Relationship } from './types';
@@ -131,8 +132,7 @@ export const DatabaseRelationshipsTable = ({
           {relationships.map(relationship => (
             <CardedTable.TableBodyRow key={relationship.name}>
               <CardedTable.TableBodyCell>
-                <button
-                  className="text-secondary cursor-pointer"
+                <Button
                   onClick={() =>
                     onEditRow({
                       dataSourceName,
@@ -142,7 +142,7 @@ export const DatabaseRelationshipsTable = ({
                   }
                 >
                   {relationship.name}
-                </button>
+                </Button>
               </CardedTable.TableBodyCell>
 
               <CardedTable.TableBodyCell>

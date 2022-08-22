@@ -1,5 +1,5 @@
 import React, { FormEvent } from 'react';
-import { Button } from '../../../Common';
+import { Button } from '@/new-components/Button';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
 
@@ -24,13 +24,14 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = ({
       {children}
       <div className={styles.add_button_layout}>
         <Button
-          size="large"
-          color="yellow"
+          size="lg"
+          mode="primary"
           type="submit"
           style={{
             ...(loading && { cursor: 'progress' }),
           }}
-          disabled={loading}
+          isLoading={loading}
+          loadingText="Saving..."
           data-test="connect-database-btn"
           data-trackid="data-tab-connect-db-button"
         >

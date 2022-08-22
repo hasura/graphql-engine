@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import { FaExternalLinkAlt, FaDatabase } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 
 import YouTube from 'react-youtube';
 
@@ -191,21 +192,13 @@ const Onboarding: React.FC<OnboardingProps> = ({
               ))}
             </ul>
           </div>
-          <div className={styles.popup_buttons}>
-            <button
-              onClick={togglePopup}
-              className={styles.button}
-              data-test="btn-hide-for-now"
-            >
+          <div className="flex gap-2 p-4 justify-between border-t">
+            <Button onClick={togglePopup} data-test="btn-hide-for-now">
               Hide for now
-            </button>
-            <button
-              onClick={markCompleted}
-              className={`${styles.button} ${styles.muted}`}
-              data-test="btn-ob-dont-show-again"
-            >
+            </Button>
+            <Button onClick={markCompleted} data-test="btn-ob-dont-show-again">
               Don&apos;t show me again
-            </button>
+            </Button>
           </div>
         </div>
       )}

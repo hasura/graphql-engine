@@ -4,8 +4,8 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 
+import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
-import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
@@ -479,8 +479,7 @@ const RawSQL = ({
             type="submit"
             className={styles.add_mar_top}
             onClick={submitSQL}
-            color="yellow"
-            size="sm"
+            mode="primary"
             data-test="run-sql"
             disabled={!sqlText.length}
           >

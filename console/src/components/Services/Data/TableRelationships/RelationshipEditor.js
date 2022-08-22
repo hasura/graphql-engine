@@ -1,6 +1,6 @@
 import React from 'react';
 import { getRelDef } from './utils';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
@@ -95,8 +95,7 @@ class RelationshipEditor extends React.Component {
         return (
           <React.Fragment>
             <Button
-              color={'white'}
-              size={'xs'}
+              size="sm"
               onClick={this.toggleEditor}
               data-test={`relationship-toggle-editor-${relName}`}
             >
@@ -128,8 +127,7 @@ class RelationshipEditor extends React.Component {
       <div className={styles.activeEdit}>
         <div>
           <Button
-            color="white"
-            size="xs"
+            size="sm"
             onClick={this.toggleEditor}
             data-test={`relationship-toggle-editor-${relName}`}
           >
@@ -153,16 +151,14 @@ class RelationshipEditor extends React.Component {
         <div className={tableStyles.relEditButtons}>
           <Button
             className={styles.add_mar_right}
-            color="yellow"
-            size="xs"
+            mode="primary"
             onClick={this.save}
             data-test={`relationship-save-${relName}`}
           >
             Save
           </Button>
           <Button
-            color="red"
-            size="xs"
+            mode="destructive"
             onClick={onDelete}
             data-test={`relationship-remove-${relName}`}
           >

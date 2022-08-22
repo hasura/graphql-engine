@@ -2,8 +2,8 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import Select, { ValueType } from 'react-select';
 
+import { Button } from '@/new-components/Button';
 import { Index, IndexType, Table } from '../../../../dataSources/types';
-import { Button } from '../../../Common';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import { removeIndex, saveIndex } from './ModifyActions';
 import { showErrorNotification } from '../../Common/Notification';
@@ -328,7 +328,7 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = props => {
               return (
                 <div key={indexInfo.index_name} className="mb-sm">
                   <Button
-                    size="xs"
+                    size="sm"
                     className="mr-sm"
                     disabled={isPrimarykeyIndex(indexInfo)}
                     onClick={onClickRemoveIndex(indexInfo)}

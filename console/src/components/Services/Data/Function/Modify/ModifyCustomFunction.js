@@ -4,10 +4,10 @@ import PropTypes from 'prop-types';
 
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import { Button } from '@/new-components/Button';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
-import Button from '../../../../Common/Button/Button';
 import styles from './ModifyCustomFunction.module.scss';
 import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import FunctionCommentEditor from './FunctionCommentEditor';
@@ -153,7 +153,7 @@ class ModifyCustomFunction extends React.Component {
       return (
         <div className={styles.commonBtn}>
           <Button
-            color="white"
+            mode="default"
             className={styles.add_mar_right}
             onClick={this.handleUntrackCustomFunction}
             disabled={loading}
@@ -164,12 +164,13 @@ class ModifyCustomFunction extends React.Component {
               : 'Untrack Function'}
           </Button>
           <Button
-            color="red"
+            mode="destructive"
             onClick={this.handleDeleteCustomFunction}
             data-test={'custom-function-edit-delete-btn'}
-            disabled={loading}
+            isLoading={loading}
+            loadingText="Deleting Function..."
           >
-            {loading?.isDeleting ? 'Deleting Function...' : 'Delete Function'}
+            Delete Function
           </Button>
           {this.state.deleteConfirmationError ? (
             <span

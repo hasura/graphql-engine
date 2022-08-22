@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '../../../../Common';
+import { Button } from '@/new-components/Button';
 import TypeMapping from './TypeMapping';
 import { inputStyles } from '../../constants';
 
@@ -76,7 +76,7 @@ const FieldNames = ({
     <div className="border border-gray-300 p-md mt-xs">
       {mode === 'edit' ? null : (
         <div>
-          <Button size="xs" onClick={onClose}>
+          <Button size="sm" onClick={onClose}>
             Close
           </Button>
         </div>
@@ -155,15 +155,14 @@ const FieldNames = ({
       </div>
       {mode === 'edit' ? (
         <div className="mt-md flex justify-end">
-          <Button color="red" size="sm" onClick={onDelete}>
+          <Button mode="destructive" size="sm" onClick={onDelete}>
             Remove
           </Button>
         </div>
       ) : (
         <div className="mt-md">
           <Button
-            size="sm"
-            color="yellow"
+            mode="primary"
             onClick={onSave}
             data-test="add-field-customization"
           >
