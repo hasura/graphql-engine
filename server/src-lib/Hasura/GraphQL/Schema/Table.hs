@@ -2,6 +2,7 @@
 module Hasura.GraphQL.Schema.Table
   ( getTableGQLName,
     tableSelectColumnsEnum,
+    tableSelectColumnsPredEnum,
     tableUpdateColumnsEnum,
     updateColumnsPlaceholderParser,
     tableSelectPermissions,
@@ -16,6 +17,7 @@ where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
+import Data.Text (pack)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error (QErr)
@@ -83,7 +85,7 @@ getTableIdentifierName tableInfo =
 -- permissions for.
 tableSelectColumnsEnum ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (Backend b, MonadBuildSchemaBase r m n) =>
   SourceInfo b ->
   TableInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
@@ -96,6 +98,42 @@ tableSelectColumnsEnum sourceInfo tableInfo = do
         Just $
           G.Description $
             "select columns of table " <>> tableInfoName tableInfo
+  pure $
+    P.enum enumName description
+      <$> nonEmpty
+        [ ( define $ ciName column,
+            ciColumn column
+          )
+          | column <- columns
+        ]
+  where
+    define name =
+      P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
+
+-- | Table select columns enum of a certain type.
+--
+-- Parser for an enum type that matches, of a given table, certain columns which
+-- satisfy a predicate.  Used as a parameter for aggregation predicate
+-- arguments, among others. Maps to the table_select_column object.
+--
+-- Return Nothing if there's no column the current user has "select"
+-- permissions for.
+tableSelectColumnsPredEnum ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  (ColumnType b -> Bool) ->
+  G.Name ->
+  SourceInfo b ->
+  TableInfo b ->
+  m (Maybe (Parser 'Both n (Column b)))
+tableSelectColumnsPredEnum columnPredicate predName sourceInfo tableInfo = do
+  tableGQLName <- getTableGQLName @b tableInfo
+  columns <- filter (columnPredicate . ciType) <$> tableSelectColumns sourceInfo tableInfo
+  enumName <- mkTypename $ tableGQLName <> Name.__select_column <> Name.__ <> predName
+  let description =
+        Just $
+          G.Description $
+            pack ("select " ++ show predName ++ "columns of table ") <>> tableInfoName tableInfo
   pure $
     P.enum enumName description
       <$> nonEmpty

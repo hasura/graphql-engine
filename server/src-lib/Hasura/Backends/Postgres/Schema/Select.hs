@@ -23,6 +23,7 @@ import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
 import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
@@ -146,6 +147,7 @@ selectFunctionAggregate mkRootFieldName sourceInfo fi@FunctionInfo {..} descript
 selectFunctionConnection ::
   forall pgKind r m n.
   ( MonadBuildSchema ('Postgres pgKind) r m n,
+    AggregationPredicatesSchema ('Postgres pgKind),
     BackendTableSelectSchema ('Postgres pgKind)
   ) =>
   MkRootFieldName ->
@@ -194,8 +196,9 @@ selectFunctionConnection mkRootFieldName sourceInfo fi@FunctionInfo {..} descrip
 -- | Computed field parser
 computedFieldPG ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
-  BackendTableSelectSchema ('Postgres pgKind) =>
+  ( MonadBuildSchema ('Postgres pgKind) r m n,
+    BackendTableSelectSchema ('Postgres pgKind)
+  ) =>
   SourceInfo ('Postgres pgKind) ->
   ComputedFieldInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->

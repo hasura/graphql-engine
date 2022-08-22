@@ -606,3 +606,14 @@ __Entity = [G.name|_Entity|]
 
 __entities :: G.Name
 __entities = [G.name|_entities|]
+
+-- * Aggregation Predicates
+
+_arguments :: G.Name
+_arguments = [G.name|arguments|]
+
+_predicate :: G.Name
+_predicate = [G.name|predicate|]
+
+_filter :: G.Name
+_filter = [G.name|filter|]

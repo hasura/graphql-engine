@@ -60,6 +60,7 @@ module Hasura.RQL.Types.Table
     sortCols,
     tableInfoName,
     getRolePermInfo,
+    tableArrayRelationships,
     tcCustomName,
     tcCustomRootFields,
     tcComment,
@@ -928,6 +929,9 @@ tiName = tiCoreInfo . tciName
 
 tableInfoName :: TableInfo b -> TableName b
 tableInfoName = view tiName
+
+tableArrayRelationships :: TableInfo b -> [RelInfo b]
+tableArrayRelationships ti = [rel | rel <- getRels . _tciFieldInfoMap . _tiCoreInfo $ ti, riType rel == ArrRel]
 
 getRolePermInfo :: RoleName -> TableInfo b -> RolePermInfo b
 getRolePermInfo role tableInfo

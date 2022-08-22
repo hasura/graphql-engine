@@ -59,6 +59,7 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), MonadBuildSchema)
+import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
 import Hasura.GraphQL.Schema.NamingCase
@@ -104,6 +105,7 @@ setFieldNameCase tCase tInfo crf getFieldName tableName =
 buildTableQueryAndSubscriptionFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   MkRootFieldName ->
@@ -200,6 +202,7 @@ buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableI
 buildTableStreamingSubscriptionFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   MkRootFieldName ->
@@ -276,6 +279,7 @@ buildTableInsertMutationFields backendInsertAction mkRootFieldName scenario sour
 buildTableUpdateMutationFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   -- | an action that builds @BackendUpdate@ with the
@@ -319,6 +323,7 @@ buildTableUpdateMutationFields mkBackendUpdate mkRootFieldName scenario sourceIn
 buildTableDeleteMutationFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   MkRootFieldName ->

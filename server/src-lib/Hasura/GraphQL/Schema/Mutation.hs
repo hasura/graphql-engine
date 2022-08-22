@@ -353,6 +353,7 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
 deleteFromTable ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   Scenario ->

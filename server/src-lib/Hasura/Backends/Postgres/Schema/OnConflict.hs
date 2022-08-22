@@ -56,7 +56,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- enum. See <https://github.com/hasura/graphql-engine/issues/6804>.
 onConflictFieldParser ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  ( MonadBuildSchema ('Postgres pgKind) r m n,
+    AggregationPredicatesSchema ('Postgres pgKind)
+  ) =>
   SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
@@ -73,7 +75,9 @@ onConflictFieldParser sourceInfo tableInfo = do
 -- | Create a parser for the @_on_conflict@ object of the given table.
 conflictObjectParser ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  ( MonadBuildSchema ('Postgres pgKind) r m n,
+    AggregationPredicatesSchema ('Postgres pgKind)
+  ) =>
   SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   Maybe (UpdPermInfo ('Postgres pgKind)) ->
