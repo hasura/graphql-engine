@@ -830,6 +830,9 @@ safeJsonQueryExpression expectedType jsonQuery =
       JsonSingleton -> nullExpression
       JsonArray -> emptyArrayExpression
 
+--------------------------------------------------------------------------------
+-- Constants
+
 data UnfurledJoin = UnfurledJoin
   { unfurledJoin :: Join,
     -- | Recorded if we joined onto an object relation.

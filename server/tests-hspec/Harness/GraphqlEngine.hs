@@ -13,6 +13,7 @@ module Harness.GraphqlEngine
     postMetadata_,
     postMetadata,
     postMetadataWithStatus,
+    postExplain,
     exportMetadata,
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
@@ -154,6 +155,18 @@ postGraphqlWithHeaders ::
   HasCallStack => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
 postGraphqlWithHeaders testEnvironment headers value =
   withFrozenCallStack $ postGraphqlYamlWithHeaders testEnvironment headers (object ["query" .= value])
+
+-- | post to /v1/graphql/explain endpoint
+postExplain :: HasCallStack => TestEnvironment -> Value -> IO Value
+postExplain testEnvironment value =
+  withFrozenCallStack $
+    post
+      testEnvironment
+      "/v1/graphql/explain"
+      [yaml|
+          query:
+            query: *value
+        |]
 
 -- | Same as 'post_', but defaults to the @"v1/metadata"@ endpoint.
 --
