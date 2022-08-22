@@ -174,7 +174,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                                                   _qAggregates = Nothing,
                                                   _qLimit = Nothing,
                                                   _qOffset = Nothing,
-                                                  _qWhere = Just (API.And []),
+                                                  _qWhere = Nothing,
                                                   _qOrderBy = Nothing
                                                 }
                                           )
@@ -183,7 +183,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                               _qAggregates = Nothing,
                               _qLimit = Just 1,
                               _qOffset = Nothing,
-                              _qWhere = Just (API.And []),
+                              _qWhere = Nothing,
                               _qOrderBy = Nothing
                             }
                       }
@@ -302,7 +302,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                                                         [("aggregate_count", API.StarCount)],
                                                   _qLimit = Nothing,
                                                   _qOffset = Nothing,
-                                                  _qWhere = Just (API.And []),
+                                                  _qWhere = Nothing,
                                                   _qOrderBy = Nothing
                                                 }
                                           )
@@ -318,7 +318,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                                     ],
                               _qLimit = Just 2,
                               _qOffset = Nothing,
-                              _qWhere = Just (API.And []),
+                              _qWhere = Nothing,
                               _qOrderBy = Nothing
                             }
                       }

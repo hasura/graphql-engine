@@ -151,7 +151,7 @@ mkPlan session (SourceConfig {}) ir = do
             case _saWhere (_asnArgs selectG) of
               Just expr -> BoolAnd [expr, _tpFilter (_asnPerm selectG)]
               Nothing -> _tpFilter (_asnPerm selectG)
-      whereClause <- translateBoolExp [] tableName whereClauseWithPermissions
+      whereClause <- translateBoolExpToExpression [] tableName whereClauseWithPermissions
       orderBy <- traverse (translateOrderBy tableName) (_saOrderBy $ _asnArgs selectG)
       pure
         IR.Q.Query
@@ -165,7 +165,7 @@ mkPlan session (SourceConfig {}) ir = do
                     _tpLimit (_asnPerm selectG)
                   ],
             _qOffset = fmap fromIntegral (_saOffset (_asnArgs selectG)),
-            _qWhere = Just whereClause,
+            _qWhere = whereClause,
             _qOrderBy = orderBy
           }
 
@@ -204,8 +204,8 @@ mkPlan session (SourceConfig {}) ir = do
         (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
         (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement _rTargetTable orderDirection (relationshipName : targetReversePath) orderByElement
 
-        targetTableWhereExp <- translateBoolExp [] _rTargetTable filterExp
-        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation (Just targetTableWhereExp) subOrderByRelations)]
+        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp subOrderByRelations)]
 
         pure (translatedOrderByElement, orderByRelations)
       AOCArrayAggregation relationshipInfo filterExp aggregateOrderByElement -> do
@@ -224,8 +224,8 @@ mkPlan session (SourceConfig {}) ir = do
                   _obeOrderDirection = orderDirection
                 }
 
-        targetTableWhereExp <- translateBoolExp [] _rTargetTable filterExp
-        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation (Just targetTableWhereExp) mempty)]
+        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp mempty)]
         pure (translatedOrderByElement, orderByRelations)
 
     mergeOrderByRelations ::
@@ -293,7 +293,7 @@ mkPlan session (SourceConfig {}) ir = do
         let targetTable = _aosTableFrom (_aarAnnSelect objRel)
         let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName objRel
         FieldsAndAggregates {..} <- translateAnnFields noPrefix targetTable (_aosFields (_aarAnnSelect objRel))
-        whereClause <- translateBoolExp [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
+        whereClause <- translateBoolExpToExpression [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
 
         recordTableRelationship
           sourceTableName
@@ -310,7 +310,7 @@ mkPlan session (SourceConfig {}) ir = do
             ( IR.Q.Query
                 { _qFields = _faaFields,
                   _qAggregates = _faaAggregates,
-                  _qWhere = Just whereClause,
+                  _qWhere = whereClause,
                   _qLimit = Nothing,
                   _qOffset = Nothing,
                   _qOrderBy = Nothing
@@ -429,6 +429,14 @@ mkPlan session (SourceConfig {}) ir = do
         Nothing -> throw400 NotSupported ("prepareLiterals: session var not found: " <>> v)
         Just s -> pure (IR.S.ValueLiteral (IR.S.String s))
 
+    translateBoolExpToExpression ::
+      [IR.R.RelationshipName] ->
+      IR.T.Name ->
+      AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m (Maybe IR.E.Expression)
+    translateBoolExpToExpression columnRelationshipReversePath sourceTableName boolExp = do
+      removeAlwaysTrueExpression <$> translateBoolExp columnRelationshipReversePath sourceTableName boolExp
+
     translateBoolExp ::
       [IR.R.RelationshipName] ->
       IR.T.Name ->
@@ -436,9 +444,9 @@ mkPlan session (SourceConfig {}) ir = do
       CPS.WriterT IR.R.TableRelationships m IR.E.Expression
     translateBoolExp columnRelationshipReversePath sourceTableName = \case
       BoolAnd xs ->
-        mkIfZeroOrMany IR.E.And <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolOr xs ->
-        mkIfZeroOrMany IR.E.Or <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolNot x ->
         IR.E.Not <$> (translateBoolExp columnRelationshipReversePath sourceTableName) x
       BoolField (AVColumn c xs) ->
@@ -455,6 +463,18 @@ mkPlan session (SourceConfig {}) ir = do
         mkIfZeroOrMany mk = \case
           [singleExp] -> singleExp
           zeroOrManyExps -> mk zeroOrManyExps
+
+    removeAlwaysTrueExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysTrueExpression = \case
+      IR.E.And [] -> Nothing
+      IR.E.Not (IR.E.Or []) -> Nothing
+      other -> Just other
+
+    removeAlwaysFalseExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysFalseExpression = \case
+      IR.E.Or [] -> Nothing
+      IR.E.Not (IR.E.And []) -> Nothing
+      other -> Just other
 
     translateOp ::
       [IR.R.RelationshipName] ->

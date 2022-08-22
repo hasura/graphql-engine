@@ -134,7 +134,7 @@ tests opts = do
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And []),
+                                _qWhere = Nothing,
                                 _qOrderBy = Nothing
                               }
                         }
@@ -196,7 +196,7 @@ tests opts = do
                                 _qAggregates = Nothing,
                                 _qLimit = Just 3,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And []),
+                                _qWhere = Nothing,
                                 _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
                               }
                         }
