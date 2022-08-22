@@ -13,7 +13,7 @@ import { metadata, relationshipQueryResponse } from './mocks';
 const url = 'http://localhost:8080';
 
 export default {
-  title: 'Features/Relationships/Database Relationship Table',
+  title: 'Data/Relationships/View Relationships',
   component: DatabaseRelationshipsTable,
   decorators: [ReactQueryDecorator()],
   parameters: {
@@ -33,5 +33,6 @@ export const Primary: Story<DatabaseRelationshipsTableProps> = args => (
 );
 
 Primary.args = {
-  target: { database: 'default', table: 'Album', schema: 'public' },
+  dataSourceName: 'chinook',
+  table: { name: 'Employee', schema: 'public' },
 };

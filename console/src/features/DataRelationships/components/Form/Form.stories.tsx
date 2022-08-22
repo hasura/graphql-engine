@@ -24,23 +24,29 @@ export const WithExistingRelationship: ComponentStory<typeof Form> = args => (
 );
 WithExistingRelationship.args = {
   existingRelationship: {
-    fromType: 'table',
-    toType: 'table',
-    name: 'products',
-    reference: 'default',
-    referenceTable: 'user',
-    target: 'default',
-    targetTable: 'product',
-    type: 'Object',
-    fieldsFrom: ['id'],
-    fieldsTo: ['fk_user_id'],
-    relationship: {
-      name: 'products',
-      using: {
-        manual_configuration: {
-          remote_table: 'product',
-          column_mapping: { id: 'fk_user_id' },
+    name: 'Customers',
+    type: 'toLocalTableFk',
+    toLocalTable: {
+      name: 'Customer',
+      schema: 'public',
+    },
+    relationship_type: 'Array',
+    mapping: {
+      from: {
+        source: 'chinook',
+        table: {
+          name: 'Employee',
+          schema: 'public',
         },
+        columns: ['SupportRepId'],
+      },
+      to: {
+        source: 'chinook',
+        table: {
+          name: 'Customer',
+          schema: 'public',
+        },
+        columns: ['EmployeeId'],
       },
     },
   },

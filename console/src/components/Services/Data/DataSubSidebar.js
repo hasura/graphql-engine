@@ -76,7 +76,6 @@ const DataSubSidebar = props => {
     dataSources,
     sidebarLoadingState,
     currentTable,
-    headers,
   } = props;
   const { setDriver } = useDataSource();
 
@@ -327,7 +326,6 @@ const DataSubSidebar = props => {
             schemaLoading={schemaLoading}
             preLoadState={preLoadState}
             gdcItemClick={handleGDCTreeClick}
-            headers={headers}
           />
         </div>
       </ul>
@@ -356,7 +354,6 @@ const mapStateToProps = state => {
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
     dataSources: getDataSources(state),
     sidebarLoadingState: state.dataSidebar.loading,
-    headers: state.tables.dataHeaders,
   };
 };
 

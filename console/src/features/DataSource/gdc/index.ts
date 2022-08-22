@@ -17,5 +17,6 @@ export const gdc: Database = {
     getTableColumns: async () => {
       return Feature.NotImplemented;
     },
+    getFKRelationships: async () => Feature.NotImplemented,
   },
 };
