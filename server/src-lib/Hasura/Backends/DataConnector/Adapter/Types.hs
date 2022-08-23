@@ -25,8 +25,13 @@ import Servant.Client (BaseUrl)
 import Witch qualified
 
 data ConnSourceConfig = ConnSourceConfig
-  { value :: API.Config,
+  { -- | An arbitrary JSON payload to be passed to the agent in a
+    -- header. HGE validates this against the OpenAPI Spec provided by
+    -- the agent.
+    value :: API.Config,
+    -- | Kriti Template for transforming the supplied 'API.Config' value.
     template :: Maybe Text,
+    -- | Timeout setting for HTTP requests to the agent. -- TODO: verify with lyndon
     timeout :: Maybe SourceTimeout
   }
   deriving stock (Eq, Ord, Show, Generic)

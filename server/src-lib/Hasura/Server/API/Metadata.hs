@@ -269,28 +269,36 @@ instance FromJSON RQLMetadataV1 where
       "test_webhook_transform" -> RMTestWebhookTransform <$> args
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "bulk" -> RMBulk <$> args
-      -- backend specific
+      -- Backend prefixed metadata actions:
       _ -> do
+        -- 1) Parse the backend source kind and metadata command:
         (backendSourceKind, cmd) <- parseQueryType queryType
         dispatchAnyBackend @BackendAPI backendSourceKind \(backendSourceKind' :: BackendSourceKind b) -> do
+          -- 2) Parse the args field:
           argValue <- args
+          -- 2) Attempt to run all the backend specific command parsers against the source kind, cmd, and arg:
+          -- NOTE: If parsers succeed then this will pick out the first successful one.
           command <- choice <$> sequenceA [p backendSourceKind' cmd argValue | p <- metadataV1CommandParsers @b]
           onNothing command $
             fail $
               "unknown metadata command \"" <> T.unpack cmd
                 <> "\" for backend "
                 <> T.unpack (T.toTxt backendSourceKind')
-    where
-      parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
-      parseQueryType queryType =
-        let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
-         in (,cmd) <$> backendSourceKindFromText prefix
-              `onNothing` fail
-                ( "unknown metadata command \"" <> T.unpack queryType
-                    <> "\"; \""
-                    <> T.unpack prefix
-                    <> "\" was not recognized as a valid backend name"
-                )
+
+-- | Parse the Metadata API action type returning a tuple of the
+-- 'BackendSourceKind' and the action suffix.
+--
+-- For example: @"pg_add_source"@ parses as @(PostgresVanillaValue, "add_source")@
+parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
+parseQueryType queryType =
+  let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
+   in (,cmd) <$> backendSourceKindFromText prefix
+        `onNothing` fail
+          ( "unknown metadata command \"" <> T.unpack queryType
+              <> "\"; \""
+              <> T.unpack prefix
+              <> "\" was not recognized as a valid backend name"
+          )
 
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2

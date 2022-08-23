@@ -4,6 +4,9 @@
 module Hasura.Backends.DataConnector.API.V0.Table
   ( TableInfo (..),
     TableName (..),
+    ForeignKeys (..),
+    ConstraintName (..),
+    Constraint (..),
   )
 where
 
@@ -12,8 +15,9 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
+import Data.HashMap.Strict (HashMap)
 import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
@@ -42,7 +46,8 @@ data TableInfo = TableInfo
   { dtiName :: TableName,
     dtiColumns :: [API.V0.ColumnInfo],
     dtiPrimaryKey :: Maybe [API.V0.ColumnName],
-    dtiDescription :: Maybe Text
+    dtiDescription :: Maybe Text,
+    dtiForeignKeys :: Maybe ForeignKeys
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -56,3 +61,32 @@ instance HasCodec TableInfo where
         <*> requiredField "columns" "The columns of the table" .= dtiColumns
         <*> optionalFieldOrNull "primary_key" "The primary key of the table" .= dtiPrimaryKey
         <*> optionalFieldOrNull "description" "Description of the table" .= dtiDescription
+        <*> optionalFieldOrNull "foreign_keys" "Foreign Key Constraints" .= dtiForeignKeys
+
+--------------------------------------------------------------------------------
+
+newtype ForeignKeys = ForeignKeys {unConstraints :: HashMap ConstraintName Constraint}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+
+instance HasCodec ForeignKeys where
+  codec = dimapCodec ForeignKeys unConstraints $ codec @(HashMap ConstraintName Constraint)
+
+newtype ConstraintName = ConstraintName {unConstraintName :: Text}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey)
+  deriving anyclass (NFData, Hashable)
+
+data Constraint = Constraint
+  { cForeignTable :: Text,
+    cColumnMapping :: HashMap Text Text
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+
+instance HasCodec Constraint where
+  codec =
+    object "Constraint" $
+      Constraint
+        <$> requiredField "foreign_table" "The table referenced by the foreign key in the child table." .= cForeignTable
+        <*> requiredField "column_mapping" "The columns on which you want want to define the foreign key." .= cColumnMapping

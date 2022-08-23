@@ -4,6 +4,7 @@
 
 import type { ColumnInfo } from './ColumnInfo';
 import type { TableName } from './TableName';
+import type { Constraint } from './Constraint';
 
 export type TableInfo = {
   /**
@@ -19,5 +20,11 @@ export type TableInfo = {
    * The primary key of the table
    */
   primary_key?: Array<string> | null;
+
+  /**
+   * A record of Constraint names to Constraints for foreign key
+   * relationships.
+   */
+  foreign_keys?: Record<string, Constraint> | null;
 };
 
