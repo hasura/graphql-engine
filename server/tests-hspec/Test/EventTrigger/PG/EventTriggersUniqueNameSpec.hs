@@ -1,15 +1,16 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
--- | Test that when a table is untracked,  SQL triggers that were created on the
--- tables is also removed
-module Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec (spec) where
+-- | Test that only event triggers with unique names are allowed
+module Test.EventTrigger.PG.EventTriggersUniqueNameSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
+import Data.Aeson (Value (..))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Test.BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -49,8 +50,8 @@ spec =
 
 -- ** Schema
 
-schema :: Text -> [Schema.Table]
-schema authorTableName = [authorsTable authorTableName]
+schema :: Text -> Text -> [Schema.Table]
+schema authorTableName articleTableName = [authorsTable authorTableName, articlesTable articleTableName]
 
 authorsTable :: Text -> Schema.Table
 authorsTable tableName =
@@ -66,16 +67,30 @@ authorsTable tableName =
         ]
     }
 
+articlesTable :: Text -> Schema.Table
+articlesTable tableName =
+  (table tableName)
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [Schema.VInt 1, Schema.VStr "Article 1"],
+          [Schema.VInt 2, Schema.VStr "Article 2"]
+        ]
+    }
+
 --------------------------------------------------------------------------------
 -- Tests
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
-  cleanupEventTriggersWhenTableUntracked opts
+  duplicateTriggerNameNotAllowed opts
 
-cleanupEventTriggersWhenTableUntracked :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenTableUntracked opts =
-  describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
+duplicateTriggerNameNotAllowed :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+duplicateTriggerNameNotAllowed opts =
+  describe "only unique trigger names are allowed" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let insertQuery =
@@ -114,48 +129,53 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "untrack table, check the SQL triggers are deleted from the table" $
-      \(testEnvironment, _) -> do
-        let untrackTableQuery =
+    it "metadata_api: does not allow creating an event trigger with a name that already exists" $
+      \(testEnvironment, (webhookServer, _)) -> do
+        -- metadata <- GraphqlEngine.exportMetadata testEnvironment
+        let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+        let createEventTriggerWithDuplicateName =
               [yaml|
-              type: pg_untrack_table
+              type: pg_create_event_trigger
               args:
+                name: authors_all
                 source: postgres
-                table: 
-                  schema: hasura
-                  name: authors
+                table:
+                    name: articles
+                    schema: hasura
+                webhook: *webhookServerEchoEndpoint
+                insert:
+                    columns: "*"
             |]
 
-            untrackTableQueryExpectedResponse = [yaml| message: success |]
+            createEventTriggerWithDuplicateNameExpectedResponse =
+              [yaml| 
+                code: already-exists
+                error: Event trigger with name "authors_all" already exists
+                path: $.args
+              |]
 
-        -- Untracking the table should remove the SQL triggers on the table
+        -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
           opts
-          (GraphqlEngine.postMetadata testEnvironment untrackTableQuery)
-          untrackTableQueryExpectedResponse
+          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty createEventTriggerWithDuplicateName)
+          createEventTriggerWithDuplicateNameExpectedResponse
 
-        -- Query the database and see if the trigger exists
-        let checkIfTriggerExists =
-              [yaml|
-              type: run_sql
-              args:
-                source: postgres
-                sql: "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE NOT tgisinternal AND tgname = 'notify_hasura_insert_author_INSERT' AND tgrelid = 'hasura.authors'::regclass);"
-            |]
+    it "replace_metadata: does not allow creating an event trigger with a name that already exists" $
+      \(testEnvironment, (webhookServer, _)) -> do
+        let replaceMetadata = getReplaceMetadata webhookServer
 
-            expectedResponse =
-              [yaml|
-              result_type: TuplesOk
-              result:
-                - - exists
-                - - f
-            |]
+            replaceMetadataWithDuplicateNameExpectedResponse =
+              [yaml| 
+                code: not-supported
+                error: 'Event trigger with duplicate names not allowed: "authors_all"'
+                path: $.args
+              |]
 
-        -- If the cleanup happened then the hasura SQL trigger should not exists in the table
+        -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
           opts
-          (GraphqlEngine.postV2Query 200 testEnvironment checkIfTriggerExists)
-          expectedResponse
+          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty replaceMetadata)
+          replaceMetadataWithDuplicateNameExpectedResponse
 
 --------------------------------------------------------------------------------
 
@@ -163,7 +183,7 @@ cleanupEventTriggersWhenTableUntracked opts =
 
 postgresSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
 postgresSetup (testEnvironment, (webhookServer, _)) = do
-  Postgres.setup (schema "authors") (testEnvironment, ())
+  Postgres.setup (schema "authors" "articles") (testEnvironment, ())
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -181,10 +201,66 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
             columns: "*"
     |]
 
+getReplaceMetadata :: GraphqlEngine.Server -> Value
+getReplaceMetadata webhookServer =
+  let sourceConfig = Postgres.defaultSourceConfiguration
+      schemaName = schemaKeyword Fixture.Postgres
+      webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+   in [yaml|
+      type: replace_metadata
+      args: 
+        version: 3
+        sources:
+        - configuration: *sourceConfig
+          name: postgres
+          kind: postgres
+          tables:
+          - table:
+              schema: *schemaName
+              name: authors
+            event_triggers:
+            - name: authors_all
+              definition:
+                enable_manual: true
+                insert:
+                  columns: "*"
+              retry_conf:
+                interval_sec: 10
+                num_retries: 0
+                timeout_sec: 60
+              webhook: *webhookServerEchoEndpoint
+          - table:
+              schema: *schemaName
+              name: articles
+            event_triggers:
+            - name: authors_all
+              definition:
+                enable_manual: true
+                insert:
+                  columns: "*"
+                update:
+                  columns: "*"
+              retry_conf:
+                interval_sec: 10
+                num_retries: 0
+                timeout_sec: 60
+              webhook: *webhookServerEchoEndpoint
+    |]
+
 postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (_, (server, _)) = do
+postgresTeardown (testEnvironment, (server, _)) = do
+  GraphqlEngine.postMetadata_ testEnvironment $
+    [yaml|
+      type: bulk
+      args:
+      - type: pg_delete_event_trigger
+        args:
+          name: authors_all
+          source: postgres
+    |]
   stopServer server
   Postgres.dropTable (authorsTable "authors")
+  Postgres.dropTable (articlesTable "articles")
 
 webhookServerMkLocalTestEnvironment ::
   TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)

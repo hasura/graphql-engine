@@ -23,12 +23,14 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     recordError',
     unlockEventsInSource,
     updateColumnInEventTrigger,
+    checkIfTriggerExists,
   )
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
+import Data.HashSet qualified as HashSet
 import Data.Int (Int64)
 import Data.Set.NonEmpty qualified as NE
 import Data.Text.Lazy qualified as TL
@@ -291,6 +293,34 @@ unlockEventsInSource ::
   m (Either QErr Int)
 unlockEventsInSource sourceConfig eventIds =
   liftIO $ runPgSourceWriteTx sourceConfig (unlockEventsTx $ toList eventIds)
+
+-- Check if any trigger function for any of the operation exists with the 'triggerName'
+checkIfTriggerExists ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  TriggerName ->
+  HashSet Ops ->
+  m Bool
+checkIfTriggerExists sourceConfig triggerName ops = do
+  liftEitherM $
+    liftIO $
+      runPgSourceWriteTx sourceConfig $
+        -- We want to avoid creating event triggers with same name since this will
+        -- cause undesired behaviour. Note that only SQL functions associated with
+        -- SQL triggers are dropped when "replace = true" is set in the event trigger
+        -- configuration. Hence, the best way to check if we should allow the
+        -- creation of a trigger with the name 'triggerName' is to check if any
+        -- function with such a name exists in the the hdb_catalog.
+        --
+        -- For eg: If a create_event_trigger request comes with trigger name as
+        -- "triggerName" and there is already a trigger with "triggerName" in the
+        -- metadata, then
+        --    1. When "replace = false", the function with name 'triggerName' exists
+        --       so the creation is not allowed
+        --    2. When "replace = true", the function with name 'triggerName' is first
+        --       dropped, hence we are allowed to create the trigger with name
+        --       'triggerName'
+        fmap or (traverse (checkIfFunctionExistsQ triggerName) (HashSet.toList ops))
 
 ---- DATABASE QUERIES ---------------------
 --
@@ -700,11 +730,11 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
       | otherwise = Extractor sqlExp Nothing
     getAlias col = toColumnAlias $ Identifier $ getPGColTxt (ciColumn col)
 
-checkIfTriggerExists ::
+checkIfTriggerExistsForTableQ ::
   QualifiedTriggerName ->
   QualifiedTable ->
   Q.TxE QErr Bool
-checkIfTriggerExists (QualifiedTriggerName triggerName) (QualifiedObject schemaName tableName) =
+checkIfTriggerExistsForTableQ (QualifiedTriggerName triggerName) (QualifiedObject schemaName tableName) =
   fmap (runIdentity . Q.getRow) $
     Q.withQE
       defaultTxErrorHandler
@@ -723,6 +753,27 @@ checkIfTriggerExists (QualifiedTriggerName triggerName) (QualifiedObject schemaN
       (triggerName, schemaName, tableName)
       True
 
+checkIfFunctionExistsQ ::
+  TriggerName ->
+  Ops ->
+  Q.TxE QErr Bool
+checkIfFunctionExistsQ triggerName op = do
+  let qualifiedTriggerName = pgTriggerName op triggerName
+  fmap (runIdentity . Q.getRow) $
+    Q.withQE
+      defaultTxErrorHandler
+      [Q.sql|
+      SELECT EXISTS (
+        SELECT 1
+        FROM pg_catalog.pg_proc
+        JOIN pg_namespace ON pg_catalog.pg_proc.pronamespace = pg_namespace.oid
+        WHERE proname = $1
+        AND pg_namespace.nspname = 'hdb_catalog'
+        )
+     |]
+      (Identity qualifiedTriggerName)
+      True
+
 mkTrigger ::
   forall pgKind m.
   (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
@@ -737,7 +788,7 @@ mkTrigger triggerName table allCols op subOpSpec = do
   dbTriggerName <- mkTriggerFunctionQ triggerName table allCols op subOpSpec
   -- check if the SQL trigger exists and only if the SQL trigger doesn't exist
   -- we create the SQL trigger.
-  doesTriggerExist <- liftTx $ checkIfTriggerExists (pgTriggerName op triggerName) table
+  doesTriggerExist <- liftTx $ checkIfTriggerExistsForTableQ (pgTriggerName op triggerName) table
   unless doesTriggerExist $
     let sqlQuery =
           Q.fromText $ createTriggerSQL dbTriggerName (toSQLTxt table) (tshow op)

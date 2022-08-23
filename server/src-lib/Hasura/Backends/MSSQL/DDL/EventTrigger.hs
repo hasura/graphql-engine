@@ -17,6 +17,7 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     getMaintenanceModeVersion,
     qualifyTableName,
     createMissingSQLTriggers,
+    checkIfTriggerExists,
   )
 where
 
@@ -25,6 +26,7 @@ import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.FileEmbed (makeRelativeToProject)
+import Data.HashSet qualified as HashSet
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated, toTxt)
@@ -254,6 +256,19 @@ unlockEventsInSource sourceConfig eventIds =
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
       unlockEventsTx $ toList eventIds
+
+-- Check if any trigger for any of the operation exists with the 'triggerName'
+checkIfTriggerExists ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  TriggerName ->
+  HashSet Ops ->
+  m Bool
+checkIfTriggerExists sourceConfig triggerName ops = do
+  liftEitherM $
+    liftIO $
+      runMSSQLSourceWriteTx sourceConfig $
+        fmap or (traverse (checkIfTriggerExistsQ triggerName) (HashSet.toList ops))
 
 ---- DATABASE QUERIES ---------------------
 --
@@ -558,6 +573,27 @@ convertUTCToDatetime2 utcTime = do
   timezone <- liftIO $ getTimeZone utcTime
   let localTime = utcToLocalTime timezone utcTime
   return $ Datetime2 localTime
+
+checkIfTriggerExistsQ ::
+  TriggerName ->
+  Ops ->
+  TxE QErr Bool
+checkIfTriggerExistsQ triggerName op = do
+  let triggerNameWithOp = "notify_hasura_" <> triggerNameToTxt triggerName <> "_" <> tshow op
+  liftMSSQLTx $
+    singleRowQueryE
+      HGE.defaultMSSQLTxErrorHandler
+      -- We check the existence of trigger across the entire database irrespective of
+      -- the schema of the table
+      [ODBC.sql|
+          SELECT CASE WHEN EXISTS
+            ( SELECT 1
+              FROM sys.triggers WHERE name = $triggerNameWithOp
+            )
+          THEN CAST(1 AS BIT)
+          ELSE CAST(0 AS BIT)
+          END;
+        |]
 
 ---- MSSQL event trigger utility functions -----------------
 

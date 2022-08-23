@@ -29,6 +29,7 @@ import Data.Aeson (ToJSON, toJSON)
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
+import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
@@ -37,6 +38,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
+import Hasura.Backends.Postgres.DDL.EventTrigger (dropTriggerQ)
 import Hasura.Backends.Postgres.DDL.Source.Version
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
 import Hasura.Backends.Postgres.Types.ComputedField
@@ -375,7 +377,7 @@ postDropSourceHook ::
   SourceConfig ('Postgres pgKind) ->
   TableEventTriggers ('Postgres pgKind) ->
   m ()
-postDropSourceHook sourceConfig _tableTriggerMap = do
+postDropSourceHook sourceConfig tableTriggersMap = do
   -- Clean traces of Hasura in source database
   --
   -- There are three type of database we have to consider here, which we
@@ -409,7 +411,11 @@ postDropSourceHook sourceConfig _tableTriggerMap = do
           -- handle both cases uniformly, doing "ideally" nothing in the type 2
           -- database, and for default databases, we drop only source-related
           -- tables from the database's "hdb_catalog" schema.
-          | hdbMetadataTableExist ->
+          | hdbMetadataTableExist -> do
+            -- drop the event trigger functions from the table for default sources
+            for_ (HM.toList tableTriggersMap) $ \(_table, triggers) ->
+              for_ triggers $ \triggerName ->
+                liftTx $ dropTriggerQ triggerName
             Q.multiQE
               defaultTxErrorHandler
               $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= Q.sqlFromFile)

@@ -1,16 +1,16 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
--- | Test that when a source is dropped any event trigger information  such as
--- 'hdb_catalog' schema and the SQL triggers that were created on the tables is also
--- removed
-module Test.EventTrigger.EventTriggerDropSourceCleanupSpec (spec) where
+-- | Test that only event triggers with unique names are allowed
+module Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
+import Data.Aeson (Value (..))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Test.BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -50,8 +50,8 @@ spec =
 
 -- ** Schema
 
-schema :: Text -> [Schema.Table]
-schema authorTableName = [authorsTable authorTableName]
+schema :: Text -> Text -> [Schema.Table]
+schema authorTableName articleTableName = [authorsTable authorTableName, articlesTable articleTableName]
 
 authorsTable :: Text -> Schema.Table
 authorsTable tableName =
@@ -67,16 +67,30 @@ authorsTable tableName =
         ]
     }
 
+articlesTable :: Text -> Schema.Table
+articlesTable tableName =
+  (table tableName)
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [Schema.VInt 1, Schema.VStr "Article 1"],
+          [Schema.VInt 2, Schema.VStr "Article 2"]
+        ]
+    }
+
 --------------------------------------------------------------------------------
 -- Tests
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
-  cleanupEventTriggersWhenSourceDropped opts
+  duplicateTriggerNameNotAllowed opts
 
-cleanupEventTriggersWhenSourceDropped :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenSourceDropped opts =
-  describe "dropping a source with event triggers should remove 'hdb_catalog' schema and the SQL triggers created on the table" do
+duplicateTriggerNameNotAllowed :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+duplicateTriggerNameNotAllowed opts =
+  describe "only unique trigger names are allowed" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let insertQuery =
@@ -115,63 +129,53 @@ cleanupEventTriggersWhenSourceDropped opts =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "drop source, check the table works as it was before event trigger was created on it" $
-      \(testEnvironment, _) -> do
-        let dropSourceQuery =
+    it "metadata_api: does not allow creating an event trigger with a name that already exists" $
+      \(testEnvironment, (webhookServer, _)) -> do
+        -- metadata <- GraphqlEngine.exportMetadata testEnvironment
+        let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+        let createEventTriggerWithDuplicateName =
               [yaml|
-              type: mssql_drop_source
+              type: mssql_create_event_trigger
               args:
-                name: mssql
-                cascade: true
-            |]
-
-            dropSourceQueryExpectedRespnse = [yaml| message: success |]
-
-        -- Dropping the source should remove 'hdb_catalog' and SQL triggers related to it
-        shouldReturnYaml
-          opts
-          (GraphqlEngine.postMetadata testEnvironment dropSourceQuery)
-          dropSourceQueryExpectedRespnse
-
-        -- Test that the table works as it was before the event trigger was created
-        -- on it. To test that the tables are working, we need to test if
-        -- INSERT/DELETE/UPDATE operations on the table works as expected.
-        -- We do this in following steps:
-        --    1. Reconnect the source, but without event triggers on any tables. We
-        --       do this so that we can use run_sql to make SQL queries
-        --    2. Do an insert statement and see that it goes through
-
-        let sourceConfig = Sqlserver.defaultSourceConfiguration
-            addSourceQuery =
-              [yaml|
-              type: mssql_add_source
-              args:
-                name: mssql
-                configuration: *sourceConfig
-            |]
-        _ <- GraphqlEngine.postMetadata testEnvironment addSourceQuery
-
-        let insertQuery =
-              [yaml|
-              type: mssql_run_sql
-              args:
+                name: authors_all
                 source: mssql
-                sql: "INSERT INTO authors (id, name) values (4, N'harry')"
+                table:
+                    name: articles
+                    schema: hasura
+                webhook: *webhookServerEchoEndpoint
+                insert:
+                    columns: "*"
             |]
 
-            expectedResponse =
-              [yaml|
-              result_type: CommandOk
-              result: null
-            |]
+            createEventTriggerWithDuplicateNameExpectedResponse =
+              [yaml| 
+                code: already-exists
+                error: Event trigger with name "authors_all" already exists
+                path: $.args
+              |]
 
-        -- If the clean-up did not happen properly this insert query would fail
-        -- because the SQL triggers that were created by event triggers might try
-        -- to write to a non existent 'hdb_catalog' schema.
+        -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
           opts
-          (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
-          expectedResponse
+          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty createEventTriggerWithDuplicateName)
+          createEventTriggerWithDuplicateNameExpectedResponse
+
+    it "replace_metadata: does not allow creating an event trigger with a name that already exists" $
+      \(testEnvironment, (webhookServer, _)) -> do
+        let replaceMetadata = getReplaceMetadata webhookServer
+
+            replaceMetadataWithDuplicateNameExpectedResponse =
+              [yaml| 
+                code: not-supported
+                error: 'Event trigger with duplicate names not allowed: "authors_all"'
+                path: $.args
+              |]
+
+        -- Creating a event trigger with duplicate name should fail
+        shouldReturnYaml
+          opts
+          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty replaceMetadata)
+          replaceMetadataWithDuplicateNameExpectedResponse
 
 --------------------------------------------------------------------------------
 
@@ -179,7 +183,7 @@ cleanupEventTriggersWhenSourceDropped opts =
 
 mssqlSetupWithEventTriggers :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
 mssqlSetupWithEventTriggers (testEnvironment, (webhookServer, _)) = do
-  Sqlserver.setup (schema "authors") (testEnvironment, ())
+  Sqlserver.setup (schema "authors" "articles") (testEnvironment, ())
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -197,10 +201,66 @@ mssqlSetupWithEventTriggers (testEnvironment, (webhookServer, _)) = do
             columns: "*"
       |]
 
+getReplaceMetadata :: GraphqlEngine.Server -> Value
+getReplaceMetadata webhookServer =
+  let sourceConfig = Sqlserver.defaultSourceConfiguration
+      schemaName = schemaKeyword Fixture.SQLServer
+      webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+   in [yaml|
+      type: replace_metadata
+      args: 
+        version: 3
+        sources:
+        - configuration: *sourceConfig
+          name: mssql
+          kind: mssql
+          tables:
+          - table:
+              schema: *schemaName
+              name: authors
+            event_triggers:
+            - name: authors_all
+              definition:
+                enable_manual: true
+                insert:
+                  columns: "*"
+              retry_conf:
+                interval_sec: 10
+                num_retries: 0
+                timeout_sec: 60
+              webhook: *webhookServerEchoEndpoint
+          - table:
+              schema: *schemaName
+              name: articles
+            event_triggers:
+            - name: authors_all
+              definition:
+                enable_manual: true
+                insert:
+                  columns: "*"
+                update:
+                  columns: "*"
+              retry_conf:
+                interval_sec: 10
+                num_retries: 0
+                timeout_sec: 60
+              webhook: *webhookServerEchoEndpoint
+    |]
+
 mssqlTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-mssqlTeardown (_, (server, _)) = do
+mssqlTeardown (testEnvironment, (server, _)) = do
+  GraphqlEngine.postMetadata_ testEnvironment $
+    [yaml|
+      type: bulk
+      args:
+      - type: mssql_delete_event_trigger
+        args:
+          name: authors_all
+          source: mssql
+    |]
   stopServer server
   Sqlserver.dropTable (authorsTable "authors")
+  Sqlserver.dropTable (articlesTable "articles")
 
 webhookServerMkLocalTestEnvironment ::
   TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
