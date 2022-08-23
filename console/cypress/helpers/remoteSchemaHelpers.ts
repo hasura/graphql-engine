@@ -6,7 +6,7 @@ export const getRemoteSchemaName = (i: number, schemaName: string) =>
   `test-remote-schema-${schemaName}-${i}`;
 
 export const getRemoteGraphQLURL = () =>
-  'https://hasura-console-test.herokuapp.com/v1/graphql/';
+  'https://graphql-pokemon2.vercel.app/';
 
 export const getRemoteGraphQLURLFromEnv = () => 'GRAPHQL_URL';
 
