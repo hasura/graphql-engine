@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.EventTrigger.EventTriggersRecreationSpec (spec) where
+module Test.EventTrigger.PG.EventTriggersRecreationSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres

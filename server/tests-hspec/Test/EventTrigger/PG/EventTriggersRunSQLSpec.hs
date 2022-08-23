@@ -2,7 +2,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Testing the `run_sql` API
-module Test.EventTrigger.EventTriggersRunSQLSpec (spec) where
+module Test.EventTrigger.PG.EventTriggersRunSQLSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
 import Data.Aeson (eitherDecode)
@@ -148,6 +148,7 @@ new:
 
 triggerListeningToSpecificColumnsTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 triggerListeningToSpecificColumnsTests _ = do
+  -- TODO: Use postWithHeadersStatus to match the errors instead of the call via getResponseBody
   it
     ( "when a run_sql query drops a column of a table"
         <> " and an event trigger is defined to access that column"

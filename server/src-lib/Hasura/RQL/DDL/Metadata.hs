@@ -36,7 +36,7 @@ import Data.List qualified as L
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
-import Data.Text.Extended ((<<>))
+import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as HL
@@ -228,6 +228,17 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           mempty
   putMetadata metadata
 
+  -- Check for duplicate trigger names in the new source metadata
+  let oldSources = (_metaSources oldMetadata)
+  let newSources = (_metaSources metadata)
+  for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
+    onJust (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
+      dispatch newBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
+        let newTriggerNames = concatMap (OMap.keys . _tmEventTriggers) (OMap.elems $ _smTables newSourceMetadata)
+            duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (hashNub newTriggerNames)
+        unless (null duplicateTriggerNamesInNewMetadata) $ do
+          throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
+
   case _rmv2AllowInconsistentMetadata of
     AllowInconsistentMetadata ->
       buildSchemaCache mempty
@@ -354,8 +365,6 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                         tableName <- getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName
                         dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (Set.fromList $ catMaybes droppedOps)
       where
-        dispatch = AB.dispatchAnyBackend @BackendEventTrigger
-
         compose ::
           SourceName ->
           AB.AnyBackend i ->
@@ -363,6 +372,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           (forall b. BackendEventTrigger b => i b -> i b -> m ()) ->
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ SB.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
+
+    dispatch = AB.dispatchAnyBackend @BackendEventTrigger
 
 -- | Only includes the cron triggers with `included_in_metadata` set to `True`
 processCronTriggersMetadata :: Metadata -> Metadata

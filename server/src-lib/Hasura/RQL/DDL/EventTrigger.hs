@@ -212,10 +212,18 @@ createEventTriggerQueryMetadata q = do
             SMOTableObj @b table $
               MTOTrigger triggerName
   sourceInfo <- askSourceInfo @b source
-  when replace $ do
-    existingEventTriggerOps <- etiOpsDef <$> askEventTriggerInfo @b source triggerName
-    let droppedOps = droppedTriggerOps existingEventTriggerOps (etcDefinition triggerConf)
-    dropDanglingSQLTrigger @b (_siConfiguration sourceInfo) triggerName table droppedOps
+  let sourceConfig = (_siConfiguration sourceInfo)
+
+  -- Check for existence of a trigger with 'triggerName' only when 'replace' is not set
+  if replace
+    then do
+      existingEventTriggerOps <- etiOpsDef <$> askEventTriggerInfo @b source triggerName
+      let droppedOps = droppedTriggerOps existingEventTriggerOps (etcDefinition triggerConf)
+      dropDanglingSQLTrigger @b (_siConfiguration sourceInfo) triggerName table droppedOps
+    else do
+      doesTriggerExists <- checkIfTriggerExists @b sourceConfig triggerName (Set.fromList [INSERT, UPDATE, DELETE])
+      when doesTriggerExists $
+        throw400 AlreadyExists ("Event trigger with name " <> triggerNameToTxt triggerName <<> " already exists")
 
   buildSchemaCacheFor metadataObj $
     MetadataModifier $

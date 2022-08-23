@@ -3,6 +3,12 @@ args:
 - type: delete_event_trigger
   args:
     name: t1_retry
+- type: delete_event_trigger
+  args:
+    name: t2_timeout_short
+- type: delete_event_trigger
+  args:
+    name: t3_timeout_long
 - type: run_sql
   args:
     sql: |

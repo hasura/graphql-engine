@@ -1259,12 +1259,14 @@ test-suite tests-hspec
     Test.DisableRootFields.SelectPermission.EnableAggSpec
     Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.EventTrigger.EventTriggerDropSourceCleanupSpec
-    Test.EventTrigger.EventTriggersExtensionSchemaSpec
-    Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec
-    Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
-    Test.EventTrigger.EventTriggersRecreationSpec
-    Test.EventTrigger.EventTriggersRunSQLSpec
+    Test.EventTrigger.PG.EventTriggersRecreationSpec
+    Test.EventTrigger.PG.EventTriggersRunSQLSpec
+    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
+    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
+    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
+    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
