@@ -33,28 +33,28 @@
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.Build</span></a></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Cron.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">CronSchedule</span></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span id="local-6989586621689556685"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#populateInitialCronTriggerEvents"><span class="hs-identifier hs-type">populateInitialCronTriggerEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-37"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689556685"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556685"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-36"></span><span id="local-6989586621689562029"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#populateInitialCronTriggerEvents"><span class="hs-identifier hs-type">populateInitialCronTriggerEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689562029"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689562029"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">CronSchedule</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><a href="#local-6989586621689556685"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="#local-6989586621689562029"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-43"></span><span id="populateInitialCronTriggerEvents"><span class="annot"><span class="annottext">populateInitialCronTriggerEvents :: CronSchedule -&gt; TriggerName -&gt; m ()
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#populateInitialCronTriggerEvents"><span class="hs-identifier hs-var hs-var">populateInitialCronTriggerEvents</span></a></span></span><span> </span><span id="local-6989586621689556614"><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689556614"><span class="hs-identifier hs-var">schedule</span></a></span></span><span> </span><span id="local-6989586621689556613"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556613"><span class="hs-identifier hs-var">triggerName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621689556612"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689556612"><span class="hs-identifier hs-var">currentTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO UTCTime -&gt; m UTCTime
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#populateInitialCronTriggerEvents"><span class="hs-identifier hs-var hs-var">populateInitialCronTriggerEvents</span></a></span></span><span> </span><span id="local-6989586621689561958"><span class="annot"><span class="annottext">CronSchedule
+</span><a href="#local-6989586621689561958"><span class="hs-identifier hs-var">schedule</span></a></span></span><span> </span><span id="local-6989586621689561957"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689561957"><span class="hs-identifier hs-var">triggerName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621689561956"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621689561956"><span class="hs-identifier hs-var">currentTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO UTCTime -&gt; m UTCTime
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO UTCTime
 </span><span class="hs-identifier hs-var">C.getCurrentTime</span></span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689556609"><span class="annot"><span class="annottext">scheduleTimes :: [UTCTime]
-</span><a href="#local-6989586621689556609"><span class="hs-identifier hs-var hs-var">scheduleTimes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; Int -&gt; CronSchedule -&gt; [UTCTime]
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689561953"><span class="annot"><span class="annottext">scheduleTimes :: [UTCTime]
+</span><a href="#local-6989586621689561953"><span class="hs-identifier hs-var hs-var">scheduleTimes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; Int -&gt; CronSchedule -&gt; [UTCTime]
 </span><a href="Hasura.Eventing.ScheduledTrigger.html#generateScheduleTimes"><span class="hs-identifier hs-var">generateScheduleTimes</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689556612"><span class="hs-identifier hs-var">currentTime</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689561956"><span class="hs-identifier hs-var">currentTime</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">100</span></span><span> </span><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689556614"><span class="hs-identifier hs-var">schedule</span></a></span><span>
+</span><a href="#local-6989586621689561958"><span class="hs-identifier hs-var">schedule</span></a></span><span>
 </span><span id="line-46"></span><span>  </span><span class="annot"><span class="annottext">[CronEventSeed] -&gt; m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
@@ -65,8 +65,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TriggerName -&gt; UTCTime -&gt; CronEventSeed
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronEventSeed"><span class="hs-identifier hs-var">CronEventSeed</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556613"><span class="hs-identifier hs-var">triggerName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[UTCTime]
-</span><a href="#local-6989586621689556609"><span class="hs-identifier hs-var">scheduleTimes</span></a></span><span>
+</span><a href="#local-6989586621689561957"><span class="hs-identifier hs-var">triggerName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[UTCTime]
+</span><a href="#local-6989586621689561953"><span class="hs-identifier hs-var">scheduleTimes</span></a></span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -74,16 +74,16 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-49"></span><span class="hs-comment">-- | runCreateCronTrigger will update a existing cron trigger when the 'replace'</span><span>
 </span><span id="line-50"></span><span class="hs-comment">--   value is set to @true@ and when replace is @false@ a new cron trigger will</span><span>
 </span><span id="line-51"></span><span class="hs-comment">--   be created</span><span>
-</span><span id="line-52"></span><span id="local-6989586621689556605"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateCronTrigger"><span class="hs-identifier hs-type">runCreateCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556605"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-54"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689556605"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556605"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556605"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-52"></span><span id="local-6989586621689561949"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateCronTrigger"><span class="hs-identifier hs-type">runCreateCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689561949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561949"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CreateCronTrigger"><span class="hs-identifier hs-type">CreateCronTrigger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-59"></span><span>  </span><span class="annot"><a href="#local-6989586621689556605"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="#local-6989586621689561949"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-60"></span><span id="runCreateCronTrigger"><span class="annot"><span class="annottext">runCreateCronTrigger :: CreateCronTrigger -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateCronTrigger"><span class="hs-identifier hs-var hs-var">runCreateCronTrigger</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CreateCronTrigger"><span class="hs-identifier hs-type">CreateCronTrigger</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689556593"><span id="local-6989586621689556594"><span id="local-6989586621689556595"><span id="local-6989586621689556596"><span id="local-6989586621689556597"><span id="local-6989586621689556598"><span id="local-6989586621689556599"><span id="local-6989586621689556600"><span id="local-6989586621689556601"><span id="local-6989586621689556602"><span id="local-6989586621689556603"><span class="annot"><span class="annottext">Bool
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateCronTrigger"><span class="hs-identifier hs-var hs-var">runCreateCronTrigger</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CreateCronTrigger"><span class="hs-identifier hs-type">CreateCronTrigger</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689561937"><span id="local-6989586621689561938"><span id="local-6989586621689561939"><span id="local-6989586621689561940"><span id="local-6989586621689561941"><span id="local-6989586621689561942"><span id="local-6989586621689561943"><span id="local-6989586621689561944"><span id="local-6989586621689561945"><span id="local-6989586621689561946"><span id="local-6989586621689561947"><span class="annot"><span class="annottext">Bool
 [HeaderConf]
 Maybe Value
 Maybe Text
@@ -116,8 +116,8 @@ _cctCronSchedule :: CronSchedule
 _cctWebhook :: InputWebhook
 _cctName :: TriggerName
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#_cctResponseTransform"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689556581"><span class="annot"><span class="annottext">q :: CronTriggerMetadata
-</span><a href="#local-6989586621689556581"><span class="hs-identifier hs-var hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689561925"><span class="annot"><span class="annottext">q :: CronTriggerMetadata
+</span><a href="#local-6989586621689561925"><span class="hs-identifier hs-var hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">TriggerName
 -&gt; InputWebhook
 -&gt; CronSchedule
@@ -131,27 +131,27 @@ _cctName :: TriggerName
 -&gt; CronTriggerMetadata
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronTriggerMetadata"><span class="hs-identifier hs-var">CronTriggerMetadata</span></a></span><span>
 </span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556603"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
+</span><a href="#local-6989586621689561947"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
 </span><span id="line-64"></span><span>          </span><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621689556602"><span class="hs-identifier hs-var">_cctWebhook</span></a></span><span>
+</span><a href="#local-6989586621689561946"><span class="hs-identifier hs-var">_cctWebhook</span></a></span><span>
 </span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689556601"><span class="hs-identifier hs-var">_cctCronSchedule</span></a></span><span>
+</span><a href="#local-6989586621689561945"><span class="hs-identifier hs-var">_cctCronSchedule</span></a></span><span>
 </span><span id="line-66"></span><span>          </span><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621689556600"><span class="hs-identifier hs-var">_cctPayload</span></a></span><span>
+</span><a href="#local-6989586621689561944"><span class="hs-identifier hs-var">_cctPayload</span></a></span><span>
 </span><span id="line-67"></span><span>          </span><span class="annot"><span class="annottext">STRetryConf
-</span><a href="#local-6989586621689556599"><span class="hs-identifier hs-var">_cctRetryConf</span></a></span><span>
+</span><a href="#local-6989586621689561943"><span class="hs-identifier hs-var">_cctRetryConf</span></a></span><span>
 </span><span id="line-68"></span><span>          </span><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621689556598"><span class="hs-identifier hs-var">_cctHeaders</span></a></span><span>
+</span><a href="#local-6989586621689561942"><span class="hs-identifier hs-var">_cctHeaders</span></a></span><span>
 </span><span id="line-69"></span><span>          </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689556597"><span class="hs-identifier hs-var">_cctIncludeInMetadata</span></a></span><span>
+</span><a href="#local-6989586621689561941"><span class="hs-identifier hs-var">_cctIncludeInMetadata</span></a></span><span>
 </span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689556596"><span class="hs-identifier hs-var">_cctComment</span></a></span><span>
+</span><a href="#local-6989586621689561940"><span class="hs-identifier hs-var">_cctComment</span></a></span><span>
 </span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">Maybe RequestTransform
-</span><a href="#local-6989586621689556594"><span class="hs-identifier hs-var">_cctRequestTransform</span></a></span><span>
+</span><a href="#local-6989586621689561938"><span class="hs-identifier hs-var">_cctRequestTransform</span></a></span><span>
 </span><span id="line-72"></span><span>          </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689556593"><span class="hs-identifier hs-var">_cctResponseTransform</span></a></span><span>
+</span><a href="#local-6989586621689561937"><span class="hs-identifier hs-var">_cctResponseTransform</span></a></span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689556595"><span class="hs-identifier hs-var">_cctReplace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689561939"><span class="hs-identifier hs-var">_cctReplace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; m EncJSON
 forall (m :: * -&gt; *).
@@ -159,11 +159,11 @@ forall (m :: * -&gt; *).
  MonadMetadataStorageQueryAPI m) =&gt;
 CronTriggerMetadata -&gt; m EncJSON
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#updateCronTrigger"><span class="hs-identifier hs-var">updateCronTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556581"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><a href="#local-6989586621689561925"><span class="hs-identifier hs-var">q</span></a></span><span>
 </span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-76"></span><span>      </span><span id="local-6989586621689556578"><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
-</span><a href="#local-6989586621689556578"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; HashMap TriggerName CronTriggerInfo
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621689561922"><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
+</span><a href="#local-6989586621689561922"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; HashMap TriggerName CronTriggerInfo
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scCronTriggers"><span class="hs-identifier hs-var hs-var">scCronTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; HashMap TriggerName CronTriggerInfo)
 -&gt; m SchemaCache -&gt; m (HashMap TriggerName CronTriggerInfo)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -175,8 +175,8 @@ forall (m :: * -&gt; *). CacheRM m =&gt; m SchemaCache
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; TriggerName
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctName"><span class="hs-identifier hs-var hs-var">ctName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556581"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
-</span><a href="#local-6989586621689556578"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689561925"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
+</span><a href="#local-6989586621689561922"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">Maybe CronTriggerInfo
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -196,18 +196,18 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; Text
 </span><a href="Hasura.RQL.Types.EventTrigger.html#triggerNameToTxt"><span class="hs-identifier hs-var">triggerNameToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; TriggerName
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctName"><span class="hs-identifier hs-var hs-var">ctName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556581"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689561925"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-83"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; already exists&quot;</span></span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689556569"><span class="annot"><span class="annottext">metadataObj :: MetadataObjId
-</span><a href="#local-6989586621689556569"><span class="hs-identifier hs-var hs-var">metadataObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; MetadataObjId
+</span><span id="line-85"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689561913"><span class="annot"><span class="annottext">metadataObj :: MetadataObjId
+</span><a href="#local-6989586621689561913"><span class="hs-identifier hs-var hs-var">metadataObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOCronTrigger"><span class="hs-identifier hs-var">MOCronTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556603"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
-</span><span id="line-86"></span><span>          </span><span id="local-6989586621689556567"><span class="annot"><span class="annottext">metadata :: CronTriggerMetadata
-</span><a href="#local-6989586621689556567"><span class="hs-identifier hs-var hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689561947"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
+</span><span id="line-86"></span><span>          </span><span id="local-6989586621689561911"><span class="annot"><span class="annottext">metadata :: CronTriggerMetadata
+</span><a href="#local-6989586621689561911"><span class="hs-identifier hs-var hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-87"></span><span>            </span><span class="annot"><span class="annottext">TriggerName
 -&gt; InputWebhook
 -&gt; CronSchedule
@@ -221,31 +221,31 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; CronTriggerMetadata
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronTriggerMetadata"><span class="hs-identifier hs-var">CronTriggerMetadata</span></a></span><span>
 </span><span id="line-88"></span><span>              </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556603"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
+</span><a href="#local-6989586621689561947"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
 </span><span id="line-89"></span><span>              </span><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621689556602"><span class="hs-identifier hs-var">_cctWebhook</span></a></span><span>
+</span><a href="#local-6989586621689561946"><span class="hs-identifier hs-var">_cctWebhook</span></a></span><span>
 </span><span id="line-90"></span><span>              </span><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689556601"><span class="hs-identifier hs-var">_cctCronSchedule</span></a></span><span>
+</span><a href="#local-6989586621689561945"><span class="hs-identifier hs-var">_cctCronSchedule</span></a></span><span>
 </span><span id="line-91"></span><span>              </span><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621689556600"><span class="hs-identifier hs-var">_cctPayload</span></a></span><span>
+</span><a href="#local-6989586621689561944"><span class="hs-identifier hs-var">_cctPayload</span></a></span><span>
 </span><span id="line-92"></span><span>              </span><span class="annot"><span class="annottext">STRetryConf
-</span><a href="#local-6989586621689556599"><span class="hs-identifier hs-var">_cctRetryConf</span></a></span><span>
+</span><a href="#local-6989586621689561943"><span class="hs-identifier hs-var">_cctRetryConf</span></a></span><span>
 </span><span id="line-93"></span><span>              </span><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621689556598"><span class="hs-identifier hs-var">_cctHeaders</span></a></span><span>
+</span><a href="#local-6989586621689561942"><span class="hs-identifier hs-var">_cctHeaders</span></a></span><span>
 </span><span id="line-94"></span><span>              </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689556597"><span class="hs-identifier hs-var">_cctIncludeInMetadata</span></a></span><span>
+</span><a href="#local-6989586621689561941"><span class="hs-identifier hs-var">_cctIncludeInMetadata</span></a></span><span>
 </span><span id="line-95"></span><span>              </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689556596"><span class="hs-identifier hs-var">_cctComment</span></a></span><span>
+</span><a href="#local-6989586621689561940"><span class="hs-identifier hs-var">_cctComment</span></a></span><span>
 </span><span id="line-96"></span><span>              </span><span class="annot"><span class="annottext">Maybe RequestTransform
-</span><a href="#local-6989586621689556594"><span class="hs-identifier hs-var">_cctRequestTransform</span></a></span><span>
+</span><a href="#local-6989586621689561938"><span class="hs-identifier hs-var">_cctRequestTransform</span></a></span><span>
 </span><span id="line-97"></span><span>              </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689556593"><span class="hs-identifier hs-var">_cctResponseTransform</span></a></span><span>
+</span><a href="#local-6989586621689561937"><span class="hs-identifier hs-var">_cctResponseTransform</span></a></span><span>
 </span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
-</span><a href="#local-6989586621689556569"><span class="hs-identifier hs-var">metadataObj</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
+</span><a href="#local-6989586621689561913"><span class="hs-identifier hs-var">metadataObj</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
@@ -265,28 +265,28 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556603"><span class="hs-identifier hs-var">_cctName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556567"><span class="hs-identifier hs-var">metadata</span></a></span><span>
+</span><a href="#local-6989586621689561947"><span class="hs-identifier hs-var">_cctName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
+</span><a href="#local-6989586621689561911"><span class="hs-identifier hs-var">metadata</span></a></span><span>
 </span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">CronSchedule -&gt; TriggerName -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadMetadataStorageQueryAPI m) =&gt;
 CronSchedule -&gt; TriggerName -&gt; m ()
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#populateInitialCronTriggerEvents"><span class="hs-identifier hs-var">populateInitialCronTriggerEvents</span></a></span><span> </span><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689556601"><span class="hs-identifier hs-var">_cctCronSchedule</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556603"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
+</span><a href="#local-6989586621689561945"><span class="hs-identifier hs-var">_cctCronSchedule</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689561947"><span class="hs-identifier hs-var">_cctName</span></a></span><span>
 </span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span id="local-6989586621689556560"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#resolveCronTrigger"><span class="hs-identifier hs-type">resolveCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-105"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556560"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-104"></span><span id="local-6989586621689561904"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#resolveCronTrigger"><span class="hs-identifier hs-type">resolveCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561904"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-106"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronTriggerMetadata"><span class="hs-identifier hs-type">CronTriggerMetadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-108"></span><span>  </span><span class="annot"><a href="#local-6989586621689556560"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CronTriggerInfo"><span class="hs-identifier hs-type">CronTriggerInfo</span></a></span></span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><a href="#local-6989586621689561904"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CronTriggerInfo"><span class="hs-identifier hs-type">CronTriggerInfo</span></a></span></span><span>
 </span><span id="line-109"></span><span id="resolveCronTrigger"><span class="annot"><span class="annottext">resolveCronTrigger :: Environment -&gt; CronTriggerMetadata -&gt; m CronTriggerInfo
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#resolveCronTrigger"><span class="hs-identifier hs-var hs-var">resolveCronTrigger</span></a></span></span><span> </span><span id="local-6989586621689556559"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689556559"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronTriggerMetadata"><span class="hs-identifier hs-type">CronTriggerMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689556549"><span id="local-6989586621689556550"><span id="local-6989586621689556551"><span id="local-6989586621689556552"><span id="local-6989586621689556553"><span id="local-6989586621689556554"><span id="local-6989586621689556555"><span id="local-6989586621689556556"><span id="local-6989586621689556557"><span id="local-6989586621689556558"><span class="annot"><span class="annottext">Bool
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#resolveCronTrigger"><span class="hs-identifier hs-var hs-var">resolveCronTrigger</span></a></span></span><span> </span><span id="local-6989586621689561903"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689561903"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronTriggerMetadata"><span class="hs-identifier hs-type">CronTriggerMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689561893"><span id="local-6989586621689561894"><span id="local-6989586621689561895"><span id="local-6989586621689561896"><span id="local-6989586621689561897"><span id="local-6989586621689561898"><span id="local-6989586621689561899"><span id="local-6989586621689561900"><span id="local-6989586621689561901"><span id="local-6989586621689561902"><span class="annot"><span class="annottext">Bool
 [HeaderConf]
 Maybe Value
 Maybe Text
@@ -317,29 +317,29 @@ ctWebhook :: InputWebhook
 ctName :: TriggerName
 ctName :: CronTriggerMetadata -&gt; TriggerName
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctResponseTransform"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-110"></span><span>  </span><span id="local-6989586621689556539"><span class="annot"><span class="annottext">ResolvedWebhook
-</span><a href="#local-6989586621689556539"><span class="hs-identifier hs-var">webhookInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; InputWebhook -&gt; m ResolvedWebhook
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621689561883"><span class="annot"><span class="annottext">ResolvedWebhook
+</span><a href="#local-6989586621689561883"><span class="hs-identifier hs-var">webhookInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; InputWebhook -&gt; m ResolvedWebhook
 forall (m :: * -&gt; *).
 QErrM m =&gt;
 Environment -&gt; InputWebhook -&gt; m ResolvedWebhook
 </span><a href="Hasura.RQL.Types.Common.html#resolveWebhook"><span class="hs-identifier hs-var">resolveWebhook</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689556559"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621689556557"><span class="hs-identifier hs-var">ctWebhook</span></a></span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621689556537"><span class="annot"><span class="annottext">[EventHeaderInfo]
-</span><a href="#local-6989586621689556537"><span class="hs-identifier hs-var">headerInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; [HeaderConf] -&gt; m [EventHeaderInfo]
+</span><a href="#local-6989586621689561903"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621689561901"><span class="hs-identifier hs-var">ctWebhook</span></a></span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621689561881"><span class="annot"><span class="annottext">[EventHeaderInfo]
+</span><a href="#local-6989586621689561881"><span class="hs-identifier hs-var">headerInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; [HeaderConf] -&gt; m [EventHeaderInfo]
 forall (m :: * -&gt; *).
 QErrM m =&gt;
 Environment -&gt; [HeaderConf] -&gt; m [EventHeaderInfo]
 </span><a href="Hasura.RQL.DDL.EventTrigger.html#getHeaderInfosFromConf"><span class="hs-identifier hs-var">getHeaderInfosFromConf</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689556559"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621689556553"><span class="hs-identifier hs-var">ctHeaders</span></a></span><span>
-</span><span id="line-112"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689556536"><span class="annot"><span class="annottext">urlTemplate :: Text
-</span><a href="#local-6989586621689556536"><span class="hs-identifier hs-var hs-var">urlTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; Text
+</span><a href="#local-6989586621689561903"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
+</span><a href="#local-6989586621689561897"><span class="hs-identifier hs-var">ctHeaders</span></a></span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689561880"><span class="annot"><span class="annottext">urlTemplate :: Text
+</span><a href="#local-6989586621689561880"><span class="hs-identifier hs-var hs-var">urlTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; Text
 </span><a href="Data.URL.Template.html#printURLTemplate"><span class="hs-identifier hs-var">printURLTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">(URLTemplate -&gt; Text) -&gt; URLTemplate -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">InputWebhook -&gt; URLTemplate
 </span><a href="Hasura.RQL.Types.Common.html#unInputWebhook"><span class="hs-identifier hs-var hs-var">unInputWebhook</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621689556557"><span class="hs-identifier hs-var">ctWebhook</span></a></span><span>
+</span><a href="#local-6989586621689561901"><span class="hs-identifier hs-var">ctWebhook</span></a></span><span>
 </span><span id="line-113"></span><span>  </span><span class="annot"><span class="annottext">CronTriggerInfo -&gt; m CronTriggerInfo
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(CronTriggerInfo -&gt; m CronTriggerInfo)
@@ -358,55 +358,55 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; CronTriggerInfo
 </span><a href="Hasura.RQL.Types.SchemaCache.html#CronTriggerInfo"><span class="hs-identifier hs-var">CronTriggerInfo</span></a></span><span>
 </span><span id="line-115"></span><span>      </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556558"><span class="hs-identifier hs-var">ctName</span></a></span><span>
+</span><a href="#local-6989586621689561902"><span class="hs-identifier hs-var">ctName</span></a></span><span>
 </span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689556556"><span class="hs-identifier hs-var">ctSchedule</span></a></span><span>
+</span><a href="#local-6989586621689561900"><span class="hs-identifier hs-var">ctSchedule</span></a></span><span>
 </span><span id="line-117"></span><span>      </span><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621689556555"><span class="hs-identifier hs-var">ctPayload</span></a></span><span>
+</span><a href="#local-6989586621689561899"><span class="hs-identifier hs-var">ctPayload</span></a></span><span>
 </span><span id="line-118"></span><span>      </span><span class="annot"><span class="annottext">STRetryConf
-</span><a href="#local-6989586621689556554"><span class="hs-identifier hs-var">ctRetryConf</span></a></span><span>
+</span><a href="#local-6989586621689561898"><span class="hs-identifier hs-var">ctRetryConf</span></a></span><span>
 </span><span id="line-119"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ResolvedWebhook -&gt; EnvRecord ResolvedWebhook
 forall a. Text -&gt; a -&gt; EnvRecord a
 </span><a href="Hasura.RQL.Types.Common.html#EnvRecord"><span class="hs-identifier hs-var">EnvRecord</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689556536"><span class="hs-identifier hs-var">urlTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">ResolvedWebhook
-</span><a href="#local-6989586621689556539"><span class="hs-identifier hs-var">webhookInfo</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689561880"><span class="hs-identifier hs-var">urlTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">ResolvedWebhook
+</span><a href="#local-6989586621689561883"><span class="hs-identifier hs-var">webhookInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>      </span><span class="annot"><span class="annottext">[EventHeaderInfo]
-</span><a href="#local-6989586621689556537"><span class="hs-identifier hs-var">headerInfo</span></a></span><span>
+</span><a href="#local-6989586621689561881"><span class="hs-identifier hs-var">headerInfo</span></a></span><span>
 </span><span id="line-121"></span><span>      </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689556551"><span class="hs-identifier hs-var">ctComment</span></a></span><span>
+</span><a href="#local-6989586621689561895"><span class="hs-identifier hs-var">ctComment</span></a></span><span>
 </span><span id="line-122"></span><span>      </span><span class="annot"><span class="annottext">Maybe RequestTransform
-</span><a href="#local-6989586621689556550"><span class="hs-identifier hs-var">ctRequestTransform</span></a></span><span>
+</span><a href="#local-6989586621689561894"><span class="hs-identifier hs-var">ctRequestTransform</span></a></span><span>
 </span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689556549"><span class="hs-identifier hs-var">ctResponseTransform</span></a></span><span>
+</span><a href="#local-6989586621689561893"><span class="hs-identifier hs-var">ctResponseTransform</span></a></span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span id="local-6989586621689556720"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#updateCronTrigger"><span class="hs-identifier hs-type">updateCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-126"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556720"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-127"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689556720"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556720"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-129"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556720"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-125"></span><span id="local-6989586621689562064"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#updateCronTrigger"><span class="hs-identifier hs-type">updateCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689562064"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689562064"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689562064"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689562064"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-130"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronTriggerMetadata"><span class="hs-identifier hs-type">CronTriggerMetadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-132"></span><span>  </span><span class="annot"><a href="#local-6989586621689556720"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-132"></span><span>  </span><span class="annot"><a href="#local-6989586621689562064"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-133"></span><span id="updateCronTrigger"><span class="annot"><span class="annottext">updateCronTrigger :: CronTriggerMetadata -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#updateCronTrigger"><span class="hs-identifier hs-var hs-var">updateCronTrigger</span></a></span></span><span> </span><span id="local-6989586621689556532"><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556532"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-134"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689556531"><span class="annot"><span class="annottext">triggerName :: TriggerName
-</span><a href="#local-6989586621689556531"><span class="hs-identifier hs-var hs-var">triggerName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; TriggerName
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#updateCronTrigger"><span class="hs-identifier hs-var hs-var">updateCronTrigger</span></a></span></span><span> </span><span id="local-6989586621689561876"><span class="annot"><span class="annottext">CronTriggerMetadata
+</span><a href="#local-6989586621689561876"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689561875"><span class="annot"><span class="annottext">triggerName :: TriggerName
+</span><a href="#local-6989586621689561875"><span class="hs-identifier hs-var hs-var">triggerName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; TriggerName
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctName"><span class="hs-identifier hs-var hs-var">ctName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556532"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span><span>
+</span><a href="#local-6989586621689561876"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span><span>
 </span><span id="line-135"></span><span>  </span><span class="annot"><span class="annottext">TriggerName -&gt; m ()
 forall (m :: * -&gt; *).
 (CacheRM m, MonadError QErr m) =&gt;
 TriggerName -&gt; m ()
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-var">checkExists</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556531"><span class="hs-identifier hs-var">triggerName</span></a></span><span>
+</span><a href="#local-6989586621689561875"><span class="hs-identifier hs-var">triggerName</span></a></span><span>
 </span><span id="line-136"></span><span>  </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TriggerName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOCronTrigger"><span class="hs-identifier hs-var">MOCronTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556531"><span class="hs-identifier hs-var">triggerName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
+</span><a href="#local-6989586621689561875"><span class="hs-identifier hs-var">triggerName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-137"></span><span>    </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
@@ -426,8 +426,8 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556531"><span class="hs-identifier hs-var">triggerName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556532"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span><span>
+</span><a href="#local-6989586621689561875"><span class="hs-identifier hs-var">triggerName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
+</span><a href="#local-6989586621689561876"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span><span>
 </span><span id="line-139"></span><span>  </span><span class="annot"><span class="annottext">ClearCronEvents -&gt; m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
@@ -436,21 +436,21 @@ ClearCronEvents -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; ClearCronEvents
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#SingleCronTrigger"><span class="hs-identifier hs-var">SingleCronTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556531"><span class="hs-identifier hs-var">triggerName</span></a></span><span>
-</span><span id="line-140"></span><span>  </span><span id="local-6989586621689556527"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689556527"><span class="hs-identifier hs-var">currentTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO UTCTime -&gt; m UTCTime
+</span><a href="#local-6989586621689561875"><span class="hs-identifier hs-var">triggerName</span></a></span><span>
+</span><span id="line-140"></span><span>  </span><span id="local-6989586621689561871"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621689561871"><span class="hs-identifier hs-var">currentTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO UTCTime -&gt; m UTCTime
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO UTCTime
 </span><span class="hs-identifier hs-var">C.getCurrentTime</span></span><span>
-</span><span id="line-141"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689556526"><span class="annot"><span class="annottext">scheduleTimes :: [UTCTime]
-</span><a href="#local-6989586621689556526"><span class="hs-identifier hs-var hs-var">scheduleTimes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; Int -&gt; CronSchedule -&gt; [UTCTime]
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689561870"><span class="annot"><span class="annottext">scheduleTimes :: [UTCTime]
+</span><a href="#local-6989586621689561870"><span class="hs-identifier hs-var hs-var">scheduleTimes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; Int -&gt; CronSchedule -&gt; [UTCTime]
 </span><a href="Hasura.Eventing.ScheduledTrigger.html#generateScheduleTimes"><span class="hs-identifier hs-var">generateScheduleTimes</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689556527"><span class="hs-identifier hs-var">currentTime</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689561871"><span class="hs-identifier hs-var">currentTime</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">100</span></span><span> </span><span class="annot"><span class="annottext">(CronSchedule -&gt; [UTCTime]) -&gt; CronSchedule -&gt; [UTCTime]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; CronSchedule
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctSchedule"><span class="hs-identifier hs-var hs-var">ctSchedule</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
-</span><a href="#local-6989586621689556532"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span><span>
+</span><a href="#local-6989586621689561876"><span class="hs-identifier hs-var">cronTriggerMetadata</span></a></span><span>
 </span><span id="line-142"></span><span>  </span><span class="annot"><span class="annottext">[CronEventSeed] -&gt; m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
@@ -461,29 +461,29 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TriggerName -&gt; UTCTime -&gt; CronEventSeed
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronEventSeed"><span class="hs-identifier hs-var">CronEventSeed</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556531"><span class="hs-identifier hs-var">triggerName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[UTCTime]
-</span><a href="#local-6989586621689556526"><span class="hs-identifier hs-var">scheduleTimes</span></a></span><span>
+</span><a href="#local-6989586621689561875"><span class="hs-identifier hs-var">triggerName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[UTCTime]
+</span><a href="#local-6989586621689561870"><span class="hs-identifier hs-var">scheduleTimes</span></a></span><span>
 </span><span id="line-143"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-144"></span><span>
-</span><span id="line-145"></span><span id="local-6989586621689556525"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteCronTrigger"><span class="hs-identifier hs-type">runDeleteCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-146"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556525"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-147"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556525"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-148"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556525"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-145"></span><span id="local-6989586621689561869"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteCronTrigger"><span class="hs-identifier hs-type">runDeleteCronTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561869"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561869"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561869"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-150"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledTriggerName"><span class="hs-identifier hs-type">ScheduledTriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-151"></span><span>  </span><span class="annot"><a href="#local-6989586621689556525"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="#local-6989586621689561869"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-152"></span><span id="runDeleteCronTrigger"><span class="annot"><span class="annottext">runDeleteCronTrigger :: ScheduledTriggerName -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteCronTrigger"><span class="hs-identifier hs-var hs-var">runDeleteCronTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledTriggerName"><span class="hs-identifier hs-type">ScheduledTriggerName</span></a></span><span> </span><span id="local-6989586621689556523"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556523"><span class="hs-identifier hs-var">stName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteCronTrigger"><span class="hs-identifier hs-var hs-var">runDeleteCronTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledTriggerName"><span class="hs-identifier hs-type">ScheduledTriggerName</span></a></span><span> </span><span id="local-6989586621689561867"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689561867"><span class="hs-identifier hs-var">stName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-153"></span><span>  </span><span class="annot"><span class="annottext">TriggerName -&gt; m ()
 forall (m :: * -&gt; *).
 (CacheRM m, MonadError QErr m) =&gt;
 TriggerName -&gt; m ()
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-var">checkExists</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556523"><span class="hs-identifier hs-var">stName</span></a></span><span>
+</span><a href="#local-6989586621689561867"><span class="hs-identifier hs-var">stName</span></a></span><span>
 </span><span id="line-154"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
@@ -498,7 +498,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-156"></span><span>      </span><span class="annot"><span class="annottext">TriggerName -&gt; MetadataModifier
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#dropCronTriggerInMetadata"><span class="hs-identifier hs-var">dropCronTriggerInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556523"><span class="hs-identifier hs-var">stName</span></a></span><span>
+</span><a href="#local-6989586621689561867"><span class="hs-identifier hs-var">stName</span></a></span><span>
 </span><span id="line-157"></span><span>  </span><span class="annot"><span class="annottext">ClearCronEvents -&gt; m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
@@ -507,7 +507,7 @@ ClearCronEvents -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; ClearCronEvents
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#SingleCronTrigger"><span class="hs-identifier hs-var">SingleCronTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556523"><span class="hs-identifier hs-var">stName</span></a></span><span>
+</span><a href="#local-6989586621689561867"><span class="hs-identifier hs-var">stName</span></a></span><span>
 </span><span id="line-158"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
@@ -515,8 +515,8 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-159"></span><span>
 </span><span id="line-160"></span><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#dropCronTriggerInMetadata"><span class="hs-identifier hs-type">dropCronTriggerInMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
 </span><span id="line-161"></span><span id="dropCronTriggerInMetadata"><span class="annot"><span class="annottext">dropCronTriggerInMetadata :: TriggerName -&gt; MetadataModifier
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#dropCronTriggerInMetadata"><span class="hs-identifier hs-var hs-var">dropCronTriggerInMetadata</span></a></span></span><span> </span><span id="local-6989586621689556520"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556520"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#dropCronTriggerInMetadata"><span class="hs-identifier hs-var hs-var">dropCronTriggerInMetadata</span></a></span></span><span> </span><span id="local-6989586621689561864"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689561864"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-162"></span><span>  </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
 -&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
@@ -533,22 +533,22 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556520"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689561864"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-163"></span><span>
-</span><span id="line-164"></span><span id="local-6989586621689556518"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateScheduledEvent"><span class="hs-identifier hs-type">runCreateScheduledEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-165"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556518"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-164"></span><span id="local-6989586621689561862"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateScheduledEvent"><span class="hs-identifier hs-type">runCreateScheduledEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-165"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561862"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-166"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CreateScheduledEvent"><span class="hs-identifier hs-type">CreateScheduledEvent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-167"></span><span>  </span><span class="annot"><a href="#local-6989586621689556518"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-167"></span><span>  </span><span class="annot"><a href="#local-6989586621689561862"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-168"></span><span id="runCreateScheduledEvent"><span class="annot"><span class="annottext">runCreateScheduledEvent :: CreateScheduledEvent -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateScheduledEvent"><span class="hs-identifier hs-var hs-var">runCreateScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621689556517"><span class="annot"><span class="annottext">CreateScheduledEvent
-</span><a href="#local-6989586621689556517"><span class="hs-identifier hs-var">scheduledEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-169"></span><span>  </span><span id="local-6989586621689556516"><span class="annot"><span class="annottext">EventId
-</span><a href="#local-6989586621689556516"><span class="hs-identifier hs-var">eid</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CreateScheduledEvent -&gt; m EventId
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runCreateScheduledEvent"><span class="hs-identifier hs-var hs-var">runCreateScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621689561861"><span class="annot"><span class="annottext">CreateScheduledEvent
+</span><a href="#local-6989586621689561861"><span class="hs-identifier hs-var">scheduledEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-169"></span><span>  </span><span id="local-6989586621689561860"><span class="annot"><span class="annottext">EventId
+</span><a href="#local-6989586621689561860"><span class="hs-identifier hs-var">eid</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CreateScheduledEvent -&gt; m EventId
 forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
 CreateScheduledEvent -&gt; m EventId
 </span><a href="Hasura.Metadata.Class.html#createOneOffScheduledEvent"><span class="hs-identifier hs-var">createOneOffScheduledEvent</span></a></span><span> </span><span class="annot"><span class="annottext">CreateScheduledEvent
-</span><a href="#local-6989586621689556517"><span class="hs-identifier hs-var">scheduledEvent</span></a></span><span>
+</span><a href="#local-6989586621689561861"><span class="hs-identifier hs-var">scheduledEvent</span></a></span><span>
 </span><span id="line-170"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; m EncJSON) -&gt; EncJSON -&gt; m EncJSON
@@ -567,14 +567,14 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-string">&quot;event_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; EventId -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">EventId
-</span><a href="#local-6989586621689556516"><span class="hs-identifier hs-var">eid</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689561860"><span class="hs-identifier hs-var">eid</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-171"></span><span>
-</span><span id="line-172"></span><span id="local-6989586621689556672"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-type">checkExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556672"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556672"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689556672"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-172"></span><span id="local-6989586621689562016"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-type">checkExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689562016"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689562016"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689562016"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-173"></span><span id="checkExists"><span class="annot"><span class="annottext">checkExists :: TriggerName -&gt; m ()
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-var hs-var">checkExists</span></a></span></span><span> </span><span id="local-6989586621689556510"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556510"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-174"></span><span>  </span><span id="local-6989586621689556509"><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
-</span><a href="#local-6989586621689556509"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; HashMap TriggerName CronTriggerInfo
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-var hs-var">checkExists</span></a></span></span><span> </span><span id="local-6989586621689561854"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689561854"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-174"></span><span>  </span><span id="local-6989586621689561853"><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
+</span><a href="#local-6989586621689561853"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; HashMap TriggerName CronTriggerInfo
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scCronTriggers"><span class="hs-identifier hs-var hs-var">scCronTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; HashMap TriggerName CronTriggerInfo)
 -&gt; m SchemaCache -&gt; m (HashMap TriggerName CronTriggerInfo)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -592,8 +592,8 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 -&gt; HashMap TriggerName CronTriggerInfo -&gt; Maybe CronTriggerInfo
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556510"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
-</span><a href="#local-6989586621689556509"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m CronTriggerInfo -&gt; m CronTriggerInfo)
+</span><a href="#local-6989586621689561854"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerInfo
+</span><a href="#local-6989586621689561853"><span class="hs-identifier hs-var">cronTriggersMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m CronTriggerInfo -&gt; m CronTriggerInfo)
 -&gt; m CronTriggerInfo -&gt; m CronTriggerInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -608,15 +608,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; Text
 </span><a href="Hasura.RQL.Types.EventTrigger.html#triggerNameToTxt"><span class="hs-identifier hs-var">triggerNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556510"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689561854"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; does not exist&quot;</span></span><span>
 </span><span id="line-179"></span><span>
-</span><span id="line-180"></span><span id="local-6989586621689556505"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteScheduledEvent"><span class="hs-identifier hs-type">runDeleteScheduledEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-181"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556505"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#DeleteScheduledEvent"><span class="hs-identifier hs-type">DeleteScheduledEvent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689556505"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-180"></span><span id="local-6989586621689561849"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteScheduledEvent"><span class="hs-identifier hs-type">runDeleteScheduledEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#DeleteScheduledEvent"><span class="hs-identifier hs-type">DeleteScheduledEvent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689561849"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-182"></span><span id="runDeleteScheduledEvent"><span class="annot"><span class="annottext">runDeleteScheduledEvent :: DeleteScheduledEvent -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteScheduledEvent"><span class="hs-identifier hs-var hs-var">runDeleteScheduledEvent</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#DeleteScheduledEvent"><span class="hs-identifier hs-type">DeleteScheduledEvent</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689556502"><span id="local-6989586621689556503"><span class="annot"><span class="annottext">EventId
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runDeleteScheduledEvent"><span class="hs-identifier hs-var hs-var">runDeleteScheduledEvent</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#DeleteScheduledEvent"><span class="hs-identifier hs-type">DeleteScheduledEvent</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689561846"><span id="local-6989586621689561847"><span class="annot"><span class="annottext">EventId
 ScheduledEventType
 _dseEventId :: DeleteScheduledEvent -&gt; EventId
 _dseType :: DeleteScheduledEvent -&gt; ScheduledEventType
@@ -628,36 +628,36 @@ forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
 EventId -&gt; ScheduledEventType -&gt; m ()
 </span><a href="Hasura.Metadata.Class.html#dropEvent"><span class="hs-identifier hs-var">dropEvent</span></a></span><span> </span><span class="annot"><span class="annottext">EventId
-</span><a href="#local-6989586621689556502"><span class="hs-identifier hs-var">_dseEventId</span></a></span><span> </span><span class="annot"><span class="annottext">ScheduledEventType
-</span><a href="#local-6989586621689556503"><span class="hs-identifier hs-var">_dseType</span></a></span><span>
+</span><a href="#local-6989586621689561846"><span class="hs-identifier hs-var">_dseEventId</span></a></span><span> </span><span class="annot"><span class="annottext">ScheduledEventType
+</span><a href="#local-6989586621689561847"><span class="hs-identifier hs-var">_dseType</span></a></span><span>
 </span><span id="line-184"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-185"></span><span>
-</span><span id="line-186"></span><span id="local-6989586621689556498"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetScheduledEvents"><span class="hs-identifier hs-type">runGetScheduledEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-187"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556498"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-188"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556498"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-186"></span><span id="local-6989586621689561842"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetScheduledEvents"><span class="hs-identifier hs-type">runGetScheduledEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-187"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561842"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-188"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561842"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-190"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetScheduledEvents"><span class="hs-identifier hs-type">GetScheduledEvents</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-191"></span><span>  </span><span class="annot"><a href="#local-6989586621689556498"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-191"></span><span>  </span><span class="annot"><a href="#local-6989586621689561842"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-192"></span><span id="runGetScheduledEvents"><span class="annot"><span class="annottext">runGetScheduledEvents :: GetScheduledEvents -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetScheduledEvents"><span class="hs-identifier hs-var hs-var">runGetScheduledEvents</span></a></span></span><span> </span><span id="local-6989586621689556497"><span class="annot"><span class="annottext">GetScheduledEvents
-</span><a href="#local-6989586621689556497"><span class="hs-identifier hs-var">gse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetScheduledEvents"><span class="hs-identifier hs-var hs-var">runGetScheduledEvents</span></a></span></span><span> </span><span id="local-6989586621689561841"><span class="annot"><span class="annottext">GetScheduledEvents
+</span><a href="#local-6989586621689561841"><span class="hs-identifier hs-var">gse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-193"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">GetScheduledEvents -&gt; ScheduledEvent
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#_gseScheduledEvent"><span class="hs-identifier hs-var hs-var">_gseScheduledEvent</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEvents
-</span><a href="#local-6989586621689556497"><span class="hs-identifier hs-var">gse</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689561841"><span class="hs-identifier hs-var">gse</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-194"></span><span>    </span><span class="annot"><span class="annottext">ScheduledEvent
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#SEOneOff"><span class="hs-identifier hs-var">SEOneOff</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-195"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#SECron"><span class="hs-identifier hs-type">SECron</span></a></span><span> </span><span id="local-6989586621689556493"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556493"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; m ()
+</span><span id="line-195"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#SECron"><span class="hs-identifier hs-type">SECron</span></a></span><span> </span><span id="local-6989586621689561837"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689561837"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; m ()
 forall (m :: * -&gt; *).
 (CacheRM m, MonadError QErr m) =&gt;
 TriggerName -&gt; m ()
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-var">checkExists</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556493"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689561837"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-196"></span><span>  </span><span class="annot"><span class="annottext">Value -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; EncJSON) -&gt; m Value -&gt; m EncJSON
@@ -667,16 +667,16 @@ forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
 GetScheduledEvents -&gt; m Value
 </span><a href="Hasura.Metadata.Class.html#fetchScheduledEvents"><span class="hs-identifier hs-var">fetchScheduledEvents</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEvents
-</span><a href="#local-6989586621689556497"><span class="hs-identifier hs-var">gse</span></a></span><span>
+</span><a href="#local-6989586621689561841"><span class="hs-identifier hs-var">gse</span></a></span><span>
 </span><span id="line-197"></span><span>
-</span><span id="line-198"></span><span id="local-6989586621689556491"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetEventInvocations"><span class="hs-identifier hs-type">runGetEventInvocations</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-199"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556491"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-200"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556491"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-198"></span><span id="local-6989586621689561835"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetEventInvocations"><span class="hs-identifier hs-type">runGetEventInvocations</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-199"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561835"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-200"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561835"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-201"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-202"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetEventInvocations"><span class="hs-identifier hs-type">GetEventInvocations</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-203"></span><span>  </span><span class="annot"><a href="#local-6989586621689556491"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-203"></span><span>  </span><span class="annot"><a href="#local-6989586621689561835"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-204"></span><span id="runGetEventInvocations"><span class="annot"><span class="annottext">runGetEventInvocations :: GetEventInvocations -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetEventInvocations"><span class="hs-identifier hs-var hs-var">runGetEventInvocations</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetEventInvocations"><span class="hs-identifier hs-type">GetEventInvocations</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689556488"><span id="local-6989586621689556489"><span class="annot"><span class="annottext">ScheduledEventPagination
+</span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetEventInvocations"><span class="hs-identifier hs-var hs-var">runGetEventInvocations</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetEventInvocations"><span class="hs-identifier hs-type">GetEventInvocations</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689561832"><span id="local-6989586621689561833"><span class="annot"><span class="annottext">ScheduledEventPagination
 GetInvocationsBy
 _geiPagination :: GetEventInvocations -&gt; ScheduledEventPagination
 _geiInvocationsBy :: GetEventInvocations -&gt; GetInvocationsBy
@@ -684,29 +684,29 @@ _geiPagination :: ScheduledEventPagination
 _geiInvocationsBy :: GetInvocationsBy
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#_geiPagination"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-205"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">GetInvocationsBy
-</span><a href="#local-6989586621689556489"><span class="hs-identifier hs-var">_geiInvocationsBy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689561833"><span class="hs-identifier hs-var">_geiInvocationsBy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-206"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GIBEventId"><span class="hs-identifier hs-type">GIBEventId</span></a></span><span> </span><span class="annot"><span class="annottext">EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ScheduledEventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-207"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GIBEvent"><span class="hs-identifier hs-type">GIBEvent</span></a></span><span> </span><span id="local-6989586621689556483"><span class="annot"><span class="annottext">ScheduledEvent
-</span><a href="#local-6989586621689556483"><span class="hs-identifier hs-var">event</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScheduledEvent
-</span><a href="#local-6989586621689556483"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-207"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GIBEvent"><span class="hs-identifier hs-type">GIBEvent</span></a></span><span> </span><span id="local-6989586621689561827"><span class="annot"><span class="annottext">ScheduledEvent
+</span><a href="#local-6989586621689561827"><span class="hs-identifier hs-var">event</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScheduledEvent
+</span><a href="#local-6989586621689561827"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-208"></span><span>      </span><span class="annot"><span class="annottext">ScheduledEvent
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#SEOneOff"><span class="hs-identifier hs-var">SEOneOff</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-209"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#SECron"><span class="hs-identifier hs-type">SECron</span></a></span><span> </span><span id="local-6989586621689556482"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556482"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; m ()
+</span><span id="line-209"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#SECron"><span class="hs-identifier hs-type">SECron</span></a></span><span> </span><span id="local-6989586621689561826"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689561826"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; m ()
 forall (m :: * -&gt; *).
 (CacheRM m, MonadError QErr m) =&gt;
 TriggerName -&gt; m ()
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#checkExists"><span class="hs-identifier hs-var">checkExists</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689556482"><span class="hs-identifier hs-var">name</span></a></span><span>
-</span><span id="line-210"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithTotalCount"><span class="hs-identifier hs-type">WithTotalCount</span></a></span><span> </span><span id="local-6989586621689556480"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689556480"><span class="hs-identifier hs-var">count</span></a></span></span><span> </span><span id="local-6989586621689556479"><span class="annot"><span class="annottext">[ScheduledEventInvocation]
-</span><a href="#local-6989586621689556479"><span class="hs-identifier hs-var">invocations</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GetInvocationsBy
+</span><a href="#local-6989586621689561826"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-210"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithTotalCount"><span class="hs-identifier hs-type">WithTotalCount</span></a></span><span> </span><span id="local-6989586621689561824"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689561824"><span class="hs-identifier hs-var">count</span></a></span></span><span> </span><span id="local-6989586621689561823"><span class="annot"><span class="annottext">[ScheduledEventInvocation]
+</span><a href="#local-6989586621689561823"><span class="hs-identifier hs-var">invocations</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GetInvocationsBy
 -&gt; ScheduledEventPagination
 -&gt; m (WithTotalCount [ScheduledEventInvocation])
 forall (m :: * -&gt; *).
@@ -715,8 +715,8 @@ GetInvocationsBy
 -&gt; ScheduledEventPagination
 -&gt; m (WithTotalCount [ScheduledEventInvocation])
 </span><a href="Hasura.Metadata.Class.html#fetchInvocations"><span class="hs-identifier hs-var">fetchInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetInvocationsBy
-</span><a href="#local-6989586621689556489"><span class="hs-identifier hs-var">_geiInvocationsBy</span></a></span><span> </span><span class="annot"><span class="annottext">ScheduledEventPagination
-</span><a href="#local-6989586621689556488"><span class="hs-identifier hs-var">_geiPagination</span></a></span><span>
+</span><a href="#local-6989586621689561833"><span class="hs-identifier hs-var">_geiInvocationsBy</span></a></span><span> </span><span class="annot"><span class="annottext">ScheduledEventPagination
+</span><a href="#local-6989586621689561832"><span class="hs-identifier hs-var">_geiPagination</span></a></span><span>
 </span><span id="line-211"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; m EncJSON) -&gt; EncJSON -&gt; m EncJSON
@@ -733,20 +733,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;invocations&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [ScheduledEventInvocation] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventInvocation]
-</span><a href="#local-6989586621689556479"><span class="hs-identifier hs-var">invocations</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689561823"><span class="hs-identifier hs-var">invocations</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-215"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;count&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689556480"><span class="hs-identifier hs-var">count</span></a></span><span>
+</span><a href="#local-6989586621689561824"><span class="hs-identifier hs-var">count</span></a></span><span>
 </span><span id="line-216"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-217"></span><span>
 </span><span id="line-218"></span><span class="hs-comment">-- | Metadata API handler to retrieve all the cron triggers from the metadata</span><span>
-</span><span id="line-219"></span><span id="local-6989586621689556477"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetCronTriggers"><span class="hs-identifier hs-type">runGetCronTriggers</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689556477"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689556477"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-219"></span><span id="local-6989586621689561821"><span class="annot"><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetCronTriggers"><span class="hs-identifier hs-type">runGetCronTriggers</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689561821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689561821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-220"></span><span id="runGetCronTriggers"><span class="annot"><span class="annottext">runGetCronTriggers :: m EncJSON
 </span><a href="Hasura.RQL.DDL.ScheduledTrigger.html#runGetCronTriggers"><span class="hs-identifier hs-var hs-var">runGetCronTriggers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-221"></span><span>  </span><span id="local-6989586621689556476"><span class="annot"><span class="annottext">[CronTriggerMetadata]
-</span><a href="#local-6989586621689556476"><span class="hs-identifier hs-var">cronTriggers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CronTriggers -&gt; [CronTriggerMetadata]
+</span><span id="line-221"></span><span>  </span><span id="local-6989586621689561820"><span class="annot"><span class="annottext">[CronTriggerMetadata]
+</span><a href="#local-6989586621689561820"><span class="hs-identifier hs-var">cronTriggers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CronTriggers -&gt; [CronTriggerMetadata]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">(CronTriggers -&gt; [CronTriggerMetadata])
 -&gt; (Metadata -&gt; CronTriggers) -&gt; Metadata -&gt; [CronTriggerMetadata]
@@ -774,5 +774,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;cron_triggers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [CronTriggerMetadata] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">[CronTriggerMetadata]
-</span><a href="#local-6989586621689556476"><span class="hs-identifier hs-var">cronTriggers</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689561820"><span class="hs-identifier hs-var">cronTriggers</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-226"></span></pre></body></html>
