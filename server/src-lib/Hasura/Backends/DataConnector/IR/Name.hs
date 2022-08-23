@@ -55,6 +55,12 @@ instance Witch.From API.RelationshipName (Name 'Relationship) where
 instance Witch.From (Name 'Relationship) API.RelationshipName where
   from (Name n) = API.RelationshipName n
 
+instance Witch.From Text (Name 'Column) where
+  from = coerce
+
+instance Witch.From Text (Name 'Relationship) where
+  from = coerce
+
 -- | The "type" of "name" that the 'Name' type is meant to provide a textual
 -- representation for.
 --

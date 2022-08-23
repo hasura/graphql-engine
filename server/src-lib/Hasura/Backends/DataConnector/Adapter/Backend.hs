@@ -44,7 +44,7 @@ instance Backend 'DataConnector where
   type FunctionName 'DataConnector = IR.F.Name
   type RawFunctionInfo 'DataConnector = XDisable
   type FunctionArgument 'DataConnector = XDisable
-  type ConstraintName 'DataConnector = Unimplemented
+  type ConstraintName 'DataConnector = IR.T.ConstraintName
   type BasicOrderType 'DataConnector = IR.O.OrderDirection
   type NullsOrderType 'DataConnector = Unimplemented
   type CountType 'DataConnector = IR.A.CountAggregate

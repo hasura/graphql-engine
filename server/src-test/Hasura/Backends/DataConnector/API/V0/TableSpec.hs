@@ -22,7 +22,7 @@ spec = do
   describe "TableInfo" $ do
     describe "minimal" $
       testToFromJSONToSchema
-        (TableInfo (TableName ["my_table_name"]) [] Nothing Nothing)
+        (TableInfo (TableName ["my_table_name"]) [] Nothing Nothing Nothing)
         [aesonQQ|
           { "name": ["my_table_name"],
             "columns": []
@@ -35,6 +35,7 @@ spec = do
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
             (Just [ColumnName "id"])
             (Just "my description")
+            Nothing
         )
         [aesonQQ|
           { "name": ["my_table_name"],
@@ -55,3 +56,4 @@ genTableInfo =
     <*> Gen.list (linear 0 5) genColumnInfo
     <*> Gen.maybe (Gen.list (linear 0 5) genColumnName)
     <*> Gen.maybe (text (linear 0 20) unicode)
+    <*> pure Nothing
