@@ -29,6 +29,7 @@ export const Tooltip: React.VFC<TooltipProps> = ({
     <RadixTooltip.Trigger
       className={clsx('ml-xs inline', className)}
       data-testid="tooltip-trigger"
+      type="button"
     >
       {children}
     </RadixTooltip.Trigger>
