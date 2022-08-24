@@ -118,6 +118,7 @@ instance PostgresMetadata 'Cockroach where
 instance
   ( Backend ('Postgres pgKind),
     PostgresMetadata pgKind,
+    PG.FetchTableMetadata pgKind,
     PG.ToMetadataFetchQuery pgKind
   ) =>
   BackendMetadata ('Postgres pgKind)

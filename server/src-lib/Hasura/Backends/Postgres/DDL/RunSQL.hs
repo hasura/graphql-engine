@@ -27,7 +27,8 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.DDL.EventTrigger
 import Hasura.Backends.Postgres.DDL.Source
-  ( ToMetadataFetchQuery,
+  ( FetchTableMetadata,
+    ToMetadataFetchQuery,
     fetchFunctionMetadata,
     fetchTableMetadata,
   )
@@ -140,7 +141,7 @@ the metadata check as well. -}
 -- | Fetch metadata of tracked tables/functions and build @'TableMeta'/@'FunctionMeta'
 -- to calculate diff later in @'withMetadataCheck'.
 fetchTablesFunctionsMetadata ::
-  (ToMetadataFetchQuery pgKind, BackendMetadata ('Postgres pgKind), MonadTx m) =>
+  (ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind, BackendMetadata ('Postgres pgKind), MonadTx m) =>
   TableCache ('Postgres pgKind) ->
   [TableName ('Postgres pgKind)] ->
   [FunctionName ('Postgres pgKind)] ->
@@ -172,6 +173,7 @@ runRunSQL ::
   forall (pgKind :: PostgresKind) m.
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
     CacheRWM m,
     HasServerConfigCtx m,
     MetadataM m,
@@ -213,6 +215,7 @@ withMetadataCheck ::
   forall (pgKind :: PostgresKind) a m.
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
     CacheRWM m,
     HasServerConfigCtx m,
     MetadataM m,
@@ -263,6 +266,7 @@ runTxWithMetadataCheck ::
   forall m a (pgKind :: PostgresKind).
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
     CacheRWM m,
     MonadIO m,
     MonadBaseControl IO m,

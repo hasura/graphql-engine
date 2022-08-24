@@ -13,6 +13,7 @@
 --       before adding any new migration if you haven't already looked at it.
 module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
+    FetchTableMetadata,
     fetchTableMetadata,
     fetchFunctionMetadata,
     prepareCatalog,
@@ -151,7 +152,7 @@ logPGSourceCatalogMigrationLockedQueries logger sourceConfig = forever $ do
 
 resolveDatabaseMetadata ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadIO m, MonadBaseControl IO m) =>
+  (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind, MonadIO m, MonadBaseControl IO m) =>
   SourceMetadata ('Postgres pgKind) ->
   SourceConfig ('Postgres pgKind) ->
   SourceTypeCustomization ->
@@ -323,19 +324,62 @@ upMigrationsUntil43 =
            (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
    )
 
+-- | We differentiate for CockroachDB and other PG implementations
+-- as our CockroachDB table fetching SQL does not require table information,
+-- and fails if it receives unused prepared arguments
+-- this distinction should no longer be necessary if this issue is resolved:
+-- https://github.com/cockroachdb/cockroach/issues/86375
+class FetchTableMetadata (pgKind :: PostgresKind) where
+  fetchTableMetadata ::
+    forall m.
+    ( Backend ('Postgres pgKind),
+      ToMetadataFetchQuery pgKind,
+      MonadTx m
+    ) =>
+    [QualifiedTable] ->
+    m (DBTablesMetadata ('Postgres pgKind))
+
+instance FetchTableMetadata 'Vanilla where
+  fetchTableMetadata = pgFetchTableMetadata
+
+instance FetchTableMetadata 'Citus where
+  fetchTableMetadata = pgFetchTableMetadata
+
+instance FetchTableMetadata 'Cockroach where
+  fetchTableMetadata = cockroachFetchTableMetadata
+
 -- | Fetch Postgres metadata of all user tables
-fetchTableMetadata ::
+pgFetchTableMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
   [QualifiedTable] ->
   m (DBTablesMetadata ('Postgres pgKind))
-fetchTableMetadata tables = do
+pgFetchTableMetadata tables = do
   results <-
     liftTx $
       Q.withQE
         defaultTxErrorHandler
         (tableMetadata @pgKind)
         [Q.AltJ $ LE.uniques tables]
+        True
+  pure $
+    Map.fromList $
+      flip map results $
+        \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
+
+-- | Fetch Cockroach metadata of all user tables
+cockroachFetchTableMetadata ::
+  forall pgKind m.
+  (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
+  [QualifiedTable] ->
+  m (DBTablesMetadata ('Postgres pgKind))
+cockroachFetchTableMetadata _tables = do
+  results <-
+    liftTx $
+      Q.rawQE
+        defaultTxErrorHandler
+        (tableMetadata @pgKind)
+        []
         True
   pure $
     Map.fromList $
