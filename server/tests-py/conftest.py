@@ -1,8 +1,6 @@
-from collections import OrderedDict
-from datetime import datetime
+import collections
 import os
 import pytest
-import random
 import re
 import sqlalchemy
 import sys
@@ -256,17 +254,13 @@ def pytest_configure(config):
             assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
             assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
 
-    random.seed(datetime.now())
-
-
 @pytest.hookimpl()
 def pytest_report_collectionfinish(config, startdir, items):
     """
     Collect server upgrade tests to the given file
     """
     tests_file = config.getoption('--collect-upgrade-tests-to-file')
-    sep=''
-    tests=OrderedDict()
+    tests = collections.OrderedDict()
     if tests_file:
         def is_upgrade_test(item):
             # Check if allow_server_upgrade_tests marker are present
@@ -295,8 +289,6 @@ def pytest_report_collectionfinish(config, startdir, items):
             for test in tests.keys():
                 f.write(test + '\n')
     return ''
-
-
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
