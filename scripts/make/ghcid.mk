@@ -28,7 +28,7 @@ define run_ghcid_main_tests
 			--width=$(PANE_WIDTH) \
 			--height=$(PANE_HEIGHT); \
 	else \
-  	HSPEC_MATCH="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HSPEC_MATCH="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main" \
 			--setup ":set args $(2)"; \
 	fi
