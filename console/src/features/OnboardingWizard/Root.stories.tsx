@@ -7,4 +7,18 @@ export default {
   component: Root,
 } as ComponentMeta<typeof Root>;
 
-export const Base: Story = () => <Root />;
+const mockGrowthClient = {
+  getAllExperimentConfig: () => [
+    {
+      experiment: 'console_onboarding_wizard_v1',
+      status: 'enabled',
+      metadata: {},
+      userActivity: {},
+    },
+  ],
+  setAllExperimentConfig: () => Promise.resolve(),
+};
+
+export const Base: Story = () => (
+  <Root growthExperimentsClient={mockGrowthClient} />
+);

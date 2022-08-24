@@ -5,19 +5,19 @@ import _push from '../../../../components/Services/Data/push';
 import { OnboardingAnimation, OnboardingAnimationNavbar } from './components';
 
 type ConnectDBScreenProps = {
-  closeWizard: () => void;
+  skipOnboarding: () => void;
+  completeOnboarding: () => void;
 };
 
 export function ConnectDBScreen(props: ConnectDBScreenProps) {
-  const { closeWizard } = props;
+  const { skipOnboarding, completeOnboarding } = props;
   const dispatch = useAppDispatch();
 
   const onClick = () => {
-    // we should change the route to `/data` first, and then close the wizard.
-    // this is because routing is slow on prod, but wizard closes instantaneously.
-    // if we close wizard first, it will show a flicker of `<Api />` tab before routing to `/data`.
+    // TODO: Due to routing being slow on prod, but wizard closing instantaneously, this causes
+    // a flicker of `<Api />` tab before routing to `/data`.
     dispatch(_push(`/data/manage/connect`));
-    closeWizard();
+    completeOnboarding();
   };
 
   return (
@@ -34,7 +34,7 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
 
       <div className="flex items-center justify-between">
         <div className="cursor-pointer text-secondary text-sm hover:text-secondary-dark">
-          <div data-trackid="onboarding-skip-button" onClick={closeWizard}>
+          <div data-trackid="onboarding-skip-button" onClick={skipOnboarding}>
             Skip setup, continue to dashboard
           </div>
         </div>
