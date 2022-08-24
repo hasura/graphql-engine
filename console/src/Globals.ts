@@ -138,6 +138,9 @@ export type EnvVars = {
 declare global {
   interface Window {
     __env: EnvVars;
+    heap?: {
+      addUserProperties: (properties: Record<string, string>) => void;
+    };
   }
   const CONSOLE_ASSET_VERSION: string;
 }
