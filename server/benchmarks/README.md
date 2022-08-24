@@ -28,7 +28,7 @@ the server, where you don't care about concurrent requests and where the work
 is CPU-bound (because in the future reporting will highlight stable metrics
 like CPU mutator time and allocations).
 
-**This is currently a WIP and not surfaced in reports** 
+**This is currently a WIP and not surfaced in reports**
 
 ### bench.sh
 
@@ -45,7 +45,7 @@ poorly and give useless output on a laptop with few cores.
 
 ### fabfile.py
 
-This is the core of the CI functionality. It's possibile to run this locally
+This is the core of the CI functionality. It's possible to run this locally
 but you'll need credentials (see `.circleci/config.yaml`). In general this can
 be ignored.
 
@@ -54,7 +54,7 @@ be ignored.
 ## Interpreting benchmark results
 
 - **bytes_alloc_per_req should be very stable** but of course doesn't measure,
-  e.g. whether we're generating efficient SQL 
+  e.g. whether we're generating efficient SQL
 
 - **min latency is often stable**, especially when we have many (>5,000) samples; a
   regression here may mean a change to the code is influencing performance
@@ -71,7 +71,7 @@ be ignored.
   versions.
 
 - If **Memory Residency** has changed:
-  - `live_bytes` is just the total size of heap objects after GC, and is quite 
+  - `live_bytes` is just the total size of heap objects after GC, and is quite
     deterministic; `mem_in_use` is closer to what users experience in their nice graphs
   - does the regression show up in `huge_schema`? If not maybe a function was
     turned into a CAF. Small, constant memory usage increases are probably not

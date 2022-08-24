@@ -383,7 +383,7 @@ def generate_regression_report():
     # For each benchmark set we uploaded, for PR_NUMBER...
     for o in s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents']:
         this_prefix, benchmark_set_name = o['Key'].split('/')
-        this_report           = fetch_report_json(this_prefix,                benchmark_set_name)
+        this_report = fetch_report_json(this_prefix, benchmark_set_name)
         try:
             merge_base_report = fetch_report_json(f"mono-pr-{merge_base_pr}", benchmark_set_name)
         except botocore.exceptions.ClientError:
