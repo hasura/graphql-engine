@@ -13,9 +13,8 @@
 --       before adding any new migration if you haven't already looked at it.
 module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
-    FetchTableMetadata,
-    fetchTableMetadata,
-    fetchFunctionMetadata,
+    FetchTableMetadata (..),
+    FetchFunctionMetadata (..),
     prepareCatalog,
     postDropSourceHook,
     resolveDatabaseMetadata,
@@ -152,7 +151,13 @@ logPGSourceCatalogMigrationLockedQueries logger sourceConfig = forever $ do
 
 resolveDatabaseMetadata ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind, MonadIO m, MonadBaseControl IO m) =>
+  ( Backend ('Postgres pgKind),
+    ToMetadataFetchQuery pgKind,
+    FetchFunctionMetadata pgKind,
+    FetchTableMetadata pgKind,
+    MonadIO m,
+    MonadBaseControl IO m
+  ) =>
   SourceMetadata ('Postgres pgKind) ->
   SourceConfig ('Postgres pgKind) ->
   SourceTypeCustomization ->
@@ -163,7 +168,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
     let allFunctions =
           OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
             <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
-    functionsMeta <- fetchFunctionMetadata allFunctions
+    functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
     pgScalars <- fetchPgScalars
     let scalarsMap = Map.fromList do
           scalar <- Set.toList pgScalars
@@ -386,9 +391,24 @@ cockroachFetchTableMetadata _tables = do
       flip map results $
         \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
+class FetchFunctionMetadata (pgKind :: PostgresKind) where
+  fetchFunctionMetadata ::
+    (MonadTx m) =>
+    [QualifiedFunction] ->
+    m (DBFunctionsMetadata ('Postgres pgKind))
+
+instance FetchFunctionMetadata 'Vanilla where
+  fetchFunctionMetadata = pgFetchFunctionMetadata
+
+instance FetchFunctionMetadata 'Citus where
+  fetchFunctionMetadata = pgFetchFunctionMetadata
+
+instance FetchFunctionMetadata 'Cockroach where
+  fetchFunctionMetadata _ = pure mempty
+
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsMetadata ('Postgres pgKind))
-fetchFunctionMetadata functions = do
+pgFetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsMetadata ('Postgres pgKind))
+pgFetchFunctionMetadata functions = do
   results <-
     liftTx $
       Q.withQE
