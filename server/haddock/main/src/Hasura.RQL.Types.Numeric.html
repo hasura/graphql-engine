@@ -31,9 +31,9 @@
 </span><span id="line-31"></span><span>
 </span><span id="line-32"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">newtype</span><span> </span><span id="NonNegative"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span></span><span> </span><span id="local-6989586621689511183"><span class="annot"><a href="#local-6989586621689511183"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonNegative"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNonNegative"><span class="annot"><span class="annottext">NonNegative a -&gt; a
-</span><a href="Hasura.RQL.Types.Numeric.html#getNonNegative"><span class="hs-identifier hs-var hs-var">getNonNegative</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689511183"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511134"><span id="local-6989586621689511136"><span class="annot"><span class="annottext">a -&gt; NonNegative b -&gt; NonNegative a
+</span><span id="line-34"></span><span class="hs-keyword">newtype</span><span> </span><span id="NonNegative"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span></span><span> </span><span id="local-6989586621689511181"><span class="annot"><a href="#local-6989586621689511181"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonNegative"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNonNegative"><span class="annot"><span class="annottext">NonNegative a -&gt; a
+</span><a href="Hasura.RQL.Types.Numeric.html#getNonNegative"><span class="hs-identifier hs-var hs-var">getNonNegative</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689511181"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511132"><span id="local-6989586621689511134"><span class="annot"><span class="annottext">a -&gt; NonNegative b -&gt; NonNegative a
 (a -&gt; b) -&gt; NonNegative a -&gt; NonNegative b
 (forall a b. (a -&gt; b) -&gt; NonNegative a -&gt; NonNegative b)
 -&gt; (forall a b. a -&gt; NonNegative b -&gt; NonNegative a)
@@ -48,7 +48,7 @@ $c&lt;$ :: forall a b. a -&gt; NonNegative b -&gt; NonNegative a
 fmap :: (a -&gt; b) -&gt; NonNegative a -&gt; NonNegative b
 $cfmap :: forall a b. (a -&gt; b) -&gt; NonNegative a -&gt; NonNegative b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511127"><span id="local-6989586621689511129"><span id="local-6989586621689511131"><span class="annot"><span class="annottext">Int -&gt; NonNegative a -&gt; ShowS
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511125"><span id="local-6989586621689511127"><span id="local-6989586621689511129"><span class="annot"><span class="annottext">Int -&gt; NonNegative a -&gt; ShowS
 [NonNegative a] -&gt; ShowS
 NonNegative a -&gt; String
 (Int -&gt; NonNegative a -&gt; ShowS)
@@ -66,7 +66,7 @@ show :: NonNegative a -&gt; String
 $cshow :: forall a. Show a =&gt; NonNegative a -&gt; String
 showsPrec :: Int -&gt; NonNegative a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; NonNegative a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511122"><span id="local-6989586621689511124"><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511120"><span id="local-6989586621689511122"><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a -&gt; Bool
 (NonNegative a -&gt; NonNegative a -&gt; Bool)
 -&gt; (NonNegative a -&gt; NonNegative a -&gt; Bool) -&gt; Eq (NonNegative a)
 forall a. Eq a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
@@ -75,7 +75,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: forall a. Eq a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
 == :: NonNegative a -&gt; NonNegative a -&gt; Bool
 $c== :: forall a. Eq a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511106"><span id="local-6989586621689511108"><span id="local-6989586621689511110"><span id="local-6989586621689511112"><span id="local-6989586621689511114"><span id="local-6989586621689511116"><span id="local-6989586621689511118"><span class="annot"><span class="annottext">Eq (NonNegative a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511104"><span id="local-6989586621689511106"><span id="local-6989586621689511108"><span id="local-6989586621689511110"><span id="local-6989586621689511112"><span id="local-6989586621689511114"><span id="local-6989586621689511116"><span class="annot"><span class="annottext">Eq (NonNegative a)
 Eq (NonNegative a)
 -&gt; (NonNegative a -&gt; NonNegative a -&gt; Ordering)
 -&gt; (NonNegative a -&gt; NonNegative a -&gt; Bool)
@@ -117,7 +117,7 @@ $c&lt; :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
 compare :: NonNegative a -&gt; NonNegative a -&gt; Ordering
 $ccompare :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Ordering
 $cp1Ord :: forall a. Ord a =&gt; Eq (NonNegative a)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511097"><span id="local-6989586621689511099"><span id="local-6989586621689511101"><span id="local-6989586621689511103"><span class="annot"><span class="annottext">[NonNegative a] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511095"><span id="local-6989586621689511097"><span id="local-6989586621689511099"><span id="local-6989586621689511101"><span class="annot"><span class="annottext">[NonNegative a] -&gt; Value
 [NonNegative a] -&gt; Encoding
 NonNegative a -&gt; Value
 NonNegative a -&gt; Encoding
@@ -144,7 +144,7 @@ toEncoding :: NonNegative a -&gt; Encoding
 $ctoEncoding :: forall a. ToJSON a =&gt; NonNegative a -&gt; Encoding
 toJSON :: NonNegative a -&gt; Value
 $ctoJSON :: forall a. ToJSON a =&gt; NonNegative a -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511092"><span id="local-6989586621689511094"><span class="annot"><span class="annottext">Rep (NonNegative a) x -&gt; NonNegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511090"><span id="local-6989586621689511092"><span class="annot"><span class="annottext">Rep (NonNegative a) x -&gt; NonNegative a
 NonNegative a -&gt; Rep (NonNegative a) x
 (forall x. NonNegative a -&gt; Rep (NonNegative a) x)
 -&gt; (forall x. Rep (NonNegative a) x -&gt; NonNegative a)
@@ -159,13 +159,13 @@ to :: Rep (NonNegative a) x -&gt; NonNegative a
 $cto :: forall a x. Generic a =&gt; Rep (NonNegative a) x -&gt; NonNegative a
 from :: NonNegative a -&gt; Rep (NonNegative a) x
 $cfrom :: forall a x. Generic a =&gt; NonNegative a -&gt; Rep (NonNegative a) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511089"><span class="annot"><span class="annottext">NonNegative a -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511087"><span class="annot"><span class="annottext">NonNegative a -&gt; ()
 (NonNegative a -&gt; ()) -&gt; NFData (NonNegative a)
 forall a. NFData a =&gt; NonNegative a -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: NonNegative a -&gt; ()
 $crnf :: forall a. NFData a =&gt; NonNegative a -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511085"><span class="annot"><span class="annottext">Eq (NonNegative a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511083"><span class="annot"><span class="annottext">Eq (NonNegative a)
 Eq (NonNegative a)
 -&gt; (Accesses -&gt; NonNegative a -&gt; NonNegative a -&gt; Bool)
 -&gt; Cacheable (NonNegative a)
@@ -180,7 +180,7 @@ $cunchanged :: forall a.
 Cacheable a =&gt;
 Accesses -&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
 $cp1Cacheable :: forall a. Cacheable a =&gt; Eq (NonNegative a)
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511080"><span id="local-6989586621689511082"><span class="annot"><span class="annottext">Int -&gt; NonNegative a -&gt; Int
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511078"><span id="local-6989586621689511080"><span class="annot"><span class="annottext">Int -&gt; NonNegative a -&gt; Int
 NonNegative a -&gt; Int
 (Int -&gt; NonNegative a -&gt; Int)
 -&gt; (NonNegative a -&gt; Int) -&gt; Hashable (NonNegative a)
@@ -193,11 +193,11 @@ hashWithSalt :: Int -&gt; NonNegative a -&gt; Int
 $chashWithSalt :: forall a. Hashable a =&gt; Int -&gt; NonNegative a -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span id="local-6989586621689511078"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#mkNonNegative"><span class="hs-identifier hs-type">mkNonNegative</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689511078"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621689511078"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689511078"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689511078"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-38"></span><span id="local-6989586621689511076"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#mkNonNegative"><span class="hs-identifier hs-type">mkNonNegative</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689511076"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621689511076"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689511076"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689511076"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-39"></span><span id="mkNonNegative"><span class="annot"><span class="annottext">mkNonNegative :: a -&gt; Maybe (NonNegative a)
-</span><a href="Hasura.RQL.Types.Numeric.html#mkNonNegative"><span class="hs-identifier hs-var hs-var">mkNonNegative</span></a></span></span><span> </span><span id="local-6989586621689511077"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689511077"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689511077"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><a href="Hasura.RQL.Types.Numeric.html#mkNonNegative"><span class="hs-identifier hs-var hs-var">mkNonNegative</span></a></span></span><span> </span><span id="local-6989586621689511075"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689511075"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689511075"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -210,20 +210,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
 forall a. a -&gt; NonNegative a
 </span><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689511077"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689511075"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (NonNegative a)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span id="local-6989586621689511076"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#unsafeNonNegative"><span class="hs-identifier hs-type">unsafeNonNegative</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689511076"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689511076"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-43"></span><span id="local-6989586621689511074"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#unsafeNonNegative"><span class="hs-identifier hs-type">unsafeNonNegative</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689511074"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689511074"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-44"></span><span id="unsafeNonNegative"><span class="annot"><span class="annottext">unsafeNonNegative :: a -&gt; NonNegative a
 </span><a href="Hasura.RQL.Types.Numeric.html#unsafeNonNegative"><span class="hs-identifier hs-var hs-var">unsafeNonNegative</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
 forall a. a -&gt; NonNegative a
 </span><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span id="local-6989586621689511075"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689511072"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Fractional</span></span><span> </span><span class="annot"><a href="#local-6989586621689511075"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689511075"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689511075"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621689511070"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (NonNegative a)
+</span><span id="line-46"></span><span id="local-6989586621689511073"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689511070"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Fractional</span></span><span> </span><span class="annot"><a href="#local-6989586621689511073"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689511073"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689511073"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621689511068"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (NonNegative a)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Scientific -&gt; Parser (NonNegative a))
 -&gt; Value
@@ -236,10 +236,10 @@ forall a. String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser (NonNegative a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689511067"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689511067"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689511065"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689511065"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-48"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689511067"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
+</span><a href="#local-6989586621689511065"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Scientific
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -259,16 +259,16 @@ forall a b. (Real a, Fractional b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">realToFrac</span></span><span> </span><span class="annot"><span class="annottext">(Scientific -&gt; NonNegative a) -&gt; Scientific -&gt; NonNegative a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689511067"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689511065"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (NonNegative a)
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;negative value not allowed&quot;</span></span></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span id="local-6989586621689511064"><span id="local-6989586621689511065"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NonNegativeInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-var">NonNegativeInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonNegativeInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-var">NonNegativeInt</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNonNegativeInt"><span class="annot"><span class="annottext">NonNegativeInt -&gt; Int
+</span><span id="line-52"></span><span id="local-6989586621689511062"><span id="local-6989586621689511063"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NonNegativeInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-var">NonNegativeInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonNegativeInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-var">NonNegativeInt</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNonNegativeInt"><span class="annot"><span class="annottext">NonNegativeInt -&gt; Int
 </span><a href="Hasura.RQL.Types.Numeric.html#getNonNegativeInt"><span class="hs-identifier hs-var hs-var">getNonNegativeInt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-53"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511057"><span id="local-6989586621689511059"><span id="local-6989586621689511061"><span class="annot"><span class="annottext">Int -&gt; NonNegativeInt -&gt; ShowS
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511055"><span id="local-6989586621689511057"><span id="local-6989586621689511059"><span class="annot"><span class="annottext">Int -&gt; NonNegativeInt -&gt; ShowS
 [NonNegativeInt] -&gt; ShowS
 NonNegativeInt -&gt; String
 (Int -&gt; NonNegativeInt -&gt; ShowS)
@@ -283,7 +283,7 @@ show :: NonNegativeInt -&gt; String
 $cshow :: NonNegativeInt -&gt; String
 showsPrec :: Int -&gt; NonNegativeInt -&gt; ShowS
 $cshowsPrec :: Int -&gt; NonNegativeInt -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511053"><span id="local-6989586621689511055"><span class="annot"><span class="annottext">NonNegativeInt -&gt; NonNegativeInt -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511051"><span id="local-6989586621689511053"><span class="annot"><span class="annottext">NonNegativeInt -&gt; NonNegativeInt -&gt; Bool
 (NonNegativeInt -&gt; NonNegativeInt -&gt; Bool)
 -&gt; (NonNegativeInt -&gt; NonNegativeInt -&gt; Bool) -&gt; Eq NonNegativeInt
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -291,7 +291,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: NonNegativeInt -&gt; NonNegativeInt -&gt; Bool
 == :: NonNegativeInt -&gt; NonNegativeInt -&gt; Bool
 $c== :: NonNegativeInt -&gt; NonNegativeInt -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511045"><span id="local-6989586621689511047"><span id="local-6989586621689511049"><span id="local-6989586621689511051"><span class="annot"><span class="annottext">[NonNegativeInt] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511043"><span id="local-6989586621689511045"><span id="local-6989586621689511047"><span id="local-6989586621689511049"><span class="annot"><span class="annottext">[NonNegativeInt] -&gt; Value
 [NonNegativeInt] -&gt; Encoding
 NonNegativeInt -&gt; Value
 NonNegativeInt -&gt; Encoding
@@ -314,7 +314,7 @@ toEncoding :: NonNegativeInt -&gt; Encoding
 $ctoEncoding :: NonNegativeInt -&gt; Encoding
 toJSON :: NonNegativeInt -&gt; Value
 $ctoJSON :: NonNegativeInt -&gt; Value
-</span><a href="#local-6989586621689511045"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. NonNegativeInt -&gt; Rep NonNegativeInt x)
+</span><a href="#local-6989586621689511043"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. NonNegativeInt -&gt; Rep NonNegativeInt x)
 -&gt; (forall x. Rep NonNegativeInt x -&gt; NonNegativeInt)
 -&gt; Generic NonNegativeInt
 forall x. Rep NonNegativeInt x -&gt; NonNegativeInt
@@ -323,12 +323,12 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep NonNegativeInt x -&gt; NonNegativeInt
 $cfrom :: forall x. NonNegativeInt -&gt; Rep NonNegativeInt x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511041"><span class="annot"><span class="annottext">NonNegativeInt -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511039"><span class="annot"><span class="annottext">NonNegativeInt -&gt; ()
 (NonNegativeInt -&gt; ()) -&gt; NFData NonNegativeInt
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: NonNegativeInt -&gt; ()
 $crnf :: NonNegativeInt -&gt; ()
-</span><a href="#local-6989586621689511041"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511038"><span class="annot"><span class="annottext">Eq NonNegativeInt
+</span><a href="#local-6989586621689511039"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511036"><span class="annot"><span class="annottext">Eq NonNegativeInt
 Eq NonNegativeInt
 -&gt; (Accesses -&gt; NonNegativeInt -&gt; NonNegativeInt -&gt; Bool)
 -&gt; Cacheable NonNegativeInt
@@ -337,7 +337,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; NonNegativeInt -&gt; NonNegativeInt -&gt; Bool
 $cunchanged :: Accesses -&gt; NonNegativeInt -&gt; NonNegativeInt -&gt; Bool
 $cp1Cacheable :: Eq NonNegativeInt
-</span><a href="#local-6989586621689511038"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511034"><span id="local-6989586621689511036"><span class="annot"><span class="annottext">Int -&gt; NonNegativeInt -&gt; Int
+</span><a href="#local-6989586621689511036"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511032"><span id="local-6989586621689511034"><span class="annot"><span class="annottext">Int -&gt; NonNegativeInt -&gt; Int
 NonNegativeInt -&gt; Int
 (Int -&gt; NonNegativeInt -&gt; Int)
 -&gt; (NonNegativeInt -&gt; Int) -&gt; Hashable NonNegativeInt
@@ -346,13 +346,13 @@ hash :: NonNegativeInt -&gt; Int
 $chash :: NonNegativeInt -&gt; Int
 hashWithSalt :: Int -&gt; NonNegativeInt -&gt; Int
 $chashWithSalt :: Int -&gt; NonNegativeInt -&gt; Int
-</span><a href="#local-6989586621689511034"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689511032"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>
 </span><span id="line-55"></span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#mkNonNegativeInt"><span class="hs-identifier hs-type">mkNonNegativeInt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-type">NonNegativeInt</span></a></span><span>
 </span><span id="line-56"></span><span id="mkNonNegativeInt"><span class="annot"><span class="annottext">mkNonNegativeInt :: Int -&gt; Maybe NonNegativeInt
-</span><a href="Hasura.RQL.Types.Numeric.html#mkNonNegativeInt"><span class="hs-identifier hs-var hs-var">mkNonNegativeInt</span></a></span></span><span> </span><span id="local-6989586621689511033"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689511033"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689511033"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="Hasura.RQL.Types.Numeric.html#mkNonNegativeInt"><span class="hs-identifier hs-var hs-var">mkNonNegativeInt</span></a></span></span><span> </span><span id="local-6989586621689511031"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689511031"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689511031"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -364,7 +364,7 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; NonNegativeInt
 </span><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-var">NonNegativeInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689511033"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689511031"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-58"></span><span>  </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe NonNegativeInt
 forall a. Maybe a
@@ -375,9 +375,9 @@ forall a. Maybe a
 </span><a href="Hasura.RQL.Types.Numeric.html#unsafeNonNegativeInt"><span class="hs-identifier hs-var hs-var">unsafeNonNegativeInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; NonNegativeInt
 </span><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-var">NonNegativeInt</span></a></span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689511030"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-type">NonNegativeInt</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621689511029"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NonNegativeInt
-</span><a href="#local-6989586621689511029"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689511028"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeInt"><span class="hs-identifier hs-type">NonNegativeInt</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621689511027"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NonNegativeInt
+</span><a href="#local-6989586621689511027"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Scientific -&gt; Parser NonNegativeInt)
 -&gt; Value
 -&gt; Parser NonNegativeInt
@@ -389,10 +389,10 @@ forall a. String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser NonNegativeInt
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689511028"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689511028"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689511026"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689511026"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-65"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689511028"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
+</span><a href="#local-6989586621689511026"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Scientific
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -417,16 +417,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Maybe Int
 forall i. (Integral i, Bounded i) =&gt; Scientific -&gt; Maybe i
 </span><span class="hs-identifier hs-var">Scientific.toBoundedInteger</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689511028"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689511026"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser NonNegativeInt
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;negative value not allowed&quot;</span></span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span id="local-6989586621689511024"><span id="local-6989586621689511025"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PositiveInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-var">PositiveInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PositiveInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-var">PositiveInt</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getPositiveInt"><span class="annot"><span class="annottext">PositiveInt -&gt; Int
+</span><span id="line-69"></span><span id="local-6989586621689511022"><span id="local-6989586621689511023"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PositiveInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-var">PositiveInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PositiveInt"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-var">PositiveInt</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getPositiveInt"><span class="annot"><span class="annottext">PositiveInt -&gt; Int
 </span><a href="Hasura.RQL.Types.Numeric.html#getPositiveInt"><span class="hs-identifier hs-var hs-var">getPositiveInt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511017"><span id="local-6989586621689511019"><span id="local-6989586621689511021"><span class="annot"><span class="annottext">Int -&gt; PositiveInt -&gt; ShowS
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689511015"><span id="local-6989586621689511017"><span id="local-6989586621689511019"><span class="annot"><span class="annottext">Int -&gt; PositiveInt -&gt; ShowS
 [PositiveInt] -&gt; ShowS
 PositiveInt -&gt; String
 (Int -&gt; PositiveInt -&gt; ShowS)
@@ -441,7 +441,7 @@ show :: PositiveInt -&gt; String
 $cshow :: PositiveInt -&gt; String
 showsPrec :: Int -&gt; PositiveInt -&gt; ShowS
 $cshowsPrec :: Int -&gt; PositiveInt -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511013"><span id="local-6989586621689511015"><span class="annot"><span class="annottext">PositiveInt -&gt; PositiveInt -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511011"><span id="local-6989586621689511013"><span class="annot"><span class="annottext">PositiveInt -&gt; PositiveInt -&gt; Bool
 (PositiveInt -&gt; PositiveInt -&gt; Bool)
 -&gt; (PositiveInt -&gt; PositiveInt -&gt; Bool) -&gt; Eq PositiveInt
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -449,7 +449,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: PositiveInt -&gt; PositiveInt -&gt; Bool
 == :: PositiveInt -&gt; PositiveInt -&gt; Bool
 $c== :: PositiveInt -&gt; PositiveInt -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511005"><span id="local-6989586621689511007"><span id="local-6989586621689511009"><span id="local-6989586621689511011"><span class="annot"><span class="annottext">[PositiveInt] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511003"><span id="local-6989586621689511005"><span id="local-6989586621689511007"><span id="local-6989586621689511009"><span class="annot"><span class="annottext">[PositiveInt] -&gt; Value
 [PositiveInt] -&gt; Encoding
 PositiveInt -&gt; Value
 PositiveInt -&gt; Encoding
@@ -472,7 +472,7 @@ toEncoding :: PositiveInt -&gt; Encoding
 $ctoEncoding :: PositiveInt -&gt; Encoding
 toJSON :: PositiveInt -&gt; Value
 $ctoJSON :: PositiveInt -&gt; Value
-</span><a href="#local-6989586621689511005"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. PositiveInt -&gt; Rep PositiveInt x)
+</span><a href="#local-6989586621689511003"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. PositiveInt -&gt; Rep PositiveInt x)
 -&gt; (forall x. Rep PositiveInt x -&gt; PositiveInt)
 -&gt; Generic PositiveInt
 forall x. Rep PositiveInt x -&gt; PositiveInt
@@ -481,12 +481,12 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep PositiveInt x -&gt; PositiveInt
 $cfrom :: forall x. PositiveInt -&gt; Rep PositiveInt x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689511001"><span class="annot"><span class="annottext">PositiveInt -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510999"><span class="annot"><span class="annottext">PositiveInt -&gt; ()
 (PositiveInt -&gt; ()) -&gt; NFData PositiveInt
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: PositiveInt -&gt; ()
 $crnf :: PositiveInt -&gt; ()
-</span><a href="#local-6989586621689511001"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510998"><span class="annot"><span class="annottext">Eq PositiveInt
+</span><a href="#local-6989586621689510999"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510996"><span class="annot"><span class="annottext">Eq PositiveInt
 Eq PositiveInt
 -&gt; (Accesses -&gt; PositiveInt -&gt; PositiveInt -&gt; Bool)
 -&gt; Cacheable PositiveInt
@@ -495,7 +495,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; PositiveInt -&gt; PositiveInt -&gt; Bool
 $cunchanged :: Accesses -&gt; PositiveInt -&gt; PositiveInt -&gt; Bool
 $cp1Cacheable :: Eq PositiveInt
-</span><a href="#local-6989586621689510998"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510994"><span id="local-6989586621689510996"><span class="annot"><span class="annottext">Int -&gt; PositiveInt -&gt; Int
+</span><a href="#local-6989586621689510996"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510992"><span id="local-6989586621689510994"><span class="annot"><span class="annottext">Int -&gt; PositiveInt -&gt; Int
 PositiveInt -&gt; Int
 (Int -&gt; PositiveInt -&gt; Int)
 -&gt; (PositiveInt -&gt; Int) -&gt; Hashable PositiveInt
@@ -504,13 +504,13 @@ hash :: PositiveInt -&gt; Int
 $chash :: PositiveInt -&gt; Int
 hashWithSalt :: Int -&gt; PositiveInt -&gt; Int
 $chashWithSalt :: Int -&gt; PositiveInt -&gt; Int
-</span><a href="#local-6989586621689510994"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689510992"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>
 </span><span id="line-72"></span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#mkPositiveInt"><span class="hs-identifier hs-type">mkPositiveInt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-type">PositiveInt</span></a></span><span>
 </span><span id="line-73"></span><span id="mkPositiveInt"><span class="annot"><span class="annottext">mkPositiveInt :: Int -&gt; Maybe PositiveInt
-</span><a href="Hasura.RQL.Types.Numeric.html#mkPositiveInt"><span class="hs-identifier hs-var hs-var">mkPositiveInt</span></a></span></span><span> </span><span id="local-6989586621689510993"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689510993"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689510993"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="Hasura.RQL.Types.Numeric.html#mkPositiveInt"><span class="hs-identifier hs-var hs-var">mkPositiveInt</span></a></span></span><span> </span><span id="local-6989586621689510991"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689510991"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689510991"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -522,7 +522,7 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; PositiveInt
 </span><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-var">PositiveInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689510993"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689510991"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe PositiveInt
 forall a. Maybe a
@@ -533,9 +533,9 @@ forall a. Maybe a
 </span><a href="Hasura.RQL.Types.Numeric.html#unsafePositiveInt"><span class="hs-identifier hs-var hs-var">unsafePositiveInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; PositiveInt
 </span><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-var">PositiveInt</span></a></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689510989"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-type">PositiveInt</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621689510988"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PositiveInt
-</span><a href="#local-6989586621689510988"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689510987"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#PositiveInt"><span class="hs-identifier hs-type">PositiveInt</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621689510986"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PositiveInt
+</span><a href="#local-6989586621689510986"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Scientific -&gt; Parser PositiveInt)
 -&gt; Value
 -&gt; Parser PositiveInt
@@ -546,10 +546,10 @@ forall a. String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser PositiveInt
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689510987"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689510987"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689510985"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689510985"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-82"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689510987"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
+</span><a href="#local-6989586621689510985"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Scientific
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -572,16 +572,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Maybe Int
 forall i. (Integral i, Bounded i) =&gt; Scientific -&gt; Maybe i
 </span><span class="hs-identifier hs-var">Scientific.toBoundedInteger</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689510987"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689510985"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser PositiveInt
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;integer passed is out of bounds&quot;</span></span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span id="local-6989586621689510985"><span id="local-6989586621689510986"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NonNegativeDiffTime"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-var">NonNegativeDiffTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonNegativeDiffTime"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-var">NonNegativeDiffTime</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unNonNegativeDiffTime"><span class="annot"><span class="annottext">NonNegativeDiffTime -&gt; DiffTime
+</span><span id="line-86"></span><span id="local-6989586621689510983"><span id="local-6989586621689510984"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NonNegativeDiffTime"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-var">NonNegativeDiffTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonNegativeDiffTime"><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-var">NonNegativeDiffTime</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unNonNegativeDiffTime"><span class="annot"><span class="annottext">NonNegativeDiffTime -&gt; DiffTime
 </span><a href="Hasura.RQL.Types.Numeric.html#unNonNegativeDiffTime"><span class="hs-identifier hs-var hs-var">unNonNegativeDiffTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
-</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689510978"><span id="local-6989586621689510980"><span id="local-6989586621689510982"><span class="annot"><span class="annottext">Int -&gt; NonNegativeDiffTime -&gt; ShowS
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689510976"><span id="local-6989586621689510978"><span id="local-6989586621689510980"><span class="annot"><span class="annottext">Int -&gt; NonNegativeDiffTime -&gt; ShowS
 [NonNegativeDiffTime] -&gt; ShowS
 NonNegativeDiffTime -&gt; String
 (Int -&gt; NonNegativeDiffTime -&gt; ShowS)
@@ -596,7 +596,7 @@ show :: NonNegativeDiffTime -&gt; String
 $cshow :: NonNegativeDiffTime -&gt; String
 showsPrec :: Int -&gt; NonNegativeDiffTime -&gt; ShowS
 $cshowsPrec :: Int -&gt; NonNegativeDiffTime -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510974"><span id="local-6989586621689510976"><span class="annot"><span class="annottext">NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510972"><span id="local-6989586621689510974"><span class="annot"><span class="annottext">NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool
 (NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool)
 -&gt; (NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool)
 -&gt; Eq NonNegativeDiffTime
@@ -605,7 +605,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool
 == :: NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool
 $c== :: NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510966"><span id="local-6989586621689510968"><span id="local-6989586621689510970"><span id="local-6989586621689510972"><span class="annot"><span class="annottext">[NonNegativeDiffTime] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510964"><span id="local-6989586621689510966"><span id="local-6989586621689510968"><span id="local-6989586621689510970"><span class="annot"><span class="annottext">[NonNegativeDiffTime] -&gt; Value
 [NonNegativeDiffTime] -&gt; Encoding
 NonNegativeDiffTime -&gt; Value
 NonNegativeDiffTime -&gt; Encoding
@@ -628,7 +628,7 @@ toEncoding :: NonNegativeDiffTime -&gt; Encoding
 $ctoEncoding :: NonNegativeDiffTime -&gt; Encoding
 toJSON :: NonNegativeDiffTime -&gt; Value
 $ctoJSON :: NonNegativeDiffTime -&gt; Value
-</span><a href="#local-6989586621689510966"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. NonNegativeDiffTime -&gt; Rep NonNegativeDiffTime x)
+</span><a href="#local-6989586621689510964"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. NonNegativeDiffTime -&gt; Rep NonNegativeDiffTime x)
 -&gt; (forall x. Rep NonNegativeDiffTime x -&gt; NonNegativeDiffTime)
 -&gt; Generic NonNegativeDiffTime
 forall x. Rep NonNegativeDiffTime x -&gt; NonNegativeDiffTime
@@ -637,12 +637,12 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep NonNegativeDiffTime x -&gt; NonNegativeDiffTime
 $cfrom :: forall x. NonNegativeDiffTime -&gt; Rep NonNegativeDiffTime x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510962"><span class="annot"><span class="annottext">NonNegativeDiffTime -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510960"><span class="annot"><span class="annottext">NonNegativeDiffTime -&gt; ()
 (NonNegativeDiffTime -&gt; ()) -&gt; NFData NonNegativeDiffTime
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: NonNegativeDiffTime -&gt; ()
 $crnf :: NonNegativeDiffTime -&gt; ()
-</span><a href="#local-6989586621689510962"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510959"><span class="annot"><span class="annottext">Eq NonNegativeDiffTime
+</span><a href="#local-6989586621689510960"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510957"><span class="annot"><span class="annottext">Eq NonNegativeDiffTime
 Eq NonNegativeDiffTime
 -&gt; (Accesses -&gt; NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool)
 -&gt; Cacheable NonNegativeDiffTime
@@ -651,7 +651,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool
 $cunchanged :: Accesses -&gt; NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; Bool
 $cp1Cacheable :: Eq NonNegativeDiffTime
-</span><a href="#local-6989586621689510959"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510945"><span id="local-6989586621689510947"><span id="local-6989586621689510949"><span id="local-6989586621689510951"><span id="local-6989586621689510953"><span id="local-6989586621689510955"><span id="local-6989586621689510957"><span class="annot"><span class="annottext">Integer -&gt; NonNegativeDiffTime
+</span><a href="#local-6989586621689510957"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689510943"><span id="local-6989586621689510945"><span id="local-6989586621689510947"><span id="local-6989586621689510949"><span id="local-6989586621689510951"><span id="local-6989586621689510953"><span id="local-6989586621689510955"><span class="annot"><span class="annottext">Integer -&gt; NonNegativeDiffTime
 NonNegativeDiffTime -&gt; NonNegativeDiffTime
 NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; NonNegativeDiffTime
 (NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; NonNegativeDiffTime)
@@ -696,9 +696,9 @@ $c+ :: NonNegativeDiffTime -&gt; NonNegativeDiffTime -&gt; NonNegativeDiffTime
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#mkNonNegativeDiffTime"><span class="hs-identifier hs-type">mkNonNegativeDiffTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-type">NonNegativeDiffTime</span></a></span><span>
 </span><span id="line-93"></span><span id="mkNonNegativeDiffTime"><span class="annot"><span class="annottext">mkNonNegativeDiffTime :: DiffTime -&gt; Maybe NonNegativeDiffTime
-</span><a href="Hasura.RQL.Types.Numeric.html#mkNonNegativeDiffTime"><span class="hs-identifier hs-var hs-var">mkNonNegativeDiffTime</span></a></span></span><span> </span><span id="local-6989586621689510943"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689510943"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689510943"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; Bool
+</span><a href="Hasura.RQL.Types.Numeric.html#mkNonNegativeDiffTime"><span class="hs-identifier hs-var hs-var">mkNonNegativeDiffTime</span></a></span></span><span> </span><span id="local-6989586621689510941"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689510941"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689510941"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -710,15 +710,15 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; NonNegativeDiffTime
 </span><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-var">NonNegativeDiffTime</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689510943"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689510941"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-95"></span><span>  </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe NonNegativeDiffTime
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689510940"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-type">NonNegativeDiffTime</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-98"></span><span>  </span><span id="local-6989586621689510939"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NonNegativeDiffTime
-</span><a href="#local-6989586621689510939"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-97"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689510938"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Numeric.html#NonNegativeDiffTime"><span class="hs-identifier hs-type">NonNegativeDiffTime</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621689510937"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NonNegativeDiffTime
+</span><a href="#local-6989586621689510937"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Scientific -&gt; Parser NonNegativeDiffTime)
 -&gt; Value
 -&gt; Parser NonNegativeDiffTime
@@ -730,10 +730,10 @@ forall a. String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser NonNegativeDiffTime
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689510938"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689510938"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689510936"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689510936"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-99"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689510938"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
+</span><a href="#local-6989586621689510936"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Scientific -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Scientific
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">of</span><span>
@@ -753,7 +753,7 @@ forall a b. (Real a, Fractional b) =&gt; a -&gt; b
 -&gt; Scientific -&gt; NonNegativeDiffTime
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689510938"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689510936"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser NonNegativeDiffTime
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
