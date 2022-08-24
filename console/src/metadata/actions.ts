@@ -314,9 +314,10 @@ export const addDataSource =
               } successfully!`,
               level: 'success',
               autoDismiss: 0,
-              action: {
+              alternateActionButtonProps: {
                 label: 'View Database',
-                callback: onButtonClick,
+                onClick: onButtonClick,
+                trackId: 'data-tab-view-database-notification-button-add-db',
               },
             },
             'success'
@@ -414,9 +415,11 @@ export const renameDataSource =
                 title: `Data source updated successfully!`,
                 level: 'success',
                 autoDismiss: 0,
-                action: {
+                alternateActionButtonProps: {
                   label: 'View Database',
-                  callback: onButtonClick,
+                  onClick: onButtonClick,
+                  trackId:
+                    'data-tab-view-database-notification-button-rename-db',
                 },
               },
               'success'
