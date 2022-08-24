@@ -102,6 +102,17 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
 -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
 
+-- By defaults users won't have access to tables they have not created (and thus do not own).
+-- You can change these default privileges to grant access to any object created in the future.
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS;
+
+-- Alternatively, you may restrict this to objects created by a specific user
+-- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO hasurauser;
+-- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO hasurauser;
+-- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO hasurauser;
+
 -- grant these privileges to use create and use all Hasura GraphQL engine functionality
 GRANT USAGE ON SCHEMA hdb_catalog TO hasurauser;
 GRANT CREATE ON SCHEMA hdb_catalog TO hasurauser;
