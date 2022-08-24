@@ -1009,6 +1009,9 @@ WHERE
     return `${dropCommonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}';
     ${commonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}'`;
   },
+  getAlterViewCommentSql: () => {
+    return '';
+  },
   getAlterFunctionCommentSql: () => {
     return '';
   },

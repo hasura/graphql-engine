@@ -199,6 +199,15 @@ export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'
     )} modify column \`${columnName}\` ${columnType} comment ${commentStr};`;
   };
 
+export const getAlterViewCommentSql: DataSourcesAPI['getAlterViewCommentSql'] =
+  ({ viewName, schemaName, comment }) => {
+    const commentStr = sqlEscapeText(comment);
+    return `alter view ${getMySQLNameString(
+      schemaName,
+      viewName
+    )} comment = ${commentStr};`;
+  };
+
 export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] =
   () => {
     return '';

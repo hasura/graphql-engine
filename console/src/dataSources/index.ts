@@ -284,6 +284,15 @@ export interface DataSourcesAPI {
     columnName: string;
     columnType?: string;
   }) => string;
+  getAlterViewCommentSql: ({
+    viewName,
+    schemaName,
+    comment,
+  }: {
+    viewName: string;
+    schemaName: string;
+    comment: string;
+  }) => string;
   getAlterFunctionCommentSql: ({
     functionName,
     schemaName,
