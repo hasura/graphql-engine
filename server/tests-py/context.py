@@ -19,6 +19,7 @@ import string
 import subprocess
 import threading
 import time
+from typing import Any
 from urllib.parse import urlparse
 import websocket
 
@@ -27,6 +28,7 @@ import graphql_server
 # pytest has removed the global pytest.config
 # As a solution to this we are going to store it in PyTestConf.config
 class PytestConf():
+    config: Any
     pass
 
 class HGECtxError(Exception):
@@ -636,7 +638,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         }, HTTPStatus.OK
 
     def check_email(self, email):
-        regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+        regex = '^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$'
         return re.search(regex,email)
 
     def execute_query(self, query):
