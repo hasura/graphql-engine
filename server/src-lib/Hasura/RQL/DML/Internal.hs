@@ -295,6 +295,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         -- Including table permission filter; "input condition" AND "permission filter condition"
         let finalBoolExp = andAnnBoolExps modBoolExp resolvedFltr
         pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table finalBoolExp}
+  AVAggregationPredicates {} -> throw400 NotExists "Aggregation Predicates cannot appear in permission checks"
 
 convAnnBoolExpPartialSQL ::
   (Applicative f) =>

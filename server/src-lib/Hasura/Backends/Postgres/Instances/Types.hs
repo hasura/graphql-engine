@@ -25,6 +25,7 @@ import Hasura.Backends.Postgres.Types.Insert qualified as PG (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as PG
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
@@ -92,6 +93,8 @@ instance
   type ComputedFieldReturn ('Postgres pgKind) = PG.ComputedFieldReturn
 
   type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate pgKind
+
+  type AggregationPredicates ('Postgres pgKind) = Agg.AggregationPredicatesImplementation ('Postgres pgKind)
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
   type BackendInsert ('Postgres pgKind) = PG.BackendInsert pgKind
