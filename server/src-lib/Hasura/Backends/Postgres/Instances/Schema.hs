@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -41,6 +42,7 @@ import Hasura.GraphQL.Schema.Backend
   )
 import Hasura.GraphQL.Schema.Backend qualified as BS
 import Hasura.GraphQL.Schema.BoolExp
+import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates as Agg
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation qualified as GSB
@@ -83,6 +85,7 @@ import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Cockroac
 import Hasura.SQL.Tag (HasTag)
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 
 ----------------------------------------------------------------
 -- BackendSchema instance
@@ -136,6 +139,57 @@ instance PostgresSchema 'Cockroach where
   pgkRelayExtension = Just ()
 
 -- postgres schema
+
+-- Not implemented yet: Pending https://github.com/hasura/graphql-engine-mono/issues/5174"
+instance AggregationPredicatesSchema ('Postgres pgKind) where
+  aggregationPredicatesParser _ _ = return Nothing
+
+-- instance (BackendSchema ('Postgres pgKind)) => AggregationPredicatesSchema ('Postgres pgKind) where
+--   aggregationPredicatesParser = Agg.defaultAggregationPredicatesParser aggregationFunctions
+
+-- | The aggregation functions that are supported by postgres variants.
+-- TODO: Add more.
+_aggregationFunctions :: [Agg.FunctionSignature ('Postgres pgKind)]
+_aggregationFunctions =
+  [ Agg.FunctionSignature
+      { fnName = "count",
+        fnGQLName = [G.name|count|],
+        fnReturnType = PGInteger,
+        fnArguments = Agg.ArgumentsStar
+      },
+    Agg.FunctionSignature
+      { fnName = "bool_and",
+        fnGQLName = [G.name|bool_and|],
+        fnReturnType = PGBoolean,
+        fnArguments =
+          Agg.Arguments
+            ( NE.fromList
+                [ Agg.ArgumentSignature
+                    { argType = PGBoolean,
+                      argName = [G.name|arg0|]
+                    }
+                ]
+            )
+      },
+    Agg.FunctionSignature
+      { fnName = "corr",
+        fnGQLName = [G.name|corr|],
+        fnReturnType = PGDouble,
+        fnArguments =
+          Agg.Arguments
+            ( NE.fromList
+                [ Agg.ArgumentSignature
+                    { argType = PGDouble,
+                      argName = [G.name|Y|]
+                    },
+                  Agg.ArgumentSignature
+                    { argType = PGDouble,
+                      argName = [G.name|X|]
+                    }
+                ]
+            )
+      }
+  ]
 
 instance
   ( PostgresSchema pgKind,
