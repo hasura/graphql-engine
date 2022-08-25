@@ -23,7 +23,7 @@
     "--- BUILD ------------------------------------------------": "",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=3072 webpack --progress --mode=production --config webpack/prod.config.js",
     "--- PRO CONSOLE ------------------------------------------------": "",
-    "build-lib": "webpack --progress --mode=production --config webpack/bundle.config.js",
+    "build-lib": "cross-env NODE_OPTIONS=--max-old-space-size=3072 webpack --progress --mode=production --config webpack/bundle.config.js",
     "--- TEST ------------------------------------------------": "",
     "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
     "--- CYPRESS ------------------------------------------------": "",

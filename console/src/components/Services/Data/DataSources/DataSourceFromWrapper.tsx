@@ -32,6 +32,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = ({
           }}
           disabled={loading}
           data-test="connect-database-btn"
+          data-trackid="data-tab-connect-db-button"
         >
           {!isEditState ? 'Connect Database' : 'Update Connection'}
         </Button>

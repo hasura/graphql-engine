@@ -67,6 +67,22 @@ module.exports = {
         subtitle: ['1.300rem', { lineHeight: '2.143rem' }], // ~20 px
         title: ['1.5rem', { lineHeight: '2.143rem' }], // ~24 px
       },
+      keyframes: {
+        onboardingWizardFadeIn: {
+          '0%': {
+            opacity: '0',
+            scale: '.9',
+          },
+          '50%': {
+            opacity: '.5',
+            scale: '.95',
+          },
+          '100%': {
+            opacity: '1',
+            scale: '1',
+          },
+        },
+      },
     },
   },
   plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
