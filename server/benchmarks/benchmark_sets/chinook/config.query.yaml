@@ -5,6 +5,11 @@ headers:
   X-Hasura-Admin-Secret: my-secret
   X-Hasura-Role: employee
   X-Hasura-User-Id: 4
+  # On cloud about 95% of requests incoming Accept gzip (which as of writing
+  # means we unconditionally compress, which has significant performance
+  # impact), so it's important that we include it in all benchmarks unless we
+  # have an intentional reason not to.
+  Accept-Encoding: gzip
 
 # Anchors to help us DRY below; settings here may be overridden selectively
 constants:
@@ -36,6 +41,12 @@ queries:
   ############################################################################
   # single-table query, small result size; makes use of permissions for
   # filtering; low RPS
+  #
+  # NOTE: According to data from cloud this is a pretty average response (we see
+  # P50 compressed response body size of 123 bytes, and P75 290 bytes):
+  #  
+  #   uncompressed body size: ~600 bytes
+  #   compressed body size:   ~200 bytes   (as of time of writing)
   - name: simple_query_low_load
     <<: *k6_custom
     options:
@@ -79,6 +90,10 @@ queries:
 
 
   ######## Small result size
+  # 
+  #   uncompressed body size: ~650 bytes
+  #   compressed body size:   ~200 bytes
+
   - name: complex_query_low_load_small_result
     <<: *k6_custom
     options:
@@ -130,6 +145,13 @@ queries:
 
 
   ######## Large result size
+  #
+  # NOTE: According to data from cloud, this is somewhere between 
+  #       P90 (2 kB compressed) and P95 (4 kB compressed):
+  #
+  #   uncompressed body size: ~33 kB
+  #   compressed body size:    ~3 kB   (as of time of writing)
+
   - name: complex_query_low_load_large_result
     <<: *k6_custom
     options:
@@ -164,6 +186,12 @@ queries:
   # The standard introspection query from server/src-rsr/introspection.json
   # We don't expect a server to be hammered with these, but they are crucial
   # for clients (like graphiql):
+  #
+  # NOTE: According to data from cloud, this is somewhere between 
+  # P95 (4 kB compressed) and P99 (40 kB compressed):
+  #
+  #   uncompressed body size: ~190 kB
+  #   compressed body size:    ~13 kB   (as of time of writing)
 
   - name: full_introspection
     <<: *k6_custom

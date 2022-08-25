@@ -1,8 +1,8 @@
 # This tells graphql-bench that it's testing a hasura instance and should
 # collect some additional metrics:
 extended_hasura_checks: true
-# headers:
-#   X-Hasura-Admin-Secret: my-secret
+headers:
+  Accept-Encoding: gzip
 
 # Anchors to help us DRY below; settings here may be overridden selectively
 constants:
