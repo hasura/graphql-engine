@@ -50,6 +50,7 @@ data RQLQuery
   | RQRunSql !Postgres.RunSQL
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQCitusRunSql !Postgres.RunSQL
+  | RQCockroachRunSql !Postgres.RunSQL
   | RQMysqlRunSql !MySQL.RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
@@ -122,6 +123,7 @@ queryModifiesSchema = \case
   RQCount _ -> False
   RQRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQCitusRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
+  RQCockroachRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQMssqlRunSql q -> MSSQL.isSchemaCacheBuildRequiredRunSQL q
   RQMysqlRunSql _ -> False
   RQBigqueryRunSql _ -> False
@@ -152,6 +154,7 @@ runQueryM env rq = Tracing.trace (T.pack $ constrName rq) $ case rq of
   RQMssqlRunSql q -> MSSQL.runSQL q
   RQMysqlRunSql q -> MySQL.runSQL q
   RQCitusRunSql q -> Postgres.runRunSQL @'Citus q
+  RQCockroachRunSql q -> Postgres.runRunSQL @'Cockroach q
   RQBigqueryRunSql q -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk l -> encJFromList <$> indexedMapM (runQueryM env) l
@@ -165,6 +168,7 @@ queryModifiesUserDB = \case
   RQCount _ -> False
   RQRunSql _ -> True
   RQCitusRunSql _ -> True
+  RQCockroachRunSql _ -> True
   RQMssqlRunSql _ -> True
   RQMysqlRunSql _ -> True
   RQBigqueryRunSql _ -> True
