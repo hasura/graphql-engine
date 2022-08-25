@@ -67,6 +67,18 @@ data
       "schema_cache_metadata_resource_version"
       'GaugeType
       ()
+  -- | Current number active live queries
+  ActiveLiveQueries ::
+    ServerMetricsSpec
+      "active_livequeries"
+      'GaugeType
+      ()
+  -- | Current number of streaming subscriptions
+  ActiveStreaming ::
+    ServerMetricsSpec
+      "active_streaming_subscriptions"
+      'GaugeType
+      ()
 
 -- | Mutable references for the server metrics. See `ServerMetricsSpec` for a
 -- description of each metric.
@@ -77,7 +89,9 @@ data ServerMetrics = ServerMetrics
     smNumEventsFetchedPerBatch :: !Distribution,
     smNumEventHTTPWorkers :: !Gauge,
     smEventQueueTime :: !Distribution,
-    smSchemaCacheMetadataResourceVersion :: !Gauge
+    smSchemaCacheMetadataResourceVersion :: !Gauge,
+    smActiveLiveQueries :: !Gauge,
+    smActiveStreamingSubscriptions :: !Gauge
   }
 
 createServerMetrics :: Store ServerMetricsSpec -> IO ServerMetrics
@@ -89,4 +103,6 @@ createServerMetrics store = do
   smNumEventHTTPWorkers <- createGauge NumEventHTTPWorkers () store
   smEventQueueTime <- createDistribution EventQueueTime () store
   smSchemaCacheMetadataResourceVersion <- createGauge SchemaCacheMetadataResourceVersion () store
+  smActiveLiveQueries <- createGauge ActiveLiveQueries () store
+  smActiveStreamingSubscriptions <- createGauge ActiveStreaming () store
   pure ServerMetrics {..}
