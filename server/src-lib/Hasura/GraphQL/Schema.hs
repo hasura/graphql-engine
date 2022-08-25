@@ -139,7 +139,6 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
                 role
                 _sccRemoteSchemaPermsCtx
                 _sccExperimentalFeatures
-                (bool StreamingSubscriptionsDisabled StreamingSubscriptionsEnabled $ EFStreamingSubscriptions `elem` _sccExperimentalFeatures)
                 defaultNC
             QueryRelay ->
               (,mempty,G.SchemaIntrospection mempty)
@@ -176,14 +175,13 @@ buildRoleContext ::
   RoleName ->
   Options.RemoteSchemaPermissions ->
   Set.HashSet ExperimentalFeature ->
-  StreamingSubscriptionsCtx ->
   Maybe NamingCase ->
   m
     ( RoleContext GQLContext,
       HashSet InconsistentMetadata,
       G.SchemaIntrospection
     )
-buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures streamingSubscriptionsCtx globalDefaultNC = do
+buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures globalDefaultNC = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         functionPermsCtx
         ) = options
@@ -308,7 +306,7 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
             validTables = takeValidTables tables
         makeTypename <- asks getter
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
-          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions streamingSubscriptionsCtx
+          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
         (,,,,apolloFedTableParsers)
           <$> customizeFields
             sourceCustomization
@@ -643,9 +641,8 @@ buildQueryAndSubscriptionFields ::
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  StreamingSubscriptionsCtx ->
   m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)], [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))])
-buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) streamingSubsCtx = do
+buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
   roleName <- retrieve scRole
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
@@ -662,7 +659,7 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
     unzip3 . catMaybes
       <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
         tableIdentifierName <- getTableIdentifierName @b tableInfo
-        lift $ buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo streamingSubsCtx tableIdentifierName
+        lift $ buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo tableIdentifierName
 
   let tableQueryRootFields = fmap mkRF $ concat tableQueryFields
       tableSubscriptionRootFields = fmap mkRF $ concat tableSubscriptionFields

@@ -43,12 +43,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types
-  ( ExperimentalFeature (..),
-    HasServerConfigCtx (..),
-    ServerConfigCtx (_sccExperimentalFeatures),
-    StreamingSubscriptionsCtx (..),
-  )
 import Hasura.Session
 
 {- Note: [Inherited roles architecture for read queries]
@@ -207,7 +201,6 @@ buildTablePermissions ::
     MonadError QErr m,
     ArrowWriter (Seq CollectedInfo) arr,
     BackendMetadata b,
-    HasServerConfigCtx m,
     Inc.Cacheable (Proxy b)
   ) =>
   ( Proxy b,
@@ -333,7 +326,6 @@ buildPermission ::
     Inc.Cacheable (a b),
     Inc.Cacheable (Proxy b),
     MonadError QErr m,
-    HasServerConfigCtx m,
     BackendMetadata b
   ) =>
   ( Proxy b,
@@ -356,11 +348,6 @@ buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields,
                       -<
                         when (_pdRole permission == adminRoleName) $
                           throw400 ConstraintViolation "cannot define permission for admin role"
-                    experimentalFeatures <- bindA -< fmap _sccExperimentalFeatures askServerConfigCtx
-                    let streamingSubscriptionCtx =
-                          if EFStreamingSubscriptions `elem` experimentalFeatures
-                            then StreamingSubscriptionsEnabled
-                            else StreamingSubscriptionsDisabled
                     (info, dependencies) <-
                       liftEitherA <<< Inc.bindDepend
                         -<
@@ -371,7 +358,6 @@ buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields,
                                   table
                                   tableFields
                                   (_pdRole permission)
-                                  streamingSubscriptionCtx
                                   (_pdPermission permission)
                               )
                               (source, tableCache)

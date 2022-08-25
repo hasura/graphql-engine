@@ -78,7 +78,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.Server.Types (StreamingSubscriptionsCtx (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Builds field name with proper case. Please note that this is a pure
@@ -110,14 +109,13 @@ buildTableQueryAndSubscriptionFields ::
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
-  StreamingSubscriptionsCtx ->
   C.GQLNameIdentifier ->
   m
     ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
       [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
       Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
     )
-buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo streamSubCtx gqlName = do
+buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
   roleName <- retrieve scRole
   let -- select table
@@ -138,7 +136,7 @@ buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableI
     -- Filter the root fields which have been enabled
     Just SelPermInfo {..} -> do
       selectStreamParser <-
-        if (isRootFieldAllowed SRFTSelectStream spiAllowedSubscriptionRootFields && streamSubCtx == StreamingSubscriptionsEnabled)
+        if (isRootFieldAllowed SRFTSelectStream spiAllowedSubscriptionRootFields)
           then buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo gqlName
           else pure mempty
 
