@@ -84,6 +84,11 @@ ghcid-test-mysql: start-postgres start-mysql remove-tix-file
 ghcid-test-citus: start-postgres start-citus remove-tix-file
 	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Citus)
 
+.PHONY: ghcid-test-data-connectors
+## ghcid-test-data-connectors: run tests for DataConnectors in ghcid
+ghcid-test-data-connectors: start-postgres start-dc-reference-agent remove-tix-file
+	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,DataConnector)
+
 .PHONY: ghcid-library-pro
 ## ghcid-library-pro: build and watch pro library in ghcid
 ghcid-library-pro:
