@@ -1,40 +1,43 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { useTables, UseTablesProps, TrackableTable } from '../useTables';
-import { RunSQLResponse } from '../../../Datasources/types';
-import { Metadata } from '../../../../features/DataSource/types';
+import { useTables, UseTablesProps } from '../hooks/useTables';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
+import { TrackableTable } from '../types';
+import { Metadata } from '../../../DataSource/types';
 
 const metadataStub: Metadata = {
-  version: 3,
-  sources: [
-    {
-      name: 'otherDataSource',
-      kind: 'postgres',
-      tables: [],
-    },
-    {
-      name: 'default',
-      kind: 'postgres',
-      tables: [
-        {
-          table: {
-            name: 'Users',
-            schema: 'public',
-          },
-          configuration: {
-            custom_root_fields: {
-              select: 'foo',
+  resource_version: 1,
+  metadata: {
+    version: 3,
+    sources: [
+      {
+        name: 'otherDataSource',
+        kind: 'postgres',
+        tables: [],
+      },
+      {
+        name: 'default',
+        kind: 'postgres',
+        tables: [
+          {
+            table: {
+              name: 'Users',
+              schema: 'public',
+            },
+            configuration: {
+              custom_root_fields: {
+                select: 'foo',
+              },
             },
           },
-        },
-      ],
-    },
-  ],
+        ],
+      },
+    ],
+  },
 };
 
-const runSqlStub: RunSQLResponse = {
+const runSqlStub = {
   result_type: 'TuplesOk',
   result: [
     ['table_name', 'table_schema', 'table_type'],
@@ -61,14 +64,13 @@ describe('useTables', () => {
         })
       );
     });
-    console.log('in before block');
 
     it('returns the tracked tables', async () => {
-      const dataSource: UseTablesProps['dataSource'] = {
-        name: 'default',
+      const { dataSourceName }: UseTablesProps = {
+        dataSourceName: 'default',
       };
       const { result, waitForNextUpdate } = renderHook(
-        () => useTables({ dataSource }),
+        () => useTables({ dataSourceName }),
         {
           wrapper,
         }
@@ -78,7 +80,7 @@ describe('useTables', () => {
 
       const expectedResult: TrackableTable[] = [
         {
-          id: '1',
+          id: 'public.Users',
           is_tracked: true,
           name: 'public.Users',
           table: { name: 'Users', schema: 'public' },
@@ -90,7 +92,7 @@ describe('useTables', () => {
           },
         },
         {
-          id: '2',
+          id: 'public.Products',
           is_tracked: false,
           name: 'public.Products',
           table: { name: 'Products', schema: 'public' },
@@ -106,16 +108,16 @@ describe('useTables', () => {
     beforeEach(() => {
       server.use(
         rest.post('/v1/metadata', (req, res, ctx) =>
-          res(ctx.status(200), ctx.json({ test: 'a' }))
+          res(ctx.status(200), ctx.json({ metadata: { test: 'a' } }))
         )
       );
     });
     it('throws an error', async () => {
-      const dataSource: UseTablesProps['dataSource'] = {
-        name: 'default',
+      const { dataSourceName }: UseTablesProps = {
+        dataSourceName: 'default',
       };
       const { result, waitForNextUpdate } = renderHook(
-        () => useTables({ dataSource }),
+        () => useTables({ dataSourceName }),
         { wrapper }
       );
 
