@@ -1218,6 +1218,7 @@ test-suite tests-hspec
  -- Harness.Backend
     Harness.Backend.BigQuery
     Harness.Backend.Citus
+    Harness.Backend.Cockroach
     Harness.Backend.DataConnector
     Harness.Backend.DataConnector.MockAgent
     Harness.Backend.Mysql

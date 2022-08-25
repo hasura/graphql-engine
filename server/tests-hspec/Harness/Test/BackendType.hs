@@ -17,6 +17,7 @@ data BackendType
   | SQLServer
   | BigQuery
   | Citus
+  | Cockroach
   | DataConnector
   deriving (Eq, Show)
 
@@ -28,6 +29,7 @@ defaultSource = \case
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
+  Cockroach -> "cockroach"
   DataConnector -> "data-connector"
 
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
@@ -38,6 +40,7 @@ defaultBackendTypeString = \case
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
+  Cockroach -> "cockroach"
   DataConnector -> "data-connector"
 
 schemaKeyword :: BackendType -> Key
@@ -47,4 +50,5 @@ schemaKeyword = \case
   SQLServer -> "schema"
   BigQuery -> "dataset"
   Citus -> "schema"
+  Cockroach -> "schema"
   DataConnector -> "schema"
