@@ -42,8 +42,6 @@ compressionTypeToTxt CTGZip = "gzip"
 contentEncodingHeader :: CompressionType -> NH.Header
 contentEncodingHeader CTGZip = gzipHeader
 
--- | Maybe compress the response body, based on the client's Accept-Encoding
--- and our own judgement.
 compressResponse ::
   NH.RequestHeaders ->
   BL.ByteString ->
