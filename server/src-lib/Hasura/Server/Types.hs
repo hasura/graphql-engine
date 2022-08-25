@@ -13,7 +13,6 @@ module Hasura.Server.Types
     pgToDbVersion,
     RequestId (..),
     ServerConfigCtx (..),
-    StreamingSubscriptionsCtx (..),
     HasServerConfigCtx (..),
     getRequestId,
   )
@@ -107,9 +106,6 @@ instance FromJSON (MaintenanceMode ()) where
 
 instance ToJSON (MaintenanceMode ()) where
   toJSON = Bool . (== MaintenanceModeEnabled ())
-
-data StreamingSubscriptionsCtx = StreamingSubscriptionsEnabled | StreamingSubscriptionsDisabled
-  deriving (Show, Eq)
 
 -- | See Note [ReadOnly Mode]
 data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled
