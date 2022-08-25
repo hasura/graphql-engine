@@ -3,7 +3,7 @@
  * Currently only implements `addUserProperties`. More functions: identify, track etc can be added
  */
 export const heap = {
-  addHeapUserProperties: (props: Record<string, string>) => {
+  addUserProperties: (props: Record<string, string>) => {
     window.heap?.addUserProperties(props);
   },
 };
