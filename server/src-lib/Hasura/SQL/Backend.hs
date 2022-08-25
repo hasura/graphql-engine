@@ -14,12 +14,13 @@ module Hasura.SQL.Backend
   )
 where
 
+import Autodocodec (HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, literalTextCodec, parseAlternatives)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Proxy
 import Data.Text (unpack)
 import Data.Text.Extended
-import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, nonEmptyTextQQ)
+import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, nonEmptyTextCodec, nonEmptyTextQQ)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
 import Hasura.Incremental
 import Hasura.Prelude
@@ -144,6 +145,46 @@ mkParseStaticBackendSourceKind backendSourceKind =
       else fail ("got: " <> unpack text <> ", expected one of: " <> unpack (commaSeparated validValues))
   where
     validValues = backendTextNames $ backendTypeFromBackendSourceKind backendSourceKind
+
+instance HasCodec (BackendSourceKind ('Postgres 'Vanilla)) where
+  codec = mkCodecStaticBackendSourceKind PostgresVanillaKind
+
+instance HasCodec (BackendSourceKind ('Postgres 'Citus)) where
+  codec = mkCodecStaticBackendSourceKind PostgresCitusKind
+
+instance HasCodec (BackendSourceKind ('Postgres 'Cockroach)) where
+  codec = mkCodecStaticBackendSourceKind PostgresCockroachKind
+
+instance HasCodec (BackendSourceKind ('MSSQL)) where
+  codec = mkCodecStaticBackendSourceKind MSSQLKind
+
+instance HasCodec (BackendSourceKind ('BigQuery)) where
+  codec = mkCodecStaticBackendSourceKind BigQueryKind
+
+instance HasCodec (BackendSourceKind ('MySQL)) where
+  codec = mkCodecStaticBackendSourceKind MySQLKind
+
+instance HasCodec (BackendSourceKind ('DataConnector)) where
+  codec = dimapCodec dec enc nonEmptyTextCodec
+    where
+      dec = DataConnectorKind . DataConnectorName
+      enc = Witch.into
+
+mkCodecStaticBackendSourceKind :: BackendSourceKind b -> JSONCodec (BackendSourceKind b)
+mkCodecStaticBackendSourceKind backendSourceKind =
+  bimapCodec dec enc $
+    parseAlternatives (literalTextCodec longName) (literalTextCodec <$> aliases)
+  where
+    dec text =
+      if text `elem` validValues
+        then Right backendSourceKind
+        else Left ("got: " <> unpack text <> ", expected one of: " <> unpack (commaSeparated validValues))
+
+    enc = toTxt
+
+    validValues = backendTextNames $ backendTypeFromBackendSourceKind backendSourceKind
+    longName = head validValues
+    aliases = tail validValues
 
 -- | Some generated APIs use a shortened version of the backend's name rather than its full
 -- name. This function returns the "short form" of a backend, if any.

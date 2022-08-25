@@ -20,6 +20,7 @@ module Hasura.Backends.MSSQL.Connection
   )
 where
 
+import Autodocodec (HasCodec (codec), named)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
@@ -33,6 +34,7 @@ import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 
 class MonadError QErr m => MonadMSSQLTx m where
@@ -146,6 +148,11 @@ instance Hashable MSSQLConnConfiguration
 instance NFData MSSQLConnConfiguration
 
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
+
+-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
+-- instances.
+instance HasCodec MSSQLConnConfiguration where
+  codec = named "MSSQLConnConfiguration" $ placeholderCodecViaJSON
 
 createMSSQLPool ::
   MonadIO m =>

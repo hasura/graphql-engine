@@ -29,6 +29,7 @@ module Hasura.Backends.Postgres.Connection.Settings
   )
 where
 
+import Autodocodec (HasCodec (codec), named)
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (aesonDrop)
@@ -45,6 +46,7 @@ import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as Q
 import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf (..))
 import Hasura.SQL.Types (ExtensionsSchema (..))
@@ -291,5 +293,8 @@ instance ToJSON PostgresConnConfiguration where
       ["connection_info" .= _pccConnectionInfo]
         <> maybe mempty (\readReplicas -> ["read_replicas" .= readReplicas]) _pccReadReplicas
         <> bool mempty (["extensions_schema" .= _pccExtensionsSchema]) (_pccExtensionsSchema /= defaultPostgresExtensionsSchema)
+
+instance HasCodec PostgresConnConfiguration where
+  codec = named "PostgresConnConfiguration" $ placeholderCodecViaJSON
 
 $(makeLenses ''PostgresConnConfiguration)

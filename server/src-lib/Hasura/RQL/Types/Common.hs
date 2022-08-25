@@ -43,6 +43,7 @@ module Hasura.RQL.Types.Common
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
@@ -200,9 +201,19 @@ instance FromJSON SourceName where
     "default" -> pure SNDefault
     t -> SNName <$> parseJSON (String t)
 
+instance HasCodec SourceName where
+  codec = dimapCodec dec enc nonEmptyTextCodec
+    where
+      dec t
+        | t == defaultSourceName = SNDefault
+        | otherwise = SNName t
+
+      enc SNDefault = defaultSourceName
+      enc (SNName t) = t
+
 sourceNameToText :: SourceName -> Text
 sourceNameToText = \case
-  SNDefault -> "default"
+  SNDefault -> unNonEmptyText defaultSourceName
   SNName t -> unNonEmptyText t
 
 instance ToJSON SourceName where
@@ -226,6 +237,9 @@ instance Cacheable SourceName
 
 defaultSource :: SourceName
 defaultSource = SNDefault
+
+defaultSourceName :: NonEmptyText
+defaultSourceName = mkNonEmptyTextUnsafe "default"
 
 data InpValInfo = InpValInfo
   { _iviDesc :: Maybe G.Description,

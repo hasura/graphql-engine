@@ -11,6 +11,7 @@ module Hasura.Backends.DataConnector.Adapter.Types
   )
 where
 
+import Autodocodec (HasCodec (codec), named)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
@@ -19,6 +20,7 @@ import Data.Text.NonEmpty (NonEmptyText)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Network.HTTP.Client qualified as HTTP
 import Servant.Client (BaseUrl)
@@ -45,6 +47,11 @@ instance FromJSON ConnSourceConfig where
     case J.lookup "value" o of
       Just _ -> ConnSourceConfig <$> o J..: "value" <*> o J..:? "template" <*> (o J..:? "timeout")
       Nothing -> ConnSourceConfig (API.Config o) Nothing <$> (o J..:? "timeout")
+
+-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
+-- instances.
+instance HasCodec ConnSourceConfig where
+  codec = named "DataConnectorConnConfiguration" $ placeholderCodecViaJSON
 
 instance Cacheable ConnSourceConfig where
   unchanged _ = (==)

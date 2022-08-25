@@ -443,7 +443,7 @@ metadataToDTO
       backendConfigs
     ) =
     MetadataV3
-      { metaV3Sources = placeholder $ sourcesToOrdJSONList sources,
+      { metaV3Sources = sources,
         metaV3RemoteSchemas = placeholder <$> remoteSchemasToOrdJSONList remoteSchemas,
         metaV3QueryCollections = placeholder <$> queryCollectionsToOrdJSONList queryCollections,
         metaV3Allowlist = placeholder <$> allowlistToOrdJSONList allowlist,
