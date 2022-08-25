@@ -5,8 +5,8 @@
 </span><span id="line-5"></span><span class="hs-comment">-- do not incorporate it into essential workflows at this time.</span><span>
 </span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.MetadataOpenAPI</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#metadataOpenAPI"><span class="hs-identifier">metadataOpenAPI</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-7"></span><span>
-</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span class="hs-special">)</span><span>
-</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">declareNamedSchemaViaCodec</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">JSONCodec</span></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">declareNamedSchemaVia</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">declareNamedSchemaViaCodec</span></span><span class="hs-special">)</span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.~)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Data</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Proxy</span></span><span class="hs-special">)</span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
@@ -20,29 +20,43 @@
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OpenApi</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi.Declare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">undeclare</span></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Proxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Proxy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html"><span class="hs-identifier">Hasura.Metadata.DTO.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier">MetadataDTO</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html"><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV1</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier">MetadataV1</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html"><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV2</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier">MetadataV2</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html"><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV3</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier">MetadataV3</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-comment">-- | An OpenApi document includes \&quot;schemas\&quot; that describe the data that may be</span><span>
-</span><span id="line-30"></span><span class="hs-comment">-- produced or consumed by an API. It can also include \&quot;paths\&quot; which describe</span><span>
-</span><span id="line-31"></span><span class="hs-comment">-- REST endpoints, and the document can include other API metadata. This example</span><span>
-</span><span id="line-32"></span><span class="hs-comment">-- only includes schemas.</span><span>
-</span><span id="line-33"></span><span class="hs-comment">--</span><span>
-</span><span id="line-34"></span><span class="hs-comment">-- Throws an error if any schema listed in 'openApiSchemas' does not have</span><span>
-</span><span id="line-35"></span><span class="hs-comment">-- a name.</span><span>
-</span><span id="line-36"></span><span class="hs-comment">--</span><span>
-</span><span id="line-37"></span><span class="hs-comment">-- The OpenAPI specification for metadata is experimental and incomplete. Please</span><span>
-</span><span id="line-38"></span><span class="hs-comment">-- do not incorporate it into essential workflows at this time.</span><span>
-</span><span id="line-39"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#metadataOpenAPI"><span class="hs-identifier hs-type">metadataOpenAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi</span></span><span>
-</span><span id="line-40"></span><span id="metadataOpenAPI"><span class="annot"><span class="annottext">metadataOpenAPI :: OpenApi
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Source</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier">BigQueryConnSourceConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DataConnector</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Connection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier">MSSQLConnConfiguration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.html"><span class="hs-identifier">Hasura.Backends.MySQL.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MySQL</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection.Settings</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier">PostgresConnConfiguration</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html"><span class="hs-identifier">Hasura.Metadata.DTO.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier">MetadataDTO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html"><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV1</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier">MetadataV1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html"><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV2</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier">MetadataV2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html"><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV3</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier">MetadataV3</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Common</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#BackendSourceMetadata"><span class="hs-identifier">BackendSourceMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier">FunctionMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier">SourceMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier">TableMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#backendSourceMetadataCodec"><span class="hs-identifier">backendSourceMetadataCodec</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html"><span class="hs-identifier">Hasura.RQL.Types.SourceCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier">SourceCustomization</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier">PostgresKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- | An OpenApi document includes \&quot;schemas\&quot; that describe the data that may be</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- produced or consumed by an API. It can also include \&quot;paths\&quot; which describe</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- REST endpoints, and the document can include other API metadata. This example</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- only includes schemas.</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- Throws an error if any schema listed in 'openApiSchemas' does not have</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- a name.</span><span>
+</span><span id="line-50"></span><span class="hs-comment">--</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- The OpenAPI specification for metadata is experimental and incomplete. Please</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- do not incorporate it into essential workflows at this time.</span><span>
+</span><span id="line-53"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#metadataOpenAPI"><span class="hs-identifier hs-type">metadataOpenAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi</span></span><span>
+</span><span id="line-54"></span><span id="metadataOpenAPI"><span class="annot"><span class="annottext">metadataOpenAPI :: OpenApi
 </span><a href="Hasura.Server.MetadataOpenAPI.html#metadataOpenAPI"><span class="hs-identifier hs-var hs-var">metadataOpenAPI</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpenApi
+</span><span id="line-55"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpenApi
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi</span></span><span class="hs-special">)</span><span>
-</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">OpenApi -&gt; (OpenApi -&gt; OpenApi) -&gt; OpenApi
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">OpenApi -&gt; (OpenApi -&gt; OpenApi) -&gt; OpenApi
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">(Components -&gt; Identity Components) -&gt; OpenApi -&gt; Identity OpenApi
 forall s a. HasComponents s a =&gt; Lens' s a
@@ -72,91 +86,241 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[NamedSchema]
 </span><a href="Hasura.Server.MetadataOpenAPI.html#openApiSchemas"><span class="hs-identifier hs-var">openApiSchemas</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-comment">-- | All metadata DTOs should be listed here. Schemas in this list must be</span><span>
-</span><span id="line-45"></span><span class="hs-comment">-- named! Some autodocodec combinators apply names for you, like 'object'.</span><span>
-</span><span id="line-46"></span><span class="hs-comment">-- Otherwise you can use the 'named' combinator to apply a name.</span><span>
-</span><span id="line-47"></span><span class="hs-comment">--</span><span>
-</span><span id="line-48"></span><span class="hs-comment">-- As far as I can tell it is necessary to explicitly list all of the data</span><span>
-</span><span id="line-49"></span><span class="hs-comment">-- types that should be included in the OpenApi document with their names. It</span><span>
-</span><span id="line-50"></span><span class="hs-comment">-- would be nice to provide only a top-level type ('Metadata' in this case), and</span><span>
-</span><span id="line-51"></span><span class="hs-comment">-- have all of the types referenced by that type included automatically; but</span><span>
-</span><span id="line-52"></span><span class="hs-comment">-- I haven't seen a way to do that.</span><span>
-</span><span id="line-53"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#openApiSchemas"><span class="hs-identifier hs-type">openApiSchemas</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span><span class="hs-special">]</span><span>
-</span><span id="line-54"></span><span id="openApiSchemas"><span class="annot"><span class="annottext">openApiSchemas :: [NamedSchema]
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- | All metadata DTOs should be listed here. Schemas in this list must be</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- named! Some autodocodec combinators apply names for you, like 'object'.</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- Otherwise you can use the 'named' combinator to apply a name.</span><span>
+</span><span id="line-61"></span><span class="hs-comment">--</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- As far as I can tell it is necessary to explicitly list all of the data</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- types that should be included in the OpenApi document with their names. It</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- would be nice to provide only a top-level type ('Metadata' in this case), and</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- have all of the types referenced by that type included automatically; but</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- I haven't seen a way to do that.</span><span>
+</span><span id="line-67"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#openApiSchemas"><span class="hs-identifier hs-type">openApiSchemas</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span><span class="hs-special">]</span><span>
+</span><span id="line-68"></span><span id="openApiSchemas"><span class="annot"><span class="annottext">openApiSchemas :: [NamedSchema]
 </span><a href="Hasura.Server.MetadataOpenAPI.html#openApiSchemas"><span class="hs-identifier hs-var hs-var">openApiSchemas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-55"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Proxy MetadataDTO -&gt; NamedSchema
+</span><span id="line-69"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Proxy MetadataDTO -&gt; NamedSchema
 forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
 </span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy MetadataDTO
 forall k (t :: k). Proxy t
 </span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier hs-type">MetadataDTO</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">Proxy MetadataV1 -&gt; NamedSchema
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="annottext">Proxy MetadataV1 -&gt; NamedSchema
 forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
 </span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy MetadataV1
 forall k (t :: k). Proxy t
 </span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-type">MetadataV1</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">Proxy MetadataV2 -&gt; NamedSchema
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">Proxy MetadataV2 -&gt; NamedSchema
 forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
 </span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy MetadataV2
 forall k (t :: k). Proxy t
 </span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">Proxy MetadataV3 -&gt; NamedSchema
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Proxy MetadataV3 -&gt; NamedSchema
 forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
 </span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy MetadataV3
 forall k (t :: k). Proxy t
-</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-comment">-- | Introspect a given 'OpenApi.NamedSchema' to get its name, and return the</span><span>
-</span><span id="line-62"></span><span class="hs-comment">-- name with the unwrapped schema. (NamedSchema wraps a pair of an</span><span>
-</span><span id="line-63"></span><span class="hs-comment">-- 'OpenApi.Schema' and an optional name.)</span><span>
-</span><span id="line-64"></span><span class="hs-comment">--</span><span>
-</span><span id="line-65"></span><span class="hs-comment">-- Throws an exception if the named schema has no name. If this happens to you</span><span>
-</span><span id="line-66"></span><span class="hs-comment">-- then use autodocodec's 'named' combinator to apply a name to your codec.</span><span>
-</span><span id="line-67"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#applySchemaName"><span class="hs-identifier hs-type">applySchemaName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.Schema</span></span><span class="hs-special">)</span><span>
-</span><span id="line-68"></span><span id="applySchemaName"><span class="annot"><span class="annottext">applySchemaName :: NamedSchema -&gt; (Text, Schema)
-</span><a href="Hasura.Server.MetadataOpenAPI.html#applySchemaName"><span class="hs-identifier hs-var hs-var">applySchemaName</span></a></span></span><span> </span><span id="local-6989586621689498188"><span class="annot"><span class="annottext">NamedSchema
-</span><a href="#local-6989586621689498188"><span class="hs-identifier hs-var">givenSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689498187"><span class="hs-identifier hs-var">schemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NamedSchema
-</span><a href="#local-6989586621689498188"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema -&gt; Getting Schema NamedSchema Schema -&gt; Schema
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">JSONCodec BackendSourceMetadata
+-&gt; Proxy BackendSourceMetadata -&gt; NamedSchema
+forall a. JSONCodec a -&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchemaVia"><span class="hs-identifier hs-var">toNamedSchemaVia</span></a></span><span> </span><span class="annot"><span class="annottext">JSONCodec BackendSourceMetadata
+</span><a href="Hasura.RQL.Types.Metadata.Common.html#backendSourceMetadataCodec"><span class="hs-identifier hs-var">backendSourceMetadataCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy BackendSourceMetadata
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#BackendSourceMetadata"><span class="hs-identifier hs-type">BackendSourceMetadata</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">Proxy SourceCustomization -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy SourceCustomization
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-comment">-- SourceMetadata</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">Proxy (SourceMetadata ('Postgres 'Vanilla)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (SourceMetadata ('Postgres 'Vanilla))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">Proxy (SourceMetadata ('Postgres 'Citus)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (SourceMetadata ('Postgres 'Citus))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><span class="annottext">Proxy (SourceMetadata ('Postgres 'Cockroach)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (SourceMetadata ('Postgres 'Cockroach))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Cockroach"><span class="hs-identifier hs-type">Cockroach</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'MSSQL) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'MSSQL)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'BigQuery) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'BigQuery)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'MySQL) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'MySQL)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'DataConnector) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (SourceMetadata 'DataConnector)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-comment">-- FunctionMetadata</span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">Proxy (FunctionMetadata ('Postgres 'Vanilla)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (FunctionMetadata ('Postgres 'Vanilla))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">Proxy (FunctionMetadata ('Postgres 'Citus)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (FunctionMetadata ('Postgres 'Citus))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-86"></span><span>    </span><span class="annot"><span class="annottext">Proxy (FunctionMetadata ('Postgres 'Cockroach)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (FunctionMetadata ('Postgres 'Cockroach))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Cockroach"><span class="hs-identifier hs-type">Cockroach</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'MSSQL) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'MSSQL)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'BigQuery) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'BigQuery)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'MySQL) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'MySQL)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'DataConnector) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (FunctionMetadata 'DataConnector)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>    </span><span class="hs-comment">-- TableMetadata</span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">Proxy (TableMetadata ('Postgres 'Vanilla)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (TableMetadata ('Postgres 'Vanilla))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">Proxy (TableMetadata ('Postgres 'Citus)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (TableMetadata ('Postgres 'Citus))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><span class="annottext">Proxy (TableMetadata ('Postgres 'Cockroach)) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (TableMetadata ('Postgres 'Cockroach))
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Cockroach"><span class="hs-identifier hs-type">Cockroach</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">Proxy (TableMetadata 'MSSQL) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (TableMetadata 'MSSQL)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">Proxy (TableMetadata 'BigQuery) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (TableMetadata 'BigQuery)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">Proxy (TableMetadata 'MySQL) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (TableMetadata 'MySQL)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">Proxy (TableMetadata 'DataConnector) -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy (TableMetadata 'DataConnector)
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="hs-comment">-- Postgres-specific types</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">Proxy PostgresConnConfiguration -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy PostgresConnConfiguration
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-comment">-- MSSQL-specific types</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><span class="annottext">Proxy MSSQLConnConfiguration -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy MSSQLConnConfiguration
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>    </span><span class="hs-comment">-- BigQuery-specific types</span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">Proxy BigQueryConnSourceConfig -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy BigQueryConnSourceConfig
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>    </span><span class="hs-comment">-- MySQL-specific types</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><span class="annottext">Proxy ConnSourceConfig -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy ConnSourceConfig
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-type">MySQL.ConnSourceConfig</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>    </span><span class="hs-comment">-- DataConnector-specific types</span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">Proxy ConnSourceConfig -&gt; NamedSchema
+forall a. HasCodec a =&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var">toNamedSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy ConnSourceConfig
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-type">DataConnector.ConnSourceConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="hs-comment">-- | Introspect a given 'OpenApi.NamedSchema' to get its name, and return the</span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- name with the unwrapped schema. (NamedSchema wraps a pair of an</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- 'OpenApi.Schema' and an optional name.)</span><span>
+</span><span id="line-114"></span><span class="hs-comment">--</span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- Throws an exception if the named schema has no name. If this happens to you</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- then use autodocodec's 'named' combinator to apply a name to your codec.</span><span>
+</span><span id="line-117"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#applySchemaName"><span class="hs-identifier hs-type">applySchemaName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.Schema</span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span id="applySchemaName"><span class="annot"><span class="annottext">applySchemaName :: NamedSchema -&gt; (Text, Schema)
+</span><a href="Hasura.Server.MetadataOpenAPI.html#applySchemaName"><span class="hs-identifier hs-var hs-var">applySchemaName</span></a></span></span><span> </span><span id="local-6989586621689605096"><span class="annot"><span class="annottext">NamedSchema
+</span><a href="#local-6989586621689605096"><span class="hs-identifier hs-var">givenSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689605095"><span class="hs-identifier hs-var">schemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NamedSchema
+</span><a href="#local-6989586621689605096"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema -&gt; Getting Schema NamedSchema Schema -&gt; Schema
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Schema NamedSchema Schema
 forall s a. HasSchema s a =&gt; Lens' s a
 </span><span class="hs-identifier hs-var">schema</span></span><span class="hs-special">)</span><span>
-</span><span id="line-69"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>    </span><span id="local-6989586621689498187"><span class="annot"><span class="annottext">schemaName :: Text
-</span><a href="#local-6989586621689498187"><span class="hs-identifier hs-var hs-var">schemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NamedSchema
-</span><a href="#local-6989586621689498188"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema
+</span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621689605095"><span class="annot"><span class="annottext">schemaName :: Text
+</span><a href="#local-6989586621689605095"><span class="hs-identifier hs-var hs-var">schemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NamedSchema
+</span><a href="#local-6989586621689605096"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema
 -&gt; Getting (Maybe Text) NamedSchema (Maybe Text) -&gt; Maybe Text
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting (Maybe Text) NamedSchema (Maybe Text)
 forall s a. HasName s a =&gt; Lens' s a
 </span><span class="hs-identifier hs-var">name</span></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-71"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689498186"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689498186"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689498186"><span class="hs-identifier hs-var">n</span></a></span><span>
-</span><span id="line-72"></span><span>      </span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-121"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689605094"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689605094"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689605094"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-122"></span><span>      </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">[Char] -&gt; Text
+</span><span id="line-123"></span><span>        </span><span class="annot"><span class="annottext">[Char] -&gt; Text
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">([Char] -&gt; Text) -&gt; [Char] -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">[Char]
+</span><span id="line-124"></span><span>          </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;a codec listed in 'openApiSchemas' does not have a name; &quot;</span></span><span>
-</span><span id="line-75"></span><span>            </span><span class="annot"><span class="annottext">[Char] -&gt; [Char] -&gt; [Char]
+</span><span id="line-125"></span><span>            </span><span class="annot"><span class="annottext">[Char] -&gt; [Char] -&gt; [Char]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;use the 'named' combinator from autodocodec to apply a name &quot;</span></span><span>
-</span><span id="line-76"></span><span>            </span><span class="annot"><span class="annottext">[Char] -&gt; [Char] -&gt; [Char]
+</span><span id="line-126"></span><span>            </span><span class="annot"><span class="annottext">[Char] -&gt; [Char] -&gt; [Char]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;to any codec in that list that does not already have one&quot;</span></span><span>
-</span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span id="local-6989586621689498233"><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-type">toNamedSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689498233"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621689498233"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span></span><span>
-</span><span id="line-79"></span><span id="toNamedSchema"><span class="annot"><span class="annottext">toNamedSchema :: Proxy a -&gt; NamedSchema
-</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var hs-var">toNamedSchema</span></a></span></span><span> </span><span id="local-6989586621689498184"><span class="annot"><span class="annottext">Proxy a
-</span><a href="#local-6989586621689498184"><span class="hs-identifier hs-var">proxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span id="local-6989586621689605168"><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-type">toNamedSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689605168"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621689605168"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span></span><span>
+</span><span id="line-129"></span><span id="toNamedSchema"><span class="annot"><span class="annottext">toNamedSchema :: Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var hs-var">toNamedSchema</span></a></span></span><span> </span><span id="local-6989586621689605092"><span class="annot"><span class="annottext">Proxy a
+</span><a href="#local-6989586621689605092"><span class="hs-identifier hs-var">proxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
 forall d a. Monoid d =&gt; Declare d a -&gt; a
 </span><span class="hs-identifier hs-var">undeclare</span></span><span> </span><span class="annot"><span class="annottext">(Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema)
 -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
@@ -166,5 +330,23 @@ forall value.
 HasCodec value =&gt;
 Proxy value -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema
 </span><span class="hs-identifier hs-var">declareNamedSchemaViaCodec</span></span><span> </span><span class="annot"><span class="annottext">Proxy a
-</span><a href="#local-6989586621689498184"><span class="hs-identifier hs-var">proxy</span></a></span><span>
-</span><span id="line-80"></span></pre></body></html>
+</span><a href="#local-6989586621689605092"><span class="hs-identifier hs-var">proxy</span></a></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span id="local-6989586621689605159"><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchemaVia"><span class="hs-identifier hs-type">toNamedSchemaVia</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689605159"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621689605159"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span></span><span>
+</span><span id="line-132"></span><span id="toNamedSchemaVia"><span class="annot"><span class="annottext">toNamedSchemaVia :: JSONCodec a -&gt; Proxy a -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchemaVia"><span class="hs-identifier hs-var hs-var">toNamedSchemaVia</span></a></span></span><span> </span><span id="local-6989586621689605091"><span class="annot"><span class="annottext">JSONCodec a
+</span><a href="#local-6989586621689605091"><span class="hs-identifier hs-var">codec</span></a></span></span><span> </span><span id="local-6989586621689605090"><span class="annot"><span class="annottext">Proxy a
+</span><a href="#local-6989586621689605090"><span class="hs-identifier hs-var">proxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
+forall d a. Monoid d =&gt; Declare d a -&gt; a
+</span><span class="hs-identifier hs-var">undeclare</span></span><span> </span><span class="annot"><span class="annottext">(Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema)
+-&gt; Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec a
+-&gt; Proxy a -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema
+forall value.
+JSONCodec value
+-&gt; Proxy value -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema
+</span><span class="hs-identifier hs-var">declareNamedSchemaVia</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec a
+</span><a href="#local-6989586621689605091"><span class="hs-identifier hs-var">codec</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy a
+</span><a href="#local-6989586621689605090"><span class="hs-identifier hs-var">proxy</span></a></span><span>
+</span><span id="line-133"></span></pre></body></html>
