@@ -57,7 +57,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.SQL.Backend
-import Hasura.Server.Types (StreamingSubscriptionsCtx)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Bag of constraints available to the methods of @BackendSchema@.
@@ -101,7 +100,6 @@ class
     SourceInfo b ->
     TableName b ->
     TableInfo b ->
-    StreamingSubscriptionsCtx ->
     GQLNameIdentifier ->
     m
       ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],

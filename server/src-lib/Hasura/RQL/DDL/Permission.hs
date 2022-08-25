@@ -55,7 +55,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
-import Hasura.Server.Types (StreamingSubscriptionsCtx (..))
 import Hasura.Session
 
 {- Note [Backend only permissions]
@@ -218,11 +217,10 @@ buildPermInfo ::
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   RoleName ->
-  StreamingSubscriptionsCtx ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildPermInfo x1 x2 x3 roleName streamingSubscriptionsCtx = \case
-  SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName streamingSubscriptionsCtx p
+buildPermInfo x1 x2 x3 roleName = \case
+  SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName p
   InsPerm' p -> buildInsPermInfo x1 x2 x3 p
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
@@ -335,10 +333,9 @@ validateAllowedRootFields ::
   SourceName ->
   TableName b ->
   RoleName ->
-  StreamingSubscriptionsCtx ->
   SelPerm b ->
   m (AllowedRootFields QueryRootFieldType, AllowedRootFields SubscriptionRootFieldType)
-validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {..} = do
+validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
   tableCoreInfo <- lookupTableCoreInfo @b tableName >>= (`onNothing` (throw500 $ "unexpected: table not found " <>> tableName))
 
   -- validate the query_root_fields and subscription_root_fields values
@@ -348,12 +345,9 @@ validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {.
       needToValidateAggregationRootField =
         QRFTSelectAggregate `rootFieldNeedsValidation` spAllowedQueryRootFields
           || SRFTSelectAggregate `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
-      needToValidateStreamingRootField =
-        SRFTSelectStream `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
 
   when needToValidatePrimaryKeyRootField $ validatePrimaryKeyRootField tableCoreInfo
   when needToValidateAggregationRootField $ validateAggregationRootField
-  when needToValidateStreamingRootField $ validateStreamingRootField
 
   pure (spAllowedQueryRootFields, spAllowedSubscriptionRootFields)
   where
@@ -386,12 +380,6 @@ validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {.
           "The \"select_aggregate\" root field can only be enabled in the query_root_fields or "
             <> " the subscription_root_fields when \"allow_aggregations\" is set to true"
 
-    validateStreamingRootField =
-      unless (streamSubsCtx == StreamingSubscriptionsEnabled) $
-        throw400 ValidationFailed $
-          "The \"select_stream\" root field can only be included in the query_root_fields or "
-            <> " the subscription_root_fields when streaming subscriptions is enabled"
-
 buildSelPermInfo ::
   forall b m.
   (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
@@ -399,10 +387,9 @@ buildSelPermInfo ::
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   RoleName ->
-  StreamingSubscriptionsCtx ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withPathK "permission" $ do
+buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permission" $ do
   let pgCols = interpColSpec (map ciColumn $ (getCols fieldInfoMap)) $ spColumns sp
 
   (spiFilter, boolExpDeps) <-
@@ -445,7 +432,7 @@ buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withP
       spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
 
   (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
-    validateAllowedRootFields source tableName roleName streamSubsCtx sp
+    validateAllowedRootFields source tableName roleName sp
 
   return (SelPermInfo {..}, deps)
   where
