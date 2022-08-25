@@ -19,7 +19,7 @@ import type {
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
-import { exportMetadata, NetworkArgs } from './api';
+import { exportMetadata, NetworkArgs, RunSQLResponse } from './api';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -66,7 +66,7 @@ const getDatabaseMethods = async ({
   dataSourceName,
   httpClient,
 }: { dataSourceName: string } & NetworkArgs) => {
-  const metadata = await exportMetadata({ httpClient });
+  const { metadata } = await exportMetadata({ httpClient });
 
   const dataSource = metadata.sources.find(
     source => source.name === dataSourceName
@@ -132,7 +132,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     },
   },
   introspectTables: async ({ dataSourceName }: { dataSourceName: string }) => {
-    const metadata = await exportMetadata({ httpClient });
+    const { metadata } = await exportMetadata({ httpClient });
 
     const dataSource = metadata.sources.find(
       source => source.name === dataSourceName
@@ -163,7 +163,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   }: {
     dataSourceName: string;
   }) => {
-    const metadata = await exportMetadata({ httpClient });
+    const { metadata } = await exportMetadata({ httpClient });
 
     const dataSource = metadata.sources.find(
       source => source.name === dataSourceName
@@ -233,7 +233,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
 });
 
-export { exportMetadata, utils };
+export { exportMetadata, utils, RunSQLResponse };
 
 export * from './types';
 export * from './guards';

@@ -30,7 +30,7 @@ export const useListAllRelationshipsFromMetadata = (
     queryKey: [dataSourceName, 'list_all_relationships'],
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      const metadata = await exportMetadata({ httpClient });
+      const { metadata } = await exportMetadata({ httpClient });
       const metadataSource = metadata.sources.find(
         source => source.name === dataSourceName
       );

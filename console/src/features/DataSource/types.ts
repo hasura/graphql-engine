@@ -211,23 +211,16 @@ export type Source = {
 };
 
 export type Metadata = {
-  version: number;
-  sources: Source[];
-};
-
-type SqlTable = {
-  name: string;
-  schema: string;
-};
-
-type BigQueryTable = {
-  name: string;
-  dataset: string;
+  resource_version: number;
+  metadata: {
+    version: number;
+    sources: Source[];
+  };
 };
 
 export type IntrospectedTable = {
   name: string;
-  table: SqlTable | BigQueryTable;
+  table: Table;
   type: string;
 };
 

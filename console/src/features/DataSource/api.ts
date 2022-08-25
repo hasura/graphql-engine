@@ -12,6 +12,7 @@ export const exportMetadata = async ({
   return (
     await httpClient.post('/v1/metadata', {
       type: 'export_metadata',
+      version: 2,
       args: {},
     })
   ).data;
