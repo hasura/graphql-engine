@@ -127,6 +127,7 @@ data Column = Column
 data BackendScalarType = BackendScalarType
   { bstMysql :: Maybe Text,
     bstCitus :: Maybe Text,
+    bstCockroach :: Maybe Text,
     bstPostgres :: Maybe Text,
     bstBigQuery :: Maybe Text,
     bstMssql :: Maybe Text
@@ -140,6 +141,7 @@ defaultBackendScalarType =
   BackendScalarType
     { bstMysql = Nothing,
       bstCitus = Nothing,
+      bstCockroach = Nothing,
       bstMssql = Nothing,
       bstPostgres = Nothing,
       bstBigQuery = Nothing
@@ -189,6 +191,7 @@ formatBackendScalarValueType (Unquoted text) = text
 data BackendScalarValue = BackendScalarValue
   { bsvMysql :: Maybe BackendScalarValueType,
     bsvCitus :: Maybe BackendScalarValueType,
+    bsvCockroach :: Maybe BackendScalarValueType,
     bsvPostgres :: Maybe BackendScalarValueType,
     bsvBigQuery :: Maybe BackendScalarValueType,
     bsvMssql :: Maybe BackendScalarValueType
@@ -202,6 +205,7 @@ defaultBackendScalarValue =
   BackendScalarValue
     { bsvMysql = Nothing,
       bsvCitus = Nothing,
+      bsvCockroach = Nothing,
       bsvPostgres = Nothing,
       bsvBigQuery = Nothing,
       bsvMssql = Nothing
@@ -250,6 +254,7 @@ defaultSerialType =
       { bstMysql = Nothing,
         bstMssql = Just "INT IDENTITY(1,1)",
         bstCitus = Just "SERIAL",
+        bstCockroach = Just "SERIAL",
         bstPostgres = Just "SERIAL",
         bstBigQuery = Nothing
       }

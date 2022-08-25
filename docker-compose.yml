@@ -78,6 +78,21 @@ services:
       - citus-data:/var/lib/postgresql/data
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
+  cockroach:
+    image: cockroachdb/cockroach:v22.1.5@sha256:66ee50d6fdc92a6994d79a74eb689b6fd2a931c4c72ac98b4cb7dba4c6ce3f8f
+    command:
+      - start-single-node
+      - --insecure
+      - --accept-sql-without-tls
+    ports:
+      - "65008:26257"
+    environment:
+      COCKROACH_USER: "root"
+      COCKROACH_DATABASE: "hasura"
+    volumes:
+        - cockroach-data:/cockroach/cockroach-data
+        - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+
   dc-reference-agent:
     build: ./dc-agents/reference/
     ports:
@@ -95,3 +110,4 @@ volumes:
   mariadb-data:
   mssql-data:
   postgres-data:
+  cockroach-data:

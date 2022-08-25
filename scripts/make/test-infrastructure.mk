@@ -14,8 +14,10 @@ MSSQL_DBUSER = hasura
 MSSQL_DBPASSWORD = Hasura1!
 CITUS_PORT = 65004
 DC_REFERENCE_PORT = 65005
-
 DC_REFERENCE_AGENT_URL = localhost:$(DC_REFERENCE_PORT)/health
+COCKROACH_PORT = 65008
+COCKROACH_DBNAME = hasura
+COCKROACH_DBUSER = root
 
 # utils.sh contains functions used in CI to wait for DBs to be ready.
 # this can be (ab)used like a script; e.g. `$(DB_UTILS) foo` expands to
@@ -48,6 +50,19 @@ else \
 	exit $$EXIT_STATUS; \
 fi
 endef
+
+.PHONY: start-cockroach
+## start-cockroach: start local PostgreSQL DB in Docker and wait for it to be ready
+start-cockroach: spawn-cockroach wait-for-cockroach
+
+.PHONY: spawn-cockroach
+spawn-cockroach:
+	docker compose up -d cockroach
+
+.PHONY: wait-for-cockroach
+wait-for-cockroach:
+	$(DB_UTILS) wait_for_cockroach $(COCKROACH_PORT)
+	$(DB_UTILS) wait_for_cockroach_db $(COCKROACH_PORT) "$(COCKROACH_DBNAME)" "$(COCKROACH_DBUSER)"
 
 .PHONY: start-postgres
 ## start-postgres: start local PostgreSQL DB in Docker and wait for it to be ready
@@ -116,8 +131,8 @@ wait-for-dc-reference-agent:
 .PHONY: start-backends
 ## start-backends: start local PostgreSQL, MariaDB, and MS SQL Server in Docker and wait for them to be ready
 start-backends: \
-	spawn-postgres spawn-sqlserver spawn-mysql spawn-citus spawn-dc-reference-agent \
-	wait-for-postgres wait-for-sqlserver wait-for-mysql wait-for-citus wait-for-dc-reference-agent
+	spawn-postgres spawn-sqlserver spawn-mysql spawn-citus spawn-dc-reference-agent spawn-cockroach\
+	wait-for-postgres wait-for-sqlserver wait-for-mysql wait-for-citus wait-for-dc-reference-agent wait-for-cockroach
 
 .PHONY: stop-everything
 ## stop-everything: tear down test databases
