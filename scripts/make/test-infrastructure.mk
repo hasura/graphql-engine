@@ -13,6 +13,9 @@ MSSQL_DBNAME = hasura
 MSSQL_DBUSER = hasura
 MSSQL_DBPASSWORD = Hasura1!
 CITUS_PORT = 65004
+DC_REFERENCE_PORT = 65005
+
+DC_REFERENCE_AGENT_URL = localhost:$(DC_REFERENCE_PORT)/health
 
 # utils.sh contains functions used in CI to wait for DBs to be ready.
 # this can be (ab)used like a script; e.g. `$(DB_UTILS) foo` expands to
@@ -98,16 +101,17 @@ wait-for-mysql:
 	$(DB_UTILS) wait_for_mysql $(MYSQL_PORT) "$(MYSQL_DBNAME)" "$(MYSQL_DBUSER)" "$(MYSQL_DBPASSWORD)"
 
 .PHONY: start-dc-reference-agent
-## start-mysql: start the Data Connectors reference agent in Docker and wait for it to be ready
+## start-dc-reference-agent: start the Data Connectors reference agent in Docker and wait for it to be ready
 start-dc-reference-agent: spawn-dc-reference-agent wait-for-dc-reference-agent
 
 .PHONY: spawn-dc-reference-agent
 spawn-dc-reference-agent:
-	docker compose up -d dc-reference-agent
+	docker compose up -d --build dc-reference-agent
 
-# This target is probably unncessary, but there to follow the pattern.
 .PHONY: wait-for-dc-reference-agent
+## wait-for-dc-reference-agent: call health endpoint of DataConnector reference agent until it is ready
 wait-for-dc-reference-agent:
+	$(DB_UTILS) wait_for_http_success $(DC_REFERENCE_AGENT_URL) "dc-reference-agent"
 
 .PHONY: start-backends
 ## start-backends: start local PostgreSQL, MariaDB, and MS SQL Server in Docker and wait for them to be ready
