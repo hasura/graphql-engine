@@ -5,6 +5,7 @@
 -- | Instances that're slow to compile.
 module Hasura.Backends.MySQL.Types.Instances () where
 
+import Autodocodec (HasCodec (codec), named)
 import Control.DeepSeq
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -19,6 +20,7 @@ import Hasura.Backends.MySQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.Incremental.Internal.Dependency
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
@@ -210,6 +212,11 @@ instance J.FromJSON Expression where
   parseJSON value = ValueExpression <$> J.parseJSON value
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = False} ''ConnSourceConfig)
+
+-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
+-- instances.
+instance HasCodec ConnSourceConfig where
+  codec = named "MySQLConnConfiguration" $ placeholderCodecViaJSON
 
 instance J.ToJSON (Pool Connection) where
   toJSON = const (J.String "_REDACTED_")

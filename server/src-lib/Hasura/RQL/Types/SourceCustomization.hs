@@ -63,6 +63,7 @@ module Hasura.RQL.Types.SourceCustomization
   )
 where
 
+import Autodocodec (HasCodec (codec), named)
 import Control.Lens
 import Data.Aeson.Extended
 import Data.Has
@@ -75,6 +76,7 @@ import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Incremental.Internal.Dependency (Cacheable)
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
@@ -205,6 +207,10 @@ instance ToJSON SourceCustomization where
 
 instance FromJSON SourceCustomization where
   parseJSON = genericParseJSON hasuraJSON
+
+-- TODO: Write proper codec
+instance HasCodec SourceCustomization where
+  codec = named "SourceCustomization" placeholderCodecViaJSON
 
 emptySourceCustomization :: SourceCustomization
 emptySourceCustomization = SourceCustomization Nothing Nothing Nothing

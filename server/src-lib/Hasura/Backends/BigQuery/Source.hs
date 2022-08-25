@@ -18,6 +18,7 @@ module Hasura.Backends.BigQuery.Source
   )
 where
 
+import Autodocodec (HasCodec, codec, named)
 import Control.Concurrent.MVar
 import Crypto.PubKey.RSA.Types qualified as Cry
 import Data.Aeson qualified as J
@@ -30,6 +31,7 @@ import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 
 data PKey = PKey
@@ -153,6 +155,11 @@ data BigQueryConnSourceConfig = BigQueryConnSourceConfig
   deriving (Eq, Generic, NFData)
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''BigQueryConnSourceConfig)
+
+-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
+-- instances.
+instance HasCodec BigQueryConnSourceConfig where
+  codec = named "BigQueryConnSourceConfig" $ placeholderCodecViaJSON
 
 deriving instance Show BigQueryConnSourceConfig
 

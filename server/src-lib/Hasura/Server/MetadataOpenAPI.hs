@@ -5,8 +5,8 @@
 -- do not incorporate it into essential workflows at this time.
 module Hasura.Server.MetadataOpenAPI (metadataOpenAPI) where
 
-import Autodocodec (HasCodec)
-import Autodocodec.OpenAPI (declareNamedSchemaViaCodec)
+import Autodocodec (HasCodec, JSONCodec)
+import Autodocodec.OpenAPI (declareNamedSchemaVia, declareNamedSchemaViaCodec)
 import Control.Lens ((.~), (^.))
 import Data.Data (Proxy)
 import Data.HashMap.Strict.InsOrd qualified as HM
@@ -20,11 +20,25 @@ import Data.OpenApi
 import Data.OpenApi qualified as OpenApi
 import Data.OpenApi.Declare (undeclare)
 import Data.Proxy (Proxy (..))
+import Hasura.Backends.BigQuery.Source (BigQueryConnSourceConfig)
+import Hasura.Backends.DataConnector.Adapter.Types qualified as DataConnector
+import Hasura.Backends.MSSQL.Connection (MSSQLConnConfiguration)
+import Hasura.Backends.MySQL.Types qualified as MySQL
+import Hasura.Backends.Postgres.Connection.Settings (PostgresConnConfiguration)
 import Hasura.Metadata.DTO.Metadata (MetadataDTO)
 import Hasura.Metadata.DTO.MetadataV1 (MetadataV1)
 import Hasura.Metadata.DTO.MetadataV2 (MetadataV2)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3)
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata.Common
+  ( BackendSourceMetadata,
+    FunctionMetadata,
+    SourceMetadata,
+    TableMetadata,
+    backendSourceMetadataCodec,
+  )
+import Hasura.RQL.Types.SourceCustomization (SourceCustomization)
+import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
 
 -- | An OpenApi document includes \"schemas\" that describe the data that may be
 -- produced or consumed by an API. It can also include \"paths\" which describe
@@ -55,7 +69,43 @@ openApiSchemas =
   [ toNamedSchema (Proxy @MetadataDTO),
     toNamedSchema (Proxy @MetadataV1),
     toNamedSchema (Proxy @MetadataV2),
-    toNamedSchema (Proxy @MetadataV3)
+    toNamedSchema (Proxy @MetadataV3),
+    toNamedSchemaVia backendSourceMetadataCodec (Proxy @BackendSourceMetadata),
+    toNamedSchema (Proxy @SourceCustomization),
+    -- SourceMetadata
+    toNamedSchema (Proxy @(SourceMetadata ('Postgres 'Vanilla))),
+    toNamedSchema (Proxy @(SourceMetadata ('Postgres 'Citus))),
+    toNamedSchema (Proxy @(SourceMetadata ('Postgres 'Cockroach))),
+    toNamedSchema (Proxy @(SourceMetadata ('MSSQL))),
+    toNamedSchema (Proxy @(SourceMetadata ('BigQuery))),
+    toNamedSchema (Proxy @(SourceMetadata ('MySQL))),
+    toNamedSchema (Proxy @(SourceMetadata ('DataConnector))),
+    -- FunctionMetadata
+    toNamedSchema (Proxy @(FunctionMetadata ('Postgres 'Vanilla))),
+    toNamedSchema (Proxy @(FunctionMetadata ('Postgres 'Citus))),
+    toNamedSchema (Proxy @(FunctionMetadata ('Postgres 'Cockroach))),
+    toNamedSchema (Proxy @(FunctionMetadata ('MSSQL))),
+    toNamedSchema (Proxy @(FunctionMetadata ('BigQuery))),
+    toNamedSchema (Proxy @(FunctionMetadata ('MySQL))),
+    toNamedSchema (Proxy @(FunctionMetadata ('DataConnector))),
+    -- TableMetadata
+    toNamedSchema (Proxy @(TableMetadata ('Postgres 'Vanilla))),
+    toNamedSchema (Proxy @(TableMetadata ('Postgres 'Citus))),
+    toNamedSchema (Proxy @(TableMetadata ('Postgres 'Cockroach))),
+    toNamedSchema (Proxy @(TableMetadata ('MSSQL))),
+    toNamedSchema (Proxy @(TableMetadata ('BigQuery))),
+    toNamedSchema (Proxy @(TableMetadata ('MySQL))),
+    toNamedSchema (Proxy @(TableMetadata ('DataConnector))),
+    -- Postgres-specific types
+    toNamedSchema (Proxy @PostgresConnConfiguration),
+    -- MSSQL-specific types
+    toNamedSchema (Proxy @MSSQLConnConfiguration),
+    -- BigQuery-specific types
+    toNamedSchema (Proxy @BigQueryConnSourceConfig),
+    -- MySQL-specific types
+    toNamedSchema (Proxy @MySQL.ConnSourceConfig),
+    -- DataConnector-specific types
+    toNamedSchema (Proxy @DataConnector.ConnSourceConfig)
   ]
 
 -- | Introspect a given 'OpenApi.NamedSchema' to get its name, and return the
@@ -77,3 +127,6 @@ applySchemaName givenSchema = (schemaName, givenSchema ^. schema)
 
 toNamedSchema :: HasCodec a => Proxy a -> OpenApi.NamedSchema
 toNamedSchema proxy = undeclare $ declareNamedSchemaViaCodec proxy
+
+toNamedSchemaVia :: JSONCodec a -> Proxy a -> OpenApi.NamedSchema
+toNamedSchemaVia codec proxy = undeclare $ declareNamedSchemaVia codec proxy

@@ -9,6 +9,7 @@ module Hasura.Backends.Postgres.Instances.Types
   )
 where
 
+import Autodocodec (HasCodec)
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
 import Data.Kind (Type)
@@ -65,7 +66,8 @@ instance
   ( HasTag ('Postgres pgKind),
     Typeable ('Postgres pgKind),
     PostgresBackend pgKind,
-    FromJSON (BackendSourceKind ('Postgres pgKind))
+    FromJSON (BackendSourceKind ('Postgres pgKind)),
+    HasCodec (BackendSourceKind ('Postgres pgKind))
   ) =>
   Backend ('Postgres pgKind)
   where

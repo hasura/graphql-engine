@@ -408,6 +408,7 @@ library
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.Multi
                      , Data.HashMap.Strict.NonEmpty
+                     , Data.HashMap.Strict.InsOrd.Autodocodec
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.List.Extended
                      , Data.Parser.CacheControl

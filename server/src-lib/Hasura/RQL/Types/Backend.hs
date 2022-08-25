@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Backend
   )
 where
 
+import Autodocodec (HasCodec)
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
 import Data.Kind (Type)
@@ -97,6 +98,8 @@ class
     FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
     FromJSONKey (Column b),
+    HasCodec (BackendSourceKind b),
+    HasCodec (SourceConnConfiguration b),
     ToJSON (BackendConfig b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
