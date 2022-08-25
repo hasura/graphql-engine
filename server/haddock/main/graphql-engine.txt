@@ -21715,20 +21715,20 @@ CreateEventTriggerQuery :: SourceName -> TriggerName -> TableName b -> Maybe (Su
 [_cetqReplace] :: CreateEventTriggerQuery (b :: BackendType) -> Bool
 [_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> Maybe MetadataResponseTransform
-cetqWebhookFromEnv :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe Text)
-cetqWebhook :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe InputWebhook)
-cetqUpdate :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe (SubscribeOpSpec b_aszmu))
-cetqTable :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (TableName b_aszmu)
-cetqSource :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) SourceName
-cetqRetryConf :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe RequestTransform)
-cetqReplace :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) Bool
-cetqName :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) TriggerName
-cetqInsert :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe (SubscribeOpSpec b_aszmu))
-cetqHeaders :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe Bool)
-cetqDelete :: forall b_aszmu. Lens' (CreateEventTriggerQuery b_aszmu) (Maybe (SubscribeOpSpec b_aszmu))
+cetqWebhookFromEnv :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe Text)
+cetqWebhook :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe InputWebhook)
+cetqUpdate :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe (SubscribeOpSpec b_aszkR))
+cetqTable :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (TableName b_aszkR)
+cetqSource :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) SourceName
+cetqRetryConf :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe RequestTransform)
+cetqReplace :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) Bool
+cetqName :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) TriggerName
+cetqInsert :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe (SubscribeOpSpec b_aszkR))
+cetqHeaders :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe Bool)
+cetqDelete :: forall b_aszkR. Lens' (CreateEventTriggerQuery b_aszkR) (Maybe (SubscribeOpSpec b_aszkR))
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: SourceName -> TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
 [_detqSource] :: DeleteEventTriggerQuery (b :: BackendType) -> SourceName
@@ -25715,9 +25715,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_ayfs6. Lens' (QueryParametersInfo b_ayfs6) (Seq (ColumnValue b_ayfs6))
-qpiReusableVariableValues :: forall b_ayfs6. Lens' (QueryParametersInfo b_ayfs6) (HashMap Name (ColumnValue b_ayfs6))
-qpiReferencedSessionVariables :: forall b_ayfs6. Lens' (QueryParametersInfo b_ayfs6) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ayfqt. Lens' (QueryParametersInfo b_ayfqt) (Seq (ColumnValue b_ayfqt))
+qpiReusableVariableValues :: forall b_ayfqt. Lens' (QueryParametersInfo b_ayfqt) (HashMap Name (ColumnValue b_ayfqt))
+qpiReferencedSessionVariables :: forall b_ayfqt. Lens' (QueryParametersInfo b_ayfqt) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -28169,6 +28169,7 @@ RQCount :: !CountQuery -> RQLQuery
 RQRunSql :: !RunSQL -> RQLQuery
 RQMssqlRunSql :: !MSSQLRunSQL -> RQLQuery
 RQCitusRunSql :: !RunSQL -> RQLQuery
+RQCockroachRunSql :: !RunSQL -> RQLQuery
 RQMysqlRunSql :: !RunSQL -> RQLQuery
 RQBigqueryRunSql :: !BigQueryRunSQL -> RQLQuery
 RQBigqueryDatabaseInspection :: !BigQueryRunSQL -> RQLQuery
