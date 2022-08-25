@@ -3548,8 +3548,15 @@ module Hasura.Server.Compression
 data CompressionType
 CTGZip :: CompressionType
 compressionTypeToTxt :: CompressionType -> Text
+
+-- | Maybe compress the response body
 compressResponse :: RequestHeaders -> ByteString -> (ByteString, Maybe Header, Maybe CompressionType)
-getRequestedCompression :: RequestHeaders -> Maybe CompressionType
+
+-- | Which, if any, compressed encodings can the client accept?
+--   
+--   
+--   <a>https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding</a>
+getAcceptedCompression :: RequestHeaders -> Maybe CompressionType
 instance GHC.Classes.Eq Hasura.Server.Compression.CompressionType
 instance GHC.Show.Show Hasura.Server.Compression.CompressionType
 
