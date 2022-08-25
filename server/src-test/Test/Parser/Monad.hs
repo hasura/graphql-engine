@@ -8,6 +8,7 @@ module Test.Parser.Monad
   ( ParserTestT (..),
     SchemaEnvironment,
     SchemaTestT (..),
+    notImplementedYet,
   )
 where
 
@@ -15,6 +16,7 @@ import Control.Monad.Memoize
 import Data.Aeson.Internal (JSONPathElement)
 import Data.Has (Has (..))
 import Data.Text qualified as T
+import GHC.Stack
 import Hasura.Base.Error (QErr)
 import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class
@@ -30,9 +32,15 @@ import Hasura.Session (adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
 import Test.Hspec
 
-notImplemented :: String -> a
-notImplemented location =
-  error $ "Not implemented: Test.Parser.Monad." <> location
+-- | Placeholder value for test inputs that are not relevant yet.
+notImplementedYet :: HasCallStack => String -> a
+notImplementedYet thing =
+  error $
+    ( unlines
+        [ "\"" ++ thing ++ "\" is not yet defined, because it hasn't been touched by tests yet.",
+          "If you see this message you likely need to provide/mock a value here"
+        ]
+    )
 
 -- | Monad builder environment.
 --
@@ -50,7 +58,7 @@ instance Has NamingCase SchemaEnvironment where
   getter = const HasuraCase
 
   modifier :: (NamingCase -> NamingCase) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has NamingCase SchemaEnvironment>"
+  modifier = notImplementedYet "modifier<Has NamingCase SchemaEnvironment>"
 
 instance Has SchemaOptions SchemaEnvironment where
   getter :: SchemaEnvironment -> SchemaOptions
@@ -64,7 +72,7 @@ instance Has SchemaOptions SchemaEnvironment where
         }
 
   modifier :: (SchemaOptions -> SchemaOptions) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has SchemaOptions SchemaEnvironment>"
+  modifier = notImplementedYet "modifier<Has SchemaOptions SchemaEnvironment>"
 
 instance Has SchemaContext SchemaEnvironment where
   getter :: SchemaEnvironment -> SchemaContext
@@ -77,28 +85,28 @@ instance Has SchemaContext SchemaEnvironment where
         }
 
   modifier :: (SchemaContext -> SchemaContext) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has SchemaContext SchemaEnvironment>"
+  modifier = notImplementedYet "modifier<Has SchemaContext SchemaEnvironment>"
 
 instance Has MkTypename SchemaEnvironment where
   getter :: SchemaEnvironment -> MkTypename
   getter = const (MkTypename id)
 
   modifier :: (MkTypename -> MkTypename) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has MkTypeName SchemaEnvironment>"
+  modifier = notImplementedYet "modifier<Has MkTypeName SchemaEnvironment>"
 
 instance Has MkRootFieldName SchemaEnvironment where
   getter :: SchemaEnvironment -> MkRootFieldName
   getter = const mempty
 
   modifier :: (MkRootFieldName -> MkRootFieldName) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has MkRootFieldName SchemaEnvironment>"
+  modifier = notImplementedYet "modifier<Has MkRootFieldName SchemaEnvironment>"
 
 instance Has CustomizeRemoteFieldName SchemaEnvironment where
   getter :: SchemaEnvironment -> CustomizeRemoteFieldName
-  getter = notImplemented "getter<Has CustomizeRemoteFieldName SchemaEnvironment>"
+  getter = notImplementedYet "getter<Has CustomizeRemoteFieldName SchemaEnvironment>"
 
   modifier :: (CustomizeRemoteFieldName -> CustomizeRemoteFieldName) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has CustomizeRemoteFieldName SchemaEnvironment>"
+  modifier = notImplementedYet "modifier<Has CustomizeRemoteFieldName SchemaEnvironment>"
 
 -------------------------------------------------------------------------------
 
@@ -109,20 +117,20 @@ newtype SchemaTestT a = SchemaTestT a
 
 instance MonadError QErr SchemaTestT where
   throwError :: forall a. QErr -> SchemaTestT a
-  throwError = notImplemented "throwError<MonadError QErr SchemaTestT>"
+  throwError = notImplementedYet "throwError<MonadError QErr SchemaTestT>"
 
   catchError :: forall a. SchemaTestT a -> (QErr -> SchemaTestT a) -> SchemaTestT a
-  catchError = notImplemented "catchError<MonadError QErr SchemaTestT>"
+  catchError = notImplementedYet "catchError<MonadError QErr SchemaTestT>"
 
 -- | Note this is not used because all the actual getters/setters for
 -- SchemaEnvironment are @const X@, so these bottoms never actually get
 -- evaluated.
 instance MonadReader SchemaEnvironment SchemaTestT where
   ask :: SchemaTestT SchemaEnvironment
-  ask = notImplemented "ask<MonadReader SchemaEnvironment SchemaTestT>"
+  ask = notImplementedYet "ask<MonadReader SchemaEnvironment SchemaTestT>"
 
   local :: (SchemaEnvironment -> SchemaEnvironment) -> SchemaTestT a -> SchemaTestT a
-  local = notImplemented "local<MonadReader SchemaEnvironment SchemaTestT>"
+  local = notImplementedYet "local<MonadReader SchemaEnvironment SchemaTestT>"
 
 -------------------------------------------------------------------------------
 

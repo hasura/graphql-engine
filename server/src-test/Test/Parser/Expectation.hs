@@ -84,7 +84,7 @@ data UpdateExpectationBuilder = UpdateExpectationBuilder
 -- | Run a test given the schema and field.
 runUpdateFieldTest :: UpdateTestSetup -> Expectation
 runUpdateFieldTest UpdateTestSetup {..} =
-  case mkParser table utsColumns of
+  case mkParser (TableInfoBuilder table utsColumns) of
     SchemaTestT [] -> expectationFailure "expected at least one parser"
     SchemaTestT parsers ->
       case find (byName (Syntax._fName utsField)) parsers of
