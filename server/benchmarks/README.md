@@ -83,6 +83,11 @@ be ignored.
     https://well-typed.com/blog/2021/01/fragmentation-deeper-look/
     https://well-typed.com/blog/2021/03/memory-return/
 
+- If optimizing or tuning the output/compression codepath:
+  - `chinook`.`*_small_result` and `simple_query_*` queries are average wrt
+    response body size (according to cloud data)
+  - ...and `chinook`.`full_introspection` is ~P95
+
 ## Adding a new benchmark and reviewing
 
 You'll create a new directory under `benchmark_sets/`, and in general can
