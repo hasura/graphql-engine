@@ -3,8 +3,8 @@
 /* eslint-disable */
 
 import type { ColumnInfo } from './ColumnInfo';
-import type { TableName } from './TableName';
 import type { Constraint } from './Constraint';
+import type { TableName } from './TableName';
 
 export type TableInfo = {
   /**
@@ -15,16 +15,14 @@ export type TableInfo = {
    * Description of the table
    */
   description?: string | null;
+  /**
+   * Foreign Key Constraints
+   */
+  foreign_keys?: Record<string, Constraint> | null;
   name: TableName;
   /**
    * The primary key of the table
    */
   primary_key?: Array<string> | null;
-
-  /**
-   * A record of Constraint names to Constraints for foreign key
-   * relationships.
-   */
-  foreign_keys?: Record<string, Constraint> | null;
 };
 

@@ -11,6 +11,11 @@ export const getConfig = (request: FastifyRequest): Config => {
   const configHeader = request.headers["x-hasura-dataconnector-config"];
   const rawConfigJson = Array.isArray(configHeader) ? configHeader[0] : configHeader ?? "{}";
   const config = JSON.parse(rawConfigJson);
+
+  if(config.db == null) {
+    throw new Error("Config must specify db");
+  }
+
   return {
     db: config.db,
     tables: config.tables ?? null,

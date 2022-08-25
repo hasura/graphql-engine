@@ -585,6 +585,26 @@
         ],
         "type": "object"
       },
+      "Constraint": {
+        "properties": {
+          "column_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The columns on which you want want to define the foreign key.",
+            "type": "object"
+          },
+          "foreign_table": {
+            "description": "The table referenced by the foreign key in the child table.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "foreign_table",
+          "column_mapping"
+        ],
+        "type": "object"
+      },
       "TableInfo": {
         "properties": {
           "columns": {
@@ -598,6 +618,14 @@
             "description": "Description of the table",
             "nullable": true,
             "type": "string"
+          },
+          "foreign_keys": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Constraint"
+            },
+            "description": "Foreign Key Constraints",
+            "nullable": true,
+            "type": "object"
           },
           "name": {
             "$ref": "#/components/schemas/TableName"
