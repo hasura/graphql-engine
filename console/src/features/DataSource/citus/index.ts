@@ -8,6 +8,11 @@ export type CitusTable = { name: string; schema: string };
 
 export const citus: Database = {
   introspection: {
+    getDriverInfo: async () => ({
+      name: 'citus',
+      displayName: 'Citus',
+      release: 'GA',
+    }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },

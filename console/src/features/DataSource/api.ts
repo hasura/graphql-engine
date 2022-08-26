@@ -1,6 +1,6 @@
 import { getRunSqlType } from '@/components/Common/utils/v1QueryUtils';
 import { AxiosInstance } from 'axios';
-import { Metadata, Source } from './types';
+import { Metadata, Source, SupportedDrivers } from './types';
 
 export interface NetworkArgs {
   httpClient: AxiosInstance;
@@ -53,3 +53,6 @@ export const runSQL = async ({
   });
   return result.data;
 };
+
+export const getDriverPrefix = (driver: SupportedDrivers) =>
+  driver === 'postgres' ? 'pg' : driver;

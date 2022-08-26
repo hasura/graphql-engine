@@ -7,6 +7,11 @@ export type MssqlTable = { schema: string; name: string };
 
 export const mssql: Database = {
   introspection: {
+    getDriverInfo: async () => ({
+      name: 'mssql',
+      displayName: 'MS SQL Server',
+      release: 'GA',
+    }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },

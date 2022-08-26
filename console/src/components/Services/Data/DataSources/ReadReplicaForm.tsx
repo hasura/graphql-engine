@@ -92,7 +92,7 @@ const Form: React.FC<FormProps> = ({
         connectionDBStateDispatch={connectDBStateDispatch}
         updateConnectionTypeRadio={updateReadReplicaConnectionType}
         connectionTypeState={readReplicaConnectionType}
-        isreadreplica
+        isReadReplica
         title="Connect Read Replica via"
       />
       <div className={styles.read_replica_action_bar}>
