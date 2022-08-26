@@ -742,9 +742,17 @@ export interface QueryCollection {
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
  */
+
+type AllowListScope =
+  | {
+      global: false;
+      roles: string[];
+    }
+  | { global: true };
 export interface AllowList {
   /** Name of a query collection to be added to the allow-list */
   collection: CollectionName;
+  scope?: AllowListScope;
 }
 
 // //////////////////////////////
