@@ -358,13 +358,10 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
            in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
-      dangerouslyCollapseBooleans
-        | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
-        | otherwise = Options.Don'tDangerouslyCollapseBooleans
       optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
         | otherwise = Options.Don'tOptimizePermissionFilters
-      sqlGenCtx = SQLGenCtx soStringifyNum dangerouslyCollapseBooleans optimizePermissionFilters
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -671,14 +668,10 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
   liftIO disableAssertNF
 
-  let dangerouslyCollapseBooleans
-        | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
-        | otherwise = Options.Don'tDangerouslyCollapseBooleans
-
-      optimizePermissionFilters
+  let optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
         | otherwise = Options.Don'tOptimizePermissionFilters
-      sqlGenCtx = SQLGenCtx soStringifyNum dangerouslyCollapseBooleans optimizePermissionFilters
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
       Loggers loggerCtx logger _ = _scLoggers
 
   authModeRes <-
