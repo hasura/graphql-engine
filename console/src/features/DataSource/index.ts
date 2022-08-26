@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import { z, ZodSchema } from 'zod';
+import { z } from 'zod';
 import { postgres } from './postgres';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
@@ -16,23 +16,31 @@ import type {
   GetTableColumnsProps,
   TableFkRelationships,
   GetFKRelationshipProps,
+  DriverInfoResponse,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
-import { exportMetadata, NetworkArgs, RunSQLResponse } from './api';
+import {
+  exportMetadata,
+  NetworkArgs,
+  RunSQLResponse,
+  getDriverPrefix,
+} from './api';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
 }
 
-const nativeDrivers = ['postgres', 'bigquery', 'mssql', 'citus'];
+export const nativeDrivers = ['postgres', 'bigquery', 'mssql', 'citus'];
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
 
 export type Database = {
   introspection?: {
+    getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
     getDatabaseConfiguration: (
-      fetch: AxiosInstance
+      fetch: AxiosInstance,
+      driver?: string
     ) => Promise<
       | { configSchema: Property; otherSchemas: Record<string, Property> }
       | Feature.NotImplemented
@@ -83,52 +91,67 @@ const getDatabaseMethods = async ({
 
 export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
-    getSupportedDrivers: async () => {
-      return supportedDrivers;
+    getAllSourceKinds: async () => {
+      const { metadata } = await exportMetadata({ httpClient });
+      const gdcDrivers = Object.keys(
+        metadata.backend_configs?.dataconnector ?? {}
+      );
+      const allDrivers = (
+        [...gdcDrivers, ...nativeDrivers] as SupportedDrivers[]
+      ).map(async driver => {
+        const driverName = nativeDrivers.includes(driver) ? driver : 'gdc';
+        const driverInfo = await drivers[
+          driverName
+        ].introspection?.getDriverInfo();
+
+        if (!driverInfo || driverInfo === Feature.NotImplemented)
+          return {
+            name: driver,
+            displayName: driver,
+            release: 'GA',
+            native: driverName !== 'gdc',
+          };
+        return { ...driverInfo, native: driverName !== 'gdc' };
+      });
+      return Promise.all(allDrivers);
     },
   },
   getNativeDrivers: async () => {
     return nativeDrivers;
   },
   connectDB: {
-    getConfigSchema: async (driver: SupportedDrivers) => {
-      return drivers[driver].introspection?.getDatabaseConfiguration(
-        httpClient
+    getConfigSchema: async (driver: string) => {
+      const driverName = (
+        nativeDrivers.includes(driver) ? driver : 'gdc'
+      ) as SupportedDrivers;
+      return drivers[driverName].introspection?.getDatabaseConfiguration(
+        httpClient,
+        driver
       );
     },
-    getFormSchema: async () => {
-      const schemas = await Promise.all(
-        Object.values(drivers).map(database =>
-          database.introspection?.getDatabaseConfiguration(httpClient)
-        )
-      );
+    getFormSchema: async (driver: string) => {
+      const driverName = (
+        nativeDrivers.includes(driver) ? driver : 'gdc'
+      ) as SupportedDrivers;
 
-      let res: ZodSchema | undefined;
+      const schema = await drivers[
+        driverName
+      ].introspection?.getDatabaseConfiguration(httpClient, driver);
 
-      schemas.forEach(schema => {
-        if (schema === Feature.NotImplemented || !schema) return;
+      if (schema === Feature.NotImplemented || !schema) return;
 
-        const postgresSchema = z.object({
-          driver: z.literal('postgres'),
-          name: z.string().min(1, 'Name is a required field!'),
-          replace_configuration: z.preprocess(x => {
-            if (!x) return false;
-            return true;
-          }, z.boolean()),
-          configuration: createZodSchema(
-            schema.configSchema,
-            schema.otherSchemas
-          ),
-        });
-
-        if (!res) {
-          res = postgresSchema;
-        } else {
-          res = res.or(postgresSchema);
-        }
+      return z.object({
+        driver: z.literal(driver),
+        name: z.string().min(1, 'Name is a required field!'),
+        replace_configuration: z.preprocess(x => {
+          if (!x) return false;
+          return true;
+        }, z.boolean()),
+        configuration: createZodSchema(
+          schema.configSchema,
+          schema.otherSchemas
+        ),
       });
-
-      return res;
     },
   },
   introspectTables: async ({ dataSourceName }: { dataSourceName: string }) => {
@@ -233,7 +256,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
 });
 
-export { exportMetadata, utils, RunSQLResponse };
+export { exportMetadata, utils, RunSQLResponse, getDriverPrefix };
 
 export * from './types';
 export * from './guards';

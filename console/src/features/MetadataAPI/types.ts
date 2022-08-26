@@ -58,12 +58,15 @@ export interface DbToDbRelationship {
   fieldMapping: Record<string, string>;
 }
 
+type GDCSourcePrefix = string;
+
 type SupportedDataSourcesPrefix =
   | 'mysql_'
   | 'mssql_'
   | 'bigquery_'
   | 'citus_'
-  | 'pg_';
+  | 'pg_'
+  | `${GDCSourcePrefix}_`;
 
 export interface TableRelationship {
   name: string;

@@ -215,6 +215,9 @@ export type Metadata = {
   metadata: {
     version: number;
     sources: Source[];
+    backend_configs?: {
+      dataconnector: Record<string, { uri: string }>;
+    };
   };
 };
 
@@ -259,6 +262,12 @@ export type TableFkRelationships = {
     table: string;
     column: string[];
   };
+};
+
+export type DriverInfoResponse = {
+  name: string;
+  displayName: string;
+  release: string;
 };
 
 export { NetworkArgs };
