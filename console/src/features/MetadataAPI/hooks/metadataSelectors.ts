@@ -263,4 +263,12 @@ export namespace MetadataSelector {
 
   export const getAllDriversList = (m: MetadataResponse) =>
     m.metadata?.sources.map(s => ({ source: s.name, kind: s.kind }));
+
+  export const getOperationsFromQueryCollection =
+    (queryCollectionName: string) => (m: MetadataResponse) => {
+      const queryCollectionDefinition = m.metadata?.query_collections?.find(
+        qs => qs.name === queryCollectionName
+      );
+      return queryCollectionDefinition?.definition?.queries ?? [];
+    };
 }
