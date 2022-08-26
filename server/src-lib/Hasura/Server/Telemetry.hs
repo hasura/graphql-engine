@@ -294,3 +294,4 @@ versionToTopic :: Version -> Topic
 versionToTopic = \case
   VersionDev _ -> Topic "server_metrics_v2_test"
   VersionRelease _ -> Topic "server_metrics_v2"
+  VersionCE _ -> Topic "server_metrics_v2"
