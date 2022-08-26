@@ -18,28 +18,28 @@
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-19"></span><span>
 </span><span id="line-20"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Resolve.html#resolveVariables"><span class="hs-identifier hs-type">resolveVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689525927"><span class="annot"><a href="#local-6989586621689525927"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689525926"><span class="annot"><a href="#local-6989586621689525926"><span class="hs-identifier hs-type">fragments</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689525927"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="annot"><a href="#local-6989586621689525926"><span class="hs-identifier hs-type">fragments</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689526318"><span class="annot"><a href="#local-6989586621689526318"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689526317"><span class="annot"><a href="#local-6989586621689526317"><span class="hs-identifier hs-type">fragments</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689526318"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="annot"><a href="#local-6989586621689526317"><span class="hs-identifier hs-type">fragments</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-24"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#VariableValues"><span class="hs-identifier hs-type">GH.VariableValues</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Directive</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689525926"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-27"></span><span>  </span><span class="annot"><a href="#local-6989586621689525927"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689526317"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><a href="#local-6989586621689526318"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-28"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Directive</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-29"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689525926"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
+</span><span id="line-29"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689526317"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
 </span><span id="line-30"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span id="resolveVariables"><span class="annot"><span class="annottext">resolveVariables :: [VariableDefinition]
 -&gt; VariableValues
 -&gt; [Directive Name]
 -&gt; SelectionSet fragments Name
 -&gt; m ([Directive Variable], SelectionSet fragments Variable)
-</span><a href="Hasura.GraphQL.Execute.Resolve.html#resolveVariables"><span class="hs-identifier hs-var hs-var">resolveVariables</span></a></span></span><span> </span><span id="local-6989586621689525923"><span class="annot"><span class="annottext">[VariableDefinition]
-</span><a href="#local-6989586621689525923"><span class="hs-identifier hs-var">definitions</span></a></span></span><span> </span><span id="local-6989586621689525922"><span class="annot"><span class="annottext">VariableValues
-</span><a href="#local-6989586621689525922"><span class="hs-identifier hs-var">jsonValues</span></a></span></span><span> </span><span id="local-6989586621689525921"><span class="annot"><span class="annottext">[Directive Name]
-</span><a href="#local-6989586621689525921"><span class="hs-identifier hs-var">directives</span></a></span></span><span> </span><span id="local-6989586621689525920"><span class="annot"><span class="annottext">SelectionSet fragments Name
-</span><a href="#local-6989586621689525920"><span class="hs-identifier hs-var">selSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621689525919"><span class="annot"><span class="annottext">HashMap Name (NonEmpty Variable)
-</span><a href="#local-6989586621689525919"><span class="hs-identifier hs-var">variablesByName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Variable -&gt; Name)
+</span><a href="Hasura.GraphQL.Execute.Resolve.html#resolveVariables"><span class="hs-identifier hs-var hs-var">resolveVariables</span></a></span></span><span> </span><span id="local-6989586621689526314"><span class="annot"><span class="annottext">[VariableDefinition]
+</span><a href="#local-6989586621689526314"><span class="hs-identifier hs-var">definitions</span></a></span></span><span> </span><span id="local-6989586621689526313"><span class="annot"><span class="annottext">VariableValues
+</span><a href="#local-6989586621689526313"><span class="hs-identifier hs-var">jsonValues</span></a></span></span><span> </span><span id="local-6989586621689526312"><span class="annot"><span class="annottext">[Directive Name]
+</span><a href="#local-6989586621689526312"><span class="hs-identifier hs-var">directives</span></a></span></span><span> </span><span id="local-6989586621689526311"><span class="annot"><span class="annottext">SelectionSet fragments Name
+</span><a href="#local-6989586621689526311"><span class="hs-identifier hs-var">selSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621689526310"><span class="annot"><span class="annottext">HashMap Name (NonEmpty Variable)
+</span><a href="#local-6989586621689526310"><span class="hs-identifier hs-var">variablesByName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Variable -&gt; Name)
 -&gt; [Variable] -&gt; HashMap Name (NonEmpty Variable)
 forall k (t :: * -&gt; *) v.
 (Eq k, Hashable k, Foldable t) =&gt;
@@ -55,10 +55,10 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">VariableDefinition -&gt; m Variable
-</span><a href="#local-6989586621689525914"><span class="hs-identifier hs-var">buildVariable</span></a></span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
-</span><a href="#local-6989586621689525923"><span class="hs-identifier hs-var">definitions</span></a></span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621689525913"><span class="annot"><span class="annottext">HashMap Name Variable
-</span><a href="#local-6989586621689525913"><span class="hs-identifier hs-var">uniqueVariables</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Name -&gt; NonEmpty Variable -&gt; m Variable)
+</span><a href="#local-6989586621689526305"><span class="hs-identifier hs-var">buildVariable</span></a></span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
+</span><a href="#local-6989586621689526314"><span class="hs-identifier hs-var">definitions</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621689526304"><span class="annot"><span class="annottext">HashMap Name Variable
+</span><a href="#local-6989586621689526304"><span class="hs-identifier hs-var">uniqueVariables</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Name -&gt; NonEmpty Variable -&gt; m Variable)
  -&gt; HashMap Name (NonEmpty Variable) -&gt; m (HashMap Name Variable))
 -&gt; HashMap Name (NonEmpty Variable)
 -&gt; (Name -&gt; NonEmpty Variable -&gt; m Variable)
@@ -72,17 +72,17 @@ Applicative f =&gt;
 (k -&gt; v1 -&gt; f v2) -&gt; HashMap k v1 -&gt; f (HashMap k v2)
 </span><span class="hs-identifier hs-var">Map.traverseWithKey</span></span><span>
 </span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">HashMap Name (NonEmpty Variable)
-</span><a href="#local-6989586621689525919"><span class="hs-identifier hs-var">variablesByName</span></a></span><span>
-</span><span id="line-36"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621689525910"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525910"><span class="hs-identifier hs-var">variableName</span></a></span></span><span> </span><span id="local-6989586621689525909"><span class="annot"><span class="annottext">NonEmpty Variable
-</span><a href="#local-6989586621689525909"><span class="hs-identifier hs-var">variableDefinitions</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689526310"><span class="hs-identifier hs-var">variablesByName</span></a></span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621689526301"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689526301"><span class="hs-identifier hs-var">variableName</span></a></span></span><span> </span><span id="local-6989586621689526300"><span class="annot"><span class="annottext">NonEmpty Variable
+</span><a href="#local-6989586621689526300"><span class="hs-identifier hs-var">variableDefinitions</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-37"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NonEmpty Variable
-</span><a href="#local-6989586621689525909"><span class="hs-identifier hs-var">variableDefinitions</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-38"></span><span>        </span><span id="local-6989586621689525908"><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689525908"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; m Variable
+</span><a href="#local-6989586621689526300"><span class="hs-identifier hs-var">variableDefinitions</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-38"></span><span>        </span><span id="local-6989586621689526299"><span class="annot"><span class="annottext">Variable
+</span><a href="#local-6989586621689526299"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; m Variable
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689525908"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621689526299"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-39"></span><span>        </span><span class="annot"><span class="annottext">NonEmpty Variable
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-40"></span><span>          </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m Variable
@@ -95,11 +95,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;multiple definitions for variable &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525910"><span class="hs-identifier hs-var">variableName</span></a></span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621689525903"><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621689525903"><span class="hs-identifier hs-var">directives'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689525902"><span class="annot"><span class="annottext">SelectionSet fragments Variable
-</span><a href="#local-6989586621689525902"><span class="hs-identifier hs-var">selSet'</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621689525901"><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525901"><span class="hs-identifier hs-var">usedVariables</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(StateT
+</span><a href="#local-6989586621689526301"><span class="hs-identifier hs-var">variableName</span></a></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621689526294"><span class="annot"><span class="annottext">[Directive Variable]
+</span><a href="#local-6989586621689526294"><span class="hs-identifier hs-var">directives'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689526293"><span class="annot"><span class="annottext">SelectionSet fragments Variable
+</span><a href="#local-6989586621689526293"><span class="hs-identifier hs-var">selSet'</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621689526292"><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621689526292"><span class="hs-identifier hs-var">usedVariables</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(StateT
    (HashSet Name)
    m
    ([Directive Variable], SelectionSet fragments Variable)
@@ -138,8 +138,8 @@ forall a. Monoid a =&gt; a
       HashSet Name)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-43"></span><span>    </span><span id="local-6989586621689525899"><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621689525899"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Directive Name -&gt; StateT (HashSet Name) m (Directive Variable))
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621689526290"><span class="annot"><span class="annottext">[Directive Variable]
+</span><a href="#local-6989586621689526290"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Directive Name -&gt; StateT (HashSet Name) m (Directive Variable))
 -&gt; [Directive Name] -&gt; StateT (HashSet Name) m [Directive Variable]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
@@ -150,11 +150,11 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name Variable -&gt; Name -&gt; StateT (HashSet Name) m Variable
-</span><a href="#local-6989586621689525898"><span class="hs-identifier hs-var">resolveVariable</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Variable
-</span><a href="#local-6989586621689525913"><span class="hs-identifier hs-var">uniqueVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Name]
-</span><a href="#local-6989586621689525921"><span class="hs-identifier hs-var">directives</span></a></span><span>
-</span><span id="line-44"></span><span>    </span><span id="local-6989586621689525897"><span class="annot"><span class="annottext">SelectionSet fragments Variable
-</span><a href="#local-6989586621689525897"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Selection fragments Name
+</span><a href="#local-6989586621689526289"><span class="hs-identifier hs-var">resolveVariable</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Variable
+</span><a href="#local-6989586621689526304"><span class="hs-identifier hs-var">uniqueVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Name]
+</span><a href="#local-6989586621689526312"><span class="hs-identifier hs-var">directives</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621689526288"><span class="annot"><span class="annottext">SelectionSet fragments Variable
+</span><a href="#local-6989586621689526288"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Selection fragments Name
  -&gt; StateT (HashSet Name) m (Selection fragments Variable))
 -&gt; SelectionSet fragments Name
 -&gt; StateT (HashSet Name) m (SelectionSet fragments Variable)
@@ -168,9 +168,9 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name Variable -&gt; Name -&gt; StateT (HashSet Name) m Variable
-</span><a href="#local-6989586621689525898"><span class="hs-identifier hs-var">resolveVariable</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Variable
-</span><a href="#local-6989586621689525913"><span class="hs-identifier hs-var">uniqueVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SelectionSet fragments Name
-</span><a href="#local-6989586621689525920"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><a href="#local-6989586621689526289"><span class="hs-identifier hs-var">resolveVariable</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Variable
+</span><a href="#local-6989586621689526304"><span class="hs-identifier hs-var">uniqueVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SelectionSet fragments Name
+</span><a href="#local-6989586621689526311"><span class="hs-identifier hs-var">selSet</span></a></span><span>
 </span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">([Directive Variable], SelectionSet fragments Variable)
 -&gt; StateT
      (HashSet Name)
@@ -178,10 +178,10 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
      ([Directive Variable], SelectionSet fragments Variable)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621689525899"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectionSet fragments Variable
-</span><a href="#local-6989586621689525897"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689525896"><span class="annot"><span class="annottext">variablesByNameSet :: HashSet Name
-</span><a href="#local-6989586621689525896"><span class="hs-identifier hs-var hs-var">variablesByNameSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
+</span><a href="#local-6989586621689526290"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectionSet fragments Variable
+</span><a href="#local-6989586621689526288"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689526287"><span class="annot"><span class="annottext">variablesByNameSet :: HashSet Name
+</span><a href="#local-6989586621689526287"><span class="hs-identifier hs-var hs-var">variablesByNameSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">([Name] -&gt; HashSet Name)
 -&gt; (HashMap Name (NonEmpty Variable) -&gt; [Name])
@@ -194,33 +194,33 @@ forall k v. HashMap k v -&gt; [k]
 -&gt; HashMap Name (NonEmpty Variable) -&gt; HashSet Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (NonEmpty Variable)
-</span><a href="#local-6989586621689525919"><span class="hs-identifier hs-var">variablesByName</span></a></span><span>
-</span><span id="line-47"></span><span>      </span><span id="local-6989586621689525892"><span class="annot"><span class="annottext">jsonVariableNames :: HashSet Name
-</span><a href="#local-6989586621689525892"><span class="hs-identifier hs-var hs-var">jsonVariableNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
+</span><a href="#local-6989586621689526310"><span class="hs-identifier hs-var">variablesByName</span></a></span><span>
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621689526283"><span class="annot"><span class="annottext">jsonVariableNames :: HashSet Name
+</span><a href="#local-6989586621689526283"><span class="hs-identifier hs-var hs-var">jsonVariableNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">([Name] -&gt; HashSet Name) -&gt; [Name] -&gt; HashSet Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">VariableValues -&gt; [Name]
 forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">VariableValues
-</span><a href="#local-6989586621689525922"><span class="hs-identifier hs-var">jsonValues</span></a></span><span>
+</span><a href="#local-6989586621689526313"><span class="hs-identifier hs-var">jsonValues</span></a></span><span>
 </span><span id="line-48"></span><span>      </span><span class="hs-comment">-- At the time of writing, this check is disabled using</span><span>
 </span><span id="line-49"></span><span>      </span><span class="hs-comment">-- a local binding because, the master branch doesn't implement this</span><span>
 </span><span id="line-50"></span><span>      </span><span class="hs-comment">-- check.</span><span>
 </span><span id="line-51"></span><span>      </span><span class="hs-comment">-- TODO: Do this check using a feature flag</span><span>
-</span><span id="line-52"></span><span>      </span><span id="local-6989586621689525891"><span class="annot"><span class="annottext">isVariableValidationEnabled :: Bool
-</span><a href="#local-6989586621689525891"><span class="hs-identifier hs-var hs-var">isVariableValidationEnabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-52"></span><span>      </span><span id="local-6989586621689526282"><span class="annot"><span class="annottext">isVariableValidationEnabled :: Bool
+</span><a href="#local-6989586621689526282"><span class="hs-identifier hs-var hs-var">isVariableValidationEnabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689525891"><span class="hs-identifier hs-var">isVariableValidationEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689526282"><span class="hs-identifier hs-var">isVariableValidationEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525901"><span class="hs-identifier hs-var">usedVariables</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; Bool
+</span><a href="#local-6989586621689526292"><span class="hs-identifier hs-var">usedVariables</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525896"><span class="hs-identifier hs-var">variablesByNameSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621689526287"><span class="hs-identifier hs-var">variablesByNameSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -255,8 +255,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-61"></span><span>                  </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; HashSet a -&gt; HashSet a -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.difference</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525896"><span class="hs-identifier hs-var">variablesByNameSet</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525901"><span class="hs-identifier hs-var">usedVariables</span></a></span><span>
+</span><a href="#local-6989586621689526287"><span class="hs-identifier hs-var">variablesByNameSet</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621689526292"><span class="hs-identifier hs-var">usedVariables</span></a></span><span>
 </span><span id="line-62"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-comment">-- There may be variables which have a default value and may not be</span><span>
@@ -268,8 +268,8 @@ forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; HashSet a -&gt; HashSet a -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.difference</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525892"><span class="hs-identifier hs-var">jsonVariableNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525901"><span class="hs-identifier hs-var">usedVariables</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; Bool
+</span><a href="#local-6989586621689526283"><span class="hs-identifier hs-var">jsonVariableNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621689526292"><span class="hs-identifier hs-var">usedVariables</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
 forall a. HashSet a
@@ -308,52 +308,52 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-75"></span><span>                  </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; HashSet a -&gt; HashSet a -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.difference</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525892"><span class="hs-identifier hs-var">jsonVariableNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689525901"><span class="hs-identifier hs-var">usedVariables</span></a></span><span>
+</span><a href="#local-6989586621689526283"><span class="hs-identifier hs-var">jsonVariableNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621689526292"><span class="hs-identifier hs-var">usedVariables</span></a></span><span>
 </span><span id="line-76"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><span class="annottext">([Directive Variable], SelectionSet fragments Variable)
 -&gt; m ([Directive Variable], SelectionSet fragments Variable)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621689525903"><span class="hs-identifier hs-var">directives'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectionSet fragments Variable
-</span><a href="#local-6989586621689525902"><span class="hs-identifier hs-var">selSet'</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689526294"><span class="hs-identifier hs-var">directives'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectionSet fragments Variable
+</span><a href="#local-6989586621689526293"><span class="hs-identifier hs-var">selSet'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>    </span><span class="annot"><a href="#local-6989586621689525914"><span class="hs-identifier hs-type">buildVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689525927"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
-</span><span id="line-81"></span><span>    </span><span id="local-6989586621689525914"><span class="annot"><span class="annottext">buildVariable :: VariableDefinition -&gt; m Variable
-</span><a href="#local-6989586621689525914"><span class="hs-identifier hs-var hs-var">buildVariable</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689525879"><span class="annot"><span class="annottext">Name
+</span><span id="line-80"></span><span>    </span><span class="annot"><a href="#local-6989586621689526305"><span class="hs-identifier hs-type">buildVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689526318"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621689526305"><span class="annot"><span class="annottext">buildVariable :: VariableDefinition -&gt; m Variable
+</span><a href="#local-6989586621689526305"><span class="hs-identifier hs-var hs-var">buildVariable</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689526270"><span class="annot"><span class="annottext">Name
 _vdName :: VariableDefinition -&gt; Name
 _vdName :: Name
-</span><span class="hs-identifier hs-var hs-var">G._vdName</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689525877"><span class="annot"><span class="annottext">GType
+</span><span class="hs-identifier hs-var hs-var">G._vdName</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689526268"><span class="annot"><span class="annottext">GType
 _vdType :: VariableDefinition -&gt; GType
 _vdType :: GType
-</span><span class="hs-identifier hs-var hs-var">G._vdType</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689525875"><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><span class="hs-identifier hs-var hs-var">G._vdType</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689526266"><span class="annot"><span class="annottext">Maybe (Value Void)
 _vdDefaultValue :: VariableDefinition -&gt; Maybe (Value Void)
 _vdDefaultValue :: Maybe (Value Void)
 </span><span class="hs-identifier hs-var hs-var">G._vdDefaultValue</span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-82"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689525873"><span class="annot"><span class="annottext">defaultValue :: Value Void
-</span><a href="#local-6989586621689525873"><span class="hs-identifier hs-var hs-var">defaultValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Maybe (Value Void) -&gt; Value Void
+</span><span id="line-82"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689526264"><span class="annot"><span class="annottext">defaultValue :: Value Void
+</span><a href="#local-6989586621689526264"><span class="hs-identifier hs-var hs-var">defaultValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Maybe (Value Void) -&gt; Value Void
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621689525875"><span class="hs-identifier hs-var">_vdDefaultValue</span></a></span><span>
-</span><span id="line-83"></span><span>          </span><span id="local-6989586621689525870"><span class="annot"><span class="annottext">isOptional :: Bool
-</span><a href="#local-6989586621689525870"><span class="hs-identifier hs-var hs-var">isOptional</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void) -&gt; Bool
+</span><a href="#local-6989586621689526266"><span class="hs-identifier hs-var">_vdDefaultValue</span></a></span><span>
+</span><span id="line-83"></span><span>          </span><span id="local-6989586621689526261"><span class="annot"><span class="annottext">isOptional :: Bool
+</span><a href="#local-6989586621689526261"><span class="hs-identifier hs-var hs-var">isOptional</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void) -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621689525875"><span class="hs-identifier hs-var">_vdDefaultValue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689526266"><span class="hs-identifier hs-var">_vdDefaultValue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">GType -&gt; Bool
 </span><span class="hs-identifier hs-var">G.isNullable</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689525877"><span class="hs-identifier hs-var">_vdType</span></a></span><span>
-</span><span id="line-84"></span><span>      </span><span id="local-6989586621689525866"><span class="annot"><span class="annottext">InputValue Void
-</span><a href="#local-6989586621689525866"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name -&gt; VariableValues -&gt; Maybe Value
+</span><a href="#local-6989586621689526268"><span class="hs-identifier hs-var">_vdType</span></a></span><span>
+</span><span id="line-84"></span><span>      </span><span id="local-6989586621689526257"><span class="annot"><span class="annottext">InputValue Void
+</span><a href="#local-6989586621689526257"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name -&gt; VariableValues -&gt; Maybe Value
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525879"><span class="hs-identifier hs-var">_vdName</span></a></span><span> </span><span class="annot"><span class="annottext">VariableValues
-</span><a href="#local-6989586621689525922"><span class="hs-identifier hs-var">jsonValues</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-85"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689525864"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689525864"><span class="hs-identifier hs-var">jsonValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InputValue Void -&gt; m (InputValue Void)
+</span><a href="#local-6989586621689526270"><span class="hs-identifier hs-var">_vdName</span></a></span><span> </span><span class="annot"><span class="annottext">VariableValues
+</span><a href="#local-6989586621689526313"><span class="hs-identifier hs-var">jsonValues</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-85"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689526255"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689526255"><span class="hs-identifier hs-var">jsonValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InputValue Void -&gt; m (InputValue Void)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(InputValue Void -&gt; m (InputValue Void))
 -&gt; InputValue Void -&gt; m (InputValue Void)
@@ -361,11 +361,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; InputValue Void
 forall v. Value -&gt; InputValue v
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">JSONValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689525864"><span class="hs-identifier hs-var">jsonValue</span></a></span><span>
+</span><a href="#local-6989586621689526255"><span class="hs-identifier hs-var">jsonValue</span></a></span><span>
 </span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">Maybe Value
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-87"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689525870"><span class="hs-identifier hs-var">isOptional</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InputValue Void -&gt; m (InputValue Void)
+</span><a href="#local-6989586621689526261"><span class="hs-identifier hs-var">isOptional</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InputValue Void -&gt; m (InputValue Void)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(InputValue Void -&gt; m (InputValue Void))
 -&gt; InputValue Void -&gt; m (InputValue Void)
@@ -379,7 +379,7 @@ forall a. Void -&gt; a
 </span><span class="hs-identifier hs-var">absurd</span></span><span> </span><span class="annot"><span class="annottext">(Void -&gt; Void) -&gt; Value Void -&gt; Value Void
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689525873"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
+</span><a href="#local-6989586621689526264"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
 </span><span id="line-88"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-89"></span><span>            </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (InputValue Void)
@@ -392,7 +392,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;expecting a value for non-nullable variable: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525879"><span class="hs-identifier hs-var">_vdName</span></a></span><span>
+</span><a href="#local-6989586621689526270"><span class="hs-identifier hs-var">_vdName</span></a></span><span>
 </span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">Variable -&gt; m Variable
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span>
@@ -403,44 +403,44 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-93"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">vInfo :: VariableInfo
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">vInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-94"></span><span>              </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689525870"><span class="hs-identifier hs-var">isOptional</span></a></span><span>
+</span><a href="#local-6989586621689526261"><span class="hs-identifier hs-var">isOptional</span></a></span><span>
 </span><span id="line-95"></span><span>                </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value Void -&gt; VariableInfo
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">VIOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525879"><span class="hs-identifier hs-var">_vdName</span></a></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689525873"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
+</span><a href="#local-6989586621689526270"><span class="hs-identifier hs-var">_vdName</span></a></span><span> </span><span class="annot"><span class="annottext">Value Void
+</span><a href="#local-6989586621689526264"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
 </span><span id="line-96"></span><span>                </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Name -&gt; VariableInfo
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">VIRequired</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525879"><span class="hs-identifier hs-var">_vdName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689526270"><span class="hs-identifier hs-var">_vdName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-97"></span><span>            </span><span class="annot"><span class="annottext">vType :: GType
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">vType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689525877"><span class="hs-identifier hs-var">_vdType</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689526268"><span class="hs-identifier hs-var">_vdType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-98"></span><span>            </span><span class="annot"><span class="annottext">vValue :: InputValue Void
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">vValue</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InputValue Void
-</span><a href="#local-6989586621689525866"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689526257"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-99"></span><span>          </span><span class="hs-special">}</span><span>
-</span><span id="line-100"></span><span>    </span><span class="annot"><a href="#local-6989586621689525898"><span class="hs-identifier hs-type">resolveVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HS.HashSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689525927"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
-</span><span id="line-101"></span><span>    </span><span id="local-6989586621689525898"><span class="annot"><span class="annottext">resolveVariable :: HashMap Name Variable -&gt; Name -&gt; StateT (HashSet Name) m Variable
-</span><a href="#local-6989586621689525898"><span class="hs-identifier hs-var hs-var">resolveVariable</span></a></span></span><span> </span><span id="local-6989586621689525853"><span class="annot"><span class="annottext">HashMap Name Variable
-</span><a href="#local-6989586621689525853"><span class="hs-identifier hs-var">variables</span></a></span></span><span> </span><span id="local-6989586621689525852"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525852"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name -&gt; HashMap Name Variable -&gt; Maybe Variable
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="#local-6989586621689526289"><span class="hs-identifier hs-type">resolveVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HS.HashSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689526318"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621689526289"><span class="annot"><span class="annottext">resolveVariable :: HashMap Name Variable -&gt; Name -&gt; StateT (HashSet Name) m Variable
+</span><a href="#local-6989586621689526289"><span class="hs-identifier hs-var hs-var">resolveVariable</span></a></span></span><span> </span><span id="local-6989586621689526244"><span class="annot"><span class="annottext">HashMap Name Variable
+</span><a href="#local-6989586621689526244"><span class="hs-identifier hs-var">variables</span></a></span></span><span> </span><span id="local-6989586621689526243"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689526243"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name -&gt; HashMap Name Variable -&gt; Maybe Variable
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525852"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Variable
-</span><a href="#local-6989586621689525853"><span class="hs-identifier hs-var">variables</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-102"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689525851"><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689525851"><span class="hs-identifier hs-var">variable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(HashSet Name -&gt; HashSet Name) -&gt; StateT (HashSet Name) m ()
+</span><a href="#local-6989586621689526243"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Variable
+</span><a href="#local-6989586621689526244"><span class="hs-identifier hs-var">variables</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-102"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689526242"><span class="annot"><span class="annottext">Variable
+</span><a href="#local-6989586621689526242"><span class="hs-identifier hs-var">variable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(HashSet Name -&gt; HashSet Name) -&gt; StateT (HashSet Name) m ()
 forall s (m :: * -&gt; *). MonadState s m =&gt; (s -&gt; s) -&gt; m ()
 </span><span class="hs-identifier hs-var">modify</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; HashSet Name -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525852"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">StateT (HashSet Name) m ()
+</span><a href="#local-6989586621689526243"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">StateT (HashSet Name) m ()
 -&gt; StateT (HashSet Name) m Variable
 -&gt; StateT (HashSet Name) m Variable
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Variable -&gt; StateT (HashSet Name) m Variable
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689525851"><span class="hs-identifier hs-var">variable</span></a></span><span>
+</span><a href="#local-6989586621689526242"><span class="hs-identifier hs-var">variable</span></a></span><span>
 </span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">Maybe Variable
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; StateT (HashSet Name) m Variable
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -452,5 +452,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;unbound variable &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689525852"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689526243"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-104"></span></pre></body></html>
