@@ -1291,6 +1291,7 @@ test-suite tests-hspec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
+    Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
