@@ -9,6 +9,7 @@ interface IApiArgs {
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: Record<any, any>;
+  credentials?: 'include' | 'omit' | 'same-origin';
 }
 
 async function fetchApi<T = unknown, V = T>(
@@ -16,11 +17,12 @@ async function fetchApi<T = unknown, V = T>(
   dataTransform?: (data: T) => V
 ): Promise<V> {
   try {
-    const { headers, url, method, body } = args;
+    const { headers, url, method, body, credentials } = args;
     const response = await fetch(url, {
       headers,
       method,
       body: JSON.stringify(body),
+      credentials,
     });
     const contentType = response.headers.get('Content-Type');
     const isResponseJson = `${contentType}`.includes('application/json');
