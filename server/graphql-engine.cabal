@@ -1077,6 +1077,7 @@ test-suite graphql-engine-tests
     Hasura.Server.MigrateSuite
     Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec
+    Hasura.Server.VersionSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
     Hasura.SessionSpec
