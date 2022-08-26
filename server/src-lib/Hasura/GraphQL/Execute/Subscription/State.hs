@@ -204,6 +204,7 @@ addLiveQuery
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
     liftIO $ Prometheus.Gauge.inc $ pmActiveSubscriptions prometheusMetrics
+    liftIO $ EKG.Gauge.inc $ smActiveLiveQueries serverMetrics
 
     pure $ SubscriberDetails handlerId cohortKey subscriberId
     where
@@ -293,6 +294,7 @@ addStreamSubscriptionQuery
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
     liftIO $ Prometheus.Gauge.inc $ pmActiveSubscriptions prometheusMetrics
+    liftIO $ EKG.Gauge.inc $ smActiveStreamingSubscriptions serverMetrics
 
     pure $ SubscriberDetails handlerId (cohortKey, cohortCursorTVar) subscriberId
     where
@@ -331,6 +333,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   liftIO $ Prometheus.Gauge.dec $ pmActiveSubscriptions prometheusMetrics
+  liftIO $ EKG.Gauge.dec $ smActiveLiveQueries serverMetrics
   where
     lqMap = _ssLiveQueryMap lqState
 
@@ -389,6 +392,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   liftIO $ Prometheus.Gauge.dec $ pmActiveSubscriptions prometheusMetrics
+  liftIO $ EKG.Gauge.dec $ smActiveStreamingSubscriptions serverMetrics
   where
     streamQMap = _ssStreamQueryMap subscriptionState
 
