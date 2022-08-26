@@ -1,0 +1,75 @@
+@keyframes onboardingWizardFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate_500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 500ms forwards;
+}
+
+.animate_1000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 1000ms forwards;
+}
+.animate_1500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 1500ms forwards;
+}
+
+.animate_2000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 2000ms forwards;
+}
+.animate_2500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 2500ms forwards;
+}
+
+.animate_3000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 3000ms forwards;
+}
+.animate_3500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 3500ms forwards;
+}
+.animate_4000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 4000ms forwards;
+}
+.animate_4500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 4500ms forwards;
+}
+.animate_5000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 5000ms forwards;
+}
+.animate_5500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 5500ms forwards;
+}
+
+.animate_6000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 6000ms forwards;
+}
+.animate_6500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 6500ms forwards;
+}
+
+.animate_7000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 7000ms forwards;
+}
+.animate_7500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 7500ms forwards;
+}
+.animate_8000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 8000ms forwards;
+}
+.animate_8500 {
+  animation: onboardingWizardFadeIn 300ms ease-out 8500ms forwards;
+}
+
+.animate_9000 {
+  animation: onboardingWizardFadeIn 300ms ease-out 9000ms forwards;
+}

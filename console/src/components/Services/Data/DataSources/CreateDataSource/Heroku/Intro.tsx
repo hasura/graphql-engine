@@ -59,6 +59,7 @@ const Intro: React.FC<Props> = ({ session, startCreation, dispatch }) => {
                     startCreation();
                   }
                 }}
+                data-trackid="data-tab-heroku-db-button"
               >
                 Create Database
               </Button>
