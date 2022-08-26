@@ -555,7 +555,7 @@ stringifyNumOption =
       Config._helpMessage = "Stringify numeric types (default: false)"
     }
 
-parseDangerousBooleanCollapse :: Opt.Parser (Maybe Bool)
+parseDangerousBooleanCollapse :: Opt.Parser (Maybe Options.DangerouslyCollapseBooleans)
 parseDangerousBooleanCollapse =
   Opt.optional $
     Opt.option
@@ -564,10 +564,10 @@ parseDangerousBooleanCollapse =
           <> Opt.help (Config._helpMessage dangerousBooleanCollapseOption)
       )
 
-dangerousBooleanCollapseOption :: Config.Option Bool
+dangerousBooleanCollapseOption :: Config.Option Options.DangerouslyCollapseBooleans
 dangerousBooleanCollapseOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Options.Don'tDangerouslyCollapseBooleans,
       Config._envVar = "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE",
       Config._helpMessage =
         "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"

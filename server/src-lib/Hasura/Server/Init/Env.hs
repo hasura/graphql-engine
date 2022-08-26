@@ -207,6 +207,9 @@ instance FromEnv Options.StringifyNumbers where
 instance FromEnv Options.RemoteSchemaPermissions where
   fromEnv = fmap (bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions) . fromEnv @Bool
 
+instance FromEnv Options.DangerouslyCollapseBooleans where
+  fromEnv = fmap (bool Options.Don'tDangerouslyCollapseBooleans Options.DangerouslyCollapseBooleans) . fromEnv @Bool
+
 instance FromEnv Options.InferFunctionPermissions where
   fromEnv = fmap (bool Options.Don'tInferFunctionPermissions Options.InferFunctionPermissions) . fromEnv @Bool
 
