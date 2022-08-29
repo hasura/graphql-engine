@@ -49,6 +49,25 @@ func TestGetConsoleAssetsVersion(t *testing.T) {
 		{"tagged pro stable", "v2.0.0-pro.9", "channel/stable/v2.0"},
 		{"tagged pro alpha", "v2.0.0-alpha.pro.9", "channel/alpha/v2.0"},
 		{"tagged cloud alpha", "v2.0.0-alpha.cloud.9", "channel/alpha/v2.0"},
+
+		{"tagged ce stable version", "v2.12.0-ce", "channel/versioned/v2.12.0-ce"},
+		{"tagged ce patch version", "v2.12.1-ce", "channel/versioned/v2.12.1-ce"},
+		{"tagged ce first beta", "v2.12.0-beta.1-ce", "channel/versioned/v2.12.0-beta.1-ce"},
+		{"tagged ce incremental beta", "v2.12.0-beta.2-ce", "channel/versioned/v2.12.0-beta.2-ce"},
+
+		{"tagged ee lite stable version", "v2.12.0", "channel/stable/v2.12"},
+		{"tagged ee lite patch version", "v2.12.1", "channel/stable/v2.12"},
+		{"tagged ee lite first beta", "v2.12.0-beta.1", "channel/beta/v2.12"},
+		{"tagged ee lite incremental beta", "v2.12.0-beta.2", "channel/beta/v2.12"},
+		{"tagged ee lite first alpha", "v2.12.0-alpha.1", "channel/alpha/v2.12"},
+		{"tagged ee lite incremental alpha", "v2.12.0-alpha.2", "channel/alpha/v2.12"},
+
+		{"tagged cloud first stable", "v2.12.0-cloud.1", "channel/stable/v2.12"},
+		{"tagged cloud incremental stable", "v2.12.0-cloud.2", "channel/stable/v2.12"},
+		{"tagged cloud first patch", "v2.12.1-cloud.1", "channel/stable/v2.12"},
+		{"tagged cloud incremental patch", "v2.12.1-cloud.2", "channel/stable/v2.12"},
+		{"tagged cloud first beta", "v2.12.0-beta.1-cloud.1", "channel/beta/v2.12"},
+		{"tagged cloud incremental beta", "v2.12.0-beta.2-cloud.1", "channel/beta/v2.12"},
 	}
 
 	for _, tc := range tt {
