@@ -391,6 +391,12 @@ def generate_regression_report():
             warn(f"No results for {benchmark_set_name} found for PR #{merge_base_pr}. Skipping")
             continue
 
+        # A benchmark set may contain no queries (e.g. If it's just using the
+        # ad hoc operation mode), in which case the results are an empty array.
+        # Skip in those cases for now
+        if not (this_report and merge_base_report):
+            continue
+
         benchmark_set_results = []
 
         # So we can look up by benchmark name:
