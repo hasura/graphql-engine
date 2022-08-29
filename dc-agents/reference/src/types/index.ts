@@ -22,6 +22,8 @@ export type { ComparisonOperators } from './models/ComparisonOperators';
 export type { ComparisonValue } from './models/ComparisonValue';
 export type { ConfigSchemaResponse } from './models/ConfigSchemaResponse';
 export type { Constraint } from './models/Constraint';
+export type { ExplainCapabilities } from './models/ExplainCapabilities';
+export type { ExplainResponse } from './models/ExplainResponse';
 export type { Expression } from './models/Expression';
 export type { Field } from './models/Field';
 export type { FilteringCapabilities } from './models/FilteringCapabilities';

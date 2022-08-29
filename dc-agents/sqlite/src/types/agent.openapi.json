@@ -108,6 +108,54 @@
         }
       }
     },
+    "/explain": {
+      "post": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-SourceName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-Config",
+            "required": true,
+            "schema": {
+              "additionalProperties": true,
+              "nullable": false,
+              "type": "object"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplainResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "parameters": [
@@ -177,6 +225,9 @@
       },
       "Capabilities": {
         "properties": {
+          "explain": {
+            "$ref": "#/components/schemas/ExplainCapabilities"
+          },
           "filtering": {
             "$ref": "#/components/schemas/FilteringCapabilities"
           },
@@ -231,6 +282,7 @@
       },
       "RelationshipCapabilities": {},
       "MetricsCapabilities": {},
+      "ExplainCapabilities": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
@@ -1402,6 +1454,26 @@
         "required": [
           "relations",
           "elements"
+        ],
+        "type": "object"
+      },
+      "ExplainResponse": {
+        "properties": {
+          "lines": {
+            "description": "Lines of the formatted explain plan response",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "query": {
+            "description": "The generated query - i.e. SQL for a relational DB",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lines",
+          "query"
         ],
         "type": "object"
       }
