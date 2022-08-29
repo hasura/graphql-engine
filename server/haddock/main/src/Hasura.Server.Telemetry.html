@@ -73,7 +73,7 @@
 </span><span id="line-70"></span><span>    </span><span id="_tlHttpError"><span class="annot"><span class="annottext">TelemetryLog -&gt; Maybe TelemetryHttpError
 </span><a href="Hasura.Server.Telemetry.html#_tlHttpError"><span class="hs-identifier hs-var hs-var">_tlHttpError</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-type">TelemetryHttpError</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689666904"><span id="local-6989586621689666906"><span id="local-6989586621689666908"><span class="annot"><span class="annottext">Int -&gt; TelemetryLog -&gt; ShowS
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689667581"><span id="local-6989586621689667583"><span id="local-6989586621689667585"><span class="annot"><span class="annottext">Int -&gt; TelemetryLog -&gt; ShowS
 [TelemetryLog] -&gt; ShowS
 TelemetryLog -&gt; String
 (Int -&gt; TelemetryLog -&gt; ShowS)
@@ -100,7 +100,7 @@ $cshowsPrec :: Int -&gt; TelemetryLog -&gt; ShowS
 </span><span id="line-78"></span><span>    </span><span id="tlheResponse"><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe Text
 </span><a href="Hasura.Server.Telemetry.html#tlheResponse"><span class="hs-identifier hs-var hs-var">tlheResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-80"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689666892"><span id="local-6989586621689666894"><span id="local-6989586621689666896"><span class="annot"><span class="annottext">Int -&gt; TelemetryHttpError -&gt; ShowS
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689667569"><span id="local-6989586621689667571"><span id="local-6989586621689667573"><span class="annot"><span class="annottext">Int -&gt; TelemetryHttpError -&gt; ShowS
 [TelemetryHttpError] -&gt; ShowS
 TelemetryHttpError -&gt; String
 (Int -&gt; TelemetryHttpError -&gt; ShowS)
@@ -117,10 +117,10 @@ showsPrec :: Int -&gt; TelemetryHttpError -&gt; ShowS
 $cshowsPrec :: Int -&gt; TelemetryHttpError -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689666885"><span id="local-6989586621689666887"><span id="local-6989586621689666889"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryLog"><span class="hs-identifier hs-type">TelemetryLog</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621689666883"><span class="annot"><span class="annottext">toJSON :: TelemetryLog -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span id="local-6989586621689666881"><span class="annot"><span class="annottext">TelemetryLog
-</span><a href="#local-6989586621689666881"><span class="hs-identifier hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689667562"><span id="local-6989586621689667564"><span id="local-6989586621689667566"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryLog"><span class="hs-identifier hs-type">TelemetryLog</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621689667560"><span class="annot"><span class="annottext">toJSON :: TelemetryLog -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span id="local-6989586621689667558"><span class="annot"><span class="annottext">TelemetryLog
+</span><a href="#local-6989586621689667558"><span class="hs-identifier hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">A.object</span></span><span>
 </span><span id="line-85"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
@@ -128,13 +128,13 @@ $cshowsPrec :: Int -&gt; TelemetryHttpError -&gt; ShowS
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Text
 </span><a href="Hasura.Server.Telemetry.html#_tlType"><span class="hs-identifier hs-var hs-var">_tlType</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
-</span><a href="#local-6989586621689666881"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689667558"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Text
 </span><a href="Hasura.Server.Telemetry.html#_tlMessage"><span class="hs-identifier hs-var hs-var">_tlMessage</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
-</span><a href="#local-6989586621689666881"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689667558"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;http_error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -145,13 +145,13 @@ forall a. ToJSON a =&gt; a -&gt; Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Maybe TelemetryHttpError
 </span><a href="Hasura.Server.Telemetry.html#_tlHttpError"><span class="hs-identifier hs-var hs-var">_tlHttpError</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
-</span><a href="#local-6989586621689666881"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667558"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689666871"><span id="local-6989586621689666873"><span id="local-6989586621689666875"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-type">TelemetryHttpError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-91"></span><span>  </span><span id="local-6989586621689666870"><span class="annot"><span class="annottext">toJSON :: TelemetryHttpError -&gt; Value
-</span><a href="#local-6989586621689666870"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621689666869"><span class="annot"><span class="annottext">TelemetryHttpError
-</span><a href="#local-6989586621689666869"><span class="hs-identifier hs-var">tlhe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689667548"><span id="local-6989586621689667550"><span id="local-6989586621689667552"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-type">TelemetryHttpError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621689667547"><span class="annot"><span class="annottext">toJSON :: TelemetryHttpError -&gt; Value
+</span><a href="#local-6989586621689667547"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621689667546"><span class="annot"><span class="annottext">TelemetryHttpError
+</span><a href="#local-6989586621689667546"><span class="hs-identifier hs-var">tlhe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">A.object</span></span><span>
 </span><span id="line-93"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
@@ -162,19 +162,19 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe Status
 </span><a href="Hasura.Server.Telemetry.html#tlheStatus"><span class="hs-identifier hs-var hs-var">tlheStatus</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
-</span><a href="#local-6989586621689666869"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689667546"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;url&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Text
 </span><a href="Hasura.Server.Telemetry.html#tlheUrl"><span class="hs-identifier hs-var hs-var">tlheUrl</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
-</span><a href="#local-6989586621689666869"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689667546"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;response&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe Text
 </span><a href="Hasura.Server.Telemetry.html#tlheResponse"><span class="hs-identifier hs-var hs-var">tlheResponse</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
-</span><a href="#local-6989586621689666869"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689667546"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-96"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;http_exception&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -184,20 +184,20 @@ forall a. ToJSON a =&gt; a -&gt; Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe HttpException
 </span><a href="Hasura.Server.Telemetry.html#tlheHttpException"><span class="hs-identifier hs-var hs-var">tlheHttpException</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
-</span><a href="#local-6989586621689666869"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667546"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryLog"><span class="hs-identifier hs-type">TelemetryLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621689666864"><span class="annot"><span class="annottext">toEngineLog :: TelemetryLog -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689666862"><span class="annot"><span class="annottext">TelemetryLog
-</span><a href="#local-6989586621689666862"><span class="hs-identifier hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TelemetryLog -&gt; LogLevel
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621689667541"><span class="annot"><span class="annottext">toEngineLog :: TelemetryLog -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689667539"><span class="annot"><span class="annottext">TelemetryLog
+</span><a href="#local-6989586621689667539"><span class="hs-identifier hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TelemetryLog -&gt; LogLevel
 </span><a href="Hasura.Server.Telemetry.html#_tlLogLevel"><span class="hs-identifier hs-var hs-var">_tlLogLevel</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
-</span><a href="#local-6989586621689666862"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
+</span><a href="#local-6989586621689667539"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTTelemetry"><span class="hs-identifier hs-var">ILTTelemetry</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
-</span><a href="#local-6989586621689666862"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667539"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>
 </span><span id="line-102"></span><span class="annot"><a href="Hasura.Server.Telemetry.html#mkHttpError"><span class="hs-identifier hs-type">mkHttpError</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-103"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -208,41 +208,41 @@ forall a. ToJSON a =&gt; a -&gt; Value
 -&gt; Maybe (Response ByteString)
 -&gt; Maybe HttpException
 -&gt; TelemetryHttpError
-</span><a href="Hasura.Server.Telemetry.html#mkHttpError"><span class="hs-identifier hs-var hs-var">mkHttpError</span></a></span></span><span> </span><span id="local-6989586621689666858"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666858"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621689666857"><span class="annot"><span class="annottext">Maybe (Response ByteString)
-</span><a href="#local-6989586621689666857"><span class="hs-identifier hs-var">mResp</span></a></span></span><span> </span><span id="local-6989586621689666856"><span class="annot"><span class="annottext">Maybe HttpException
-</span><a href="#local-6989586621689666856"><span class="hs-identifier hs-var">httpEx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Telemetry.html#mkHttpError"><span class="hs-identifier hs-var hs-var">mkHttpError</span></a></span></span><span> </span><span id="local-6989586621689667535"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689667535"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621689667534"><span class="annot"><span class="annottext">Maybe (Response ByteString)
+</span><a href="#local-6989586621689667534"><span class="hs-identifier hs-var">mResp</span></a></span></span><span> </span><span id="local-6989586621689667533"><span class="annot"><span class="annottext">Maybe HttpException
+</span><a href="#local-6989586621689667533"><span class="hs-identifier hs-var">httpEx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Response ByteString)
-</span><a href="#local-6989586621689666857"><span class="hs-identifier hs-var">mResp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689667534"><span class="hs-identifier hs-var">mResp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">Maybe (Response ByteString)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Status
 -&gt; Text -&gt; Maybe HttpException -&gt; Maybe Text -&gt; TelemetryHttpError
 </span><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-var">TelemetryHttpError</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Status
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666858"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe HttpException
-</span><a href="#local-6989586621689666856"><span class="hs-identifier hs-var">httpEx</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689667535"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe HttpException
+</span><a href="#local-6989586621689667533"><span class="hs-identifier hs-var">httpEx</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-110"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689666855"><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689666855"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-111"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689666854"><span class="annot"><span class="annottext">status :: Status
-</span><a href="#local-6989586621689666854"><span class="hs-identifier hs-var hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689666855"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><span id="line-110"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689667532"><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689667532"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-111"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689667531"><span class="annot"><span class="annottext">status :: Status
+</span><a href="#local-6989586621689667531"><span class="hs-identifier hs-var hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689667532"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
 -&gt; Getting Status (Response ByteString) Status -&gt; Status
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Status (Response ByteString) Status
 forall body. Lens' (Response body) Status
 </span><span class="hs-identifier hs-var">Wreq.responseStatus</span></span><span>
-</span><span id="line-112"></span><span>          </span><span id="local-6989586621689666851"><span class="annot"><span class="annottext">body :: Maybe Text
-</span><a href="#local-6989586621689666851"><span class="hs-identifier hs-var hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTF8 ByteString -&gt; Maybe Text
+</span><span id="line-112"></span><span>          </span><span id="local-6989586621689667528"><span class="annot"><span class="annottext">body :: Maybe Text
+</span><a href="#local-6989586621689667528"><span class="hs-identifier hs-var hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTF8 ByteString -&gt; Maybe Text
 forall (f :: * -&gt; *) a. DecodeText f a =&gt; a -&gt; f Text
 </span><span class="hs-identifier hs-var">decodeText</span></span><span> </span><span class="annot"><span class="annottext">(UTF8 ByteString -&gt; Maybe Text) -&gt; UTF8 ByteString -&gt; Maybe Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; UTF8 ByteString
 forall a. a -&gt; UTF8 a
 </span><span class="hs-identifier hs-var">UTF8</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689666855"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689667532"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
 -&gt; Getting ByteString (Response ByteString) ByteString
 -&gt; ByteString
 forall s a. s -&gt; Getting a s a -&gt; a
@@ -255,10 +255,10 @@ Lens (Response body0) (Response body1) body0 body1
 </span><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-var">TelemetryHttpError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Status -&gt; Maybe Status
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Status
-</span><a href="#local-6989586621689666854"><span class="hs-identifier hs-var">status</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666858"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe HttpException
-</span><a href="#local-6989586621689666856"><span class="hs-identifier hs-var">httpEx</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689666851"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><a href="#local-6989586621689667531"><span class="hs-identifier hs-var">status</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689667535"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe HttpException
+</span><a href="#local-6989586621689667533"><span class="hs-identifier hs-var">httpEx</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689667528"><span class="hs-identifier hs-var">body</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="annot"><a href="Hasura.Server.Telemetry.html#mkTelemetryLog"><span class="hs-identifier hs-type">mkTelemetryLog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-type">TelemetryHttpError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryLog"><span class="hs-identifier hs-type">TelemetryLog</span></a></span><span>
 </span><span id="line-116"></span><span id="mkTelemetryLog"><span class="annot"><span class="annottext">mkTelemetryLog :: Text -&gt; Text -&gt; Maybe TelemetryHttpError -&gt; TelemetryLog
@@ -279,7 +279,7 @@ forall a. a -&gt; Maybe a
 </span><span id="line-125"></span><span class="hs-comment">-- | An infinite loop that sends updated telemetry data ('Metrics') every 24</span><span>
 </span><span id="line-126"></span><span class="hs-comment">-- hours. The send time depends on when the server was started and will</span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- naturally drift.</span><span>
-</span><span id="line-128"></span><span id="local-6989586621689666846"><span class="annot"><a href="Hasura.Server.Telemetry.html#runTelemetry"><span class="hs-identifier hs-type">runTelemetry</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-128"></span><span id="local-6989586621689667523"><span class="annot"><a href="Hasura.Server.Telemetry.html#runTelemetry"><span class="hs-identifier hs-type">runTelemetry</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-129"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-130"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-131"></span><span>  </span><span class="hs-comment">-- | an action that always returns the latest schema cache</span><span>
@@ -287,7 +287,7 @@ forall a. a -&gt; Maybe a
 </span><span id="line-133"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#MetadataDbId"><span class="hs-identifier hs-type">MetadataDbId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-134"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-135"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#PGVersion"><span class="hs-identifier hs-type">PGVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-136"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689666846"><span class="hs-identifier hs-type">void</span></a></span></span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689667523"><span class="hs-identifier hs-type">void</span></a></span></span><span>
 </span><span id="line-137"></span><span id="runTelemetry"><span class="annot"><span class="annottext">runTelemetry :: Logger Hasura
 -&gt; Manager
 -&gt; IO SchemaCache
@@ -295,39 +295,39 @@ forall a. a -&gt; Maybe a
 -&gt; InstanceId
 -&gt; PGVersion
 -&gt; IO void
-</span><a href="Hasura.Server.Telemetry.html#runTelemetry"><span class="hs-identifier hs-var hs-var">runTelemetry</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689666844"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><a href="Hasura.Server.Telemetry.html#runTelemetry"><span class="hs-identifier hs-var hs-var">runTelemetry</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689667521"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689666844"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689666843"><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689666843"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span id="local-6989586621689666842"><span class="annot"><span class="annottext">IO SchemaCache
-</span><a href="#local-6989586621689666842"><span class="hs-identifier hs-var">getSchemaCache</span></a></span></span><span> </span><span id="local-6989586621689666841"><span class="annot"><span class="annottext">MetadataDbId
-</span><a href="#local-6989586621689666841"><span class="hs-identifier hs-var">metadataDbUid</span></a></span></span><span> </span><span id="local-6989586621689666840"><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621689666840"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621689666839"><span class="annot"><span class="annottext">PGVersion
-</span><a href="#local-6989586621689666839"><span class="hs-identifier hs-var">pgVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-138"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689666838"><span class="annot"><span class="annottext">options :: Options
-</span><a href="#local-6989586621689666838"><span class="hs-identifier hs-var hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Manager -&gt; [Header] -&gt; Options
+</span><a href="#local-6989586621689667521"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689667520"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689667520"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span id="local-6989586621689667519"><span class="annot"><span class="annottext">IO SchemaCache
+</span><a href="#local-6989586621689667519"><span class="hs-identifier hs-var">getSchemaCache</span></a></span></span><span> </span><span id="local-6989586621689667518"><span class="annot"><span class="annottext">MetadataDbId
+</span><a href="#local-6989586621689667518"><span class="hs-identifier hs-var">metadataDbUid</span></a></span></span><span> </span><span id="local-6989586621689667517"><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621689667517"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621689667516"><span class="annot"><span class="annottext">PGVersion
+</span><a href="#local-6989586621689667516"><span class="hs-identifier hs-var">pgVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689667515"><span class="annot"><span class="annottext">options :: Options
+</span><a href="#local-6989586621689667515"><span class="hs-identifier hs-var hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Manager -&gt; [Header] -&gt; Options
 </span><a href="Hasura.HTTP.html#wreqOptions"><span class="hs-identifier hs-var">wreqOptions</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689666843"><span class="hs-identifier hs-var">manager</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689667520"><span class="hs-identifier hs-var">manager</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-139"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; IO void
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO void) -&gt; IO () -&gt; IO void
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-140"></span><span>    </span><span id="local-6989586621689666835"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621689666835"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO SchemaCache
-</span><a href="#local-6989586621689666842"><span class="hs-identifier hs-var">getSchemaCache</span></a></span><span>
-</span><span id="line-141"></span><span>    </span><span id="local-6989586621689666834"><span class="annot"><span class="annottext">ServiceTimingMetrics
-</span><a href="#local-6989586621689666834"><span class="hs-identifier hs-var">serviceTimings</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ServiceTimingMetrics
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621689667512"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621689667512"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO SchemaCache
+</span><a href="#local-6989586621689667519"><span class="hs-identifier hs-var">getSchemaCache</span></a></span><span>
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621689667511"><span class="annot"><span class="annottext">ServiceTimingMetrics
+</span><a href="#local-6989586621689667511"><span class="hs-identifier hs-var">serviceTimings</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ServiceTimingMetrics
 forall (m :: * -&gt; *). MonadIO m =&gt; m ServiceTimingMetrics
 </span><a href="Hasura.Server.Telemetry.Counters.html#dumpServiceTimingMetrics"><span class="hs-identifier hs-var">dumpServiceTimingMetrics</span></a></span><span>
-</span><span id="line-142"></span><span>    </span><span id="local-6989586621689666833"><span class="annot"><span class="annottext">Maybe CI
-</span><a href="#local-6989586621689666833"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe CI)
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621689667510"><span class="annot"><span class="annottext">Maybe CI
+</span><a href="#local-6989586621689667510"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe CI)
 </span><span class="hs-identifier hs-var">CI.getCI</span></span><span>
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span>    </span><span class="hs-comment">-- Creates a telemetry payload for a specific backend.</span><span>
-</span><span id="line-145"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621689666831"><span class="hs-identifier hs-type">telemetryForSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689666830"><span class="annot"><a href="#local-6989586621689666830"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689666830"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689666830"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier hs-type">TelemetryPayload</span></a></span><span>
-</span><span id="line-146"></span><span>        </span><span id="local-6989586621689666831"><span class="annot"><span class="annottext">telemetryForSource :: SourceInfo b -&gt; TelemetryPayload
-</span><a href="#local-6989586621689666831"><span class="hs-identifier hs-var hs-var">telemetryForSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-145"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621689667508"><span class="hs-identifier hs-type">telemetryForSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689667507"><span class="annot"><a href="#local-6989586621689667507"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667507"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667507"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier hs-type">TelemetryPayload</span></a></span><span>
+</span><span id="line-146"></span><span>        </span><span id="local-6989586621689667508"><span class="annot"><span class="annottext">telemetryForSource :: SourceInfo b -&gt; TelemetryPayload
+</span><a href="#local-6989586621689667508"><span class="hs-identifier hs-var hs-var">telemetryForSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-147"></span><span>          </span><span class="annot"><span class="annottext">MetadataDbId
 -&gt; InstanceId
 -&gt; Version
@@ -352,31 +352,31 @@ MetadataDbId
 -&gt; TelemetryPayload
 </span><a href="Hasura.Server.Telemetry.html#mkTelemetryPayload"><span class="hs-identifier hs-var">mkTelemetryPayload</span></a></span><span>
 </span><span id="line-148"></span><span>            </span><span class="annot"><span class="annottext">MetadataDbId
-</span><a href="#local-6989586621689666841"><span class="hs-identifier hs-var">metadataDbUid</span></a></span><span>
+</span><a href="#local-6989586621689667518"><span class="hs-identifier hs-var">metadataDbUid</span></a></span><span>
 </span><span id="line-149"></span><span>            </span><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621689666840"><span class="hs-identifier hs-var">instanceId</span></a></span><span>
+</span><a href="#local-6989586621689667517"><span class="hs-identifier hs-var">instanceId</span></a></span><span>
 </span><span id="line-150"></span><span>            </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var">currentVersion</span></a></span><span>
 </span><span id="line-151"></span><span>            </span><span class="annot"><span class="annottext">PGVersion
-</span><a href="#local-6989586621689666839"><span class="hs-identifier hs-var">pgVersion</span></a></span><span>
+</span><a href="#local-6989586621689667516"><span class="hs-identifier hs-var">pgVersion</span></a></span><span>
 </span><span id="line-152"></span><span>            </span><span class="annot"><span class="annottext">Maybe CI
-</span><a href="#local-6989586621689666833"><span class="hs-identifier hs-var">ci</span></a></span><span>
+</span><a href="#local-6989586621689667510"><span class="hs-identifier hs-var">ci</span></a></span><span>
 </span><span id="line-153"></span><span>            </span><span class="annot"><span class="annottext">ServiceTimingMetrics
-</span><a href="#local-6989586621689666834"><span class="hs-identifier hs-var">serviceTimings</span></a></span><span>
+</span><a href="#local-6989586621689667511"><span class="hs-identifier hs-var">serviceTimings</span></a></span><span>
 </span><span id="line-154"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaCache -&gt; RemoteSchemaMap
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scRemoteSchemas"><span class="hs-identifier hs-var hs-var">scRemoteSchemas</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621689666835"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667512"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-155"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaCache -&gt; ActionCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scActions"><span class="hs-identifier hs-var hs-var">scActions</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621689666835"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-156"></span><span>        </span><span id="local-6989586621689666825"><span class="annot"><span class="annottext">telemetries :: [TelemetryPayload]
-</span><a href="#local-6989586621689666825"><span class="hs-identifier hs-var hs-var">telemetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689667512"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-156"></span><span>        </span><span id="local-6989586621689667502"><span class="annot"><span class="annottext">telemetries :: [TelemetryPayload]
+</span><a href="#local-6989586621689667502"><span class="hs-identifier hs-var hs-var">telemetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-157"></span><span>          </span><span class="annot"><span class="annottext">(AnyBackend SourceInfo -&gt; TelemetryPayload)
 -&gt; [AnyBackend SourceInfo] -&gt; [TelemetryPayload]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span>
-</span><span id="line-158"></span><span>            </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689666824"><span class="annot"><span class="annottext">AnyBackend SourceInfo
-</span><a href="#local-6989586621689666824"><span class="hs-identifier hs-var">sourceinfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnyBackend SourceInfo
+</span><span id="line-158"></span><span>            </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689667501"><span class="annot"><span class="annottext">AnyBackend SourceInfo
+</span><a href="#local-6989586621689667501"><span class="hs-identifier hs-var">sourceinfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnyBackend SourceInfo
 -&gt; (forall (b :: BackendType).
     HasTag b =&gt;
     SourceInfo b -&gt; TelemetryPayload)
@@ -385,39 +385,39 @@ forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">Any.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceInfo
-</span><a href="#local-6989586621689666824"><span class="hs-identifier hs-var">sourceinfo</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="#local-6989586621689667501"><span class="hs-identifier hs-var">sourceinfo</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 HasTag b =&gt;
 SourceInfo b -&gt; TelemetryPayload
-</span><a href="#local-6989586621689666831"><span class="hs-identifier hs-var">telemetryForSource</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667508"><span class="hs-identifier hs-var">telemetryForSource</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap SourceName (AnyBackend SourceInfo)
 -&gt; [AnyBackend SourceInfo]
 forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">HM.elems</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaCache -&gt; HashMap SourceName (AnyBackend SourceInfo)
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621689666835"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-160"></span><span>        </span><span id="local-6989586621689666820"><span class="annot"><span class="annottext">payloads :: [ByteString]
-</span><a href="#local-6989586621689666820"><span class="hs-identifier hs-var hs-var">payloads</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TelemetryPayload -&gt; ByteString
+</span><a href="#local-6989586621689667512"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-160"></span><span>        </span><span id="local-6989586621689667497"><span class="annot"><span class="annottext">payloads :: [ByteString]
+</span><a href="#local-6989586621689667497"><span class="hs-identifier hs-var hs-var">payloads</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TelemetryPayload -&gt; ByteString
 forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">A.encode</span></span><span> </span><span class="annot"><span class="annottext">(TelemetryPayload -&gt; ByteString)
 -&gt; [TelemetryPayload] -&gt; [ByteString]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[TelemetryPayload]
-</span><a href="#local-6989586621689666825"><span class="hs-identifier hs-var">telemetries</span></a></span><span>
+</span><a href="#local-6989586621689667502"><span class="hs-identifier hs-var">telemetries</span></a></span><span>
 </span><span id="line-161"></span><span>
 </span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">[ByteString] -&gt; (ByteString -&gt; IO ()) -&gt; IO ()
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><span class="hs-identifier hs-var">for_</span></span><span> </span><span class="annot"><span class="annottext">[ByteString]
-</span><a href="#local-6989586621689666820"><span class="hs-identifier hs-var">payloads</span></a></span><span> </span><span class="annot"><span class="annottext">((ByteString -&gt; IO ()) -&gt; IO ()) -&gt; (ByteString -&gt; IO ()) -&gt; IO ()
+</span><a href="#local-6989586621689667497"><span class="hs-identifier hs-var">payloads</span></a></span><span> </span><span class="annot"><span class="annottext">((ByteString -&gt; IO ()) -&gt; IO ()) -&gt; (ByteString -&gt; IO ()) -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689666817"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689666817"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689667494"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689667494"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">UnstructuredLog -&gt; IO ()
 forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689666844"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(UnstructuredLog -&gt; IO ()) -&gt; UnstructuredLog -&gt; IO ()
+</span><a href="#local-6989586621689667521"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(UnstructuredLog -&gt; IO ()) -&gt; UnstructuredLog -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#debugLBS"><span class="hs-identifier hs-var">debugLBS</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; UnstructuredLog) -&gt; ByteString -&gt; UnstructuredLog
@@ -426,9 +426,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;metrics_info: &quot;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689666817"><span class="hs-identifier hs-var">payload</span></a></span><span>
-</span><span id="line-164"></span><span>      </span><span id="local-6989586621689666815"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
-</span><a href="#local-6989586621689666815"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Response ByteString)
+</span><a href="#local-6989586621689667494"><span class="hs-identifier hs-var">payload</span></a></span><span>
+</span><span id="line-164"></span><span>      </span><span id="local-6989586621689667492"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689667492"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Response ByteString)
 -&gt; IO (Either HttpException (Response ByteString))
 forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
 </span><span class="hs-identifier hs-var">try</span></span><span> </span><span class="annot"><span class="annottext">(IO (Response ByteString)
@@ -441,19 +441,19 @@ forall a.
 Postable a =&gt;
 Options -&gt; String -&gt; a -&gt; IO (Response ByteString)
 </span><span class="hs-identifier hs-var">Wreq.postWith</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="#local-6989586621689666838"><span class="hs-identifier hs-var">options</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="#local-6989586621689667515"><span class="hs-identifier hs-var">options</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Server.Telemetry.html#telemetryUrl"><span class="hs-identifier hs-var">telemetryUrl</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689666817"><span class="hs-identifier hs-var">payload</span></a></span><span>
+</span><a href="#local-6989586621689667494"><span class="hs-identifier hs-var">payload</span></a></span><span>
 </span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">(HttpException -&gt; IO ())
 -&gt; (Response ByteString -&gt; IO ())
 -&gt; Either HttpException (Response ByteString)
 -&gt; IO ()
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; IO ()
-</span><a href="#local-6989586621689666811"><span class="hs-identifier hs-var">logHttpEx</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString -&gt; IO ()
-</span><a href="#local-6989586621689666810"><span class="hs-identifier hs-var">handleHttpResp</span></a></span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
-</span><a href="#local-6989586621689666815"><span class="hs-identifier hs-var">resp</span></a></span><span>
+</span><a href="#local-6989586621689667488"><span class="hs-identifier hs-var">logHttpEx</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString -&gt; IO ()
+</span><a href="#local-6989586621689667487"><span class="hs-identifier hs-var">handleHttpResp</span></a></span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689667492"><span class="hs-identifier hs-var">resp</span></a></span><span>
 </span><span id="line-166"></span><span>    </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">C.sleep</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; IO ()) -&gt; DiffTime -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -461,12 +461,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Data.Time.Clock.Units.html#days"><span class="hs-identifier hs-var hs-var">days</span></a></span><span> </span><span class="annot"><span class="annottext">Days
 </span><span class="hs-number">1</span></span><span>
 </span><span id="line-167"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-168"></span><span>    </span><span class="annot"><a href="#local-6989586621689666811"><span class="hs-identifier hs-type">logHttpEx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-169"></span><span>    </span><span id="local-6989586621689666811"><span class="annot"><span class="annottext">logHttpEx :: HttpException -&gt; IO ()
-</span><a href="#local-6989586621689666811"><span class="hs-identifier hs-var hs-var">logHttpEx</span></a></span></span><span> </span><span id="local-6989586621689666807"><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689666807"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-170"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689666806"><span class="annot"><span class="annottext">httpErr :: Maybe TelemetryHttpError
-</span><a href="#local-6989586621689666806"><span class="hs-identifier hs-var hs-var">httpErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe TelemetryHttpError
+</span><span id="line-168"></span><span>    </span><span class="annot"><a href="#local-6989586621689667488"><span class="hs-identifier hs-type">logHttpEx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621689667488"><span class="annot"><span class="annottext">logHttpEx :: HttpException -&gt; IO ()
+</span><a href="#local-6989586621689667488"><span class="hs-identifier hs-var hs-var">logHttpEx</span></a></span></span><span> </span><span id="local-6989586621689667484"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689667484"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-170"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689667483"><span class="annot"><span class="annottext">httpErr :: Maybe TelemetryHttpError
+</span><a href="#local-6989586621689667483"><span class="hs-identifier hs-var hs-var">httpErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe TelemetryHttpError
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(TelemetryHttpError -&gt; Maybe TelemetryHttpError)
 -&gt; TelemetryHttpError -&gt; Maybe TelemetryHttpError
@@ -485,25 +485,25 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; HttpException
 </span><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-var">HttpException</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689666807"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667484"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-171"></span><span>      </span><span class="annot"><span class="annottext">TelemetryLog -&gt; IO ()
 forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689666844"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(TelemetryLog -&gt; IO ()) -&gt; TelemetryLog -&gt; IO ()
+</span><a href="#local-6989586621689667521"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(TelemetryLog -&gt; IO ()) -&gt; TelemetryLog -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Maybe TelemetryHttpError -&gt; TelemetryLog
 </span><a href="Hasura.Server.Telemetry.html#mkTelemetryLog"><span class="hs-identifier hs-var">mkTelemetryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;http_exception&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;http exception occurred&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe TelemetryHttpError
-</span><a href="#local-6989586621689666806"><span class="hs-identifier hs-var">httpErr</span></a></span><span>
+</span><a href="#local-6989586621689667483"><span class="hs-identifier hs-var">httpErr</span></a></span><span>
 </span><span id="line-172"></span><span>
-</span><span id="line-173"></span><span>    </span><span id="local-6989586621689666810"><span class="annot"><span class="annottext">handleHttpResp :: Response ByteString -&gt; IO ()
-</span><a href="#local-6989586621689666810"><span class="hs-identifier hs-var hs-var">handleHttpResp</span></a></span></span><span> </span><span id="local-6989586621689666804"><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689666804"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-174"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689666803"><span class="annot"><span class="annottext">statusCode :: Int
-</span><a href="#local-6989586621689666803"><span class="hs-identifier hs-var hs-var">statusCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689666804"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString -&gt; Getting Int (Response ByteString) Int -&gt; Int
+</span><span id="line-173"></span><span>    </span><span id="local-6989586621689667487"><span class="annot"><span class="annottext">handleHttpResp :: Response ByteString -&gt; IO ()
+</span><a href="#local-6989586621689667487"><span class="hs-identifier hs-var hs-var">handleHttpResp</span></a></span></span><span> </span><span id="local-6989586621689667481"><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689667481"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-174"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689667480"><span class="annot"><span class="annottext">statusCode :: Int
+</span><a href="#local-6989586621689667480"><span class="hs-identifier hs-var hs-var">statusCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689667481"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString -&gt; Getting Int (Response ByteString) Int -&gt; Int
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">(Status -&gt; Const Int Status)
 -&gt; Response ByteString -&gt; Const Int (Response ByteString)
@@ -520,7 +520,7 @@ Lens' Status Int
 forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689666844"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(UnstructuredLog -&gt; IO ()) -&gt; UnstructuredLog -&gt; IO ()
+</span><a href="#local-6989586621689667521"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(UnstructuredLog -&gt; IO ()) -&gt; UnstructuredLog -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#debugLBS"><span class="hs-identifier hs-var">debugLBS</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; UnstructuredLog) -&gt; ByteString -&gt; UnstructuredLog
@@ -529,7 +529,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;http_success: &quot;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689666804"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689667481"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
 -&gt; Getting ByteString (Response ByteString) ByteString
 -&gt; ByteString
 forall s a. s -&gt; Getting a s a -&gt; a
@@ -540,14 +540,14 @@ Lens (Response body0) (Response body1) body0 body1
 </span><span id="line-176"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666803"><span class="hs-identifier hs-var">statusCode</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621689667480"><span class="hs-identifier hs-var">statusCode</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">200</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-177"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689666798"><span class="annot"><span class="annottext">httpErr :: Maybe TelemetryHttpError
-</span><a href="#local-6989586621689666798"><span class="hs-identifier hs-var hs-var">httpErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe TelemetryHttpError
+</span><span id="line-177"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689667475"><span class="annot"><span class="annottext">httpErr :: Maybe TelemetryHttpError
+</span><a href="#local-6989586621689667475"><span class="hs-identifier hs-var hs-var">httpErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe TelemetryHttpError
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(TelemetryHttpError -&gt; Maybe TelemetryHttpError)
 -&gt; TelemetryHttpError -&gt; Maybe TelemetryHttpError
@@ -560,20 +560,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Server.Telemetry.html#telemetryUrl"><span class="hs-identifier hs-var">telemetryUrl</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Response ByteString -&gt; Maybe (Response ByteString)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689666804"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe HttpException
+</span><a href="#local-6989586621689667481"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe HttpException
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-178"></span><span>        </span><span class="annot"><span class="annottext">TelemetryLog -&gt; IO ()
 forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689666844"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(TelemetryLog -&gt; IO ()) -&gt; TelemetryLog -&gt; IO ()
+</span><a href="#local-6989586621689667521"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(TelemetryLog -&gt; IO ()) -&gt; TelemetryLog -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Maybe TelemetryHttpError -&gt; TelemetryLog
 </span><a href="Hasura.Server.Telemetry.html#mkTelemetryLog"><span class="hs-identifier hs-var">mkTelemetryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;http_error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;failed to post telemetry&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe TelemetryHttpError
-</span><a href="#local-6989586621689666798"><span class="hs-identifier hs-var">httpErr</span></a></span><span>
+</span><a href="#local-6989586621689667475"><span class="hs-identifier hs-var">httpErr</span></a></span><span>
 </span><span id="line-179"></span><span>
 </span><span id="line-180"></span><span class="hs-comment">-- * Generate metrics</span><span>
 </span><span id="line-181"></span><span>
@@ -583,8 +583,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-185"></span><span class="hs-comment">--   such as service timing, remote schemas and actions, will be reported</span><span>
 </span><span id="line-186"></span><span class="hs-comment">--   only with the default source.</span><span>
 </span><span id="line-187"></span><span class="annot"><a href="Hasura.Server.Telemetry.html#mkTelemetryPayload"><span class="hs-identifier hs-type">mkTelemetryPayload</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-188"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689667062"><span class="annot"><a href="#local-6989586621689667062"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span>
-</span><span id="line-189"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667062"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689667739"><span class="annot"><a href="#local-6989586621689667739"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span>
+</span><span id="line-189"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667739"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-190"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#MetadataDbId"><span class="hs-identifier hs-type">MetadataDbId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-191"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-192"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -593,7 +593,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-195"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-196"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#RemoteSchemaMap"><span class="hs-identifier hs-type">RemoteSchemaMap</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-197"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#ActionCache"><span class="hs-identifier hs-type">ActionCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-198"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667062"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-198"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667739"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-199"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier hs-type">TelemetryPayload</span></a></span><span>
 </span><span id="line-200"></span><span id="mkTelemetryPayload"><span class="annot"><span class="annottext">mkTelemetryPayload :: MetadataDbId
 -&gt; InstanceId
@@ -605,30 +605,30 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; ActionCache
 -&gt; SourceInfo b
 -&gt; TelemetryPayload
-</span><a href="Hasura.Server.Telemetry.html#mkTelemetryPayload"><span class="hs-identifier hs-var hs-var">mkTelemetryPayload</span></a></span></span><span> </span><span id="local-6989586621689666797"><span class="annot"><span class="annottext">MetadataDbId
-</span><a href="#local-6989586621689666797"><span class="hs-identifier hs-var">metadataDbId</span></a></span></span><span> </span><span id="local-6989586621689666796"><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621689666796"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621689666795"><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689666795"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span id="local-6989586621689666794"><span class="annot"><span class="annottext">PGVersion
-</span><a href="#local-6989586621689666794"><span class="hs-identifier hs-var">pgVersion</span></a></span></span><span> </span><span id="local-6989586621689666793"><span class="annot"><span class="annottext">Maybe CI
-</span><a href="#local-6989586621689666793"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span id="local-6989586621689666792"><span class="annot"><span class="annottext">ServiceTimingMetrics
-</span><a href="#local-6989586621689666792"><span class="hs-identifier hs-var">serviceTimings</span></a></span></span><span> </span><span id="local-6989586621689666791"><span class="annot"><span class="annottext">RemoteSchemaMap
-</span><a href="#local-6989586621689666791"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span></span><span> </span><span id="local-6989586621689666790"><span class="annot"><span class="annottext">ActionCache
-</span><a href="#local-6989586621689666790"><span class="hs-identifier hs-var">actionCache</span></a></span></span><span> </span><span id="local-6989586621689666789"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689666789"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-201"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689666788"><span class="annot"><span class="annottext">topic :: Topic
-</span><a href="#local-6989586621689666788"><span class="hs-identifier hs-var hs-var">topic</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Topic
+</span><a href="Hasura.Server.Telemetry.html#mkTelemetryPayload"><span class="hs-identifier hs-var hs-var">mkTelemetryPayload</span></a></span></span><span> </span><span id="local-6989586621689667474"><span class="annot"><span class="annottext">MetadataDbId
+</span><a href="#local-6989586621689667474"><span class="hs-identifier hs-var">metadataDbId</span></a></span></span><span> </span><span id="local-6989586621689667473"><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621689667473"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621689667472"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689667472"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span id="local-6989586621689667471"><span class="annot"><span class="annottext">PGVersion
+</span><a href="#local-6989586621689667471"><span class="hs-identifier hs-var">pgVersion</span></a></span></span><span> </span><span id="local-6989586621689667470"><span class="annot"><span class="annottext">Maybe CI
+</span><a href="#local-6989586621689667470"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span id="local-6989586621689667469"><span class="annot"><span class="annottext">ServiceTimingMetrics
+</span><a href="#local-6989586621689667469"><span class="hs-identifier hs-var">serviceTimings</span></a></span></span><span> </span><span id="local-6989586621689667468"><span class="annot"><span class="annottext">RemoteSchemaMap
+</span><a href="#local-6989586621689667468"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span></span><span> </span><span id="local-6989586621689667467"><span class="annot"><span class="annottext">ActionCache
+</span><a href="#local-6989586621689667467"><span class="hs-identifier hs-var">actionCache</span></a></span></span><span> </span><span id="local-6989586621689667466"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689667466"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-201"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689667465"><span class="annot"><span class="annottext">topic :: Topic
+</span><a href="#local-6989586621689667465"><span class="hs-identifier hs-var hs-var">topic</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Topic
 </span><a href="Hasura.Server.Telemetry.html#versionToTopic"><span class="hs-identifier hs-var">versionToTopic</span></a></span><span> </span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689666795"><span class="hs-identifier hs-var">version</span></a></span><span>
-</span><span id="line-202"></span><span>      </span><span id="local-6989586621689666786"><span class="annot"><span class="annottext">sourceMetadata :: SourceMetadata
-</span><a href="#local-6989586621689666786"><span class="hs-identifier hs-var hs-var">sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689667472"><span class="hs-identifier hs-var">version</span></a></span><span>
+</span><span id="line-202"></span><span>      </span><span id="local-6989586621689667463"><span class="annot"><span class="annottext">sourceMetadata :: SourceMetadata
+</span><a href="#local-6989586621689667463"><span class="hs-identifier hs-var hs-var">sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-203"></span><span>        </span><span class="annot"><span class="annottext">SourceMetadata :: Maybe DbUid -&gt; BackendType -&gt; Maybe DbVersion -&gt; SourceMetadata
 </span><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span>
 </span><span id="line-204"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_smDbUid :: Maybe DbUid
 </span><a href="Hasura.Server.Telemetry.Types.html#_smDbUid"><span class="hs-identifier hs-var">_smDbUid</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DbUid -&gt; Maybe DbUid
 forall a. a -&gt; Maybe a
-</span><a href="#local-6989586621689666783"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataDbId -&gt; DbUid
+</span><a href="#local-6989586621689667460"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataDbId -&gt; DbUid
 </span><a href="Hasura.Server.Types.html#mdDbIdToDbUid"><span class="hs-identifier hs-var">mdDbIdToDbUid</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataDbId
-</span><a href="#local-6989586621689666797"><span class="hs-identifier hs-var">metadataDbId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689667474"><span class="hs-identifier hs-var">metadataDbId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-205"></span><span>            </span><span class="annot"><span class="annottext">_smDbKind :: BackendType
 </span><a href="Hasura.Server.Telemetry.Types.html#_smDbKind"><span class="hs-identifier hs-var">_smDbKind</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendTag b -&gt; BackendType
 forall (b :: BackendType). BackendTag b -&gt; BackendType
@@ -636,24 +636,24 @@ forall (b :: BackendType). BackendTag b -&gt; BackendType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HasTag b =&gt; BackendTag b
 forall (b :: BackendType). HasTag b =&gt; BackendTag b
-</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689667062"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689667739"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-206"></span><span>            </span><span class="annot"><span class="annottext">_smDbVersion :: Maybe DbVersion
 </span><a href="Hasura.Server.Telemetry.Types.html#_smDbVersion"><span class="hs-identifier hs-var">_smDbVersion</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DbVersion -&gt; Maybe DbVersion
 forall a. a -&gt; Maybe a
-</span><a href="#local-6989586621689666783"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGVersion -&gt; DbVersion
+</span><a href="#local-6989586621689667460"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGVersion -&gt; DbVersion
 </span><a href="Hasura.Server.Types.html#pgToDbVersion"><span class="hs-identifier hs-var">pgToDbVersion</span></a></span><span> </span><span class="annot"><span class="annottext">PGVersion
-</span><a href="#local-6989586621689666794"><span class="hs-identifier hs-var">pgVersion</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667471"><span class="hs-identifier hs-var">pgVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-207"></span><span>          </span><span class="hs-special">}</span><span>
 </span><span id="line-208"></span><span>      </span><span class="hs-comment">-- We use this function to attach additional information that is not associated</span><span>
 </span><span id="line-209"></span><span>      </span><span class="hs-comment">-- with a particular source, such as service timing, remote schemas and actions.</span><span>
 </span><span id="line-210"></span><span>      </span><span class="hs-comment">-- These will be reported only with the default source.</span><span>
-</span><span id="line-211"></span><span>      </span><span class="annot"><a href="#local-6989586621689666783"><span class="hs-identifier hs-type">forDefaultSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689666776"><span class="annot"><a href="#local-6989586621689666776"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="#local-6989586621689666776"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689666776"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-212"></span><span>      </span><span id="local-6989586621689666783"><span class="annot"><span class="annottext">forDefaultSource :: a -&gt; Maybe a
-</span><a href="#local-6989586621689666783"><span class="hs-identifier hs-var hs-var">forDefaultSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-211"></span><span>      </span><span class="annot"><a href="#local-6989586621689667460"><span class="hs-identifier hs-type">forDefaultSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689667453"><span class="annot"><a href="#local-6989586621689667453"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="#local-6989586621689667453"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689667453"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-212"></span><span>      </span><span id="local-6989586621689667460"><span class="annot"><span class="annottext">forDefaultSource :: a -&gt; Maybe a
+</span><a href="#local-6989586621689667460"><span class="hs-identifier hs-var hs-var">forDefaultSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-213"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
 </span><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier hs-var hs-var">_siName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689666789"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; SourceName -&gt; Bool
+</span><a href="#local-6989586621689667466"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; SourceName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#SNDefault"><span class="hs-identifier hs-var">SNDefault</span></a></span><span>
@@ -665,8 +665,8 @@ forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-216"></span><span>      </span><span id="local-6989586621689666772"><span class="annot"><span class="annottext">metrics :: Metrics
-</span><a href="#local-6989586621689666772"><span class="hs-identifier hs-var hs-var">metrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-216"></span><span>      </span><span id="local-6989586621689667449"><span class="annot"><span class="annottext">metrics :: Metrics
+</span><a href="#local-6989586621689667449"><span class="hs-identifier hs-var hs-var">metrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-217"></span><span>        </span><span class="annot"><span class="annottext">SourceInfo b
 -&gt; Maybe ServiceTimingMetrics
 -&gt; Maybe RemoteSchemaMap
@@ -680,21 +680,21 @@ SourceInfo b
 -&gt; Metrics
 </span><a href="Hasura.Server.Telemetry.html#computeMetrics"><span class="hs-identifier hs-var">computeMetrics</span></a></span><span>
 </span><span id="line-218"></span><span>          </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689666789"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
+</span><a href="#local-6989586621689667466"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
 </span><span id="line-219"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; Maybe ServiceTimingMetrics
 forall a. a -&gt; Maybe a
-</span><a href="#local-6989586621689666783"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetrics
-</span><a href="#local-6989586621689666792"><span class="hs-identifier hs-var">serviceTimings</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667460"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetrics
+</span><a href="#local-6989586621689667469"><span class="hs-identifier hs-var">serviceTimings</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-220"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaMap -&gt; Maybe RemoteSchemaMap
 forall a. a -&gt; Maybe a
-</span><a href="#local-6989586621689666783"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMap
-</span><a href="#local-6989586621689666791"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689667460"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMap
+</span><a href="#local-6989586621689667468"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-221"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionCache -&gt; Maybe ActionCache
 forall a. a -&gt; Maybe a
-</span><a href="#local-6989586621689666783"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">ActionCache
-</span><a href="#local-6989586621689666790"><span class="hs-identifier hs-var">actionCache</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-222"></span><span>      </span><span id="local-6989586621689666770"><span class="annot"><span class="annottext">telemetry :: HasuraTelemetry
-</span><a href="#local-6989586621689666770"><span class="hs-identifier hs-var hs-var">telemetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689667460"><span class="hs-identifier hs-var">forDefaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">ActionCache
+</span><a href="#local-6989586621689667467"><span class="hs-identifier hs-var">actionCache</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-222"></span><span>      </span><span id="local-6989586621689667447"><span class="annot"><span class="annottext">telemetry :: HasuraTelemetry
+</span><a href="#local-6989586621689667447"><span class="hs-identifier hs-var hs-var">telemetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-223"></span><span>        </span><span class="annot"><span class="annottext">MetadataDbId
 -&gt; InstanceId
 -&gt; Version
@@ -703,21 +703,21 @@ forall a. a -&gt; Maybe a
 -&gt; Metrics
 -&gt; HasuraTelemetry
 </span><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-var">HasuraTelemetry</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataDbId
-</span><a href="#local-6989586621689666797"><span class="hs-identifier hs-var">metadataDbId</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621689666796"><span class="hs-identifier hs-var">instanceId</span></a></span><span> </span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689666795"><span class="hs-identifier hs-var">version</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CI
-</span><a href="#local-6989586621689666793"><span class="hs-identifier hs-var">ci</span></a></span><span> </span><span class="annot"><span class="annottext">SourceMetadata
-</span><a href="#local-6989586621689666786"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">Metrics
-</span><a href="#local-6989586621689666772"><span class="hs-identifier hs-var">metrics</span></a></span><span>
+</span><a href="#local-6989586621689667474"><span class="hs-identifier hs-var">metadataDbId</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621689667473"><span class="hs-identifier hs-var">instanceId</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689667472"><span class="hs-identifier hs-var">version</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CI
+</span><a href="#local-6989586621689667470"><span class="hs-identifier hs-var">ci</span></a></span><span> </span><span class="annot"><span class="annottext">SourceMetadata
+</span><a href="#local-6989586621689667463"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">Metrics
+</span><a href="#local-6989586621689667449"><span class="hs-identifier hs-var">metrics</span></a></span><span>
 </span><span id="line-224"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Topic -&gt; HasuraTelemetry -&gt; TelemetryPayload
 </span><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier hs-var">TelemetryPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Topic
-</span><a href="#local-6989586621689666788"><span class="hs-identifier hs-var">topic</span></a></span><span> </span><span class="annot"><span class="annottext">HasuraTelemetry
-</span><a href="#local-6989586621689666770"><span class="hs-identifier hs-var">telemetry</span></a></span><span>
+</span><a href="#local-6989586621689667465"><span class="hs-identifier hs-var">topic</span></a></span><span> </span><span class="annot"><span class="annottext">HasuraTelemetry
+</span><a href="#local-6989586621689667447"><span class="hs-identifier hs-var">telemetry</span></a></span><span>
 </span><span id="line-225"></span><span>
 </span><span id="line-226"></span><span class="hs-comment">-- | Compute the relevant metrics for a specific source.</span><span>
 </span><span id="line-227"></span><span class="annot"><a href="Hasura.Server.Telemetry.html#computeMetrics"><span class="hs-identifier hs-type">computeMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-228"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689667011"><span class="annot"><a href="#local-6989586621689667011"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span>
-</span><span id="line-229"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667011"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-228"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689667688"><span class="annot"><a href="#local-6989586621689667688"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span>
+</span><span id="line-229"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667688"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-230"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-231"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#RemoteSchemaMap"><span class="hs-identifier hs-type">RemoteSchemaMap</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-232"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#ActionCache"><span class="hs-identifier hs-type">ActionCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -727,14 +727,14 @@ forall a. a -&gt; Maybe a
 -&gt; Maybe RemoteSchemaMap
 -&gt; Maybe ActionCache
 -&gt; Metrics
-</span><a href="Hasura.Server.Telemetry.html#computeMetrics"><span class="hs-identifier hs-var hs-var">computeMetrics</span></a></span></span><span> </span><span id="local-6989586621689666767"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689666767"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689666766"><span class="annot"><span class="annottext">Maybe ServiceTimingMetrics
-</span><a href="#local-6989586621689666766"><span class="hs-identifier hs-var">_mtServiceTimings</span></a></span></span><span> </span><span id="local-6989586621689666765"><span class="annot"><span class="annottext">Maybe RemoteSchemaMap
-</span><a href="#local-6989586621689666765"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span></span><span> </span><span id="local-6989586621689666764"><span class="annot"><span class="annottext">Maybe ActionCache
-</span><a href="#local-6989586621689666764"><span class="hs-identifier hs-var">actionCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-235"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689666763"><span class="annot"><span class="annottext">_mtTables :: Int
-</span><a href="#local-6989586621689666763"><span class="hs-identifier hs-var hs-var">_mtTables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; Bool) -&gt; Int
-</span><a href="#local-6989586621689666762"><span class="hs-identifier hs-var">countSourceTables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe ViewInfo -&gt; Bool
+</span><a href="Hasura.Server.Telemetry.html#computeMetrics"><span class="hs-identifier hs-var hs-var">computeMetrics</span></a></span></span><span> </span><span id="local-6989586621689667444"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689667444"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689667443"><span class="annot"><span class="annottext">Maybe ServiceTimingMetrics
+</span><a href="#local-6989586621689667443"><span class="hs-identifier hs-var">_mtServiceTimings</span></a></span></span><span> </span><span id="local-6989586621689667442"><span class="annot"><span class="annottext">Maybe RemoteSchemaMap
+</span><a href="#local-6989586621689667442"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span></span><span> </span><span id="local-6989586621689667441"><span class="annot"><span class="annottext">Maybe ActionCache
+</span><a href="#local-6989586621689667441"><span class="hs-identifier hs-var">actionCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-235"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689667440"><span class="annot"><span class="annottext">_mtTables :: Int
+</span><a href="#local-6989586621689667440"><span class="hs-identifier hs-var hs-var">_mtTables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; Bool) -&gt; Int
+</span><a href="#local-6989586621689667439"><span class="hs-identifier hs-var">countSourceTables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe ViewInfo -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isNothing</span></span><span> </span><span class="annot"><span class="annottext">(Maybe ViewInfo -&gt; Bool)
 -&gt; (TableInfo b -&gt; Maybe ViewInfo) -&gt; TableInfo b -&gt; Bool
@@ -750,9 +750,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-236"></span><span>      </span><span id="local-6989586621689666758"><span class="annot"><span class="annottext">_mtViews :: Int
-</span><a href="#local-6989586621689666758"><span class="hs-identifier hs-var hs-var">_mtViews</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; Bool) -&gt; Int
-</span><a href="#local-6989586621689666762"><span class="hs-identifier hs-var">countSourceTables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe ViewInfo -&gt; Bool
+</span><span id="line-236"></span><span>      </span><span id="local-6989586621689667435"><span class="annot"><span class="annottext">_mtViews :: Int
+</span><a href="#local-6989586621689667435"><span class="hs-identifier hs-var hs-var">_mtViews</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; Bool) -&gt; Int
+</span><a href="#local-6989586621689667439"><span class="hs-identifier hs-var">countSourceTables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe ViewInfo -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe ViewInfo -&gt; Bool)
 -&gt; (TableInfo b -&gt; Maybe ViewInfo) -&gt; TableInfo b -&gt; Bool
@@ -768,9 +768,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-237"></span><span>      </span><span id="local-6989586621689666756"><span class="annot"><span class="annottext">_mtEnumTables :: Int
-</span><a href="#local-6989586621689666756"><span class="hs-identifier hs-var hs-var">_mtEnumTables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; Bool) -&gt; Int
-</span><a href="#local-6989586621689666762"><span class="hs-identifier hs-var">countSourceTables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe EnumValues -&gt; Bool
+</span><span id="line-237"></span><span>      </span><span id="local-6989586621689667433"><span class="annot"><span class="annottext">_mtEnumTables :: Int
+</span><a href="#local-6989586621689667433"><span class="hs-identifier hs-var hs-var">_mtEnumTables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; Bool) -&gt; Int
+</span><a href="#local-6989586621689667439"><span class="hs-identifier hs-var">countSourceTables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe EnumValues -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe EnumValues -&gt; Bool)
 -&gt; (TableInfo b -&gt; Maybe EnumValues) -&gt; TableInfo b -&gt; Bool
@@ -786,8 +786,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-238"></span><span>      </span><span id="local-6989586621689666754"><span class="annot"><span class="annottext">allRels :: [RelInfo b]
-</span><a href="#local-6989586621689666754"><span class="hs-identifier hs-var hs-var">allRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[RelInfo b]] -&gt; [RelInfo b]
+</span><span id="line-238"></span><span>      </span><span id="local-6989586621689667431"><span class="annot"><span class="annottext">allRels :: [RelInfo b]
+</span><a href="#local-6989586621689667431"><span class="hs-identifier hs-var hs-var">allRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[RelInfo b]] -&gt; [RelInfo b]
 forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
 </span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">([[RelInfo b]] -&gt; [RelInfo b]) -&gt; [[RelInfo b]] -&gt; [RelInfo b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -821,26 +821,26 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b)
-</span><a href="#local-6989586621689666750"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
-</span><span id="line-239"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689666749"><span class="annot"><span class="annottext">[RelInfo b]
-</span><a href="#local-6989586621689666749"><span class="hs-identifier hs-var">manualRels</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689666748"><span class="annot"><span class="annottext">[RelInfo b]
-</span><a href="#local-6989586621689666748"><span class="hs-identifier hs-var">autoRels</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RelInfo b -&gt; Bool) -&gt; [RelInfo b] -&gt; ([RelInfo b], [RelInfo b])
+</span><a href="#local-6989586621689667427"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
+</span><span id="line-239"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689667426"><span class="annot"><span class="annottext">[RelInfo b]
+</span><a href="#local-6989586621689667426"><span class="hs-identifier hs-var">manualRels</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689667425"><span class="annot"><span class="annottext">[RelInfo b]
+</span><a href="#local-6989586621689667425"><span class="hs-identifier hs-var">autoRels</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RelInfo b -&gt; Bool) -&gt; [RelInfo b] -&gt; ([RelInfo b], [RelInfo b])
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; ([a], [a])
 </span><span class="hs-identifier hs-var">L.partition</span></span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; Bool
 forall (b :: BackendType). RelInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riIsManual"><span class="hs-identifier hs-var hs-var">riIsManual</span></a></span><span> </span><span class="annot"><span class="annottext">[RelInfo b]
-</span><a href="#local-6989586621689666754"><span class="hs-identifier hs-var">allRels</span></a></span><span>
-</span><span id="line-240"></span><span>      </span><span id="local-6989586621689666745"><span class="annot"><span class="annottext">_mtRelationships :: RelationshipMetric
-</span><a href="#local-6989586621689666745"><span class="hs-identifier hs-var hs-var">_mtRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; RelationshipMetric
+</span><a href="#local-6989586621689667431"><span class="hs-identifier hs-var">allRels</span></a></span><span>
+</span><span id="line-240"></span><span>      </span><span id="local-6989586621689667422"><span class="annot"><span class="annottext">_mtRelationships :: RelationshipMetric
+</span><a href="#local-6989586621689667422"><span class="hs-identifier hs-var hs-var">_mtRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; RelationshipMetric
 </span><a href="Hasura.Server.Telemetry.Types.html#RelationshipMetric"><span class="hs-identifier hs-var">RelationshipMetric</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[RelInfo b] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[RelInfo b]
-</span><a href="#local-6989586621689666749"><span class="hs-identifier hs-var">manualRels</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[RelInfo b] -&gt; Int
+</span><a href="#local-6989586621689667426"><span class="hs-identifier hs-var">manualRels</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[RelInfo b] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[RelInfo b]
-</span><a href="#local-6989586621689666748"><span class="hs-identifier hs-var">autoRels</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-241"></span><span>      </span><span id="local-6989586621689666742"><span class="annot"><span class="annottext">rolePerms :: [(RoleName, RolePermInfo b)]
-</span><a href="#local-6989586621689666742"><span class="hs-identifier hs-var hs-var">rolePerms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[(RoleName, RolePermInfo b)]] -&gt; [(RoleName, RolePermInfo b)]
+</span><a href="#local-6989586621689667425"><span class="hs-identifier hs-var">autoRels</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-241"></span><span>      </span><span id="local-6989586621689667419"><span class="annot"><span class="annottext">rolePerms :: [(RoleName, RolePermInfo b)]
+</span><a href="#local-6989586621689667419"><span class="hs-identifier hs-var hs-var">rolePerms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[(RoleName, RolePermInfo b)]] -&gt; [(RoleName, RolePermInfo b)]
 forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
 </span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">([[(RoleName, RolePermInfo b)]] -&gt; [(RoleName, RolePermInfo b)])
 -&gt; [[(RoleName, RolePermInfo b)]] -&gt; [(RoleName, RolePermInfo b)]
@@ -858,10 +858,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap (TableName b) [(RoleName, RolePermInfo b)]
 forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">Map.map</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; [(RoleName, RolePermInfo b)]
-</span><a href="#local-6989586621689666741"><span class="hs-identifier hs-var">permsOfTbl</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b)
-</span><a href="#local-6989586621689666750"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
-</span><span id="line-242"></span><span>      </span><span id="local-6989586621689666740"><span class="annot"><span class="annottext">_pmRoles :: Int
-</span><a href="#local-6989586621689666740"><span class="hs-identifier hs-var hs-var">_pmRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[RoleName] -&gt; Int
+</span><a href="#local-6989586621689667418"><span class="hs-identifier hs-var">permsOfTbl</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b)
+</span><a href="#local-6989586621689667427"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
+</span><span id="line-242"></span><span>      </span><span id="local-6989586621689667417"><span class="annot"><span class="annottext">_pmRoles :: Int
+</span><a href="#local-6989586621689667417"><span class="hs-identifier hs-var hs-var">_pmRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[RoleName] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([RoleName] -&gt; Int) -&gt; [RoleName] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -875,49 +875,49 @@ forall a b. (a, b) -&gt; a
 -&gt; [(RoleName, RolePermInfo b)] -&gt; [RoleName]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(RoleName, RolePermInfo b)]
-</span><a href="#local-6989586621689666742"><span class="hs-identifier hs-var">rolePerms</span></a></span><span>
-</span><span id="line-243"></span><span>      </span><span id="local-6989586621689666738"><span class="annot"><span class="annottext">allPerms :: [RolePermInfo b]
-</span><a href="#local-6989586621689666738"><span class="hs-identifier hs-var hs-var">allPerms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RoleName, RolePermInfo b) -&gt; RolePermInfo b
+</span><a href="#local-6989586621689667419"><span class="hs-identifier hs-var">rolePerms</span></a></span><span>
+</span><span id="line-243"></span><span>      </span><span id="local-6989586621689667415"><span class="annot"><span class="annottext">allPerms :: [RolePermInfo b]
+</span><a href="#local-6989586621689667415"><span class="hs-identifier hs-var hs-var">allPerms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RoleName, RolePermInfo b) -&gt; RolePermInfo b
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">((RoleName, RolePermInfo b) -&gt; RolePermInfo b)
 -&gt; [(RoleName, RolePermInfo b)] -&gt; [RolePermInfo b]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(RoleName, RolePermInfo b)]
-</span><a href="#local-6989586621689666742"><span class="hs-identifier hs-var">rolePerms</span></a></span><span>
-</span><span id="line-244"></span><span>      </span><span id="local-6989586621689666737"><span class="annot"><span class="annottext">_pmInsert :: Int
-</span><a href="#local-6989586621689666737"><span class="hs-identifier hs-var hs-var">_pmInsert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (InsPermInfo b))
+</span><a href="#local-6989586621689667419"><span class="hs-identifier hs-var">rolePerms</span></a></span><span>
+</span><span id="line-244"></span><span>      </span><span id="local-6989586621689667414"><span class="annot"><span class="annottext">_pmInsert :: Int
+</span><a href="#local-6989586621689667414"><span class="hs-identifier hs-var hs-var">_pmInsert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (InsPermInfo b))
 -&gt; [RolePermInfo b] -&gt; Int
 forall a. (RolePermInfo b -&gt; Maybe a) -&gt; [RolePermInfo b] -&gt; Int
-</span><a href="#local-6989586621689666736"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (InsPermInfo b)
+</span><a href="#local-6989586621689667413"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (InsPermInfo b)
 forall (b :: BackendType). RolePermInfo b -&gt; Maybe (InsPermInfo b)
 </span><a href="Hasura.RQL.Types.Table.html#_permIns"><span class="hs-identifier hs-var hs-var">_permIns</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
-</span><a href="#local-6989586621689666738"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
-</span><span id="line-245"></span><span>      </span><span id="local-6989586621689666734"><span class="annot"><span class="annottext">_pmSelect :: Int
-</span><a href="#local-6989586621689666734"><span class="hs-identifier hs-var hs-var">_pmSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (SelPermInfo b))
+</span><a href="#local-6989586621689667415"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
+</span><span id="line-245"></span><span>      </span><span id="local-6989586621689667411"><span class="annot"><span class="annottext">_pmSelect :: Int
+</span><a href="#local-6989586621689667411"><span class="hs-identifier hs-var hs-var">_pmSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (SelPermInfo b))
 -&gt; [RolePermInfo b] -&gt; Int
 forall a. (RolePermInfo b -&gt; Maybe a) -&gt; [RolePermInfo b] -&gt; Int
-</span><a href="#local-6989586621689666736"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (SelPermInfo b)
+</span><a href="#local-6989586621689667413"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (SelPermInfo b)
 forall (b :: BackendType). RolePermInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="Hasura.RQL.Types.Table.html#_permSel"><span class="hs-identifier hs-var hs-var">_permSel</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
-</span><a href="#local-6989586621689666738"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
-</span><span id="line-246"></span><span>      </span><span id="local-6989586621689666732"><span class="annot"><span class="annottext">_pmUpdate :: Int
-</span><a href="#local-6989586621689666732"><span class="hs-identifier hs-var hs-var">_pmUpdate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (UpdPermInfo b))
+</span><a href="#local-6989586621689667415"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
+</span><span id="line-246"></span><span>      </span><span id="local-6989586621689667409"><span class="annot"><span class="annottext">_pmUpdate :: Int
+</span><a href="#local-6989586621689667409"><span class="hs-identifier hs-var hs-var">_pmUpdate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (UpdPermInfo b))
 -&gt; [RolePermInfo b] -&gt; Int
 forall a. (RolePermInfo b -&gt; Maybe a) -&gt; [RolePermInfo b] -&gt; Int
-</span><a href="#local-6989586621689666736"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (UpdPermInfo b)
+</span><a href="#local-6989586621689667413"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (UpdPermInfo b)
 forall (b :: BackendType). RolePermInfo b -&gt; Maybe (UpdPermInfo b)
 </span><a href="Hasura.RQL.Types.Table.html#_permUpd"><span class="hs-identifier hs-var hs-var">_permUpd</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
-</span><a href="#local-6989586621689666738"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
-</span><span id="line-247"></span><span>      </span><span id="local-6989586621689666730"><span class="annot"><span class="annottext">_pmDelete :: Int
-</span><a href="#local-6989586621689666730"><span class="hs-identifier hs-var hs-var">_pmDelete</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (DelPermInfo b))
+</span><a href="#local-6989586621689667415"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
+</span><span id="line-247"></span><span>      </span><span id="local-6989586621689667407"><span class="annot"><span class="annottext">_pmDelete :: Int
+</span><a href="#local-6989586621689667407"><span class="hs-identifier hs-var hs-var">_pmDelete</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (DelPermInfo b))
 -&gt; [RolePermInfo b] -&gt; Int
 forall a. (RolePermInfo b -&gt; Maybe a) -&gt; [RolePermInfo b] -&gt; Int
-</span><a href="#local-6989586621689666736"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (DelPermInfo b)
+</span><a href="#local-6989586621689667413"><span class="hs-identifier hs-var">calcPerms</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (DelPermInfo b)
 forall (b :: BackendType). RolePermInfo b -&gt; Maybe (DelPermInfo b)
 </span><a href="Hasura.RQL.Types.Table.html#_permDel"><span class="hs-identifier hs-var hs-var">_permDel</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
-</span><a href="#local-6989586621689666738"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
-</span><span id="line-248"></span><span>      </span><span id="local-6989586621689666728"><span class="annot"><span class="annottext">_mtPermissions :: PermissionMetric
-</span><a href="#local-6989586621689666728"><span class="hs-identifier hs-var hs-var">_mtPermissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689667415"><span class="hs-identifier hs-var">allPerms</span></a></span><span>
+</span><span id="line-248"></span><span>      </span><span id="local-6989586621689667405"><span class="annot"><span class="annottext">_mtPermissions :: PermissionMetric
+</span><a href="#local-6989586621689667405"><span class="hs-identifier hs-var hs-var">_mtPermissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-249"></span><span>        </span><span class="annot"><span class="annottext">PermissionMetric :: Int -&gt; Int -&gt; Int -&gt; Int -&gt; Int -&gt; PermissionMetric
 </span><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier hs-type">PermissionMetric</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Int
 _pmRoles :: Int
@@ -931,8 +931,8 @@ _pmSelect :: Int
 _pmInsert :: Int
 _pmRoles :: Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_pmRoles"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-250"></span><span>      </span><span id="local-6989586621689666721"><span class="annot"><span class="annottext">_mtEventTriggers :: Int
-</span><a href="#local-6989586621689666721"><span class="hs-identifier hs-var hs-var">_mtEventTriggers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-250"></span><span>      </span><span id="local-6989586621689667398"><span class="annot"><span class="annottext">_mtEventTriggers :: Int
+</span><a href="#local-6989586621689667398"><span class="hs-identifier hs-var hs-var">_mtEventTriggers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-251"></span><span>        </span><span class="annot"><span class="annottext">HashMap (TableName b) (HashMap TriggerName (EventTriggerInfo b))
 -&gt; Int
 forall k v. HashMap k v -&gt; Int
@@ -968,16 +968,16 @@ forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">Map.map</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; HashMap TriggerName (EventTriggerInfo b)
 forall (b :: BackendType). TableInfo b -&gt; EventTriggerInfoMap b
 </span><a href="Hasura.RQL.Types.Table.html#_tiEventTriggerInfoMap"><span class="hs-identifier hs-var hs-var">_tiEventTriggerInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b)
-</span><a href="#local-6989586621689666750"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
-</span><span id="line-254"></span><span>      </span><span id="local-6989586621689666715"><span class="annot"><span class="annottext">_mtRemoteSchemas :: Maybe Int
-</span><a href="#local-6989586621689666715"><span class="hs-identifier hs-var hs-var">_mtRemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMap -&gt; Int
+</span><a href="#local-6989586621689667427"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
+</span><span id="line-254"></span><span>      </span><span id="local-6989586621689667392"><span class="annot"><span class="annottext">_mtRemoteSchemas :: Maybe Int
+</span><a href="#local-6989586621689667392"><span class="hs-identifier hs-var hs-var">_mtRemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMap -&gt; Int
 forall k v. HashMap k v -&gt; Int
 </span><span class="hs-identifier hs-var">Map.size</span></span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaMap -&gt; Int) -&gt; Maybe RemoteSchemaMap -&gt; Maybe Int
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe RemoteSchemaMap
-</span><a href="#local-6989586621689666765"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span><span>
-</span><span id="line-255"></span><span>      </span><span id="local-6989586621689666714"><span class="annot"><span class="annottext">_mtFunctions :: Int
-</span><a href="#local-6989586621689666714"><span class="hs-identifier hs-var hs-var">_mtFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (FunctionName b) (FunctionInfo b) -&gt; Int
+</span><a href="#local-6989586621689667442"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span><span>
+</span><span id="line-255"></span><span>      </span><span id="local-6989586621689667391"><span class="annot"><span class="annottext">_mtFunctions :: Int
+</span><a href="#local-6989586621689667391"><span class="hs-identifier hs-var hs-var">_mtFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (FunctionName b) (FunctionInfo b) -&gt; Int
 forall k v. HashMap k v -&gt; Int
 </span><span class="hs-identifier hs-var">Map.size</span></span><span> </span><span class="annot"><span class="annottext">(HashMap (FunctionName b) (FunctionInfo b) -&gt; Int)
 -&gt; HashMap (FunctionName b) (FunctionInfo b) -&gt; Int
@@ -997,14 +997,14 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FunctionInfo b -&gt; SystemDefined
 forall (b :: BackendType). FunctionInfo b -&gt; SystemDefined
 </span><a href="Hasura.RQL.Types.Function.html#_fiSystemDefined"><span class="hs-identifier hs-var hs-var">_fiSystemDefined</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap (FunctionName b) (FunctionInfo b)
-</span><a href="#local-6989586621689666711"><span class="hs-identifier hs-var">sourceFunctionCache</span></a></span><span>
-</span><span id="line-256"></span><span>      </span><span id="local-6989586621689666710"><span class="annot"><span class="annottext">_mtActions :: Maybe ActionMetric
-</span><a href="#local-6989586621689666710"><span class="hs-identifier hs-var hs-var">_mtActions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActionCache -&gt; ActionMetric
+</span><a href="#local-6989586621689667388"><span class="hs-identifier hs-var">sourceFunctionCache</span></a></span><span>
+</span><span id="line-256"></span><span>      </span><span id="local-6989586621689667387"><span class="annot"><span class="annottext">_mtActions :: Maybe ActionMetric
+</span><a href="#local-6989586621689667387"><span class="hs-identifier hs-var hs-var">_mtActions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActionCache -&gt; ActionMetric
 </span><a href="Hasura.Server.Telemetry.html#computeActionsMetrics"><span class="hs-identifier hs-var">computeActionsMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionCache -&gt; ActionMetric)
 -&gt; Maybe ActionCache -&gt; Maybe ActionMetric
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe ActionCache
-</span><a href="#local-6989586621689666764"><span class="hs-identifier hs-var">actionCache</span></a></span><span>
+</span><a href="#local-6989586621689667441"><span class="hs-identifier hs-var">actionCache</span></a></span><span>
 </span><span id="line-257"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Metrics :: Int
 -&gt; Int
 -&gt; Int
@@ -1044,19 +1044,19 @@ _mtTables :: Int
 _mtServiceTimings :: Maybe ServiceTimingMetrics
 </span><a href="Hasura.Server.Telemetry.Types.html#_mtActions"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-258"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-259"></span><span>    </span><span id="local-6989586621689666750"><span class="annot"><span class="annottext">sourceTableCache :: HashMap (TableName b) (TableInfo b)
-</span><a href="#local-6989586621689666750"><span class="hs-identifier hs-var hs-var">sourceTableCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; HashMap (TableName b) (TableInfo b)
+</span><span id="line-259"></span><span>    </span><span id="local-6989586621689667427"><span class="annot"><span class="annottext">sourceTableCache :: HashMap (TableName b) (TableInfo b)
+</span><a href="#local-6989586621689667427"><span class="hs-identifier hs-var hs-var">sourceTableCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; HashMap (TableName b) (TableInfo b)
 forall (b :: BackendType). SourceInfo b -&gt; TableCache b
 </span><a href="Hasura.RQL.Types.Source.html#_siTables"><span class="hs-identifier hs-var hs-var">_siTables</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689666767"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
-</span><span id="line-260"></span><span>    </span><span id="local-6989586621689666711"><span class="annot"><span class="annottext">sourceFunctionCache :: HashMap (FunctionName b) (FunctionInfo b)
-</span><a href="#local-6989586621689666711"><span class="hs-identifier hs-var hs-var">sourceFunctionCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; HashMap (FunctionName b) (FunctionInfo b)
+</span><a href="#local-6989586621689667444"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
+</span><span id="line-260"></span><span>    </span><span id="local-6989586621689667388"><span class="annot"><span class="annottext">sourceFunctionCache :: HashMap (FunctionName b) (FunctionInfo b)
+</span><a href="#local-6989586621689667388"><span class="hs-identifier hs-var hs-var">sourceFunctionCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; HashMap (FunctionName b) (FunctionInfo b)
 forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 </span><a href="Hasura.RQL.Types.Source.html#_siFunctions"><span class="hs-identifier hs-var hs-var">_siFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689666767"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
-</span><span id="line-261"></span><span>    </span><span id="local-6989586621689666762"><span class="annot"><span class="annottext">countSourceTables :: (TableInfo b -&gt; Bool) -&gt; Int
-</span><a href="#local-6989586621689666762"><span class="hs-identifier hs-var hs-var">countSourceTables</span></a></span></span><span> </span><span id="local-6989586621689666695"><span class="annot"><span class="annottext">TableInfo b -&gt; Bool
-</span><a href="#local-6989586621689666695"><span class="hs-identifier hs-var">predicate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TableInfo b] -&gt; Int
+</span><a href="#local-6989586621689667444"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
+</span><span id="line-261"></span><span>    </span><span id="local-6989586621689667439"><span class="annot"><span class="annottext">countSourceTables :: (TableInfo b -&gt; Bool) -&gt; Int
+</span><a href="#local-6989586621689667439"><span class="hs-identifier hs-var hs-var">countSourceTables</span></a></span></span><span> </span><span id="local-6989586621689667372"><span class="annot"><span class="annottext">TableInfo b -&gt; Bool
+</span><a href="#local-6989586621689667372"><span class="hs-identifier hs-var">predicate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TableInfo b] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([TableInfo b] -&gt; Int)
 -&gt; ([TableInfo b] -&gt; [TableInfo b]) -&gt; [TableInfo b] -&gt; Int
@@ -1064,18 +1064,18 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; Bool) -&gt; [TableInfo b] -&gt; [TableInfo b]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; Bool
-</span><a href="#local-6989586621689666695"><span class="hs-identifier hs-var">predicate</span></a></span><span> </span><span class="annot"><span class="annottext">([TableInfo b] -&gt; Int) -&gt; [TableInfo b] -&gt; Int
+</span><a href="#local-6989586621689667372"><span class="hs-identifier hs-var">predicate</span></a></span><span> </span><span class="annot"><span class="annottext">([TableInfo b] -&gt; Int) -&gt; [TableInfo b] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b) -&gt; [TableInfo b]
 forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b)
-</span><a href="#local-6989586621689666750"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
+</span><a href="#local-6989586621689667427"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>
 </span><span id="line-262"></span><span>
-</span><span id="line-263"></span><span>    </span><span id="local-6989586621689666974"><span class="annot"><a href="#local-6989586621689666736"><span class="hs-identifier hs-type">calcPerms</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667011"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689666974"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667011"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>
-</span><span id="line-264"></span><span>    </span><span id="local-6989586621689666736"><span class="annot"><span class="annottext">calcPerms :: (RolePermInfo b -&gt; Maybe a) -&gt; [RolePermInfo b] -&gt; Int
-</span><a href="#local-6989586621689666736"><span class="hs-identifier hs-var hs-var">calcPerms</span></a></span></span><span> </span><span id="local-6989586621689666694"><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe a
-</span><a href="#local-6989586621689666694"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span id="local-6989586621689666693"><span class="annot"><span class="annottext">[RolePermInfo b]
-</span><a href="#local-6989586621689666693"><span class="hs-identifier hs-var">perms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; Int
+</span><span id="line-263"></span><span>    </span><span id="local-6989586621689667651"><span class="annot"><a href="#local-6989586621689667413"><span class="hs-identifier hs-type">calcPerms</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667688"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689667651"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667688"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>
+</span><span id="line-264"></span><span>    </span><span id="local-6989586621689667413"><span class="annot"><span class="annottext">calcPerms :: (RolePermInfo b -&gt; Maybe a) -&gt; [RolePermInfo b] -&gt; Int
+</span><a href="#local-6989586621689667413"><span class="hs-identifier hs-var hs-var">calcPerms</span></a></span></span><span> </span><span id="local-6989586621689667371"><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe a
+</span><a href="#local-6989586621689667371"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span id="local-6989586621689667370"><span class="annot"><span class="annottext">[RolePermInfo b]
+</span><a href="#local-6989586621689667370"><span class="hs-identifier hs-var">perms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([a] -&gt; Int) -&gt; [a] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1084,12 +1084,12 @@ forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe a
-</span><a href="#local-6989586621689666694"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
-</span><a href="#local-6989586621689666693"><span class="hs-identifier hs-var">perms</span></a></span><span>
+</span><a href="#local-6989586621689667371"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
+</span><a href="#local-6989586621689667370"><span class="hs-identifier hs-var">perms</span></a></span><span>
 </span><span id="line-265"></span><span>
-</span><span id="line-266"></span><span>    </span><span class="annot"><a href="#local-6989586621689666741"><span class="hs-identifier hs-type">permsOfTbl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667011"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667011"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-267"></span><span>    </span><span id="local-6989586621689666741"><span class="annot"><span class="annottext">permsOfTbl :: TableInfo b -&gt; [(RoleName, RolePermInfo b)]
-</span><a href="#local-6989586621689666741"><span class="hs-identifier hs-var hs-var">permsOfTbl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (RolePermInfo b) -&gt; [(RoleName, RolePermInfo b)]
+</span><span id="line-266"></span><span>    </span><span class="annot"><a href="#local-6989586621689667418"><span class="hs-identifier hs-type">permsOfTbl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667688"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689667688"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-267"></span><span>    </span><span id="local-6989586621689667418"><span class="annot"><span class="annottext">permsOfTbl :: TableInfo b -&gt; [(RoleName, RolePermInfo b)]
+</span><a href="#local-6989586621689667418"><span class="hs-identifier hs-var hs-var">permsOfTbl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (RolePermInfo b) -&gt; [(RoleName, RolePermInfo b)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">(HashMap RoleName (RolePermInfo b) -&gt; [(RoleName, RolePermInfo b)])
 -&gt; (TableInfo b -&gt; HashMap RoleName (RolePermInfo b))
@@ -1103,23 +1103,23 @@ forall (b :: BackendType). TableInfo b -&gt; RolePermInfoMap b
 </span><span id="line-269"></span><span class="hs-comment">-- | Compute the relevant metrics for actions from the action cache.</span><span>
 </span><span id="line-270"></span><span class="annot"><a href="Hasura.Server.Telemetry.html#computeActionsMetrics"><span class="hs-identifier hs-type">computeActionsMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#ActionCache"><span class="hs-identifier hs-type">ActionCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-type">ActionMetric</span></a></span><span>
 </span><span id="line-271"></span><span id="computeActionsMetrics"><span class="annot"><span class="annottext">computeActionsMetrics :: ActionCache -&gt; ActionMetric
-</span><a href="Hasura.Server.Telemetry.html#computeActionsMetrics"><span class="hs-identifier hs-var hs-var">computeActionsMetrics</span></a></span></span><span> </span><span id="local-6989586621689666689"><span class="annot"><span class="annottext">ActionCache
-</span><a href="#local-6989586621689666689"><span class="hs-identifier hs-var">actionCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Telemetry.html#computeActionsMetrics"><span class="hs-identifier hs-var hs-var">computeActionsMetrics</span></a></span></span><span> </span><span id="local-6989586621689667366"><span class="annot"><span class="annottext">ActionCache
+</span><a href="#local-6989586621689667366"><span class="hs-identifier hs-var">actionCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-272"></span><span>  </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int -&gt; Int -&gt; Int -&gt; ActionMetric
 </span><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-var">ActionMetric</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666687"><span class="hs-identifier hs-var">syncActionsLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666686"><span class="hs-identifier hs-var">asyncActionsLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666685"><span class="hs-identifier hs-var">queryActionsLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666684"><span class="hs-identifier hs-var">typeRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666683"><span class="hs-identifier hs-var">customTypesLen</span></a></span><span>
+</span><a href="#local-6989586621689667364"><span class="hs-identifier hs-var">syncActionsLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689667363"><span class="hs-identifier hs-var">asyncActionsLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689667362"><span class="hs-identifier hs-var">queryActionsLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689667361"><span class="hs-identifier hs-var">typeRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689667360"><span class="hs-identifier hs-var">customTypesLen</span></a></span><span>
 </span><span id="line-273"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-274"></span><span>    </span><span id="local-6989586621689666682"><span class="annot"><span class="annottext">actions :: [ActionInfo]
-</span><a href="#local-6989586621689666682"><span class="hs-identifier hs-var hs-var">actions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActionCache -&gt; [ActionInfo]
+</span><span id="line-274"></span><span>    </span><span id="local-6989586621689667359"><span class="annot"><span class="annottext">actions :: [ActionInfo]
+</span><a href="#local-6989586621689667359"><span class="hs-identifier hs-var hs-var">actions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActionCache -&gt; [ActionInfo]
 forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">ActionCache
-</span><a href="#local-6989586621689666689"><span class="hs-identifier hs-var">actionCache</span></a></span><span>
-</span><span id="line-275"></span><span>    </span><span id="local-6989586621689666687"><span class="annot"><span class="annottext">syncActionsLen :: Int
-</span><a href="#local-6989586621689666687"><span class="hs-identifier hs-var hs-var">syncActionsLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ActionInfo] -&gt; Int
+</span><a href="#local-6989586621689667366"><span class="hs-identifier hs-var">actionCache</span></a></span><span>
+</span><span id="line-275"></span><span>    </span><span id="local-6989586621689667364"><span class="annot"><span class="annottext">syncActionsLen :: Int
+</span><a href="#local-6989586621689667364"><span class="hs-identifier hs-var hs-var">syncActionsLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ActionInfo] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int)
 -&gt; ([ActionInfo] -&gt; [ActionInfo]) -&gt; [ActionInfo] -&gt; Int
@@ -1152,9 +1152,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int) -&gt; [ActionInfo] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ActionInfo]
-</span><a href="#local-6989586621689666682"><span class="hs-identifier hs-var">actions</span></a></span><span>
-</span><span id="line-276"></span><span>    </span><span id="local-6989586621689666686"><span class="annot"><span class="annottext">asyncActionsLen :: Int
-</span><a href="#local-6989586621689666686"><span class="hs-identifier hs-var hs-var">asyncActionsLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ActionInfo] -&gt; Int
+</span><a href="#local-6989586621689667359"><span class="hs-identifier hs-var">actions</span></a></span><span>
+</span><span id="line-276"></span><span>    </span><span id="local-6989586621689667363"><span class="annot"><span class="annottext">asyncActionsLen :: Int
+</span><a href="#local-6989586621689667363"><span class="hs-identifier hs-var hs-var">asyncActionsLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ActionInfo] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int)
 -&gt; ([ActionInfo] -&gt; [ActionInfo]) -&gt; [ActionInfo] -&gt; Int
@@ -1187,9 +1187,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int) -&gt; [ActionInfo] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ActionInfo]
-</span><a href="#local-6989586621689666682"><span class="hs-identifier hs-var">actions</span></a></span><span>
-</span><span id="line-277"></span><span>    </span><span id="local-6989586621689666685"><span class="annot"><span class="annottext">queryActionsLen :: Int
-</span><a href="#local-6989586621689666685"><span class="hs-identifier hs-var hs-var">queryActionsLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ActionInfo] -&gt; Int
+</span><a href="#local-6989586621689667359"><span class="hs-identifier hs-var">actions</span></a></span><span>
+</span><span id="line-277"></span><span>    </span><span id="local-6989586621689667362"><span class="annot"><span class="annottext">queryActionsLen :: Int
+</span><a href="#local-6989586621689667362"><span class="hs-identifier hs-var hs-var">queryActionsLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ActionInfo] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int)
 -&gt; ([ActionInfo] -&gt; [ActionInfo]) -&gt; [ActionInfo] -&gt; Int
@@ -1221,10 +1221,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int) -&gt; [ActionInfo] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ActionInfo]
-</span><a href="#local-6989586621689666682"><span class="hs-identifier hs-var">actions</span></a></span><span>
+</span><a href="#local-6989586621689667359"><span class="hs-identifier hs-var">actions</span></a></span><span>
 </span><span id="line-278"></span><span>
-</span><span id="line-279"></span><span>    </span><span id="local-6989586621689666675"><span class="annot"><span class="annottext">outputTypesLen :: Int
-</span><a href="#local-6989586621689666675"><span class="hs-identifier hs-var hs-var">outputTypesLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[GraphQLType] -&gt; Int
+</span><span id="line-279"></span><span>    </span><span id="local-6989586621689667352"><span class="annot"><span class="annottext">outputTypesLen :: Int
+</span><a href="#local-6989586621689667352"><span class="hs-identifier hs-var hs-var">outputTypesLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[GraphQLType] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([GraphQLType] -&gt; Int)
 -&gt; ([ActionInfo] -&gt; [GraphQLType]) -&gt; [ActionInfo] -&gt; Int
@@ -1255,9 +1255,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int) -&gt; [ActionInfo] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ActionInfo]
-</span><a href="#local-6989586621689666682"><span class="hs-identifier hs-var">actions</span></a></span><span>
-</span><span id="line-280"></span><span>    </span><span id="local-6989586621689666672"><span class="annot"><span class="annottext">inputTypesLen :: Int
-</span><a href="#local-6989586621689666672"><span class="hs-identifier hs-var hs-var">inputTypesLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(GType, AnnotatedInputType)] -&gt; Int
+</span><a href="#local-6989586621689667359"><span class="hs-identifier hs-var">actions</span></a></span><span>
+</span><span id="line-280"></span><span>    </span><span id="local-6989586621689667349"><span class="annot"><span class="annottext">inputTypesLen :: Int
+</span><a href="#local-6989586621689667349"><span class="hs-identifier hs-var hs-var">inputTypesLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(GType, AnnotatedInputType)] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([(GType, AnnotatedInputType)] -&gt; Int)
 -&gt; ([ActionInfo] -&gt; [(GType, AnnotatedInputType)])
@@ -1308,16 +1308,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int) -&gt; [ActionInfo] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ActionInfo]
-</span><a href="#local-6989586621689666682"><span class="hs-identifier hs-var">actions</span></a></span><span>
-</span><span id="line-281"></span><span>    </span><span id="local-6989586621689666683"><span class="annot"><span class="annottext">customTypesLen :: Int
-</span><a href="#local-6989586621689666683"><span class="hs-identifier hs-var hs-var">customTypesLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666672"><span class="hs-identifier hs-var">inputTypesLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621689667359"><span class="hs-identifier hs-var">actions</span></a></span><span>
+</span><span id="line-281"></span><span>    </span><span id="local-6989586621689667360"><span class="annot"><span class="annottext">customTypesLen :: Int
+</span><a href="#local-6989586621689667360"><span class="hs-identifier hs-var hs-var">customTypesLen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689667349"><span class="hs-identifier hs-var">inputTypesLen</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666675"><span class="hs-identifier hs-var">outputTypesLen</span></a></span><span>
+</span><a href="#local-6989586621689667352"><span class="hs-identifier hs-var">outputTypesLen</span></a></span><span>
 </span><span id="line-282"></span><span>
-</span><span id="line-283"></span><span>    </span><span id="local-6989586621689666684"><span class="annot"><span class="annottext">typeRelationships :: Int
-</span><a href="#local-6989586621689666684"><span class="hs-identifier hs-var hs-var">typeRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-283"></span><span>    </span><span id="local-6989586621689667361"><span class="annot"><span class="annottext">typeRelationships :: Int
+</span><a href="#local-6989586621689667361"><span class="hs-identifier hs-var hs-var">typeRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-284"></span><span>      </span><span class="annot"><span class="annottext">[RelationshipName] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([RelationshipName] -&gt; Int)
@@ -1335,8 +1335,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; [ActionInfo] -&gt; [RelationshipName]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span>
-</span><span id="line-286"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689666667"><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689666667"><span class="hs-identifier hs-var">aInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(GType, AnnotatedOutputType) -&gt; AnnotatedOutputType
+</span><span id="line-286"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689667344"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689667344"><span class="hs-identifier hs-var">aInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(GType, AnnotatedOutputType) -&gt; AnnotatedOutputType
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">((GType, AnnotatedOutputType) -&gt; AnnotatedOutputType)
 -&gt; (ActionInfo -&gt; (GType, AnnotatedOutputType))
@@ -1348,9 +1348,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; ActionInfo -&gt; AnnotatedOutputType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689666667"><span class="hs-identifier hs-var">aInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-287"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AOTObject"><span class="hs-identifier hs-type">AOTObject</span></a></span><span> </span><span id="local-6989586621689666664"><span class="annot"><span class="annottext">AnnotatedObjectType
-</span><a href="#local-6989586621689666664"><span class="hs-identifier hs-var">aot</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(AnnotatedTypeRelationship -&gt; RelationshipName)
+</span><a href="#local-6989586621689667344"><span class="hs-identifier hs-var">aInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-287"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AOTObject"><span class="hs-identifier hs-type">AOTObject</span></a></span><span> </span><span id="local-6989586621689667341"><span class="annot"><span class="annottext">AnnotatedObjectType
+</span><a href="#local-6989586621689667341"><span class="hs-identifier hs-var">aot</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(AnnotatedTypeRelationship -&gt; RelationshipName)
 -&gt; [AnnotatedTypeRelationship] -&gt; [RelationshipName]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedTypeRelationship -&gt; RelationshipName
@@ -1359,14 +1359,14 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjectType -&gt; [AnnotatedTypeRelationship]
 </span><a href="Hasura.RQL.Types.CustomTypes.html#_aotRelationships"><span class="hs-identifier hs-var hs-var">_aotRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjectType
-</span><a href="#local-6989586621689666664"><span class="hs-identifier hs-var">aot</span></a></span><span>
+</span><a href="#local-6989586621689667341"><span class="hs-identifier hs-var">aot</span></a></span><span>
 </span><span id="line-288"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AOTScalar"><span class="hs-identifier hs-type">AOTScalar</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedScalarType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-289"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-290"></span><span>        </span><span class="annot"><span class="annottext">([ActionInfo] -&gt; Int) -&gt; [ActionInfo] -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ActionInfo]
-</span><a href="#local-6989586621689666682"><span class="hs-identifier hs-var">actions</span></a></span><span>
+</span><a href="#local-6989586621689667359"><span class="hs-identifier hs-var">actions</span></a></span><span>
 </span><span id="line-291"></span><span>
 </span><span id="line-292"></span><span class="hs-comment">-- | Decide which topic (telemetry table) we should use based on the version.</span><span>
 </span><span id="line-293"></span><span class="annot"><a href="Hasura.Server.Telemetry.html#versionToTopic"><span class="hs-identifier hs-type">versionToTopic</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Topic"><span class="hs-identifier hs-type">Topic</span></a></span><span>
