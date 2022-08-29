@@ -37,6 +37,9 @@ data RQLMetadataV1
   | RMDropSource DropSource
   | RMRenameSource !RenameSource
   | RMUpdateSource !(AnyBackend UpdateSource)
+  | RMListSourceKinds !ListSourceKinds
+  | RMGetSourceTables !GetSourceTables
+  | RMGetTableInfo !GetTableInfo
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMUntrackTable !(AnyBackend UntrackTable)
@@ -121,7 +124,6 @@ data RQLMetadataV1
   | -- GraphQL Data Connectors
     RMDCAddAgent !DCAddAgent
   | RMDCDeleteAgent !DCDeleteAgent
-  | RMListSourceKinds !ListSourceKinds
   | -- Custom types
     RMSetCustomTypes !CustomTypes
   | -- Api limits

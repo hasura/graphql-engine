@@ -67,8 +67,8 @@ instance HasCodec TableInfo where
 
 newtype ForeignKeys = ForeignKeys {unConstraints :: HashMap ConstraintName Constraint}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving newtype (FromJSON, ToJSON)
   deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON) via Autodocodec ForeignKeys
 
 instance HasCodec ForeignKeys where
   codec = dimapCodec ForeignKeys unConstraints $ codec @(HashMap ConstraintName Constraint)

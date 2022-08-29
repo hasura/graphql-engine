@@ -4,8 +4,7 @@ module Test.SchemaSpec (spec) where
 
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (sort, sortOn)
-import Hasura.Backends.DataConnector.API (Config, Constraint (..), ForeignKeys (..), Routes (..), SchemaResponse (..), SourceName, TableInfo (..))
-import Hasura.Backends.DataConnector.API.V0.Column (ColumnInfo (..))
+import Hasura.Backends.DataConnector.API qualified as API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
 import Test.Data qualified as Data
@@ -15,24 +14,24 @@ import Prelude
 
 --------------------------------------------------------------------------------
 
-removeDescriptionFromColumn :: ColumnInfo -> ColumnInfo
-removeDescriptionFromColumn c = c {dciDescription = Nothing}
+removeDescriptionFromColumn :: API.ColumnInfo -> API.ColumnInfo
+removeDescriptionFromColumn c = c {API.dciDescription = Nothing}
 
-removeDescription :: TableInfo -> TableInfo
-removeDescription t@TableInfo {dtiColumns} = t {dtiDescription = Nothing, dtiColumns = newColumns}
+removeDescription :: API.TableInfo -> API.TableInfo
+removeDescription t@API.TableInfo {API.dtiColumns} = t {API.dtiDescription = Nothing, API.dtiColumns = newColumns}
   where
     newColumns = map removeDescriptionFromColumn dtiColumns
 
-removeForeignKeys :: TableInfo -> TableInfo
-removeForeignKeys t = t {dtiForeignKeys = Nothing}
+removeForeignKeys :: API.TableInfo -> API.TableInfo
+removeForeignKeys t = t {API.dtiForeignKeys = Nothing}
 
-extractForeignKeys :: TableInfo -> [Constraint]
-extractForeignKeys = foldMap (HashMap.elems . unConstraints) . dtiForeignKeys
+extractForeignKeys :: API.TableInfo -> [API.Constraint]
+extractForeignKeys = foldMap (HashMap.elems . API.unConstraints) . API.dtiForeignKeys
 
-spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
+spec :: Client IO (NamedRoutes API.Routes) -> API.SourceName -> API.Config -> Spec
 spec api sourceName config = describe "schema API" $ do
   it "returns Chinook schema" $ do
-    tables <- (map removeDescription . sortOn dtiName . srTables) <$> (api // _schema) sourceName config
+    tables <- (map removeDescription . sortOn API.dtiName . API.srTables) <$> (api // API._schema) sourceName config
 
     -- NOTE: Constraint names arent guaranteed to be the same across
     -- Chinook backends so we compare Constraints without their names

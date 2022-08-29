@@ -8,13 +8,11 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (DataConnector), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
@@ -31,7 +29,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ DataConnector.setupFixtureAction
-                    sourceMetadata
+                    DataConnector.chinookStockMetadata
                     DataConnector.defaultBackendConfig
                     testEnv
                 ]
@@ -39,73 +37,6 @@ spec =
         ]
     )
     tests
-
-sourceMetadata :: Aeson.Value
-sourceMetadata =
-  let source = defaultSource DataConnector
-      backendType = defaultBackendTypeString DataConnector
-   in [yaml|
-name : *source
-kind: *backendType
-tables:
-  - table: [Album]
-    configuration:
-      custom_root_fields:
-        select: albums
-        select_by_pk: albums_by_pk
-      column_config:
-        AlbumId:
-          custom_name: id
-        Title:
-          custom_name: title
-        ArtistId:
-          custom_name: artist_id
-    object_relationships:
-      - name: artist
-        using:
-          manual_configuration:
-            remote_table: [Artist]
-            column_mapping:
-              ArtistId: ArtistId
-  - table: [Artist]
-    configuration:
-      custom_root_fields:
-        select: artists
-        select_by_pk: artists_by_pk
-      column_config:
-        ArtistId:
-          custom_name: id
-        Name:
-          custom_name: name
-    array_relationships:
-      - name: albums
-        using:
-          manual_configuration:
-            remote_table: [Album]
-            column_mapping:
-              ArtistId: ArtistId
-  - table: Playlist
-    array_relationships:
-    - name : Tracks
-      using:
-        foreign_key_constraint_on:
-          column: PlaylistId
-          table:
-          - PlaylistTrack
-  - table: PlaylistTrack
-    object_relationships:
-      - name: Playlist
-        using:
-          foreign_key_constraint_on: PlaylistId
-      - name: Track
-        using:
-          manual_configuration:
-            remote_table: [Track]
-            column_mapping:
-              TrackId: TrackId
-  - table: Track
-configuration: {}
-|]
 
 --------------------------------------------------------------------------------
 

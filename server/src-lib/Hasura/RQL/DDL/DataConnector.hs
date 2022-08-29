@@ -23,7 +23,6 @@ import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
-import Hasura.RQL.Types.Metadata (MetadataM (putMetadata))
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
@@ -59,7 +58,7 @@ runAddDataConnectorAgent DCAddAgent {..} = do
         oldMetadata & Metadata.metaBackendConfigs %~ BackendMap.modify @'Backend.DataConnector \oldMap ->
           Metadata.BackendConfigWrapper $ InsOrdHashMap.insert kind agent (coerce oldMap)
 
-  putMetadata modifiedMetadata
+  Metadata.putMetadata modifiedMetadata
   pure Common.successMsg
 
 --------------------------------------------------------------------------------
@@ -91,5 +90,5 @@ runDeleteDataConnectorAgent DCDeleteAgent {..} = do
               %~ BackendMap.alter @'Backend.DataConnector
                 (fmap (coerce . InsOrdHashMap.delete kind . Metadata.unBackendConfigWrapper))
 
-      putMetadata modifiedMetadata
+      Metadata.putMetadata modifiedMetadata
       pure Common.successMsg
