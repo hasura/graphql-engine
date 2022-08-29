@@ -8,7 +8,7 @@
 module Hasura.RQL.Types.Metadata.Common
   ( Actions,
     BackendConfigWrapper (..),
-    BackendSourceMetadata,
+    BackendSourceMetadata (..),
     CatalogState (..),
     CatalogStateType (..),
     ComputedFieldMetadata (..),
@@ -400,6 +400,7 @@ type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
 
 type InheritedRoles = InsOrdHashMap RoleName InheritedRole
 
+-- | Source configuration for a source of backend type @b@ as stored in the Metadata DB.
 data SourceMetadata b = SourceMetadata
   { _smName :: SourceName,
     _smKind :: BackendSourceKind b,
@@ -456,18 +457,18 @@ backendSourceMetadataCodec =
         else Nothing
 
     runBackendType :: BackendSourceMetadata -> BackendType
-    runBackendType input = AB.runBackend input \sourceMeta ->
+    runBackendType (BackendSourceMetadata input) = AB.runBackend input \sourceMeta ->
       backendTypeFromBackendSourceKind $ _smKind sourceMeta
 
 anySourceMetadataCodec :: (HasTag b) => JSONCodec (SourceMetadata b) -> JSONCodec BackendSourceMetadata
 anySourceMetadataCodec = dimapCodec dec enc
   where
     dec :: HasTag b => SourceMetadata b -> BackendSourceMetadata
-    dec = AB.mkAnyBackend
+    dec = BackendSourceMetadata . AB.mkAnyBackend
 
     -- This encoding function is partial, but that should be ok.
     enc :: HasTag b => BackendSourceMetadata -> SourceMetadata b
-    enc input = fromJust $ AB.unpackAnyBackend input
+    enc input = fromJust $ AB.unpackAnyBackend $ unBackendSourceMetadata input
 
 instance Backend b => HasCodec (SourceMetadata b) where
   codec =
@@ -492,24 +493,27 @@ mkSourceMetadata ::
   SourceCustomization ->
   BackendSourceMetadata
 mkSourceMetadata name backendSourceKind config customization =
-  AB.mkAnyBackend $
-    SourceMetadata
-      @b
-      name
-      backendSourceKind
-      mempty
-      mempty
-      config
-      Nothing
-      customization
+  BackendSourceMetadata $
+    AB.mkAnyBackend $
+      SourceMetadata
+        @b
+        name
+        backendSourceKind
+        mempty
+        mempty
+        config
+        Nothing
+        customization
 
-type BackendSourceMetadata = AB.AnyBackend SourceMetadata
+-- | Source configuration as stored in the Metadata DB for some existentialized backend.
+newtype BackendSourceMetadata = BackendSourceMetadata {unBackendSourceMetadata :: AB.AnyBackend SourceMetadata}
+  deriving newtype (Eq, Show)
 
 toSourceMetadata :: forall b. (Backend b) => Prism' BackendSourceMetadata (SourceMetadata b)
-toSourceMetadata = prism' AB.mkAnyBackend AB.unpackAnyBackend
+toSourceMetadata = prism' (BackendSourceMetadata . AB.mkAnyBackend) (AB.unpackAnyBackend . unBackendSourceMetadata)
 
 getSourceName :: BackendSourceMetadata -> SourceName
-getSourceName e = AB.dispatchAnyBackend @Backend e _smName
+getSourceName e = AB.dispatchAnyBackend @Backend (unBackendSourceMetadata e) _smName
 
 type Sources = InsOrdHashMap SourceName BackendSourceMetadata
 

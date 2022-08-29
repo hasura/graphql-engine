@@ -128,11 +128,8 @@ runRenameSource RenameSource {..} = do
     renameBackendSourceMetadata oldKey newKey m =
       case OMap.lookup oldKey m of
         Just val ->
-          OMap.insert
-            newKey
-            (AB.mapBackend val (renameSource newKey))
-            . OMap.delete oldKey
-            $ m
+          let renamedSource = BackendSourceMetadata (AB.mapBackend (unBackendSourceMetadata val) (renameSource newKey))
+           in OMap.insert newKey renamedSource $ OMap.delete oldKey $ m
         Nothing -> m
 
     renameSource :: forall b. SourceName -> SourceMetadata b -> SourceMetadata b
