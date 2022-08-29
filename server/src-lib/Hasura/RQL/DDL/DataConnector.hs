@@ -17,7 +17,9 @@ import Data.Aeson (FromJSON, ToJSON, (.:), (.=))
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.NonEmpty (NonEmptyText)
+import Data.Text.NonEmpty qualified as Text.NE
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
+import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
@@ -72,16 +74,22 @@ instance FromJSON DCDeleteAgent where
 instance ToJSON DCDeleteAgent where
   toJSON DCDeleteAgent {..} = Aeson.object ["name" .= _gdcrName]
 
-runDeleteDataConnectorAgent :: (Metadata.MetadataM m) => DCDeleteAgent -> m EncJSON
+runDeleteDataConnectorAgent :: (Metadata.MetadataM m, MonadError Error.QErr m) => DCDeleteAgent -> m EncJSON
 runDeleteDataConnectorAgent DCDeleteAgent {..} = do
   let kind = DC.Types.DataConnectorName _gdcrName
 
   oldMetadata <- Metadata.getMetadata
 
-  let modifiedMetadata =
-        oldMetadata & Metadata.metaBackendConfigs
-          %~ BackendMap.alter @'Backend.DataConnector
-            (fmap (coerce . InsOrdHashMap.delete kind . Metadata.unBackendConfigWrapper))
+  let kindExists = do
+        agentMap <- BackendMap.lookup @'Backend.DataConnector $ Metadata._metaBackendConfigs oldMetadata
+        InsOrdHashMap.lookup kind $ Metadata.unBackendConfigWrapper agentMap
+  case kindExists of
+    Nothing -> Error.throw400 Error.NotFound $ "DC Agent '" <> Text.NE.unNonEmptyText _gdcrName <> "' not found"
+    Just _ -> do
+      let modifiedMetadata =
+            oldMetadata & Metadata.metaBackendConfigs
+              %~ BackendMap.alter @'Backend.DataConnector
+                (fmap (coerce . InsOrdHashMap.delete kind . Metadata.unBackendConfigWrapper))
 
-  putMetadata modifiedMetadata
-  pure Common.successMsg
+      putMetadata modifiedMetadata
+      pure Common.successMsg
