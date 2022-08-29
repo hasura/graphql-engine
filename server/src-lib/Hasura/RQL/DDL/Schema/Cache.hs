@@ -610,7 +610,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           sourceRoles =
             HS.fromList $
               concat $
-                OMap.elems sources >>= \e ->
+                OMap.elems sources >>= \(BackendSourceMetadata e) ->
                   AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _ _ _) -> do
                     table <- OMap.elems tables
                     pure $
@@ -1335,11 +1335,11 @@ instance (Backend b) => Inc.Cacheable (BackendConfigAndSourceMetadata b)
 
 joinBackendConfigsToSources ::
   BackendMap BackendConfigWrapper ->
-  InsOrdHashMap SourceName (AB.AnyBackend SourceMetadata) ->
+  InsOrdHashMap SourceName BackendSourceMetadata ->
   InsOrdHashMap SourceName (AB.AnyBackend BackendConfigAndSourceMetadata)
 joinBackendConfigsToSources backendConfigs sources =
   flip OMap.map sources $ \abSourceMetadata ->
-    AB.dispatchAnyBackend @Backend abSourceMetadata $ \(sourceMetadata :: SourceMetadata b) ->
+    AB.dispatchAnyBackend @Backend (unBackendSourceMetadata abSourceMetadata) $ \(sourceMetadata :: SourceMetadata b) ->
       let _bcasmBackendConfig = maybe mempty unBackendConfigWrapper (BackendMap.lookup @b backendConfigs)
           _bcasmSourceMetadata = sourceMetadata
        in AB.mkAnyBackend @b BackendConfigAndSourceMetadata {..}

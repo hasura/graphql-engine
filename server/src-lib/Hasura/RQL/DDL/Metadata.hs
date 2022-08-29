@@ -17,7 +17,7 @@ module Hasura.RQL.DDL.Metadata
   )
 where
 
-import Control.Lens ((.~), (^.), (^?))
+import Control.Lens (to, (.~), (^.), (^?))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
@@ -96,7 +96,7 @@ runClearMetadata _ = do
   metadata <- getMetadata
   -- Clean up all sources, drop hdb_catalog schema from source
   for_ (OMap.toList $ _metaSources metadata) $ \(sourceName, backendSourceMetadata) ->
-    AB.dispatchAnyBackend @BackendMetadata backendSourceMetadata \(_sourceMetadata :: SourceMetadata b) -> do
+    AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata backendSourceMetadata) \(_sourceMetadata :: SourceMetadata b) -> do
       sourceInfo <- askSourceInfo @b sourceName
       -- We do not bother dropping all dependencies on the source, because the
       -- metadata is going to be replaced with an empty metadata. And dropping the
@@ -108,7 +108,7 @@ runClearMetadata _ = do
   -- We can infer whether the server is started with `--database-url` option
   -- (or corresponding env variable) by checking the existence of @'defaultSource'
   -- in current metadata.
-  let maybeDefaultSourceMetadata = metadata ^? metaSources . ix defaultSource
+  let maybeDefaultSourceMetadata = metadata ^? metaSources . ix defaultSource . to unBackendSourceMetadata
       emptyMetadata' = case maybeDefaultSourceMetadata of
         Nothing -> emptyMetadata
         Just exists ->
@@ -116,16 +116,17 @@ runClearMetadata _ = do
           -- which contains only default source without any tables and functions.
           let emptyDefaultSource =
                 AB.dispatchAnyBackend @Backend exists \(s :: SourceMetadata b) ->
-                  AB.mkAnyBackend @b $
-                    SourceMetadata
-                      @b
-                      defaultSource
-                      (_smKind @b s)
-                      mempty
-                      mempty
-                      (_smConfiguration @b s)
-                      Nothing
-                      emptySourceCustomization
+                  BackendSourceMetadata $
+                    AB.mkAnyBackend @b $
+                      SourceMetadata
+                        @b
+                        defaultSource
+                        (_smKind @b s)
+                        mempty
+                        mempty
+                        (_smConfiguration @b s)
+                        Nothing
+                        emptySourceCustomization
            in emptyMetadata
                 & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'
@@ -205,11 +206,12 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
         onNothing maybeDefaultSourceMetadata $
           throw400 NotSupported "cannot import metadata without sources since no default source is defined"
       let newDefaultSourceMetadata =
-            AB.mkAnyBackend
-              defaultSourceMetadata
-                { _smTables = _mnsTables,
-                  _smFunctions = _mnsFunctions
-                }
+            BackendSourceMetadata $
+              AB.mkAnyBackend
+                defaultSourceMetadata
+                  { _smTables = _mnsTables,
+                    _smFunctions = _mnsFunctions
+                  }
       pure $
         Metadata
           (OMap.singleton defaultSource newDefaultSourceMetadata)
@@ -328,7 +330,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
       -- using `DROP IF EXISTS..` meaning this silently fails without throwing an error.
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
         onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
-          compose source newBackendSourceMetadata oldBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
+          compose source (unBackendSourceMetadata newBackendSourceMetadata) (unBackendSourceMetadata oldBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               let oldTriggersMap = getTriggersMap oldSourceMetadata
                   newTriggersMap = getTriggersMap newSourceMetadata
@@ -373,7 +375,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ SB.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
 
-    dispatch = AB.dispatchAnyBackend @BackendEventTrigger
+    dispatch (BackendSourceMetadata bs) = AB.dispatchAnyBackend @BackendEventTrigger bs
 
 -- | Only includes the cron triggers with `included_in_metadata` set to `True`
 processCronTriggersMetadata :: Metadata -> Metadata

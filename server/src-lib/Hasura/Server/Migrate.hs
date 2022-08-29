@@ -159,7 +159,7 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
                         defaultSourceConfig
                         Nothing
                         emptySourceCustomization
-                  sources = OMap.singleton defaultSource defaultSourceMetadata
+                  sources = OMap.singleton defaultSource $ BackendSourceMetadata defaultSourceMetadata
                in emptyMetadata {_metaSources = sources}
 
       liftTx $ insertMetadataInCatalog emptyMetadata'
@@ -326,8 +326,9 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
           let metadataV3 =
                 let MetadataNoSources {..} = metadataV2
                     defaultSourceMetadata =
-                      AB.mkAnyBackend $
-                        SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization
+                      BackendSourceMetadata $
+                        AB.mkAnyBackend $
+                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization
                  in Metadata
                       (OMap.singleton defaultSource defaultSourceMetadata)
                       _mnsRemoteSchemas
@@ -356,7 +357,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                 MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
           metadataV2 <- case OMap.toList _metaSources of
             [] -> pure emptyMetadataNoSources
-            [(_, exists)] ->
+            [(_, BackendSourceMetadata exists)] ->
               pure $ case AB.unpackAnyBackend exists of
                 Nothing -> emptyMetadataNoSources
                 Just SourceMetadata {..} ->

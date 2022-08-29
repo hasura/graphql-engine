@@ -56,7 +56,7 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection (SetGraphqlIntrospectionOptio
 import Hasura.RQL.Types.Metadata.Common
   ( Actions,
     BackendConfigWrapper (..),
-    BackendSourceMetadata,
+    BackendSourceMetadata (..),
     ComputedFieldMetadata (..),
     CronTriggers,
     Endpoints,
@@ -103,7 +103,7 @@ sourcesToOrdJSONList sources =
     map sourceMetaToOrdJSON $ sortOn getSourceName $ OM.elems sources
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
-    sourceMetaToOrdJSON exists =
+    sourceMetaToOrdJSON (BackendSourceMetadata exists) =
       AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
             sourceKindPair = ("kind", AO.toOrdered _smKind)
