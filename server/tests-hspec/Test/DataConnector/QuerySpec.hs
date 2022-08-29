@@ -84,15 +84,19 @@ tables:
             remote_table: [Album]
             column_mapping:
               ArtistId: ArtistId
-  - table: [Playlist]
-  - table: [PlaylistTrack]
+  - table: Playlist
+    array_relationships:
+    - name : Tracks
+      using:
+        foreign_key_constraint_on:
+          column: PlaylistId
+          table:
+          - PlaylistTrack
+  - table: PlaylistTrack
     object_relationships:
       - name: Playlist
         using:
-          manual_configuration:
-            remote_table: [Playlist]
-            column_mapping:
-              PlaylistId: PlaylistId
+          foreign_key_constraint_on: PlaylistId
       - name: Track
         using:
           manual_configuration:
@@ -218,59 +222,109 @@ tests opts = describe "Queries" $ do
         |]
 
   describe "Array Relationships" $ do
-    it "joins on album id" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
-              query getArtist {
-                artists_by_pk(id: 1) {
-                  id
-                  name
-                  albums {
-                    title
+    describe "Manual" $ do
+      it "joins on album id" $ \(testEnvironment, _) ->
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+                query getArtist {
+                  artists_by_pk(id: 1) {
+                    id
+                    name
+                    albums {
+                      title
+                    }
                   }
                 }
-              }
-            |]
-        )
-        [yaml|
-          data:
-            artists_by_pk:
-              name: AC/DC
-              id: 1
-              albums:
-                - title: For Those About To Rock We Salute You
-                - title: Let There Be Rock
-        |]
+              |]
+          )
+          [yaml|
+            data:
+              artists_by_pk:
+                name: AC/DC
+                id: 1
+                albums:
+                  - title: For Those About To Rock We Salute You
+                  - title: Let There Be Rock
+          |]
+
+    describe "Foreign Key Constraint On" $ do
+      it "joins on PlaylistId" $ \(testEnvironment, _) ->
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+                query getPlaylist {
+                    Playlist_by_pk(PlaylistId: 1) {
+                      Tracks (limit: 3) {
+                        TrackId
+                      }
+                    }
+                }
+              |]
+          )
+          [yaml|
+            data:
+              Playlist_by_pk:
+                Tracks:
+                - TrackId: 3402
+                - TrackId: 3389
+                - TrackId: 3390
+          |]
 
   describe "Object Relationships" $ do
-    it "joins on artist id" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
-              query getAlbum {
-                albums_by_pk(id: 1) {
-                  id
-                  title
-                  artist {
-                    name
+    describe "Manual" $ do
+      it "joins on artist id" $ \(testEnvironment, _) ->
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+                query getAlbum {
+                  albums_by_pk(id: 1) {
+                    id
+                    title
+                    artist {
+                      name
+                    }
                   }
                 }
-              }
-            |]
-        )
-        [yaml|
-          data:
-            albums_by_pk:
-              id: 1
-              title: "For Those About To Rock We Salute You"
-              artist:
-                name: "AC/DC"
-        |]
+              |]
+          )
+          [yaml|
+            data:
+              albums_by_pk:
+                id: 1
+                title: "For Those About To Rock We Salute You"
+                artist:
+                  name: "AC/DC"
+          |]
+
+    describe "Foreign Key Constraint On" $ do
+      it "joins on PlaylistId" $ \(testEnvironment, _) ->
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+                query getPlaylist {
+                    PlaylistTrack_by_pk(PlaylistId: 1, TrackId: 2) {
+                      Playlist {
+                        Name
+                      }
+                    }
+                }
+              |]
+          )
+          [yaml|
+            data:
+              PlaylistTrack_by_pk:
+                Playlist:
+                  Name: "Music"
+          |]
 
   describe "Where Clause Tests" $ do
     it "works with '_in' predicate" $ \(testEnvironment, _) ->

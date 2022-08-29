@@ -1249,6 +1249,7 @@ test-suite tests-hspec
     Test.BigQuery.Schema.RunSQLSpec
     Test.BigQuery.TypeInterpretationSpec
     Test.DataConnector.AggregateQuerySpec
+    Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
