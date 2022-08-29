@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- |</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- This module holds functions and data types used for logging at the GraphQL</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- layer. In contrast with, logging at the HTTP server layer.</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Logging</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier">QueryLog</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#GeneratedQuery"><span class="hs-identifier">GeneratedQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier">MonadQueryLog</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKind"><span class="hs-identifier">QueryLogKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html"><span class="hs-identifier">Hasura.GraphQL.Namespace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier">RootFieldAlias</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.HTTP.Protocol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier">GQLReqUnparsed</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier">RequestId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier">TraceT</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- | A GraphQL query, optionally generated SQL, and the request id makes up the</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- | 'QueryLog'</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">data</span><span> </span><span id="QueryLog"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-var">QueryLog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryLog"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-var">QueryLog</span></a></span></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_qlQuery"><span class="annot"><span class="annottext">QueryLog -&gt; GQLReqUnparsed
+</span><a href="Hasura.GraphQL.Logging.html#_qlQuery"><span class="hs-identifier hs-var hs-var">_qlQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span id="_qlGeneratedSql"><span class="annot"><span class="annottext">QueryLog -&gt; Maybe (RootFieldAlias, GeneratedQuery)
+</span><a href="Hasura.GraphQL.Logging.html#_qlGeneratedSql"><span class="hs-identifier hs-var hs-var">_qlGeneratedSql</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#GeneratedQuery"><span class="hs-identifier hs-type">GeneratedQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span id="_qlRequestId"><span class="annot"><span class="annottext">QueryLog -&gt; RequestId
+</span><a href="Hasura.GraphQL.Logging.html#_qlRequestId"><span class="hs-identifier hs-var hs-var">_qlRequestId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span id="_qlKind"><span class="annot"><span class="annottext">QueryLog -&gt; QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.html#_qlKind"><span class="hs-identifier hs-var hs-var">_qlKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKind"><span class="hs-identifier hs-type">QueryLogKind</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">data</span><span> </span><span id="QueryLogKind"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKind"><span class="hs-identifier hs-var">QueryLogKind</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="QueryLogKindDatabase"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKindDatabase"><span class="hs-identifier hs-var">QueryLogKindDatabase</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QueryLogKindAction"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKindAction"><span class="hs-identifier hs-var">QueryLogKindAction</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QueryLogKindRemoteSchema"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKindRemoteSchema"><span class="hs-identifier hs-var">QueryLogKindRemoteSchema</span></a></span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QueryLogKindCached"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKindCached"><span class="hs-identifier hs-var">QueryLogKindCached</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QueryLogKindIntrospection"><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKindIntrospection"><span class="hs-identifier hs-var">QueryLogKindIntrospection</span></a></span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689361398"><span id="local-6989586621689361400"><span id="local-6989586621689361402"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLogKind"><span class="hs-identifier hs-type">QueryLogKind</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621689361396"><span class="annot"><span class="annottext">toJSON :: QueryLogKind -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.html#QueryLogKindDatabase"><span class="hs-identifier hs-var">QueryLogKindDatabase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;database&quot;</span></span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.html#QueryLogKindAction"><span class="hs-identifier hs-var">QueryLogKindAction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;action&quot;</span></span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.html#QueryLogKindRemoteSchema"><span class="hs-identifier hs-var">QueryLogKindRemoteSchema</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;remote-schema&quot;</span></span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.html#QueryLogKindCached"><span class="hs-identifier hs-var">QueryLogKindCached</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;cached&quot;</span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.html#QueryLogKindIntrospection"><span class="hs-identifier hs-var">QueryLogKindIntrospection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;introspection&quot;</span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="GeneratedQuery"><span class="annot"><a href="Hasura.GraphQL.Logging.html#GeneratedQuery"><span class="hs-identifier hs-var">GeneratedQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GeneratedQuery"><span class="annot"><a href="Hasura.GraphQL.Logging.html#GeneratedQuery"><span class="hs-identifier hs-var">GeneratedQuery</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_gqQueryString"><span class="annot"><span class="annottext">GeneratedQuery -&gt; Text
+</span><a href="Hasura.GraphQL.Logging.html#_gqQueryString"><span class="hs-identifier hs-var hs-var">_gqQueryString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span id="_gqPreparedArgs"><span class="annot"><span class="annottext">GeneratedQuery -&gt; Value
+</span><a href="Hasura.GraphQL.Logging.html#_gqPreparedArgs"><span class="hs-identifier hs-var hs-var">_gqPreparedArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689361385"><span id="local-6989586621689361387"><span id="local-6989586621689361389"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-type">QueryLog</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621689361384"><span class="annot"><span class="annottext">toJSON :: QueryLog -&gt; Value
+</span><a href="#local-6989586621689361384"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-type">QueryLog</span></a></span><span> </span><span id="local-6989586621689361383"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621689361383"><span class="hs-identifier hs-var">gqlQuery</span></a></span></span><span> </span><span id="local-6989586621689361382"><span class="annot"><span class="annottext">Maybe (RootFieldAlias, GeneratedQuery)
+</span><a href="#local-6989586621689361382"><span class="hs-identifier hs-var">generatedQuery</span></a></span></span><span> </span><span id="local-6989586621689361381"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621689361381"><span class="hs-identifier hs-var">reqId</span></a></span></span><span> </span><span id="local-6989586621689361380"><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="#local-6989586621689361380"><span class="hs-identifier hs-var">kind</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-55"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; GQLReqUnparsed -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621689361383"><span class="hs-identifier hs-var">gqlQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>        </span><span class="hs-comment">-- NOTE: this customizes the default JSON instance of a pair</span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;generated_sql&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe (HashMap Text GeneratedQuery) -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">((RootFieldAlias, GeneratedQuery) -&gt; HashMap Text GeneratedQuery)
+-&gt; Maybe (RootFieldAlias, GeneratedQuery)
+-&gt; Maybe (HashMap Text GeneratedQuery)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(RootFieldAlias, GeneratedQuery) -&gt; HashMap Text GeneratedQuery
+forall b v. ToTxt b =&gt; (b, v) -&gt; HashMap Text v
+</span><a href="#local-6989586621689361377"><span class="hs-identifier hs-var">fromPair</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (RootFieldAlias, GeneratedQuery)
+</span><a href="#local-6989586621689361382"><span class="hs-identifier hs-var">generatedQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;request_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RequestId -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621689361381"><span class="hs-identifier hs-var">reqId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;kind&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; QueryLogKind -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="#local-6989586621689361380"><span class="hs-identifier hs-var">kind</span></a></span><span>
+</span><span id="line-60"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621689361377"><span class="annot"><span class="annottext">fromPair :: (b, v) -&gt; HashMap Text v
+</span><a href="#local-6989586621689361377"><span class="hs-identifier hs-var hs-var">fromPair</span></a></span></span><span> </span><span id="local-6989586621689361376"><span class="annot"><span class="annottext">(b, v)
+</span><a href="#local-6989586621689361376"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Text, v)] -&gt; HashMap Text v
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">(b -&gt; Text) -&gt; (b, v) -&gt; (Text, v)
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; a (b, d) (c, d)
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(b, v)
+</span><a href="#local-6989586621689361376"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689361367"><span id="local-6989586621689361369"><span id="local-6989586621689361371"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#GeneratedQuery"><span class="hs-identifier hs-type">GeneratedQuery</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621689361366"><span class="annot"><span class="annottext">toJSON :: GeneratedQuery -&gt; Value
+</span><a href="#local-6989586621689361366"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Logging.html#GeneratedQuery"><span class="hs-identifier hs-type">GeneratedQuery</span></a></span><span> </span><span id="local-6989586621689361365"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689361365"><span class="hs-identifier hs-var">queryString</span></a></span></span><span> </span><span id="local-6989586621689361364"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689361364"><span class="hs-identifier hs-var">preparedArgs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-67"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689361365"><span class="hs-identifier hs-var">queryString</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;prepared_arguments&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689361364"><span class="hs-identifier hs-var">preparedArgs</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-type">QueryLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621689361360"><span class="annot"><span class="annottext">toEngineLog :: QueryLog -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689361358"><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361358"><span class="hs-identifier hs-var">ql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">L.LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
+</span><a href="Hasura.Logging.html#ELTQueryLog"><span class="hs-identifier hs-var">L.ELTQueryLog</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">QueryLog -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361358"><span class="hs-identifier hs-var">ql</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">class</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689361429"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="MonadQueryLog"><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-var">MonadQueryLog</span></a></span></span><span> </span><span id="local-6989586621689361429"><span class="annot"><a href="#local-6989586621689361429"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="logQueryLog"><span class="annot"><a href="Hasura.GraphQL.Logging.html#logQueryLog"><span class="hs-identifier hs-type">logQueryLog</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-type">QueryLog</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><a href="#local-6989586621689361429"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span id="local-6989586621689361353"><span id="local-6989586621689361354"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621689361353"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361354"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621689361349"><span class="annot"><span class="annottext">logQueryLog :: Logger Hasura -&gt; QueryLog -&gt; ExceptT e m ()
+</span><a href="#local-6989586621689361349"><span class="hs-identifier hs-var hs-var hs-var hs-var">logQueryLog</span></a></span></span><span> </span><span id="local-6989586621689361348"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361348"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689361347"><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361347"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; ExceptT e m ()
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; ExceptT e m ()) -&gt; m () -&gt; ExceptT e m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.html#logQueryLog"><span class="hs-identifier hs-var">logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361348"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361347"><span class="hs-identifier hs-var">l</span></a></span></span></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span id="local-6989586621689361344"><span id="local-6989586621689361345"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361345"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621689361344"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361345"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621689361341"><span class="annot"><span class="annottext">logQueryLog :: Logger Hasura -&gt; QueryLog -&gt; ReaderT r m ()
+</span><a href="#local-6989586621689361341"><span class="hs-identifier hs-var hs-var hs-var hs-var">logQueryLog</span></a></span></span><span> </span><span id="local-6989586621689361340"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361340"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689361339"><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361339"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; ReaderT r m ()
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; ReaderT r m ()) -&gt; m () -&gt; ReaderT r m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.html#logQueryLog"><span class="hs-identifier hs-var">logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361340"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361339"><span class="hs-identifier hs-var">l</span></a></span></span></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span id="local-6989586621689361338"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361338"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361338"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621689361335"><span class="annot"><span class="annottext">logQueryLog :: Logger Hasura -&gt; QueryLog -&gt; TraceT m ()
+</span><a href="#local-6989586621689361335"><span class="hs-identifier hs-var hs-var hs-var hs-var">logQueryLog</span></a></span></span><span> </span><span id="local-6989586621689361334"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361334"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689361333"><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361333"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; TraceT m ()
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; TraceT m ()) -&gt; m () -&gt; TraceT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.html#logQueryLog"><span class="hs-identifier hs-var">logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361334"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361333"><span class="hs-identifier hs-var">l</span></a></span></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span id="local-6989586621689361332"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361332"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MetadataStorageT"><span class="hs-identifier hs-type">MetadataStorageT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689361332"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621689361329"><span class="annot"><span class="annottext">logQueryLog :: Logger Hasura -&gt; QueryLog -&gt; MetadataStorageT m ()
+</span><a href="#local-6989586621689361329"><span class="hs-identifier hs-var hs-var hs-var hs-var">logQueryLog</span></a></span></span><span> </span><span id="local-6989586621689361328"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361328"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689361327"><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361327"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; MetadataStorageT m ()
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; MetadataStorageT m ()) -&gt; m () -&gt; MetadataStorageT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.html#logQueryLog"><span class="hs-identifier hs-var">logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689361328"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">QueryLog
+</span><a href="#local-6989586621689361327"><span class="hs-identifier hs-var">l</span></a></span></span><span>
+</span><span id="line-91"></span></pre></body></html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- |</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- Definitions for schema building configuration.</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Schema.Options</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#SchemaOptions"><span class="hs-identifier">SchemaOptions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier">StringifyNumbers</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier">DangerouslyCollapseBooleans</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier">InferFunctionPermissions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier">RemoteSchemaPermissions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier">OptimizePermissionFilters</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Value</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">withBool</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- | The record of options required to build the schema. This includes options</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- that can be enabled with 'Hasura.Server.Types.ExperimentalFeature' flags.</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">data</span><span> </span><span id="SchemaOptions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#SchemaOptions"><span class="hs-identifier hs-var">SchemaOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaOptions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#SchemaOptions"><span class="hs-identifier hs-var">SchemaOptions</span></a></span></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="soStringifyNumbers"><span class="annot"><span class="annottext">SchemaOptions -&gt; StringifyNumbers
+</span><a href="Hasura.GraphQL.Schema.Options.html#soStringifyNumbers"><span class="hs-identifier hs-var hs-var">soStringifyNumbers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span id="soDangerousBooleanCollapse"><span class="annot"><span class="annottext">SchemaOptions -&gt; DangerouslyCollapseBooleans
+</span><a href="Hasura.GraphQL.Schema.Options.html#soDangerousBooleanCollapse"><span class="hs-identifier hs-var hs-var">soDangerousBooleanCollapse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span id="soInferFunctionPermissions"><span class="annot"><span class="annottext">SchemaOptions -&gt; InferFunctionPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#soInferFunctionPermissions"><span class="hs-identifier hs-var hs-var">soInferFunctionPermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span id="soOptimizePermissionFilters"><span class="annot"><span class="annottext">SchemaOptions -&gt; OptimizePermissionFilters
+</span><a href="Hasura.GraphQL.Schema.Options.html#soOptimizePermissionFilters"><span class="hs-identifier hs-var hs-var">soOptimizePermissionFilters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-type">OptimizePermissionFilters</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- | Should we represent numbers in our responses as numbers, or strings?</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- Some backends can return numbers that exceed the bounds of JSON's own</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- number type. In these cases, we can use stringified versions of these</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- numbers to avoid this problem.</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="StringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">StringifyNumbers</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">StringifyNumbers</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tStringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Don'tStringifyNumbers</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689258560"><span id="local-6989586621689258562"><span class="annot"><span class="annottext">StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
+(StringifyNumbers -&gt; StringifyNumbers -&gt; Bool)
+-&gt; (StringifyNumbers -&gt; StringifyNumbers -&gt; Bool)
+-&gt; Eq StringifyNumbers
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
+$c/= :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
+== :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
+$c== :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689258553"><span id="local-6989586621689258555"><span id="local-6989586621689258557"><span class="annot"><span class="annottext">Int -&gt; StringifyNumbers -&gt; ShowS
+[StringifyNumbers] -&gt; ShowS
+StringifyNumbers -&gt; String
+(Int -&gt; StringifyNumbers -&gt; ShowS)
+-&gt; (StringifyNumbers -&gt; String)
+-&gt; ([StringifyNumbers] -&gt; ShowS)
+-&gt; Show StringifyNumbers
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [StringifyNumbers] -&gt; ShowS
+$cshowList :: [StringifyNumbers] -&gt; ShowS
+show :: StringifyNumbers -&gt; String
+$cshow :: StringifyNumbers -&gt; String
+showsPrec :: Int -&gt; StringifyNumbers -&gt; ShowS
+$cshowsPrec :: Int -&gt; StringifyNumbers -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- | Should Boolean fields be collapsed to 'True' when a null value is</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- given? This was the behaviour of Hasura V1, and is now discouraged.</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">data</span><span> </span><span id="DangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tDangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tDangerouslyCollapseBooleans"><span class="hs-identifier hs-var">Don'tDangerouslyCollapseBooleans</span></a></span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689258546"><span id="local-6989586621689258548"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
+(DangerouslyCollapseBooleans
+ -&gt; DangerouslyCollapseBooleans -&gt; Bool)
+-&gt; (DangerouslyCollapseBooleans
+    -&gt; DangerouslyCollapseBooleans -&gt; Bool)
+-&gt; Eq DangerouslyCollapseBooleans
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
+$c/= :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
+== :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
+$c== :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689258540"><span id="local-6989586621689258542"><span id="local-6989586621689258544"><span class="annot"><span class="annottext">Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
+[DangerouslyCollapseBooleans] -&gt; ShowS
+DangerouslyCollapseBooleans -&gt; String
+(Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS)
+-&gt; (DangerouslyCollapseBooleans -&gt; String)
+-&gt; ([DangerouslyCollapseBooleans] -&gt; ShowS)
+-&gt; Show DangerouslyCollapseBooleans
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [DangerouslyCollapseBooleans] -&gt; ShowS
+$cshowList :: [DangerouslyCollapseBooleans] -&gt; ShowS
+show :: DangerouslyCollapseBooleans -&gt; String
+$cshow :: DangerouslyCollapseBooleans -&gt; String
+showsPrec :: Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
+$cshowsPrec :: Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- | Should we infer function permissions? If this flag is set to</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- 'InferFunctionPermissions', we may fail to build expression parsers</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- in 'buildQueryAndSubscriptionFields' for users with unrecognised roles.</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">data</span><span> </span><span id="InferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="InferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tInferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689258534"><span id="local-6989586621689258536"><span class="annot"><span class="annottext">InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
+(InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool)
+-&gt; (InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool)
+-&gt; Eq InferFunctionPermissions
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
+$c/= :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
+== :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
+$c== :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689258528"><span id="local-6989586621689258530"><span id="local-6989586621689258532"><span class="annot"><span class="annottext">Int -&gt; InferFunctionPermissions -&gt; ShowS
+[InferFunctionPermissions] -&gt; ShowS
+InferFunctionPermissions -&gt; String
+(Int -&gt; InferFunctionPermissions -&gt; ShowS)
+-&gt; (InferFunctionPermissions -&gt; String)
+-&gt; ([InferFunctionPermissions] -&gt; ShowS)
+-&gt; Show InferFunctionPermissions
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [InferFunctionPermissions] -&gt; ShowS
+$cshowList :: [InferFunctionPermissions] -&gt; ShowS
+show :: InferFunctionPermissions -&gt; String
+$cshow :: InferFunctionPermissions -&gt; String
+showsPrec :: Int -&gt; InferFunctionPermissions -&gt; ShowS
+$cshowsPrec :: Int -&gt; InferFunctionPermissions -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689258525"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621689258523"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InferFunctionPermissions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">String
+-&gt; (Bool -&gt; Parser InferFunctionPermissions)
+-&gt; Value
+-&gt; Parser InferFunctionPermissions
+forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">withBool</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;InferFunctionPermissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Bool -&gt; Parser InferFunctionPermissions)
+ -&gt; Value -&gt; Parser InferFunctionPermissions)
+-&gt; (Bool -&gt; Parser InferFunctionPermissions)
+-&gt; Value
+-&gt; Parser InferFunctionPermissions
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">InferFunctionPermissions -&gt; Parser InferFunctionPermissions
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(InferFunctionPermissions -&gt; Parser InferFunctionPermissions)
+-&gt; (Bool -&gt; InferFunctionPermissions)
+-&gt; Bool
+-&gt; Parser InferFunctionPermissions
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span><span>
+</span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689258514"><span id="local-6989586621689258516"><span id="local-6989586621689258518"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621689258512"><span class="annot"><span class="annottext">toJSON :: InferFunctionPermissions -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- | Should we enable remote schema permissions? If so, these permissions will</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- influence 'Hasura.GraphQL.Schema.buildGQLContext'.</span><span>
+</span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-var">RemoteSchemaPermissions</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="EnableRemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DisableRemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689258504"><span id="local-6989586621689258506"><span class="annot"><span class="annottext">RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
+(RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool)
+-&gt; (RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool)
+-&gt; Eq RemoteSchemaPermissions
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
+$c/= :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
+== :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
+$c== :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689258498"><span id="local-6989586621689258500"><span id="local-6989586621689258502"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaPermissions -&gt; ShowS
+[RemoteSchemaPermissions] -&gt; ShowS
+RemoteSchemaPermissions -&gt; String
+(Int -&gt; RemoteSchemaPermissions -&gt; ShowS)
+-&gt; (RemoteSchemaPermissions -&gt; String)
+-&gt; ([RemoteSchemaPermissions] -&gt; ShowS)
+-&gt; Show RemoteSchemaPermissions
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RemoteSchemaPermissions] -&gt; ShowS
+$cshowList :: [RemoteSchemaPermissions] -&gt; ShowS
+show :: RemoteSchemaPermissions -&gt; String
+$cshow :: RemoteSchemaPermissions -&gt; String
+showsPrec :: Int -&gt; RemoteSchemaPermissions -&gt; ShowS
+$cshowsPrec :: Int -&gt; RemoteSchemaPermissions -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689258495"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621689258494"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteSchemaPermissions
+</span><a href="#local-6989586621689258494"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="annottext">String
+-&gt; (Bool -&gt; Parser RemoteSchemaPermissions)
+-&gt; Value
+-&gt; Parser RemoteSchemaPermissions
+forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">withBool</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;RemoteSchemaPermissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Bool -&gt; Parser RemoteSchemaPermissions)
+ -&gt; Value -&gt; Parser RemoteSchemaPermissions)
+-&gt; (Bool -&gt; Parser RemoteSchemaPermissions)
+-&gt; Value
+-&gt; Parser RemoteSchemaPermissions
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">RemoteSchemaPermissions -&gt; Parser RemoteSchemaPermissions
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaPermissions -&gt; Parser RemoteSchemaPermissions)
+-&gt; (Bool -&gt; RemoteSchemaPermissions)
+-&gt; Bool
+-&gt; Parser RemoteSchemaPermissions
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689258487"><span id="local-6989586621689258489"><span id="local-6989586621689258491"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621689258486"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaPermissions -&gt; Value
+</span><a href="#local-6989586621689258486"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span class="hs-comment">-- | Should we attempt to deduplicate permission filters? This flag is used in</span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- 'Hasura.GraphQL.Schema.Select.relationshipField' to determine whether</span><span>
+</span><span id="line-82"></span><span class="hs-comment">-- certain row-level permission filters can be dropped in certain cases.</span><span>
+</span><span id="line-83"></span><span class="hs-keyword">data</span><span> </span><span id="OptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-var">OptimizePermissionFilters</span></a></span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-var">OptimizePermissionFilters</span></a></span></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tOptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tOptimizePermissionFilters"><span class="hs-identifier hs-var">Don'tOptimizePermissionFilters</span></a></span></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689258480"><span id="local-6989586621689258482"><span class="annot"><span class="annottext">OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
+(OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool)
+-&gt; (OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool)
+-&gt; Eq OptimizePermissionFilters
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
+$c/= :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
+== :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
+$c== :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689258474"><span id="local-6989586621689258476"><span id="local-6989586621689258478"><span class="annot"><span class="annottext">Int -&gt; OptimizePermissionFilters -&gt; ShowS
+[OptimizePermissionFilters] -&gt; ShowS
+OptimizePermissionFilters -&gt; String
+(Int -&gt; OptimizePermissionFilters -&gt; ShowS)
+-&gt; (OptimizePermissionFilters -&gt; String)
+-&gt; ([OptimizePermissionFilters] -&gt; ShowS)
+-&gt; Show OptimizePermissionFilters
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [OptimizePermissionFilters] -&gt; ShowS
+$cshowList :: [OptimizePermissionFilters] -&gt; ShowS
+show :: OptimizePermissionFilters -&gt; String
+$cshow :: OptimizePermissionFilters -&gt; String
+showsPrec :: Int -&gt; OptimizePermissionFilters -&gt; ShowS
+$cshowsPrec :: Int -&gt; OptimizePermissionFilters -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span></pre></body></html>

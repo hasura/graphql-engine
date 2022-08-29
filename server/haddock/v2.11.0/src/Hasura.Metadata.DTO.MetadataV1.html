@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV1</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier">MetadataV1</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">codec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">object</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">optionalField</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">requiredField</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OpenApi</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html"><span class="hs-identifier">Hasura.Metadata.DTO.Placeholder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier">PlaceholderArray</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html"><span class="hs-identifier">Hasura.Metadata.DTO.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#optionalVersionField"><span class="hs-identifier">optionalVersionField</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- | Revision 1 of the Metadata export format. Note that values of the types,</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- 'PlaceholderArray' and 'PlaceholderObject' are placeholders that will</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- eventually be expanded to represent more detail.</span><span>
+</span><span id="line-14"></span><span id="local-6989586621689257485"><span id="local-6989586621689257486"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV1"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-var">MetadataV1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV1"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-var">MetadataV1</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="metaV1Functions"><span class="annot"><span class="annottext">MetadataV1 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV1.html#metaV1Functions"><span class="hs-identifier hs-var hs-var">metaV1Functions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span id="metaV1RemoteSchemas"><span class="annot"><span class="annottext">MetadataV1 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV1.html#metaV1RemoteSchemas"><span class="hs-identifier hs-var hs-var">metaV1RemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span id="metaV1Tables"><span class="annot"><span class="annottext">MetadataV1 -&gt; PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV1.html#metaV1Tables"><span class="hs-identifier hs-var hs-var">metaV1Tables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689257475"><span id="local-6989586621689257477"><span id="local-6989586621689257479"><span class="annot"><span class="annottext">Int -&gt; MetadataV1 -&gt; ShowS
+[MetadataV1] -&gt; ShowS
+MetadataV1 -&gt; String
+(Int -&gt; MetadataV1 -&gt; ShowS)
+-&gt; (MetadataV1 -&gt; String)
+-&gt; ([MetadataV1] -&gt; ShowS)
+-&gt; Show MetadataV1
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [MetadataV1] -&gt; ShowS
+$cshowList :: [MetadataV1] -&gt; ShowS
+show :: MetadataV1 -&gt; String
+$cshow :: MetadataV1 -&gt; String
+showsPrec :: Int -&gt; MetadataV1 -&gt; ShowS
+$cshowsPrec :: Int -&gt; MetadataV1 -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689257470"><span id="local-6989586621689257472"><span class="annot"><span class="annottext">MetadataV1 -&gt; MetadataV1 -&gt; Bool
+(MetadataV1 -&gt; MetadataV1 -&gt; Bool)
+-&gt; (MetadataV1 -&gt; MetadataV1 -&gt; Bool) -&gt; Eq MetadataV1
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: MetadataV1 -&gt; MetadataV1 -&gt; Bool
+$c/= :: MetadataV1 -&gt; MetadataV1 -&gt; Bool
+== :: MetadataV1 -&gt; MetadataV1 -&gt; Bool
+$c== :: MetadataV1 -&gt; MetadataV1 -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. MetadataV1 -&gt; Rep MetadataV1 x)
+-&gt; (forall x. Rep MetadataV1 x -&gt; MetadataV1) -&gt; Generic MetadataV1
+forall x. Rep MetadataV1 x -&gt; MetadataV1
+forall x. MetadataV1 -&gt; Rep MetadataV1 x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep MetadataV1 x -&gt; MetadataV1
+$cfrom :: forall x. MetadataV1 -&gt; Rep MetadataV1 x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689257462"><span id="local-6989586621689257464"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV1]
+Value -&gt; Parser MetadataV1
+(Value -&gt; Parser MetadataV1)
+-&gt; (Value -&gt; Parser [MetadataV1]) -&gt; FromJSON MetadataV1
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [MetadataV1]
+$cparseJSONList :: Value -&gt; Parser [MetadataV1]
+parseJSON :: Value -&gt; Parser MetadataV1
+$cparseJSON :: Value -&gt; Parser MetadataV1
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689257453"><span id="local-6989586621689257455"><span id="local-6989586621689257457"><span id="local-6989586621689257459"><span class="annot"><span class="annottext">[MetadataV1] -&gt; Value
+[MetadataV1] -&gt; Encoding
+MetadataV1 -&gt; Value
+MetadataV1 -&gt; Encoding
+(MetadataV1 -&gt; Value)
+-&gt; (MetadataV1 -&gt; Encoding)
+-&gt; ([MetadataV1] -&gt; Value)
+-&gt; ([MetadataV1] -&gt; Encoding)
+-&gt; ToJSON MetadataV1
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [MetadataV1] -&gt; Encoding
+$ctoEncodingList :: [MetadataV1] -&gt; Encoding
+toJSONList :: [MetadataV1] -&gt; Value
+$ctoJSONList :: [MetadataV1] -&gt; Value
+toEncoding :: MetadataV1 -&gt; Encoding
+$ctoEncoding :: MetadataV1 -&gt; Encoding
+toJSON :: MetadataV1 -&gt; Value
+$ctoJSON :: MetadataV1 -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689257449"><span class="annot"><span class="annottext">Typeable MetadataV1
+Typeable MetadataV1
+-&gt; (Proxy MetadataV1 -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema MetadataV1
+Proxy MetadataV1 -&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+declareNamedSchema :: Proxy MetadataV1 -&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: Proxy MetadataV1 -&gt; Declare (Definitions Schema) NamedSchema
+$cp1ToSchema :: Typeable MetadataV1
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-type">MetadataV1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689257445"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-type">MetadataV1</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621689257443"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV1
+</span><a href="#local-6989586621689257443"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec MetadataV1 MetadataV1 -&gt; JSONCodec MetadataV1
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;MetadataV1&quot;</span></span><span> </span><span class="annot"><span class="annottext">(ObjectCodec MetadataV1 MetadataV1 -&gt; JSONCodec MetadataV1)
+-&gt; ObjectCodec MetadataV1 MetadataV1 -&gt; JSONCodec MetadataV1
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-25"></span><span>      </span><span class="annot"><span class="annottext">Maybe PlaceholderArray
+-&gt; Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV1
+</span><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-var">MetadataV1</span></a></span><span>
+</span><span id="line-26"></span><span>        </span><span class="annot"><span class="annottext">(Maybe PlaceholderArray
+ -&gt; Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV1)
+-&gt; Codec Object MetadataV1 (Maybe Scientific)
+-&gt; Codec
+     Object
+     MetadataV1
+     (Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV1)
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Codec Object MetadataV1 (Maybe Scientific)
+forall a. Integer -&gt; ObjectCodec a (Maybe Scientific)
+</span><a href="Hasura.Metadata.DTO.Utils.html#optionalVersionField"><span class="hs-identifier hs-var">optionalVersionField</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-27"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV1
+  (Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV1)
+-&gt; Codec Object MetadataV1 (Maybe PlaceholderArray)
+-&gt; Codec
+     Object
+     MetadataV1
+     (Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV1)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><span class="hs-identifier hs-var">optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;functions&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;user-defined SQL functions&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV1 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV1 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV1 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV1.html#metaV1Functions"><span class="hs-identifier hs-var hs-var">metaV1Functions</span></a></span><span>
+</span><span id="line-28"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV1
+  (Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV1)
+-&gt; Codec Object MetadataV1 (Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV1 (PlaceholderArray -&gt; MetadataV1)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><span class="hs-identifier hs-var">optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remote_schemas&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;merge remote GraphQL schemas and provide a unified GraphQL API&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV1 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV1 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV1 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV1.html#metaV1RemoteSchemas"><span class="hs-identifier hs-var hs-var">metaV1RemoteSchemas</span></a></span><span>
+</span><span id="line-29"></span><span>        </span><span class="annot"><span class="annottext">Codec Object MetadataV1 (PlaceholderArray -&gt; MetadataV1)
+-&gt; Codec Object MetadataV1 PlaceholderArray
+-&gt; ObjectCodec MetadataV1 MetadataV1
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec PlaceholderArray PlaceholderArray
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;tables&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;configured database tables&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec PlaceholderArray PlaceholderArray
+-&gt; (MetadataV1 -&gt; PlaceholderArray)
+-&gt; Codec Object MetadataV1 PlaceholderArray
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV1 -&gt; PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV1.html#metaV1Tables"><span class="hs-identifier hs-var hs-var">metaV1Tables</span></a></span><span>
+</span><span id="line-30"></span></pre></body></html>
