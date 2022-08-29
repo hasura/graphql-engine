@@ -39,6 +39,7 @@ export const allowedMetadataTypesArr = [
   'update_remote_schema_remote_relationship',
   'delete_remote_schema_remote_relationship',
   'add_remote_schema',
+  'update_scope_of_collection_in_allowlist',
   'bulk',
 ] as const;
 

@@ -271,4 +271,13 @@ export namespace MetadataSelector {
       );
       return queryCollectionDefinition?.definition?.queries ?? [];
     };
+  export const getNewRolePermission =
+    (queryCollectionName: string) => (m: MetadataResponse) => {
+      const queryCollectionDefinition = m.metadata?.allowlist?.find(
+        qs => qs.collection === queryCollectionName
+      );
+      return queryCollectionDefinition?.scope?.global === false
+        ? queryCollectionDefinition?.scope?.roles
+        : [];
+    };
 }
