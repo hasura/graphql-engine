@@ -9,6 +9,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture (emptySetupAction)
@@ -22,7 +23,7 @@ import Test.Hspec (SpecWith, describe, it)
 -- Reference Agent Query Tests
 
 spec :: SpecWith TestEnvironment
-spec =
+spec = do
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
@@ -31,12 +32,85 @@ spec =
             }
         ]
     )
-    tests
+    schemaCrudTests
+
+  Fixture.runWithLocalTestEnvironment
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ DataConnector.setupFixtureAction
+                    DataConnector.chinookStockMetadata
+                    DataConnector.defaultBackendConfig
+                    testEnv
+                ]
+            }
+        ]
+    )
+    schemaInspectionTests
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-tests opts = describe "Metadata API: A series of actions to setup and teardown a source with tracked tables and relationships" $ do
+schemaInspectionTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
+  describe "get_source_tables" $ do
+    it "success" $ \(testEnvironment, _) -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+            type: get_source_tables
+            args:
+              source: chinook
+          |]
+        )
+        [yaml|
+          - Artist
+          - Album
+          - Customer
+          - Employee
+          - Genre
+          - Invoice
+          - InvoiceLine
+          - MediaType
+          - Playlist
+          - PlaylistTrack
+          - Track
+        |]
+
+  describe "get_table_info" $ do
+    it "success" $ \(testEnvironment, _) -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+            type: get_table_info
+            args:
+              source: chinook
+              table:
+                - Genre
+          |]
+        )
+        [yaml|
+          columns:
+          - description: Genre primary key identifier
+            name: GenreId
+            nullable: false
+            type: number
+          - description: The name of the genre
+            name: Name
+            nullable: true
+            type: string
+          description: Genres of music
+          name:
+          - Genre
+          primary_key:
+          - GenreId
+        |]
+
+schemaCrudTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+schemaCrudTests opts = describe "A series of actions to setup and teardown a source with tracked tables and relationships" $ do
   describe "dc_add_agent" $ do
     it "Success" $ \(testEnvironment, _) -> do
       shouldReturnYaml
