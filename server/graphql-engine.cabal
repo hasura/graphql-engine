@@ -383,6 +383,7 @@ library dc-api
                      , Hasura.Backends.DataConnector.API.V0.Expression
                      , Hasura.Backends.DataConnector.API.V0.OrderBy
                      , Hasura.Backends.DataConnector.API.V0.Query
+                     , Hasura.Backends.DataConnector.API.V0.Explain
                      , Hasura.Backends.DataConnector.API.V0.Relationships
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Type
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Value
@@ -1375,6 +1376,7 @@ test-suite tests-dc-api
     , Test.Expectations
     , Test.HealthSpec
     , Test.MetricsSpec
+    , Test.ExplainSpec
     , Test.QuerySpec
     , Test.QuerySpec.AggregatesSpec
     , Test.QuerySpec.BasicSpec

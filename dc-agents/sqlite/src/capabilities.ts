@@ -13,6 +13,7 @@ export const capabilitiesResponse: CapabilitiesResponse = {
       supportsPrimaryKeys: true
     },
     relationships: {},
+    explain: {},
     ... ( envToBool('METRICS') ?  { metrics: {} } : {} )
   },
 }

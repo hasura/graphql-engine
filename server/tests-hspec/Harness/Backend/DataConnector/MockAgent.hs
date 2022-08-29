@@ -38,7 +38,8 @@ capabilities =
             API.cSubscriptions = Nothing,
             API.cFiltering = Nothing,
             API.cRelationships = Just API.RelationshipCapabilities {},
-            API.cMetrics = Just API.MetricsCapabilities {}
+            API.cMetrics = Just API.MetricsCapabilities {},
+            API.cExplain = Just API.ExplainCapabilities {}
           },
       crConfigSchemaResponse =
         API.ConfigSchemaResponse
@@ -556,6 +557,10 @@ mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ 
   I.writeIORef mQueryCfg (Just queryConfig)
   pure $ handler query
 
+-- Returns an empty explain response for now
+explainHandler :: API.SourceName -> API.Config -> API.QueryRequest -> Handler API.ExplainResponse
+explainHandler _sourceName _queryConfig _query = pure $ API.ExplainResponse [] ""
+
 healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
 healthcheckHandler _sourceName _config = pure NoContent
 
@@ -567,6 +572,7 @@ dcMockableServer mcfg mquery mQueryConfig =
   mockCapabilitiesHandler mcfg
     :<|> mockSchemaHandler mcfg mQueryConfig
     :<|> mockQueryHandler mcfg mquery mQueryConfig
+    :<|> explainHandler
     :<|> healthcheckHandler
     :<|> metricsHandler
 

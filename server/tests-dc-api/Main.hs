@@ -14,6 +14,7 @@ import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
 import Test.CapabilitiesSpec qualified
+import Test.ExplainSpec qualified
 import Test.HealthSpec qualified
 import Test.Hspec (Spec)
 import Test.Hspec.Core.Runner (runSpec)
@@ -34,6 +35,7 @@ tests api sourceName agentConfig capabilities = do
   Test.SchemaSpec.spec api sourceName agentConfig
   Test.QuerySpec.spec api sourceName agentConfig capabilities
   for_ (API.cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
+  for_ (API.cExplain capabilities) \_ -> Test.ExplainSpec.spec api sourceName agentConfig capabilities
 
 main :: IO ()
 main = do

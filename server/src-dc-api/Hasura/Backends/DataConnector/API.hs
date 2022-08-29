@@ -49,6 +49,13 @@ type QueryApi =
     :> ReqBody '[JSON] V0.QueryRequest
     :> Post '[JSON] V0.QueryResponse
 
+type ExplainApi =
+  "explain"
+    :> SourceNameHeader Required
+    :> ConfigHeader Required
+    :> ReqBody '[JSON] V0.QueryRequest
+    :> Post '[JSON] V0.ExplainResponse
+
 type HealthApi =
   "health"
     :> SourceNameHeader Optional
@@ -86,6 +93,8 @@ data Routes mode = Routes
     _schema :: mode :- SchemaApi,
     -- | 'POST /query'
     _query :: mode :- QueryApi,
+    -- | 'POST /explain'
+    _explain :: mode :- ExplainApi,
     -- | 'GET /health'
     _health :: mode :- HealthApi,
     -- | 'GET /metrics'
@@ -95,7 +104,7 @@ data Routes mode = Routes
 
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> HealthApi :<|> MetricsApi
+type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> HealthApi :<|> MetricsApi
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi

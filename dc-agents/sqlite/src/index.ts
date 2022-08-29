@@ -1,10 +1,10 @@
 ﻿import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
 import { getSchema } from './schema';
-import { queryData } from './query';
+import { explain, queryData } from './query';
 import { getConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse } from './types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse } from './types';
 import { connect } from './db';
 import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
@@ -105,6 +105,12 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   const result = queryData(config, sqlLogger, request.body);
   end();
   return result;
+});
+
+server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "query.request");
+  const config = getConfig(request);
+  return explain(config, sqlLogger, request.body);
 });
 
 server.get("/health", async (request, response) => {
