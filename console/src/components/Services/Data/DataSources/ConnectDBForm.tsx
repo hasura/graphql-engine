@@ -51,6 +51,7 @@ const dbTypePlaceholders: Record<Driver, string> = {
     'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
   mysql: 'MySQL connection string',
   bigquery: 'SERVICE_ACCOUNT_KEY_FROM_ENV',
+  cockroach: 'postgresql://username:password@hostname:5432/database',
 };
 
 const defaultTitle = 'Connect Database Via';
@@ -73,6 +74,10 @@ const driverToLabel: Record<
   },
   citus: {
     label: 'Citus',
+    defaultConnection: 'DATABASE_URL',
+  },
+  cockroach: {
+    label: 'CockroachDB',
     defaultConnection: 'DATABASE_URL',
   },
 };

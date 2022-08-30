@@ -34,6 +34,10 @@ const driverToLabel: Record<
     label: 'Citus',
     defaultConnection: 'DATABASE_URL',
   },
+  cockroach: {
+    label: 'CockroachDB',
+    defaultConnection: 'DATABASE_URL',
+  },
 };
 
 // const supportedDrivers = getSupportedDrivers('connectDbForm.enabled');

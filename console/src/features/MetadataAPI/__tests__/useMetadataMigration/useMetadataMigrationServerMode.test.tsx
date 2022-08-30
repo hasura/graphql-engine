@@ -12,6 +12,8 @@ import {
   renderWithClient,
 } from '../../../../hooks/__tests__/common/decorator';
 
+// NOTE: this test seems to be flaky, it failed when I ran the whole test suite, but it worked when run it alone
+
 const metadata = {
   resource_version: 1,
   sources: [],

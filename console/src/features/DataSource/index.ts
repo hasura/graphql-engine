@@ -5,6 +5,7 @@ import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { mssql } from './mssql';
 import { gdc } from './gdc';
+import { cockroach } from './cockroach';
 import * as utils from './common/utils';
 import type {
   Property,
@@ -31,7 +32,13 @@ export enum Feature {
   NotImplemented = 'Not Implemented',
 }
 
-export const nativeDrivers = ['postgres', 'bigquery', 'mssql', 'citus'];
+export const nativeDrivers = [
+  'postgres',
+  'bigquery',
+  'mssql',
+  'citus',
+  'cockroach',
+];
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
 
@@ -68,6 +75,7 @@ const drivers: Record<SupportedDrivers, Database> = {
   citus,
   mssql,
   gdc,
+  cockroach,
 };
 
 const getDatabaseMethods = async ({
