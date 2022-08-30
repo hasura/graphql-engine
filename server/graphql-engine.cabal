@@ -1301,6 +1301,7 @@ test-suite tests-hspec
     Test.Regression.InsertOnConflict8260Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
+    Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common

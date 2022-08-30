@@ -7,6 +7,7 @@
 module Harness.Backend.Postgres
   ( livenessCheck,
     run_,
+    runSQL,
     defaultSourceMetadata,
     defaultSourceConfiguration,
     createTable,
@@ -20,6 +21,8 @@ module Harness.Backend.Postgres
     teardownPermissions,
     setupTablesAction,
     setupPermissionsAction,
+    setupFunctionRootFieldAction,
+    setupComputedFieldAction,
   )
 where
 
@@ -39,7 +42,12 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
+import Harness.Test.Schema
+  ( BackendScalarType (..),
+    BackendScalarValue (..),
+    ScalarValue (..),
+    SchemaName (..),
+  )
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
@@ -86,6 +94,9 @@ run_ q =
               ]
           )
     )
+
+runSQL :: String -> TestEnvironment -> IO ()
+runSQL = Schema.runSQL Postgres (defaultSource Postgres)
 
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: Value
@@ -227,6 +238,7 @@ dropTable Schema.Table {tableName} = do
       T.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
           T.pack Constants.postgresDb <> "." <> tableName,
+          -- "CASCADE",
           ";"
         ]
 
@@ -291,3 +303,40 @@ setupPermissions permissions env = Permissions.setup "pg" permissions env
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
 teardownPermissions permissions env = Permissions.teardown "pg" permissions env
+
+setupFunctionRootFieldAction :: String -> TestEnvironment -> SetupAction
+setupFunctionRootFieldAction functionName env =
+  SetupAction
+    ( Schema.trackFunction
+        Postgres
+        (defaultSource Postgres)
+        functionName
+        env
+    )
+    ( \_ ->
+        Schema.untrackFunction
+          Postgres
+          (defaultSource Postgres)
+          functionName
+          env
+    )
+
+setupComputedFieldAction :: Schema.Table -> String -> String -> TestEnvironment -> SetupAction
+setupComputedFieldAction table functionName asFieldName env =
+  SetupAction
+    ( Schema.trackComputedField
+        Postgres
+        (defaultSource Postgres)
+        table
+        functionName
+        asFieldName
+        env
+    )
+    ( \_ ->
+        Schema.untrackComputedField
+          Postgres
+          (defaultSource Postgres)
+          table
+          asFieldName
+          env
+    )

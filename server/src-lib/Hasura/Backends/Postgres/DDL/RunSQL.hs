@@ -22,6 +22,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
+import Data.List (nub)
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection.MonadTx
@@ -299,7 +300,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
         -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.
         let tableNames = M.keys tableCache
             computedFieldFunctions = concatMap getComputedFieldFunctions (M.elems tableCache)
-            functionNames = M.keys functionCache <> computedFieldFunctions
+            functionNames = nub $ M.keys functionCache <> computedFieldFunctions
         (preTxTablesMeta, preTxFunctionsMeta) <- fetchTablesFunctionsMetadata tableCache tableNames functionNames
 
         -- Since the @'tx' may alter table/function names we use the OIDs of underlying tables
