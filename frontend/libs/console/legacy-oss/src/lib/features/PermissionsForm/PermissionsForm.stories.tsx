@@ -10,7 +10,7 @@ export default {
   component: PermissionsForm,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers,
+    msw: handlers(),
   },
 } as Meta;
 
@@ -71,7 +71,7 @@ export const Showcase: Story<PermissionsFormProps> = () => {
   );
 };
 
-export const Insert: Story<PermissionsFormProps> = args => (
+export const Insert: Story<PermissionsFormProps> = (args) => (
   <PermissionsForm {...args} />
 );
 Insert.args = {
@@ -86,7 +86,7 @@ Insert.parameters = {
   chromatic: { disableSnapshot: true },
 };
 
-export const Select: Story<PermissionsFormProps> = args => (
+export const Select: Story<PermissionsFormProps> = (args) => (
   <PermissionsForm {...args} />
 );
 Select.args = {
@@ -95,7 +95,7 @@ Select.args = {
 };
 Select.parameters = Insert.parameters;
 
-export const Update: Story<PermissionsFormProps> = args => (
+export const Update: Story<PermissionsFormProps> = (args) => (
   <PermissionsForm {...args} />
 );
 Update.args = {
@@ -105,7 +105,7 @@ Update.args = {
 };
 Update.parameters = Insert.parameters;
 
-export const Delete: Story<PermissionsFormProps> = args => (
+export const Delete: Story<PermissionsFormProps> = (args) => (
   <PermissionsForm {...args} />
 );
 Delete.args = {

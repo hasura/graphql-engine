@@ -18,6 +18,37 @@
         "jestConfig": "libs/console/legacy-oss/jest.config.ts",
         "passWithNoTests": true
       }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "port": 4400,
+        "config": {
+          "configFolder": "libs/console/legacy-oss/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "dist/storybook/console-ce",
+        "config": {
+          "configFolder": "libs/console/legacy-oss/.storybook"
+        }
+      }
+    },
+    "configurations": {
+      "ci": {
+        "quiet": true
+      }
     }
   }
 }

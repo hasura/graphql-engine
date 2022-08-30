@@ -22,7 +22,7 @@ const dataLeaf = {
   },
 };
 
-export const Primary: Story<BulkDeleteProps> = args => {
+export const Primary: Story<BulkDeleteProps> = (args) => {
   return <BulkDelete {...args} />;
 };
 Primary.args = {
