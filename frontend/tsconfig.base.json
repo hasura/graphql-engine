@@ -15,9 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["libs/console/legacy-oss/src/lib/*"],
       "@hasura/console/legacy-oss": ["libs/console/legacy-oss/src/index.ts"],
-      "@hasura/console/legacy-pro": ["libs/console/legacy-pro/src/index.js"],
-      "@/*": ["libs/console/legacy-oss/src/lib/*"]
+      "@hasura/console/legacy-pro": ["libs/console/legacy-pro/src/index.js"]
     }
   },
   "exclude": ["node_modules", "tmp"]
