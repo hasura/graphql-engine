@@ -1,3 +1,4 @@
+import { Driver } from '@/dataSources';
 import { NetworkArgs } from './api';
 import { RemoteField } from '../RemoteRelationships';
 
@@ -25,12 +26,13 @@ export type Property = {
     }
 );
 
-// export type supportedDrivers = 'postgres' | 'mssql' | 'bigquery' | 'citus';
+// export type supportedDrivers = 'postgres' | 'mssql' | 'bigquery' | 'citus' | 'cockroach' | 'gdc';
 export type SupportedDrivers =
   | 'postgres'
   | 'bigquery'
   | 'mssql'
   | 'citus'
+  | 'cockroach'
   | 'gdc';
 
 export type RemoteDBRelationship = {
@@ -264,10 +266,12 @@ export type TableFkRelationships = {
   };
 };
 
+type ReleaseType = 'GA' | 'Beta';
+
 export type DriverInfoResponse = {
-  name: string;
+  name: Driver;
   displayName: string;
-  release: string;
+  release: ReleaseType;
 };
 
 export { NetworkArgs };

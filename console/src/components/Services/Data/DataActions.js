@@ -238,6 +238,9 @@ const loadSchema = (configOptions = {}) => {
             case 'bigquery':
               mergedData = mergeDataBigQuery(data, metadataTables);
               break;
+            case 'cockroach':
+              mergedData = mergeLoadSchemaDataPostgres(data, metadataTables);
+              break;
             default:
           }
 

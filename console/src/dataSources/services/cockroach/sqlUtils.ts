@@ -22,20 +22,20 @@ const generateWhereClause = (
   sqlSchemaName = 'ist.table_schema',
   clausePrefix = 'where'
 ) => {
-  const whereCondtions: string[] = [];
+  const whereConditions: string[] = [];
 
   options.schemas?.forEach(schemaName => {
-    whereCondtions.push(`(${sqlSchemaName}='${schemaName}')`);
+    whereConditions.push(`(${sqlSchemaName}='${schemaName}')`);
   });
 
   options.tables?.forEach(tableInfo => {
-    whereCondtions.push(
+    whereConditions.push(
       `(${sqlSchemaName}='${tableInfo.schema}' and ${sqlTableName}='${tableInfo.name}')`
     );
   });
 
-  if (whereCondtions.length) {
-    return `${clausePrefix} (${whereCondtions.join(' or ')})`;
+  if (whereConditions.length) {
+    return `${clausePrefix} (${whereConditions.join(' or ')})`;
   }
   return '';
 };
@@ -50,7 +50,7 @@ export const getFetchTablesListQuery = (options: {
     'pgn.nspname',
     'and'
   );
-  return `
+  const sql = `
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
   FROM (
@@ -120,10 +120,12 @@ export const getFetchTablesListQuery = (options: {
           ON (t.typtype = 'd' AND t.typbasetype = bt.oid)
         LEFT JOIN (pg_collation co JOIN pg_namespace nco ON (co.collnamespace = nco.oid))
           ON a.attcollation = co.oid AND (nco.nspname, co.collname) <> ('pg_catalog', 'default')
-      WHERE (NOT pg_is_other_temp_schema(nc.oid))
-        AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f', 'p')
-        AND (pg_has_role(c.relowner, 'USAGE')
-             OR has_column_privilege(c.oid, a.attnum,
+      WHERE -- (NOT pg_is_other_temp_schema(nc.oid))
+        -- AND
+        a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f', 'p')
+        AND (-- pg_has_role(c.relowner, 'USAGE')
+              -- OR
+              has_column_privilege(c.oid, a.attnum,
                                      'SELECT, INSERT, UPDATE, REFERENCES'))
     ) AS isc
       ON  isc.table_schema = pgn.nspname
@@ -146,7 +148,8 @@ export const getFetchTablesListQuery = (options: {
       SELECT
         nc.nspname         AS table_schema,
         c.relname          AS table_name,
-        CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid) ELSE null END AS view_definition,
+        pg_get_viewdef(c.oid),
+        -- CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid) ELSE null END AS view_definition,
         CASE WHEN pg_relation_is_updatable(c.oid, false) & 20 = 20 THEN 'YES' ELSE 'NO' END AS is_updatable,
         CASE WHEN pg_relation_is_updatable(c.oid, false) &  8 =  8 THEN 'YES' ELSE 'NO' END AS is_insertable_into,
         CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = c.oid AND tgtype & 81 = 81) THEN 'YES' ELSE 'NO' END AS is_trigger_updatable,
@@ -156,9 +159,10 @@ export const getFetchTablesListQuery = (options: {
   
       WHERE c.relnamespace = nc.oid
         AND c.relkind in ('v', 'm')
-        AND (NOT pg_is_other_temp_schema(nc.oid))
-        AND (pg_has_role(c.relowner, 'USAGE')
-             OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+        -- AND (NOT pg_is_other_temp_schema(nc.oid))
+        AND (-- pg_has_role(c.relowner, 'USAGE')
+             -- OR
+             has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
              OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES'))
     ) AS isv
       ON  isv.table_schema = pgn.nspname
@@ -170,6 +174,8 @@ export const getFetchTablesListQuery = (options: {
     GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
   ) AS info;
   `;
+
+  return sql;
 };
 
 export const fetchColumnTypesQuery = `
@@ -219,8 +225,7 @@ export const isSQLFunction = (str: string | undefined) =>
 export const getEstimateCountQuery = (
   schemaName: string,
   tableName: string
-) => {
-  return `
+) => `
   SELECT
     reltuples::BIGINT
   FROM
@@ -230,7 +235,6 @@ export const getEstimateCountQuery = (
   WHERE
     c.relname = quote_ident('${tableName}') AND n.nspname = quote_ident('${schemaName}');
   `;
-};
 
 export const cascadeSqlQuery = (sql: string) => {
   if (sql[sql.length - 1] === ';') {
@@ -415,13 +419,11 @@ export const getCreateTableQueries = (
   return sqlQueries;
 };
 
-export const getDropTableSql = (schema: string, table: string) => {
-  return `DROP TABLE "${schema}"."${table}"`;
-};
+export const getDropTableSql = (schema: string, table: string) =>
+  `DROP TABLE "${schema}"."${table}"`;
 
-export const getStatementTimeoutSql = (statementTimeoutInSecs: number) => {
-  return `SET LOCAL statement_timeout = ${statementTimeoutInSecs * 1000};`;
-};
+export const getStatementTimeoutSql = (statementTimeoutInSecs: number) =>
+  `SET LOCAL statement_timeout = ${statementTimeoutInSecs * 1000};`;
 
 export const getDropSchemaSql = (schemaName: string) =>
   `drop schema "${schemaName}" cascade;`;
@@ -532,9 +534,11 @@ export const getDropSql = (
 
 export const getViewDefinitionSql = (viewName: string) => `
   SELECT
-    CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid)
-    ELSE null
-    END AS view_definition,
+    pg_get_viewdef(c.oid)
+    -- CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid)
+    -- ELSE null
+    -- END
+    AS view_definition,
     CASE WHEN c.relkind = 'v' THEN 'VIEW' ELSE 'MATERIALIZED VIEW' END AS view_type
   FROM pg_class c
   WHERE c.relname = '${viewName}'
@@ -665,29 +669,24 @@ export const getSetColumnDefaultSql = (
 };
 
 export const getAlterTableCommentSql: DataSourcesAPI['getAlterTableCommentSql'] =
-  ({ tableName, schemaName, comment }) => {
-    return `comment on table "${schemaName}"."${tableName}" is ${
+  ({ tableName, schemaName, comment }) =>
+    `comment on table "${schemaName}"."${tableName}" is ${
       comment ? sqlEscapeText(comment) : 'NULL'
     }`;
-  };
 
 export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'] =
-  ({ tableName, schemaName, columnName, comment }) => {
-    return `
+  ({ tableName, schemaName, columnName, comment }) => `
   comment on column "${schemaName}"."${tableName}"."${columnName}" is ${
-      comment ? sqlEscapeText(comment) : 'NULL'
-    }
+    comment ? sqlEscapeText(comment) : 'NULL'
+  }
 `;
-  };
 
 export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] =
-  ({ functionName, schemaName, comment }) => {
-    return `
+  ({ functionName, schemaName, comment }) => `
 comment on function "${schemaName}"."${functionName}" is ${
-      comment ? sqlEscapeText(comment) : 'NULL'
-    }
+    comment ? sqlEscapeText(comment) : 'NULL'
+  }
 `;
-  };
 
 export const getAlterColumnTypeSql = (
   tableName: string,
@@ -775,9 +774,8 @@ export const getCreateCheckConstraintSql = (
   schemaName: string,
   constraintName: string,
   check: string
-) => {
-  return `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" check (${check})`;
-};
+) =>
+  `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" check (${check})`;
 
 export const getCreatePkSql = ({
   schemaName,
@@ -789,11 +787,9 @@ export const getCreatePkSql = ({
   tableName: string;
   selectedPkColumns: string[];
   constraintName?: string; // compulsory for PG
-}) => {
-  return `alter table "${schemaName}"."${tableName}"
+}) => `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
-};
 export const getAlterPkSql = ({
   schemaName,
   tableName,
@@ -804,16 +800,14 @@ export const getAlterPkSql = ({
   tableName: string;
   selectedPkColumns: string[];
   constraintName: string; // compulsory for PG
-}) => {
-  return `BEGIN TRANSACTION;
+}) => `BEGIN TRANSACTION;
 ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
 
 ALTER TABLE "${schemaName}"."${tableName}"
     ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
-    .map(pkc => `"${pkc}"`)
-    .join(', ')});
+  .map(pkc => `"${pkc}"`)
+  .join(', ')});
 COMMIT TRANSACTION;`;
-};
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
@@ -836,8 +830,7 @@ export const getFunctionDefinitionSql = (
   schemaName: string | string[],
   functionName?: string | null,
   type?: keyof typeof functionWhereStatement
-) => {
-  return `
+) => `
 -- test_id = ${Array.isArray(schemaName) ? type ?? 'all' : 'single'}_functions
 SELECT
 COALESCE(
@@ -860,7 +853,7 @@ pd.description,
         WHEN p.provolatile::text = 'v'::character(1)::text THEN 'VOLATILE'::text
         ELSE NULL::text
     END AS function_type,
-pg_get_functiondef(p.oid) AS function_definition,
+NULL, -- pg_get_functiondef(p.oid) AS function_definition,
 rtn.nspname::text AS return_type_schema,
 rt.typname::text AS return_type_name,
 rt.typtype::text AS return_type_type,
@@ -884,7 +877,7 @@ JOIN pg_type rt ON rt.oid = p.prorettype
 JOIN pg_namespace rtn ON rtn.oid = rt.typnamespace
 LEFT JOIN pg_description pd ON p.oid = pd.objoid
 WHERE
-pn.nspname::text !~~ 'pg_%'::text
+pn.nspname::text NOT LIKE 'pg_%'::text
 AND(pn.nspname::text <> ALL (ARRAY ['information_schema'::text]))
 AND NOT(EXISTS (
   SELECT
@@ -893,17 +886,16 @@ AND NOT(EXISTS (
     pg_aggregate.aggfnoid::oid = p.oid))) as info
 -- WHERE function_schema='${schemaName}'
 WHERE ${
-    Array.isArray(schemaName)
-      ? `function_schema IN (${schemaName.map(s => `'${s}'`).join(', ')})`
-      : `function_schema='${schemaName}'`
-  }
+  Array.isArray(schemaName)
+    ? `function_schema IN (${schemaName.map(s => `'${s}'`).join(', ')})`
+    : `function_schema='${schemaName}'`
+}
 ${functionName ? `AND function_name='${functionName}'` : ''}
 ${type ? functionWhereStatement[type] : ''}
 ORDER BY function_name ASC
 ${functionName ? 'LIMIT 1' : ''}
 ) as functions;
 `;
-};
 
 export const primaryKeysInfoSql = (options: {
   schemas: string[];
@@ -1293,7 +1285,7 @@ FROM (
 	FROM
 		information_schema.columns
 	WHERE
-		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')
+		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal', 'crdb_internal')
 		AND table_schema NOT LIKE 'pg_toast%'
 		AND table_schema NOT LIKE 'pg_temp_%'
 	GROUP BY

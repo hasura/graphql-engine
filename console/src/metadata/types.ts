@@ -1114,7 +1114,7 @@ type GraphQLCustomizationMetadata = {
 
 export interface MetadataDataSource {
   name: string;
-  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
+  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus' | 'cockroach';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     extensions_schema?: string;

@@ -6,6 +6,7 @@ import citus, { CitusDataTarget } from './citus';
 import mssql, { MssqlDataTarget } from './mssql';
 import mysql, { MysqlDataTarget } from './mysql';
 import postgres, { PostgresDataTarget } from './postgres';
+import cockroach, { CockroachDataTarget } from './cockroach';
 import { RunSQLQueryOptions } from './types';
 
 export type DataTarget =
@@ -13,7 +14,8 @@ export type DataTarget =
   | CitusDataTarget
   | MssqlDataTarget
   | BigQueryDataTarget
-  | MysqlDataTarget;
+  | MysqlDataTarget
+  | CockroachDataTarget;
 
 export type TableRelationshipsType = {
   from: {
@@ -45,4 +47,5 @@ export const drivers: TDriversMap = {
   mssql,
   bigquery,
   mysql,
+  cockroach,
 };

@@ -22,7 +22,8 @@ type AllowedRunSQLKeys =
   | 'bigquery_run_sql'
   | 'citus_run_sql'
   | 'mysql_run_sql'
-  | 'run_sql';
+  | 'run_sql'
+  | 'cockroach_run_sql';
 
 export const getRunSqlType = (driver: Driver): AllowedRunSQLKeys => {
   if (driver === 'postgres') return 'run_sql';

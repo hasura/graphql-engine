@@ -35,6 +35,7 @@ import { getDataSources } from '../../../../metadata/selector';
 import { services } from '../../../../dataSources/services';
 import { isFeatureSupported, setDriver } from '../../../../dataSources';
 import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
+import { unsupportedRawSQLDrivers } from './utils';
 
 const checkChangeLang = (sql, selectedDriver) => {
   return (
@@ -89,7 +90,7 @@ const RawSQL = ({
   const [sqlText, onChangeSQLText] = useState(sql);
 
   const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
-  const [selectedDriver, setSelectedDriver] = useState('postgres');
+  const [selectedDriver, setSelectedDriver] = useState(null);
   const [suggestLangChange, setSuggestLangChange] = useState(false);
 
   useEffect(() => {
@@ -450,21 +451,30 @@ const RawSQL = ({
             <b>Database</b>
           </label>{' '}
           <DropDownSelector
-            options={sources.map(source => source.name)}
+            options={sources.map(source => ({
+              name: source.name,
+              driver: source.driver,
+            }))}
             defaultValue={currentDataSource}
             onChange={dropDownSelectorValueChange}
           />
         </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
-          {getSQLSection()}
+          {unsupportedRawSQLDrivers.includes(selectedDriver) && getSQLSection()}
         </div>
 
         <div
           className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
         >
-          {isFeatureSupported('rawSQL.tracking') ? getTrackThisSection() : null}
-          {getMetadataCascadeSection()}
-          {getMigrationSection()}
+          {unsupportedRawSQLDrivers.includes(selectedDriver) ? null : (
+            <>
+              {isFeatureSupported('rawSQL.tracking')
+                ? getTrackThisSection()
+                : null}
+              {getMetadataCascadeSection()}
+              {getMigrationSection()}
+            </>
+          )}
 
           {isFeatureSupported('rawSQL.statementTimeout') && (
             <StatementTimeout

@@ -59,7 +59,11 @@ export const useSubmit = () => {
     if (typeof values.driver !== 'string')
       throw new Error('Invalid drivers format');
 
-    if (!drivers.data?.map(driver => driver.name).includes(values.driver))
+    if (
+      !drivers.data
+        ?.map(driver => driver.name)
+        .includes(values.driver as 'mysql' | SupportedDrivers)
+    )
       throw new Error(`Unmanaged ${values.driver} driver`);
 
     mutate(
