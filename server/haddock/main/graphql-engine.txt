@@ -30009,8 +30009,25 @@ UpdateSource :: SourceName -> Maybe (SourceConnConfiguration b) -> Maybe SourceC
 [_usConfiguration] :: UpdateSource b -> Maybe (SourceConnConfiguration b)
 [_usCustomization] :: UpdateSource b -> Maybe SourceCustomization
 runUpdateSource :: forall m b. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => UpdateSource b -> m EncJSON
+newtype GetSourceTables
+GetSourceTables :: SourceName -> GetSourceTables
+[_gstSourceName] :: GetSourceTables -> SourceName
+
+-- | Fetch a list of tables for the request data source. Currently this is
+--   only supported for Data Connectors.
+runGetSourceTables :: (Has (Logger Hasura) r, HasHttpManagerM m, MonadReader r m, MonadError QErr m, MetadataM m, MonadIO m) => GetSourceTables -> m EncJSON
+data GetTableInfo
+GetTableInfo :: SourceName -> TableName -> GetTableInfo
+[_gtiSourceName] :: GetTableInfo -> SourceName
+[_gtiTableName] :: GetTableInfo -> TableName
+
+-- | Fetch a list of tables for the request data source. Currently this is
+--   only supported for Data Connectors.
+runGetTableInfo :: (Has (Logger Hasura) r, HasHttpManagerM m, MonadReader r m, MonadError QErr m, MetadataM m, MonadIO m) => GetTableInfo -> m EncJSON
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Source.DropSource
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Source.DropSource
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.GetTableInfo
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.GetSourceTables
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.SQL.Backend.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.UpdateSource b)
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.DropSource
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.RenameSource
@@ -30231,6 +30248,9 @@ RMAddSource :: !AnyBackend AddSource -> RQLMetadataV1
 RMDropSource :: DropSource -> RQLMetadataV1
 RMRenameSource :: !RenameSource -> RQLMetadataV1
 RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
+RMListSourceKinds :: !ListSourceKinds -> RQLMetadataV1
+RMGetSourceTables :: !GetSourceTables -> RQLMetadataV1
+RMGetTableInfo :: !GetTableInfo -> RQLMetadataV1
 RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
 RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
 RMSetTableCustomization :: !AnyBackend SetTableCustomization -> RQLMetadataV1
@@ -30298,7 +30318,6 @@ RMCreateRestEndpoint :: !CreateEndpoint -> RQLMetadataV1
 RMDropRestEndpoint :: !DropEndpoint -> RQLMetadataV1
 RMDCAddAgent :: !DCAddAgent -> RQLMetadataV1
 RMDCDeleteAgent :: !DCDeleteAgent -> RQLMetadataV1
-RMListSourceKinds :: !ListSourceKinds -> RQLMetadataV1
 RMSetCustomTypes :: !CustomTypes -> RQLMetadataV1
 RMSetApiLimits :: !ApiLimit -> RQLMetadataV1
 RMRemoveApiLimits :: RQLMetadataV1
