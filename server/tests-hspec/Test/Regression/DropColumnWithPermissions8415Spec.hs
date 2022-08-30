@@ -11,7 +11,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema
+import Harness.Test.Schema hiding (runSQL)
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
