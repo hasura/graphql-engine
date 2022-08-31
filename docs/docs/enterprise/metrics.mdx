@@ -1,0 +1,108 @@
+---
+sidebar_label: Metrics via Prometheus
+description: Metrics via Prometheus for Hasura Enterprise Edition
+title: 'Metrics via Prometheus'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 4
+---
+
+# Metrics via Prometheus
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Enable metrics endpoint
+
+By default the Prometheus metrics endpoint is disabled. To enable Prometheus metrics, configure the environment variable
+below:
+
+```bash
+HASURA_GRAPHQL_ENABLED_APIS=metadata,graphql,config,metrics
+```
+
+Secure the Prometheus metrics endpoint with a secret:
+
+```bash
+HASURA_GRAPHQL_METRICS_SECRET=<secret>
+```
+
+```bash
+curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
+```
+
+:::note Note
+
+- The metrics endpoint should be configured with a secret to prevent misuse and should not be exposed over the
+  internet.
+
+:::
+
+## Metrics exported
+
+<table>
+  <tr>
+    <td>Name</td>
+    <td>Description</td>
+    <td>Type</td>
+    <td>Labels</td>
+  </tr>
+  <tr>
+    <td>hasura_http_connections</td>
+    <td>Current number of active HTTP connections (excluding WebSocket connections)</td>
+    <td>Gauge</td>
+    <td>none</td>
+  </tr>
+  <tr>
+    <td>hasura_websocket_connections</td>
+    <td>Current number of active WebSocket connections</td>
+    <td>Gauge</td>
+    <td>none</td>
+  </tr>
+  <tr>
+    <td>hasura_active_subscriptions</td>
+    <td>Current number of active subscriptions</td>
+    <td>Gauge</td>
+    <td>none</td>
+  </tr>
+  <tr>
+    <td>hasura_graphql_requests_total</td>
+    <td>Number of GraphQL requests received (excluding subscriptions)</td>
+    <td>Counter</td>
+    <td>&#8226; "operation_type": query|mutation|unknown <br/>
+      &#8226; The "unknown" operation type will be returned for queries that fail authorization, parsing, or certain
+      validations<br/>
+      &#8226; "response_status": success|failed
+    </td>
+
+  </tr>
+  <tr>
+    <td>hasura_graphql_execution_time_seconds</td>
+    <td>Execution time of successful GraphQL requests (excluding subscriptions)</td>
+    <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
+    <td>&#8226; "operation_type": query|mutation</td>
+  </tr>
+  <tr>
+    <td>hasura_event_queue_time_seconds</td>
+    <td>Queueing delay of event trigger batches in the processing queue</td>
+    <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
+    <td>none</td>
+  </tr>  
+  <tr>
+    <td>hasura_event_trigger_http_workers</td>
+    <td>Current number of active event trigger HTTP workers</td>
+    <td>Gauge</td>
+    <td>none</td>
+  </tr>
+
+</table>
+
+:::note Note
+
+The GraphQL request execution time:
+
+- Uses wall-clock time, so it includes time spent waiting on I/O.
+- Includes authorization, parsing, validation, planning, and execution (calls to databases, remote schemas).
+
+:::
