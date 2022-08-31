@@ -316,8 +316,18 @@ txtEncoder colVal = case txtEncodedVal colVal of
 -- https://github.com/hasura/graphql-engine-mono/issues/4892
 buildArrayLiteral :: [PGScalarValue] -> Text
 buildArrayLiteral ts =
-  T.concat ["{", T.intercalate "," (map (inner . txtEncodedVal) ts), "}"]
+  T.concat ["{", T.intercalate "," (map (inner . encodeElement) ts), "}"]
   where
+    -- Make sure to wrap text values in quotes, and escape unique characters
+    encodeElement = \case
+      PGValChar t -> TELit $ tshow $ T.singleton t
+      PGValVarchar t -> TELit $ tshow t
+      PGValText t -> TELit $ tshow t
+      PGValCitext t -> TELit $ tshow t
+      PGValLquery t -> TELit $ tshow t
+      PGValLtxtquery t -> TELit $ tshow t
+      PGValUnknown t -> TELit $ tshow t
+      other -> txtEncodedVal other
     inner = \case
       TENull -> "null"
       TELit t -> t
