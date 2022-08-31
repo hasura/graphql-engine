@@ -3,6 +3,7 @@ sidebar_label: Release Notes
 sidebar_position: 6
 description: Release Notes for Hasura EE Data Plane
 title: 'EE: Release Notes'
+date: 2022-08-08T16:30:59+05:30
 keywords:
   - hasura
   - docs
@@ -12,11 +13,24 @@ keywords:
   - release notes
 ---
 
-import HeadingIcon from '@site/src/components/HeadingIcon';
-
 # Release Notes
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+### `v2.9.0-pro.1`
+
+- Add support for linux/arm64 Docker image (M1 Mac compatible)
+- Support HASURA_GRAPHQL_ADMIN_SECRETS environment variable in cli-migrations
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.9.0)
+
+### `v2.8.4-pro.1`
+
+- Adds support to customize the root field for streaming subscriptions
+- Fixes bug that had disabled expression-based indexes in Postgres variants
+- Disables query/subscription root fields
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.8.4)
 
 ### `v2.7.0-pro.2`
 
