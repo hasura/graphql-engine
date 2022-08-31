@@ -1,0 +1,2053 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE NumDecimals #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Types for time intervals of various units. Each newtype wraps 'DiffTime',</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- but they have different 'Num' instances. The intent is to use the record</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- selectors to write literals with particular units, like this:</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- &gt;&gt;&gt; 'milliseconds' 500</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- 0.5s</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- &gt;&gt;&gt; 'hours' 3</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- 10800s</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- &gt;&gt;&gt; 'minutes' 1.5 + 'seconds' 30</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- 120s</span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-15"></span><span class="hs-comment">--</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- You can also go the other way using the constructors rather than the selectors:</span><span>
+</span><span id="line-17"></span><span class="hs-comment">--</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- &gt;&gt;&gt; 'toRational' '$' 'Minutes' ('seconds' 17)</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- 17 % 60</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- &gt;&gt;&gt; 'realToFrac' ('Days' ('hours' 12)) :: 'Double'</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- 0.5</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-24"></span><span class="hs-comment">--</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- NOTE: the 'Real' and 'Fractional' instances just essentially add or strip the</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- unit label (as  above), so you can't use 'realToFrac' to convert between the</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- units types here. Instead try  'convertDuration' which is less of a foot-gun.</span><span>
+</span><span id="line-28"></span><span class="hs-comment">--</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- The 'Read' instances for these types mirror the behavior of the 'RealFrac'</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- instance wrt numeric literals for convenient serialization (e.g. when working</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- with env vars):</span><span>
+</span><span id="line-32"></span><span class="hs-comment">--</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- &gt;&gt;&gt; read &quot;1.2&quot; :: Milliseconds</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- Milliseconds {milliseconds = 0.0012s}</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-37"></span><span class="hs-comment">--</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- Generally, if you need to pass around a duration between functions you should</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- use 'DiffTime' directly. However if storing a duration in a type that will be</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- serialized, e.g. one having a 'ToJSON' instance, it is better to use one of</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- these explicit wrapper types so that it's  obvious what units will be used.</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.Time.Clock.Units</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Days"><span class="hs-identifier">Days</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#Hours"><span class="hs-identifier">Hours</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#Minutes"><span class="hs-identifier">Minutes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier">Seconds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier">Milliseconds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#Microseconds"><span class="hs-identifier">Microseconds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#Nanoseconds"><span class="hs-identifier">Nanoseconds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Converting between units</span></span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#Duration"><span class="hs-identifier">Duration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#convertDuration"><span class="hs-identifier">convertDuration</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Reexports</span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-comment">-- | We use 'DiffTime' as the standard type for unit-agnostic duration in our</span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-comment">-- code. You'll need to convert to a 'NominalDiffTime'  (with 'convertDuration') in</span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-comment">-- order to do anything useful with 'UTCTime' with these durations.</span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-comment">-- NOTE: some care must be taken especially when 'NominalDiffTime' interacts</span><span>
+</span><span id="line-62"></span><span>    </span><span class="hs-comment">-- with 'UTCTime':</span><span>
+</span><span id="line-63"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-comment">--  - a 'DiffTime' or 'NominalDiffTime' may be negative</span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-comment">--  - 'addUTCTime' and 'diffUTCTime' do not attempt to handle leap seconds</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="hs-identifier">DiffTime</span></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="Data.Time.Clock.Units.html#diffTimeToMicroSeconds"><span class="hs-identifier">diffTimeToMicroSeconds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;|&gt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Arrow</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">first</span></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Hashable</span></span><span>
+</span><span id="line-75"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Proxy</span></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unpack</span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock</span></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.TypeLits</span></span><span>
+</span><span id="line-79"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Numeric</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">readFloat</span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Read</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TR</span></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">newtype</span><span> </span><span id="Seconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-var">Seconds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Seconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-var">Seconds</span></a></span></span><span> </span><span class="hs-special">{</span><span id="seconds"><span class="annot"><span class="annottext">Seconds -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#seconds"><span class="hs-identifier hs-var hs-var">seconds</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-comment">-- NOTE: we want Show to give a pastable data structure string, even</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-comment">-- though Read is custom.</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689256246"><span id="local-6989586621689256248"><span class="annot"><span class="annottext">DiffTime -&gt; Seconds
+Seconds -&gt; DiffTime
+(DiffTime -&gt; Seconds) -&gt; (Seconds -&gt; DiffTime) -&gt; Duration Seconds
+forall d. (DiffTime -&gt; d) -&gt; (d -&gt; DiffTime) -&gt; Duration d
+toDiffTime :: Seconds -&gt; DiffTime
+$ctoDiffTime :: Seconds -&gt; DiffTime
+fromDiffTime :: DiffTime -&gt; Seconds
+$cfromDiffTime :: DiffTime -&gt; Seconds
+</span><a href="Data.Time.Clock.Units.html#C%3ADuration"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Duration</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256239"><span id="local-6989586621689256241"><span id="local-6989586621689256243"><span class="annot"><span class="annottext">Int -&gt; Seconds -&gt; ShowS
+[Seconds] -&gt; ShowS
+Seconds -&gt; String
+(Int -&gt; Seconds -&gt; ShowS)
+-&gt; (Seconds -&gt; String) -&gt; ([Seconds] -&gt; ShowS) -&gt; Show Seconds
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Seconds] -&gt; ShowS
+$cshowList :: [Seconds] -&gt; ShowS
+show :: Seconds -&gt; String
+$cshow :: Seconds -&gt; String
+showsPrec :: Int -&gt; Seconds -&gt; ShowS
+$cshowsPrec :: Int -&gt; Seconds -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256234"><span id="local-6989586621689256236"><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Bool
+(Seconds -&gt; Seconds -&gt; Bool)
+-&gt; (Seconds -&gt; Seconds -&gt; Bool) -&gt; Eq Seconds
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Seconds -&gt; Seconds -&gt; Bool
+$c/= :: Seconds -&gt; Seconds -&gt; Bool
+== :: Seconds -&gt; Seconds -&gt; Bool
+$c== :: Seconds -&gt; Seconds -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256218"><span id="local-6989586621689256220"><span id="local-6989586621689256222"><span id="local-6989586621689256224"><span id="local-6989586621689256226"><span id="local-6989586621689256228"><span id="local-6989586621689256230"><span class="annot"><span class="annottext">Eq Seconds
+Eq Seconds
+-&gt; (Seconds -&gt; Seconds -&gt; Ordering)
+-&gt; (Seconds -&gt; Seconds -&gt; Bool)
+-&gt; (Seconds -&gt; Seconds -&gt; Bool)
+-&gt; (Seconds -&gt; Seconds -&gt; Bool)
+-&gt; (Seconds -&gt; Seconds -&gt; Bool)
+-&gt; (Seconds -&gt; Seconds -&gt; Seconds)
+-&gt; (Seconds -&gt; Seconds -&gt; Seconds)
+-&gt; Ord Seconds
+Seconds -&gt; Seconds -&gt; Bool
+Seconds -&gt; Seconds -&gt; Ordering
+Seconds -&gt; Seconds -&gt; Seconds
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Seconds -&gt; Seconds -&gt; Seconds
+$cmin :: Seconds -&gt; Seconds -&gt; Seconds
+max :: Seconds -&gt; Seconds -&gt; Seconds
+$cmax :: Seconds -&gt; Seconds -&gt; Seconds
+&gt;= :: Seconds -&gt; Seconds -&gt; Bool
+$c&gt;= :: Seconds -&gt; Seconds -&gt; Bool
+&gt; :: Seconds -&gt; Seconds -&gt; Bool
+$c&gt; :: Seconds -&gt; Seconds -&gt; Bool
+&lt;= :: Seconds -&gt; Seconds -&gt; Bool
+$c&lt;= :: Seconds -&gt; Seconds -&gt; Bool
+&lt; :: Seconds -&gt; Seconds -&gt; Bool
+$c&lt; :: Seconds -&gt; Seconds -&gt; Bool
+compare :: Seconds -&gt; Seconds -&gt; Ordering
+$ccompare :: Seconds -&gt; Seconds -&gt; Ordering
+$cp1Ord :: Eq Seconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256209"><span id="local-6989586621689256211"><span id="local-6989586621689256213"><span id="local-6989586621689256215"><span class="annot"><span class="annottext">[Seconds] -&gt; Value
+[Seconds] -&gt; Encoding
+Seconds -&gt; Value
+Seconds -&gt; Encoding
+(Seconds -&gt; Value)
+-&gt; (Seconds -&gt; Encoding)
+-&gt; ([Seconds] -&gt; Value)
+-&gt; ([Seconds] -&gt; Encoding)
+-&gt; ToJSON Seconds
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [Seconds] -&gt; Encoding
+$ctoEncodingList :: [Seconds] -&gt; Encoding
+toJSONList :: [Seconds] -&gt; Value
+$ctoJSONList :: [Seconds] -&gt; Value
+toEncoding :: Seconds -&gt; Encoding
+$ctoEncoding :: Seconds -&gt; Encoding
+toJSON :: Seconds -&gt; Value
+$ctoJSON :: Seconds -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256204"><span id="local-6989586621689256206"><span class="annot"><span class="annottext">Value -&gt; Parser [Seconds]
+Value -&gt; Parser Seconds
+(Value -&gt; Parser Seconds)
+-&gt; (Value -&gt; Parser [Seconds]) -&gt; FromJSON Seconds
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [Seconds]
+$cparseJSONList :: Value -&gt; Parser [Seconds]
+parseJSON :: Value -&gt; Parser Seconds
+$cparseJSON :: Value -&gt; Parser Seconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689256195"><span id="local-6989586621689256197"><span id="local-6989586621689256199"><span id="local-6989586621689256201"><span class="annot"><span class="annottext">ReadPrec [Seconds]
+ReadPrec Seconds
+Int -&gt; ReadS Seconds
+ReadS [Seconds]
+(Int -&gt; ReadS Seconds)
+-&gt; ReadS [Seconds]
+-&gt; ReadPrec Seconds
+-&gt; ReadPrec [Seconds]
+-&gt; Read Seconds
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Seconds]
+$creadListPrec :: ReadPrec [Seconds]
+readPrec :: ReadPrec Seconds
+$creadPrec :: ReadPrec Seconds
+readList :: ReadS [Seconds]
+$creadList :: ReadS [Seconds]
+readsPrec :: Int -&gt; ReadS Seconds
+$creadsPrec :: Int -&gt; ReadS Seconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256180"><span id="local-6989586621689256182"><span id="local-6989586621689256184"><span id="local-6989586621689256186"><span id="local-6989586621689256188"><span id="local-6989586621689256190"><span id="local-6989586621689256192"><span class="annot"><span class="annottext">Integer -&gt; Seconds
+Seconds -&gt; Seconds
+Seconds -&gt; Seconds -&gt; Seconds
+(Seconds -&gt; Seconds -&gt; Seconds)
+-&gt; (Seconds -&gt; Seconds -&gt; Seconds)
+-&gt; (Seconds -&gt; Seconds -&gt; Seconds)
+-&gt; (Seconds -&gt; Seconds)
+-&gt; (Seconds -&gt; Seconds)
+-&gt; (Seconds -&gt; Seconds)
+-&gt; (Integer -&gt; Seconds)
+-&gt; Num Seconds
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Seconds
+$cfromInteger :: Integer -&gt; Seconds
+signum :: Seconds -&gt; Seconds
+$csignum :: Seconds -&gt; Seconds
+abs :: Seconds -&gt; Seconds
+$cabs :: Seconds -&gt; Seconds
+negate :: Seconds -&gt; Seconds
+$cnegate :: Seconds -&gt; Seconds
+* :: Seconds -&gt; Seconds -&gt; Seconds
+$c* :: Seconds -&gt; Seconds -&gt; Seconds
+- :: Seconds -&gt; Seconds -&gt; Seconds
+$c- :: Seconds -&gt; Seconds -&gt; Seconds
++ :: Seconds -&gt; Seconds -&gt; Seconds
+$c+ :: Seconds -&gt; Seconds -&gt; Seconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256172"><span id="local-6989586621689256174"><span id="local-6989586621689256176"><span class="annot"><span class="annottext">Num Seconds
+Num Seconds
+-&gt; (Seconds -&gt; Seconds -&gt; Seconds)
+-&gt; (Seconds -&gt; Seconds)
+-&gt; (Rational -&gt; Seconds)
+-&gt; Fractional Seconds
+Rational -&gt; Seconds
+Seconds -&gt; Seconds
+Seconds -&gt; Seconds -&gt; Seconds
+forall a.
+Num a
+-&gt; (a -&gt; a -&gt; a) -&gt; (a -&gt; a) -&gt; (Rational -&gt; a) -&gt; Fractional a
+fromRational :: Rational -&gt; Seconds
+$cfromRational :: Rational -&gt; Seconds
+recip :: Seconds -&gt; Seconds
+$crecip :: Seconds -&gt; Seconds
+/ :: Seconds -&gt; Seconds -&gt; Seconds
+$c/ :: Seconds -&gt; Seconds -&gt; Seconds
+$cp1Fractional :: Num Seconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Fractional</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256167"><span class="annot"><span class="annottext">Num Seconds
+Ord Seconds
+Num Seconds -&gt; Ord Seconds -&gt; (Seconds -&gt; Rational) -&gt; Real Seconds
+Seconds -&gt; Rational
+forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
+toRational :: Seconds -&gt; Rational
+$ctoRational :: Seconds -&gt; Rational
+$cp2Real :: Ord Seconds
+$cp1Real :: Num Seconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256162"><span id="local-6989586621689256164"><span class="annot"><span class="annottext">Int -&gt; Seconds -&gt; Int
+Seconds -&gt; Int
+(Int -&gt; Seconds -&gt; Int) -&gt; (Seconds -&gt; Int) -&gt; Hashable Seconds
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Seconds -&gt; Int
+$chash :: Seconds -&gt; Int
+hashWithSalt :: Int -&gt; Seconds -&gt; Int
+$chashWithSalt :: Int -&gt; Seconds -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256149"><span id="local-6989586621689256151"><span id="local-6989586621689256153"><span id="local-6989586621689256155"><span id="local-6989586621689256157"><span class="annot"><span class="annottext">Fractional Seconds
+Real Seconds
+Real Seconds
+-&gt; Fractional Seconds
+-&gt; (forall b. Integral b =&gt; Seconds -&gt; (b, Seconds))
+-&gt; (forall b. Integral b =&gt; Seconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Seconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Seconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Seconds -&gt; b)
+-&gt; RealFrac Seconds
+Seconds -&gt; b
+Seconds -&gt; b
+Seconds -&gt; b
+Seconds -&gt; b
+Seconds -&gt; (b, Seconds)
+forall b. Integral b =&gt; Seconds -&gt; b
+forall b. Integral b =&gt; Seconds -&gt; (b, Seconds)
+forall a.
+Real a
+-&gt; Fractional a
+-&gt; (forall b. Integral b =&gt; a -&gt; (b, a))
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; RealFrac a
+floor :: Seconds -&gt; b
+$cfloor :: forall b. Integral b =&gt; Seconds -&gt; b
+ceiling :: Seconds -&gt; b
+$cceiling :: forall b. Integral b =&gt; Seconds -&gt; b
+round :: Seconds -&gt; b
+$cround :: forall b. Integral b =&gt; Seconds -&gt; b
+truncate :: Seconds -&gt; b
+$ctruncate :: forall b. Integral b =&gt; Seconds -&gt; b
+properFraction :: Seconds -&gt; (b, Seconds)
+$cproperFraction :: forall b. Integral b =&gt; Seconds -&gt; (b, Seconds)
+$cp2RealFrac :: Fractional Seconds
+$cp1RealFrac :: Real Seconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">RealFrac</span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#SecondsP"><span class="hs-identifier hs-type">SecondsP</span></a></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- TODO if needed: deriving (ToJSON, FromJSON) via (TimeUnit ..) making sure</span><span>
+</span><span id="line-90"></span><span class="hs-comment">--      to copy Aeson instances (with withBoundedScientific), and e.g.</span><span>
+</span><span id="line-91"></span><span class="hs-comment">--         toJSON (5 :: Minutes) == Number 5</span><span>
+</span><span id="line-92"></span><span class="hs-keyword">newtype</span><span> </span><span id="Days"><span class="annot"><a href="Data.Time.Clock.Units.html#Days"><span class="hs-identifier hs-var">Days</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Days"><span class="annot"><a href="Data.Time.Clock.Units.html#Days"><span class="hs-identifier hs-var">Days</span></a></span></span><span> </span><span class="hs-special">{</span><span id="days"><span class="annot"><span class="annottext">Days -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#days"><span class="hs-identifier hs-var hs-var">days</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689256141"><span id="local-6989586621689256143"><span class="annot"><span class="annottext">DiffTime -&gt; Days
+Days -&gt; DiffTime
+(DiffTime -&gt; Days) -&gt; (Days -&gt; DiffTime) -&gt; Duration Days
+forall d. (DiffTime -&gt; d) -&gt; (d -&gt; DiffTime) -&gt; Duration d
+toDiffTime :: Days -&gt; DiffTime
+$ctoDiffTime :: Days -&gt; DiffTime
+fromDiffTime :: DiffTime -&gt; Days
+$cfromDiffTime :: DiffTime -&gt; Days
+</span><a href="#local-6989586621689256141"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Duration</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256135"><span id="local-6989586621689256137"><span id="local-6989586621689256139"><span class="annot"><span class="annottext">Int -&gt; Days -&gt; ShowS
+[Days] -&gt; ShowS
+Days -&gt; String
+(Int -&gt; Days -&gt; ShowS)
+-&gt; (Days -&gt; String) -&gt; ([Days] -&gt; ShowS) -&gt; Show Days
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Days] -&gt; ShowS
+$cshowList :: [Days] -&gt; ShowS
+show :: Days -&gt; String
+$cshow :: Days -&gt; String
+showsPrec :: Int -&gt; Days -&gt; ShowS
+$cshowsPrec :: Int -&gt; Days -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256131"><span id="local-6989586621689256133"><span class="annot"><span class="annottext">Days -&gt; Days -&gt; Bool
+(Days -&gt; Days -&gt; Bool) -&gt; (Days -&gt; Days -&gt; Bool) -&gt; Eq Days
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Days -&gt; Days -&gt; Bool
+$c/= :: Days -&gt; Days -&gt; Bool
+== :: Days -&gt; Days -&gt; Bool
+$c== :: Days -&gt; Days -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256116"><span id="local-6989586621689256118"><span id="local-6989586621689256120"><span id="local-6989586621689256122"><span id="local-6989586621689256124"><span id="local-6989586621689256126"><span id="local-6989586621689256128"><span class="annot"><span class="annottext">Eq Days
+Eq Days
+-&gt; (Days -&gt; Days -&gt; Ordering)
+-&gt; (Days -&gt; Days -&gt; Bool)
+-&gt; (Days -&gt; Days -&gt; Bool)
+-&gt; (Days -&gt; Days -&gt; Bool)
+-&gt; (Days -&gt; Days -&gt; Bool)
+-&gt; (Days -&gt; Days -&gt; Days)
+-&gt; (Days -&gt; Days -&gt; Days)
+-&gt; Ord Days
+Days -&gt; Days -&gt; Bool
+Days -&gt; Days -&gt; Ordering
+Days -&gt; Days -&gt; Days
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Days -&gt; Days -&gt; Days
+$cmin :: Days -&gt; Days -&gt; Days
+max :: Days -&gt; Days -&gt; Days
+$cmax :: Days -&gt; Days -&gt; Days
+&gt;= :: Days -&gt; Days -&gt; Bool
+$c&gt;= :: Days -&gt; Days -&gt; Bool
+&gt; :: Days -&gt; Days -&gt; Bool
+$c&gt; :: Days -&gt; Days -&gt; Bool
+&lt;= :: Days -&gt; Days -&gt; Bool
+$c&lt;= :: Days -&gt; Days -&gt; Bool
+&lt; :: Days -&gt; Days -&gt; Bool
+$c&lt; :: Days -&gt; Days -&gt; Bool
+compare :: Days -&gt; Days -&gt; Ordering
+$ccompare :: Days -&gt; Days -&gt; Ordering
+$cp1Ord :: Eq Days
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689256108"><span id="local-6989586621689256110"><span id="local-6989586621689256112"><span id="local-6989586621689256114"><span class="annot"><span class="annottext">ReadPrec [Days]
+ReadPrec Days
+Int -&gt; ReadS Days
+ReadS [Days]
+(Int -&gt; ReadS Days)
+-&gt; ReadS [Days] -&gt; ReadPrec Days -&gt; ReadPrec [Days] -&gt; Read Days
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Days]
+$creadListPrec :: ReadPrec [Days]
+readPrec :: ReadPrec Days
+$creadPrec :: ReadPrec Days
+readList :: ReadS [Days]
+$creadList :: ReadS [Days]
+readsPrec :: Int -&gt; ReadS Days
+$creadsPrec :: Int -&gt; ReadS Days
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256094"><span id="local-6989586621689256096"><span id="local-6989586621689256098"><span id="local-6989586621689256100"><span id="local-6989586621689256102"><span id="local-6989586621689256104"><span id="local-6989586621689256106"><span class="annot"><span class="annottext">Integer -&gt; Days
+Days -&gt; Days
+Days -&gt; Days -&gt; Days
+(Days -&gt; Days -&gt; Days)
+-&gt; (Days -&gt; Days -&gt; Days)
+-&gt; (Days -&gt; Days -&gt; Days)
+-&gt; (Days -&gt; Days)
+-&gt; (Days -&gt; Days)
+-&gt; (Days -&gt; Days)
+-&gt; (Integer -&gt; Days)
+-&gt; Num Days
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Days
+$cfromInteger :: Integer -&gt; Days
+signum :: Days -&gt; Days
+$csignum :: Days -&gt; Days
+abs :: Days -&gt; Days
+$cabs :: Days -&gt; Days
+negate :: Days -&gt; Days
+$cnegate :: Days -&gt; Days
+* :: Days -&gt; Days -&gt; Days
+$c* :: Days -&gt; Days -&gt; Days
+- :: Days -&gt; Days -&gt; Days
+$c- :: Days -&gt; Days -&gt; Days
++ :: Days -&gt; Days -&gt; Days
+$c+ :: Days -&gt; Days -&gt; Days
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256087"><span id="local-6989586621689256089"><span id="local-6989586621689256091"><span class="annot"><span class="annottext">Num Days
+Num Days
+-&gt; (Days -&gt; Days -&gt; Days)
+-&gt; (Days -&gt; Days)
+-&gt; (Rational -&gt; Days)
+-&gt; Fractional Days
+Rational -&gt; Days
+Days -&gt; Days
+Days -&gt; Days -&gt; Days
+forall a.
+Num a
+-&gt; (a -&gt; a -&gt; a) -&gt; (a -&gt; a) -&gt; (Rational -&gt; a) -&gt; Fractional a
+fromRational :: Rational -&gt; Days
+$cfromRational :: Rational -&gt; Days
+recip :: Days -&gt; Days
+$crecip :: Days -&gt; Days
+/ :: Days -&gt; Days -&gt; Days
+$c/ :: Days -&gt; Days -&gt; Days
+$cp1Fractional :: Num Days
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Fractional</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256083"><span class="annot"><span class="annottext">Num Days
+Ord Days
+Num Days -&gt; Ord Days -&gt; (Days -&gt; Rational) -&gt; Real Days
+Days -&gt; Rational
+forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
+toRational :: Days -&gt; Rational
+$ctoRational :: Days -&gt; Rational
+$cp2Real :: Ord Days
+$cp1Real :: Num Days
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256079"><span id="local-6989586621689256081"><span class="annot"><span class="annottext">Int -&gt; Days -&gt; Int
+Days -&gt; Int
+(Int -&gt; Days -&gt; Int) -&gt; (Days -&gt; Int) -&gt; Hashable Days
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Days -&gt; Int
+$chash :: Days -&gt; Int
+hashWithSalt :: Int -&gt; Days -&gt; Int
+$chashWithSalt :: Int -&gt; Days -&gt; Int
+</span><a href="#local-6989586621689256079"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256067"><span id="local-6989586621689256069"><span id="local-6989586621689256071"><span id="local-6989586621689256073"><span id="local-6989586621689256075"><span class="annot"><span class="annottext">Fractional Days
+Real Days
+Real Days
+-&gt; Fractional Days
+-&gt; (forall b. Integral b =&gt; Days -&gt; (b, Days))
+-&gt; (forall b. Integral b =&gt; Days -&gt; b)
+-&gt; (forall b. Integral b =&gt; Days -&gt; b)
+-&gt; (forall b. Integral b =&gt; Days -&gt; b)
+-&gt; (forall b. Integral b =&gt; Days -&gt; b)
+-&gt; RealFrac Days
+Days -&gt; b
+Days -&gt; b
+Days -&gt; b
+Days -&gt; b
+Days -&gt; (b, Days)
+forall b. Integral b =&gt; Days -&gt; b
+forall b. Integral b =&gt; Days -&gt; (b, Days)
+forall a.
+Real a
+-&gt; Fractional a
+-&gt; (forall b. Integral b =&gt; a -&gt; (b, a))
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; RealFrac a
+floor :: Days -&gt; b
+$cfloor :: forall b. Integral b =&gt; Days -&gt; b
+ceiling :: Days -&gt; b
+$cceiling :: forall b. Integral b =&gt; Days -&gt; b
+round :: Days -&gt; b
+$cround :: forall b. Integral b =&gt; Days -&gt; b
+truncate :: Days -&gt; b
+$ctruncate :: forall b. Integral b =&gt; Days -&gt; b
+properFraction :: Days -&gt; (b, Days)
+$cproperFraction :: forall b. Integral b =&gt; Days -&gt; (b, Days)
+$cp2RealFrac :: Fractional Days
+$cp1RealFrac :: Real Days
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">RealFrac</span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#SecondsP"><span class="hs-identifier hs-type">SecondsP</span></a></span><span> </span><span class="annot"><span class="hs-number">86400</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">newtype</span><span> </span><span id="Hours"><span class="annot"><a href="Data.Time.Clock.Units.html#Hours"><span class="hs-identifier hs-var">Hours</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Hours"><span class="annot"><a href="Data.Time.Clock.Units.html#Hours"><span class="hs-identifier hs-var">Hours</span></a></span></span><span> </span><span class="hs-special">{</span><span id="hours"><span class="annot"><span class="annottext">Hours -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#hours"><span class="hs-identifier hs-var hs-var">hours</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689256061"><span id="local-6989586621689256063"><span class="annot"><span class="annottext">DiffTime -&gt; Hours
+Hours -&gt; DiffTime
+(DiffTime -&gt; Hours) -&gt; (Hours -&gt; DiffTime) -&gt; Duration Hours
+forall d. (DiffTime -&gt; d) -&gt; (d -&gt; DiffTime) -&gt; Duration d
+toDiffTime :: Hours -&gt; DiffTime
+$ctoDiffTime :: Hours -&gt; DiffTime
+fromDiffTime :: DiffTime -&gt; Hours
+$cfromDiffTime :: DiffTime -&gt; Hours
+</span><a href="#local-6989586621689256061"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Duration</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256055"><span id="local-6989586621689256057"><span id="local-6989586621689256059"><span class="annot"><span class="annottext">Int -&gt; Hours -&gt; ShowS
+[Hours] -&gt; ShowS
+Hours -&gt; String
+(Int -&gt; Hours -&gt; ShowS)
+-&gt; (Hours -&gt; String) -&gt; ([Hours] -&gt; ShowS) -&gt; Show Hours
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Hours] -&gt; ShowS
+$cshowList :: [Hours] -&gt; ShowS
+show :: Hours -&gt; String
+$cshow :: Hours -&gt; String
+showsPrec :: Int -&gt; Hours -&gt; ShowS
+$cshowsPrec :: Int -&gt; Hours -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256051"><span id="local-6989586621689256053"><span class="annot"><span class="annottext">Hours -&gt; Hours -&gt; Bool
+(Hours -&gt; Hours -&gt; Bool) -&gt; (Hours -&gt; Hours -&gt; Bool) -&gt; Eq Hours
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Hours -&gt; Hours -&gt; Bool
+$c/= :: Hours -&gt; Hours -&gt; Bool
+== :: Hours -&gt; Hours -&gt; Bool
+$c== :: Hours -&gt; Hours -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256036"><span id="local-6989586621689256038"><span id="local-6989586621689256040"><span id="local-6989586621689256042"><span id="local-6989586621689256044"><span id="local-6989586621689256046"><span id="local-6989586621689256048"><span class="annot"><span class="annottext">Eq Hours
+Eq Hours
+-&gt; (Hours -&gt; Hours -&gt; Ordering)
+-&gt; (Hours -&gt; Hours -&gt; Bool)
+-&gt; (Hours -&gt; Hours -&gt; Bool)
+-&gt; (Hours -&gt; Hours -&gt; Bool)
+-&gt; (Hours -&gt; Hours -&gt; Bool)
+-&gt; (Hours -&gt; Hours -&gt; Hours)
+-&gt; (Hours -&gt; Hours -&gt; Hours)
+-&gt; Ord Hours
+Hours -&gt; Hours -&gt; Bool
+Hours -&gt; Hours -&gt; Ordering
+Hours -&gt; Hours -&gt; Hours
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Hours -&gt; Hours -&gt; Hours
+$cmin :: Hours -&gt; Hours -&gt; Hours
+max :: Hours -&gt; Hours -&gt; Hours
+$cmax :: Hours -&gt; Hours -&gt; Hours
+&gt;= :: Hours -&gt; Hours -&gt; Bool
+$c&gt;= :: Hours -&gt; Hours -&gt; Bool
+&gt; :: Hours -&gt; Hours -&gt; Bool
+$c&gt; :: Hours -&gt; Hours -&gt; Bool
+&lt;= :: Hours -&gt; Hours -&gt; Bool
+$c&lt;= :: Hours -&gt; Hours -&gt; Bool
+&lt; :: Hours -&gt; Hours -&gt; Bool
+$c&lt; :: Hours -&gt; Hours -&gt; Bool
+compare :: Hours -&gt; Hours -&gt; Ordering
+$ccompare :: Hours -&gt; Hours -&gt; Ordering
+$cp1Ord :: Eq Hours
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689256028"><span id="local-6989586621689256030"><span id="local-6989586621689256032"><span id="local-6989586621689256034"><span class="annot"><span class="annottext">ReadPrec [Hours]
+ReadPrec Hours
+Int -&gt; ReadS Hours
+ReadS [Hours]
+(Int -&gt; ReadS Hours)
+-&gt; ReadS [Hours]
+-&gt; ReadPrec Hours
+-&gt; ReadPrec [Hours]
+-&gt; Read Hours
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Hours]
+$creadListPrec :: ReadPrec [Hours]
+readPrec :: ReadPrec Hours
+$creadPrec :: ReadPrec Hours
+readList :: ReadS [Hours]
+$creadList :: ReadS [Hours]
+readsPrec :: Int -&gt; ReadS Hours
+$creadsPrec :: Int -&gt; ReadS Hours
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256014"><span id="local-6989586621689256016"><span id="local-6989586621689256018"><span id="local-6989586621689256020"><span id="local-6989586621689256022"><span id="local-6989586621689256024"><span id="local-6989586621689256026"><span class="annot"><span class="annottext">Integer -&gt; Hours
+Hours -&gt; Hours
+Hours -&gt; Hours -&gt; Hours
+(Hours -&gt; Hours -&gt; Hours)
+-&gt; (Hours -&gt; Hours -&gt; Hours)
+-&gt; (Hours -&gt; Hours -&gt; Hours)
+-&gt; (Hours -&gt; Hours)
+-&gt; (Hours -&gt; Hours)
+-&gt; (Hours -&gt; Hours)
+-&gt; (Integer -&gt; Hours)
+-&gt; Num Hours
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Hours
+$cfromInteger :: Integer -&gt; Hours
+signum :: Hours -&gt; Hours
+$csignum :: Hours -&gt; Hours
+abs :: Hours -&gt; Hours
+$cabs :: Hours -&gt; Hours
+negate :: Hours -&gt; Hours
+$cnegate :: Hours -&gt; Hours
+* :: Hours -&gt; Hours -&gt; Hours
+$c* :: Hours -&gt; Hours -&gt; Hours
+- :: Hours -&gt; Hours -&gt; Hours
+$c- :: Hours -&gt; Hours -&gt; Hours
++ :: Hours -&gt; Hours -&gt; Hours
+$c+ :: Hours -&gt; Hours -&gt; Hours
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256007"><span id="local-6989586621689256009"><span id="local-6989586621689256011"><span class="annot"><span class="annottext">Num Hours
+Num Hours
+-&gt; (Hours -&gt; Hours -&gt; Hours)
+-&gt; (Hours -&gt; Hours)
+-&gt; (Rational -&gt; Hours)
+-&gt; Fractional Hours
+Rational -&gt; Hours
+Hours -&gt; Hours
+Hours -&gt; Hours -&gt; Hours
+forall a.
+Num a
+-&gt; (a -&gt; a -&gt; a) -&gt; (a -&gt; a) -&gt; (Rational -&gt; a) -&gt; Fractional a
+fromRational :: Rational -&gt; Hours
+$cfromRational :: Rational -&gt; Hours
+recip :: Hours -&gt; Hours
+$crecip :: Hours -&gt; Hours
+/ :: Hours -&gt; Hours -&gt; Hours
+$c/ :: Hours -&gt; Hours -&gt; Hours
+$cp1Fractional :: Num Hours
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Fractional</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689256003"><span class="annot"><span class="annottext">Num Hours
+Ord Hours
+Num Hours -&gt; Ord Hours -&gt; (Hours -&gt; Rational) -&gt; Real Hours
+Hours -&gt; Rational
+forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
+toRational :: Hours -&gt; Rational
+$ctoRational :: Hours -&gt; Rational
+$cp2Real :: Ord Hours
+$cp1Real :: Num Hours
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255999"><span id="local-6989586621689256001"><span class="annot"><span class="annottext">Int -&gt; Hours -&gt; Int
+Hours -&gt; Int
+(Int -&gt; Hours -&gt; Int) -&gt; (Hours -&gt; Int) -&gt; Hashable Hours
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Hours -&gt; Int
+$chash :: Hours -&gt; Int
+hashWithSalt :: Int -&gt; Hours -&gt; Int
+$chashWithSalt :: Int -&gt; Hours -&gt; Int
+</span><a href="#local-6989586621689255999"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255987"><span id="local-6989586621689255989"><span id="local-6989586621689255991"><span id="local-6989586621689255993"><span id="local-6989586621689255995"><span class="annot"><span class="annottext">Fractional Hours
+Real Hours
+Real Hours
+-&gt; Fractional Hours
+-&gt; (forall b. Integral b =&gt; Hours -&gt; (b, Hours))
+-&gt; (forall b. Integral b =&gt; Hours -&gt; b)
+-&gt; (forall b. Integral b =&gt; Hours -&gt; b)
+-&gt; (forall b. Integral b =&gt; Hours -&gt; b)
+-&gt; (forall b. Integral b =&gt; Hours -&gt; b)
+-&gt; RealFrac Hours
+Hours -&gt; b
+Hours -&gt; b
+Hours -&gt; b
+Hours -&gt; b
+Hours -&gt; (b, Hours)
+forall b. Integral b =&gt; Hours -&gt; b
+forall b. Integral b =&gt; Hours -&gt; (b, Hours)
+forall a.
+Real a
+-&gt; Fractional a
+-&gt; (forall b. Integral b =&gt; a -&gt; (b, a))
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; RealFrac a
+floor :: Hours -&gt; b
+$cfloor :: forall b. Integral b =&gt; Hours -&gt; b
+ceiling :: Hours -&gt; b
+$cceiling :: forall b. Integral b =&gt; Hours -&gt; b
+round :: Hours -&gt; b
+$cround :: forall b. Integral b =&gt; Hours -&gt; b
+truncate :: Hours -&gt; b
+$ctruncate :: forall b. Integral b =&gt; Hours -&gt; b
+properFraction :: Hours -&gt; (b, Hours)
+$cproperFraction :: forall b. Integral b =&gt; Hours -&gt; (b, Hours)
+$cp2RealFrac :: Fractional Hours
+$cp1RealFrac :: Real Hours
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">RealFrac</span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#SecondsP"><span class="hs-identifier hs-type">SecondsP</span></a></span><span> </span><span class="annot"><span class="hs-number">3600</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">newtype</span><span> </span><span id="Minutes"><span class="annot"><a href="Data.Time.Clock.Units.html#Minutes"><span class="hs-identifier hs-var">Minutes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Minutes"><span class="annot"><a href="Data.Time.Clock.Units.html#Minutes"><span class="hs-identifier hs-var">Minutes</span></a></span></span><span> </span><span class="hs-special">{</span><span id="minutes"><span class="annot"><span class="annottext">Minutes -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#minutes"><span class="hs-identifier hs-var hs-var">minutes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255981"><span id="local-6989586621689255983"><span class="annot"><span class="annottext">DiffTime -&gt; Minutes
+Minutes -&gt; DiffTime
+(DiffTime -&gt; Minutes) -&gt; (Minutes -&gt; DiffTime) -&gt; Duration Minutes
+forall d. (DiffTime -&gt; d) -&gt; (d -&gt; DiffTime) -&gt; Duration d
+toDiffTime :: Minutes -&gt; DiffTime
+$ctoDiffTime :: Minutes -&gt; DiffTime
+fromDiffTime :: DiffTime -&gt; Minutes
+$cfromDiffTime :: DiffTime -&gt; Minutes
+</span><a href="#local-6989586621689255981"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Duration</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255975"><span id="local-6989586621689255977"><span id="local-6989586621689255979"><span class="annot"><span class="annottext">Int -&gt; Minutes -&gt; ShowS
+[Minutes] -&gt; ShowS
+Minutes -&gt; String
+(Int -&gt; Minutes -&gt; ShowS)
+-&gt; (Minutes -&gt; String) -&gt; ([Minutes] -&gt; ShowS) -&gt; Show Minutes
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Minutes] -&gt; ShowS
+$cshowList :: [Minutes] -&gt; ShowS
+show :: Minutes -&gt; String
+$cshow :: Minutes -&gt; String
+showsPrec :: Int -&gt; Minutes -&gt; ShowS
+$cshowsPrec :: Int -&gt; Minutes -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255971"><span id="local-6989586621689255973"><span class="annot"><span class="annottext">Minutes -&gt; Minutes -&gt; Bool
+(Minutes -&gt; Minutes -&gt; Bool)
+-&gt; (Minutes -&gt; Minutes -&gt; Bool) -&gt; Eq Minutes
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Minutes -&gt; Minutes -&gt; Bool
+$c/= :: Minutes -&gt; Minutes -&gt; Bool
+== :: Minutes -&gt; Minutes -&gt; Bool
+$c== :: Minutes -&gt; Minutes -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255956"><span id="local-6989586621689255958"><span id="local-6989586621689255960"><span id="local-6989586621689255962"><span id="local-6989586621689255964"><span id="local-6989586621689255966"><span id="local-6989586621689255968"><span class="annot"><span class="annottext">Eq Minutes
+Eq Minutes
+-&gt; (Minutes -&gt; Minutes -&gt; Ordering)
+-&gt; (Minutes -&gt; Minutes -&gt; Bool)
+-&gt; (Minutes -&gt; Minutes -&gt; Bool)
+-&gt; (Minutes -&gt; Minutes -&gt; Bool)
+-&gt; (Minutes -&gt; Minutes -&gt; Bool)
+-&gt; (Minutes -&gt; Minutes -&gt; Minutes)
+-&gt; (Minutes -&gt; Minutes -&gt; Minutes)
+-&gt; Ord Minutes
+Minutes -&gt; Minutes -&gt; Bool
+Minutes -&gt; Minutes -&gt; Ordering
+Minutes -&gt; Minutes -&gt; Minutes
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Minutes -&gt; Minutes -&gt; Minutes
+$cmin :: Minutes -&gt; Minutes -&gt; Minutes
+max :: Minutes -&gt; Minutes -&gt; Minutes
+$cmax :: Minutes -&gt; Minutes -&gt; Minutes
+&gt;= :: Minutes -&gt; Minutes -&gt; Bool
+$c&gt;= :: Minutes -&gt; Minutes -&gt; Bool
+&gt; :: Minutes -&gt; Minutes -&gt; Bool
+$c&gt; :: Minutes -&gt; Minutes -&gt; Bool
+&lt;= :: Minutes -&gt; Minutes -&gt; Bool
+$c&lt;= :: Minutes -&gt; Minutes -&gt; Bool
+&lt; :: Minutes -&gt; Minutes -&gt; Bool
+$c&lt; :: Minutes -&gt; Minutes -&gt; Bool
+compare :: Minutes -&gt; Minutes -&gt; Ordering
+$ccompare :: Minutes -&gt; Minutes -&gt; Ordering
+$cp1Ord :: Eq Minutes
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255948"><span id="local-6989586621689255950"><span id="local-6989586621689255952"><span id="local-6989586621689255954"><span class="annot"><span class="annottext">ReadPrec [Minutes]
+ReadPrec Minutes
+Int -&gt; ReadS Minutes
+ReadS [Minutes]
+(Int -&gt; ReadS Minutes)
+-&gt; ReadS [Minutes]
+-&gt; ReadPrec Minutes
+-&gt; ReadPrec [Minutes]
+-&gt; Read Minutes
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Minutes]
+$creadListPrec :: ReadPrec [Minutes]
+readPrec :: ReadPrec Minutes
+$creadPrec :: ReadPrec Minutes
+readList :: ReadS [Minutes]
+$creadList :: ReadS [Minutes]
+readsPrec :: Int -&gt; ReadS Minutes
+$creadsPrec :: Int -&gt; ReadS Minutes
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255934"><span id="local-6989586621689255936"><span id="local-6989586621689255938"><span id="local-6989586621689255940"><span id="local-6989586621689255942"><span id="local-6989586621689255944"><span id="local-6989586621689255946"><span class="annot"><span class="annottext">Integer -&gt; Minutes
+Minutes -&gt; Minutes
+Minutes -&gt; Minutes -&gt; Minutes
+(Minutes -&gt; Minutes -&gt; Minutes)
+-&gt; (Minutes -&gt; Minutes -&gt; Minutes)
+-&gt; (Minutes -&gt; Minutes -&gt; Minutes)
+-&gt; (Minutes -&gt; Minutes)
+-&gt; (Minutes -&gt; Minutes)
+-&gt; (Minutes -&gt; Minutes)
+-&gt; (Integer -&gt; Minutes)
+-&gt; Num Minutes
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Minutes
+$cfromInteger :: Integer -&gt; Minutes
+signum :: Minutes -&gt; Minutes
+$csignum :: Minutes -&gt; Minutes
+abs :: Minutes -&gt; Minutes
+$cabs :: Minutes -&gt; Minutes
+negate :: Minutes -&gt; Minutes
+$cnegate :: Minutes -&gt; Minutes
+* :: Minutes -&gt; Minutes -&gt; Minutes
+$c* :: Minutes -&gt; Minutes -&gt; Minutes
+- :: Minutes -&gt; Minutes -&gt; Minutes
+$c- :: Minutes -&gt; Minutes -&gt; Minutes
++ :: Minutes -&gt; Minutes -&gt; Minutes
+$c+ :: Minutes -&gt; Minutes -&gt; Minutes
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255927"><span id="local-6989586621689255929"><span id="local-6989586621689255931"><span class="annot"><span class="annottext">Num Minutes
+Num Minutes
+-&gt; (Minutes -&gt; Minutes -&gt; Minutes)
+-&gt; (Minutes -&gt; Minutes)
+-&gt; (Rational -&gt; Minutes)
+-&gt; Fractional Minutes
+Rational -&gt; Minutes
+Minutes -&gt; Minutes
+Minutes -&gt; Minutes -&gt; Minutes
+forall a.
+Num a
+-&gt; (a -&gt; a -&gt; a) -&gt; (a -&gt; a) -&gt; (Rational -&gt; a) -&gt; Fractional a
+fromRational :: Rational -&gt; Minutes
+$cfromRational :: Rational -&gt; Minutes
+recip :: Minutes -&gt; Minutes
+$crecip :: Minutes -&gt; Minutes
+/ :: Minutes -&gt; Minutes -&gt; Minutes
+$c/ :: Minutes -&gt; Minutes -&gt; Minutes
+$cp1Fractional :: Num Minutes
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Fractional</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255923"><span class="annot"><span class="annottext">Num Minutes
+Ord Minutes
+Num Minutes -&gt; Ord Minutes -&gt; (Minutes -&gt; Rational) -&gt; Real Minutes
+Minutes -&gt; Rational
+forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
+toRational :: Minutes -&gt; Rational
+$ctoRational :: Minutes -&gt; Rational
+$cp2Real :: Ord Minutes
+$cp1Real :: Num Minutes
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255919"><span id="local-6989586621689255921"><span class="annot"><span class="annottext">Int -&gt; Minutes -&gt; Int
+Minutes -&gt; Int
+(Int -&gt; Minutes -&gt; Int) -&gt; (Minutes -&gt; Int) -&gt; Hashable Minutes
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Minutes -&gt; Int
+$chash :: Minutes -&gt; Int
+hashWithSalt :: Int -&gt; Minutes -&gt; Int
+$chashWithSalt :: Int -&gt; Minutes -&gt; Int
+</span><a href="#local-6989586621689255919"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255907"><span id="local-6989586621689255909"><span id="local-6989586621689255911"><span id="local-6989586621689255913"><span id="local-6989586621689255915"><span class="annot"><span class="annottext">Fractional Minutes
+Real Minutes
+Real Minutes
+-&gt; Fractional Minutes
+-&gt; (forall b. Integral b =&gt; Minutes -&gt; (b, Minutes))
+-&gt; (forall b. Integral b =&gt; Minutes -&gt; b)
+-&gt; (forall b. Integral b =&gt; Minutes -&gt; b)
+-&gt; (forall b. Integral b =&gt; Minutes -&gt; b)
+-&gt; (forall b. Integral b =&gt; Minutes -&gt; b)
+-&gt; RealFrac Minutes
+Minutes -&gt; b
+Minutes -&gt; b
+Minutes -&gt; b
+Minutes -&gt; b
+Minutes -&gt; (b, Minutes)
+forall b. Integral b =&gt; Minutes -&gt; b
+forall b. Integral b =&gt; Minutes -&gt; (b, Minutes)
+forall a.
+Real a
+-&gt; Fractional a
+-&gt; (forall b. Integral b =&gt; a -&gt; (b, a))
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; RealFrac a
+floor :: Minutes -&gt; b
+$cfloor :: forall b. Integral b =&gt; Minutes -&gt; b
+ceiling :: Minutes -&gt; b
+$cceiling :: forall b. Integral b =&gt; Minutes -&gt; b
+round :: Minutes -&gt; b
+$cround :: forall b. Integral b =&gt; Minutes -&gt; b
+truncate :: Minutes -&gt; b
+$ctruncate :: forall b. Integral b =&gt; Minutes -&gt; b
+properFraction :: Minutes -&gt; (b, Minutes)
+$cproperFraction :: forall b. Integral b =&gt; Minutes -&gt; (b, Minutes)
+$cp2RealFrac :: Fractional Minutes
+$cp1RealFrac :: Real Minutes
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">RealFrac</span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#SecondsP"><span class="hs-identifier hs-type">SecondsP</span></a></span><span> </span><span class="annot"><span class="hs-number">60</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">newtype</span><span> </span><span id="Milliseconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-var">Milliseconds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Milliseconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-var">Milliseconds</span></a></span></span><span> </span><span class="hs-special">{</span><span id="milliseconds"><span class="annot"><span class="annottext">Milliseconds -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#milliseconds"><span class="hs-identifier hs-var hs-var">milliseconds</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255901"><span id="local-6989586621689255903"><span class="annot"><span class="annottext">DiffTime -&gt; Milliseconds
+Milliseconds -&gt; DiffTime
+(DiffTime -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; DiffTime) -&gt; Duration Milliseconds
+forall d. (DiffTime -&gt; d) -&gt; (d -&gt; DiffTime) -&gt; Duration d
+toDiffTime :: Milliseconds -&gt; DiffTime
+$ctoDiffTime :: Milliseconds -&gt; DiffTime
+fromDiffTime :: DiffTime -&gt; Milliseconds
+$cfromDiffTime :: DiffTime -&gt; Milliseconds
+</span><a href="#local-6989586621689255901"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Duration</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255895"><span id="local-6989586621689255897"><span id="local-6989586621689255899"><span class="annot"><span class="annottext">Int -&gt; Milliseconds -&gt; ShowS
+[Milliseconds] -&gt; ShowS
+Milliseconds -&gt; String
+(Int -&gt; Milliseconds -&gt; ShowS)
+-&gt; (Milliseconds -&gt; String)
+-&gt; ([Milliseconds] -&gt; ShowS)
+-&gt; Show Milliseconds
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Milliseconds] -&gt; ShowS
+$cshowList :: [Milliseconds] -&gt; ShowS
+show :: Milliseconds -&gt; String
+$cshow :: Milliseconds -&gt; String
+showsPrec :: Int -&gt; Milliseconds -&gt; ShowS
+$cshowsPrec :: Int -&gt; Milliseconds -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255891"><span id="local-6989586621689255893"><span class="annot"><span class="annottext">Milliseconds -&gt; Milliseconds -&gt; Bool
+(Milliseconds -&gt; Milliseconds -&gt; Bool)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Bool) -&gt; Eq Milliseconds
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Milliseconds -&gt; Milliseconds -&gt; Bool
+$c/= :: Milliseconds -&gt; Milliseconds -&gt; Bool
+== :: Milliseconds -&gt; Milliseconds -&gt; Bool
+$c== :: Milliseconds -&gt; Milliseconds -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255876"><span id="local-6989586621689255878"><span id="local-6989586621689255880"><span id="local-6989586621689255882"><span id="local-6989586621689255884"><span id="local-6989586621689255886"><span id="local-6989586621689255888"><span class="annot"><span class="annottext">Eq Milliseconds
+Eq Milliseconds
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Ordering)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Bool)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Bool)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Bool)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Bool)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Milliseconds)
+-&gt; Ord Milliseconds
+Milliseconds -&gt; Milliseconds -&gt; Bool
+Milliseconds -&gt; Milliseconds -&gt; Ordering
+Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+$cmin :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+max :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+$cmax :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+&gt;= :: Milliseconds -&gt; Milliseconds -&gt; Bool
+$c&gt;= :: Milliseconds -&gt; Milliseconds -&gt; Bool
+&gt; :: Milliseconds -&gt; Milliseconds -&gt; Bool
+$c&gt; :: Milliseconds -&gt; Milliseconds -&gt; Bool
+&lt;= :: Milliseconds -&gt; Milliseconds -&gt; Bool
+$c&lt;= :: Milliseconds -&gt; Milliseconds -&gt; Bool
+&lt; :: Milliseconds -&gt; Milliseconds -&gt; Bool
+$c&lt; :: Milliseconds -&gt; Milliseconds -&gt; Bool
+compare :: Milliseconds -&gt; Milliseconds -&gt; Ordering
+$ccompare :: Milliseconds -&gt; Milliseconds -&gt; Ordering
+$cp1Ord :: Eq Milliseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255868"><span id="local-6989586621689255870"><span id="local-6989586621689255872"><span id="local-6989586621689255874"><span class="annot"><span class="annottext">ReadPrec [Milliseconds]
+ReadPrec Milliseconds
+Int -&gt; ReadS Milliseconds
+ReadS [Milliseconds]
+(Int -&gt; ReadS Milliseconds)
+-&gt; ReadS [Milliseconds]
+-&gt; ReadPrec Milliseconds
+-&gt; ReadPrec [Milliseconds]
+-&gt; Read Milliseconds
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Milliseconds]
+$creadListPrec :: ReadPrec [Milliseconds]
+readPrec :: ReadPrec Milliseconds
+$creadPrec :: ReadPrec Milliseconds
+readList :: ReadS [Milliseconds]
+$creadList :: ReadS [Milliseconds]
+readsPrec :: Int -&gt; ReadS Milliseconds
+$creadsPrec :: Int -&gt; ReadS Milliseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255854"><span id="local-6989586621689255856"><span id="local-6989586621689255858"><span id="local-6989586621689255860"><span id="local-6989586621689255862"><span id="local-6989586621689255864"><span id="local-6989586621689255866"><span class="annot"><span class="annottext">Integer -&gt; Milliseconds
+Milliseconds -&gt; Milliseconds
+Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+(Milliseconds -&gt; Milliseconds -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; Milliseconds)
+-&gt; (Integer -&gt; Milliseconds)
+-&gt; Num Milliseconds
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Milliseconds
+$cfromInteger :: Integer -&gt; Milliseconds
+signum :: Milliseconds -&gt; Milliseconds
+$csignum :: Milliseconds -&gt; Milliseconds
+abs :: Milliseconds -&gt; Milliseconds
+$cabs :: Milliseconds -&gt; Milliseconds
+negate :: Milliseconds -&gt; Milliseconds
+$cnegate :: Milliseconds -&gt; Milliseconds
+* :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+$c* :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+- :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+$c- :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
++ :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+$c+ :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255847"><span id="local-6989586621689255849"><span id="local-6989586621689255851"><span class="annot"><span class="annottext">Num Milliseconds
+Num Milliseconds
+-&gt; (Milliseconds -&gt; Milliseconds -&gt; Milliseconds)
+-&gt; (Milliseconds -&gt; Milliseconds)
+-&gt; (Rational -&gt; Milliseconds)
+-&gt; Fractional Milliseconds
+Rational -&gt; Milliseconds
+Milliseconds -&gt; Milliseconds
+Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+forall a.
+Num a
+-&gt; (a -&gt; a -&gt; a) -&gt; (a -&gt; a) -&gt; (Rational -&gt; a) -&gt; Fractional a
+fromRational :: Rational -&gt; Milliseconds
+$cfromRational :: Rational -&gt; Milliseconds
+recip :: Milliseconds -&gt; Milliseconds
+$crecip :: Milliseconds -&gt; Milliseconds
+/ :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+$c/ :: Milliseconds -&gt; Milliseconds -&gt; Milliseconds
+$cp1Fractional :: Num Milliseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Fractional</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255843"><span class="annot"><span class="annottext">Num Milliseconds
+Ord Milliseconds
+Num Milliseconds
+-&gt; Ord Milliseconds
+-&gt; (Milliseconds -&gt; Rational)
+-&gt; Real Milliseconds
+Milliseconds -&gt; Rational
+forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
+toRational :: Milliseconds -&gt; Rational
+$ctoRational :: Milliseconds -&gt; Rational
+$cp2Real :: Ord Milliseconds
+$cp1Real :: Num Milliseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255839"><span id="local-6989586621689255841"><span class="annot"><span class="annottext">Int -&gt; Milliseconds -&gt; Int
+Milliseconds -&gt; Int
+(Int -&gt; Milliseconds -&gt; Int)
+-&gt; (Milliseconds -&gt; Int) -&gt; Hashable Milliseconds
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Milliseconds -&gt; Int
+$chash :: Milliseconds -&gt; Int
+hashWithSalt :: Int -&gt; Milliseconds -&gt; Int
+$chashWithSalt :: Int -&gt; Milliseconds -&gt; Int
+</span><a href="#local-6989586621689255839"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255827"><span id="local-6989586621689255829"><span id="local-6989586621689255831"><span id="local-6989586621689255833"><span id="local-6989586621689255835"><span class="annot"><span class="annottext">Fractional Milliseconds
+Real Milliseconds
+Real Milliseconds
+-&gt; Fractional Milliseconds
+-&gt; (forall b. Integral b =&gt; Milliseconds -&gt; (b, Milliseconds))
+-&gt; (forall b. Integral b =&gt; Milliseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Milliseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Milliseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Milliseconds -&gt; b)
+-&gt; RealFrac Milliseconds
+Milliseconds -&gt; b
+Milliseconds -&gt; b
+Milliseconds -&gt; b
+Milliseconds -&gt; b
+Milliseconds -&gt; (b, Milliseconds)
+forall b. Integral b =&gt; Milliseconds -&gt; b
+forall b. Integral b =&gt; Milliseconds -&gt; (b, Milliseconds)
+forall a.
+Real a
+-&gt; Fractional a
+-&gt; (forall b. Integral b =&gt; a -&gt; (b, a))
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; RealFrac a
+floor :: Milliseconds -&gt; b
+$cfloor :: forall b. Integral b =&gt; Milliseconds -&gt; b
+ceiling :: Milliseconds -&gt; b
+$cceiling :: forall b. Integral b =&gt; Milliseconds -&gt; b
+round :: Milliseconds -&gt; b
+$cround :: forall b. Integral b =&gt; Milliseconds -&gt; b
+truncate :: Milliseconds -&gt; b
+$ctruncate :: forall b. Integral b =&gt; Milliseconds -&gt; b
+properFraction :: Milliseconds -&gt; (b, Milliseconds)
+$cproperFraction :: forall b. Integral b =&gt; Milliseconds -&gt; (b, Milliseconds)
+$cp2RealFrac :: Fractional Milliseconds
+$cp1RealFrac :: Real Milliseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">RealFrac</span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><span class="hs-number">1000000000</span></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- TODO: Has an alternative string representation instead of a numberic one here</span><span>
+</span><span id="line-109"></span><span class="hs-comment">-- in order to clarify what's going on.</span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- Rounding is also problematic, but should be ok for now...</span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689255820"><span id="local-6989586621689255822"><span id="local-6989586621689255824"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-type">Milliseconds</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621689255819"><span class="annot"><span class="annottext">toJSON :: Milliseconds -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Value)
+-&gt; (Milliseconds -&gt; Integer) -&gt; Milliseconds -&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Integer -&gt; Integer) -&gt; Integer -&gt; Integer -&gt; Integer
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">div</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">1e9</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Integer)
+-&gt; (Milliseconds -&gt; Integer) -&gt; Milliseconds -&gt; Integer
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
+</span><span class="hs-identifier hs-var">diffTimeToPicoseconds</span></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; Integer)
+-&gt; (Milliseconds -&gt; DiffTime) -&gt; Milliseconds -&gt; Integer
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#milliseconds"><span class="hs-identifier hs-var hs-var">milliseconds</span></a></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689255811"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-type">Milliseconds</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621689255810"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Milliseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621689255808"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689255808"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">String
+-&gt; (Scientific -&gt; Parser Milliseconds)
+-&gt; Value
+-&gt; Parser Milliseconds
+forall a. String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">withScientific</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Milliseconds Number&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Milliseconds -&gt; Parser Milliseconds
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Milliseconds -&gt; Parser Milliseconds)
+-&gt; (Scientific -&gt; Milliseconds)
+-&gt; Scientific
+-&gt; Parser Milliseconds
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Milliseconds
+</span><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-var">Milliseconds</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; Milliseconds)
+-&gt; (Scientific -&gt; DiffTime) -&gt; Scientific -&gt; Milliseconds
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; DiffTime
+</span><span class="hs-identifier hs-var">picosecondsToDiffTime</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; DiffTime)
+-&gt; (Scientific -&gt; Integer) -&gt; Scientific -&gt; DiffTime
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">1e9</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Integer)
+-&gt; (Scientific -&gt; Integer) -&gt; Scientific -&gt; Integer
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Integer
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">ceiling</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689255808"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-117"></span><span>      </span><span class="annot"><span class="annottext">Parser Milliseconds -&gt; Parser Milliseconds -&gt; Parser Milliseconds
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Text -&gt; Parser Milliseconds) -&gt; Value -&gt; Parser Milliseconds
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">withText</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Milliseconds String&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String -&gt; Parser Milliseconds)
+-&gt; (Milliseconds -&gt; Parser Milliseconds)
+-&gt; Either String Milliseconds
+-&gt; Parser Milliseconds
+forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
+</span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Parser Milliseconds
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser Milliseconds)
+-&gt; ShowS -&gt; String -&gt; Parser Milliseconds
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ShowS
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; Parser Milliseconds
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either String Milliseconds -&gt; Parser Milliseconds)
+-&gt; (Text -&gt; Either String Milliseconds)
+-&gt; Text
+-&gt; Parser Milliseconds
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Milliseconds
+forall a. Read a =&gt; String -&gt; Either String a
+</span><span class="hs-identifier hs-var">TR.readEither</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either String Milliseconds)
+-&gt; (Text -&gt; String) -&gt; Text -&gt; Either String Milliseconds
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">unpack</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689255808"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">newtype</span><span> </span><span id="Microseconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Microseconds"><span class="hs-identifier hs-var">Microseconds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Microseconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Microseconds"><span class="hs-identifier hs-var">Microseconds</span></a></span></span><span> </span><span class="hs-special">{</span><span id="microseconds"><span class="annot"><span class="annottext">Microseconds -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#microseconds"><span class="hs-identifier hs-var hs-var">microseconds</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255794"><span id="local-6989586621689255796"><span class="annot"><span class="annottext">DiffTime -&gt; Microseconds
+Microseconds -&gt; DiffTime
+(DiffTime -&gt; Microseconds)
+-&gt; (Microseconds -&gt; DiffTime) -&gt; Duration Microseconds
+forall d. (DiffTime -&gt; d) -&gt; (d -&gt; DiffTime) -&gt; Duration d
+toDiffTime :: Microseconds -&gt; DiffTime
+$ctoDiffTime :: Microseconds -&gt; DiffTime
+fromDiffTime :: DiffTime -&gt; Microseconds
+$cfromDiffTime :: DiffTime -&gt; Microseconds
+</span><a href="#local-6989586621689255794"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Duration</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255788"><span id="local-6989586621689255790"><span id="local-6989586621689255792"><span class="annot"><span class="annottext">Int -&gt; Microseconds -&gt; ShowS
+[Microseconds] -&gt; ShowS
+Microseconds -&gt; String
+(Int -&gt; Microseconds -&gt; ShowS)
+-&gt; (Microseconds -&gt; String)
+-&gt; ([Microseconds] -&gt; ShowS)
+-&gt; Show Microseconds
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Microseconds] -&gt; ShowS
+$cshowList :: [Microseconds] -&gt; ShowS
+show :: Microseconds -&gt; String
+$cshow :: Microseconds -&gt; String
+showsPrec :: Int -&gt; Microseconds -&gt; ShowS
+$cshowsPrec :: Int -&gt; Microseconds -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255784"><span id="local-6989586621689255786"><span class="annot"><span class="annottext">Microseconds -&gt; Microseconds -&gt; Bool
+(Microseconds -&gt; Microseconds -&gt; Bool)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Bool) -&gt; Eq Microseconds
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Microseconds -&gt; Microseconds -&gt; Bool
+$c/= :: Microseconds -&gt; Microseconds -&gt; Bool
+== :: Microseconds -&gt; Microseconds -&gt; Bool
+$c== :: Microseconds -&gt; Microseconds -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255769"><span id="local-6989586621689255771"><span id="local-6989586621689255773"><span id="local-6989586621689255775"><span id="local-6989586621689255777"><span id="local-6989586621689255779"><span id="local-6989586621689255781"><span class="annot"><span class="annottext">Eq Microseconds
+Eq Microseconds
+-&gt; (Microseconds -&gt; Microseconds -&gt; Ordering)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Bool)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Bool)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Bool)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Bool)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Microseconds)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Microseconds)
+-&gt; Ord Microseconds
+Microseconds -&gt; Microseconds -&gt; Bool
+Microseconds -&gt; Microseconds -&gt; Ordering
+Microseconds -&gt; Microseconds -&gt; Microseconds
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Microseconds -&gt; Microseconds -&gt; Microseconds
+$cmin :: Microseconds -&gt; Microseconds -&gt; Microseconds
+max :: Microseconds -&gt; Microseconds -&gt; Microseconds
+$cmax :: Microseconds -&gt; Microseconds -&gt; Microseconds
+&gt;= :: Microseconds -&gt; Microseconds -&gt; Bool
+$c&gt;= :: Microseconds -&gt; Microseconds -&gt; Bool
+&gt; :: Microseconds -&gt; Microseconds -&gt; Bool
+$c&gt; :: Microseconds -&gt; Microseconds -&gt; Bool
+&lt;= :: Microseconds -&gt; Microseconds -&gt; Bool
+$c&lt;= :: Microseconds -&gt; Microseconds -&gt; Bool
+&lt; :: Microseconds -&gt; Microseconds -&gt; Bool
+$c&lt; :: Microseconds -&gt; Microseconds -&gt; Bool
+compare :: Microseconds -&gt; Microseconds -&gt; Ordering
+$ccompare :: Microseconds -&gt; Microseconds -&gt; Ordering
+$cp1Ord :: Eq Microseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255761"><span id="local-6989586621689255763"><span id="local-6989586621689255765"><span id="local-6989586621689255767"><span class="annot"><span class="annottext">ReadPrec [Microseconds]
+ReadPrec Microseconds
+Int -&gt; ReadS Microseconds
+ReadS [Microseconds]
+(Int -&gt; ReadS Microseconds)
+-&gt; ReadS [Microseconds]
+-&gt; ReadPrec Microseconds
+-&gt; ReadPrec [Microseconds]
+-&gt; Read Microseconds
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Microseconds]
+$creadListPrec :: ReadPrec [Microseconds]
+readPrec :: ReadPrec Microseconds
+$creadPrec :: ReadPrec Microseconds
+readList :: ReadS [Microseconds]
+$creadList :: ReadS [Microseconds]
+readsPrec :: Int -&gt; ReadS Microseconds
+$creadsPrec :: Int -&gt; ReadS Microseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255747"><span id="local-6989586621689255749"><span id="local-6989586621689255751"><span id="local-6989586621689255753"><span id="local-6989586621689255755"><span id="local-6989586621689255757"><span id="local-6989586621689255759"><span class="annot"><span class="annottext">Integer -&gt; Microseconds
+Microseconds -&gt; Microseconds
+Microseconds -&gt; Microseconds -&gt; Microseconds
+(Microseconds -&gt; Microseconds -&gt; Microseconds)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Microseconds)
+-&gt; (Microseconds -&gt; Microseconds -&gt; Microseconds)
+-&gt; (Microseconds -&gt; Microseconds)
+-&gt; (Microseconds -&gt; Microseconds)
+-&gt; (Microseconds -&gt; Microseconds)
+-&gt; (Integer -&gt; Microseconds)
+-&gt; Num Microseconds
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Microseconds
+$cfromInteger :: Integer -&gt; Microseconds
+signum :: Microseconds -&gt; Microseconds
+$csignum :: Microseconds -&gt; Microseconds
+abs :: Microseconds -&gt; Microseconds
+$cabs :: Microseconds -&gt; Microseconds
+negate :: Microseconds -&gt; Microseconds
+$cnegate :: Microseconds -&gt; Microseconds
+* :: Microseconds -&gt; Microseconds -&gt; Microseconds
+$c* :: Microseconds -&gt; Microseconds -&gt; Microseconds
+- :: Microseconds -&gt; Microseconds -&gt; Microseconds
+$c- :: Microseconds -&gt; Microseconds -&gt; Microseconds
++ :: Microseconds -&gt; Microseconds -&gt; Microseconds
+$c+ :: Microseconds -&gt; Microseconds -&gt; Microseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255740"><span id="local-6989586621689255742"><span id="local-6989586621689255744"><span class="annot"><span class="annottext">Num Microseconds
+Num Microseconds
+-&gt; (Microseconds -&gt; Microseconds -&gt; Microseconds)
+-&gt; (Microseconds -&gt; Microseconds)
+-&gt; (Rational -&gt; Microseconds)
+-&gt; Fractional Microseconds
+Rational -&gt; Microseconds
+Microseconds -&gt; Microseconds
+Microseconds -&gt; Microseconds -&gt; Microseconds
+forall a.
+Num a
+-&gt; (a -&gt; a -&gt; a) -&gt; (a -&gt; a) -&gt; (Rational -&gt; a) -&gt; Fractional a
+fromRational :: Rational -&gt; Microseconds
+$cfromRational :: Rational -&gt; Microseconds
+recip :: Microseconds -&gt; Microseconds
+$crecip :: Microseconds -&gt; Microseconds
+/ :: Microseconds -&gt; Microseconds -&gt; Microseconds
+$c/ :: Microseconds -&gt; Microseconds -&gt; Microseconds
+$cp1Fractional :: Num Microseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Fractional</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255736"><span class="annot"><span class="annottext">Num Microseconds
+Ord Microseconds
+Num Microseconds
+-&gt; Ord Microseconds
+-&gt; (Microseconds -&gt; Rational)
+-&gt; Real Microseconds
+Microseconds -&gt; Rational
+forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
+toRational :: Microseconds -&gt; Rational
+$ctoRational :: Microseconds -&gt; Rational
+$cp2Real :: Ord Microseconds
+$cp1Real :: Num Microseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255732"><span id="local-6989586621689255734"><span class="annot"><span class="annottext">Int -&gt; Microseconds -&gt; Int
+Microseconds -&gt; Int
+(Int -&gt; Microseconds -&gt; Int)
+-&gt; (Microseconds -&gt; Int) -&gt; Hashable Microseconds
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Microseconds -&gt; Int
+$chash :: Microseconds -&gt; Int
+hashWithSalt :: Int -&gt; Microseconds -&gt; Int
+$chashWithSalt :: Int -&gt; Microseconds -&gt; Int
+</span><a href="#local-6989586621689255732"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255720"><span id="local-6989586621689255722"><span id="local-6989586621689255724"><span id="local-6989586621689255726"><span id="local-6989586621689255728"><span class="annot"><span class="annottext">Fractional Microseconds
+Real Microseconds
+Real Microseconds
+-&gt; Fractional Microseconds
+-&gt; (forall b. Integral b =&gt; Microseconds -&gt; (b, Microseconds))
+-&gt; (forall b. Integral b =&gt; Microseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Microseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Microseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Microseconds -&gt; b)
+-&gt; RealFrac Microseconds
+Microseconds -&gt; b
+Microseconds -&gt; b
+Microseconds -&gt; b
+Microseconds -&gt; b
+Microseconds -&gt; (b, Microseconds)
+forall b. Integral b =&gt; Microseconds -&gt; b
+forall b. Integral b =&gt; Microseconds -&gt; (b, Microseconds)
+forall a.
+Real a
+-&gt; Fractional a
+-&gt; (forall b. Integral b =&gt; a -&gt; (b, a))
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; RealFrac a
+floor :: Microseconds -&gt; b
+$cfloor :: forall b. Integral b =&gt; Microseconds -&gt; b
+ceiling :: Microseconds -&gt; b
+$cceiling :: forall b. Integral b =&gt; Microseconds -&gt; b
+round :: Microseconds -&gt; b
+$cround :: forall b. Integral b =&gt; Microseconds -&gt; b
+truncate :: Microseconds -&gt; b
+$ctruncate :: forall b. Integral b =&gt; Microseconds -&gt; b
+properFraction :: Microseconds -&gt; (b, Microseconds)
+$cproperFraction :: forall b. Integral b =&gt; Microseconds -&gt; (b, Microseconds)
+$cp2RealFrac :: Fractional Microseconds
+$cp1RealFrac :: Real Microseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">RealFrac</span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><span class="hs-number">1000000</span></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span class="hs-keyword">newtype</span><span> </span><span id="Nanoseconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Nanoseconds"><span class="hs-identifier hs-var">Nanoseconds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Nanoseconds"><span class="annot"><a href="Data.Time.Clock.Units.html#Nanoseconds"><span class="hs-identifier hs-var">Nanoseconds</span></a></span></span><span> </span><span class="hs-special">{</span><span id="nanoseconds"><span class="annot"><span class="annottext">Nanoseconds -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#nanoseconds"><span class="hs-identifier hs-var hs-var">nanoseconds</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">}</span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255714"><span id="local-6989586621689255716"><span class="annot"><span class="annottext">DiffTime -&gt; Nanoseconds
+Nanoseconds -&gt; DiffTime
+(DiffTime -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; DiffTime) -&gt; Duration Nanoseconds
+forall d. (DiffTime -&gt; d) -&gt; (d -&gt; DiffTime) -&gt; Duration d
+toDiffTime :: Nanoseconds -&gt; DiffTime
+$ctoDiffTime :: Nanoseconds -&gt; DiffTime
+fromDiffTime :: DiffTime -&gt; Nanoseconds
+$cfromDiffTime :: DiffTime -&gt; Nanoseconds
+</span><a href="#local-6989586621689255714"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Duration</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255708"><span id="local-6989586621689255710"><span id="local-6989586621689255712"><span class="annot"><span class="annottext">Int -&gt; Nanoseconds -&gt; ShowS
+[Nanoseconds] -&gt; ShowS
+Nanoseconds -&gt; String
+(Int -&gt; Nanoseconds -&gt; ShowS)
+-&gt; (Nanoseconds -&gt; String)
+-&gt; ([Nanoseconds] -&gt; ShowS)
+-&gt; Show Nanoseconds
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Nanoseconds] -&gt; ShowS
+$cshowList :: [Nanoseconds] -&gt; ShowS
+show :: Nanoseconds -&gt; String
+$cshow :: Nanoseconds -&gt; String
+showsPrec :: Int -&gt; Nanoseconds -&gt; ShowS
+$cshowsPrec :: Int -&gt; Nanoseconds -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255704"><span id="local-6989586621689255706"><span class="annot"><span class="annottext">Nanoseconds -&gt; Nanoseconds -&gt; Bool
+(Nanoseconds -&gt; Nanoseconds -&gt; Bool)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Bool) -&gt; Eq Nanoseconds
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+$c/= :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+== :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+$c== :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255689"><span id="local-6989586621689255691"><span id="local-6989586621689255693"><span id="local-6989586621689255695"><span id="local-6989586621689255697"><span id="local-6989586621689255699"><span id="local-6989586621689255701"><span class="annot"><span class="annottext">Eq Nanoseconds
+Eq Nanoseconds
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Ordering)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Bool)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Bool)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Bool)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Bool)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds)
+-&gt; Ord Nanoseconds
+Nanoseconds -&gt; Nanoseconds -&gt; Bool
+Nanoseconds -&gt; Nanoseconds -&gt; Ordering
+Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+$cmin :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+max :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+$cmax :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+&gt;= :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+$c&gt;= :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+&gt; :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+$c&gt; :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+&lt;= :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+$c&lt;= :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+&lt; :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+$c&lt; :: Nanoseconds -&gt; Nanoseconds -&gt; Bool
+compare :: Nanoseconds -&gt; Nanoseconds -&gt; Ordering
+$ccompare :: Nanoseconds -&gt; Nanoseconds -&gt; Ordering
+$cp1Ord :: Eq Nanoseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255681"><span id="local-6989586621689255683"><span id="local-6989586621689255685"><span id="local-6989586621689255687"><span class="annot"><span class="annottext">ReadPrec [Nanoseconds]
+ReadPrec Nanoseconds
+Int -&gt; ReadS Nanoseconds
+ReadS [Nanoseconds]
+(Int -&gt; ReadS Nanoseconds)
+-&gt; ReadS [Nanoseconds]
+-&gt; ReadPrec Nanoseconds
+-&gt; ReadPrec [Nanoseconds]
+-&gt; Read Nanoseconds
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Nanoseconds]
+$creadListPrec :: ReadPrec [Nanoseconds]
+readPrec :: ReadPrec Nanoseconds
+$creadPrec :: ReadPrec Nanoseconds
+readList :: ReadS [Nanoseconds]
+$creadList :: ReadS [Nanoseconds]
+readsPrec :: Int -&gt; ReadS Nanoseconds
+$creadsPrec :: Int -&gt; ReadS Nanoseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255667"><span id="local-6989586621689255669"><span id="local-6989586621689255671"><span id="local-6989586621689255673"><span id="local-6989586621689255675"><span id="local-6989586621689255677"><span id="local-6989586621689255679"><span class="annot"><span class="annottext">Integer -&gt; Nanoseconds
+Nanoseconds -&gt; Nanoseconds
+Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+(Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; Nanoseconds)
+-&gt; (Integer -&gt; Nanoseconds)
+-&gt; Num Nanoseconds
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Nanoseconds
+$cfromInteger :: Integer -&gt; Nanoseconds
+signum :: Nanoseconds -&gt; Nanoseconds
+$csignum :: Nanoseconds -&gt; Nanoseconds
+abs :: Nanoseconds -&gt; Nanoseconds
+$cabs :: Nanoseconds -&gt; Nanoseconds
+negate :: Nanoseconds -&gt; Nanoseconds
+$cnegate :: Nanoseconds -&gt; Nanoseconds
+* :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+$c* :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+- :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+$c- :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
++ :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+$c+ :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255660"><span id="local-6989586621689255662"><span id="local-6989586621689255664"><span class="annot"><span class="annottext">Num Nanoseconds
+Num Nanoseconds
+-&gt; (Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds)
+-&gt; (Nanoseconds -&gt; Nanoseconds)
+-&gt; (Rational -&gt; Nanoseconds)
+-&gt; Fractional Nanoseconds
+Rational -&gt; Nanoseconds
+Nanoseconds -&gt; Nanoseconds
+Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+forall a.
+Num a
+-&gt; (a -&gt; a -&gt; a) -&gt; (a -&gt; a) -&gt; (Rational -&gt; a) -&gt; Fractional a
+fromRational :: Rational -&gt; Nanoseconds
+$cfromRational :: Rational -&gt; Nanoseconds
+recip :: Nanoseconds -&gt; Nanoseconds
+$crecip :: Nanoseconds -&gt; Nanoseconds
+/ :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+$c/ :: Nanoseconds -&gt; Nanoseconds -&gt; Nanoseconds
+$cp1Fractional :: Num Nanoseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Fractional</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255656"><span class="annot"><span class="annottext">Num Nanoseconds
+Ord Nanoseconds
+Num Nanoseconds
+-&gt; Ord Nanoseconds -&gt; (Nanoseconds -&gt; Rational) -&gt; Real Nanoseconds
+Nanoseconds -&gt; Rational
+forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
+toRational :: Nanoseconds -&gt; Rational
+$ctoRational :: Nanoseconds -&gt; Rational
+$cp2Real :: Ord Nanoseconds
+$cp1Real :: Num Nanoseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255652"><span id="local-6989586621689255654"><span class="annot"><span class="annottext">Int -&gt; Nanoseconds -&gt; Int
+Nanoseconds -&gt; Int
+(Int -&gt; Nanoseconds -&gt; Int)
+-&gt; (Nanoseconds -&gt; Int) -&gt; Hashable Nanoseconds
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Nanoseconds -&gt; Int
+$chash :: Nanoseconds -&gt; Int
+hashWithSalt :: Int -&gt; Nanoseconds -&gt; Int
+$chashWithSalt :: Int -&gt; Nanoseconds -&gt; Int
+</span><a href="#local-6989586621689255652"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255640"><span id="local-6989586621689255642"><span id="local-6989586621689255644"><span id="local-6989586621689255646"><span id="local-6989586621689255648"><span class="annot"><span class="annottext">Fractional Nanoseconds
+Real Nanoseconds
+Real Nanoseconds
+-&gt; Fractional Nanoseconds
+-&gt; (forall b. Integral b =&gt; Nanoseconds -&gt; (b, Nanoseconds))
+-&gt; (forall b. Integral b =&gt; Nanoseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Nanoseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Nanoseconds -&gt; b)
+-&gt; (forall b. Integral b =&gt; Nanoseconds -&gt; b)
+-&gt; RealFrac Nanoseconds
+Nanoseconds -&gt; b
+Nanoseconds -&gt; b
+Nanoseconds -&gt; b
+Nanoseconds -&gt; b
+Nanoseconds -&gt; (b, Nanoseconds)
+forall b. Integral b =&gt; Nanoseconds -&gt; b
+forall b. Integral b =&gt; Nanoseconds -&gt; (b, Nanoseconds)
+forall a.
+Real a
+-&gt; Fractional a
+-&gt; (forall b. Integral b =&gt; a -&gt; (b, a))
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; (forall b. Integral b =&gt; a -&gt; b)
+-&gt; RealFrac a
+floor :: Nanoseconds -&gt; b
+$cfloor :: forall b. Integral b =&gt; Nanoseconds -&gt; b
+ceiling :: Nanoseconds -&gt; b
+$cceiling :: forall b. Integral b =&gt; Nanoseconds -&gt; b
+round :: Nanoseconds -&gt; b
+$cround :: forall b. Integral b =&gt; Nanoseconds -&gt; b
+truncate :: Nanoseconds -&gt; b
+$ctruncate :: forall b. Integral b =&gt; Nanoseconds -&gt; b
+properFraction :: Nanoseconds -&gt; (b, Nanoseconds)
+$cproperFraction :: forall b. Integral b =&gt; Nanoseconds -&gt; (b, Nanoseconds)
+$cp2RealFrac :: Fractional Nanoseconds
+$cp1RealFrac :: Real Nanoseconds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">RealFrac</span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><span class="hs-number">1000</span></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span class="hs-comment">-- Internal for deriving via</span><span>
+</span><span id="line-128"></span><span class="hs-keyword">newtype</span><span> </span><span id="TimeUnit"><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689256285"><span class="annot"><a href="#local-6989586621689256285"><span class="hs-identifier hs-type">picosPerUnit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TimeUnit"><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255633"><span id="local-6989586621689255635"><span id="local-6989586621689255637"><span class="annot"><span class="annottext">Int -&gt; TimeUnit picosPerUnit -&gt; ShowS
+[TimeUnit picosPerUnit] -&gt; ShowS
+TimeUnit picosPerUnit -&gt; String
+(Int -&gt; TimeUnit picosPerUnit -&gt; ShowS)
+-&gt; (TimeUnit picosPerUnit -&gt; String)
+-&gt; ([TimeUnit picosPerUnit] -&gt; ShowS)
+-&gt; Show (TimeUnit picosPerUnit)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (picosPerUnit :: Nat). Int -&gt; TimeUnit picosPerUnit -&gt; ShowS
+forall (picosPerUnit :: Nat). [TimeUnit picosPerUnit] -&gt; ShowS
+forall (picosPerUnit :: Nat). TimeUnit picosPerUnit -&gt; String
+showList :: [TimeUnit picosPerUnit] -&gt; ShowS
+$cshowList :: forall (picosPerUnit :: Nat). [TimeUnit picosPerUnit] -&gt; ShowS
+show :: TimeUnit picosPerUnit -&gt; String
+$cshow :: forall (picosPerUnit :: Nat). TimeUnit picosPerUnit -&gt; String
+showsPrec :: Int -&gt; TimeUnit picosPerUnit -&gt; ShowS
+$cshowsPrec :: forall (picosPerUnit :: Nat). Int -&gt; TimeUnit picosPerUnit -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255629"><span id="local-6989586621689255631"><span class="annot"><span class="annottext">TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+(TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool)
+-&gt; (TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool)
+-&gt; Eq (TimeUnit picosPerUnit)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+/= :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+$c/= :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+== :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+$c== :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689255614"><span id="local-6989586621689255616"><span id="local-6989586621689255618"><span id="local-6989586621689255620"><span id="local-6989586621689255622"><span id="local-6989586621689255624"><span id="local-6989586621689255626"><span class="annot"><span class="annottext">Eq (TimeUnit picosPerUnit)
+Eq (TimeUnit picosPerUnit)
+-&gt; (TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Ordering)
+-&gt; (TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool)
+-&gt; (TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool)
+-&gt; (TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool)
+-&gt; (TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool)
+-&gt; (TimeUnit picosPerUnit
+    -&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit)
+-&gt; (TimeUnit picosPerUnit
+    -&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit)
+-&gt; Ord (TimeUnit picosPerUnit)
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Ordering
+TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall (picosPerUnit :: Nat). Eq (TimeUnit picosPerUnit)
+forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Ordering
+forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+min :: TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+$cmin :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+max :: TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+$cmax :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+&gt;= :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+$c&gt;= :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+&gt; :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+$c&gt; :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+&lt;= :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+$c&lt;= :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+&lt; :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+$c&lt; :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Bool
+compare :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Ordering
+$ccompare :: forall (picosPerUnit :: Nat).
+TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit -&gt; Ordering
+$cp1Ord :: forall (picosPerUnit :: Nat). Eq (TimeUnit picosPerUnit)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-keyword">type</span><span> </span><span id="SecondsP"><span class="annot"><a href="Data.Time.Clock.Units.html#SecondsP"><span class="hs-identifier hs-var">SecondsP</span></a></span></span><span> </span><span id="local-6989586621689255613"><span class="annot"><a href="#local-6989586621689255613"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621689255613"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">GHC.TypeLits.*</span></span><span> </span><span class="annot"><span class="hs-number">1000000000000</span></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span class="annot"><a href="Data.Time.Clock.Units.html#natNum"><span class="hs-identifier hs-type">natNum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689256283"><span class="annot"><a href="#local-6989586621689256283"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689256284"><span class="annot"><a href="#local-6989586621689256284"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621689256283"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621689256284"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689256284"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-134"></span><span id="natNum"><span class="annot"><span class="annottext">natNum :: a
+</span><a href="Data.Time.Clock.Units.html#natNum"><span class="hs-identifier hs-var hs-var">natNum</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; a
+forall a. Num a =&gt; Integer -&gt; a
+</span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; a) -&gt; Integer -&gt; a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Proxy n -&gt; Integer
+forall (n :: Nat) (proxy :: Nat -&gt; *).
+KnownNat n =&gt;
+proxy n -&gt; Integer
+</span><span class="hs-identifier hs-var">natVal</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689256283"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span id="local-6989586621689255609"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621689255609"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255609"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255601"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255601"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689255600"><span class="annot"><span class="annottext">+ :: TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">+</span></span></span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255598"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255598"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; DiffTime -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255601"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; DiffTime
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255598"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255597"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255597"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689255596"><span class="annot"><span class="annottext">- :: TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+</span><span class="hs-glyph hs-var hs-var hs-var hs-var">-</span></span></span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255595"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255595"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; DiffTime -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255597"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; DiffTime
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255595"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255594"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255594"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689255593"><span class="annot"><span class="annottext">* :: TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+</span><a href="#local-6989586621689255593"><span class="hs-operator hs-var hs-var hs-var hs-var">*</span></a></span></span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255592"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255592"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; (Integer -&gt; DiffTime) -&gt; Integer -&gt; TimeUnit picosPerUnit
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; DiffTime
+</span><span class="hs-identifier hs-var">picosecondsToDiffTime</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; TimeUnit picosPerUnit)
+-&gt; Integer -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-141"></span><span>      </span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
+</span><span class="hs-identifier hs-var">diffTimeToPicoseconds</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255594"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
+</span><span class="hs-identifier hs-var">diffTimeToPicoseconds</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255592"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="annottext">forall a. (KnownNat picosPerUnit, Num a) =&gt; a
+forall (n :: Nat) a. (KnownNat n, Num a) =&gt; a
+</span><a href="Data.Time.Clock.Units.html#natNum"><span class="hs-identifier hs-var">natNum</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689255609"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621689255591"><span class="annot"><span class="annottext">negate :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">negate</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255590"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255590"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; DiffTime -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255590"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-143"></span><span>  </span><span id="local-6989586621689255589"><span class="annot"><span class="annottext">abs :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">abs</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255587"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255587"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; DiffTime -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">abs</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255587"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621689255586"><span class="annot"><span class="annottext">signum :: TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">signum</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255584"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255584"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; DiffTime -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">signum</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255584"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span id="local-6989586621689255583"><span class="annot"><span class="annottext">fromInteger :: Integer -&gt; TimeUnit picosPerUnit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromInteger</span></span></span><span> </span><span id="local-6989586621689255582"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689255582"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; (Integer -&gt; DiffTime) -&gt; Integer -&gt; TimeUnit picosPerUnit
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; DiffTime
+</span><span class="hs-identifier hs-var">picosecondsToDiffTime</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; TimeUnit picosPerUnit)
+-&gt; Integer -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689255582"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">forall a. (KnownNat picosPerUnit, Num a) =&gt; a
+forall (n :: Nat) a. (KnownNat n, Num a) =&gt; a
+</span><a href="Data.Time.Clock.Units.html#natNum"><span class="hs-identifier hs-var">natNum</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689255609"><span class="hs-identifier hs-type">picosPerUnit</span></a></span></span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span id="local-6989586621689255581"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689255574"><span id="local-6989586621689255576"><span id="local-6989586621689255578"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621689255581"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Read</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255581"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621689255573"><span class="annot"><span class="annottext">readsPrec :: Int -&gt; ReadS (TimeUnit picosPerUnit)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">readsPrec</span></span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Rational, String) -&gt; (TimeUnit picosPerUnit, String))
+-&gt; [(Rational, String)] -&gt; [(TimeUnit picosPerUnit, String)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Rational -&gt; TimeUnit picosPerUnit)
+-&gt; (Rational, String) -&gt; (TimeUnit picosPerUnit, String)
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; a (b, d) (c, d)
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">Rational -&gt; TimeUnit picosPerUnit
+forall a. Fractional a =&gt; Rational -&gt; a
+</span><span class="hs-identifier hs-var">fromRational</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Rational, String)] -&gt; [(TimeUnit picosPerUnit, String)])
+-&gt; (String -&gt; [(Rational, String)])
+-&gt; ReadS (TimeUnit picosPerUnit)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; [(Rational, String)]
+forall a. RealFrac a =&gt; ReadS a
+</span><span class="hs-identifier hs-var">readFloat</span></span></span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span id="local-6989586621689255571"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689255567"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621689255571"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Fractional</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255571"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255565"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255565"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689255564"><span class="annot"><span class="annottext">/ :: TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">/</span></span></span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255562"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255562"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>    </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; (Integer -&gt; DiffTime) -&gt; Integer -&gt; TimeUnit picosPerUnit
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; DiffTime
+</span><span class="hs-identifier hs-var">picosecondsToDiffTime</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; TimeUnit picosPerUnit)
+-&gt; Integer -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-153"></span><span>      </span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
+</span><span class="hs-identifier hs-var">diffTimeToPicoseconds</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255565"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">forall a. (KnownNat picosPerUnit, Num a) =&gt; a
+forall (n :: Nat) a. (KnownNat n, Num a) =&gt; a
+</span><a href="Data.Time.Clock.Units.html#natNum"><span class="hs-identifier hs-var">natNum</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689255571"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
+</span><span class="hs-identifier hs-var">diffTimeToPicoseconds</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255562"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621689255561"><span class="annot"><span class="annottext">fromRational :: Rational -&gt; TimeUnit picosPerUnit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromRational</span></span></span><span> </span><span id="local-6989586621689255560"><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621689255560"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; TimeUnit picosPerUnit
+forall (picosPerUnit :: Nat). DiffTime -&gt; TimeUnit picosPerUnit
+</span><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-var">TimeUnit</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; TimeUnit picosPerUnit)
+-&gt; (Integer -&gt; DiffTime) -&gt; Integer -&gt; TimeUnit picosPerUnit
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; DiffTime
+</span><span class="hs-identifier hs-var">picosecondsToDiffTime</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; TimeUnit picosPerUnit)
+-&gt; Integer -&gt; TimeUnit picosPerUnit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Rational -&gt; Integer
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621689255560"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Rational -&gt; Rational -&gt; Rational
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">forall a. (KnownNat picosPerUnit, Num a) =&gt; a
+forall (n :: Nat) a. (KnownNat n, Num a) =&gt; a
+</span><a href="Data.Time.Clock.Units.html#natNum"><span class="hs-identifier hs-var">natNum</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689255571"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span id="local-6989586621689255558"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621689255558"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Real</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255558"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-157"></span><span>  </span><span id="local-6989586621689255554"><span class="annot"><span class="annottext">toRational :: TimeUnit picosPerUnit -&gt; Rational
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toRational</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255553"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255553"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Rational
+forall a. Real a =&gt; a -&gt; Rational
+</span><span class="hs-identifier hs-var">toRational</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
+</span><span class="hs-identifier hs-var">diffTimeToPicoseconds</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255553"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; Rational -&gt; Rational
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">forall a. (KnownNat picosPerUnit, Num a) =&gt; a
+forall (n :: Nat) a. (KnownNat n, Num a) =&gt; a
+</span><a href="Data.Time.Clock.Units.html#natNum"><span class="hs-identifier hs-var">natNum</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689255558"><span class="hs-identifier hs-type">picosPerUnit</span></a></span></span><span>
+</span><span id="line-158"></span><span>
+</span><span id="line-159"></span><span id="local-6989586621689255552"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621689255552"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">RealFrac</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255552"><span class="hs-identifier hs-type">picosPerUnit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621689255544"><span class="annot"><span class="annottext">properFraction :: TimeUnit picosPerUnit -&gt; (b, TimeUnit picosPerUnit)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">properFraction</span></span></span><span> </span><span id="local-6989586621689255542"><span class="annot"><span class="annottext">TimeUnit picosPerUnit
+</span><a href="#local-6989586621689255542"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621689255541"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit
+</span><a href="#local-6989586621689255542"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit
+-&gt; TimeUnit picosPerUnit -&gt; TimeUnit picosPerUnit
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; TimeUnit picosPerUnit
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621689255541"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-162"></span><span>      </span><span id="local-6989586621689255541"><span class="annot"><span class="annottext">i :: b
+</span><a href="#local-6989586621689255541"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">truncate</span></span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit
+</span><a href="#local-6989586621689255542"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-163"></span><span>  </span><span id="local-6989586621689255539"><span class="annot"><span class="annottext">truncate :: TimeUnit picosPerUnit -&gt; b
+</span><a href="#local-6989586621689255539"><span class="hs-identifier hs-var hs-var hs-var hs-var">truncate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">truncate</span></span><span> </span><span class="annot"><span class="annottext">(Rational -&gt; b)
+-&gt; (TimeUnit picosPerUnit -&gt; Rational)
+-&gt; TimeUnit picosPerUnit
+-&gt; b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit -&gt; Rational
+forall a. Real a =&gt; a -&gt; Rational
+</span><span class="hs-identifier hs-var">toRational</span></span><span>
+</span><span id="line-164"></span><span>  </span><span id="local-6989586621689255538"><span class="annot"><span class="annottext">round :: TimeUnit picosPerUnit -&gt; b
+</span><a href="#local-6989586621689255538"><span class="hs-identifier hs-var hs-var hs-var hs-var">round</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">(Rational -&gt; b)
+-&gt; (TimeUnit picosPerUnit -&gt; Rational)
+-&gt; TimeUnit picosPerUnit
+-&gt; b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit -&gt; Rational
+forall a. Real a =&gt; a -&gt; Rational
+</span><span class="hs-identifier hs-var">toRational</span></span><span>
+</span><span id="line-165"></span><span>  </span><span id="local-6989586621689255537"><span class="annot"><span class="annottext">ceiling :: TimeUnit picosPerUnit -&gt; b
+</span><a href="#local-6989586621689255537"><span class="hs-identifier hs-var hs-var hs-var hs-var">ceiling</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">ceiling</span></span><span> </span><span class="annot"><span class="annottext">(Rational -&gt; b)
+-&gt; (TimeUnit picosPerUnit -&gt; Rational)
+-&gt; TimeUnit picosPerUnit
+-&gt; b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit -&gt; Rational
+forall a. Real a =&gt; a -&gt; Rational
+</span><span class="hs-identifier hs-var">toRational</span></span><span>
+</span><span id="line-166"></span><span>  </span><span id="local-6989586621689255536"><span class="annot"><span class="annottext">floor :: TimeUnit picosPerUnit -&gt; b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">floor</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">floor</span></span><span> </span><span class="annot"><span class="annottext">(Rational -&gt; b)
+-&gt; (TimeUnit picosPerUnit -&gt; Rational)
+-&gt; TimeUnit picosPerUnit
+-&gt; b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TimeUnit picosPerUnit -&gt; Rational
+forall a. Real a =&gt; a -&gt; Rational
+</span><span class="hs-identifier hs-var">toRational</span></span></span><span>
+</span><span id="line-167"></span><span>
+</span><span id="line-168"></span><span class="hs-comment">-- we can ignore unit:</span><span>
+</span><span id="line-169"></span><span id="local-6989586621689255534"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689255531"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255534"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-170"></span><span>  </span><span id="local-6989586621689255530"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; TimeUnit a -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621689255528"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689255528"><span class="hs-identifier hs-var">salt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#TimeUnit"><span class="hs-identifier hs-type">TimeUnit</span></a></span><span> </span><span id="local-6989586621689255527"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255527"><span class="hs-identifier hs-var">dt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-171"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; Double -&gt; Int
+forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
+</span><span class="hs-identifier hs-var">hashWithSalt</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689255528"><span class="hs-identifier hs-var">salt</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Int) -&gt; Double -&gt; Int
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-172"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DiffTime -&gt; Double
+forall a b. (Real a, Fractional b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">realToFrac</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689255527"><span class="hs-identifier hs-var">dt</span></a></span></span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span class="hs-comment">-- | Duration types isomorphic to 'DiffTime', powering 'convertDuration'.</span><span>
+</span><span id="line-175"></span><span class="hs-keyword">class</span><span> </span><span id="Duration"><span class="annot"><a href="Data.Time.Clock.Units.html#Duration"><span class="hs-identifier hs-var">Duration</span></a></span></span><span> </span><span id="local-6989586621689256387"><span class="annot"><a href="#local-6989586621689256387"><span class="hs-identifier hs-type">d</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-176"></span><span>  </span><span id="fromDiffTime"><span class="annot"><a href="Data.Time.Clock.Units.html#fromDiffTime"><span class="hs-identifier hs-type">fromDiffTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689256387"><span class="hs-identifier hs-type">d</span></a></span><span>
+</span><span id="line-177"></span><span>  </span><span id="toDiffTime"><span class="annot"><a href="Data.Time.Clock.Units.html#toDiffTime"><span class="hs-identifier hs-type">toDiffTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689256387"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span>
+</span><span id="line-178"></span><span>
+</span><span id="line-179"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-180"></span><span>  </span><span id="local-6989586621689255522"><span class="annot"><span class="annottext">fromDiffTime :: DiffTime -&gt; DiffTime
+</span><a href="#local-6989586621689255522"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromDiffTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-181"></span><span>  </span><span id="local-6989586621689255520"><span class="annot"><span class="annottext">toDiffTime :: DiffTime -&gt; DiffTime
+</span><a href="#local-6989586621689255520"><span class="hs-identifier hs-var hs-var hs-var hs-var">toDiffTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NominalDiffTime</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-184"></span><span>  </span><span id="local-6989586621689255517"><span class="annot"><span class="annottext">fromDiffTime :: DiffTime -&gt; NominalDiffTime
+</span><a href="#local-6989586621689255517"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromDiffTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; NominalDiffTime
+forall a b. (Real a, Fractional b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">realToFrac</span></span><span>
+</span><span id="line-185"></span><span>  </span><span id="local-6989586621689255516"><span class="annot"><span class="annottext">toDiffTime :: NominalDiffTime -&gt; DiffTime
+</span><a href="#local-6989586621689255516"><span class="hs-identifier hs-var hs-var hs-var hs-var">toDiffTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NominalDiffTime -&gt; DiffTime
+forall a b. (Real a, Fractional b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">realToFrac</span></span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- | Safe conversion between duration units.</span><span>
+</span><span id="line-188"></span><span id="local-6989586621689255514"><span id="local-6989586621689255515"><span class="annot"><a href="Data.Time.Clock.Units.html#convertDuration"><span class="hs-identifier hs-type">convertDuration</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Time.Clock.Units.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255515"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Duration"><span class="hs-identifier hs-type">Duration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689255514"><span class="hs-identifier hs-type">y</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689255515"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689255514"><span class="hs-identifier hs-type">y</span></a></span></span></span><span>
+</span><span id="line-189"></span><span id="convertDuration"><span class="annot"><span class="annottext">convertDuration :: x -&gt; y
+</span><a href="Data.Time.Clock.Units.html#convertDuration"><span class="hs-identifier hs-var hs-var">convertDuration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; y
+forall d. Duration d =&gt; DiffTime -&gt; d
+</span><a href="Data.Time.Clock.Units.html#fromDiffTime"><span class="hs-identifier hs-var">fromDiffTime</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; y) -&gt; (x -&gt; DiffTime) -&gt; x -&gt; y
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">x -&gt; DiffTime
+forall d. Duration d =&gt; d -&gt; DiffTime
+</span><a href="Data.Time.Clock.Units.html#toDiffTime"><span class="hs-identifier hs-var">toDiffTime</span></a></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span class="annot"><a href="Data.Time.Clock.Units.html#diffTimeToMicroSeconds"><span class="hs-identifier hs-type">diffTimeToMicroSeconds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-192"></span><span id="diffTimeToMicroSeconds"><span class="annot"><span class="annottext">diffTimeToMicroSeconds :: DiffTime -&gt; Integer
+</span><a href="Data.Time.Clock.Units.html#diffTimeToMicroSeconds"><span class="hs-identifier hs-var hs-var">diffTimeToMicroSeconds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Integer
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">1000000</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Integer)
+-&gt; (DiffTime -&gt; Integer) -&gt; DiffTime -&gt; Integer
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
+</span><span class="hs-identifier hs-var">diffTimeToPicoseconds</span></span><span>
+</span><span id="line-193"></span></pre></body></html>

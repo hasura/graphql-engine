@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Eventing.Common</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Eventing.Common.html#LockedEventsCtx"><span class="hs-identifier">LockedEventsCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.Common.html#saveLockedEvents"><span class="hs-identifier">saveLockedEvents</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.Common.html#removeEventFromLockedEvents"><span class="hs-identifier">removeEventFromLockedEvents</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM.TVar</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.STM</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html"><span class="hs-identifier">Hasura.RQL.Types.Action</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionEventId"><span class="hs-identifier">LockedActionEventId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html"><span class="hs-identifier">Hasura.RQL.Types.Eventing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier">EventId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html"><span class="hs-identifier">Hasura.RQL.Types.ScheduledTrigger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronEventId"><span class="hs-identifier">CronEventId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#OneOffScheduledEventId"><span class="hs-identifier">OneOffScheduledEventId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">data</span><span> </span><span id="LockedEventsCtx"><span class="annot"><a href="Hasura.Eventing.Common.html#LockedEventsCtx"><span class="hs-identifier hs-var">LockedEventsCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LockedEventsCtx"><span class="annot"><a href="Hasura.Eventing.Common.html#LockedEventsCtx"><span class="hs-identifier hs-var">LockedEventsCtx</span></a></span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="leCronEvents"><span class="annot"><span class="annottext">LockedEventsCtx -&gt; TVar (Set CronEventId)
+</span><a href="Hasura.Eventing.Common.html#leCronEvents"><span class="hs-identifier hs-var hs-var">leCronEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronEventId"><span class="hs-identifier hs-type">CronEventId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span id="leOneOffEvents"><span class="annot"><span class="annottext">LockedEventsCtx -&gt; TVar (Set CronEventId)
+</span><a href="Hasura.Eventing.Common.html#leOneOffEvents"><span class="hs-identifier hs-var hs-var">leOneOffEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#OneOffScheduledEventId"><span class="hs-identifier hs-type">OneOffScheduledEventId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span id="leEvents"><span class="annot"><span class="annottext">LockedEventsCtx -&gt; TVar (HashMap SourceName (Set CronEventId))
+</span><a href="Hasura.Eventing.Common.html#leEvents"><span class="hs-identifier hs-var hs-var">leEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span id="leActionEvents"><span class="annot"><span class="annottext">LockedEventsCtx -&gt; TVar (Set CronEventId)
+</span><a href="Hasura.Eventing.Common.html#leActionEvents"><span class="hs-identifier hs-var hs-var">leActionEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionEventId"><span class="hs-identifier hs-type">LockedActionEventId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- | After the events are fetched from the DB, we store the locked events</span><span>
+</span><span id="line-25"></span><span class="hs-comment">--   in a hash set(order doesn't matter and look ups are faster) in the</span><span>
+</span><span id="line-26"></span><span class="hs-comment">--   event engine context</span><span>
+</span><span id="line-27"></span><span id="local-6989586621689337001"><span class="annot"><a href="Hasura.Eventing.Common.html#saveLockedEvents"><span class="hs-identifier hs-type">saveLockedEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689337001"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689337001"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-28"></span><span id="saveLockedEvents"><span class="annot"><span class="annottext">saveLockedEvents :: [CronEventId] -&gt; TVar (Set CronEventId) -&gt; m ()
+</span><a href="Hasura.Eventing.Common.html#saveLockedEvents"><span class="hs-identifier hs-var hs-var">saveLockedEvents</span></a></span></span><span> </span><span id="local-6989586621689337000"><span class="annot"><span class="annottext">[CronEventId]
+</span><a href="#local-6989586621689337000"><span class="hs-identifier hs-var">eventIds</span></a></span></span><span> </span><span id="local-6989586621689336999"><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621689336999"><span class="hs-identifier hs-var">lockedEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621689336996"><span class="annot"><span class="annottext">Set CronEventId
+</span><a href="#local-6989586621689336996"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; STM (Set CronEventId)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621689336999"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
+</span><span id="line-32"></span><span>      </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; Set CronEventId -&gt; STM ()
+forall a. TVar a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621689336999"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
+</span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">(Set CronEventId -&gt; STM ()) -&gt; Set CronEventId -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">Set CronEventId -&gt; Set CronEventId -&gt; Set CronEventId
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.union</span></span><span> </span><span class="annot"><span class="annottext">Set CronEventId
+</span><a href="#local-6989586621689336996"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span>
+</span><span id="line-34"></span><span>        </span><span class="annot"><span class="annottext">(Set CronEventId -&gt; Set CronEventId)
+-&gt; Set CronEventId -&gt; Set CronEventId
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[CronEventId] -&gt; Set CronEventId
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">[CronEventId]
+</span><a href="#local-6989586621689337000"><span class="hs-identifier hs-var">eventIds</span></a></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- | Remove an event from the 'LockedEventsCtx' after it has been processed</span><span>
+</span><span id="line-37"></span><span id="local-6989586621689336990"><span class="annot"><a href="Hasura.Eventing.Common.html#removeEventFromLockedEvents"><span class="hs-identifier hs-type">removeEventFromLockedEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689336990"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689336990"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-39"></span><span id="removeEventFromLockedEvents"><span class="annot"><span class="annottext">removeEventFromLockedEvents :: CronEventId -&gt; TVar (Set CronEventId) -&gt; m ()
+</span><a href="Hasura.Eventing.Common.html#removeEventFromLockedEvents"><span class="hs-identifier hs-var hs-var">removeEventFromLockedEvents</span></a></span></span><span> </span><span id="local-6989586621689336989"><span class="annot"><span class="annottext">CronEventId
+</span><a href="#local-6989586621689336989"><span class="hs-identifier hs-var">eventId</span></a></span></span><span> </span><span id="local-6989586621689336988"><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621689336988"><span class="hs-identifier hs-var">lockedEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621689336987"><span class="annot"><span class="annottext">Set CronEventId
+</span><a href="#local-6989586621689336987"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; STM (Set CronEventId)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621689336988"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; Set CronEventId -&gt; STM ()
+forall a. TVar a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621689336988"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span> </span><span class="annot"><span class="annottext">(Set CronEventId -&gt; STM ()) -&gt; Set CronEventId -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">CronEventId -&gt; Set CronEventId -&gt; Set CronEventId
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.delete</span></span><span> </span><span class="annot"><span class="annottext">CronEventId
+</span><a href="#local-6989586621689336989"><span class="hs-identifier hs-var">eventId</span></a></span><span> </span><span class="annot"><span class="annottext">Set CronEventId
+</span><a href="#local-6989586621689336987"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span>
+</span><span id="line-44"></span></pre></body></html>

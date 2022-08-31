@@ -1,0 +1,483 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Restricted `ManagerSettings` for &lt;https://haskell-lang.org/library/http-client&gt;</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- -</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- - Portions from http-client-tls Copyright (c) 2013 Michael Snoyman</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- - Portions from http-client-restricted Copyright 2018 Joey Hess &lt;id@joeyh.name&gt;</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- -</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- - License: MIT</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Network.HTTP.Client.Restricted</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Decision"><span class="hs-identifier">Decision</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Restriction"><span class="hs-identifier">Restriction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#mkRestrictedManagerSettings"><span class="hs-identifier">mkRestrictedManagerSettings</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier">ConnectionRestricted</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Default</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Typeable</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier">onNothing</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.BSD</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">getProtocolNumber</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Connection</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NC</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Client</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Client.Internal</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Client.TLS</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Socket</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">data</span><span> </span><span id="Decision"><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Decision"><span class="hs-identifier hs-var">Decision</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Allow"><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Allow"><span class="hs-identifier hs-var">Allow</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Deny"><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Deny"><span class="hs-identifier hs-var">Deny</span></a></span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">type</span><span> </span><span id="Restriction"><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Restriction"><span class="hs-identifier hs-var">Restriction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AddrInfo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Decision"><span class="hs-identifier hs-type">Decision</span></a></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- | Blocked requests raise this exception, wrapped as 'InternalException'.</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="ConnectionRestricted"><span class="annot"><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier hs-var">ConnectionRestricted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnectionRestricted"><span class="annot"><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier hs-var">ConnectionRestricted</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="crHostName"><span class="annot"><span class="annottext">ConnectionRestricted -&gt; String
+</span><a href="Network.HTTP.Client.Restricted.html#crHostName"><span class="hs-identifier hs-var hs-var">crHostName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="crAddress"><span class="annot"><span class="annottext">ConnectionRestricted -&gt; AddrInfo
+</span><a href="Network.HTTP.Client.Restricted.html#crAddress"><span class="hs-identifier hs-var hs-var">crAddress</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AddrInfo</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689269559"><span id="local-6989586621689269561"><span id="local-6989586621689269563"><span class="annot"><span class="annottext">Int -&gt; ConnectionRestricted -&gt; ShowS
+[ConnectionRestricted] -&gt; ShowS
+ConnectionRestricted -&gt; String
+(Int -&gt; ConnectionRestricted -&gt; ShowS)
+-&gt; (ConnectionRestricted -&gt; String)
+-&gt; ([ConnectionRestricted] -&gt; ShowS)
+-&gt; Show ConnectionRestricted
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ConnectionRestricted] -&gt; ShowS
+$cshowList :: [ConnectionRestricted] -&gt; ShowS
+show :: ConnectionRestricted -&gt; String
+$cshow :: ConnectionRestricted -&gt; String
+showsPrec :: Int -&gt; ConnectionRestricted -&gt; ShowS
+$cshowsPrec :: Int -&gt; ConnectionRestricted -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689269550"><span id="local-6989586621689269552"><span id="local-6989586621689269554"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier hs-type">ConnectionRestricted</span></a></span></span></span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- | Adjusts a ManagerSettings to enforce a Restriction. The restriction</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- will be checked each time a Request is made, and for each redirect</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- followed.</span><span>
+</span><span id="line-44"></span><span class="hs-comment">--</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- This overrides the `managerRawConnection`</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- and `managerTlsConnection` with its own implementations that check</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- the Restriction. They should otherwise behave the same as the</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- ones provided by http-client-tls.</span><span>
+</span><span id="line-49"></span><span class="hs-comment">--</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- This function is not exported, because using it with a ManagerSettings</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- produced by something other than http-client-tls would result in</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- surprising behavior, since its connection methods would not be used.</span><span>
+</span><span id="line-53"></span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#restrictManagerSettings"><span class="hs-identifier hs-type">restrictManagerSettings</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.ConnectionContext</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.TLSSettings</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Restriction"><span class="hs-identifier hs-type">Restriction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ManagerSettings</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ManagerSettings</span></span><span>
+</span><span id="line-59"></span><span id="restrictManagerSettings"><span class="annot"><span class="annottext">restrictManagerSettings :: Maybe ConnectionContext
+-&gt; Maybe TLSSettings
+-&gt; Restriction
+-&gt; ManagerSettings
+-&gt; ManagerSettings
+</span><a href="Network.HTTP.Client.Restricted.html#restrictManagerSettings"><span class="hs-identifier hs-var hs-var">restrictManagerSettings</span></a></span></span><span> </span><span id="local-6989586621689269547"><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269547"><span class="hs-identifier hs-var">mcontext</span></a></span></span><span> </span><span id="local-6989586621689269546"><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269546"><span class="hs-identifier hs-var">mtls</span></a></span></span><span> </span><span id="local-6989586621689269545"><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269545"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span id="local-6989586621689269544"><span class="annot"><span class="annottext">ManagerSettings
+</span><a href="#local-6989586621689269544"><span class="hs-identifier hs-var">base</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">ManagerSettings
+</span><a href="#local-6989586621689269544"><span class="hs-identifier hs-var">base</span></a></span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">managerRawConnection :: IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><span class="hs-identifier hs-var">HTTP.managerRawConnection</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Restriction
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><a href="Network.HTTP.Client.Restricted.html#restrictedRawConnection"><span class="hs-identifier hs-var">restrictedRawConnection</span></a></span><span> </span><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269545"><span class="hs-identifier hs-var">cfg</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><span class="annottext">managerTlsConnection :: IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><span class="hs-identifier hs-var">HTTP.managerTlsConnection</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+-&gt; Maybe TLSSettings
+-&gt; Restriction
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><a href="Network.HTTP.Client.Restricted.html#restrictedTlsConnection"><span class="hs-identifier hs-var">restrictedTlsConnection</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269547"><span class="hs-identifier hs-var">mcontext</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269546"><span class="hs-identifier hs-var">mtls</span></a></span><span> </span><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269545"><span class="hs-identifier hs-var">cfg</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">managerWrapException :: forall a. Request -&gt; IO a -&gt; IO a
+</span><span class="hs-identifier hs-var">HTTP.managerWrapException</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ManagerSettings -&gt; Request -&gt; IO a -&gt; IO a
+forall a. ManagerSettings -&gt; Request -&gt; IO a -&gt; IO a
+</span><a href="Network.HTTP.Client.Restricted.html#wrapOurExceptions"><span class="hs-identifier hs-var">wrapOurExceptions</span></a></span><span> </span><span class="annot"><span class="annottext">ManagerSettings
+</span><a href="#local-6989586621689269544"><span class="hs-identifier hs-var">base</span></a></span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- | Makes a TLS-capable ManagerSettings with a Restriction applied to it.</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- The Restriction will be checked each time a Request is made, and for</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- each redirect followed.</span><span>
+</span><span id="line-70"></span><span class="hs-comment">--</span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- Aside from checking the Restriction, it should behave the same as</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- `Network.HTTP.Client.TLS.mkManagerSettingsContext`</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- from http-client-tls.</span><span>
+</span><span id="line-74"></span><span class="hs-comment">--</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- &gt; main = do</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- &gt; 	manager &lt;- newManager $ mkRestrictedManagerSettings myRestriction Nothing Nothing</span><span>
+</span><span id="line-77"></span><span class="hs-comment">-- &gt;	request &lt;- parseRequest &quot;http://httpbin.org/get&quot;</span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- &gt; 	response &lt;- httpLbs request manager</span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- &gt; 	print $ responseBody response</span><span>
+</span><span id="line-80"></span><span class="hs-comment">--</span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- See `mkManagerSettingsContext` for why</span><span>
+</span><span id="line-82"></span><span class="hs-comment">-- it can be useful to provide a `NC.ConnectionContext`.</span><span>
+</span><span id="line-83"></span><span class="hs-comment">--</span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- Note that SOCKS is not supported.</span><span>
+</span><span id="line-85"></span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#mkRestrictedManagerSettings"><span class="hs-identifier hs-type">mkRestrictedManagerSettings</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Restriction"><span class="hs-identifier hs-type">Restriction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.ConnectionContext</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.TLSSettings</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ManagerSettings</span></span><span>
+</span><span id="line-90"></span><span id="mkRestrictedManagerSettings"><span class="annot"><span class="annottext">mkRestrictedManagerSettings :: Restriction
+-&gt; Maybe ConnectionContext -&gt; Maybe TLSSettings -&gt; ManagerSettings
+</span><a href="Network.HTTP.Client.Restricted.html#mkRestrictedManagerSettings"><span class="hs-identifier hs-var hs-var">mkRestrictedManagerSettings</span></a></span></span><span> </span><span id="local-6989586621689269537"><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269537"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span id="local-6989586621689269536"><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269536"><span class="hs-identifier hs-var">mcontext</span></a></span></span><span> </span><span id="local-6989586621689269535"><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269535"><span class="hs-identifier hs-var">mtls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+-&gt; Maybe TLSSettings
+-&gt; Restriction
+-&gt; ManagerSettings
+-&gt; ManagerSettings
+</span><a href="Network.HTTP.Client.Restricted.html#restrictManagerSettings"><span class="hs-identifier hs-var">restrictManagerSettings</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269536"><span class="hs-identifier hs-var">mcontext</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269535"><span class="hs-identifier hs-var">mtls</span></a></span><span> </span><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269537"><span class="hs-identifier hs-var">cfg</span></a></span><span> </span><span class="annot"><span class="annottext">(ManagerSettings -&gt; ManagerSettings)
+-&gt; ManagerSettings -&gt; ManagerSettings
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+-&gt; TLSSettings -&gt; Maybe SockSettings -&gt; ManagerSettings
+</span><span class="hs-identifier hs-var">HTTP.mkManagerSettingsContext</span></span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269536"><span class="hs-identifier hs-var">mcontext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TLSSettings -&gt; Maybe TLSSettings -&gt; TLSSettings
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">TLSSettings
+forall a. Default a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span> </span><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269535"><span class="hs-identifier hs-var">mtls</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe SockSettings
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span id="local-6989586621689269619"><span class="annot"><a href="Network.HTTP.Client.Restricted.html#wrapOurExceptions"><span class="hs-identifier hs-type">wrapOurExceptions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ManagerSettings</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689269619"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689269619"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-95"></span><span id="wrapOurExceptions"><span class="annot"><span class="annottext">wrapOurExceptions :: ManagerSettings -&gt; Request -&gt; IO a -&gt; IO a
+</span><a href="Network.HTTP.Client.Restricted.html#wrapOurExceptions"><span class="hs-identifier hs-var hs-var">wrapOurExceptions</span></a></span></span><span> </span><span id="local-6989586621689269531"><span class="annot"><span class="annottext">ManagerSettings
+</span><a href="#local-6989586621689269531"><span class="hs-identifier hs-var">base</span></a></span></span><span> </span><span id="local-6989586621689269530"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689269530"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621689269529"><span class="annot"><span class="annottext">IO a
+</span><a href="#local-6989586621689269529"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689269528"><span class="annot"><span class="annottext">wrapper :: SomeException -&gt; SomeException
+</span><a href="#local-6989586621689269528"><span class="hs-identifier hs-var hs-var">wrapper</span></a></span></span><span> </span><span id="local-6989586621689269527"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621689269527"><span class="hs-identifier hs-var">se</span></a></span></span><span>
+</span><span id="line-97"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ConnectionRestricted
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier hs-type">ConnectionRestricted</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Maybe ConnectionRestricted
+forall e. Exception e =&gt; SomeException -&gt; Maybe e
+</span><span class="hs-identifier hs-var">fromException</span></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621689269527"><span class="hs-identifier hs-var">se</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">HttpException -&gt; SomeException
+forall e. Exception e =&gt; e -&gt; SomeException
+</span><span class="hs-identifier hs-var">toException</span></span><span> </span><span class="annot"><span class="annottext">(HttpException -&gt; SomeException) -&gt; HttpException -&gt; SomeException
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-99"></span><span>            </span><span class="annot"><span class="annottext">Request -&gt; HttpExceptionContent -&gt; HttpException
+</span><span class="hs-identifier hs-var">HTTP.HttpExceptionRequest</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689269530"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">(HttpExceptionContent -&gt; HttpException)
+-&gt; HttpExceptionContent -&gt; HttpException
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-100"></span><span>              </span><span class="annot"><span class="annottext">SomeException -&gt; HttpExceptionContent
+</span><span class="hs-identifier hs-var">HTTP.InternalException</span></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621689269527"><span class="hs-identifier hs-var">se</span></a></span><span>
+</span><span id="line-101"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621689269527"><span class="hs-identifier hs-var">se</span></a></span><span>
+</span><span id="line-102"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">ManagerSettings -&gt; Request -&gt; IO a -&gt; IO a
+ManagerSettings -&gt; forall a. Request -&gt; IO a -&gt; IO a
+</span><span class="hs-identifier hs-var hs-var">HTTP.managerWrapException</span></span><span> </span><span class="annot"><span class="annottext">ManagerSettings
+</span><a href="#local-6989586621689269531"><span class="hs-identifier hs-var">base</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689269530"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SomeException -&gt; IO a) -&gt; IO a -&gt; IO a
+forall e a. Exception e =&gt; (e -&gt; IO a) -&gt; IO a -&gt; IO a
+</span><span class="hs-identifier hs-var">handle</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeException -&gt; IO a
+forall e a. Exception e =&gt; e -&gt; IO a
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">(SomeException -&gt; IO a)
+-&gt; (SomeException -&gt; SomeException) -&gt; SomeException -&gt; IO a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; SomeException
+</span><a href="#local-6989586621689269528"><span class="hs-identifier hs-var">wrapper</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">IO a
+</span><a href="#local-6989586621689269529"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#restrictedRawConnection"><span class="hs-identifier hs-type">restrictedRawConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Restriction"><span class="hs-identifier hs-type">Restriction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HostAddress</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Connection</span></span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span id="restrictedRawConnection"><span class="annot"><span class="annottext">restrictedRawConnection :: Restriction
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><a href="Network.HTTP.Client.Restricted.html#restrictedRawConnection"><span class="hs-identifier hs-var hs-var">restrictedRawConnection</span></a></span></span><span> </span><span id="local-6989586621689269519"><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269519"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Restriction
+-&gt; Maybe TLSSettings
+-&gt; Maybe ConnectionContext
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><a href="Network.HTTP.Client.Restricted.html#getConnection"><span class="hs-identifier hs-var">getConnection</span></a></span><span> </span><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269519"><span class="hs-identifier hs-var">cfg</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TLSSettings
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#restrictedTlsConnection"><span class="hs-identifier hs-type">restrictedTlsConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.ConnectionContext</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.TLSSettings</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Restriction"><span class="hs-identifier hs-type">Restriction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HostAddress</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Connection</span></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span id="restrictedTlsConnection"><span class="annot"><span class="annottext">restrictedTlsConnection :: Maybe ConnectionContext
+-&gt; Maybe TLSSettings
+-&gt; Restriction
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><a href="Network.HTTP.Client.Restricted.html#restrictedTlsConnection"><span class="hs-identifier hs-var hs-var">restrictedTlsConnection</span></a></span></span><span> </span><span id="local-6989586621689269517"><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269517"><span class="hs-identifier hs-var">mcontext</span></a></span></span><span> </span><span id="local-6989586621689269516"><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269516"><span class="hs-identifier hs-var">mtls</span></a></span></span><span> </span><span id="local-6989586621689269515"><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269515"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><span class="annottext">Restriction
+-&gt; Maybe TLSSettings
+-&gt; Maybe ConnectionContext
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><a href="Network.HTTP.Client.Restricted.html#getConnection"><span class="hs-identifier hs-var">getConnection</span></a></span><span> </span><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269515"><span class="hs-identifier hs-var">cfg</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TLSSettings -&gt; Maybe TLSSettings
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TLSSettings -&gt; Maybe TLSSettings -&gt; TLSSettings
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">TLSSettings
+forall a. Default a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span> </span><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269516"><span class="hs-identifier hs-var">mtls</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269517"><span class="hs-identifier hs-var">mcontext</span></a></span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="hs-comment">-- Based on Network.HTTP.Client.TLS.getTlsConnection.</span><span>
+</span><span id="line-112"></span><span class="hs-comment">--</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- Checks the Restriction</span><span>
+</span><span id="line-114"></span><span class="hs-comment">--</span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- Does not support SOCKS.</span><span>
+</span><span id="line-116"></span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#getConnection"><span class="hs-identifier hs-type">getConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Restriction"><span class="hs-identifier hs-type">Restriction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.TLSSettings</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.ConnectionContext</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HostAddress</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Connection</span></span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span id="getConnection"><span class="annot"><span class="annottext">getConnection :: Restriction
+-&gt; Maybe TLSSettings
+-&gt; Maybe ConnectionContext
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+</span><a href="Network.HTTP.Client.Restricted.html#getConnection"><span class="hs-identifier hs-var hs-var">getConnection</span></a></span></span><span> </span><span id="local-6989586621689269514"><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269514"><span class="hs-identifier hs-var">restriction</span></a></span></span><span> </span><span id="local-6989586621689269513"><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269513"><span class="hs-identifier hs-var">tls</span></a></span></span><span> </span><span id="local-6989586621689269512"><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269512"><span class="hs-identifier hs-var">mcontext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621689269511"><span class="annot"><span class="annottext">ConnectionContext
+</span><a href="#local-6989586621689269511"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+-&gt; IO ConnectionContext -&gt; IO ConnectionContext
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689269512"><span class="hs-identifier hs-var">mcontext</span></a></span><span> </span><span class="annot"><span class="annottext">IO ConnectionContext
+</span><span class="hs-identifier hs-var">NC.initConnectionContext</span></span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><span class="annottext">(Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">((Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+ -&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection))
+-&gt; (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+-&gt; IO (Maybe HostAddress -&gt; String -&gt; Int -&gt; IO Connection)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689269509"><span class="annot"><span class="annottext">Maybe HostAddress
+</span><a href="#local-6989586621689269509"><span class="hs-identifier hs-var">_hostAddress</span></a></span></span><span> </span><span id="local-6989586621689269508"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269508"><span class="hs-identifier hs-var">hostName</span></a></span></span><span> </span><span id="local-6989586621689269507"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689269507"><span class="hs-identifier hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">IO Connection
+-&gt; (Connection -&gt; IO ())
+-&gt; (Connection -&gt; IO Connection)
+-&gt; IO Connection
+forall a b c. IO a -&gt; (a -&gt; IO b) -&gt; (a -&gt; IO c) -&gt; IO c
+</span><span class="hs-identifier hs-var">bracketOnError</span></span><span>
+</span><span id="line-125"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ConnectionContext -&gt; String -&gt; Int -&gt; IO Connection
+</span><a href="#local-6989586621689269505"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionContext
+</span><a href="#local-6989586621689269511"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269508"><span class="hs-identifier hs-var">hostName</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689269507"><span class="hs-identifier hs-var">port</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span>      </span><span class="annot"><span class="annottext">Connection -&gt; IO ()
+</span><span class="hs-identifier hs-var">NC.connectionClose</span></span><span>
+</span><span id="line-127"></span><span>      </span><span class="annot"><span class="annottext">Connection -&gt; IO Connection
+</span><a href="Network.HTTP.Client.Restricted.html#convertConnection"><span class="hs-identifier hs-var">convertConnection</span></a></span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621689269505"><span class="annot"><span class="annottext">go :: ConnectionContext -&gt; String -&gt; Int -&gt; IO Connection
+</span><a href="#local-6989586621689269505"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689269502"><span class="annot"><span class="annottext">ConnectionContext
+</span><a href="#local-6989586621689269502"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621689269501"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269501"><span class="hs-identifier hs-var">hostName</span></a></span></span><span> </span><span id="local-6989586621689269500"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689269500"><span class="hs-identifier hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-130"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689269499"><span class="annot"><span class="annottext">connparams :: ConnectionParams
+</span><a href="#local-6989586621689269499"><span class="hs-identifier hs-var hs-var">connparams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-131"></span><span>            </span><span class="annot"><span class="annottext">ConnectionParams :: String
+-&gt; PortNumber
+-&gt; Maybe TLSSettings
+-&gt; Maybe SockSettings
+-&gt; ConnectionParams
+</span><span class="hs-identifier hs-type">NC.ConnectionParams</span></span><span>
+</span><span id="line-132"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">connectionHostname :: String
+</span><span class="hs-identifier hs-var">NC.connectionHostname</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269496"><span class="hs-identifier hs-var">host</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>                </span><span class="annot"><span class="annottext">connectionPort :: PortNumber
+</span><span class="hs-identifier hs-var">NC.connectionPort</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; PortNumber
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689269500"><span class="hs-identifier hs-var">port</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>                </span><span class="annot"><span class="annottext">connectionUseSecure :: Maybe TLSSettings
+</span><span class="hs-identifier hs-var">NC.connectionUseSecure</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe TLSSettings
+</span><a href="#local-6989586621689269513"><span class="hs-identifier hs-var">tls</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>                </span><span class="annot"><span class="annottext">connectionUseSocks :: Maybe SockSettings
+</span><span class="hs-identifier hs-var">NC.connectionUseSocks</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe SockSettings
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-comment">-- unsupprted</span><span>
+</span><span id="line-136"></span><span>              </span><span class="hs-special">}</span><span>
+</span><span id="line-137"></span><span>      </span><span id="local-6989586621689269492"><span class="annot"><span class="annottext">ProtocolNumber
+</span><a href="#local-6989586621689269492"><span class="hs-identifier hs-var">proto</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; IO ProtocolNumber
+</span><span class="hs-identifier hs-var">getProtocolNumber</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;tcp&quot;</span></span><span>
+</span><span id="line-138"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689269491"><span class="annot"><span class="annottext">serv :: String
+</span><a href="#local-6989586621689269491"><span class="hs-identifier hs-var hs-var">serv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689269500"><span class="hs-identifier hs-var">port</span></a></span><span>
+</span><span id="line-139"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689269489"><span class="annot"><span class="annottext">hints :: AddrInfo
+</span><a href="#local-6989586621689269489"><span class="hs-identifier hs-var hs-var">hints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-140"></span><span>            </span><span class="annot"><span class="annottext">AddrInfo
+</span><span class="hs-identifier hs-var">defaultHints</span></span><span>
+</span><span id="line-141"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">addrFlags :: [AddrInfoFlag]
+</span><span class="hs-identifier hs-var">addrFlags</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">AddrInfoFlag
+</span><span class="hs-identifier hs-var">AI_ADDRCONFIG</span></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>                </span><span class="annot"><span class="annottext">addrProtocol :: ProtocolNumber
+</span><span class="hs-identifier hs-var">addrProtocol</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ProtocolNumber
+</span><a href="#local-6989586621689269492"><span class="hs-identifier hs-var">proto</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>                </span><span class="annot"><span class="annottext">addrSocketType :: SocketType
+</span><span class="hs-identifier hs-var">addrSocketType</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SocketType
+</span><span class="hs-identifier hs-var">Stream</span></span><span>
+</span><span id="line-144"></span><span>              </span><span class="hs-special">}</span><span>
+</span><span id="line-145"></span><span>      </span><span id="local-6989586621689269482"><span class="annot"><span class="annottext">[AddrInfo]
+</span><a href="#local-6989586621689269482"><span class="hs-identifier hs-var">addrs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe AddrInfo -&gt; Maybe String -&gt; Maybe String -&gt; IO [AddrInfo]
+</span><span class="hs-identifier hs-var">getAddrInfo</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddrInfo -&gt; Maybe AddrInfo
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269489"><span class="hs-identifier hs-var">hints</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269496"><span class="hs-identifier hs-var">host</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269491"><span class="hs-identifier hs-var">serv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>      </span><span class="annot"><span class="annottext">IO Socket
+-&gt; (Socket -&gt; IO ()) -&gt; (Socket -&gt; IO Connection) -&gt; IO Connection
+forall a b c. IO a -&gt; (a -&gt; IO b) -&gt; (a -&gt; IO c) -&gt; IO c
+</span><span class="hs-identifier hs-var">bracketOnError</span></span><span>
+</span><span id="line-147"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[IO Socket] -&gt; IO Socket
+</span><a href="#local-6989586621689269480"><span class="hs-identifier hs-var">firstSuccessful</span></a></span><span> </span><span class="annot"><span class="annottext">([IO Socket] -&gt; IO Socket) -&gt; [IO Socket] -&gt; IO Socket
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(AddrInfo -&gt; IO Socket) -&gt; [AddrInfo] -&gt; [IO Socket]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo -&gt; IO Socket
+</span><a href="#local-6989586621689269479"><span class="hs-identifier hs-var">tryToConnect</span></a></span><span> </span><span class="annot"><span class="annottext">[AddrInfo]
+</span><a href="#local-6989586621689269482"><span class="hs-identifier hs-var">addrs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">Socket -&gt; IO ()
+</span><span class="hs-identifier hs-var">close</span></span><span>
+</span><span id="line-149"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689269477"><span class="annot"><span class="annottext">Socket
+</span><a href="#local-6989586621689269477"><span class="hs-identifier hs-var">sock</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConnectionContext -&gt; Socket -&gt; ConnectionParams -&gt; IO Connection
+</span><span class="hs-identifier hs-var">NC.connectFromSocket</span></span><span> </span><span class="annot"><span class="annottext">ConnectionContext
+</span><a href="#local-6989586621689269502"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">Socket
+</span><a href="#local-6989586621689269477"><span class="hs-identifier hs-var">sock</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionParams
+</span><a href="#local-6989586621689269499"><span class="hs-identifier hs-var">connparams</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-151"></span><span>        </span><span id="local-6989586621689269496"><span class="annot"><span class="annottext">host :: String
+</span><a href="#local-6989586621689269496"><span class="hs-identifier hs-var hs-var">host</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">HTTP.strippedHostName</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269501"><span class="hs-identifier hs-var">hostName</span></a></span><span>
+</span><span id="line-152"></span><span>        </span><span id="local-6989586621689269479"><span class="annot"><span class="annottext">tryToConnect :: AddrInfo -&gt; IO Socket
+</span><a href="#local-6989586621689269479"><span class="hs-identifier hs-var hs-var">tryToConnect</span></a></span></span><span> </span><span id="local-6989586621689269474"><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269474"><span class="hs-identifier hs-var">addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Restriction
+</span><a href="#local-6989586621689269514"><span class="hs-identifier hs-var">restriction</span></a></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269474"><span class="hs-identifier hs-var">addr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-153"></span><span>          </span><span class="annot"><span class="annottext">Decision
+</span><a href="Network.HTTP.Client.Restricted.html#Allow"><span class="hs-identifier hs-var">Allow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-154"></span><span>            </span><span class="annot"><span class="annottext">IO Socket
+-&gt; (Socket -&gt; IO ()) -&gt; (Socket -&gt; IO Socket) -&gt; IO Socket
+forall a b c. IO a -&gt; (a -&gt; IO b) -&gt; (a -&gt; IO c) -&gt; IO c
+</span><span class="hs-identifier hs-var">bracketOnError</span></span><span>
+</span><span id="line-155"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Family -&gt; SocketType -&gt; ProtocolNumber -&gt; IO Socket
+</span><span class="hs-identifier hs-var">socket</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddrInfo -&gt; Family
+</span><span class="hs-identifier hs-var hs-var">addrFamily</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269474"><span class="hs-identifier hs-var">addr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddrInfo -&gt; SocketType
+</span><span class="hs-identifier hs-var hs-var">addrSocketType</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269474"><span class="hs-identifier hs-var">addr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddrInfo -&gt; ProtocolNumber
+</span><span class="hs-identifier hs-var hs-var">addrProtocol</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269474"><span class="hs-identifier hs-var">addr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-156"></span><span>              </span><span class="annot"><span class="annottext">Socket -&gt; IO ()
+</span><span class="hs-identifier hs-var">close</span></span><span>
+</span><span id="line-157"></span><span>              </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689269471"><span class="annot"><span class="annottext">Socket
+</span><a href="#local-6989586621689269471"><span class="hs-identifier hs-var">sock</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Socket -&gt; SockAddr -&gt; IO ()
+</span><span class="hs-identifier hs-var">connect</span></span><span> </span><span class="annot"><span class="annottext">Socket
+</span><a href="#local-6989586621689269471"><span class="hs-identifier hs-var">sock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddrInfo -&gt; SockAddr
+</span><span class="hs-identifier hs-var hs-var">addrAddress</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269474"><span class="hs-identifier hs-var">addr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; IO Socket -&gt; IO Socket
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Socket -&gt; IO Socket
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Socket
+</span><a href="#local-6989586621689269471"><span class="hs-identifier hs-var">sock</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-158"></span><span>          </span><span class="annot"><span class="annottext">Decision
+</span><a href="Network.HTTP.Client.Restricted.html#Deny"><span class="hs-identifier hs-var">Deny</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConnectionRestricted -&gt; IO Socket
+forall e a. Exception e =&gt; e -&gt; IO a
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">(ConnectionRestricted -&gt; IO Socket)
+-&gt; ConnectionRestricted -&gt; IO Socket
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; AddrInfo -&gt; ConnectionRestricted
+</span><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier hs-var">ConnectionRestricted</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269496"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621689269474"><span class="hs-identifier hs-var">addr</span></a></span><span>
+</span><span id="line-159"></span><span>        </span><span id="local-6989586621689269480"><span class="annot"><span class="annottext">firstSuccessful :: [IO Socket] -&gt; IO Socket
+</span><a href="#local-6989586621689269480"><span class="hs-identifier hs-var hs-var">firstSuccessful</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HostNotResolved -&gt; IO Socket
+forall e a. Exception e =&gt; e -&gt; IO a
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">(HostNotResolved -&gt; IO Socket) -&gt; HostNotResolved -&gt; IO Socket
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; HostNotResolved
+</span><span class="hs-identifier hs-var">NC.HostNotResolved</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689269496"><span class="hs-identifier hs-var">host</span></a></span><span>
+</span><span id="line-160"></span><span>        </span><span class="annot"><a href="#local-6989586621689269480"><span class="hs-identifier hs-var">firstSuccessful</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689269467"><span class="annot"><span class="annottext">IO Socket
+</span><a href="#local-6989586621689269467"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689269466"><span class="annot"><span class="annottext">[IO Socket]
+</span><a href="#local-6989586621689269466"><span class="hs-keyword hs-var">as</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-161"></span><span>          </span><span class="annot"><span class="annottext">IO Socket
+</span><a href="#local-6989586621689269467"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">IO Socket -&gt; (IOException -&gt; IO Socket) -&gt; IO Socket
+forall e a. Exception e =&gt; IO a -&gt; (e -&gt; IO a) -&gt; IO a
+</span><span class="hs-operator hs-var">`catch`</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689269464"><span class="annot"><span class="annottext">IOException
+</span><a href="#local-6989586621689269464"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IOException</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-162"></span><span>            </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[IO Socket]
+</span><a href="#local-6989586621689269466"><span class="hs-keyword hs-var">as</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-163"></span><span>              </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IOException -&gt; IO Socket
+forall e a. Exception e =&gt; e -&gt; IO a
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">IOException
+</span><a href="#local-6989586621689269464"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-164"></span><span>              </span><span class="annot"><span class="annottext">[IO Socket]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[IO Socket] -&gt; IO Socket
+</span><a href="#local-6989586621689269480"><span class="hs-identifier hs-var">firstSuccessful</span></a></span><span> </span><span class="annot"><span class="annottext">[IO Socket]
+</span><a href="#local-6989586621689269466"><span class="hs-keyword hs-var">as</span></a></span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- Copied from Network.HTTP.Client.TLS, unfortunately not exported.</span><span>
+</span><span id="line-167"></span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#convertConnection"><span class="hs-identifier hs-type">convertConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NC.Connection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Connection</span></span><span>
+</span><span id="line-168"></span><span id="convertConnection"><span class="annot"><span class="annottext">convertConnection :: Connection -&gt; IO Connection
+</span><a href="Network.HTTP.Client.Restricted.html#convertConnection"><span class="hs-identifier hs-var hs-var">convertConnection</span></a></span></span><span> </span><span id="local-6989586621689269463"><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621689269463"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-169"></span><span>  </span><span class="annot"><span class="annottext">IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO () -&gt; IO Connection
+</span><span class="hs-identifier hs-var">HTTP.makeConnection</span></span><span>
+</span><span id="line-170"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Connection -&gt; IO ByteString
+</span><span class="hs-identifier hs-var">NC.connectionGetChunk</span></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621689269463"><span class="hs-identifier hs-var">conn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-171"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Connection -&gt; ByteString -&gt; IO ()
+</span><span class="hs-identifier hs-var">NC.connectionPut</span></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621689269463"><span class="hs-identifier hs-var">conn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>    </span><span class="hs-comment">-- Closing an SSL connection gracefully involves writing/reading</span><span>
+</span><span id="line-173"></span><span>    </span><span class="hs-comment">-- on the socket.  But when this is called the socket might be</span><span>
+</span><span id="line-174"></span><span>    </span><span class="hs-comment">-- already closed, and we get a @ResourceVanished@.</span><span>
+</span><span id="line-175"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Connection -&gt; IO ()
+</span><span class="hs-identifier hs-var">NC.connectionClose</span></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621689269463"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="annot"><span class="annottext">IO () -&gt; (IOException -&gt; IO ()) -&gt; IO ()
+forall e a. Exception e =&gt; IO a -&gt; (e -&gt; IO a) -&gt; IO a
+</span><span class="hs-operator hs-var">`Control.Exception.catch`</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">IOException
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IOException</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span></pre></body></html>
