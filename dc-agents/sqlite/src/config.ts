@@ -8,12 +8,20 @@ export type Config = {
 }
 
 export const getConfig = (request: FastifyRequest): Config => {
+  const config = tryGetConfig(request);
+  if (config === null) {
+    throw new Error("X-Hasura-DataConnector-Config header must specify db");
+  }
+  return config;
+}
+
+export const tryGetConfig = (request: FastifyRequest): Config | null => {
   const configHeader = request.headers["x-hasura-dataconnector-config"];
   const rawConfigJson = Array.isArray(configHeader) ? configHeader[0] : configHeader ?? "{}";
   const config = JSON.parse(rawConfigJson);
 
   if(config.db == null) {
-    throw new Error("Config must specify db");
+    return null;
   }
 
   return {
