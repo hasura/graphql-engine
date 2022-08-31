@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | This module defines all missing instances of third party libraries.
@@ -9,8 +8,6 @@ import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Functor.Product (Product (Pair))
 import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
-import Data.HashMap.Strict qualified as M
-import Data.HashSet qualified as S
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
 import Data.URL.Template qualified as UT
@@ -62,14 +59,6 @@ instance NFData C.CronSchedule
 
 --------------------------------------------------------------------------------
 -- Template Haskell
-
-instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
-  lift m = [|M.fromList $(TH.lift $ M.toList m)|]
-  liftTyped = TH.unsafeTExpCoerce . TH.lift
-
-instance TH.Lift a => TH.Lift (S.HashSet a) where
-  lift s = [|S.fromList $(TH.lift $ S.toList s)|]
-  liftTyped = TH.unsafeTExpCoerce . TH.lift
 
 deriving instance TH.Lift TDFA.CompOption
 
