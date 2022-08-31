@@ -2,7 +2,7 @@
 import FastifyCors from '@fastify/cors';
 import { getSchema } from './schema';
 import { explain, queryData } from './query';
-import { getConfig } from './config';
+import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
 import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse } from './types';
 import { connect } from './db';
@@ -114,20 +114,18 @@ server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (re
 });
 
 server.get("/health", async (request, response) => {
-  const config = getConfig(request);
+  const config = tryGetConfig(request);
   response.type('application/json');
 
-  if(config.db == null) {
+  if(config === null) {
     server.log.info({ headers: request.headers, query: request.body, }, "health.request");
-    // response.statusCode = 204;
-    return { "status": "ok" };
+    response.statusCode = 204;
   } else {
     server.log.info({ headers: request.headers, query: request.body, }, "health.db.request");
     const db = connect(config, sqlLogger);
     const [r, m] = await db.query('select 1 where 1 = 1');
     if(r && JSON.stringify(r) == '[{"1":1}]') {
       response.statusCode = 204;
-      return { "status": "ok" };
     } else {
       response.statusCode = 500;
       return { "error": "problem executing query", "query_result": r };
