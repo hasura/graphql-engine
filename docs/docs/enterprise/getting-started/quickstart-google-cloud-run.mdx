@@ -1,0 +1,129 @@
+---
+sidebar_label: Quickstart with Google Cloud Run
+description: Quickstart with Google Cloud Run for Hasura Enterprise Edition
+title: 'Quickstart with Google Cloud Run'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 4
+---
+
+import LatestRelease from '@site/src/components/LatestRelease';
+
+# Quickstart with Google Cloud Run
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Introduction
+
+This tutorial will help you run Hasura Enterprise Edition as a Google Cloud Run service using the `gcloud` CLI.
+
+**This guide requires HGE versions `v2.12.0-beta.1` and above.** Installation instructions are below.
+
+## Deploying Hasura EE on Cloud Run
+
+### Prerequisites
+
+This tutorial assumes that the following prerequisites have been met:
+
+- The latest version of the `gcloud` CLI is installed and configured. For more information about installing or upgrading
+  your gcloud CLI, see [Installing the gcloud CLI](https://cloud.google.com/sdk/docs/install).
+- Your `gcloud` user has the
+  [required permissions](https://cloud.google.com/run/docs/reference/iam/roles#additional-configuration) to deploy a
+  cloud run service.
+- You have a Postgres database for storing metadata and Redis for caching / rate limiting, preferably a managed service,
+  see [Creating a Cloud SQL PostgresSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance) and
+  [Creating a Memorystore for Redis](https://cloud.google.com/memorystore/docs/redis/create-instance-console).
+- You have a Serverless VPC Access Connector to make the Postgres and Redis datastores accessible from Cloud Run, see
+  [Creating a Serverless VPC Access connector](https://cloud.google.com/vpc/docs/configure-serverless-vpc-access).
+
+### Step 1: Get the Cloud Run env vars file
+
+The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
+installation manifests required to deploy Hasura anywhere. Get the Cloud Run env vars file from there:
+
+```bash
+wget https://raw.githubusercontent.com/hasura/graphql-engine/beta/install-manifests/enterprise/google-cloud-run/env.yaml
+```
+
+### Step 2: Set the license key, metadata database URL, Redis database URL and the admin secret
+
+Edit `env.yaml` and set the right values:
+
+```yaml
+HASURA_GRAPHQL_EE_LICENSE_KEY: ''
+HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
+HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+```
+
+Examples of `HASURA_GRAPHQL_METADATA_DATABASE_URL`:
+
+- `postgres://admin:password@db-ip:5432/my_db`
+- `postgres://admin:@db-ip:5432/my_db` _(if there is no password)_
+
+Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`:
+
+- `redis://admin:password@redis-ip:6379`
+- `redis://redis-ip:6379` _(if there is no password)_
+
+:::info Note
+
+- If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
+  `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var (e.g. %40 for @).
+
+- The Hasura GraphQL engine needs access permissions on your Postgres database as described in
+  [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
+
+- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+  the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+  information on setting up authentication.
+
+- Convert confidential environment variables such as Postgres / Redis URLs, admin / metrics secrets to fetch them from
+  secrets, [see here for more information](https://cloud.google.com/run/docs/configuring/secrets).
+
+:::
+
+### Step 3: Copy the Hasura graphql-engine image to the GCR registry
+
+Cloud Run does not allow using images from Dockerhub. Due to this limitation it's necessary to pull the Hasura
+graphql-engine image from Dockerhub and push it to your container registry,
+[see here for more information](https://cloud.google.com/run/docs/deploying#other-registries).
+
+This can be done using the below steps:
+
+<pre>
+  <code>
+    VERSION=
+    <LatestRelease />
+    <br />
+    docker pull hasura/graphql-engine:$VERSION
+    <br />
+    docker tag hasura/graphql-engine:$VERSION gcr.io/&lt;MY_PROJECT_ID&gt;/hasura/graphql-engine:$VERSION
+    <br />
+    docker push gcr.io/&lt;MY_PROJECT_ID&gt;/hasura/graphql-engine:$VERSION
+  </code>
+</pre>
+
+### Step 4: Deploy the service
+
+Update the image and vpc connector values in the below commmand.
+
+```bash {2,4}
+gcloud run deploy hasura \
+  --image=gcr.io/<MY_PROJECT_ID>/hasura/graphql-engine:tag \
+  --env-vars-file=env.yaml \
+  --vpc-connector=<vpc-connector-name> \
+  --allow-unauthenticated \
+  --max-instances=1 \
+  --cpu=1 \
+  --memory=2048Mi \
+  --port=8080
+```
+
+Wait for the deployment to finish. Upon successful completion, a success message is displayed along with the URL of the
+deployed service.
+
+Click the displayed URL link to open the unique and stable endpoint of the Hasura service.
