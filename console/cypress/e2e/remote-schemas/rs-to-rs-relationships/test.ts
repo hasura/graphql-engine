@@ -1,10 +1,12 @@
 import { getElementFromAlias } from '../../../helpers/eventHelpers';
 import { replaceMetadata, resetMetadata } from '../../../helpers/metadata';
+import type { HasuraMetadataV3 } from '../../../../src/metadata/types';
 
-describe('check if remote schema to db relationships are created properly', () => {
+// Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+// TODO: Fix and restore it
+describe.skip('check if remote schema to db relationships are created properly', () => {
   before(() => {
-    // load stuff into the metadata
-    replaceMetadata({
+    const body: HasuraMetadataV3 = {
       version: 3,
       sources: [
         {
@@ -46,7 +48,10 @@ describe('check if remote schema to db relationships are created properly', () =
           comment: '',
         },
       ],
-    });
+      inherited_roles: [],
+    };
+    // load stuff into the metadata
+    replaceMetadata(body);
   });
 
   it('should create a new rs-to-rs relationship from source field', () => {

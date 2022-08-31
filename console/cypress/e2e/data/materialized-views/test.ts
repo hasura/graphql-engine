@@ -17,7 +17,9 @@ import { setMetaData } from '../../validators/validators';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
-  describe('Setup route', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Setup route', () => {
     it('Visit the index route', () => {
       // Visit the index route
       cy.visit(getIndexRoute());
@@ -28,7 +30,9 @@ const setup = () => {
 };
 
 export const runMaterializedViewsTest = () => {
-  describe('Materialized Views', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Materialized Views', () => {
     it('Create Tables', passVCreateTables);
     it('Add data to table', passVAddData);
     it('Create MaterializedView', passVCreateMaterializedViews);

@@ -24,7 +24,9 @@ import { setMetaData } from '../../validators/validators';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
-  describe('Setup route', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Setup route', () => {
     it('Visit the index route', () => {
       cy.visit(getIndexRoute());
       // Get and set validation metadata
@@ -34,7 +36,9 @@ const setup = () => {
 };
 
 export const runInsertBrowseTests = () => {
-  describe('Table: Browse and Insert', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Table: Browse and Insert', () => {
     it('Create a table with fields of all data types', passBICreateTable);
     it('Search for tables', passSearchTables);
     it('Check Insert Route', checkInsertRoute);

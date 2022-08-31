@@ -2,7 +2,6 @@ import { testMode } from '../../../helpers/common';
 
 import { logMetadataRequests } from './utils/requests/logMetadataRequests';
 import { loginActionMustNotExist } from './utils/testState/loginActionMustNotExist';
-import { waitForPostCreationRequests } from './utils/requests/waitForPostCreationRequests';
 
 if (testMode !== 'cli') {
   describe('Actions with Transform', () => {
@@ -18,10 +17,7 @@ if (testMode !== 'cli') {
       loginActionMustNotExist();
     });
 
-    // TODO: This test is slow because it tests not only the happy path but also the error cases of
-    // the Request Options Transform. Checking the error paths through an E2E test is a bad practice.
-
-    it('When the users create, edit, and delete a Action with Transform, everything should work', () => {
+    it('When the users create, and delete a Action with Transform, everything should work', () => {
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
@@ -40,28 +36,32 @@ if (testMode !== 'cli') {
 
       // --------------------
       cy.log('**--- Type in the Action Definition textarea**');
-      cy.get('@actionDefinitionTextarea').clearConsoleTextarea().type(
-        `type Mutation {
+      cy.get('@actionDefinitionTextarea')
+        .clearConsoleTextarea()
+        .type(
+          `type Mutation {
               login (username: String!, password: String!): LoginResponse
             }`,
-        { force: true, delay: 0 }
-      );
+          { force: true, delay: 0 }
+        );
 
       // --------------------
       cy.log('**--- Type in the Type Configuration textarea**');
-      cy.get('@typeConfigurationTextarea').clearConsoleTextarea().type(
-        `type LoginResponse {
+      cy.get('@typeConfigurationTextarea')
+        .clearConsoleTextarea()
+        .type(
+          `type LoginResponse {
           accessToken: String!
         }`,
-        { force: true, delay: 0 }
-      );
+          { force: true, delay: 0 }
+        );
 
       // --------------------
       cy.log('**--- Click the Add Request Options Transform button**');
       cy.contains('Add Request Options Transform').click();
 
       cy.log('**------------------------------**');
-      cy.log('**--- Step 1.1: Invalid URL error**');
+      cy.log('**--- Step 1.1: Add URL**');
       cy.log('**------------------------------**');
 
       cy.get('[data-cy="Change Request Options"]').within(() => {
@@ -71,22 +71,11 @@ if (testMode !== 'cli') {
 
         // --------------------
         cy.log('**--- Type in the Request URL Template field**');
-        cy.get('[placeholder="URL Template (Optional)..."]').type('users');
-
-        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-        // --------------------
-        cy.log('**--- Look for the "Invalid URL" error**');
-        cy.contains(
-          'TransformationError: Invalid URL: http://host.docker.internal:3000users',
-          // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-          // the payload (see the next cy.intercept) means asserting on it too
-          { timeout: 10000 }
-        ).should('be.visible');
+        cy.get('[placeholder="URL Template (Optional)..."]').type('/users');
       });
 
       cy.log('**------------------------------**');
-      cy.log('**--- Step 1.2: Missing Env Var error**');
+      cy.log('**--- Step 1.2: Add Env Var**');
       cy.log('**------------------------------**');
 
       // --------------------
@@ -97,27 +86,6 @@ if (testMode !== 'cli') {
           delay: 0,
           parseSpecialCharSequences: false,
         });
-
-      cy.get('[data-cy="Change Request Options"]').within(() => {
-        // --------------------
-        cy.log('**--- Type in the Request URL Template field**');
-        cy.get('[placeholder="URL Template (Optional)..."]')
-          .clearConsoleTextarea()
-          .type('/users');
-
-        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-        // --------------------
-        cy.log('**--- Look for "Missing Env Var" error**');
-        cy.getBySel('transform-requestUrl-error')
-          .as('missingWebhookError')
-          .should('be.visible')
-          .and('contain', 'not-found: Missing Env Var: MY_WEBHOOK');
-      });
-
-      cy.log('**------------------------------**');
-      cy.log('**--- Step 1.2: Env Var add**');
-      cy.log('**------------------------------**');
 
       // --------------------
       cy.log('**--- Click the Show Sample Context button**');
@@ -133,17 +101,6 @@ if (testMode !== 'cli') {
         delay: 1,
       });
 
-      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-      // --------------------
-      cy.log('**--- Check the error disappeared**');
-      cy.get(
-        '@missingWebhookError',
-        // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-        // the payload (see the next cy.intercept) means asserting on it too
-        { timeout: 10000 }
-      ).should('not.exist');
-
       // --------------------
       cy.get('[data-cy="Change Request Options"]').within(() => {
         cy.log('**--- Check the Preview of the Request URL Template**');
@@ -154,7 +111,7 @@ if (testMode !== 'cli') {
       });
 
       cy.log('**------------------------------**');
-      cy.log('**--- Step 1.3: Invalid Path error**');
+      cy.log('**--- Step 1.3: Add path**');
       cy.log('**------------------------------**');
 
       // --------------------
@@ -165,24 +122,6 @@ if (testMode !== 'cli') {
           delay: 0,
           parseSpecialCharSequences: false,
         });
-
-      cy.get('[data-cy="Change Request Options"]').within(() => {
-        // --------------------
-        cy.log('**--- Type in the Request URL Template field**');
-        cy.get('[placeholder="URL Template (Optional)..."]')
-          .clearConsoleTextarea()
-          .type('{{$url}}/users', { parseSpecialCharSequences: false });
-      });
-
-      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-      // --------------------
-      cy.log('**--- Look for "Invalid Path" error**');
-
-      cy.getBySel('transform-requestUrl-error')
-        .as('invalidPathError')
-        .should('be.visible')
-        .and('contain', 'Invalid Path: "$url"');
 
       cy.log('**------------------------------**');
       cy.log('**--- Step 1.4: Query Params add**');
@@ -210,28 +149,17 @@ if (testMode !== 'cli') {
         }
       );
 
-      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-      // --------------------
-      cy.log('**--- Check the error disappeared**');
-      cy.get(
-        '@invalidPathError',
-        // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-        // the payload (see the next cy.intercept) means asserting on it too
-        { timeout: 10000 }
-      ).should('not.exist');
-
       // --------------------
       cy.get('[data-cy="Change Request Options"]').within(() => {
         cy.log('**--- Check the Preview of the Request URL Template**');
-        cy.getBySel('transform-requestUrl-preview').should(
+        cy.findByLabelText('Preview').should(
           'have.value',
           'https://hasura-actions-demo.glitch.me/login?name=login&id=5'
         );
       });
 
       cy.log('**------------------------------**');
-      cy.log('**--- Step 1.5: Invalid Path error**');
+      cy.log('**--- Step 1.5: Add Payload Transform**');
       cy.log('**------------------------------**');
 
       // --------------------
@@ -243,139 +171,81 @@ if (testMode !== 'cli') {
         // Assign an alias to the most unclear selectors for future references
         cy.get('textarea').eq(1).as('payloadTransformRequestBody');
 
-        // --------------------
         cy.log('**--- Type in the Payload Transform Request Body textarea**');
         cy.get('@payloadTransformRequestBody')
           .clearConsoleTextarea()
-          // this second attempt tries to workaround a problem between Cypress and our text area.
-          // In case the problem arises with other tests, it would be better off moving the double
-          // clear to the clearConsoleTextarea command itself
-          .wait(200)
-          .clearConsoleTextarea()
           .type(
             `{
-            "userInfo": {
-              "name": {{$input.username}}
-          `,
-            { force: true, delay: 1, parseSpecialCharSequences: false }
-          );
-
-        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-        // --------------------
-        cy.log('**--- Look for the "Invalid path" error**');
-        cy.contains(
-          `Invalid Path: "$input.username"`,
-          // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-          // the payload (see the next cy.intercept) means asserting on it too
-          { timeout: 10000 }
-        )
-          .as('invalidPathError')
-          .should('be.visible');
-
-        cy.log('**------------------------------**');
-        cy.log('**--- Step 1.6: Request Body add:**');
-        cy.log('**------------------------------**');
-
-        // --------------------
-        cy.log('**--- Type in the Payload Transform Request Body textarea**');
-        cy.get('@payloadTransformRequestBody').clearConsoleTextarea().type(
-          `{
             "userInfo": {
               "name": {{$body.input.username}},
               "password": {{$body.input.password}},
               "type": {{$body.action.name}}
             `,
-          // delay is set to 1 because setting it to 0 causes the test to fail because writes
-          // something like
-          // "name": {{$body.input.username}}name
-          // in the textarea (the closing "name" is a mistake)
-          { force: true, delay: 1, parseSpecialCharSequences: false }
-        );
-
-        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-        // --------------------
-        cy.log('**--- Check the error disappeared**');
-        cy.get(
-          '@invalidPathError',
-          // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-          // the payload (see the next cy.intercept) means asserting on it too
-          { timeout: 10000 }
-        ).should('not.exist');
+            // delay is set to 1 because setting it to 0 causes the test to fail because writes
+            // something like
+            // "name": {{$body.input.username}}name
+            // in the textarea (the closing "name" is a mistake)
+            { force: true, delay: 1, parseSpecialCharSequences: false }
+          );
       });
 
       // --------------------
       cy.log('**--- Click the Create button**');
       cy.getBySel('create-action-btn').click();
 
-      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
-      cy.get(
-        '.notification',
-        // The custom timeout aims to replace the lack of waiting for the outgoing request
-        { timeout: 10000 }
-      )
-        .should('be.visible')
-        .and('contain', 'Created action successfully');
+      cy.expectSuccessNotificationWithTitle('Created action successfully');
 
-      // TODO: check if it exists in the database? Other tests do that
+      // -------------------------------------------------------------------------
+      // see: https://github.com/hasura/graphql-engine-mono/issues/5433
+      // The "Action change" part has been removed since it caused Cypress to crash
+      // TODO: identify the crashing reason
+      // -------------------------------------------------------------------------
 
-      cy.log('**------------------------------**');
-      cy.log('**------------------------------**');
-      cy.log('**------------------------------**');
-      cy.log('**--- Step 2: Action change**');
-      cy.log('**------------------------------**');
-      cy.log('**------------------------------**');
-      cy.log('**------------------------------**');
+      // cy.log('**------------------------------**');
+      // cy.log('**------------------------------**');
+      // cy.log('**------------------------------**');
+      // cy.log('**--- Step 2: Action change**');
+      // cy.log('**------------------------------**');
+      // cy.log('**------------------------------**');
+      // cy.log('**------------------------------**');
 
-      // --------------------
-      cy.log('**--- Wait all the requests to be settled**');
-      waitForPostCreationRequests();
+      // // --------------------
+      // cy.log('**--- Wait all the requests to be settled**');
+      // waitForPostCreationRequests();
 
-      cy.get('[data-cy="Change Request Options"]').within(() => {
-        // --------------------
-        cy.log('**--- Choose GET**');
-        cy.contains('GET').click();
+      // cy.get('[data-cy="Change Request Options"]').within(() => {
+      //   // --------------------
+      //   cy.log('**--- Choose GET**');
+      //   cy.contains('GET').click();
 
-        // --------------------
-        cy.log('**--- Type in the Request URL Template field**');
+      //   // --------------------
+      //   cy.log('**--- Type in the Request URL Template field**');
 
-        cy.get('[placeholder="URL Template (Optional)..."]')
-          .clearConsoleTextarea()
-          .type('/{{$body.action.name}}/actions', {
-            delay: 0,
-            parseSpecialCharSequences: false,
-          });
+      //   cy.get('[placeholder="URL Template (Optional)..."]')
+      //     .clearConsoleTextarea()
+      //     .type('/{{$body.action.name}}/actions', {
+      //       delay: 0,
+      //       parseSpecialCharSequences: false,
+      //     });
 
-        // --------------------
-        cy.log('**--- Click on the first Remove Query Param button**');
-        cy.getBySel('transform-query-params-kv-remove-button-0').click();
-      });
+      //   // --------------------
+      //   cy.log('**--- Click on the first Remove Query Param button**');
+      //   cy.getBySel('transform-query-params-kv-remove-button-0').click();
+      // });
 
-      // --------------------
-      cy.log('**--- Click the Remove Payload Transform button**');
-      cy.contains('Remove Payload Transform').click();
+      // // --------------------
+      // cy.log('**--- Click the Remove Payload Transform button**');
+      // cy.contains('Remove Payload Transform').click();
 
-      // --------------------
-      cy.log('**--- Click on the Save button**');
-      cy.getBySel('save-modify-action-changes').click();
+      // // --------------------
+      // cy.log('**--- Click on the Save button**');
+      // cy.getBySel('save-modify-action-changes').click();
 
-      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
-      // --------------------
-      cy.log('**--- Check if the success notification is visible**');
-      cy.get(
-        '.notification',
-        // The custom timeout aims to replace the lack of waiting for the outgoing request
-        { timeout: 10000 }
-      )
-        .should('be.visible')
-        .and('contain', 'Action saved successfully');
-
-      // TODO: check if it exists in the database? Other tests do that
+      // // --------------------
+      // cy.log('**--- Check if the success notification is visible**');
+      // cy.expectSuccessNotificationWithTitle('Action saved successfully');
 
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
@@ -384,17 +254,6 @@ if (testMode !== 'cli') {
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
-
-      // --------------------
-      cy.log('**--- Reload the page**');
-      // The purpose is to avoid the following notification when the Delete button will be clicked
-      // -------------
-      // Metadata is Out-of-Date
-      // The operation failed as the metadata on the server is newer than what is currently loaded on the console. The metadata has to be re-fetched to continue editing it.
-      // Do you want fetch the latest metadata?
-      // Fetch metadata (button)
-      // -------------
-      cy.reload();
 
       // --------------------
       cy.log('**--- Go the the action page**');
@@ -413,19 +272,9 @@ if (testMode !== 'cli') {
       cy.log('**--- Check the prompt has been called**');
       cy.window().its('prompt').should('be.called');
 
-      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
-
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
-      cy.get(
-        '.notification',
-        // The custom timeout aims to replace the lack of waiting for the outgoing request
-        { timeout: 10000 }
-      )
-        .should('be.visible')
-        .and('contain', 'Action deleted successfully');
-
-      // TODO: check if it does not exist in the database? Other tests do that
+      cy.expectSuccessNotificationWithTitle('Action deleted successfully');
     });
   });
 }

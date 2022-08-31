@@ -299,9 +299,8 @@ export const passVFilterQueryEq = () => {
 
 const checkOrder = (order: string) => {
   // Utility function to get right element
-  const curElement = cy.get('[role=row]');
   if (order === 'asc') {
-    curElement.each(($el, index) => {
+    cy.get('[role=row]').each(($el, index) => {
       if (index === 1) {
         cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
       }
@@ -315,7 +314,7 @@ const checkOrder = (order: string) => {
       }
     });
   } else {
-    curElement.each(($el, index) => {
+    cy.get('[role=row]').each(($el, index) => {
       if (index === 2) {
         cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
       }

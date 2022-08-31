@@ -108,7 +108,7 @@ interface CreateInsertBodyArgs extends CreateBodyArgs {
   existingPermissions: any;
 }
 
-interface InsertBodyResult {
+export interface InsertBodyResult {
   type: allowedMetadataTypes;
   resource_version: number;
   args: Record<string, any>[];

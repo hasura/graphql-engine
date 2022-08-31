@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 
 interface Options {
   dir: string;

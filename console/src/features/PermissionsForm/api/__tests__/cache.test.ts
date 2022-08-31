@@ -1,14 +1,13 @@
-import { allowedMetadataTypes } from '../../../MetadataAPI';
+import type { InsertBodyResult } from '../api';
 import { updateTablePermission } from '../cache';
 import { metadata } from '../../mocks/dataStubs';
 
-const data = {
-  type: 'bulk' as allowedMetadataTypes,
-  source: 'default',
+const data: InsertBodyResult = {
+  type: 'bulk',
   resource_version: 30,
   args: [
     {
-      type: 'pg_create_insert_permission' as allowedMetadataTypes,
+      type: 'pg_create_insert_permission',
       args: {
         table: {
           name: 'users',

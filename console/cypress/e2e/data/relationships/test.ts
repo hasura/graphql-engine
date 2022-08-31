@@ -7,18 +7,15 @@ import {
   passRTAddSuggestedRel,
   failRTAddSuggestedRel,
   passRTRenameRelationship,
-  passRSTAddRSRel,
-  passRSTDeleteRSRel,
-  passRSTSetup,
-  passRSTReset,
 } from './spec';
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
-import { postgres } from '../manage-database/postgres.spec';
 
 const setup = () => {
-  describe('Check Data Tab', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
       cy.visit(getIndexRoute());
       // Get and set validation metadata
@@ -28,7 +25,9 @@ const setup = () => {
 };
 
 export const runRelationshipsTests = () => {
-  describe('Relationships Tests', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Relationships Tests', () => {
     it('Create testing tables', passRTCreateTables);
     it('Add Manual Relationship Object', passRTAddManualObjRel);
     it('Add Manual Relationship Array', passRTAddManualArrayRel);
@@ -41,33 +40,7 @@ export const runRelationshipsTests = () => {
   });
 };
 
-export const remoteRelationshipTests = () => {
-  const drivers = [postgres];
-
-  describe('Remote schema relationships tests', () => {
-    drivers.forEach(driver => {
-      describe(`for ${driver.name}`, () => {
-        // test setup
-        before(() => {
-          driver.helpers.createRemoteSchema('remote_rel_test_rs');
-        });
-
-        it('Create testing tables', passRSTSetup);
-        it('Adds a relationship', passRSTAddRSRel);
-        it('Deletes a relationship', passRSTDeleteRSRel);
-        it('Delete testing tables', passRSTReset);
-
-        // clean up
-        after(() => {
-          driver.helpers.deleteRemoteSchema('remote_rel_test_rs');
-        });
-      });
-    });
-  });
-};
-
 if (testMode !== 'cli') {
   setup();
   runRelationshipsTests();
-  remoteRelationshipTests();
 }

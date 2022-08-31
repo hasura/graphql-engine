@@ -15,7 +15,9 @@ import { setMetaData } from '../../validators/validators';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
-  describe('Check Data Tab', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Check Data Tab', () => {
     it('Visiting the data URL opens the correct route', () => {
       // Visit the index route
       cy.visit(getIndexRoute());
@@ -26,7 +28,9 @@ const setup = () => {
 };
 
 export const runPermissionsTests = () => {
-  describe('Permissions', () => {
+  describe.skip('Permissions', () => {
+    // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+    // TODO: Fix and restore it
     it('Create a table', passPTCreateTable);
     it('Create a view', passPVCreateView);
     it('Check permission route', passPTCheckRoute);

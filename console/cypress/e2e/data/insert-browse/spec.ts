@@ -62,9 +62,8 @@ const checkQuerySuccess = () => {
 const checkOrder = (order: string) => {
   // Utility function to get right element
 
-  const curElement = cy.get('[role=row]');
   if (order === 'asc') {
-    curElement.each(($el, index) => {
+    cy.get('[role=row]').each(($el, index) => {
       if (index !== 0) {
         cy.wrap($el)
           .find('[role=gridcell]')
@@ -75,7 +74,7 @@ const checkOrder = (order: string) => {
       }
     });
   } else {
-    curElement.each(($el, index) => {
+    cy.get('[role=row]').each(($el, index) => {
       if (index !== 0) {
         cy.wrap($el)
           .find('[role=gridcell]')
