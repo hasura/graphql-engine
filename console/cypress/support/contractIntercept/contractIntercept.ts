@@ -7,7 +7,7 @@ import type {
 import { checkAndGetTestInfo } from './helpers/checkAndGetTestInfo';
 import { generateEmptyTestState } from './helpers/generateEmptyTestState';
 
-let runningTestState: RunningTestsState = {};
+const runningTestState: RunningTestsState = {};
 
 /**
  * A wrapper around `cy.intercept` that allows intercepting and recording the request/response series
@@ -58,7 +58,7 @@ function startContractIntercept(
     const fixtureName = createFixtureName(request);
     if (fixtureName.includes('\\') || fixtureName.includes('/')) {
       throw new Error(
-        `createFixtureName cannot return names that includes / or \ like ${fixtureName}`
+        `createFixtureName cannot return names that includes / or \\ like ${fixtureName}`
       );
     }
 

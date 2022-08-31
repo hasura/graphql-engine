@@ -12,7 +12,9 @@ import { setMetaData } from '../../validators/validators';
 import { testMode } from '../../../helpers/common';
 
 const setup = () => {
-  describe('Setup route', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Setup route', () => {
     it('Visit the index route', () => {
       // Visit the index route
       cy.visit('/');
@@ -23,7 +25,9 @@ const setup = () => {
 };
 
 export const runApiExplorerTests = () => {
-  describe('API Explorer', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('API Explorer', () => {
     it('Create test table', createTestTable);
     it('Insert row into test table', insertValue);
     it('Open API Explorer', openAPIExplorer);

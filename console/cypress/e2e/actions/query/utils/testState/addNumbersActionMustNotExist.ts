@@ -14,8 +14,8 @@ export function addNumbersActionMustNotExist() {
     );
 
     if (actionExists) {
-      Cypress.log({ message: '**--- The Action must be deleted**' }),
-        deleteAddNumbersAction();
+      Cypress.log({ message: '**--- The Action must be deleted**' });
+      deleteAddNumbersAction();
     }
   });
 }

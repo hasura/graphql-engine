@@ -1,11 +1,13 @@
 import { getElementFromAlias } from '../../../helpers/eventHelpers';
 import { replaceMetadata, resetMetadata } from '../../../helpers/metadata';
-import { postgres } from '../../data/manage-database/postgres.spec';
+// import { postgres } from '../../data/manage-database/postgres.spec';
 
-describe('check if remote schema relationships are displayed properly', () => {
+// Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+// TODO: Fix and restore it
+describe.skip('check if remote schema relationships are displayed properly', () => {
   before(() => {
     // create a table called destination_table
-    postgres.helpers.createTable('destination_table');
+    // postgres.helpers.createTable('destination_table');
 
     // load stuff into the metadata
     replaceMetadata({
@@ -119,6 +121,6 @@ describe('check if remote schema relationships are displayed properly', () => {
     resetMetadata();
 
     // delete the table
-    postgres.helpers.deleteTable('destination_table');
+    // postgres.helpers.deleteTable('destination_table');
   });
 });

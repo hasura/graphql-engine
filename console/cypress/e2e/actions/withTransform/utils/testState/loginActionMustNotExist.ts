@@ -14,8 +14,8 @@ export function loginActionMustNotExist() {
     );
 
     if (actionExists) {
-      Cypress.log({ message: '**--- The Action must be deleted**' }),
-        deleteLoginAction();
+      Cypress.log({ message: '**--- The Action must be deleted**' });
+      deleteLoginAction();
     }
   });
 }

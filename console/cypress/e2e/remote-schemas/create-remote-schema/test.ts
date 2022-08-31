@@ -1,5 +1,4 @@
 /* eslint no-unused-vars: 0 */
-/* eslint import/prefer-default-export: 0 */
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
@@ -21,7 +20,9 @@ import {
 } from './spec';
 
 const setup = () => {
-  describe('Setup route', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Setup route', () => {
     it('Visit the index route', () => {
       // Visit the index route
       cy.visit('/remote-schemas/manage/schemas');
@@ -32,7 +33,9 @@ const setup = () => {
 };
 
 export const runCreateRemoteSchemaTableTests = () => {
-  describe('Create Remote Schema', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Create Remote Schema', () => {
     it(
       'Add remote schema button opens the correct route',
       checkCreateRemoteSchemaRoute

@@ -14,7 +14,9 @@ import {
 } from './postgres.spec';
 
 const connectPgDatabaseFormTests = () => {
-  describe('Add a database via connect form', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Add a database via connect form', () => {
     describe('can successfully add', () => {
       describe('a postgres database', () => {
         it('using a connection string', () => {
@@ -135,7 +137,9 @@ const connectPgDatabaseFormTests = () => {
 };
 
 const manageDatabasesPageTests = () => {
-  describe('Connected Databases list page', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Connected Databases list page', () => {
     it('can successfully remove db', () => {
       cy.log('**--- Create database**');
       createDB('db_for_removal');

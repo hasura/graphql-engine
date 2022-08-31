@@ -1,39 +1,33 @@
 Cypress.Commands.add('expectSuccessNotification', () => {
-  const el = cy.get('.notification-success');
-  el.should('be.visible');
+  cy.get('.notification-success').should('be.visible');
 });
 
 Cypress.Commands.add('expectSuccessNotificationWithTitle', (title: string) => {
-  const el = cy.get('.notification-success');
-  el.should('be.visible');
-  el.should('contain', title);
+  cy.get('.notification-success').should('be.visible').should('contain', title);
 });
 
 Cypress.Commands.add(
   'expectSuccessNotificationWithMessage',
   (message: string) => {
-    const el = cy.get('.notification-success');
-    el.should('be.visible');
-    el.should('contain', message);
+    cy.get('.notification-success')
+      .should('be.visible')
+      .should('contain', message);
   }
 );
 
 Cypress.Commands.add('expectErrorNotification', () => {
-  const el = cy.get('.notification-error');
-  el.should('be.visible');
+  cy.get('.notification-error').should('be.visible');
 });
 
 Cypress.Commands.add('expectErrorNotificationWithTitle', (title: string) => {
-  const el = cy.get('.notification-error');
-  el.should('be.visible');
-  el.should('contain', title);
+  cy.get('.notification-error').should('be.visible').should('contain', title);
 });
 
 Cypress.Commands.add(
   'expectErrorNotificationWithMessage',
   (message: string) => {
-    const el = cy.get('.notification-error');
-    el.should('be.visible');
-    el.should('contain', message);
+    cy.get('.notification-error')
+      .should('be.visible')
+      .should('contain', message);
   }
 );

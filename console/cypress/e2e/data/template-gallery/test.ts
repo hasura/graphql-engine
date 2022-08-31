@@ -16,12 +16,10 @@ export const runSchemaSharingTests = () => {
   describe('template gallery', () => {
     it('display content', () => {
       cy.get('[data-test=table-links]').contains('default').click();
-      const oneToOne = cy.get('table').contains('Relationships: One-to-One');
-      oneToOne.click();
+      cy.get('table').contains('Relationships: One-to-One').click();
       cy.contains('Install Template').click();
       cy.wait(1000);
-      const installed = cy.get('[data-test=table-links]').contains('_onetoone');
-      installed.click();
+      cy.get('[data-test=table-links]').contains('_onetoone').click();
       setPromptValue('_onetoone');
       cy.contains('_onetoone').parent().parent().contains('owner');
       cy.contains('_onetoone').parent().parent().contains('passport_info');

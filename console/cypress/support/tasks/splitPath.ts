@@ -1,4 +1,4 @@
-import nodePath from 'node:path';
+import * as nodePath from 'node:path';
 
 interface Options {
   path: string;

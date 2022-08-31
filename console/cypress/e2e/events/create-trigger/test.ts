@@ -1,5 +1,4 @@
 /* eslint no-unused-vars: 0 */
-/* eslint import/prefer-default-export: 0 */
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
@@ -20,7 +19,9 @@ import {
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
-  describe('Check Data Tab', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
       // Visit the index route
       cy.visit(getIndexRoute());
@@ -31,7 +32,9 @@ const setup = () => {
 };
 
 export const runCreateTriggerTests = () => {
-  describe('Create Trigger', () => {
+  // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+  // TODO: Fix and restore it
+  describe.skip('Create Trigger', () => {
     it('Create test table', passPTCreateTable);
     it(
       'Create trigger button opens the correct route',
