@@ -2,6 +2,8 @@
 
 ## Next release
 
+- server: Fix string literals in arrays
+
 ### Bug fixes and improvements
 
 ## v2.10.1
