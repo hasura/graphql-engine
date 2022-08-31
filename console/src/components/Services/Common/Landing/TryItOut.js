@@ -2,6 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Button } from '@/new-components/Button';
 import PopUp from './PopUp';
+import Rectangle from './images/Rectangle.svg';
+import styles from '../../RemoteSchema/RemoteSchema.module.scss';
+import glitch from './images/glitch.png';
+import googleCloud from './images/google_cloud.svg';
+import MicrosoftAzure from './images/Microsoft_Azure_Logo.svg';
+import AWS from './images/AWS.png';
+import externalLink from './images/external-link.svg';
 
 class TryItOut extends React.Component {
   constructor() {
@@ -14,13 +21,6 @@ class TryItOut extends React.Component {
     this.setState({ isPopUp: !this.state.isPopUp });
   }
   render() {
-    const Rectangle = require('./images/Rectangle.svg');
-    const styles = require('../../RemoteSchema/RemoteSchema.module.scss');
-    const glitch = require('./images/glitch.png');
-    const googleCloud = require('./images/google_cloud.svg');
-    const MicrosoftAzure = require('./images/Microsoft_Azure_Logo.svg');
-    const AWS = require('./images/AWS.png');
-    const externalLink = require('./images/external-link.svg');
     // const { title, imgUrl, imgAlt,  description} = this.props;
     const commonStyle = this.props.isAvailable
       ? styles.instructionsWrapper

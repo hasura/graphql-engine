@@ -3,7 +3,8 @@ import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy'
 import RemoteSchemaContent from './RemoteSchemaContent';
 import EventTriggerContent from './EventTriggerContent';
 
-const styles = require('./Popup.module.scss');
+import styles from './Popup.module.scss';
+import close from './images/cancel.svg';
 
 import PropTypes from 'prop-types';
 
@@ -13,7 +14,6 @@ const ContentMap = {
 };
 class PopUp extends React.Component {
   render() {
-    const close = require('./images/cancel.svg');
     const { onClose, title, queryDefinition, footerDescription } = this.props;
     // const queryDefinition = 'query { hello }';
     const commonPopupStyle = this.props.isAvailable

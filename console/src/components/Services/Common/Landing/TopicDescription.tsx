@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '../../RemoteSchema/RemoteSchema.module.scss';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 
-const Rectangle = require('./images/Rectangle.svg');
+import Rectangle from './images/Rectangle.svg';
 
 type TopicDescriptionProps = {
   title: string;
