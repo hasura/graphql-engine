@@ -440,6 +440,16 @@ def generate_regression_report():
                 )
             except KeyError:
                 continue
+            # Response body size:
+            try:
+                merge_base_body_size = float(merge_base_bench['response']['totalBytes']) / float(merge_base_bench['requests']['count'])
+                this_body_size       = float(      this_bench['response']['totalBytes']) / float(      this_bench['requests']['count'])
+                response_body_change = pct_change(merge_base_body_size, this_body_size)
+                # filter response body size unless it changes significantly, since this is rare:
+                if abs(response_body_change) > 1:
+                    metrics['response_body_size'] = response_body_change
+            except KeyError:
+                pass
             # NOTE: we decided to omit higher-percentile latencies here since
             # they are noisy (which might lead to people ignoring benchmarks)
             # and there are better ways to view these tail latencies in the works.
