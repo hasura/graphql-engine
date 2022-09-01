@@ -1,33 +1,14 @@
-# Website
+# README.md
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+## Info
 
-### Installation
+The most up-to-date information for the docs site can be found on our wiki. You can access the wiki on the
+[live docs site](https://hasura.io/docs/wiki/), or [directly within this repository](wiki/index.mdx).
 
-```
-$ yarn
-```
+## Quick Links
 
-### Local Development
-
-```
-$ yarn start
-```
-
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-### Build
-
-```
-$ yarn build
-```
-
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-### Deployment
-
-```
-$ GIT_USER=<Your GitHub username> USE_SSH=true yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+- I want to contribute! [[live](https://hasura.io/docs/wiki/contributions/) / [in-repo](wiki/contributions.mdx)]
+- I have questions about page structure...? [[live](https://hasura.io/docs/wiki/page-structure/) /
+  [in-repo](wiki/page-structure.mdx)]
+- How does Docusaurus work? [[live](https://hasura.io/docs/wiki/working-with-docusaurus/) /
+  [in-repo](wiki/working-with-docusaurus.mdx)]
