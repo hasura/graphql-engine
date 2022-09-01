@@ -97,6 +97,8 @@ export const metadataQueryTypes = [
   'drop_rest_endpoint',
   'add_host_to_tls_allowlist',
   'drop_host_from_tls_allowlist',
+  'dc_add_agent',
+  'dc_delete_agent',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];

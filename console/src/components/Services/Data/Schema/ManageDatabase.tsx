@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import { FaExclamationTriangle, FaEye, FaTimes } from 'react-icons/fa';
-
+import { ManageAgents } from '@/features/ManageAgents';
 import { Button } from '@/new-components/Button';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -215,6 +219,10 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   const { show: shouldShowVPCBanner, dismiss: dismissVPCBanner } =
     useVPCBannerVisibility();
 
+  const { enabled: isDCAgentsManageUIEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
+
   const crumbs = [
     {
       title: 'Data',
@@ -328,6 +336,12 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             </table>
           </div>
         </div>
+
+        {isDCAgentsManageUIEnabled ? (
+          <div className="mt-lg">
+            <ManageAgents />
+          </div>
+        ) : null}
       </div>
     </RightContainer>
   );
