@@ -79,7 +79,7 @@ newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving anyclass (NFData, Hashable)
 
 data Constraint = Constraint
-  { cForeignTable :: Text,
+  { cForeignTable :: TableName,
     cColumnMapping :: HashMap Text Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)

@@ -130,7 +130,7 @@ function ddlColumns(ddl: any): Array<any> {
 
 /**
  * Example:
- * 
+ *
  * foreign_keys: {
  *   "ArtistId->Artist.ArtistId": {
  *     column_mapping: {
@@ -139,12 +139,12 @@ function ddlColumns(ddl: any): Array<any> {
  *     foreign_table: "Artist",
  *   }
  * }
- * 
+ *
  * NOTE: We currently don't log if the structure of the DDL is unexpected, which could be the case for composite FKs, etc.
  * NOTE: There could be multiple paths between tables.
  * NOTE: Composite keys are not currently supported.
  *
- * @param ddl 
+ * @param ddl
  * @returns Array<[name, FK constraint definition]>
  */
 function ddlFKs(ddl: any): Array<[string, Constraint]>  {
@@ -179,7 +179,7 @@ function ddlFKs(ddl: any): Array<[string, Constraint]>  {
 
       return [[
         `${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
-        { foreign_table: definition.references.name,
+        { foreign_table: [definition.references.name],
           column_mapping: {
             [sourceColumn.name]: destinationColumn.name
           }

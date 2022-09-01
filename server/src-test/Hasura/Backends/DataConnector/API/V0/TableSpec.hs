@@ -53,7 +53,7 @@ spec = do
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
             (Just [ColumnName "id"])
             (Just "my description")
-            (Just $ ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint "Artists" (HashMap.singleton "ArtistId" "ArtistId")))
+            (Just $ ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton "ArtistId" "ArtistId")))
         )
         [aesonQQ|
           { "name": ["my_table_name"],
@@ -62,7 +62,7 @@ spec = do
             "description": "my description",
             "foreign_keys": {
               "Artist": {
-                "foreign_table": "Artists",
+                "foreign_table": ["artist_table"],
                 "column_mapping": {
                   "ArtistId": "ArtistId"
                 }
@@ -83,9 +83,8 @@ genConstraintName = ConstraintName <$> text (linear 0 10) unicode
 
 genConstraint :: MonadGen m => m Constraint
 genConstraint =
-  let foreignTable = text (linear 0 10) unicode
-      mapping = genHashMap (text (linear 0 10) unicode) (text (linear 0 10) unicode) defaultRange
-   in Constraint <$> foreignTable <*> mapping
+  let mapping = genHashMap (text (linear 0 10) unicode) (text (linear 0 10) unicode) defaultRange
+   in Constraint <$> genTableName <*> mapping
 
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.
 genTableInfo :: MonadGen m => m TableInfo

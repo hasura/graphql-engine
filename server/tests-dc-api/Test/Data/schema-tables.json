@@ -26,7 +26,7 @@
         "column_mapping": {
             "ArtistId": "ArtistId"
         },
-        "foreign_table": "Artist"
+        "foreign_table": ["Artist"]
       }
     },
     "description": "Collection of music albums created by artists",
@@ -57,9 +57,9 @@
     "foreign_keys": {
       "CustomerSupportRep": {
         "column_mapping": {
-	  "SupportRepId": "EmployeeId"
-	},
-        "foreign_table": "Employee"
+          "SupportRepId": "EmployeeId"
+        },
+        "foreign_table": ["Employee"]
       }
     },
     "description": "Collection of customers who can buy tracks",
@@ -151,8 +151,8 @@
       "EmployeeReportsTo": {
         "column_mapping": {
           "ReportsTo": "EmployeeId"
-	},
-        "foreign_table": "Employee"
+        },
+        "foreign_table": ["Employee"]
       }
     },
     "description": "Collection of employees who work for the business",
@@ -274,9 +274,9 @@
     "foreign_keys": {
       "InvoiceCustomer": {
         "column_mapping": {
-         "CustomerId": "CustomerId"
-	},
-        "foreign_table": "Customer"
+          "CustomerId": "CustomerId"
+        },
+        "foreign_table": ["Customer"]
       }
     },
     "description": "Collection of invoices of music purchases by a customer",
@@ -344,14 +344,14 @@
       "Invoice": {
         "column_mapping": {
           "InvoiceId": "InvoiceId"
-	},
-        "foreign_table": "Invoice"
+        },
+        "foreign_table": ["Invoice"]
       },
       "Track": {
         "column_mapping": {
           "TrackId": "TrackId"
-	},
-        "foreign_table": "Track"
+        },
+        "foreign_table": ["Track"]
       }
     },
     "description": "Collection of track purchasing line items of invoices",
@@ -433,14 +433,14 @@
       "Playlist": {
         "column_mapping": {
           "PlaylistId": "PlaylistId"
-	},
-        "foreign_table": "Playlist"
+        },
+        "foreign_table": ["Playlist"]
       },
       "Track": {
         "column_mapping": {
           "TrackId": "TrackId"
         },
-        "foreign_table": "Track"
+        "foreign_table": ["Track"]
       }
     },
     "description": "Associations between playlists and tracks",
@@ -464,22 +464,22 @@
     "primary_key": ["TrackId"],
     "foreign_keys": {
       "Album": {
-          "column_mapping": {
+        "column_mapping": {
           "AlbumId": "AlbumId"
         },
-        "foreign_table": "Album"
+        "foreign_table": ["Album"]
       },
       "Genre": {
         "column_mapping": {
           "GenreId": "GenreId"
         },
-        "foreign_table": "Genre"
+        "foreign_table": ["Genre"]
       },
       "MediaType": {
         "column_mapping": {
           "MediaTypeId": "MediaTypeId"
         },
-        "foreign_table": "MediaType"
+        "foreign_table": ["MediaType"]
       }
     },
     "description": "Collection of music tracks",
