@@ -9,6 +9,7 @@ import '../src/theme/tailwind.css';
 import { store } from '../src/store';
 import '../src/components/Common/Common.module.scss';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const channel = addons.getChannel();
 initialize();

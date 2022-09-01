@@ -13,6 +13,7 @@ import type {
   rsToDbRelDef,
   ObjectRelationship,
   ArrayRelationship,
+  QueryCollectionEntry,
 } from '@/metadata/types';
 import { MetadataResponse } from '..';
 
@@ -263,6 +264,10 @@ export namespace MetadataSelector {
 
   export const getAllDriversList = (m: MetadataResponse) =>
     m.metadata?.sources.map(s => ({ source: s.name, kind: s.kind }));
+
+  export const getQueryCollections = (
+    m: MetadataResponse
+  ): QueryCollectionEntry[] => m.metadata?.query_collections ?? [];
 
   export const getOperationsFromQueryCollection =
     (queryCollectionName: string) => (m: MetadataResponse) => {

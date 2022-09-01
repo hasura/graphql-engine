@@ -1,0 +1,94 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { DropdownButton } from '@/new-components/DropdownButton';
+
+<Meta
+  title="components/Dropdown Button 🧬"
+  component={DropdownButton}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+  decorators={[Story => <div className={'p-4'}>{Story()}</div>]}
+/>
+
+# DropdownButton ⚛️
+
+- [🧰 Overview](#-overview)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/DropdownButton/DropdownButton.tsx)
+
+## 🧰 Overview
+
+A component that display a button that opens a dropdown menu.
+
+### Basic usage
+
+```ts
+import { DropdownButton } from '@/new-components/DropdownButton';
+```
+
+```tsx
+<DropdownButton
+  items={[
+    ['Action', <span className="text-red-600">Destructive Action</span>],
+    ['Another action'],
+  ]}
+>
+  The DropdownButton label
+</DropdownButton>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <div>
+      <DropdownButton
+        items={[
+          ['Action', <span className="text-red-600">Destructive Action</span>],
+          ['Another action'],
+        ]}
+      >
+        The DropdownButton label
+      </DropdownButton>
+    </div>
+  </Story>
+</Canvas>
+
+#### 🚦 Usage
+
+- The dropdown button is used for opening a contextual menu with list of actions
+- The `items` prop is an array of array of react nodes (each array is a group of items) that will be rendered in the dropdown
+- The Button prop is an object of props forwarded to the button component
+- The children of this component are forwarded to the button component
+
+## ⚙️ API
+
+export const Template = args => <DropdownButton {...args} />;
+
+<Canvas>
+  <Story
+    name="API playground"
+    args={{
+      items: [
+        ['Action', <span className="text-red-600">Destructive</span>],
+        ['Another action', 'Another action'],
+      ],
+      children: 'Button label',
+    }}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
