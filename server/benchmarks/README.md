@@ -28,7 +28,10 @@ the server, where you don't care about concurrent requests and where the work
 is CPU-bound (because in the future reporting will highlight stable metrics
 like CPU mutator time and allocations).
 
-**This is currently a WIP and not surfaced in reports**
+Because of the overhead of timing things in bash you probably don't want to
+rely on the wallclock latency numbers for queries that are faster than 100 ms.
+These numbers may also be noisier since we're running single-threaded and so
+taking fewer samples.
 
 ### bench.sh
 

@@ -322,6 +322,12 @@ function run_adhoc_operation_benchmarks() (
 
   echo_pretty "Running adhoc operations for $BENCH_DIR..."
 
+  # sanity check:
+  if [ ! -f report.json ]; then
+      echo "Bug: Somehow a report from graphql-engine isn't present! Exiting"
+      exit 43
+  fi
+
   # NOTE: This loops over each word in `$scripts` with globbing.
   for script in $scripts; do
       # The script must define a function named "adhoc_operation" which we
@@ -330,18 +336,13 @@ function run_adhoc_operation_benchmarks() (
       # iterations to execute here.
       unset -f adhoc_operation
       unset iterations
-      # NOTE: Shellcheck is not able to source these scripts.
-      #
-      # cf. https://github.com/koalaman/shellcheck/wiki/SC1090
-      #     https://github.com/koalaman/shellcheck/wiki/SC1091
-      #
+
       # shellcheck disable=SC1090
       . "$script"
       if [[ $(type -t adhoc_operation) != function ]]; then
           echo "Error: $script must define a function named 'adhoc_operation'! Exiting." >&2; exit 1
       fi
-      # NOTE: See the comment on `adhoc_operation` above.
-      #
+
       # shellcheck disable=SC2154
       if ! [[ "$iterations" =~ ^[0-9]+$ ]] ; then
           echo "Error: $script must define 'iterations'" >&2; exit 1
@@ -352,33 +353,108 @@ function run_adhoc_operation_benchmarks() (
       # Unfortunately that metric is fubar
       # (https://gitlab.haskell.org/ghc/ghc/-/issues/21082). Trying to use perf
       # will be a pain, might require root, means this script won't work over a
-      # network, etc... For now we'll just collect allocated_bytes and noisey
-      # wall-clock time
-      allocated_bytes_start=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
-      time_sec_start=$(date +%s.%N)  # N.B. don't time curl
-
+      # network, etc...
+      live_bytes_before=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_live_bytes')
+      mem_in_use_bytes_before=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_mem_in_use_bytes')
+      allocated_bytes_before=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
+ 
       IFS="./" read -r -a script_name_parts <<< "$script"
       name=${script_name_parts[1]}
+
+      # Space separated list of nanosecond timings
+      latencies_ns=""
+      # Select an item from latencies_ns at the percentile requested, this
+      # never takes the mean of two samples.
+      rough_percentile() {
+          echo "$latencies_ns" |\
+              tr ' ' '\n' | sort -n |\
+              awk '{all[NR] = $0} END{print all[int(NR*'"$1"'+0.5)]}' 
+              # ^^^ select a value based on line number, rounding up
+      }
 
       echo -n "Running $name $iterations time(s)..."
       for _ in $(seq 1 "$iterations"); do
          echo -n "."
+         # NOTE: Executing a command like `date` takes about 1 ms in Bash, so
+         # we can't really accurately time operations that are on the order of
+         # single-digit ms
+         time_ns_before=$(date +%s%N)
          adhoc_operation &> /tmp/hasura_bench_adhoc_last_iteration.out
+         time_ns_after=$(date +%s%N)
+         latencies_ns+=" $((time_ns_after-time_ns_before))"
       done
       echo
 
-      time_sec_end=$(date +%s.%N)  # N.B. don't time curl
-      allocated_bytes_end=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
+      allocated_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
+      mem_in_use_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_mem_in_use_bytes')
+      live_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_live_bytes')
 
-      # For now just print stats so they exist in CI logs at least
-      secs=$(jq -n \("$time_sec_end"-"$time_sec_start"\)/"$iterations")
-      bytes=$(jq -n \("$allocated_bytes_end"-"$allocated_bytes_start"\)/"$iterations")
-      echo " Done. For $name, measured $secs sec/op and $bytes bytes_allocated/op"
+      mean_ms=$(echo "$latencies_ns" | jq -s '(add/length)/1000000')
+      min_ms=$(echo "$latencies_ns"  | jq -s 'min/1000000')
+      max_ms=$(echo "$latencies_ns"  | jq -s 'max/1000000')
+      p50_ms=$(rough_percentile 0.50 | jq -s 'min/1000000')
+      p90_ms=$(rough_percentile 0.90 | jq -s 'min/1000000')
+      bytes_allocated_per_request=$(jq -n \("$allocated_bytes_after"-"$allocated_bytes_before"\)/"$iterations")
+
+      echo " Done. For $name, measured $mean_ms ms/op and $bytes_allocated_per_request bytes_allocated/op"
+      echo "Appending to $PWD/report.json..."
+      # NOTE: certain metrics that are difficult to collect or that we don't
+      # care about are set to 0 here, to prevent the graphql-bench web app from
+      # breaking 
+      #
+      # Name these "ADHOC-foo" so we can choose to display them differently,
+      # e.g. in PR regression reports
+      temp_result_file="$(mktemp)"  # ('sponge' unavailable)
+      jq --arg name "$name" \
+         --argjson iterations "$iterations" \
+         --argjson p50_ms "$p50_ms" \
+         --argjson p90_ms "$p90_ms" \
+         --argjson max_ms "$max_ms" \
+         --argjson mean_ms "$mean_ms" \
+         --argjson min_ms "$min_ms" \
+         --argjson bytes_allocated_per_request "$bytes_allocated_per_request" \
+         --argjson live_bytes_before "$live_bytes_before" \
+         --argjson live_bytes_after "$live_bytes_after" \
+         --argjson mem_in_use_bytes_before "$mem_in_use_bytes_before" \
+         --argjson mem_in_use_bytes_after "$mem_in_use_bytes_after" \
+         '. +
+          [{
+            "name": "ADHOC-\($name)",
+            "time": {
+            },
+            "requests": {
+              "count": $iterations,
+              "average": 0
+            },
+            "response": {
+              "totalBytes": 0,
+              "bytesPerSecond": 0
+            },
+            "histogram": {
+              "json": {
+                "p50": $p50_ms,
+                "p90": $p90_ms,
+                "max": $max_ms,
+                "totalCount": $iterations,
+                "mean": $mean_ms,
+                "min": $min_ms,
+                "stdDeviation": 0
+              },
+              "parsedStats": [
+              ]
+            },
+            "extended_hasura_checks": {
+              "bytes_allocated_per_request": $bytes_allocated_per_request,
+              "live_bytes_before": $live_bytes_before,
+              "live_bytes_after": $live_bytes_after,
+              "mem_in_use_bytes_before": $mem_in_use_bytes_before,
+              "mem_in_use_bytes_after": $mem_in_use_bytes_after
+            }
+          }]' < report.json > "$temp_result_file"
+      mv -f "$temp_result_file" report.json
+
       # TODO once GHC issue 21082 fixed:
       #  - collect mutator cpu ns
-      #  - write metrics to CSV file, upload to S3 in fabfile.py
-      #  - integrate with regression report (just compare bytes and mutator cpu time)
-      #  - document new adhoc operations stuff
       #  - add an untrack/track table benchmark to chinook and huge_schema
   done
 )
@@ -447,3 +523,8 @@ custom_setup
 load_data_and_schema
 run_graphql_benchmarks
 run_adhoc_operation_benchmarks
+
+echo_pretty "All done. You can visualize the report using the web app here:"
+echo_pretty "    https://hasura.github.io/graphql-bench/app/web-app/"
+echo_pretty "...and passing it the file we just generated:"
+echo_pretty "    $BENCH_DIR/report.json"
