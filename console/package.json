@@ -140,6 +140,7 @@
     "styled-components": "5.0.1",
     "styled-system": "5.1.5",
     "subscriptions-transport-ws": "0.9.16",
+    "tailwindcss-radix": "^2.5.0",
     "ts-essentials": "7.0.3",
     "uuid": "8.3.2",
     "xstate": "^4.30.1",
