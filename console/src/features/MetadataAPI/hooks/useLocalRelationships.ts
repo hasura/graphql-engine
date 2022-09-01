@@ -3,9 +3,50 @@ import {
   useTableRelationships,
   TableRelationshipsType,
 } from '@/features/Datasources';
-import { RowData } from '@/features/RelationshipsTable';
+import { ArrayRelationship, ObjectRelationship } from '@/metadata/types';
+import { DbToDbRelationship, DbToRemoteSchemaRelationship } from '../types';
 import { useArrayRelationships } from './useArrayRelationships';
 import { useObjectRelationships } from './useObjectRelationships';
+
+type BaseTypes = {
+  name: string;
+  reference: string;
+  referenceTable: string;
+  target: string;
+  targetTable?: string;
+  fieldsFrom: string[];
+  fieldsTo: string[];
+};
+
+type DbToDb = {
+  fromType: 'table';
+  toType: 'database';
+  type: 'Object' | 'Array';
+  relationship: DbToDbRelationship;
+} & BaseTypes;
+
+type Remote = {
+  fromType: 'table';
+  toType: 'remote_schema';
+  type: 'Remote Schema';
+  relationship: DbToRemoteSchemaRelationship;
+};
+
+type LocalArray = {
+  fromType: 'table';
+  toType: 'table';
+  type: 'Array';
+  relationship: ArrayRelationship;
+};
+
+type LocalObject = {
+  fromType: 'table';
+  toType: 'table';
+  type: 'Object';
+  relationship: ObjectRelationship;
+};
+
+type RowData = (DbToDb | LocalObject | LocalArray | Remote) & BaseTypes;
 
 const getRelationshipMap = (
   tableRlns: TableRelationshipsType[],
@@ -21,16 +62,19 @@ export const useLocalRelationships = (relDef: DataTarget) => {
   const {
     data: objRlns,
     isLoading: objRlnsIsLoading,
+    isSuccess: objRlnsIsSuccess,
     isError: objRlnsIsError,
   } = useObjectRelationships(relDef);
   const {
     data: arrRlns,
     isLoading: arrRlnsIsLoading,
+    isSuccess: arrRlnsIsSuccess,
     isError: arrRlnsIsError,
   } = useArrayRelationships(relDef);
   const {
     data: tableRlns,
     isLoading: tableRlnsIsLoading,
+    isSuccess: tableRlnsIsSuccess,
     isError: tableRlnsIsError,
   } = useTableRelationships({ target: relDef });
 
@@ -133,6 +177,7 @@ export const useLocalRelationships = (relDef: DataTarget) => {
   return {
     data: [...objRlnsData, ...arrRlnsData],
     isLoading: objRlnsIsLoading || arrRlnsIsLoading || tableRlnsIsLoading,
+    isSuccess: objRlnsIsSuccess && arrRlnsIsSuccess && tableRlnsIsSuccess,
     isError: objRlnsIsError || arrRlnsIsError || tableRlnsIsError,
   };
 };

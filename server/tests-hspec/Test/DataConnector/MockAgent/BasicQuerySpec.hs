@@ -8,7 +8,6 @@ where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.List.NonEmpty qualified as NE
@@ -17,25 +16,25 @@ import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.runWithLocalTestEnvironment
-    [ Context.Context
-        { name = Context.Backend Context.DataConnector,
-          mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
-          setup = DataConnector.setupMock sourceMetadata DataConnector.mockBackendConfig,
-          teardown = DataConnector.teardownMock,
-          customOptions = Nothing
-        }
-    ]
+  Fixture.runWithLocalTestEnvironment
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+            { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
+              Fixture.setupTeardown = \(testEnv, mockEnv) ->
+                [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
+            }
+        ]
+    )
     tests
 
 sourceMetadata :: Aeson.Value
@@ -46,7 +45,7 @@ sourceMetadata =
         name : *source
         kind: *backendType
         tables:
-          - table: Album
+          - table: [Album]
             configuration:
               custom_root_fields:
                 select: albums
@@ -62,10 +61,10 @@ sourceMetadata =
               - name: artist
                 using:
                   manual_configuration:
-                    remote_table: Artist
+                    remote_table: [Artist]
                     column_mapping:
                       ArtistId: ArtistId
-          - table: Artist
+          - table: [Artist]
             configuration:
               custom_root_fields:
                 select: artists
@@ -79,7 +78,7 @@ sourceMetadata =
               - name: albums
                 using:
                   manual_configuration:
-                    remote_table: Album
+                    remote_table: [Album]
                     column_mapping:
                       ArtistId: ArtistId
         configuration: {}
@@ -87,7 +86,7 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Context.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
 tests opts = do
   describe "Basic Tests" $ do
     it "works with simple object query" $
@@ -96,8 +95,8 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 1),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock We Salute You")
+                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -122,20 +121,20 @@ tests opts = do
               { _whenQuery =
                   Just
                     ( API.QueryRequest
-                        { _qrTable = API.TableName "Album",
+                        { _qrTable = API.TableName ("Album" :| []),
                           _qrTableRelationships = [],
                           _qrQuery =
                             API.Query
                               { _qFields =
                                   Just $
                                     KM.fromList
-                                      [ ("id", API.ColumnField (ValueWrapper (API.ColumnName "AlbumId"))),
-                                        ("title", API.ColumnField (ValueWrapper (API.ColumnName "Title")))
+                                      [ ("id", API.ColumnField (API.ColumnName "AlbumId")),
+                                        ("title", API.ColumnField (API.ColumnName "Title"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And (ValueWrapper [])),
+                                _qWhere = Nothing,
                                 _qOrderBy = Nothing
                               }
                         }
@@ -148,14 +147,14 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 1),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock We Salute You")
+                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ],
-                            [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 2),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "Balls to the Wall")
+                            [ ("id", API.mkColumnFieldValue $ Aeson.Number 2),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
                             ],
-                            [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 3),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "Restless and Wild")
+                            [ ("id", API.mkColumnFieldValue $ Aeson.Number 3),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -184,21 +183,21 @@ tests opts = do
               { _whenQuery =
                   Just
                     ( API.QueryRequest
-                        { _qrTable = API.TableName "Album",
+                        { _qrTable = API.TableName ("Album" :| []),
                           _qrTableRelationships = [],
                           _qrQuery =
                             API.Query
                               { _qFields =
                                   Just $
                                     KM.fromList
-                                      [ ("id", API.ColumnField (ValueWrapper (API.ColumnName "AlbumId"))),
-                                        ("title", API.ColumnField (ValueWrapper (API.ColumnName "Title")))
+                                      [ ("id", API.ColumnField (API.ColumnName "AlbumId")),
+                                        ("title", API.ColumnField (API.ColumnName "Title"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 3,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And (ValueWrapper [])),
-                                _qOrderBy = Just (API.OrderBy (API.ColumnName "AlbumId") API.Ascending NE.:| [])
+                                _qWhere = Nothing,
+                                _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
                               }
                         }
                     )

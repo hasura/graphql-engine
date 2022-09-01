@@ -1,0 +1,332 @@
+---
+sidebar_label: Quickstart with AWS ECS
+description: Quickstart with AWS ECS for Hasura Enterprise Edition
+title: 'Quickstart with AWS ECS'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 2
+---
+
+import LatestRelease from '@site/src/components/LatestRelease';
+
+# Quickstart with AWS ECS
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Introduction
+
+This tutorial will help you set up a cluster, register a task definition, run the Hasura GraphQL Engine as a Linux
+Fargate task, and perform other common tasks in Amazon ECS with the AWS CLI.
+
+**This guide requires HGE versions `v2.12.0-beta.1` and above.** Installation instructions are below.
+
+## Deploying Hasura EE on ECS
+
+### Prerequisites
+
+This tutorial assumes that the following prerequisites have been met:
+
+- The latest version of the AWS CLI is installed and configured. For more information about installing or upgrading your
+  AWS CLI, see
+  [Installing the AWS Command Line Interface](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+- The steps in
+  [Set up to use Amazon ECS](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/get-set-up-for-amazon-ecs.html)
+  have been completed.
+- Your AWS user has the required permissions specified in the
+  [Amazon ECS first-run wizard permissions](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/security_iam_id-based-policy-examples.html#first-run-permissions).
+- You have a Postgres database for storing metadata and Redis for caching / rate limiting, preferably a managed service,
+  which is accessible from the ECS containers.
+- You have a VPC and security group created to use. This tutorial uses a container image hosted on the Public docker hub
+  so your task must have internet access. To give your task a route to the internet, use one of the following options:
+  - Use a private subnet with a NAT gateway that has an elastic IP address.
+  - Use a public subnet and assign a public IP address to the task.
+  - For more information, see
+    [Create a virtual private cloud](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/get-set-up-for-amazon-ecs.html#create-a-vpc).
+
+### Step 1: Create a Cluster
+
+If your account already has an ECS cluster you would like to use, skip this step.
+
+Create your own cluster with a unique name with the following command:
+
+```bash
+aws ecs create-cluster --cluster-name hasura-fargate-cluster
+```
+
+### Step 2: Get the ECS task definition
+
+The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
+installation manifests required to deploy Hasura anywhere. Get the ECS task definition files from there:
+
+```bash
+wget https://raw.githubusercontent.com/hasura/graphql-engine/beta/install-manifests/enterprise/aws-ecs/hasura-fargate-task.json
+```
+
+### Step 3: Set the license key, metadata database URL, Redis database URL and the admin secret
+
+Edit `hasura-fargate-task.json` and set the right values:
+
+```json {6,10,14,18,22}
+---
+{
+  "environment": [
+    {
+      "name": "HASURA_GRAPHQL_EE_LICENSE_KEY",
+      "value": ""
+    },
+    {
+      "name": "HASURA_GRAPHQL_METADATA_DATABASE_URL",
+      "value": "postgres://<username>:<password>@hostname:<port>/<dbname>"
+    },
+    {
+      "name": "HASURA_GRAPHQL_REDIS_URL",
+      "value": "redis://hostname:6379"
+    },
+    {
+      "name": "HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL",
+      "value": "redis://hostname:6379"
+    },
+    {
+      "name": "HASURA_GRAPHQL_ADMIN_SECRET",
+      "value": "myadminsecretkey"
+    }
+  ]
+}
+```
+
+Examples of `HASURA_GRAPHQL_METADATA_DATABASE_URL`:
+
+- `postgres://admin:password@db-name.region.rds.amazonaws.com:5432/my_db`
+- `postgres://admin:@db-name.region.rds.amazonaws.com:5432/my_db` _(if there is no password)_
+
+Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`:
+
+- `redis://admin:password@db-name.region.cache.amazonaws.com:6379`
+- `redis://db-name.region.cache.amazonaws.com:6379` _(if there is no password)_
+
+:::info Note
+
+- If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
+  `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var (e.g. %40 for @).
+
+- The Hasura GraphQL engine needs access permissions on your Postgres database as described in
+  [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
+
+- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+  the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+  information on setting up authentication.
+
+- Convert confidential environment variables such as Postgres / Redis URLs, admin / metrics secrets to fetch from
+  secrets,
+  [see here for more information](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html).
+
+- Configure logging and monitoring for your Hasura graphql engine instance,
+  [see here for more information](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-logging-monitoring.html).
+
+:::
+
+### Step 4: Register the Task Definition
+
+```bash
+aws ecs register-task-definition --cli-input-json file://hasura-fargate-task.json
+```
+
+### Step 5: List Task Definitions
+
+You can list the task definitions for your account at any time with the list-task-definitions command. The output of
+this command shows the `family` and `revision` values that you can use together when calling **run-task** or
+**start-task** or **create-service** or **update-service**.
+
+```bash
+aws ecs list-task-definitions
+```
+
+Output:
+
+```json
+{
+  "taskDefinitionArns": ["arn:aws:ecs:region:aws_account_id:task-definition/hasura:1"]
+}
+```
+
+### Step 6: Create a Service
+
+After you have registered a task for your account, you can create a service for the registered task in your cluster. For
+this example, you create a service with one instance of the `hasura:1` task definition running in your cluster.
+
+The task requires a route to the internet, so there are two ways you can achieve this. One way is to use a private
+subnet configured with a NAT gateway with an elastic IP address in a public subnet. Another way is to use a public
+subnet and assign a public IP address to your task. We provide both examples below.
+
+Substitute subnets and security groups in the below commands:
+
+Example using a private subnet:
+
+```bash {7}
+aws ecs create-service \
+--cluster hasura-fargate-cluster \
+--service-name hasura-fargate-service \
+--task-definition hasura:1 \
+--desired-count 1 \
+--launch-type "FARGATE" \
+--network-configuration "awsvpcConfiguration={subnets=[subnet-abcd1234],securityGroups=[sg-abcd1234]}"
+```
+
+Example using a public subnet:
+
+```bash {7}
+aws ecs create-service \
+--cluster hasura-fargate-cluster \
+--service-name hasura-fargate-service \
+--task-definition hasura:1 \
+--desired-count 1 \
+--launch-type "FARGATE" \
+--network-configuration "awsvpcConfiguration={subnets=[subnet-abcd1234],securityGroups=[sg-abcd1234],assignPublicIp=ENABLED}"
+```
+
+The **create-service** command returns a description of the task definition after it completes its registration.
+
+### Step 7: Describe the Running Service
+
+Describe the service using the service name retrieved earlier to get more information about the task.
+
+```bash
+aws ecs describe-services --cluster hasura-fargate-cluster --services hasura-fargate-service
+```
+
+If successful, this will return a description of the service failures and services. For example, in the services
+section, you will find information on deployments, such as the status of the tasks as running or pending.
+
+You may also find information on the task definition, the network configuration and time-stamped events. In the failures
+section, you will find information on failures, if any, associated with the call. For troubleshooting, see
+[Service Event Messages](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-event-messages.html).
+
+### Step 8: Open the Hasura console
+
+Copy the task id from the previous step and describe the task in the service so that you can get the Elastic Network
+Interface (ENI) for the task.
+
+Describe the task and locate the ENI ID.
+
+```bash
+aws ecs describe-tasks --cluster hasura-fargate-cluster --tasks <task-id-here>
+```
+
+The attachment information is listed in the output
+
+```json {16}
+{
+    "tasks": [
+        {
+            "attachments": [
+                {
+                    "id": "d9e7735a-16aa-4128-bc7a-b2d5115029e9",
+                    "type": "ElasticNetworkInterface",
+                    "status": "ATTACHED",
+                    "details": [
+                        {
+                            "name": "subnetId",
+                            "value": "subnetabcd1234"
+                        },
+                        {
+                            "name": "networkInterfaceId",
+                            "value": "eni-0fa40520aeEXAMPLE"
+                        },
+                    ]
+                }
+…
+}
+```
+
+Copy the ENI from the above describe-tasks output. Describe the ENI to get the public IP address.
+
+```bash
+aws ec2 describe-network-interfaces --network-interface-id  eni-0fa40520aeEXAMPLE
+```
+
+The public IP address is in the output.
+
+```json {7}
+{
+    "NetworkInterfaces": [
+        {
+            "Association": {
+                "IpOwnerId": "amazon",
+                "PublicDnsName": "ec2-34-229-42-222.compute-1.amazonaws.com",
+                "PublicIp": "198.51.100.2"
+            },
+…
+}
+
+```
+
+Enter the public IP address in your web browser and you should see a webpage that displays the Hasura GraphQL engine
+console.
+
+## Updating Hasura GraphQL engine {#ecs-update}
+
+This guide will help you update the Hasura GraphQL engine running on ECS. This guide assumes that you already have the
+Hasura GraphQL engine running on ECS.
+
+### Step 1: Check the latest release version
+
+The current latest version is:
+
+<code>
+  hasura/graphql-engine:
+  <LatestRelease />
+</code>
+
+All the versions can be found at:
+[https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases).
+
+### Step 2: Update the container image
+
+In the `hasura-fargate-task.json` file, update the image tag to this latest version.
+
+For example, if you had:
+
+```json {3}
+"containerDefinitions": [
+    {
+        "image": "hasura/graphql-engine:v2.0.1",
+    ...
+    }
+```
+
+you should change it to:
+
+<pre>
+  <code>
+    "image": "hasura/graphql-engine:
+    <LatestRelease />
+    ",
+  </code>
+</pre>
+
+### Step 3: Roll out the change
+
+Register the updated task definition and copy the `taskDefinitionArn` revision number:
+
+```bash
+aws ecs register-task-definition --cli-input-json file://hasura-fargate-task.json
+```
+
+```json {3}
+    {
+        "taskDefinition": {
+            "taskDefinitionArn": "arn:aws:ecs:region:aws_account_id:task-definition/hasura:7",
+```
+
+```bash
+aws ecs update-service --cluster hasura-fargate-cluster --service hasura-fargate-service --task-definition hasura:7
+```
+
+:::info Note
+
+If you are downgrading to an older version of the GraphQL engine, you might need to downgrade your metadata catalogue
+version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx).
+
+:::

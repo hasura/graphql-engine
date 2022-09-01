@@ -19,10 +19,11 @@ import {
   getDatabaseTableTypeInfoForAllSources,
 } from './DataActions';
 import _push from './push';
-import Button from '../../Common/Button/Button';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import { Button } from '@/new-components/Button';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
-import { useGDCTreeClick } from './GDCTree/hooks/useGDCTreeClick';
+// import { useGDCTreeClick } from './GDCTree/hooks/useGDCTreeClick';
+import { GDC_TREE_VIEW_DEV } from '@/utils/featureFlags';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -201,7 +202,35 @@ const DataSubSidebar = props => {
   };
 
   const [treeViewItems, setTreeViewItems] = useState([]);
-  const handleGDCTreeClick = useGDCTreeClick(dispatch);
+
+  const handleGDCTreeClick = value => {
+    if (GDC_TREE_VIEW_DEV === 'disabled') return;
+
+    const { database, ...table } = JSON.parse(value[0]);
+
+    const metadataSource = sources.find(source => source.name === database);
+
+    if (!metadataSource)
+      throw Error('useGDCTreeClick: source was not found in metadata');
+
+    /**
+     * Handling click for GDC DBs
+     */
+    const isTableClicked = Object.keys(table).length !== 0;
+    if (isTableClicked) {
+      dispatch(
+        _push(
+          encodeURI(
+            `/data/v2/manage?database=${database}&table=${JSON.stringify(
+              table
+            )}`
+          )
+        )
+      );
+    } else {
+      dispatch(_push(encodeURI(`/data/v2/manage?database=${database}`)));
+    }
+  };
 
   useEffect(() => {
     // skip api call, if the data is there in store
@@ -257,7 +286,7 @@ const DataSubSidebar = props => {
             databaseLoading ||
             sidebarLoadingState ||
             isFetching ? (
-              <div className={styles.inline_display}>
+              <div className={styles.inline_display} id="spinner">
                 <Spinner className={styles.spinner} />
               </div>
             ) : (
@@ -273,11 +302,7 @@ const DataSubSidebar = props => {
             className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
           >
             <Link className={styles.padd_remove_full} to={manageDatabasesRoute}>
-              <Button
-                size="xs"
-                color="white"
-                data-test="sidebar-manage-database"
-              >
+              <Button size="sm" data-test="sidebar-manage-database">
                 Manage
               </Button>
             </Link>

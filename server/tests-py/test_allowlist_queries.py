@@ -127,6 +127,9 @@ class TestAllowlistMetadata:
     def dir(cls):
         return 'queries/graphql_query/allowlist_role_based'
 
+    def test_rename_query_collection(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/rename_query_collection.yaml')
+
     def test_add_update_drop(self, hge_ctx):
         # Cycle through add_collection_to_allowlist,
         # update_scope_of_collection_in_allowlist and

@@ -96,7 +96,7 @@ instance ToJSON PermType where
 
 data PermColSpec b
   = PCStar
-  | PCCols ![Column b]
+  | PCCols [Column b]
   deriving (Generic)
 
 deriving instance (Backend b) => Show (PermColSpec b)
@@ -114,9 +114,9 @@ instance (Backend b) => ToJSON (PermColSpec b) where
   toJSON PCStar = "*"
 
 data PermDef (b :: BackendType) (perm :: BackendType -> Type) = PermDef
-  { _pdRole :: !RoleName,
-    _pdPermission :: !(PermDefPermission b perm),
-    _pdComment :: !(Maybe T.Text)
+  { _pdRole :: RoleName,
+    _pdPermission :: PermDefPermission b perm,
+    _pdComment :: Maybe T.Text
   }
   deriving (Show, Eq, Generic)
 
@@ -219,10 +219,10 @@ instance ToJSON SubscriptionRootFieldType where
 
 -- Insert permission
 data InsPerm (b :: BackendType) = InsPerm
-  { ipCheck :: !(BoolExp b),
-    ipSet :: !(Maybe (ColumnValues b Value)),
-    ipColumns :: !(Maybe (PermColSpec b)),
-    ipBackendOnly :: !Bool -- see Note [Backend only permissions]
+  { ipCheck :: BoolExp b,
+    ipSet :: Maybe (ColumnValues b Value),
+    ipColumns :: Maybe (PermColSpec b),
+    ipBackendOnly :: Bool -- see Note [Backend only permissions]
   }
   deriving (Show, Eq, Generic)
 
@@ -340,8 +340,8 @@ type SelPermDef b = PermDef b SelPerm
 
 -- Delete permission
 data DelPerm (b :: BackendType) = DelPerm
-  { dcFilter :: !(BoolExp b),
-    dcBackendOnly :: !Bool -- see Note [Backend only permissions]
+  { dcFilter :: BoolExp b,
+    dcBackendOnly :: Bool -- see Note [Backend only permissions]
   }
   deriving (Show, Eq, Generic)
 
@@ -360,16 +360,16 @@ type DelPermDef b = PermDef b DelPerm
 
 -- Update constraint
 data UpdPerm (b :: BackendType) = UpdPerm
-  { ucColumns :: !(PermColSpec b), -- Allowed columns
-    ucSet :: !(Maybe (ColumnValues b Value)), -- Preset columns
-    ucFilter :: !(BoolExp b), -- Filter expression (applied before update)
+  { ucColumns :: PermColSpec b, -- Allowed columns
+    ucSet :: Maybe (ColumnValues b Value), -- Preset columns
+    ucFilter :: BoolExp b, -- Filter expression (applied before update)
 
     -- | Check expression, which must be true after update.
     -- This is optional because we don't want to break the v1 API
     -- but Nothing should be equivalent to the expression which always
     -- returns true.
-    ucCheck :: !(Maybe (BoolExp b)),
-    ucBackendOnly :: !Bool -- see Note [Backend only permissions]
+    ucCheck :: Maybe (BoolExp b),
+    ucBackendOnly :: Bool -- see Note [Backend only permissions]
   }
   deriving (Show, Eq, Generic)
 

@@ -41,5 +41,5 @@ args:
       type: query
       arguments: []
       output_type: "[Message]"
-      handler: http://127.0.0.1:5593/get_messages
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get_messages"
 

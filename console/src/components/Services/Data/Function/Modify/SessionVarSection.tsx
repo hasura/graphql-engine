@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import styles from './ModifyCustomFunction.scss';
-import ToolTip from '../../../../Common/Tooltip/Tooltip';
-import Button from '../../../../Common/Button';
+import { IconTooltip } from '@/new-components/Tooltip';
+import { Button } from '@/new-components/Button';
+import styles from './ModifyCustomFunction.module.scss';
 import EditorInput from './EditorInput';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 
@@ -36,9 +36,10 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   const onSessVarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSessVar(e.target.value);
   };
-  const closeEditPopUp = React.useCallback(() => setIsEditing(false), [
-    setIsEditing,
-  ]);
+  const closeEditPopUp = React.useCallback(
+    () => setIsEditing(false),
+    [setIsEditing]
+  );
   const onSave = () => {
     if (sessVar !== (configuration?.session_argument || ''))
       onSessVarUpdate(sessVar).then(closeEditPopUp);
@@ -48,7 +49,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
     <>
       <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
         Session Argument
-        <ToolTip message="the function argument into which hasura session variables will be passed" />
+        <IconTooltip message="the function argument into which hasura session variables will be passed" />
         <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#accessing-hasura-session-variables-in-custom-functions" />
       </h4>
       <div
@@ -61,8 +62,6 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
         <div className="mb-md" data-test={`${functionName}-session-argument`}>
           <Button
             className={styles.add_mar_small}
-            color="white"
-            size="xs"
             onClick={toggleIsEditting}
             data-test={`${functionName}-session-argument-btn`}
           >
@@ -81,8 +80,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
             <div className="mt-md">
               <Button
                 type="submit"
-                color="yellow"
-                size="sm"
+                mode="primary"
                 className={styles.add_mar_right}
                 onClick={onSave}
                 data-test={`${functionName}-session-argument-save`}

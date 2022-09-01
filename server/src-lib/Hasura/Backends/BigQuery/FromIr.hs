@@ -105,18 +105,18 @@ newtype FromIr a = FromIr
   deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
 data FromIrState = FromIrState
-  { indices :: !(Map Text Int)
+  { indices :: Map Text Int
   }
 
 data FromIrReader = FromIrReader
-  { config :: !FromIrConfig
+  { config :: FromIrConfig
   }
 
 -- | Config values for the from-IR translator.
 data FromIrConfig = FromIrConfig
   { -- | Applies globally to all selects, and may be reduced to
     -- something even smaller by permission/user args.
-    globalSelectLimit :: !Top
+    globalSelectLimit :: Top
   }
 
 -- | A default config.

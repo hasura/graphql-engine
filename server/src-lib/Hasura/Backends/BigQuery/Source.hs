@@ -18,6 +18,7 @@ module Hasura.Backends.BigQuery.Source
   )
 where
 
+import Autodocodec (HasCodec, codec, named)
 import Control.Concurrent.MVar
 import Crypto.PubKey.RSA.Types qualified as Cry
 import Data.Aeson qualified as J
@@ -30,6 +31,7 @@ import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 
 data PKey = PKey
@@ -64,8 +66,8 @@ newtype GoogleAccessToken
   deriving (Show, Eq, J.FromJSON, J.ToJSON, Hashable, Generic, Data, NFData)
 
 data TokenResp = TokenResp
-  { _trAccessToken :: !GoogleAccessToken,
-    _trExpiresAt :: !Integer -- Number of seconds until expiry from `now`, but we add `now` seconds to this for easy tracking
+  { _trAccessToken :: GoogleAccessToken,
+    _trExpiresAt :: Integer -- Number of seconds until expiry from `now`, but we add `now` seconds to this for easy tracking
   }
   deriving (Eq, Show, Data, NFData, Generic, Hashable)
 
@@ -76,9 +78,9 @@ instance J.FromJSON TokenResp where
       <*> o J..: "expires_in"
 
 data ServiceAccount = ServiceAccount
-  { _saClientEmail :: !Text,
-    _saPrivateKey :: !PKey,
-    _saProjectId :: !Text
+  { _saClientEmail :: Text,
+    _saPrivateKey :: PKey,
+    _saProjectId :: Text
   }
   deriving (Eq, Show, Data, NFData, Generic, Hashable)
 
@@ -106,8 +108,8 @@ instance J.ToJSON a => J.ToJSON (ConfigurationJSON a) where
 -- | Configuration inputs when they are a YAML array or an Env var whos value is
 -- a comma-separated string
 data ConfigurationInputs
-  = FromYamls ![Text]
-  | FromEnvs !Text
+  = FromYamls [Text]
+  | FromEnvs Text
   deriving stock (Show, Eq, Generic)
   deriving (NFData, Hashable)
 
@@ -125,8 +127,8 @@ instance J.FromJSON ConfigurationInputs where
 -- | Configuration input when the YAML value as well as the Env var have
 -- singlular values
 data ConfigurationInput
-  = FromYaml !Text
-  | FromEnv !Text
+  = FromYaml Text
+  | FromEnv Text
   deriving stock (Show, Eq, Generic)
   deriving (NFData, Hashable)
 
@@ -153,6 +155,11 @@ data BigQueryConnSourceConfig = BigQueryConnSourceConfig
   deriving (Eq, Generic, NFData)
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''BigQueryConnSourceConfig)
+
+-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
+-- instances.
+instance HasCodec BigQueryConnSourceConfig where
+  codec = named "BigQueryConnSourceConfig" $ placeholderCodecViaJSON
 
 deriving instance Show BigQueryConnSourceConfig
 

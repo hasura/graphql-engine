@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -120,6 +121,9 @@ func (p *DefaultTemplateProvider) GetTemplateVersion(v *version.Version) string 
 func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 	// server has a version
 	if v.Server != "" {
+		if strings.HasSuffix(v.Server, "-ce") {
+			return fmt.Sprintf("channel/%s/%s", versioned, v.Server)
+		}
 		// version is semver
 		if v.ServerSemver != nil {
 			// check for release channels

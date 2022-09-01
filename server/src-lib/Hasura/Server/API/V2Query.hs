@@ -13,6 +13,8 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Environment qualified as Env
+import Data.Text qualified as T
+import GHC.Generics.Extended (constrName)
 import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.MSSQL.DDL.RunSQL qualified as MSSQL
 import Hasura.Backends.MySQL.SQL qualified as MySQL
@@ -48,10 +50,12 @@ data RQLQuery
   | RQRunSql !Postgres.RunSQL
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQCitusRunSql !Postgres.RunSQL
+  | RQCockroachRunSql !Postgres.RunSQL
   | RQMysqlRunSql !MySQL.RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
+  deriving (Generic)
 
 $( deriveFromJSON
      defaultOptions
@@ -81,7 +85,7 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
-  (metadata, currentResourceVersion) <- fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
   result <-
     runQueryM env rqlQuery & \x -> do
       ((js, meta), rsc, ci) <-
@@ -100,9 +104,12 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
         case _sccMaintenanceMode serverConfigCtx of
           MaintenanceModeDisabled -> do
             -- set modified metadata in storage
-            newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
+            newResourceVersion <-
+              Tracing.trace "setMetadata" $
+                setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
-            notifySchemaCacheSync newResourceVersion instanceId invalidations
+            Tracing.trace "notifySchemaCacheSync" $
+              notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled () ->
             throw500 "metadata cannot be modified in maintenance mode"
       pure (result, updatedCache)
@@ -116,6 +123,7 @@ queryModifiesSchema = \case
   RQCount _ -> False
   RQRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQCitusRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
+  RQCockroachRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQMssqlRunSql q -> MSSQL.isSchemaCacheBuildRequiredRunSQL q
   RQMysqlRunSql _ -> False
   RQBigqueryRunSql _ -> False
@@ -136,7 +144,7 @@ runQueryM ::
   Env.Environment ->
   RQLQuery ->
   m EncJSON
-runQueryM env = \case
+runQueryM env rq = Tracing.trace (T.pack $ constrName rq) $ case rq of
   RQInsert q -> runInsert q
   RQSelect q -> runSelect q
   RQUpdate q -> runUpdate q
@@ -146,6 +154,7 @@ runQueryM env = \case
   RQMssqlRunSql q -> MSSQL.runSQL q
   RQMysqlRunSql q -> MySQL.runSQL q
   RQCitusRunSql q -> Postgres.runRunSQL @'Citus q
+  RQCockroachRunSql q -> Postgres.runRunSQL @'Cockroach q
   RQBigqueryRunSql q -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk l -> encJFromList <$> indexedMapM (runQueryM env) l
@@ -159,6 +168,7 @@ queryModifiesUserDB = \case
   RQCount _ -> False
   RQRunSql _ -> True
   RQCitusRunSql _ -> True
+  RQCockroachRunSql _ -> True
   RQMssqlRunSql _ -> True
   RQMysqlRunSql _ -> True
   RQBigqueryRunSql _ -> True

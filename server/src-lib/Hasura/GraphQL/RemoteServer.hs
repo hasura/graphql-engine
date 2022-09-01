@@ -9,6 +9,7 @@ where
 import Control.Arrow.Extended (left)
 import Control.Exception (try)
 import Control.Lens (set, (^.))
+import Control.Monad.Memoize
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
@@ -20,7 +21,7 @@ import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Monad (Parse, runSchemaT)
+import Hasura.GraphQL.Parser.Monad (Parse)
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
@@ -82,7 +83,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   -- quickly reject an invalid schema.
   void $
     flip runReaderT minimumValidContext $
-      runSchemaT $
+      runMemoizeT $
         buildRemoteParser @_ @_ @Parse
           _rscIntroOriginal
           _rscRemoteRelationships
@@ -116,8 +117,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
     -- Minimum valid information required to run schema generation for
     -- the remote schema.
     minimumValidContext =
-      ( adminRoleName :: RoleName,
-        mempty :: CustomizeRemoteFieldName,
+      ( mempty :: CustomizeRemoteFieldName,
         mempty :: MkTypename,
         mempty :: MkRootFieldName,
         HasuraCase,
@@ -137,6 +137,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         SchemaContext
           HasuraSchema
           ignoreRemoteRelationship
+          adminRoleName
       )
 
 -- | Sends a GraphQL query to the given server.
@@ -532,7 +533,7 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
     typeFieldMap :: HashMap G.Name [G.Name] -- typeName -> fieldNames
     typeFieldMap =
-      Map.mapMaybe getFieldsNames typeDefinitions
+      mapMaybe getFieldsNames typeDefinitions
       where
         getFieldsNames = \case
           G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> Just $ G._fldName <$> _otdFieldsDefinition

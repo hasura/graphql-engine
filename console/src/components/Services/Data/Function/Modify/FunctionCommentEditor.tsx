@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { FaEdit } from 'react-icons/fa';
 
 import { saveFunctionComment, setEditing } from '../customFunctionReducer';
@@ -66,15 +67,9 @@ export const FunctionCommentEditor: React.FC<FunctionCommentEditorProps> = ({
         </div>
       )}
       {!readOnly && (
-        <button
-          onClick={() => dispatchIsEditing(true)}
-          className="flex items-center cursor-pointer"
-        >
-          <FaEdit className="mr-xs" />
-          <span className="font-semibold">
-            {comment ? 'Edit Comment' : 'Add a Comment'}
-          </span>
-        </button>
+        <Button icon={<FaEdit />} onClick={() => dispatchIsEditing(true)}>
+          {comment ? 'Edit Comment' : 'Add a Comment'}
+        </Button>
       )}
     </div>
   );

@@ -2,8 +2,9 @@ import React, { useEffect, useReducer } from 'react';
 import { GraphQLError } from 'graphql';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
-import { Tooltip } from 'react-bootstrap';
+import { IconTooltip } from '@/new-components/Tooltip';
 import requestAction from '@/utils/requestAction';
+import { Button } from '@/new-components/Button';
 import {
   parseValidateApiData,
   getValidateTransformOptions,
@@ -38,7 +39,6 @@ import {
 } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
 import ActionEditor from '../Common/components/ActionEditor';
-import Button from '../../../Common/Button';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import { showWarningNotification } from '../../Common/Notification';
@@ -372,8 +372,8 @@ const AddAction: React.FC<AddActionProps> = ({
 
         <div>
           <Button
-            color="yellow"
-            size="sm"
+            mode="primary"
+            size="md"
             type="submit"
             disabled={!allowSave}
             onClick={onSubmit}
@@ -382,9 +382,7 @@ const AddAction: React.FC<AddActionProps> = ({
             Create Action
           </Button>
           {readOnlyMode && (
-            <Tooltip id="tooltip-actions-add-readonlymode">
-              Adding new action is not allowed in Read only mode!
-            </Tooltip>
+            <IconTooltip message="Adding new action is not allowed in Read only mode!" />
           )}
         </div>
       </div>

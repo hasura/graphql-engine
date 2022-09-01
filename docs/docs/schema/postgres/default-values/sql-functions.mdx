@@ -53,13 +53,13 @@ Modify the table `sql_function_table` and make its `output` column nullable.
 
 Open the console and head to `Data -> [sql_function_table] -> Modify`:
 
-<Thumbnail src='/img/graphql/core/schema/modify-sql-fn-table.png' alt='Modify the table' />
+<Thumbnail src='/img/schema/modify-sql-fn-table.png' alt='Modify the table' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the following SQL
-statement to the `up.sql` file:
+[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the
+following SQL statement to the `up.sql` file:
 
 ```sql
 ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" DROP NOT NULL;
@@ -122,13 +122,13 @@ CREATE FUNCTION test_func() RETURNS trigger AS $emp_stamp$
 
 Head to `Data -> SQL` and run the above SQL:
 
-<Thumbnail src='/img/graphql/core/schema/create-trigger.png' alt='Create a trigger with SQL' />
+<Thumbnail src='/img/schema/create-trigger.png' alt='Create a trigger with SQL' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the above SQL to the
-`up.sql` file. Also, add a statement to revert the previous statement to the `down.sql`.
+[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the
+above SQL to the `up.sql` file. Also, add a statement to revert the previous statement to the `down.sql`.
 
 Apply the migration by running:
 

@@ -33,9 +33,9 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 data CountQueryP1 = CountQueryP1
-  { cqp1Table :: !QualifiedTable,
-    cqp1Where :: !(AnnBoolExpSQL ('Postgres 'Vanilla), Maybe (AnnBoolExpSQL ('Postgres 'Vanilla))),
-    cqp1Distinct :: !(Maybe [PGCol])
+  { cqp1Table :: QualifiedTable,
+    cqp1Where :: (AnnBoolExpSQL ('Postgres 'Vanilla), Maybe (AnnBoolExpSQL ('Postgres 'Vanilla))),
+    cqp1Distinct :: Maybe [PGCol]
   }
   deriving (Eq)
 

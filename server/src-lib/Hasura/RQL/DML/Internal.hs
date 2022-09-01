@@ -235,8 +235,8 @@ askTableInfoSource tableName = do
     throw400 NotExists $ "table " <> tableName <<> " does not exist"
 
 data SessionVariableBuilder m = SessionVariableBuilder
-  { _svbCurrentSession :: !(SQLExpression ('Postgres 'Vanilla)),
-    _svbVariableParser :: !(SessionVarType ('Postgres 'Vanilla) -> SessionVariable -> m (SQLExpression ('Postgres 'Vanilla)))
+  { _svbCurrentSession :: SQLExpression ('Postgres 'Vanilla),
+    _svbVariableParser :: SessionVarType ('Postgres 'Vanilla) -> SessionVariable -> m (SQLExpression ('Postgres 'Vanilla))
   }
 
 fetchRelDet ::
@@ -295,6 +295,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         -- Including table permission filter; "input condition" AND "permission filter condition"
         let finalBoolExp = andAnnBoolExps modBoolExp resolvedFltr
         pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table finalBoolExp}
+  AVAggregationPredicates {} -> throw400 NotExists "Aggregation Predicates cannot appear in permission checks"
 
 convAnnBoolExpPartialSQL ::
   (Applicative f) =>

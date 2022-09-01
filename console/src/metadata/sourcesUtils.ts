@@ -1,3 +1,4 @@
+import { isPostgresFlavour } from '@/components/Services/Data/DataSources/utils';
 import { Driver, sourceNames } from '../dataSources';
 import {
   ConnectionParams,
@@ -48,6 +49,7 @@ export const addSource = (
     connection_parameters?: ConnectionParams;
     connection_pool_settings?: ConnectionPoolSettings;
     replace_configuration?: boolean;
+    extensionsSchema?: string;
     bigQuery: {
       projectId: string;
       datasets: string;
@@ -142,12 +144,9 @@ export const addSource = (
     };
   }
 
-  if (
-    (driver === 'postgres' || driver === 'citus') &&
-    payload?.replace_configuration
-  ) {
+  if (isPostgresFlavour(driver) && payload?.replace_configuration) {
     return {
-      type: `${driver === 'postgres' ? 'pg' : 'citus'}_update_source`,
+      type: `${driver === 'postgres' ? 'pg' : driver}_update_source`,
       args: {
         name: payload.name,
         configuration: {
@@ -161,6 +160,9 @@ export const addSource = (
             ssl_configuration: payload.sslConfiguration,
           },
           read_replicas: replicas?.length ? replicas : null,
+          extensions_schema: payload?.extensionsSchema
+            ? payload?.extensionsSchema
+            : null,
         },
         replace_configuration,
         ...adaptedCustomizations,
@@ -169,7 +171,7 @@ export const addSource = (
   }
 
   return {
-    type: `${driver === 'postgres' ? 'pg' : 'citus'}_add_source`,
+    type: `${driver === 'postgres' ? 'pg' : driver}_add_source`,
     args: {
       name: payload.name,
       configuration: {
@@ -183,6 +185,9 @@ export const addSource = (
           ssl_configuration: payload.sslConfiguration,
         },
         read_replicas: replicas?.length ? replicas : null,
+        extensions_schema: payload?.extensionsSchema
+          ? payload?.extensionsSchema
+          : null,
       },
       replace_configuration,
       ...adaptedCustomizations,
@@ -201,6 +206,9 @@ export const removeSource = (driver: Driver, name: string) => {
       break;
     case sourceNames.citus:
       prefix = 'citus_';
+      break;
+    case sourceNames.cockroach:
+      prefix = 'cockroach_';
       break;
     default:
       prefix = 'pg_';

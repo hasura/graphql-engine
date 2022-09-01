@@ -73,6 +73,10 @@ import Hasura.Server.Init.Config
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Logging qualified as L
+import Hasura.Server.Prometheus
+  ( GraphQLRequestMetrics (..),
+    PrometheusMetrics (..),
+  )
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
@@ -82,6 +86,8 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai.Extended qualified as Wai
+import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
+import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed,
@@ -258,6 +264,7 @@ filterVariablesFromQuery = foldMap \case
   RFRemote remote -> foldOf (traverse . _SessionPresetVariable . to match) remote
   RFAction actionQ -> foldMap remoteFieldPred actionQ
   RFRaw {} -> mempty
+  RFMulti {} -> mempty
   where
     _SessionPresetVariable :: Traversal' RemoteSchemaVariable SessionVariable
     _SessionPresetVariable f (SessionPresetVariable a b c) =
@@ -311,41 +318,57 @@ runGQ ::
   GQLReqUnparsed ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  (totalTime, (response, parameterizedQueryHash)) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL readOnlyMode <- ask
+  E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL readOnlyMode prometheusMetrics <- ask
+  let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
-    -- 1. Run system authorization on the 'reqUnparsed :: GQLReqUnparsed' query.
-    reqParsed <-
-      E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
-        >>= flip onLeft throwError
+  (totalTime, (response, parameterizedQueryHash, gqlOpType)) <- withElapsedTime $ do
+    (reqParsed, runLimits, queryParts) <- observeGQLQueryError gqlMetrics Nothing $ do
+      -- 1. Run system authorization on the 'reqUnparsed :: GQLReqUnparsed' query.
+      reqParsed <-
+        E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
+          >>= flip onLeft throwError
 
-    operationLimit <- askGraphqlOperationLimit
-    let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
+      operationLimit <- askGraphqlOperationLimit reqId
+      let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
 
-    -- 2. Construct an execution plan from 'reqParsed :: GQLParsed'.
-    (parameterizedQueryHash, execPlan) <-
-      E.getResolvedExecPlan
-        env
-        logger
-        userInfo
-        sqlGenCtx
-        readOnlyMode
-        sc
-        scVer
-        queryType
-        httpManager
-        reqHeaders
-        (reqUnparsed, reqParsed)
-        reqId
+      -- 2. Construct the first step of the execution plan from 'reqParsed :: GQLParsed'.
+      queryParts <- getSingleOperation reqParsed
+      return (reqParsed, runLimits, queryParts)
 
-    -- 3. Execute the execution plan producing a 'AnnotatedResponse'.
-    response <- executePlan httpManager reqParsed runLimits execPlan
-    return (response, parameterizedQueryHash)
+    let gqlOpType = G._todType queryParts
+    observeGQLQueryError gqlMetrics (Just gqlOpType) $ do
+      -- 3. Construct the remainder of the execution plan.
+      let maybeOperationName = _unOperationName <$> _grOperationName reqParsed
+      (parameterizedQueryHash, execPlan) <-
+        E.getResolvedExecPlan
+          env
+          logger
+          userInfo
+          sqlGenCtx
+          readOnlyMode
+          sc
+          scVer
+          queryType
+          httpManager
+          reqHeaders
+          reqUnparsed
+          queryParts
+          maybeOperationName
+          reqId
 
+      -- 4. Execute the execution plan producing a 'AnnotatedResponse'.
+      response <- executePlan httpManager reqParsed runLimits execPlan
+      return (response, parameterizedQueryHash, gqlOpType)
+
+  -- 5. Record telemetry
   recordTimings totalTime response
+
+  -- 6. Record Prometheus metrics (query successes)
+  liftIO $ recordGQLQuerySuccess gqlMetrics totalTime gqlOpType
+
+  -- 7. Return the response along with logging metadata.
   let requestSize = LBS.length $ J.encode reqUnparsed
       responseSize = LBS.length $ encJToLBS $ snd $ _hrBody $ arResponse $ response
-  -- 4. Return the response along with logging metadata.
   return
     ( GQLQueryOperationSuccessLog reqUnparsed totalTime responseSize requestSize parameterizedQueryHash,
       arResponse response
@@ -462,6 +485,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.ExecStepRaw json -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
         buildRaw json
+      -- For `ExecStepMulti`, execute all steps and then concat them in a list
+      E.ExecStepMulti lst -> do
+        _all <- traverse (executeQueryStep httpManager fieldName) lst
+        pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse _all)) []
 
     executeMutationStep ::
       HTTP.Manager ->
@@ -492,6 +519,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.ExecStepRaw json -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
         buildRaw json
+      -- For `ExecStepMulti`, execute all steps and then concat them in a list
+      E.ExecStepMulti lst -> do
+        _all <- traverse (executeQueryStep httpManager fieldName) lst
+        pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse _all)) []
 
     runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
@@ -560,6 +591,49 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           { telemTimeIO = convertDuration $ arTimeIO result,
             telemTimeTot = convertDuration totalTime
           }
+
+    -- Catch, record, and re-throw errors.
+    observeGQLQueryError ::
+      forall n e a.
+      ( MonadIO n,
+        MonadError e n
+      ) =>
+      GraphQLRequestMetrics ->
+      Maybe G.OperationType ->
+      n a ->
+      n a
+    observeGQLQueryError gqlMetrics mOpType action =
+      catchError (fmap Right action) (pure . Left) >>= \case
+        Right result ->
+          pure result
+        Left err -> do
+          case mOpType of
+            Nothing ->
+              liftIO $ Prometheus.Counter.inc (gqlRequestsUnknownFailure gqlMetrics)
+            Just opType -> case opType of
+              G.OperationTypeQuery ->
+                liftIO $ Prometheus.Counter.inc (gqlRequestsQueryFailure gqlMetrics)
+              G.OperationTypeMutation ->
+                liftIO $ Prometheus.Counter.inc (gqlRequestsMutationFailure gqlMetrics)
+              G.OperationTypeSubscription ->
+                -- We do not collect metrics for subscriptions at the request level.
+                pure ()
+          throwError err
+
+    -- Tally and record execution times for successful GraphQL requests.
+    recordGQLQuerySuccess ::
+      GraphQLRequestMetrics -> DiffTime -> G.OperationType -> IO ()
+    recordGQLQuerySuccess gqlMetrics totalTime = \case
+      G.OperationTypeQuery -> liftIO $ do
+        Prometheus.Counter.inc (gqlRequestsQuerySuccess gqlMetrics)
+        Prometheus.Histogram.observe (gqlExecutionTimeSecondsQuery gqlMetrics) (realToFrac totalTime)
+      G.OperationTypeMutation -> liftIO $ do
+        Prometheus.Counter.inc (gqlRequestsMutationSuccess gqlMetrics)
+        Prometheus.Histogram.observe (gqlExecutionTimeSecondsMutation gqlMetrics) (realToFrac totalTime)
+      G.OperationTypeSubscription ->
+        -- We do not collect metrics for subscriptions at the request level.
+        -- Furthermore, we do not serve GraphQL subscriptions over HTTP.
+        pure ()
 
 coalescePostgresMutations ::
   EB.ExecutionPlan ->

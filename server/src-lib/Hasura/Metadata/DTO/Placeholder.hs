@@ -12,15 +12,23 @@ module Hasura.Metadata.DTO.Placeholder
   ( PlaceholderArray (..),
     PlaceholderObject (..),
     IsPlaceholder (..),
+    placeholderCodecViaJSON,
   )
 where
 
-import Autodocodec (Autodocodec, HasCodec (codec), codecViaAeson, dimapCodec, valueCodec, vectorCodec, (<?>))
+import Autodocodec (Autodocodec, HasCodec (codec), JSONCodec, bimapCodec, codecViaAeson, dimapCodec, valueCodec, vectorCodec, (<?>))
 import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as JSON
+import Data.Aeson.Ordered qualified as AO
+import Data.Aeson.Types qualified as JSON
 import Data.OpenApi qualified as OpenApi
+import Data.Vector qualified as V
 import Hasura.Prelude
+
+-- TODO: Store ordered aeson values in placeholders instead of stock aeson
+-- values so that we can preserve order. We want to do that after #4842 is
+-- merged so we can use 'toOrderedJSONVia' to produce the appropriate codecs.
 
 -- | Stands in for an array that we have not had time to fully specify yet.
 -- Generated OpenAPI documentation for 'PlaceholderArray' will permit an array
@@ -62,3 +70,22 @@ instance IsPlaceholder PlaceholderArray JSON.Array where
 
 instance IsPlaceholder PlaceholderObject JSON.Object where
   placeholder = PlaceholderObject
+
+instance IsPlaceholder PlaceholderArray AO.Array where
+  placeholder = PlaceholderArray . V.fromList . map AO.fromOrdered . V.toList
+
+instance IsPlaceholder PlaceholderObject AO.Object where
+  placeholder = PlaceholderObject . AO.fromOrderedObject
+
+-- | This placeholder can be used in a codec to represent any type of data that
+-- has `FromJSON` and `ToJSON` instances. Generated OpenAPI specifications based
+-- on this codec will not show any information about the internal structure of
+-- the type so ideally uses of this placeholder should eventually be replaced
+-- with more descriptive codecs.
+placeholderCodecViaJSON :: (FromJSON a, ToJSON a) => JSONCodec a
+placeholderCodecViaJSON =
+  bimapCodec dec enc valueCodec
+    <?> "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+  where
+    dec = JSON.parseEither JSON.parseJSON
+    enc = JSON.toJSON

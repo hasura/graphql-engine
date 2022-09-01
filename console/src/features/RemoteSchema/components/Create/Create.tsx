@@ -3,7 +3,7 @@ import { Button } from '@/new-components/Button';
 import { FieldError } from 'react-hook-form';
 import { Form, InputField } from '@/new-components/Form';
 import { useFireNotification } from '@/new-components/Notifications';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import get from 'lodash.get';
 import { APIError } from '@/hooks/error';
 import React, { useState } from 'react';
@@ -116,12 +116,12 @@ export const Create = ({ onSuccess }: Props) => {
             <div className="mb-lg w-4/12">
               <label className="block flex items-center text-gray-600 font-semibold mb-xs">
                 GraphQL Server Timeout
-                <ToolTip message="Configure timeout for your remote GraphQL server. Defaults to 60 seconds." />
+                <IconTooltip message="Configure timeout for your remote GraphQL server. Defaults to 60 seconds." />
               </label>
               <div className="relative w-full">
                 <input
                   type="text"
-                  className="block w-full shadow-sm rounded pr-10 border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                  className="font-normal block w-full shadow-sm rounded pr-10 border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                   placeholder="60"
                   {...options.register('timeout_seconds')}
                   data-testid="timeout_seconds"
@@ -144,20 +144,23 @@ export const Create = ({ onSuccess }: Props) => {
                 />
                 <label className="pl-3 flex items-center mt-2">
                   Forward all headers from client
-                  <ToolTip
+                  <IconTooltip
                     message="Toggle forwarding headers sent by the client app in the request to
           your remote GraphQL server"
                   />
                 </label>
               </div>
               <div>
-                <label className="flex items-center">
+                <label className="flex items-center mb-xs">
                   Additional headers:
-                  <ToolTip message="Custom headers to be sent to the remote GraphQL server" />
+                  <IconTooltip message="Custom headers to be sent to the remote GraphQL server" />
                 </label>
               </div>
 
-              <RequestHeadersSelector name="headers" />
+              <RequestHeadersSelector
+                name="headers"
+                addButtonText="Add additional headers"
+              />
             </div>
             <div className="mb-lg w-8/12">
               <h2 className="text-lg font-semibold flex items-center">
@@ -187,13 +190,13 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="flex items-center col-span-4">
                       <label className="flex items-center text-gray-600 font-medium">
                         Root Field Namespace
-                        <ToolTip message="Root field type names will be prefixed by this name." />
+                        <IconTooltip message="Root field type names will be prefixed by this name." />
                       </label>
                     </div>
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="namespace_"
                         {...options.register(
                           'customization.root_fields_namespace'
@@ -205,7 +208,7 @@ export const Create = ({ onSuccess }: Props) => {
 
                   <h2 className="text-lg font-semibold mb-xs items-center flex">
                     Types
-                    <ToolTip message="add a prefix / suffix to all types of the remote schema" />
+                    <IconTooltip message="add a prefix / suffix to all types of the remote schema" />
                   </h2>
 
                   <div className="grid gap-3 grid-cols-12 mb-md">
@@ -217,7 +220,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="prefix_"
                         {...options.register('customization.type_prefix')}
                         data-testid="customization.type_prefix"
@@ -233,7 +236,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="_suffix"
                         {...options.register('customization.type_suffix')}
                         data-testid="customization.type_suffix"
@@ -243,7 +246,7 @@ export const Create = ({ onSuccess }: Props) => {
 
                   <h2 className="text-lg font-semibold mb-xs flex items-center">
                     Fields
-                    <ToolTip message="add a prefix / suffix to the fields of the query / mutation root fields" />
+                    <IconTooltip message="add a prefix / suffix to the fields of the query / mutation root fields" />
                   </h2>
 
                   <h3 className="font-semibold mb-xs text-gray-600 text-lg">
@@ -268,7 +271,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="Query/query_root"
                         {...options.register(
                           'customization.query_root.parent_type'
@@ -287,7 +290,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="prefix_"
                         {...options.register('customization.query_root.prefix')}
                         data-testid="customization.query_root.prefix"
@@ -304,7 +307,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="_suffix"
                         {...options.register('customization.query_root.suffix')}
                         data-testid="customization.query_root.suffix"
@@ -335,7 +338,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="Mutation/mutation_root"
                         {...options.register(
                           'customization.mutation_root.parent_type'
@@ -354,7 +357,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="prefix_"
                         {...options.register(
                           'customization.mutation_root.prefix'
@@ -372,7 +375,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="_suffix"
                         {...options.register(
                           'customization.mutation_root.suffix'

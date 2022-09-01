@@ -25,7 +25,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache hiding (BoolExpCtx (..), BoolExpM (..))
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
@@ -191,6 +191,7 @@ translateBoolExp = \case
                 mkComputedFieldFunctionExp currTableReference function sessionArgPresence $
                   Just $ S.toTableAlias aliasFunction
           S.mkExists (S.FIFunc functionExp) <$> recCurrentTable (S.QualifiedIdentifier aliasFunction Nothing) be
+    AVAggregationPredicates _aggPreds -> error "Not implemented yet: Pending https://github.com/hasura/graphql-engine-mono/issues/5174"
   where
     mkQCol :: forall a. IsIdentifier a => S.Qual -> a -> S.SQLExp
     mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
@@ -212,8 +213,8 @@ translateBoolExp = \case
     recCurrentTable curr = local (\e -> e {currTableReference = curr}) . translateBoolExp
 
 data LHSField b
-  = LColumn !FieldName
-  | LComputedField !QualifiedFunction !(FunctionArgsExp b (SQLExpression b))
+  = LColumn FieldName
+  | LComputedField QualifiedFunction (FunctionArgsExp b (SQLExpression b))
 
 mkComputedFieldFunctionExp ::
   S.Qual ->

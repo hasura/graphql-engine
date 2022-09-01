@@ -32,6 +32,7 @@ import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated, toTxt, (<<>))
 import Data.Validation (Validation (..), toEither)
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (fromErrorMessage)
 import Hasura.GraphQL.Execute.Remote
   ( getVariableDefinitionAndValue,
     resolveRemoteVariable,
@@ -350,4 +351,4 @@ parseGraphQLName txt =
 
 ordJSONValueToGValue :: (MonadError QErr n) => AO.Value -> n (G.Value Void)
 ordJSONValueToGValue =
-  either (throw400 ValidationFailed) pure . P.jsonToGraphQL . AO.fromOrdered
+  either (throw400 ValidationFailed . fromErrorMessage) pure . P.jsonToGraphQL . AO.fromOrdered

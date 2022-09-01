@@ -7,12 +7,14 @@ module Hasura.GraphQL.Schema.SubscriptionStream
   )
 where
 
+import Control.Monad.Memoize
 import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended ((<>>))
 import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -58,7 +60,7 @@ cursorBatchSizeArg tCase =
 -- > }
 cursorOrderingArgParser ::
   forall n m r.
-  (MonadSchema n m, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
+  (MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
   m (Parser 'Both n CursorOrdering)
 cursorOrderingArgParser = do
   tCase <- asks getter
@@ -78,13 +80,13 @@ cursorOrderingArgParser = do
   where
     define (name, val) =
       let orderingTypeDesc = bool "descending" "ascending" $ val == COAscending
-       in P.Definition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") Nothing P.EnumValueInfo
+       in P.Definition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") Nothing [] P.EnumValueInfo
 
 -- | Argument to specify the ordering of the cursor.
 -- > ordering: cursor_ordering
 cursorOrderingArg ::
   forall n m r.
-  (MonadSchema n m, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
+  (MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
   m (InputFieldsParser n (Maybe CursorOrdering))
 cursorOrderingArg = do
   cursorOrderingParser' <- cursorOrderingArgParser
@@ -95,7 +97,7 @@ cursorOrderingArg = do
 -- > column_name: column_type
 streamColumnParserArg ::
   forall b n m r.
-  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   ColumnInfo b ->
   m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
 streamColumnParserArg colInfo = do
@@ -117,7 +119,7 @@ streamColumnParserArg colInfo = do
 -- > }
 streamColumnValueParser ::
   forall b n m r.
-  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   SourceInfo b ->
   G.Name ->
   [ColumnInfo b] ->
@@ -136,7 +138,8 @@ streamColumnValueParser sourceInfo tableGQLName colInfos =
 streamColumnValueParserArg ::
   forall b n m r.
   ( BackendSchema b,
-    MonadSchema n m,
+    MonadMemoize m,
+    MonadParse n,
     Has MkTypename r,
     MonadReader r m,
     MonadError QErr m,
@@ -158,7 +161,7 @@ streamColumnValueParserArg sourceInfo tableGQLName colInfos = do
 -- >
 tableStreamColumnArg ::
   forall n m r b.
-  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   SourceInfo b ->
   G.Name ->
   [ColumnInfo b] ->
@@ -216,7 +219,9 @@ tableStreamCursorArg sourceInfo tableInfo = do
 -- > table_stream (cursor: [table_stream_cursor_input]!, batch_size: Int!, where: table_bool_exp)
 tableStreamArguments ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( AggregationPredicatesSchema b,
+    MonadBuildSchema b r m n
+  ) =>
   SourceInfo b ->
   TableInfo b ->
   m (InputFieldsParser n (SelectStreamArgs b))
@@ -239,6 +244,7 @@ tableStreamArguments sourceInfo tableInfo = do
 selectStreamTable ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b,
     BackendTableSelectSchema b
   ) =>
   SourceInfo b ->
@@ -250,7 +256,8 @@ selectStreamTable ::
   Maybe G.Description ->
   m (Maybe (P.FieldParser n (StreamSelectExp b)))
 selectStreamTable sourceInfo tableInfo fieldName description = runMaybeT $ do
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   xStreamSubscription <- hoistMaybe $ streamSubscriptionExtension @b
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   tableStreamArgsParser <- lift $ tableStreamArguments sourceInfo tableInfo

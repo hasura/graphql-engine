@@ -3,14 +3,16 @@
 -- | Test if only list root field is accessible
 module Test.DisableRootFields.SelectPermission.EnablePKSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Quoter.Yaml (yaml)
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.DisableRootFields.Common
 import Test.Hspec (SpecWith, describe, it)
@@ -20,32 +22,34 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec = do
-  Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = postgresSetup,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        },
-      Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = mssqlSetup,
-          teardown = SQLServer.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+  let pgFixture =
+        (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          { Fixture.setupTeardown = \(testEnv, _) ->
+              [ Postgres.setupTablesAction schema testEnv,
+                postgresSetupPermissions testEnv
+              ]
+          }
+      sqlServerFixture =
+        (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          { Fixture.setupTeardown = \(testEnv, _) ->
+              [ SQLServer.setupTablesAction schema testEnv,
+                sqlserverSetupPermissions testEnv
+              ]
+          }
+
+  Fixture.run
+    ( NE.fromList
+        [ pgFixture,
+          sqlServerFixture
+        ]
+    )
     graphQLTests
-  Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Postgres.setup schema,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+
+  Fixture.run
+    ( NE.fromList
+        [ pgFixture
+        ]
+    )
     metadataValidationTests
 
 --------------------------------------------------------------------------------
@@ -69,63 +73,83 @@ schema =
 --------------------------------------------------------------------------------
 -- Setting up Postgres
 
-postgresSetup :: (TestEnvironment, ()) -> IO ()
-postgresSetup (testEnvironment, localTestEnvironment) = do
-  Postgres.setup schema (testEnvironment, localTestEnvironment)
-  postgresCreatePermissions testEnvironment
-
-postgresCreatePermissions :: TestEnvironment -> IO ()
-postgresCreatePermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: pg_create_select_permission
-args:
-  source: postgres
-  table:
-    schema: hasura
-    name: author
-  role: user
-  permission:
-    filter:
-      id: X-Hasura-User-Id
-    columns: '*'
-    query_root_fields: ["select_by_pk"]
-    subscription_root_fields: ["select_by_pk"]
-|]
+postgresSetupPermissions :: TestEnvironment -> Fixture.SetupAction
+postgresSetupPermissions testEnv =
+  Fixture.SetupAction
+    { setupAction =
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: pg_create_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: author
+            role: user
+            permission:
+              filter:
+                id: X-Hasura-User-Id
+              columns: '*'
+              query_root_fields: ["select_by_pk"]
+              subscription_root_fields: ["select_by_pk"]
+          |],
+      teardownAction = \_ ->
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: pg_drop_select_permission
+          args:
+            source: postgres
+            table:
+              schema: hasura
+              name: author
+            role: user
+          |]
+    }
 
 --------------------------------------------------------------------------------
 -- Setting up SQL Server
 
-mssqlSetup :: (TestEnvironment, ()) -> IO ()
-mssqlSetup (testEnvironment, localTestEnvironment) = do
-  SQLServer.setup schema (testEnvironment, localTestEnvironment)
-  mssqlCreatePermissions testEnvironment
-
-mssqlCreatePermissions :: TestEnvironment -> IO ()
-mssqlCreatePermissions testEnvironment = do
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: mssql_create_select_permission
-args:
-  source: mssql
-  table:
-    schema: hasura
-    name: author
-  role: user
-  permission:
-    filter:
-      id: X-Hasura-User-Id
-    columns: '*'
-    query_root_fields: ["select_by_pk"]
-    subscription_root_fields: ["select_by_pk"]
-|]
+sqlserverSetupPermissions :: TestEnvironment -> Fixture.SetupAction
+sqlserverSetupPermissions testEnv =
+  Fixture.SetupAction
+    { setupAction =
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: mssql_create_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+            permission:
+              filter:
+                id: X-Hasura-User-Id
+              columns: '*'
+              query_root_fields: ["select_by_pk"]
+              subscription_root_fields: ["select_by_pk"]
+          |],
+      teardownAction = \_ ->
+        GraphqlEngine.postMetadata_
+          testEnv
+          [yaml|
+          type: mssql_drop_select_permission
+          args:
+            source: mssql
+            table:
+              schema: hasura
+              name: author
+            role: user
+          |]
+    }
 
 --------------------------------------------------------------------------------
 -- Tests
 
-metadataValidationTests :: Context.Options -> SpecWith TestEnvironment
+metadataValidationTests :: Fixture.Options -> SpecWith TestEnvironment
 metadataValidationTests opts = describe "EnablePKRootField Validation test " $ do
   it "a role not having access to the primary key column(s) should not be allowed to enable the primary key root field" $ \testEnvironment -> do
     shouldReturnYaml
@@ -183,7 +207,7 @@ code: invalid-configuration
 
       |]
 
-graphQLTests :: Context.Options -> SpecWith TestEnvironment
+graphQLTests :: Fixture.Options -> SpecWith TestEnvironment
 graphQLTests opts = describe "EnablePKRootFieldSpec GraphQL tests" $ do
   let userHeaders = [("x-hasura-role", "user"), ("x-hasura-user-id", "1")]
   it "query root: 'list' root field is disabled and not accessible" $ \testEnvironment -> do

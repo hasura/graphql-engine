@@ -36,6 +36,11 @@ import Hasura.Server.Init.Config
   )
 import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
+import Hasura.Server.Prometheus
+  ( PrometheusMetrics (..),
+    decWebsocketConnections,
+    incWebsocketConnections,
+  )
 import Hasura.Server.Types (ReadOnlyMode)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
@@ -74,6 +79,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
 
     logger = _wseLogger serverEnv
     serverMetrics = _wseServerMetrics serverEnv
+    prometheusMetrics = _wsePrometheusMetrics serverEnv
 
     wsActions = mkWSActions logger
 
@@ -81,6 +87,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
     -- here `sp` stands for sub-protocol
     onConnHandler rid rh ip sp = mask_ do
       liftIO $ EKG.Gauge.inc $ smWebsocketConnections serverMetrics
+      liftIO $ incWebsocketConnections $ pmConnections prometheusMetrics
       flip runReaderT serverEnv $ onConn rid rh ip (wsActions sp)
 
     onMessageHandler conn bs sp =
@@ -89,7 +96,8 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
 
     onCloseHandler conn = mask_ do
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
-      onClose logger serverMetrics (_wseSubscriptionState serverEnv) conn
+      liftIO $ decWebsocketConnections $ pmConnections prometheusMetrics
+      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
@@ -106,6 +114,7 @@ createWSServerEnv ::
   Bool ->
   KeepAliveDelay ->
   ServerMetrics ->
+  PrometheusMetrics ->
   m WSServerEnv
 createWSServerEnv
   logger
@@ -117,7 +126,8 @@ createWSServerEnv
   readOnlyMode
   enableAL
   keepAliveDelay
-  serverMetrics = do
+  serverMetrics
+  prometheusMetrics = do
     wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
     pure $
       WSServerEnv
@@ -132,6 +142,7 @@ createWSServerEnv
         enableAL
         keepAliveDelay
         serverMetrics
+        prometheusMetrics
 
 mkWSActions :: L.Logger L.Hasura -> WSSubProtocol -> WS.WSActions WSConnData
 mkWSActions logger subProtocol =

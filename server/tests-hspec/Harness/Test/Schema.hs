@@ -9,11 +9,13 @@ module Harness.Test.Schema
     ScalarType (..),
     defaultSerialType,
     ScalarValue (..),
+    WKT (..),
     UniqueConstraint (..),
     BackendScalarType (..),
     BackendScalarValue (..),
     BackendScalarValueType (..),
     ManualRelationship (..),
+    SchemaName (..),
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -31,6 +33,12 @@ module Harness.Test.Schema
     untrackRelationships,
     mkObjectRelationshipName,
     mkArrayRelationshipName,
+    getSchemaName,
+    trackFunction,
+    untrackFunction,
+    trackComputedField,
+    untrackComputedField,
+    runSQL,
   )
 where
 
@@ -40,16 +48,15 @@ import Data.Aeson
     (.=),
   )
 import Data.Aeson.Key qualified as K
-import Data.Foldable (for_)
-import Data.Text (Text, pack)
 import Data.Time (UTCTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (BackendType, defaultBackendTypeString, defaultSchema, defaultSource, schemaKeyword)
+import Harness.Test.BackendType
+import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
-import Prelude
+import Hasura.Prelude
 
 -- | Generic type to use to specify schema tables for all backends.
 -- Usually a list of these make up a "schema" to pass to the respective
@@ -125,6 +132,7 @@ data Column = Column
 data BackendScalarType = BackendScalarType
   { bstMysql :: Maybe Text,
     bstCitus :: Maybe Text,
+    bstCockroach :: Maybe Text,
     bstPostgres :: Maybe Text,
     bstBigQuery :: Maybe Text,
     bstMssql :: Maybe Text
@@ -138,6 +146,7 @@ defaultBackendScalarType =
   BackendScalarType
     { bstMysql = Nothing,
       bstCitus = Nothing,
+      bstCockroach = Nothing,
       bstMssql = Nothing,
       bstPostgres = Nothing,
       bstBigQuery = Nothing
@@ -187,6 +196,7 @@ formatBackendScalarValueType (Unquoted text) = text
 data BackendScalarValue = BackendScalarValue
   { bsvMysql :: Maybe BackendScalarValueType,
     bsvCitus :: Maybe BackendScalarValueType,
+    bsvCockroach :: Maybe BackendScalarValueType,
     bsvPostgres :: Maybe BackendScalarValueType,
     bsvBigQuery :: Maybe BackendScalarValueType,
     bsvMssql :: Maybe BackendScalarValueType
@@ -200,6 +210,7 @@ defaultBackendScalarValue =
   BackendScalarValue
     { bsvMysql = Nothing,
       bsvCitus = Nothing,
+      bsvCockroach = Nothing,
       bsvPostgres = Nothing,
       bsvBigQuery = Nothing,
       bsvMssql = Nothing
@@ -214,6 +225,7 @@ data ScalarType
   | TStr
   | TUTCTime
   | TBool
+  | TGeography
   | TCustomType BackendScalarType
   deriving (Show, Eq)
 
@@ -224,9 +236,16 @@ data ScalarValue
   | VStr Text
   | VUTCTime UTCTime
   | VBool Bool
+  | VGeography WKT
   | VNull
   | VCustomValue BackendScalarValue
   deriving (Show, Eq)
+
+-- | Describe Geography values using the WKT representation
+-- https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+-- https://cloud.google.com/bigquery/docs/geospatial-data#loading_wkt_or_wkb_data
+newtype WKT = WKT Text
+  deriving (Eq, Show, IsString)
 
 backendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe BackendScalarValueType) -> BackendScalarValueType
 backendScalarValue bsv fn = case fn bsv of
@@ -240,6 +259,7 @@ defaultSerialType =
       { bstMysql = Nothing,
         bstMssql = Just "INT IDENTITY(1,1)",
         bstCitus = Just "SERIAL",
+        bstCockroach = Just "SERIAL",
         bstPostgres = Just "SERIAL",
         bstBigQuery = Nothing
       }
@@ -260,7 +280,7 @@ parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 trackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
 trackTable backend source Table {tableName} testEnvironment = do
   let backendType = defaultBackendTypeString backend
-      schema = defaultSchema backend
+      schema = getSchemaName testEnvironment
       requestType = backendType <> "_track_table"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -277,7 +297,7 @@ args:
 untrackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
 untrackTable backend source Table {tableName} testEnvironment = do
   let backendType = defaultBackendTypeString backend
-      schema = defaultSchema backend
+      schema = getSchemaName testEnvironment
   let requestType = backendType <> "_untrack_table"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -290,6 +310,89 @@ args:
     name: *tableName
 |]
 
+trackFunction :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
+trackFunction backend source functionName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+      requestType = backendType <> "_track_function"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  function:
+    schema: *schema
+    name: *functionName
+  source: *source
+|]
+
+-- | Unified untrack function
+untrackFunction :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
+untrackFunction backend source functionName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+  let requestType = backendType <> "_untrack_function"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  function:
+    schema: *schema
+    name: *functionName
+|]
+
+trackComputedField ::
+  HasCallStack =>
+  BackendType ->
+  String ->
+  Table ->
+  String ->
+  String ->
+  TestEnvironment ->
+  IO ()
+trackComputedField backend source Table {tableName} functionName asFieldName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+      requestType = backendType <> "_add_computed_field"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  comment: null
+  table:
+    schema: *schema
+    name: *tableName
+  name: *asFieldName
+  definition:
+    function:
+      schema: *schema
+      name: *functionName
+    table_argument: null
+    session_argument: null
+|]
+
+-- | Unified untrack computed field
+untrackComputedField :: HasCallStack => BackendType -> String -> Table -> String -> TestEnvironment -> IO ()
+untrackComputedField backend source Table {tableName} fieldName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+  let requestType = backendType <> "_drop_computed_field"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    schema: *schema
+    name: *tableName
+  name: *fieldName
+|]
+
 -- | Helper to create the object relationship name
 mkObjectRelationshipName :: Reference -> Text
 mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
@@ -298,11 +401,11 @@ mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, 
 -- | Unified track object relationships
 trackObjectRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
 trackObjectRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
+  let schema = getSchemaName testEnvironment
   let source = defaultSource backend
-      schema = defaultSchema backend
       tableObj =
         object
-          [ schemaKeyword backend .= String (pack schema),
+          [ schemaKeyword backend .= String (unSchemaName schema),
             "name" .= String tableName
           ]
       requestType = source <> "_create_object_relationship"
@@ -323,7 +426,7 @@ args:
     let relationshipName = mkObjectRelationshipName ref
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (unSchemaName schema),
               "name" .= String referenceTargetTable
             ]
         manualConfiguration :: Value
@@ -354,11 +457,11 @@ mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn =
 -- | Unified track array relationships
 trackArrayRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
 trackArrayRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
+  let schema = getSchemaName testEnvironment
   let source = defaultSource backend
-      schema = defaultSchema backend
       tableObj =
         object
-          [ schemaKeyword backend .= String (pack schema),
+          [ schemaKeyword backend .= String (unSchemaName schema),
             "name" .= String tableName
           ]
       requestType = source <> "_create_array_relationship"
@@ -366,7 +469,7 @@ trackArrayRelationships backend Table {tableName, tableReferences, tableManualRe
     let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (unSchemaName schema),
               "name" .= String referenceTargetTable
             ]
     GraphqlEngine.postMetadata_
@@ -386,7 +489,7 @@ args:
     let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (unSchemaName schema),
               "name" .= String referenceTargetTable
             ]
         manualConfiguration :: Value
@@ -413,11 +516,11 @@ args:
 -- | Unified untrack relationships
 untrackRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
 untrackRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
+  let schema = getSchemaName testEnvironment
   let source = defaultSource backend
-      schema = defaultSchema backend
       tableObj =
         object
-          [ schemaKeyword backend .= String (pack schema),
+          [ schemaKeyword backend .= String (unSchemaName schema),
             "name" .= String tableName
           ]
       requestType = source <> "_drop_relationship"
@@ -426,7 +529,7 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
         objectRelationshipName = mkObjectRelationshipName ref
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (unSchemaName schema),
               "name" .= String referenceTargetTable
             ]
     finally
@@ -452,3 +555,21 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
       relationship: *objectRelationshipName
     |]
       )
+
+-- | Unified RunSQL
+runSQL :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
+runSQL backend source sql testEnvironment = do
+  let prefix = case backend of
+        Postgres -> ""
+        _ -> defaultBackendTypeString backend <> "_"
+      requestType = prefix <> "run_sql"
+  GraphqlEngine.postV2Query_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  sql: *sql
+  cascade: false
+  read_only: false
+|]

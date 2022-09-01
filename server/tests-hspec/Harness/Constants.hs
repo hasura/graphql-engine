@@ -29,6 +29,8 @@ module Harness.Constants
     httpHealthCheckIntervalSeconds,
     citusConnectionString,
     citusDb,
+    cockroachConnectionString,
+    cockroachDb,
     serveOptions,
     dataConnectorDb,
     maxRetriesRateLimitExceeded,
@@ -41,10 +43,12 @@ import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
@@ -123,6 +127,32 @@ citusConnectionString =
     ++ show citusPort
     ++ "/"
     ++ citusDb
+
+-- * Cockroach
+
+cockroachUser :: String
+cockroachUser = "root"
+
+cockroachDb :: String
+cockroachDb = "hasura"
+
+cockroachHost :: String
+cockroachHost = "127.0.0.1"
+
+cockroachPort :: Word16
+cockroachPort = 65008
+
+cockroachConnectionString :: String
+cockroachConnectionString =
+  "postgresql://"
+    ++ cockroachUser
+    ++ "@"
+    ++ cockroachHost
+    ++ ":"
+    ++ show cockroachPort
+    ++ "/"
+    ++ cockroachDb
+    ++ "?sslmode=disable"
 
 -- * DataConnector
 
@@ -206,7 +236,7 @@ httpHealthCheckIntervalSeconds = 1
 serveOptions :: ServeOptions L.Hasura
 serveOptions =
   ServeOptions
-    { soPort = 12345, -- The server runner will typically be generating
+    { soPort = Init.unsafePort 12345, -- The server runner will typically be generating
     -- a random port, so this isn't particularly
     -- important.
       soHost = "0.0.0.0",
@@ -221,7 +251,7 @@ serveOptions =
       soConsoleAssetsDir = Just "../console/static/dist",
       soEnableTelemetry = False,
       soStringifyNum = Options.StringifyNumbers,
-      soDangerousBooleanCollapse = False,
+      soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soStreamingQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
@@ -229,25 +259,26 @@ serveOptions =
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
       soResponseInternalErrorsConfig = InternalErrorsAllRequests,
-      soEventsHttpPoolSize = Nothing,
-      soEventsFetchInterval = Nothing,
+      soEventsHttpPoolSize = Init._default Init.graphqlEventsHttpPoolSizeOption,
+      soEventsFetchInterval = Init._default Init.graphqlEventsFetchIntervalOption,
       soAsyncActionsFetchInterval = Skip,
       soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
       soConnectionOptions = WS.defaultConnectionOptions,
-      soWebSocketKeepAlive = Init.defaultKeepAliveDelay,
+      soWebSocketKeepAlive = Init._default Init.webSocketKeepAliveOption,
       soInferFunctionPermissions = Options.InferFunctionPermissions,
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
-      soSchemaPollInterval = Interval 10,
+      soSchemaPollInterval = Interval (Numeric.unsafeNonNegative 10),
       soExperimentalFeatures = Set.singleton EFStreamingSubscriptions,
-      soEventsFetchBatchSize = 1,
+      soEventsFetchBatchSize = Numeric.unsafeNonNegativeInt 1,
       soDevMode = True,
-      soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
-      soWebSocketConnectionInitTimeout = Init.defaultWSConnectionInitTimeout,
+      soGracefulShutdownTimeout = Numeric.unsafeNonNegative 0, -- Don't wait to shutdown.
+      soWebSocketConnectionInitTimeout = Init._default Init.webSocketConnectionInitTimeoutOption,
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
-      soDefaultNamingConvention = Nothing
+      soDefaultNamingConvention = Nothing,
+      soExtensionsSchema = ExtensionsSchema "public"
     }
 
 -- | What log level should be used by the engine; this is not exported, and

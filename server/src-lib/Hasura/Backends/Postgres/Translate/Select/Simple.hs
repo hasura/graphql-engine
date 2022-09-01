@@ -10,7 +10,7 @@ where
 import Control.Monad.Writer.Strict (runWriter)
 import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.IdentifierUniqueness (prefixNumToAliases)
+import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiers)
 import Hasura.Backends.Postgres.SQL.Types (IsIdentifier (toIdentifier))
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
@@ -66,7 +66,7 @@ mkSQLSelect jsonAggSelect annSel =
         asJsonAggExtr jsonAggSelect rootFldAls permLimitSubQuery $
           orderByForJsonAgg selectSource
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
-   in prefixNumToAliases $
+   in renameIdentifiers $
         generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
     strfyNum = _asnStrfyNum annSel

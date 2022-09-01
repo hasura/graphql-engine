@@ -1,116 +1,127 @@
 import React from 'react';
-
-import { FaArrowRight } from 'react-icons/fa';
+// eslint-disable-next-line import/first
+import { Table } from '@/features/DataSource';
+import {
+  FaArrowRight,
+  FaColumns,
+  FaDatabase,
+  FaEdit,
+  FaFont,
+  FaPlug,
+  FaTable,
+  FaTrash,
+} from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
-import {
-  useDbToRemoteSchemaRelationships,
-  useDbToRemoteDbRelationships,
-  useLocalRelationships,
-} from '@/features/MetadataAPI';
-import { DataTarget } from '@/features/Datasources';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import {
-  ModifyActions,
-  TableRowIcon,
-  SourceRelationshipCell,
-  DestinationRelationshipCell,
-} from './components';
-
-import { getRemoteFieldPath } from '../utils';
-import { RowData } from './types';
+import { Relationship } from './types';
 import Legends from './Legends';
+import { useListAllRelationshipsFromMetadata } from './hooks/useListAllRelationshipsFromMetadata';
 
-export const columns = ['NAME', 'TARGET', 'TYPE', 'RELATIONSHIP', null];
+export const columns = ['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', null];
 
-// fetch the data from the relevant hooks
-const useTableData = (target: DataTarget) => {
-  const {
-    data: dbToRsData,
-    isLoading: dbToRsIsLoading,
-    isError: dbToRsIsError,
-  } = useDbToRemoteSchemaRelationships(target);
+const getTableDisplayName = (table: Table): string => {
+  if (!table) return 'Empty Object';
 
-  const {
-    data: localrelationships,
-    isLoading: localRelnsIsLoading,
-  } = useLocalRelationships(target);
+  if (typeof table === 'string') return table;
 
-  const {
-    data: dbToDbData,
-    isLoading: dbToDbIsLoading,
-    isError: dbToDbIsError,
-  } = useDbToRemoteDbRelationships(target);
+  if (typeof table === 'object' && 'name' in table)
+    return (table as { name: string }).name;
 
-  // convert it into a consistent useful format for the table
-  const data = React.useMemo(() => {
-    // other relationships will be added here
-    const dbToRs: RowData[] =
-      dbToRsData?.map(relationship => ({
-        fromType: 'table',
-        toType: 'remote_schema',
-        name: relationship?.relationshipName,
-        reference: target.database,
-        referenceTable: target.table,
-        target: relationship.remoteSchemaName,
-        type: 'Remote Schema',
-        fieldsFrom: relationship?.lhs_fields || [],
-        fieldsTo: getRemoteFieldPath(relationship?.remote_field),
-        relationship,
-      })) || [];
+  return JSON.stringify(table);
+};
 
-    const dbToDb: RowData[] =
-      dbToDbData?.map(relationship => ({
-        fromType: 'table',
-        toType: 'database',
-        name: relationship?.relationshipName,
-        reference: target.database,
-        referenceTable: target.table,
-        target: relationship.remoteDbName,
-        ...(relationship?.target?.table && {
-          targetTable: relationship?.target?.table,
-        }),
-        type: relationship.relationshipType,
-        fieldsFrom: Object.keys(relationship.fieldMapping) || [],
-        fieldsTo: Object.values(relationship.fieldMapping) || [],
-        relationship,
-      })) || [];
+function TargetName(props: { relationship: Relationship }) {
+  const { relationship } = props;
+  if (relationship.type === 'toRemoteSchema')
+    return (
+      <>
+        <FaPlug /> <span>{relationship.mapping.to.remoteSchema}</span>
+      </>
+    );
 
-    return [...localrelationships, ...dbToRs, ...dbToDb];
-  }, [dbToRsData, dbToDbData, localrelationships, target]);
+  return (
+    <>
+      <FaDatabase /> <span>{relationship.mapping.to.source}</span>
+    </>
+  );
+}
 
-  const isLoading = dbToRsIsLoading || dbToDbIsLoading || localRelnsIsLoading;
-  const isError = dbToRsIsError || dbToDbIsError;
+const RelationshipMapping = ({
+  relationship,
+}: {
+  relationship: Relationship;
+}) => {
+  return (
+    <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2">
+        <FaTable />
+        <span>{getTableDisplayName(relationship.mapping.from.table)}</span>
+        /
+        <FaColumns /> {relationship.mapping.from.columns.join(',')}
+      </div>
+      <FaArrowRight />
 
-  return { data, isLoading, isError };
+      <div className="flex items-center gap-2">
+        {relationship.type === 'toRemoteSchema' ? (
+          <>
+            <FaPlug />
+            <span>{relationship.mapping.to.remoteSchema}</span> /
+            <FaFont /> {relationship.mapping.to.fields.join(',')}
+          </>
+        ) : (
+          <>
+            <FaTable />
+            <span>{getTableDisplayName(relationship.mapping.to.table)}</span> /
+            <FaColumns />
+            {!relationship.mapping.to.columns.length
+              ? '[could not find target columns]'
+              : relationship.mapping.to.columns.join(',')}
+          </>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export interface DatabaseRelationshipsTableProps {
-  target: DataTarget;
-  onClick: (input: OnClickHandlerArgs) => void;
-}
-
-export interface OnClickHandlerArgs {
-  type: 'add' | 'edit' | 'delete' | 'close';
-  row?: RowData;
+  dataSourceName: string;
+  table: Table;
+  onEditRow: (props: {
+    dataSourceName: string;
+    table: Table;
+    relationship: Relationship;
+  }) => void;
+  onDeleteRow: (props: {
+    dataSourceName: string;
+    table: Table;
+    relationship: Relationship;
+  }) => void;
 }
 
 export const DatabaseRelationshipsTable = ({
-  target,
-  onClick,
+  dataSourceName,
+  table,
+  onEditRow,
+  onDeleteRow,
 }: DatabaseRelationshipsTableProps) => {
-  const { data, isLoading, isError } = useTableData(target);
+  const {
+    data: relationships,
+    isLoading,
+    isError,
+  } = useListAllRelationshipsFromMetadata(dataSourceName, table);
   if (isError && !isLoading)
     return (
       <IndicatorCard
         status="negative"
-        headline="Error fetching relationships"
+        headline="Error while fetching relationships"
       />
     );
 
-  if (!data && isLoading)
+  if (!relationships && isLoading)
     return <IndicatorCard status="info" headline="Fetching relationships..." />;
 
-  if (!data || data?.length === 0)
+  if (!relationships || relationships.length === 0)
     return <IndicatorCard status="info" headline="No relationships found" />;
 
   return (
@@ -118,43 +129,65 @@ export const DatabaseRelationshipsTable = ({
       <CardedTable.Table>
         <CardedTable.Header columns={columns} />
         <CardedTable.TableBody>
-          {data.map(row => (
-            <CardedTable.TableBodyRow key={row.name}>
+          {relationships.map(relationship => (
+            <CardedTable.TableBodyRow key={relationship.name}>
               <CardedTable.TableBodyCell>
-                <button
-                  className="text-secondary cursor-pointer"
-                  onClick={() => onClick({ type: 'add', row })}
+                <Button
+                  onClick={() =>
+                    onEditRow({
+                      dataSourceName,
+                      table,
+                      relationship,
+                    })
+                  }
                 >
-                  {row.name}
-                </button>
+                  {relationship.name}
+                </Button>
               </CardedTable.TableBodyCell>
+
               <CardedTable.TableBodyCell>
                 <div className="flex items-center gap-2">
-                  <TableRowIcon
-                    type={
-                      row.toType === 'remote_schema'
-                        ? 'remote_schema'
-                        : 'database'
-                    }
-                  />
-                  <span>{row.target}</span>
+                  <TargetName relationship={relationship} />
                 </div>
               </CardedTable.TableBodyCell>
-              <CardedTable.TableBodyCell>{row.type}</CardedTable.TableBodyCell>
+
               <CardedTable.TableBodyCell>
-                <SourceRelationshipCell row={row} />
+                {relationship.relationship_type}
               </CardedTable.TableBodyCell>
+
               <CardedTable.TableBodyCell>
-                <FaArrowRight className="fill-current text-sm text-muted" />
+                <RelationshipMapping relationship={relationship} />
               </CardedTable.TableBodyCell>
-              <CardedTable.TableBodyCell>
-                <DestinationRelationshipCell row={row} />
-              </CardedTable.TableBodyCell>
+
               <CardedTable.TableBodyActionCell>
-                <ModifyActions
-                  onEdit={() => onClick({ type: 'edit', row })}
-                  onDelete={() => onClick({ type: 'delete', row })}
-                />
+                <div className="flex items-center justify-end whitespace-nowrap text-right">
+                  <button
+                    onClick={() =>
+                      onEditRow({
+                        dataSourceName,
+                        table,
+                        relationship,
+                      })
+                    }
+                    className="flex px-2 py-0.5 items-center font-semibold rounded text-secondary mr-0.5 hover:bg-indigo-50 focus:bg-indigo-100"
+                  >
+                    <FaEdit className="fill-current mr-1" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() =>
+                      onDeleteRow({
+                        dataSourceName,
+                        table,
+                        relationship,
+                      })
+                    }
+                    className="flex px-2 py-0.5 items-center font-semibold rounded text-red-700 hover:bg-red-50 focus:bg-red-100"
+                  >
+                    <FaTrash className="fill-current mr-1" />
+                    Remove
+                  </button>
+                </div>
               </CardedTable.TableBodyActionCell>
             </CardedTable.TableBodyRow>
           ))}

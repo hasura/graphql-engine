@@ -1,6 +1,6 @@
-const CommonScss = require('../src/components/Common/Common.scss');
-const filterQueryScss = require('../src/components/Common/FilterQuery/FilterQuery.scss');
-const tableScss = require('../src/components/Common/TableCommon/Table.scss');
+const CommonScss = require('../src/components/Common/Common.module.scss');
+const filterQueryScss = require('../src/components/Common/FilterQuery/FilterQuery.module.scss');
+const tableScss = require('../src/components/Common/TableCommon/Table.module.scss');
 
 import * as EndpointNamedExps from '../src/Endpoints';
 
@@ -11,7 +11,12 @@ export {
 export { fetchConsoleNotifications } from '../src/components/Main/Actions';
 export { default as NotificationSection } from '../src/components/Main/NotificationSection';
 export { default as Onboarding } from '../src/components/Common/Onboarding';
+export { analyticsToolsUtils } from '../src/features/AnalyticsToolsUtils';
+export { OnboardingWizard } from '../src/features/OnboardingWizard';
+export { makeGrowthExperimentsClient } from '../src/features/GrowthExperiments';
 export { default as PageNotFound } from '../src/components/Error/PageNotFound';
+export * from '../src/new-components/Button/';
+export * from '../src/new-components/Tooltip/';
 export { CONSOLE_ADMIN_SECRET } from '../src/components/AppState';
 export { default as dataHeaders } from '../src/components/Services/Data/Common/Headers';
 export { handleMigrationErrors } from '../src/components/Services/Data/TableModify/ModifyActions';

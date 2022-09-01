@@ -35,7 +35,6 @@ import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
@@ -53,18 +52,27 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- Metadata
 
 data SourceInfo b = SourceInfo
-  { _siName :: !SourceName,
-    _siTables :: !(TableCache b),
-    _siFunctions :: !(FunctionCache b),
-    _siConfiguration :: !(SourceConfig b),
-    _siQueryTagsConfig :: !(Maybe QueryTagsConfig),
-    _siCustomization :: !SourceCustomization
+  { _siName :: SourceName,
+    _siTables :: TableCache b,
+    _siFunctions :: FunctionCache b,
+    _siConfiguration :: SourceConfig b,
+    _siQueryTagsConfig :: Maybe QueryTagsConfig,
+    _siCustomization :: SourceCustomization
   }
   deriving (Generic)
 
 $(makeLenses ''SourceInfo)
 
-instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
+instance
+  ( Backend b,
+    ToJSON (TableCache b),
+    ToJSON (FunctionCache b),
+    ToJSON (SourceConfig b),
+    ToJSON (QueryTagsConfig),
+    ToJSON (SourceCustomization)
+  ) =>
+  ToJSON (SourceInfo b)
+  where
   toJSON = genericToJSON hasuraJSON
 
 type BackendSourceInfo = AB.AnyBackend SourceInfo

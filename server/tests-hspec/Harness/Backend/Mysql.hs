@@ -23,10 +23,7 @@ where
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
-import Data.Bool (bool)
-import Data.Foldable (for_)
-import Data.String
-import Data.Text (Text, pack, replace)
+import Data.String (fromString)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
@@ -35,15 +32,14 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (BackendType (MySQL))
-import Harness.Test.Fixture
+import Harness.Test.BackendType (BackendType (MySQL), defaultBackendTypeString, defaultSource)
+import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
-import Hasura.Prelude (tshow)
+import Hasura.Prelude
 import System.Process.Typed
-import Prelude
 
 -- | Check that the MySQL service is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
@@ -124,6 +120,7 @@ scalarType = \case
   Schema.TStr -> "TEXT"
   Schema.TUTCTime -> "DATETIME"
   Schema.TBool -> "BIT"
+  Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstMysql
 
 mkColumn :: Schema.Column -> Text
@@ -182,9 +179,10 @@ insertTable Schema.Table {tableName, tableColumns, tableData}
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt i -> tshow i
-  VStr s -> "'" <> replace "'" "\'" s <> "'"
-  VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
+  VStr s -> "'" <> T.replace "'" "\'" s <> "'"
+  VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
+  VGeography (Schema.WKT wkt) -> T.concat ["st_geogfromtext(\'", wkt, "\')"]
   VNull -> "NULL"
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvMysql
 

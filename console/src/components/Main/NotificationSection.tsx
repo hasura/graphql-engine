@@ -1,6 +1,7 @@
 import React, { ComponentProps } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { FaArrowRight, FaBell, FaTimes } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import {
@@ -9,7 +10,7 @@ import {
   NotificationScope,
   ConsoleScope,
 } from './ConsoleNotification';
-import styles from './Main.scss';
+import styles from './Main.module.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
@@ -18,7 +19,6 @@ import {
   setPreReleaseNotificationOptOutInDB,
   updateConsoleNotificationsState,
 } from '../../telemetry/Actions';
-import Button from '../Common/Button';
 import {
   getReadAllNotificationsState,
   getConsoleScope,
@@ -504,9 +504,8 @@ const HasuraNotifications: React.FC<
 
   const pagination = useNotificationsPagination(consoleNotifications.length);
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
-  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] = React.useState(
-    false
-  );
+  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] =
+    React.useState(false);
 
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
@@ -758,7 +757,7 @@ const HasuraNotifications: React.FC<
             disabled={!numberNotifications || !consoleNotifications.length}
             className={styles.markAllAsReadBtn}
           >
-            mark all as read
+            Mark all as read
           </Button>
           <div
             className={styles.closeNotificationIcon}

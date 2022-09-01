@@ -35,6 +35,8 @@ import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
+import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
@@ -44,6 +46,7 @@ import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options (OptimizePermissionFilters (..))
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.OrderBy
@@ -103,9 +106,10 @@ defaultSelectTable ::
   m (Maybe (FieldParser n (SelectExp b)))
 defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
   tCase <- asks getter
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   selectionSetParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
-  lift $ memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableArgsParser <- tableArguments sourceInfo tableInfo
     pure $
@@ -145,7 +149,8 @@ defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
 selectTableConnection ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendTableSelectSchema b
+    BackendTableSelectSchema b,
+    AggregationPredicatesSchema b
   ) =>
   SourceInfo b ->
   -- | table info
@@ -159,10 +164,11 @@ selectTableConnection ::
   m (Maybe (FieldParser n (ConnectionSelectExp b)))
 selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   xRelayInfo <- hoistMaybe $ relayExtension @b
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   selectionSetParser <- fmap P.nonNullableParser <$> MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
-  lift $ memoizeOn 'selectTableConnection (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'selectTableConnection (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     selectArgsParser <- tableConnectionArgs pkeyColumns sourceInfo tableInfo
     pure $
@@ -209,11 +215,12 @@ selectTableByPk ::
   m (Maybe (FieldParser n (SelectExp b)))
 selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
   tCase <- asks getter
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
   selectionSetParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   guard $ all (\c -> ciColumn c `Map.member` spiCols selectPermissions) primaryKeys
-  lift $ memoizeOn 'selectTableByPk (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'selectTableByPk (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     argsParser <-
       sequenceA <$> for primaryKeys \columnInfo -> do
@@ -263,16 +270,17 @@ defaultSelectTableAggregate ::
   m (Maybe (FieldParser n (AggSelectExp b)))
 defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMaybeT $ do
   tCase <- asks getter
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   guard $ spiAllowAgg selectPermissions
   xNodesAgg <- hoistMaybe $ nodesAggExtension @b
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
-  lift $ memoizeOn 'defaultSelectTableAggregate (_siName sourceInfo, tableName, fieldName) do
+  lift $ P.memoizeOn 'defaultSelectTableAggregate (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
-    tableGQLName <- getTableGQLName tableInfo
+    tableGQLName <- getTableIdentifierName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- mkTypename $ tableGQLName <> Name.__aggregate
+    selectionName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName
     let aggregationParser =
           P.nonNullableParser $
             parsedSelectionsToFields IR.TAFExp
@@ -361,28 +369,43 @@ cause errors on the client side, for the following reasons:
 -- > }
 defaultTableSelectionSet ::
   forall b r m n.
-  ( MonadBuildSchema b r m n,
+  ( AggregationPredicatesSchema b,
     BackendTableSelectSchema b,
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (AnnBoolExp b (IR.UnpreparedValue b)),
+    MonadBuildSchema b r m n
   ) =>
   SourceInfo b ->
   TableInfo b ->
   m (Maybe (Parser 'Output n (AnnotatedFields b)))
 defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
-  _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  tCase <- asks getter
+  _selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   schemaKind <- lift $ retrieve scSchemaKind
   -- If this check fails, it means we're attempting to build a Relay schema, but
   -- the current backend b does't support Relay; rather than returning an
   -- incomplete selection set, we fail early and return 'Nothing'. This check
   -- must happen first, since we can't memoize a @Maybe Parser@.
   guard $ isHasuraSchema schemaKind || isJust (relayExtension @b)
-  lift $ memoizeOn 'defaultTableSelectionSet (sourceName, tableName) do
-    tableGQLName <- getTableGQLName tableInfo
-    objectTypename <- mkTypename tableGQLName
+  lift $ P.memoizeOn 'defaultTableSelectionSet (sourceName, tableName) do
+    tableGQLName <- getTableIdentifierName tableInfo
+    objectTypename <- mkTypename $ applyTypeNameCaseIdentifier tCase tableGQLName
     let xRelay = relayExtension @b
         tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
         tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
+        pkFields = concatMap toList tablePkeyColumns
+        pkFieldDirective = T.intercalate " " $ map (G.unName . ciName) pkFields
+        -- Adding `@key` directives to type for apollo federation. An example
+        -- of type with key directive:
+        --  type Product @key(fields: "upc sku"){
+        --    upc: UPC!
+        --    sku: SKU!
+        --    name: String
+        --  }
+        pkDirectives =
+          if isApolloFedV1enabled (_tciApolloFederationConfig tableCoreInfo) && (not . null) pkFields
+            then [(G.Directive Name._key . Map.singleton Name._fields . G.VString) pkFieldDirective]
+            else mempty
         description = G.Description . PG.getPGDescription <$> _tciDescription tableCoreInfo
     fieldParsers <-
       concat
@@ -406,16 +429,19 @@ defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
             allFieldParsers = fieldParsers <> [nodeIdFieldParser]
         nodeInterface <- runNodeBuilder nodeBuilder
         pure $
-          P.selectionSetObject objectTypename description allFieldParsers [nodeInterface]
+          selectionSetObjectWithDirective objectTypename description allFieldParsers [nodeInterface] pkDirectives
             <&> parsedSelectionsToFields IR.AFExpression
       _ ->
         pure $
-          P.selectionSetObject objectTypename description fieldParsers []
+          selectionSetObjectWithDirective objectTypename description fieldParsers [] pkDirectives
             <&> parsedSelectionsToFields IR.AFExpression
   where
     sourceName = _siName sourceInfo
     tableName = tableInfoName tableInfo
     tableCoreInfo = _tiCoreInfo tableInfo
+    selectionSetObjectWithDirective name description parsers implementsInterfaces directives =
+      P.setParserDirectives directives $
+        P.selectionSetObject name description parsers implementsInterfaces
 
 -- | List of table fields object.
 -- Just a @'nonNullableObjectList' wrapper over @'tableSelectionSet'.
@@ -458,10 +484,13 @@ tableConnectionSelectionSet ::
   TableInfo b ->
   m (Maybe (Parser 'Output n (ConnectionFields b)))
 tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
-  tableGQLName <- lift $ getTableGQLName tableInfo
-  _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  tCase <- asks getter
+  tableIdentifierName <- lift $ getTableIdentifierName tableInfo
+  let tableGQLName = applyTypeNameCaseIdentifier tCase tableIdentifierName
+  void $ hoistMaybe $ tableSelectPermissions roleName tableInfo
   edgesParser <- MaybeT $ tableEdgesSelectionSet tableGQLName
-  lift $ memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
+  lift $ P.memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
     connectionTypeName <- mkTypename $ tableGQLName <> Name._Connection
     let pageInfo =
           P.subselection_
@@ -555,7 +584,7 @@ tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
 -- > where: table_bool_exp
 defaultTableArgs ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =>
   SourceInfo b ->
   TableInfo b ->
   m (InputFieldsParser n (SelectArgs b))
@@ -603,7 +632,9 @@ defaultTableArgs sourceInfo tableInfo = do
 -- > where: table_bool_exp
 tableWhereArg ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( AggregationPredicatesSchema b,
+    MonadBuildSchema b r m n
+  ) =>
   SourceInfo b ->
   TableInfo b ->
   m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (IR.UnpreparedValue b))))
@@ -696,7 +727,7 @@ tableOffsetArg =
 -- > after: String
 tableConnectionArgs ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =>
   PrimaryKeyColumns b ->
   SourceInfo b ->
   TableInfo b ->
@@ -847,14 +878,14 @@ tableAggregationFields ::
   TableInfo b ->
   m (Parser 'Output n (IR.AggregateFields b))
 tableAggregationFields sourceInfo tableInfo =
-  memoizeOn 'tableAggregationFields (_siName sourceInfo, tableInfoName tableInfo) do
-    tableGQLName <- getTableGQLName tableInfo
+  P.memoizeOn 'tableAggregationFields (_siName sourceInfo, tableInfoName tableInfo) do
     tCase <- asks getter
+    tableGQLName <- getTableIdentifierName tableInfo
     allColumns <- tableSelectColumns sourceInfo tableInfo
     let numericColumns = onlyNumCols allColumns
         comparableColumns = onlyComparableCols allColumns
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
-    selectName <- mkTypename $ tableGQLName <> Name.__aggregate_fields
+    selectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateFieldTypeName tableGQLName
     count <- countField
     makeTypename <- asks getter
     numericAndComparable <-
@@ -868,7 +899,7 @@ tableAggregationFields sourceInfo tableInfo =
                   for numericAggOperators $ \operator -> do
                     let fieldNameCase = applyFieldNameCaseCust tCase operator
                     numFields <- mkNumericAggFields operator numericColumns
-                    pure $ parseAggOperator makeTypename operator fieldNameCase tableGQLName numFields,
+                    pure $ parseAggOperator makeTypename operator fieldNameCase tCase tableGQLName numFields,
               -- operators on comparable columns
               if null comparableColumns
                 then Nothing
@@ -877,7 +908,7 @@ tableAggregationFields sourceInfo tableInfo =
                   pure $
                     comparisonAggOperators & map \operator ->
                       let fieldNameCase = applyFieldNameCaseCust tCase operator
-                       in parseAggOperator makeTypename operator fieldNameCase tableGQLName comparableFields
+                       in parseAggOperator makeTypename operator fieldNameCase tCase tableGQLName comparableFields
             ]
     let aggregateFields = count : numericAndComparable
     pure $
@@ -925,12 +956,13 @@ tableAggregationFields sourceInfo tableInfo =
       MkTypename ->
       G.Name ->
       G.Name ->
-      G.Name ->
+      NamingCase ->
+      GQLNameIdentifier ->
       [FieldParser n (IR.ColFld b)] ->
       FieldParser n (IR.AggregateField b)
-    parseAggOperator makeTypename operator fieldName tableGQLName columns =
+    parseAggOperator makeTypename operator fieldName tCase tableGQLName columns =
       let opText = G.unName operator
-          setName = runMkTypename makeTypename $ tableGQLName <> Name.__ <> operator <> Name.__fields
+          setName = runMkTypename makeTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggOperatorTypeName tableGQLName operator
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
@@ -943,10 +975,10 @@ tableAggregationFields sourceInfo tableInfo =
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection ::
   forall b r m n.
-  ( MonadBuildSchema b r m n,
+  ( AggregationPredicatesSchema b,
     BackendTableSelectSchema b,
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (AnnBoolExp b (IR.UnpreparedValue b)),
+    MonadBuildSchema b r m n
   ) =>
   SourceInfo b ->
   TableName b ->
@@ -956,6 +988,7 @@ fieldSelection ::
 fieldSelection sourceInfo table tableInfo = \case
   FIColumn columnInfo ->
     maybeToList <$> runMaybeT do
+      roleName <- retrieve scRole
       schemaKind <- retrieve scSchemaKind
       let fieldName = ciName columnInfo
       -- If the field name is 'id' and we're building a schema for the Relay
@@ -963,7 +996,7 @@ fieldSelection sourceInfo table tableInfo = \case
       -- ignore the original.
       guard $ isHasuraSchema schemaKind || fieldName /= Name._id
       let columnName = ciColumn columnInfo
-      selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+      selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       guard $ columnName `Map.member` spiCols selectPermissions
       let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
           caseBoolExpUnpreparedValue =
@@ -1096,10 +1129,10 @@ join) satisfies `p(T)`.
 -- | Field parsers for a table relationship
 relationshipField ::
   forall b r m n.
-  ( MonadBuildSchema b r m n,
+  ( AggregationPredicatesSchema b,
     BackendTableSelectSchema b,
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (AnnBoolExp b (IR.UnpreparedValue b)),
+    MonadBuildSchema b r m n
   ) =>
   SourceInfo b ->
   TableName b ->
@@ -1107,15 +1140,16 @@ relationshipField ::
   m (Maybe [FieldParser n (AnnotatedField b)])
 relationshipField sourceInfo table ri = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   optimizePermissionFilters <- retrieve Options.soOptimizePermissionFilters
+  tableInfo <- lift $ askTableInfo sourceInfo table
   otherTableInfo <- lift $ askTableInfo sourceInfo $ riRTable ri
-  remotePerms <- MaybeT $ tableSelectPermissions otherTableInfo
+  tablePerms <- hoistMaybe $ tableSelectPermissions roleName tableInfo
+  remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
   -- START black magic to deduplicate permission checks
-  thisTablePerm <-
-    IR._tpFilter . tablePermissionsInfo
-      <$> MaybeT (tableSelectPermissions =<< askTableInfo sourceInfo table)
-  let deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
+  let thisTablePerm = IR._tpFilter $ tablePermissionsInfo tablePerms
+      deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
       deduplicatePermissions x =
         case (optimizePermissionFilters, x) of
           (OptimizePermissionFilters, BoolAnd [BoolField (AVRelationship remoteRI remoteTablePerm)]) ->
@@ -1175,7 +1209,6 @@ relationshipField sourceInfo table ri = runMaybeT do
       nullable <- case (riIsManual ri, riInsertOrder ri) of
         -- Automatically generated forward relationship
         (False, BeforeParent) -> do
-          tableInfo <- askTableInfo sourceInfo table
           let columns = Map.keys $ riMapping ri
               fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
               findColumn col = Map.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn

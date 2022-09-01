@@ -16,38 +16,34 @@ where
 
 import Data.Aeson (Value)
 import Data.Char (isUpper, toLower)
-import Data.Foldable (traverse_)
-import Data.Function ((&))
-import Data.List (intercalate, sortBy)
+import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types qualified as Morpheus
-import Data.Text (Text)
 import Data.Typeable (Typeable)
-import GHC.Generics
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
+import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.Test.Context (Context (..))
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
+import Harness.Yaml (shouldReturnYaml)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Context.runWithLocalTestEnvironment contexts tests
+spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    lhsContexts = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
-    rhsContexts = [rhsPostgres, rhsSQLServer]
-    contexts = combine <$> lhsContexts <*> rhsContexts
+    lhsFixtures = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
+    rhsFixtures = [rhsPostgres, rhsSQLServer]
+    contexts = NE.fromList $ combine <$> lhsFixtures <*> rhsFixtures
 
 -- | Combines a lhs and a rhs.
 --
@@ -56,36 +52,36 @@ spec = Context.runWithLocalTestEnvironment contexts tests
 -- Teardown is done in the opposite order.
 --
 -- The metadata is cleared befored each setup.
-combine :: LHSContext -> RHSContext -> Context (Maybe Server)
+combine :: LHSFixture -> RHSFixture -> Fixture.Fixture (Maybe Server)
 combine lhs (tableName, rhs) =
-  Context
-    { name = Context.Combine lhsName rhsName,
+  Fixture.Fixture
+    { name = Fixture.Combine lhsName rhsName,
       mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-      setup = \(testEnvironment, localTestEnvironment) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        rhsSetup (testEnvironment, ())
-        lhsSetup (testEnvironment, localTestEnvironment),
-      teardown = \testEnvironment@(globalTestEnvironment, _localTestEnvironment) -> do
-        lhsTeardown testEnvironment
-        rhsTeardown (globalTestEnvironment, ())
-        GraphqlEngine.clearMetadata globalTestEnvironment,
+      setupTeardown = \(testEnvironment, localTestEnvironment) ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction = GraphqlEngine.clearMetadata testEnvironment,
+              Fixture.teardownAction = \_ -> GraphqlEngine.clearMetadata testEnvironment
+            }
+        ]
+          <> rhsSetupTeardown (testEnvironment, ())
+          <> lhsSetupTeardown (testEnvironment, localTestEnvironment),
       customOptions =
-        Context.combineOptions lhsOptions rhsOptions
+        Fixture.combineOptions lhsOptions rhsOptions
     }
   where
-    Context
+    Fixture.Fixture
       { name = lhsName,
         mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-        setup = lhsSetup,
-        teardown = lhsTeardown,
+        setupTeardown = lhsSetupTeardown,
         customOptions = lhsOptions
       } = lhs tableName
-    Context
+    Fixture.Fixture
       { name = rhsName,
-        setup = rhsSetup,
-        teardown = rhsTeardown,
+        setupTeardown = rhsSetupTeardown,
         customOptions = rhsOptions
       } = rhs
+
+--------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 
@@ -94,36 +90,42 @@ combine lhs (tableName, rhs) =
 -- Each LHS context is responsible for setting up the remote relationship, and
 -- for tearing it down. Each lhs context is given the JSON representation for
 -- the table name on the RHS.
-type LHSContext = Value -> Context (Maybe Server)
+type LHSFixture = Value -> Fixture.Fixture (Maybe Server)
 
-lhsPostgres :: LHSContext
+lhsPostgres :: LHSFixture
 lhsPostgres tableName =
-  Context
-    { name = Context.Backend Context.Postgres,
-      mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
-      setup = lhsPostgresSetup tableName,
-      teardown = lhsPostgresTeardown,
-      customOptions = Nothing
+  (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+    { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
+      Fixture.setupTeardown = \testEnv ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction = lhsPostgresSetup tableName testEnv,
+              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnv
+            }
+        ]
     }
 
-lhsSQLServer :: LHSContext
+lhsSQLServer :: LHSFixture
 lhsSQLServer tableName =
-  Context
-    { name = Context.Backend Context.SQLServer,
-      mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
-      setup = lhsSQLServerSetup tableName,
-      teardown = lhsSQLServerTeardown,
-      customOptions = Nothing
+  (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+    { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
+      Fixture.setupTeardown = \testEnv ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction = lhsSQLServerSetup tableName testEnv,
+              Fixture.teardownAction = \_ -> lhsSQLServerTeardown testEnv
+            }
+        ]
     }
 
-lhsRemoteServer :: LHSContext
+lhsRemoteServer :: LHSFixture
 lhsRemoteServer tableName =
-  Context
-    { name = Context.RemoteGraphQLServer,
-      mkLocalTestEnvironment = lhsRemoteServerMkLocalTestEnvironment,
-      setup = lhsRemoteServerSetup tableName,
-      teardown = lhsRemoteServerTeardown,
-      customOptions = Nothing
+  (Fixture.fixture $ Fixture.RemoteGraphQLServer)
+    { Fixture.mkLocalTestEnvironment = lhsRemoteServerMkLocalTestEnvironment,
+      Fixture.setupTeardown = \testEnv ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction = lhsRemoteServerSetup tableName testEnv,
+              Fixture.teardownAction = \_ -> lhsRemoteServerTeardown testEnv
+            }
+        ]
     }
 
 --------------------------------------------------------------------------------
@@ -132,9 +134,9 @@ lhsRemoteServer tableName =
 --
 -- Each RHS context is responsible for setting up the target table, and for
 -- returning the JSON representation of said table.
-type RHSContext = (Value, Context ())
+type RHSFixture = (Value, Fixture.Fixture ())
 
-rhsPostgres :: RHSContext
+rhsPostgres :: RHSFixture
 rhsPostgres =
   let table =
         [yaml|
@@ -142,16 +144,17 @@ rhsPostgres =
       name: album
     |]
       context =
-        Context
-          { name = Context.Backend Context.Postgres,
-            mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-            setup = rhsPostgresSetup,
-            teardown = rhsPostgresTeardown,
-            customOptions = Nothing
+        (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          { Fixture.setupTeardown = \testEnv ->
+              [ Fixture.SetupAction
+                  { Fixture.setupAction = rhsPostgresSetup testEnv,
+                    Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnv
+                  }
+              ]
           }
    in (table, context)
 
-rhsSQLServer :: RHSContext
+rhsSQLServer :: RHSFixture
 rhsSQLServer =
   let table =
         [yaml|
@@ -159,12 +162,13 @@ rhsSQLServer =
       name: album
     |]
       context =
-        Context
-          { name = Context.Backend Context.SQLServer,
-            mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-            setup = rhsSQLServerSetup,
-            teardown = rhsSQLServerTeardown,
-            customOptions = Nothing
+        (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          { Fixture.setupTeardown = \testEnv ->
+              [ Fixture.SetupAction
+                  { Fixture.setupAction = rhsSQLServerSetup testEnv,
+                    Fixture.teardownAction = \_ -> rhsSQLServerTeardown testEnv
+                  }
+              ]
           }
    in (table, context)
 
@@ -220,7 +224,7 @@ lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.Postgres
+      schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -231,9 +235,9 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable track
+  Postgres.createTable testEnvironment track
   Postgres.insertTable track
-  Schema.trackTable Context.Postgres sourceName track testEnvironment
+  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -288,7 +292,8 @@ lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.SQLServer
+      schemaName = Schema.getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -301,7 +306,7 @@ args:
   -- setup tables only
   SQLServer.createTable track
   SQLServer.insertTable track
-  Schema.trackTable Context.SQLServer sourceName track testEnvironment
+  Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -456,7 +461,7 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
           orderByFunction = case ta_order_by of
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
-          limitFunction = maybe Prelude.id take ta_limit
+          limitFunction = maybe Hasura.Prelude.id take ta_limit
       pure $
         tracks
           & filter filterFunction
@@ -554,7 +559,8 @@ rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.Postgres
+      schemaName = Schema.getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -565,9 +571,9 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable album
+  Postgres.createTable testEnvironment album
   Postgres.insertTable album
-  Schema.trackTable Context.Postgres sourceName album testEnvironment
+  Schema.trackTable Fixture.Postgres sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -614,7 +620,8 @@ rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
 rhsSQLServerSetup (testEnvironment, _) = do
   let sourceName = "target"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.SQLServer
+      schemaName = Schema.getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -627,7 +634,7 @@ args:
   -- setup tables only
   SQLServer.createTable album
   SQLServer.insertTable album
-  Schema.trackTable Context.SQLServer sourceName album testEnvironment
+  Schema.trackTable Fixture.SQLServer sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -670,14 +677,14 @@ rhsSQLServerTeardown _ = SQLServer.dropTable album
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
 tests opts = describe "object-relationship" $ do
   schemaTests opts
   executionTests opts
   permissionTests opts
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
+executionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
 executionTests opts = describe "execution" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
@@ -768,7 +775,7 @@ executionTests opts = describe "execution" $ do
 
 -- | Spec that describe an object relationship's data in the presence of
 -- permisisons.
-permissionTests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
+permissionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
 permissionTests opts = describe "permission" $ do
   let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
 
@@ -855,7 +862,7 @@ permissionTests opts = describe "permission" $ do
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
-schemaTests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
+schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
 schemaTests opts =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table

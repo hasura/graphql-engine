@@ -20,14 +20,7 @@ args:
         is_published BOOLEAN NOT NULL default FALSE,
         published_on TIMESTAMP
       );
-      CREATE EXTENSION IF NOT EXISTS postgis;
-      DO $$
-      BEGIN
-        IF PostGIS_lib_version() ~ '^3.*' THEN
-          CREATE EXTENSION IF NOT EXISTS postgis_raster;
-        END IF;
-      END$$;
-      CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
       CREATE TABLE geom_table(
         id SERIAL PRIMARY KEY,
         type TEXT NOT NULL,

@@ -25,6 +25,7 @@ export const allowedMetadataTypesArr = [
   'pg_create_delete_permission',
   'pg_drop_delete_permission',
   'pg_set_permission_comment',
+  'pg_track_table',
   'mssql_create_insert_permission',
   'mssql_drop_insert_permission',
   'mssql_create_select_permission',
@@ -38,6 +39,9 @@ export const allowedMetadataTypesArr = [
   'update_remote_schema_remote_relationship',
   'delete_remote_schema_remote_relationship',
   'add_remote_schema',
+  'update_scope_of_collection_in_allowlist',
+  'drop_collection_from_allowlist',
+  'add_collection_from_allowlist',
   'bulk',
 ] as const;
 
@@ -57,31 +61,35 @@ export interface DbToDbRelationship {
   fieldMapping: Record<string, string>;
 }
 
+type GDCSourcePrefix = string;
+
 type SupportedDataSourcesPrefix =
   | 'mysql_'
   | 'mssql_'
   | 'bigquery_'
   | 'citus_'
-  | 'pg_';
+  | 'pg_'
+  | `${GDCSourcePrefix}_`;
 
 export interface TableRelationship {
   name: string;
   comment: string;
   type: 'object' | 'array';
-  tableRelationships?: {
-    from: {
-      table: string;
-      column: string[];
-    };
-    to: {
-      table: string;
-      column: string[];
-    };
-  }[];
+  from: {
+    table: string;
+    column: string[];
+  };
+  to: {
+    table: string;
+    column: string[];
+  };
 }
 
-export type AllMetadataQueries = `${SupportedDataSourcesPrefix}${MetadataQueryType}`;
+export type AllMetadataQueries =
+  `${SupportedDataSourcesPrefix}${MetadataQueryType}`;
 
+// TODO: these could be more strongly typed
 export type allowedMetadataTypes =
   | typeof allowedMetadataTypesArr[number]
-  | AllMetadataQueries;
+  | AllMetadataQueries
+  | MetadataQueryType;

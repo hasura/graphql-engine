@@ -1,0 +1,24 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        is_admin BOOLEAN NOT NULL DEFAULT false
+      );
+      INSERT INTO "user" (id, name, email) VALUES
+        (1, 'foo', 'foo@email.com'),
+        (2, 'bar', 'bar@email.com'),
+        (3, 'bar', 'bar@email.com'),
+        (4, 'baz', 'baz@email.com');
+
+- type: track_table
+  args:
+    table: user
+    schema: public
+    apollo_federation_config:
+      enable: v1

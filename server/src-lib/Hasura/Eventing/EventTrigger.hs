@@ -33,7 +33,6 @@ module Hasura.Eventing.EventTrigger
     processEventQueue,
     defaultMaxEventThreads,
     defaultFetchInterval,
-    defaultFetchBatchSize,
     Event (..),
     EventEngineCtx (..),
     -- Exported for testing
@@ -74,16 +73,21 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
+import Hasura.RQL.Types.Numeric (NonNegativeInt)
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Metrics (ServerMetrics (..))
+import Hasura.Server.Prometheus (EventTriggerMetrics (..))
 import Hasura.Server.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
+import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
+import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -163,14 +167,11 @@ deriving instance Backend b => Eq (EventPayload b)
 instance Backend b => J.ToJSON (EventPayload b) where
   toJSON = J.genericToJSON hasuraJSON {omitNothingFields = True}
 
-defaultMaxEventThreads :: Int
-defaultMaxEventThreads = 100
+defaultMaxEventThreads :: Numeric.PositiveInt
+defaultMaxEventThreads = Numeric.unsafePositiveInt 100
 
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
-
-defaultFetchBatchSize :: NonNegativeInt
-defaultFetchBatchSize = unsafeNonNegativeInt 100
 
 initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
@@ -221,13 +222,14 @@ processEventQueue ::
   EventEngineCtx ->
   LockedEventsCtx ->
   ServerMetrics ->
+  EventTriggerMetrics ->
   MaintenanceMode () ->
   m (Forever m)
-processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics maintenanceMode = do
+processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
-    fetchBatchSize = getNonNegativeInt _eeCtxFetchSize
+    fetchBatchSize = Numeric.getNonNegativeInt _eeCtxFetchSize
 
     popEventsBatch :: m [BackendEventWithSource]
     popEventsBatch = do
@@ -354,6 +356,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
       eventProcessTime <- liftIO getCurrentTime
       let eventQueueTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
       _ <- liftIO $ EKG.Distribution.add (smEventQueueTime serverMetrics) eventQueueTime
+      liftIO $ Prometheus.Histogram.observe (eventQueueTimeSeconds eventTriggerMetrics) eventQueueTime
 
       cache <- liftIO getSchemaCache
 
@@ -410,8 +413,14 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                     -- request invocation
                     resp <-
                       bracket_
-                        (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
-                        (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                        ( do
+                            liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics
+                            liftIO $ Prometheus.Gauge.inc (eventTriggerHTTPWorkers eventTriggerMetrics)
+                        )
+                        ( do
+                            liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics
+                            liftIO $ Prometheus.Gauge.dec (eventTriggerHTTPWorkers eventTriggerMetrics)
+                        )
                         (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
                     pure (request, resp)
               case eitherReqRes of

@@ -1,0 +1,28 @@
+description: Introspection to check query fields and their types
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query EntitiesTest($representations: [_Any!]!) {
+      _entities(representations: $representations) {
+        ... on user {
+          id
+          email
+          name
+          is_admin
+        }
+      }
+    }
+  variables:
+    representations:
+    - __typename: user
+      id: 1
+
+
+response:
+  data:
+    _entities:
+    - id: 1
+      email: foo@email.com
+      name: foo
+      is_admin: false

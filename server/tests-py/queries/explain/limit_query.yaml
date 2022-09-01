@@ -13,7 +13,8 @@ query:
       }
 response:
 - field: article
-  sql: 'SELECT  coalesce(json_agg("root" ), ''[]'' ) AS "root" FROM  (SELECT  row_to_json((SELECT  "_1_e"  FROM  (SELECT  "_0_root.base"."id"
-    AS "id", "_0_root.base"."title" AS "title", "_0_root.base"."content" AS "content"       )
-    AS "_1_e"      ) ) AS "root" FROM  (SELECT  *  FROM "public"."article"  WHERE
-    (''true'')    LIMIT 2 ) AS "_0_root.base"      ) AS "_2_root"      '
+  sql: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT\
+    \  \"_e\"  FROM  (SELECT  \"_root.base\".\"id\" AS \"id\", \"_root.base\".\"title\"\
+    \ AS \"title\", \"_root.base\".\"content\" AS \"content\"       ) AS \"_e\"  \
+    \    ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"article\"  WHERE ('true')\
+    \    LIMIT 2 ) AS \"_root.base\"      ) AS \"_root\"      "

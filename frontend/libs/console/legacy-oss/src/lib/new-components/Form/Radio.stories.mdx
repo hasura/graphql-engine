@@ -1,0 +1,308 @@
+import { useRef, useEffect } from 'react';
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { z } from 'zod';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { Radio, Form } from '@/new-components/Form';
+
+<Meta
+  title="components/Forms 🦠/Radio 🧬"
+  component={Radio}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+/>
+
+# Radio 🧬
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Form/Radio.tsx)
+
+## 🧰 Overview
+
+A component wrapping native `<radio>` element ([see MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/radio)),
+its description, hint and error message.
+
+Default CSS display is `block`, provided without padding and margin (displayed here with the `<Form>` padding).
+
+### Basic usage
+
+```ts
+import { Radio } from '@/new-components/Form';
+```
+
+The `<Radio>` options list has the following structure:
+
+```ts
+const options: RadioItem[] = [
+  { value: 'value0', label: 'Value 0' },
+  { value: 'value1', label: 'Value 1', disabled: true },
+  { value: 'value2', label: 'Value 2' },
+];
+```
+
+export const options = [
+  { value: 'value0', label: 'Value 0' },
+  { value: 'value1', label: 'Value 1', disabled: true },
+  { value: 'value2', label: 'Value 2' },
+];
+
+The `<Radio>` component must be wrapped inside a `<Form>` to be usable. It allows to benefit **form validation**
+and to define a **default value**:
+
+```ts
+const validationSchema = z.object({
+  radioName: z.enum(['on']),
+});
+```
+
+export const validationSchema = z.object({
+  radioName: z.enum(['on']),
+});
+
+```tsx
+<Form
+  options={{
+    defaultValues: {
+      radioName: 'value1',
+    },
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+  }}
+  schema={validationSchema}
+>
+  {() => (
+    <Radio
+      name="radioName"
+      label="The radio label"
+      placeholder="Radio placeholder"
+      options={options}
+    />
+  )}
+</Form>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <Form
+      options={{
+        defaultValues: {
+          radioName: 'value1',
+        },
+        mode: 'onBlur',
+      }}
+      schema={validationSchema}
+    >
+      {() => (
+        <Radio
+          name="radioName"
+          label="The radio label"
+          placeholder="Radio placeholder"
+          options={options}
+        />
+      )}
+    </Form>
+  </Story>
+</Canvas>
+
+export const Template = args => {
+  const formRef = useRef();
+  if (args && args.triggerValidation) {
+    useEffect(() => {
+      formRef.current.trigger();
+    });
+  }
+  return (
+    <Form
+      ref={formRef}
+      options={{
+        defaultValues: {
+          ...(args && args.defaultValues ? args.defaultValues : {}),
+        },
+        mode: 'onBlur',
+      }}
+      schema={validationSchema}
+    >
+      {() => <Radio {...args} />}
+    </Form>
+  );
+};
+
+export const stories = {
+  'States - With default value': {
+    name: 'radioName',
+    options: options,
+    label: 'With Radioed value',
+    defaultValues: {
+      radioName: 'value2',
+    },
+  },
+  'States - Disabled': {
+    name: 'radioName',
+    options: options,
+    label: 'Disabled',
+    disabled: true,
+  },
+  'States - With error message': {
+    name: 'radioName',
+    options: options,
+    label: 'With error message',
+    triggerValidation: true,
+  },
+  'Variant - With description': {
+    name: 'radioName',
+    options: options,
+    label: 'Label',
+    description: 'Radio description',
+    disabled: true,
+  },
+  'Variant - Horizontal orientation': {
+    name: 'radioName',
+    options: options,
+    label: 'Label',
+    orientation: 'horizontal',
+  },
+  'Variant - Vertical orientation': {
+    name: 'radioName',
+    options: options,
+    label: 'Label',
+    orientation: 'vertical',
+  },
+  'API playground': {
+    name: 'radioName',
+    options: options,
+    label: 'API playground',
+  },
+  'Testing - Scalability': {
+    name: 'radioName',
+    options: [
+      ...options,
+      {
+        value: 'value4',
+        label:
+          'Value 4 - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      },
+    ],
+    label:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    description:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    tooltip:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    triggerValidation: true,
+  },
+};
+
+## 🔁 States
+
+### 🔁 With default value
+
+Use `<Form>` options to set default value.
+
+<Canvas>
+  <Story
+    name="States - With default value"
+    args={stories['States - With default value']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🔁 Disabled
+
+<Canvas>
+  <Story name="States - Disabled" args={stories['States - Disabled']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🔁 With error message
+
+Incorrect value is set then `<Form>` validation is automatically triggered.
+
+<Canvas>
+  <Story
+    name="States - With error message"
+    args={stories['States - With error message']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## 🎭 Variants
+
+### 🎭 Size
+
+<Canvas>
+  <Story
+    name="Variant - Orientation"
+    args={{
+      'Variant - Vertical orientation':
+        stories['Variant - Vertical orientation'],
+      'Variant - Horizontal orientation':
+        stories['Variant - Horizontal orientation'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+### 🎭 With description
+
+<Canvas>
+  <Story
+    name="Variant - With description"
+    args={stories['Variant - With description']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+## 🧪 Testing
+
+### 🧪 Scalability
+
+<Canvas>
+  <Story name="Testing - Scalability" args={stories['Testing - Scalability']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={stories}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

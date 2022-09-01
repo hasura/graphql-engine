@@ -6,23 +6,35 @@ module SpecHook
 where
 
 import Control.Exception.Safe (bracket)
+import Data.UUID.V4 (nextRandom)
 import Harness.GraphqlEngine (startServerThread)
 import Harness.TestEnvironment (TestEnvironment (..), stopServer)
+import Hasura.Prelude
 import System.Environment (lookupEnv)
+import System.Log.FastLogger qualified as FL
 import Test.Hspec (Spec, SpecWith, aroundAllWith)
-import Text.Read (readMaybe)
-import Prelude
 
 setupTestEnvironment :: IO TestEnvironment
 setupTestEnvironment = do
   murlPrefix <- lookupEnv "HASURA_TEST_URLPREFIX"
   mport <- fmap (>>= readMaybe) (lookupEnv "HASURA_TEST_PORT")
   server <- startServerThread ((,) <$> murlPrefix <*> mport)
-  pure $ TestEnvironment server
+  let logType = FL.LogFileNoRotate "tests-hspec.log" 1024
+  (logger, loggerCleanup) <- FL.newFastLogger logType
+  uniqueTestId <- nextRandom
+  pure
+    TestEnvironment
+      { server = server,
+        uniqueTestId = uniqueTestId,
+        backendType = Nothing,
+        logger = logger,
+        loggerCleanup = loggerCleanup
+      }
 
 teardownTestEnvironment :: TestEnvironment -> IO ()
-teardownTestEnvironment TestEnvironment {server} =
+teardownTestEnvironment TestEnvironment {..} = do
   stopServer server
+  loggerCleanup
 
 hook :: SpecWith TestEnvironment -> Spec
 hook = aroundAllWith (const . bracket setupTestEnvironment teardownTestEnvironment)

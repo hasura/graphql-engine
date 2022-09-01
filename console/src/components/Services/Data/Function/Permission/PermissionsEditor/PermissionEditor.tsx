@@ -1,24 +1,8 @@
 import React from 'react';
 
-import Button from '../../../../../Common/Button';
-import { ButtonProps } from '../../../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
-import styles from '../../../../../Common/Permissions/PermissionStyles.scss';
-
-type PermissionsActionButtonProps = {
-  onClick: () => void;
-  color: ButtonProps['color'];
-  text: string;
-};
-const PermissionsActionButton: React.FC<PermissionsActionButtonProps> = ({
-  onClick,
-  color,
-  text,
-}) => (
-  <Button color={color} className={styles.add_mar_right} onClick={onClick}>
-    {text}
-  </Button>
-);
+import styles from '../../../../../Common/Permissions/PermissionStyles.module.scss';
 
 type PermissionEditorProps = {
   role: string;
@@ -63,11 +47,17 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({
         </p>
       </div>
       {permissionAccessInMetadata === 'no' ? (
-        <PermissionsActionButton onClick={saveFn} color="yellow" text="Save" />
+        <Button onClick={saveFn} mode="primary">
+          Save
+        </Button>
       ) : (
-        <PermissionsActionButton onClick={removeFn} color="red" text="Remove" />
+        <Button onClick={removeFn} mode="destructive">
+          Remove
+        </Button>
       )}
-      <PermissionsActionButton onClick={closeFn} color="white" text="Cancel" />
+      <Button onClick={closeFn} mode="default">
+        Cancel
+      </Button>
     </div>
   ) : null;
 

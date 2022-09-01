@@ -8,17 +8,25 @@ import { BulkDelete, BulkDeleteProps } from './BulkDelete';
 import { handlers } from './mocks/handlers.mock';
 
 export default {
-  title: 'Permissions Form/Bulk Update',
+  title: 'Features/Permissions Form/Bulk Update',
   component: BulkDelete,
   decorators: [ReactQueryDecorator()],
 } as Meta;
+
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
 
 export const Primary: Story<BulkDeleteProps> = args => {
   return <BulkDelete {...args} />;
 };
 Primary.args = {
-  schemaName: 'public',
-  tableName: 'users',
+  dataLeaf,
   roles: ['user'],
   handleClose: () => {},
 };

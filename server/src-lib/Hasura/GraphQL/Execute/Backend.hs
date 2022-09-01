@@ -261,6 +261,9 @@ data ExecutionStep where
   ExecStepRaw ::
     JO.Value ->
     ExecutionStep
+  ExecStepMulti ::
+    [ExecutionStep] ->
+    ExecutionStep
 
 -- | The series of steps that need to be executed for a given query. For now, those steps are all
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,

@@ -44,10 +44,10 @@ import Hasura.RQL.Types.SourceCustomization
 --
 -- FIXME: move this to Hasura/Metadata
 data ToSourceRelationshipDef = ToSourceRelationshipDef
-  { _tsrdRelationshipType :: !RelType,
-    _tsrdFieldMapping :: !(HashMap FieldName FieldName),
-    _tsrdSource :: !SourceName,
-    _tsrdTable :: !Value
+  { _tsrdRelationshipType :: RelType,
+    _tsrdFieldMapping :: HashMap FieldName FieldName,
+    _tsrdSource :: SourceName,
+    _tsrdTable :: Value
   }
   deriving stock (Show, Eq, Generic)
 
@@ -66,15 +66,15 @@ instance FromJSON ToSourceRelationshipDef where
 
 -- | Schema cache information for a table field targeting a remote source.
 data RemoteSourceFieldInfo tgt = RemoteSourceFieldInfo
-  { _rsfiName :: !RelName,
-    _rsfiType :: !RelType,
-    _rsfiSource :: !SourceName,
-    _rsfiSourceConfig :: !(SourceConfig tgt),
-    _rsfiSourceCustomization :: !SourceTypeCustomization,
+  { _rsfiName :: RelName,
+    _rsfiType :: RelType,
+    _rsfiSource :: SourceName,
+    _rsfiSourceConfig :: SourceConfig tgt,
+    _rsfiSourceCustomization :: SourceTypeCustomization,
     -- | this is parsed from `Value`
-    _rsfiTable :: !(TableName tgt),
+    _rsfiTable :: TableName tgt,
     -- | LHS field name -> RHS Column, RHS Column type
-    _rsfiMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
+    _rsfiMapping :: HM.HashMap FieldName (ScalarType tgt, Column tgt)
   }
   deriving stock (Generic)
 

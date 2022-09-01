@@ -11,38 +11,34 @@ keywords:
   - data federation
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
-import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # MS SQL Server: Database to Remote Schema relationships
 
 ## Introduction
 
-Database to Remote Schema relationships extend the concept of joining data across
-tables, to joining across tables and remote GraphQL sources. Once you
-create relationships between types from your database and types created
-from remote schemas, you can then "join" them by running GraphQL queries.
+Database to Remote Schema relationships extend the concept of joining data across tables, to joining across tables and
+remote GraphQL sources. Once you create relationships between types from your database and types created from remote
+schemas, you can then "join" them by running GraphQL queries.
 
-These APIs can be custom GraphQL servers you write, third party SaaS
-APIs, or even other Hasura instances.
+These APIs can be custom GraphQL servers you write, third party SaaS APIs, or even other Hasura instances.
 
-Because Hasura is meant to be a GraphQL server that you can expose
-directly to your apps, Hasura also handles security and authorization
-while providing remote joins.
+Because Hasura is meant to be a GraphQL server that you can expose directly to your apps, Hasura also handles security
+and authorization while providing remote joins.
 
 :::info Note
 
-To see example use cases, check out this [blog
-post](https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/).
+To see example use cases, check out this
+[blog post](https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/).
 
 :::
 
 :::tip Supported from
 
-Remote schema relationships from MS SQL Server are supported from versions `v2.6.0` and
-above.
+Remote schema relationships from MS SQL Server are supported from versions `v2.6.0` and above.
 
 :::
 
@@ -50,31 +46,26 @@ above.
 
 ### Step 0: Add a remote schema and a database
 
-Add a remote schema and a database as described [here](/remote-schemas/adding-schema.mdx)
-and [here](/databases/connect-db/index.mdx), if not already added.
+Add a remote schema and a database as described [here](/remote-schemas/adding-schema.mdx) and
+[here](/databases/connect-db/index.mdx), if not already added.
 
 ### Step 1: Define and create the relationship
 
 The following fields can be defined for a remote schema relationship:
 
 - **Name**: Define a name for the relationship.
-- **Remote Schema**: Select a remote schema among all the ones you've
-  created.
-- **Configuration**: Set up the join configuration, to inject values
-  as input arguments of the remote schema field.
+- **Remote Schema**: Select a remote schema among all the ones you've created.
+- **Configuration**: Set up the join configuration, to inject values as input arguments of the remote schema field.
   - **From column**: Input injected from table column values.
-  - **From static value**: Input injected from a static value of
-    your choice.
+  - **From static value**: Input injected from a static value of your choice.
 
-For example, let's assume that our database has a table
-`order(id int, user_id int)` and we've added a remote schema
+For example, let's assume that our database has a table `order(id int, user_id int)` and we've added a remote schema
 `user-remote-schema`.
 
 1.  We name the relationship `user`.
 2.  We select the `user-remote-schema` that we've added.
-3.  We set up the config to join the `id` input argument of our
-    remote schema field to the `user_id` column of this table (in this
-    case, the `order` table).
+3.  We set up the config to join the `id` input argument of our remote schema field to the `user_id` column of this
+    table (in this case, the `order` table).
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
@@ -83,18 +74,14 @@ For example, let's assume that our database has a table
 - Click the `Add a remote relationship` button.
 
   <Thumbnail
-    src="/img/graphql/core/schema/add-remote-schema-relationship.png"
-    alt="Opening the remote relationship section"
-    width="1000px"
+    src='/img/schema/add-remote-schema-relationship.png'
+    alt='Opening the remote relationship section'
+    width='1000px'
   />
 
 - Define the relationship and hit `Save`.
 
-  <Thumbnail
-    src="/img/graphql/core/schema/define-remote-schema-relationship.png"
-    alt="Defining the relationship"
-    width="800px"
-  />
+  <Thumbnail src='/img/schema/define-remote-schema-relationship.png' alt='Defining the relationship' width='800px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -127,7 +114,8 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add a remote schema relationship by using the
-[pg_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship) metadata API:
+[pg_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship)
+metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -190,19 +178,16 @@ In the `API` tab, test out your remote schema relationship.
 ## Remote schema relationship permissions {#pg-remote-schema-relationship-permissions}
 
 Remote schema relationship permissions are derived from the
-[remote schema permissions](/remote-schemas/auth/remote-schema-permissions.mdx) defined for the
-role. When a remote relationship permission cannot be derived, the remote
-relationship field will not be added to the schema for the role.
+[remote schema permissions](/remote-schemas/auth/remote-schema-permissions.mdx) defined for the role. When a remote
+relationship permission cannot be derived, the remote relationship field will not be added to the schema for the role.
 
 Some cases in which a remote relationship permission cannot be derived are:
 
 1.  There are no remote schema permissions defined for the role.
-2.  The role doesn't have access to the field or types that are used by
-    the remote relationship.
+2.  The role doesn't have access to the field or types that are used by the remote relationship.
 
 :::info Note
 
-Remote relationship permissions apply only if remote schema permissions
-are enabled in GraphQL engine.
+Remote relationship permissions apply only if remote schema permissions are enabled in GraphQL engine.
 
 :::

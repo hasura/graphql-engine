@@ -2,19 +2,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Schema.BoolExp
-  ( boolExp,
+  ( AggregationPredicatesSchema (..),
+    boolExp,
     mkBoolOperator,
     equalityOperators,
     comparisonOperators,
   )
 where
 
+import Data.Has (getter)
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Common (MonadBuildSchemaBase, SchemaContext (..), askTableInfo, partialSQLExpToUnpreparedValue, retrieve)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
@@ -36,9 +38,36 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend (BackendType)
 import Language.GraphQL.Draft.Syntax qualified as G
+
+-- | Backends implement this type class to specify the schema of
+-- aggregation predicates.
+--
+-- The default implementation results in a parser that does not parse anything.
+--
+-- The scope of this class is local to the function 'boolExp'. In particular,
+-- methods in `class BackendSchema` and `type MonadBuildSchema` should *NOT*
+-- include this class as a constraint.
+class AggregationPredicatesSchema (b :: BackendType) where
+  aggregationPredicatesParser ::
+    forall r m n.
+    MonadBuildSchemaBase r m n =>
+    SourceInfo b ->
+    TableInfo b ->
+    m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+
+-- Overlapping instance for backends that do not implement Aggregation Predicates.
+instance {-# OVERLAPPABLE #-} (AggregationPredicates b ~ Const Void) => AggregationPredicatesSchema (b :: BackendType) where
+  aggregationPredicatesParser ::
+    forall r m n.
+    (MonadBuildSchemaBase r m n) =>
+    SourceInfo b ->
+    TableInfo b ->
+    m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+  aggregationPredicatesParser _ _ = return Nothing
 
 -- |
 -- > input type_bool_exp {
@@ -50,13 +79,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- > }
 boolExp ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =>
   SourceInfo b ->
   TableInfo b ->
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
-  tableGQLName <- getTableGQLName tableInfo
-  name <- mkTypename $ tableGQLName <> Name.__bool_exp
+boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
+  tCase <- asks getter
+  tableGQLName <- getTableIdentifierName tableInfo
+  name <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableBoolExpTypeName tableGQLName
   let description =
         G.Description $
           "Boolean expression to filter rows from the table " <> tableName
@@ -64,10 +94,12 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
 
   fieldInfos <- tableSelectFields sourceInfo tableInfo
   tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos
+  -- TODO: This naming is somewhat unsatifactory..
+  aggregationPredicatesParser' <- fromMaybe (pure []) <$> aggregationPredicatesParser sourceInfo tableInfo
   recur <- boolExp sourceInfo tableInfo
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
-  let specialFieldParsers =
+  let connectiveFieldParsers =
         [ P.fieldOptional Name.__or Nothing (BoolOr <$> P.list recur),
           P.fieldOptional Name.__and Nothing (BoolAnd <$> P.list recur),
           P.fieldOptional Name.__not Nothing (BoolNot <$> recur)
@@ -76,8 +108,9 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
   pure $
     BoolAnd <$> P.object name (Just description) do
       tableFields <- map BoolField . catMaybes <$> sequenceA tableFieldParsers
-      specialFields <- catMaybes <$> sequenceA specialFieldParsers
-      pure (tableFields ++ specialFields)
+      specialFields <- catMaybes <$> sequenceA connectiveFieldParsers
+      aggregationPredicateFields <- map (BoolField . AVAggregationPredicates) <$> aggregationPredicatesParser'
+      pure (tableFields ++ specialFields ++ aggregationPredicateFields)
   where
     tableName = tableInfoName tableInfo
 
@@ -85,6 +118,7 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
       FieldInfo b ->
       m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
+      roleName <- retrieve scRole
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
@@ -93,10 +127,10 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
-          remotePermissions <- lift $ tableSelectPermissions remoteTableInfo
           let remoteTableFilter =
-                fmap partialSQLExpToUnpreparedValue
-                  <$> maybe annBoolExpTrue spiFilter remotePermissions
+                (fmap . fmap) partialSQLExpToUnpreparedValue $
+                  maybe annBoolExpTrue spiFilter $
+                    tableSelectPermissions roleName remoteTableInfo
           remoteBoolExp <- lift $ boolExp sourceInfo remoteTableInfo
           pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do
@@ -213,11 +247,11 @@ equalityOperators ::
   Parser k n (UnpreparedValue b) ->
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 equalityOperators tCase collapseIfNull valueParser valueListParser =
-  [ mkBoolOperator tCase collapseIfNull (C.fromTuple $$(G.litGQLIdentifier ["_is", "null"])) Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
-    mkBoolOperator tCase collapseIfNull (C.fromName Name.__eq) Nothing $ AEQ True <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName Name.__neq) Nothing $ ANE True <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName Name.__in) Nothing $ AIN <$> valueListParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName Name.__nin) Nothing $ ANIN <$> valueListParser
+  [ mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_is", "null"])) Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__eq) Nothing $ AEQ True <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__neq) Nothing $ ANE True <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__in) Nothing $ AIN <$> valueListParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__nin) Nothing $ ANIN <$> valueListParser
   ]
 
 comparisonOperators ::
@@ -229,8 +263,8 @@ comparisonOperators ::
   Parser k n (UnpreparedValue b) ->
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 comparisonOperators tCase collapseIfNull valueParser =
-  [ mkBoolOperator tCase collapseIfNull (C.fromName Name.__gt) Nothing $ AGT <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName Name.__lt) Nothing $ ALT <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName Name.__gte) Nothing $ AGTE <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName Name.__lte) Nothing $ ALTE <$> valueParser
+  [ mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__gt) Nothing $ AGT <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__lt) Nothing $ ALT <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__gte) Nothing $ AGTE <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__lte) Nothing $ ALTE <$> valueParser
   ]

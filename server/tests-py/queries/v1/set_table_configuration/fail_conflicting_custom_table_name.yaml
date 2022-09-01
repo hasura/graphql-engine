@@ -3,9 +3,9 @@ status: 500
 url: /v1/query
 response:
   code: unexpected
-  error: 'found duplicate fields in selection set for mutation root: update_article,
-    delete_article, update_article_many, insert_article_one, update_article_by_pk, delete_article_by_pk,
-    insert_article'
+  error: >-
+    found duplicate fields in selection set for mutation root:
+    ['update_article', 'delete_article', 'update_article_many', 'insert_article_one', 'update_article_by_pk', 'delete_article_by_pk', 'insert_article']
   path: $.args
 query:
   type: set_table_customization

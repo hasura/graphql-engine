@@ -35,6 +35,8 @@ module Hasura.GraphQL.Schema.Parser
     pattern P.Parser,
     Schema,
     pattern P.Schema,
+    ConflictingDefinitions,
+    pattern P.ConflictingDefinitions,
     Definition,
     pattern P.Definition,
     Type,
@@ -51,14 +53,26 @@ module Hasura.GraphQL.Schema.Parser
     pattern P.SomeDefinitionTypeInfo,
     TypeDefinitionsWrapper,
     pattern TypeDefinitionsWrapper,
+    P.ParseErrorCode (..),
+    toQErr,
     module Hasura.GraphQL.Parser,
+    Memoize.MonadMemoize,
+    memoizeOn,
+    memoize,
   )
 where
 
 -- Re-export everything, except types whose type parameter we want to fill in in
 -- this module.
+
+import Control.Monad.Error.Class
+import Control.Monad.Memoize qualified as Memoize
+import Data.Typeable
+import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (ErrorMessage (fromErrorMessage))
 import Hasura.GraphQL.Parser hiding
-  ( Definition,
+  ( ConflictingDefinitions (..),
+    Definition,
     Directive,
     DirectiveInfo,
     FieldInfo,
@@ -66,6 +80,7 @@ import Hasura.GraphQL.Parser hiding
     HasTypeDefinitions,
     InputFieldInfo,
     InputFieldsParser,
+    ParseErrorCode (..),
     Parser,
     Schema,
     SomeDefinitionTypeInfo,
@@ -73,13 +88,17 @@ import Hasura.GraphQL.Parser hiding
     TypeDefinitionsWrapper,
   )
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Object
+import Language.Haskell.TH qualified as TH
 
 type FieldParser = P.FieldParser MetadataObjId
 
 type Parser = P.Parser MetadataObjId
 
 type Schema = P.Schema MetadataObjId
+
+type ConflictingDefinitions = P.ConflictingDefinitions MetadataObjId
 
 type Type = P.Type MetadataObjId
 
@@ -106,3 +125,43 @@ type TypeDefinitionsWrapper = P.TypeDefinitionsWrapper MetadataObjId
 -- 'MetadataObjId' set for its origin type parameter.
 pattern TypeDefinitionsWrapper :: () => forall a. HasTypeDefinitions a => a -> TypeDefinitionsWrapper
 pattern TypeDefinitionsWrapper typeDef = P.TypeDefinitionsWrapper typeDef
+
+toQErr :: (MonadError QErr m) => Either ParseError a -> m a
+toQErr = either (throwError . parseErrorToQErr) pure
+  where
+    parseErrorToQErr :: ParseError -> QErr
+    parseErrorToQErr ParseError {pePath, peMessage, peCode} =
+      (err400 (parseErrorCodeToCode peCode) (fromErrorMessage peMessage)) {qePath = pePath}
+
+    parseErrorCodeToCode :: P.ParseErrorCode -> Code
+    parseErrorCodeToCode P.ValidationFailed = ValidationFailed
+    parseErrorCodeToCode P.ParseFailed = ParseFailed
+    parseErrorCodeToCode P.ConflictingDefinitionsError = Unexpected
+    parseErrorCodeToCode P.NotSupported = NotSupported
+
+memoizeOn ::
+  (Memoize.MonadMemoize m, Ord a, Typeable a, Typeable p, MonadParse n, Typeable b) =>
+  -- | A unique name used to identify the function being memoized. There isn’t
+  -- really any metaprogramming going on here, we just use a Template Haskell
+  -- 'TH.Name' as a convenient source for a static, unique identifier.
+  TH.Name ->
+  -- | The value to use as the memoization key. It’s the caller’s
+  -- responsibility to ensure multiple calls to the same function don’t use
+  -- the same key.
+  a ->
+  -- | The value to be memoized. 'p' is intended to be either 'Parser k' or
+  -- 'FieldParser'.
+  m (p n b) ->
+  m (p n b)
+memoizeOn = Memoize.memoizeOn
+
+-- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
+-- as the key.
+memoize ::
+  (Memoize.MonadMemoize m, Ord a, Typeable a, Typeable p, MonadParse n, Typeable b) =>
+  TH.Name ->
+  -- | A function generating something to be memoized. 'p' is intended to be
+  -- either 'Parser k' or 'FieldParser'.
+  (a -> m (p n b)) ->
+  (a -> m (p n b))
+memoize = Memoize.memoize

@@ -50,10 +50,11 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-track-table-syntax}
 
-| Key     | Required | Schema                                                | Description                                                                                                |
-| ------- | -------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename) | Name of the table                                                                                          |
-| is_enum | false    | Boolean                                               | When set to `true`, creates the table as an [enum table](/schema/postgres/enums.mdx#pg-create-enum-table). |
+| Key                      | Required | Schema                                                                          | Description                                                                                                |
+| ------------------------ | -------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                                                                                          |
+| is_enum                  | false    | Boolean                                                                         | When set to `true`, creates the table as an [enum table](/schema/postgres/enums.mdx#pg-create-enum-table). |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                                                              |
 
 ## set_table_is_enum {#schema-metadata-set-table-is-enum}
 
@@ -166,10 +167,11 @@ GraphQL engine requires the constraint names (if any) of a table to be
 
 ### Args syntax {#schema-metadata-track-table-syntax-v2}
 
-| Key           | Required | Schema                                                      | Description                      |
-| ------------- | -------- | ----------------------------------------------------------- | -------------------------------- |
-| table         | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)       | Name of the table                |
-| configuration | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view |
+| Key                      | Required | Schema                                                                          | Description                      |
+| ------------------------ | -------- | ------------------------------------------------------------------------------- | -------------------------------- |
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                |
+| configuration            | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config)                     | Configuration for the table/view |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                                                              |
 
 ## set_table_custom_fields (deprecated) {#schema-metadata-set-table-custom-fields}
 

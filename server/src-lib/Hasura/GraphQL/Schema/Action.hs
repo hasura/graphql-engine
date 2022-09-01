@@ -10,7 +10,6 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -65,7 +64,7 @@ actionExecute ::
   ActionInfo ->
   m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionExecute customTypes actionInfo = runMaybeT do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -109,7 +108,7 @@ actionAsyncMutation ::
   ActionInfo ->
   m (Maybe (FieldParser n IR.AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   let fieldName = unActionName actionName
@@ -140,7 +139,7 @@ actionAsyncQuery ::
   ActionInfo ->
   m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   createdAtFieldParser <-
     lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGTimeStampTZ) (G.Nullability False)
@@ -178,6 +177,8 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       actionOutputParser <- lift $ actionOutputFields outputType aot objectTypes
       let desc = G.Description $ "fields of action: " <>> actionName
           selectionSet =
+            -- Note: If we want support for Apollo Federation for Actions later,
+            -- we'd need to add support for "key" directive here as well.
             P.selectionSet outputTypeName (Just desc) (allFieldParsers actionOutputParser)
               <&> parsedSelectionsToFields IR.AsyncTypename
       pure $ P.subselection fieldName description actionIdInputField selectionSet
@@ -278,7 +279,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
     outputFieldParser ::
       ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType) ->
       m (FieldParser n (AnnotatedActionField))
-    outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) = memoizeOn 'actionOutputFields (_aotName annotatedObject, name) do
+    outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) = P.memoizeOn 'actionOutputFields (_aotName annotatedObject, name) do
       case objectFieldType of
         AOFTScalar def ->
           wrapScalar $ customScalarParser def
@@ -371,7 +372,7 @@ actionInputArguments nonObjectTypeMap arguments = do
         NOCTEnum def -> pure $ mkResult $ customEnumParser def
         -- input objects however may recursively contain one another
         NOCTInputObject (InputObjectTypeDefinition (InputObjectTypeName objectName) objectDesc inputFields) ->
-          mkResult <$> memoizeOn 'actionInputArguments objectName do
+          mkResult <$> P.memoizeOn 'actionInputArguments objectName do
             inputFieldsParsers <- forM
               (toList inputFields)
               \(InputObjectFieldDefinition (InputObjectFieldName fieldName) fieldDesc (GraphQLType fieldType)) -> do
@@ -422,7 +423,7 @@ customScalarParser = \case
         | _stdName == GName._Boolean -> J.toJSON <$> P.boolean
         | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name backendScalarType ->
-    let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
+    let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
         backendScalarValidator =
           AB.dispatchAnyBackend @Backend backendScalarType \(scalarType :: ScalarWrapper b) jsonInput -> do
             -- We attempt to parse the value from JSON to validate it, but still
@@ -435,7 +436,7 @@ customScalarParser = \case
             -- well.
             void $
               parseScalarValue @b (unwrapScalar scalarType) jsonInput
-                `onLeft` \e -> parseErrorWith ParseFailed . toErrorMessage $ qeError e
+                `onLeft` \e -> parseErrorWith P.ParseFailed . toErrorMessage $ qeError e
             pure jsonInput
      in P.Parser
           { pType = schemaType,
@@ -456,5 +457,6 @@ customEnumParser (EnumTypeDefinition typeName description enumValues) =
                   valueName
                   (_evdDescription enumValue)
                   Nothing
+                  []
                   P.EnumValueInfo
    in P.enum enumName description enumValueDefinitions

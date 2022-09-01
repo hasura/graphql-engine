@@ -83,7 +83,6 @@ module Hasura.RQL.Types.SchemaCache
     getCols,
     getRels,
     getComputedFieldInfos,
-    RelInfo (..),
     RolePermInfoMap,
     InsPermInfo (..),
     UpdPermInfo (..),
@@ -112,6 +111,9 @@ module Hasura.RQL.Types.SchemaCache
     initialResourceVersion,
     getBoolExpDeps,
     InlinedAllowlist,
+    BoolExpM (..),
+    BoolExpCtx (..),
+    getOpExpDeps,
   )
 where
 
@@ -217,10 +219,10 @@ mkComputedFieldDep reason s tn computedField =
 type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult = IntrospectionResult
-  { irDoc :: !RemoteSchemaIntrospection,
-    irQueryRoot :: !G.Name,
-    irMutationRoot :: !(Maybe G.Name),
-    irSubscriptionRoot :: !(Maybe G.Name)
+  { irDoc :: RemoteSchemaIntrospection,
+    irQueryRoot :: G.Name,
+    irMutationRoot :: Maybe G.Name,
+    irSubscriptionRoot :: Maybe G.Name
   }
   deriving (Show, Eq, Generic)
 
@@ -231,14 +233,14 @@ type RemoteSchemaRelationships =
 
 -- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx = RemoteSchemaCtx
-  { _rscName :: !RemoteSchemaName,
+  { _rscName :: RemoteSchemaName,
     -- | Original remote schema without customizations
-    _rscIntroOriginal :: !IntrospectionResult,
-    _rscInfo :: !RemoteSchemaInfo,
+    _rscIntroOriginal :: IntrospectionResult,
+    _rscInfo :: RemoteSchemaInfo,
     -- | The raw response from the introspection query against the remote server.
     -- We store this so we can efficiently service 'introspect_remote_schema'.
-    _rscRawIntrospectionResult :: !BL.ByteString,
-    _rscPermissions :: !(M.HashMap RoleName IntrospectionResult),
+    _rscRawIntrospectionResult :: BL.ByteString,
+    _rscPermissions :: M.HashMap RoleName IntrospectionResult,
     _rscRemoteRelationships :: RemoteSchemaRelationships
   }
 
@@ -269,15 +271,15 @@ type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
 data CronTriggerInfo = CronTriggerInfo
-  { ctiName :: !TriggerName,
-    ctiSchedule :: !CronSchedule,
-    ctiPayload :: !(Maybe Value),
-    ctiRetryConf :: !STRetryConf,
-    ctiWebhookInfo :: !(EnvRecord ResolvedWebhook),
-    ctiHeaders :: ![EventHeaderInfo],
-    ctiComment :: !(Maybe Text),
-    ctiRequestTransform :: !(Maybe RequestTransform),
-    ctiResponseTransform :: !(Maybe MetadataResponseTransform)
+  { ctiName :: TriggerName,
+    ctiSchedule :: CronSchedule,
+    ctiPayload :: Maybe Value,
+    ctiRetryConf :: STRetryConf,
+    ctiWebhookInfo :: EnvRecord ResolvedWebhook,
+    ctiHeaders :: [EventHeaderInfo],
+    ctiComment :: Maybe Text,
+    ctiRequestTransform :: Maybe RequestTransform,
+    ctiResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq)
 
@@ -483,25 +485,26 @@ askFunctionInfo sourceName functionName = do
 -------------------------------------------------------------------------------
 
 data SchemaCache = SchemaCache
-  { scSources :: !SourceCache,
-    scActions :: !ActionCache,
-    scRemoteSchemas :: !RemoteSchemaMap,
-    scAllowlist :: !InlinedAllowlist,
-    scAdminIntrospection :: !G.SchemaIntrospection,
-    scGQLContext :: !(HashMap RoleName (RoleContext GQLContext)),
-    scUnauthenticatedGQLContext :: !GQLContext,
-    scRelayContext :: !(HashMap RoleName (RoleContext GQLContext)),
-    scUnauthenticatedRelayContext :: !GQLContext,
-    scDepMap :: !DepMap,
-    scInconsistentObjs :: ![InconsistentMetadata],
-    scCronTriggers :: !(M.HashMap TriggerName CronTriggerInfo),
-    scEndpoints :: !(EndpointTrie GQLQueryWithText),
-    scApiLimits :: !ApiLimit,
-    scMetricsConfig :: !MetricsConfig,
-    scMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
-    scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions,
-    scTlsAllowlist :: ![TlsAllow],
-    scQueryCollections :: !QueryCollections
+  { scSources :: SourceCache,
+    scActions :: ActionCache,
+    scRemoteSchemas :: RemoteSchemaMap,
+    scAllowlist :: InlinedAllowlist,
+    scAdminIntrospection :: G.SchemaIntrospection,
+    scGQLContext :: HashMap RoleName (RoleContext GQLContext),
+    scUnauthenticatedGQLContext :: GQLContext,
+    scRelayContext :: HashMap RoleName (RoleContext GQLContext),
+    scUnauthenticatedRelayContext :: GQLContext,
+    scDepMap :: DepMap,
+    scInconsistentObjs :: [InconsistentMetadata],
+    scCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
+    scEndpoints :: EndpointTrie GQLQueryWithText,
+    scApiLimits :: ApiLimit,
+    scMetricsConfig :: MetricsConfig,
+    scMetadataResourceVersion :: Maybe MetadataResourceVersion,
+    scSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
+    scTlsAllowlist :: [TlsAllow],
+    scQueryCollections :: QueryCollections,
+    scDataConnectorCapabilities :: DataConnectorCapabilities
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all
@@ -526,7 +529,8 @@ instance ToJSON SchemaCache where
         "metadata_resource_version" .= toJSON scMetadataResourceVersion,
         "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions,
         "tls_allowlist" .= toJSON scTlsAllowlist,
-        "query_collection" .= toJSON scQueryCollections
+        "query_collection" .= toJSON scQueryCollections,
+        "data_connector_capabilities" .= toJSON scDataConnectorCapabilities
       ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
@@ -711,21 +715,10 @@ getRemoteDependencies schemaCache sourceName =
       SORemoteSchemaPermission {} -> False
       SORole {} -> False
 
--- | The table type context of schema dependency discovery. Boolean expressions
--- may refer to a so-called 'root table' (identified by a '$'-sign in the
--- expression input syntax) or the 'current' table.
-data BoolExpCtx b = BoolExpCtx
-  { source :: SourceName,
-    -- | Reference to the 'current' table type.
-    currTable :: TableName b,
-    -- | Reference to the 'root' table type.
-    rootTable :: TableName b
-  }
-
 -- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
   forall b.
-  Backend b =>
+  (GetAggregationPredicatesDeps b) =>
   SourceName ->
   TableName b ->
   AnnBoolExpPartialSQL b ->
@@ -733,17 +726,9 @@ getBoolExpDeps ::
 getBoolExpDeps source tableName =
   runBoolExpM (BoolExpCtx {source = source, currTable = tableName, rootTable = tableName}) . getBoolExpDeps'
 
--- | The monad for doing schema dependency discovery for boolean expressions.
--- maintains the table context of the expressions being translated.
-newtype BoolExpM b a = BoolExpM {unBoolExpM :: Reader (BoolExpCtx b) a}
-  deriving (Functor, Applicative, Monad, MonadReader (BoolExpCtx b))
-
-runBoolExpM :: BoolExpCtx b -> BoolExpM b a -> a
-runBoolExpM ctx = flip runReader ctx . unBoolExpM
-
 getBoolExpDeps' ::
   forall b.
-  Backend b =>
+  (Backend b, GetAggregationPredicatesDeps b) =>
   AnnBoolExpPartialSQL b ->
   BoolExpM b [SchemaDependency]
 getBoolExpDeps' = \case
@@ -767,7 +752,7 @@ getBoolExpDeps' = \case
 
 getColExpDeps ::
   forall b.
-  Backend b =>
+  (Backend b, GetAggregationPredicatesDeps b) =>
   AnnBoolExpFld b (PartialSQLExp b) ->
   BoolExpM b [SchemaDependency]
 getColExpDeps bexp = do
@@ -777,7 +762,7 @@ getColExpDeps bexp = do
       let columnName = ciColumn colInfo
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
-       in (colDep :) <$> mkOpExpDeps opExps
+       in (colDep :) <$> getOpExpDeps opExps
     AVRelationship relInfo relBoolExp ->
       let relationshipName = riName relInfo
           relationshipTable = riRTable relInfo
@@ -797,19 +782,24 @@ getColExpDeps bexp = do
               let computedFieldDep =
                     mkComputedFieldDep' $
                       bool DRSessionVariable DROnType $ any hasStaticExp opExps
-               in (computedFieldDep :) <$> mkOpExpDeps opExps
+               in (computedFieldDep :) <$> getOpExpDeps opExps
             CFBETable cfTable cfTableBoolExp ->
               (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
-  where
-    mkOpExpDeps :: [OpExpG b (PartialSQLExp b)] -> BoolExpM b [SchemaDependency]
-    mkOpExpDeps opExps = do
-      BoolExpCtx {source, rootTable, currTable} <- ask
-      pure $ do
-        RootOrCurrentColumn rootOrCol col <- mapMaybe opExpDepCol opExps
-        let table = case rootOrCol of
-              IsRoot -> rootTable
-              IsCurrent -> currTable
-        pure $ mkColDep @b DROnType source table col
+    AVAggregationPredicates aggPreds -> getAggregationPredicateDeps aggPreds
+
+getOpExpDeps ::
+  forall b.
+  (Backend b) =>
+  [OpExpG b (PartialSQLExp b)] ->
+  BoolExpM b [SchemaDependency]
+getOpExpDeps opExps = do
+  BoolExpCtx {source, rootTable, currTable} <- ask
+  pure $ do
+    RootOrCurrentColumn rootOrCol col <- mapMaybe opExpDepCol opExps
+    let table = case rootOrCol of
+          IsRoot -> rootTable
+          IsCurrent -> currTable
+    pure $ mkColDep @b DROnType source table col
 
 -- | Asking for a table's fields info without explicit @'SourceName' argument.
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.

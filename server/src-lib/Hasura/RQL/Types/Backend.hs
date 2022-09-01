@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Backend
   )
 where
 
+import Autodocodec (HasCodec)
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
 import Data.Kind (Type)
@@ -86,7 +87,6 @@ class
     Ord (FunctionName b),
     Ord (ScalarType b),
     Data (TableName b),
-    Traversable (BooleanOperators b),
     FromJSON (BackendConfig b),
     FromJSON (Column b),
     FromJSON (ConstraintName b),
@@ -98,6 +98,8 @@ class
     FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
     FromJSONKey (Column b),
+    HasCodec (BackendSourceKind b),
+    HasCodec (SourceConnConfiguration b),
     ToJSON (BackendConfig b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
@@ -152,12 +154,16 @@ class
     Eq (XStreamingSubscription b),
     Show (XStreamingSubscription b),
     -- Intermediate Representations
+    Traversable (BooleanOperators b),
     Functor (BackendUpdate b),
     Foldable (BackendUpdate b),
     Traversable (BackendUpdate b),
     Functor (BackendInsert b),
     Foldable (BackendInsert b),
-    Traversable (BackendInsert b)
+    Traversable (BackendInsert b),
+    Functor (AggregationPredicates b),
+    Foldable (AggregationPredicates b),
+    Traversable (AggregationPredicates b)
   ) =>
   Backend (b :: BackendType)
   where
@@ -194,7 +200,6 @@ class
   type ScalarValue b :: Type
   type ScalarType b :: Type
 
-  type BooleanOperators b :: Type -> Type
   type SQLExpression b :: Type
   type ComputedFieldDefinition b :: Type
 
@@ -215,6 +220,9 @@ class
   type FunctionArgument b :: Type
 
   -- | Function input argument expression
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
   type FunctionArgumentExp b :: Type -> Type
 
   -- | Computed field function argument values which are being implicitly inferred from table and/or session information
@@ -225,14 +233,36 @@ class
 
   -- Backend-specific IR types
 
+  -- | Intermediate Representation of extensions to the shared set of boolean
+  -- operators on table fields.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type BooleanOperators b :: Type -> Type
+
+  -- | Intermediate Representation of aggregation predicates.
+  -- The default implementation makes aggregation predicates uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type AggregationPredicates b :: Type -> Type
+
+  type AggregationPredicates b = Const Void
+
   -- | Intermediate Representation of Update Mutations.
   -- The default implementation makes update expressions uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
   type BackendUpdate b :: Type -> Type
 
   type BackendUpdate b = Const Void
 
   -- | Intermediate Representation of Insert Mutations.
   -- The default implementation makes insert expressions uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
   type BackendInsert b :: Type -> Type
 
   type BackendInsert b = Const Void

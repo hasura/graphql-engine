@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
--- | TODO(SOLOMON):
+-- | The Downgrade Command Parser
 module Hasura.Server.Init.Arg.Command.Downgrade
   ( downgradeCommandParser,
   )
@@ -33,9 +33,6 @@ downgradeShortcuts =
 
 --------------------------------------------------------------------------------
 
--- TODO (SOLOMON): Since we are alreay using template haskell in this
--- module, catalog versions should only parse if they are in
--- 'catalog_versions.txt'.
 downgradeCommandParser :: Opt.Parser Config.DowngradeOptions
 downgradeCommandParser =
   Config.DowngradeOptions

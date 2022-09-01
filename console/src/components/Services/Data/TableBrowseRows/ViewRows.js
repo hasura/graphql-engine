@@ -30,6 +30,8 @@ import {
   vCollapseRow,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
+import { Button } from '@/new-components/Button';
+
 import {
   setOrderCol,
   setOrderType,
@@ -44,7 +46,6 @@ import _push from '../push';
 import { ordinalColSort } from '../utils';
 import FilterQuery from './FilterQuery';
 import Spinner from '../../../Common/Spinner/Spinner';
-import Button from '../../../Common/Button/Button';
 
 import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
@@ -156,7 +157,7 @@ const ViewRows = props => {
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 152,
+      width: 182,
     });
 
     _gridHeadings.push({
@@ -319,18 +320,16 @@ const ViewRows = props => {
 
           return (
             <Button
+              size="sm"
+              icon={icon}
               className="mr-1"
-              color="white"
-              size="xs"
+              title={message()}
+              disabled={disabled || !featureSupported}
               onClick={
                 disabled || !featureSupported ? disabledOnClick : handleClick
               }
-              title={message()}
               data-test={`row-${type}-button-${rowIndex}`}
-              disabled={disabled || !featureSupported}
-            >
-              {icon}
-            </Button>
+            />
           );
         };
 
@@ -448,9 +447,8 @@ const ViewRows = props => {
               content: (
                 <div>
                   <Button
+                    size="sm"
                     className="mr-1"
-                    color="white"
-                    size="xs"
                     data-test={`run_manual_trigger_${m.name}`}
                     onClick={() => invokeTrigger(m.name, rowIndex)}
                   >
@@ -777,14 +775,13 @@ const ViewRows = props => {
         <div className="flex mb-sm">
           <b className="pr-xs">Selected:</b>
           {selectedRows.length}
-          <button
-            className="ml-xs text-base bg-white border rounded-sm border-gray-400 px-1"
+          <Button
+            icon={<FaTrash />}
             title="Delete selected rows"
-            onClick={handleDeleteItems}
+            className="ml-xs text-base bg-white border rounded-sm border-gray-400 px-1"
             data-test="bulk-delete"
-          >
-            <FaTrash />
-          </button>
+            onClick={handleDeleteItems}
+          />
         </div>
       );
     }
@@ -1000,14 +997,13 @@ const ViewRows = props => {
       return (
         <div className="flex ml-sm mr-sm justify-around">
           <div>
-            <button
-              className="bg-gray-100 py-xs px-md rounded-sm text-gray-500 disabled:text-gray-300"
+            <Button
               onClick={() => handlePageChange(newPage - 1)}
               disabled={curFilter.offset === 0}
               data-test="custom-pagination-prev"
             >
-              prev
-            </button>
+              Prev
+            </Button>
           </div>
           <div className="w-1/3">
             <select
@@ -1031,14 +1027,13 @@ const ViewRows = props => {
             </select>
           </div>
           <div>
-            <button
-              className="bg-gray-100 py-xs px-md rounded-sm text-gray-500 disabled:text-gray-300"
+            <Button
               onClick={() => handlePageChange(newPage + 1)}
               disabled={curRows.length === 0}
               data-test="custom-pagination-next"
             >
-              next
-            </button>
+              Next
+            </Button>
           </div>
         </div>
       );
@@ -1060,7 +1055,6 @@ const ViewRows = props => {
         minRows={0}
         getTheadThProps={getTheadThProps}
         getResizerProps={getResizerProps}
-        showPagination={!isSingleRow}
         pageSize={curFilter.limit}
         pages={Math.ceil(count / curFilter.limit)}
         onPageChange={handlePageChange}

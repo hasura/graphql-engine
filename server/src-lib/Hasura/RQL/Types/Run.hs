@@ -18,9 +18,9 @@ import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Manager qualified as HTTP
 
 data RunCtx = RunCtx
-  { _rcUserInfo :: !UserInfo,
-    _rcHttpMgr :: !HTTP.Manager,
-    _rcServerConfigCtx :: !ServerConfigCtx
+  { _rcUserInfo :: UserInfo,
+    _rcHttpMgr :: HTTP.Manager,
+    _rcServerConfigCtx :: ServerConfigCtx
   }
 
 newtype RunT m a = RunT {unRunT :: ReaderT RunCtx (ExceptT QErr m) a}

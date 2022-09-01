@@ -30,6 +30,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.Server.Utils
 import Hasura.Session
@@ -72,13 +73,17 @@ newtype CreatePerm a b = CreatePerm (WithTable b (PermDef b a))
 deriving instance (Backend b, FromJSON (PermDef b a)) => FromJSON (CreatePerm a b)
 
 data CreatePermP1Res a = CreatePermP1Res
-  { cprInfo :: !a,
-    cprDeps :: ![SchemaDependency]
+  { cprInfo :: a,
+    cprDeps :: [SchemaDependency]
   }
   deriving (Show, Eq)
 
 procBoolExp ::
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -109,9 +114,9 @@ getDependentHeaders (BoolExp boolExp) =
   Set.fromList $ flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 data DropPerm b = DropPerm
-  { dipSource :: !SourceName,
-    dipTable :: !(TableName b),
-    dipRole :: !RoleName
+  { dipSource :: SourceName,
+    dipTable :: TableName b,
+    dipRole :: RoleName
   }
 
 instance (Backend b) => FromJSON (DropPerm b) where

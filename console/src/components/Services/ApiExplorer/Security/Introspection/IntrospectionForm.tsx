@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { Button } from '../../../../Common';
+import { Button } from '@/new-components/Button';
 import { TableFormProps } from '../../../../Common/Table';
-import styles from '../Security.scss';
+import styles from '../Security.module.scss';
 import { updateIntrospectionOptions } from '../actions';
 
 const IntrospectionForm: React.FC<
@@ -43,11 +43,10 @@ const IntrospectionForm: React.FC<
       instrospectionIsDisabled: state,
     });
   };
-
   return (
     <section className={styles.form_section}>
       <div className={styles.top}>
-        <Button size="xs" onClick={() => collapseForm()}>
+        <Button size="sm" onClick={() => collapseForm()}>
           Close
         </Button>
         <h5>
@@ -93,7 +92,7 @@ const IntrospectionForm: React.FC<
         </div>
 
         <div className="submit_btn">
-          <Button size="xs" color="yellow" type="submit">
+          <Button size="md" mode="primary" type="submit">
             Save Settings
           </Button>
         </div>

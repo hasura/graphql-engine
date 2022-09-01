@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { RelationshipType } from '../types';
 
@@ -13,21 +14,13 @@ const ModifyActions = ({
   onEdit,
   onDelete,
 }: ModifyActionsColProps) => (
-  <div className="flex items-center justify-end whitespace-nowrap text-right">
-    <button
-      onClick={() => onEdit(relationship)}
-      className="flex px-2 py-0.5 items-center font-semibold rounded text-secondary mr-0.5 hover:bg-indigo-50 focus:bg-indigo-100"
-    >
-      <FaEdit className="fill-current mr-1" />
+  <div className="flex items-center justify-end whitespace-nowrap text-right gap-0.5">
+    <Button onClick={() => onEdit(relationship)} icon={<FaEdit />}>
       Edit
-    </button>
-    <button
-      onClick={() => onDelete(relationship)}
-      className="flex px-2 py-0.5 items-center font-semibold rounded text-red-700 hover:bg-red-50 focus:bg-red-100"
-    >
-      <FaTrash className="fill-current mr-1" />
+    </Button>
+    <Button onClick={() => onDelete(relationship)} icon={<FaTrash />}>
       Remove
-    </button>
+    </Button>
   </div>
 );
 

@@ -37,8 +37,9 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
-import Hasura.Server.Init (considerEnv, databaseUrlEnv, runWithEnv)
+import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
+import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Types (RequestId (..))
 import Hasura.Session (RoleName, mkRoleName)
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -55,7 +56,7 @@ buildStreamingSubscriptionSuite = do
 
   pgUrlText :: Text <- flip onLeft (printErrExit . T.pack) $
     runWithEnv env $ do
-      let envVar = fst databaseUrlEnv
+      let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
         throwError $ "Expected: " <> envVar
@@ -65,7 +66,7 @@ buildStreamingSubscriptionSuite = do
   pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams print
 
   let pgContext = mkPGExecCtx Q.ReadCommitted pgPool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ())
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $
     describe "Streaming subscriptions polling tests" $ streamingSubscriptionPollingSpec dbSourceConfig
@@ -333,6 +334,7 @@ streamingSubscriptionPollingSpec srcConfig = do
     describe "Adding two subscribers concurrently" $ do
       dummyServerStore <- runIO newStore
       dummyServerMetrics <- runIO $ createServerMetrics dummyServerStore
+      dummyPromMetrics <- runIO makeDummyPrometheusMetrics
 
       subscriptionState <- do
         let subOptions = mkSubscriptionsOptions Nothing Nothing
@@ -367,6 +369,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               @('Postgres 'Vanilla)
               logger
               dummyServerMetrics
+              dummyPromMetrics
               subscriberMetadata
               subscriptionState
               SNDefault

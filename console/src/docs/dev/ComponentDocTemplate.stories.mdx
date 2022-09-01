@@ -25,7 +25,7 @@ export const Component = (
 - [🧰 Overview](#-overview)
 - [🔁 States](#-states)
 - [🎭 Variants](#-variants)
-- [⚙️ API](#-api)
+- [⚙️ API](#%EF%B8%8F-api)
 - [🧪 Testing](#-testing)
 - [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Component/Component.tsx)
 
@@ -52,25 +52,6 @@ import { Component } from '@/new-components/Component';
 </Canvas>
 
 export const Template = args => <Component {...args} />;
-
-export const TemplateStories = stories => {
-  return (
-    <div>
-      {Object.entries(stories).map(([storyName, story]) => (
-        <div key={storyName}>
-          <div
-            className={
-              'text-black dark:text-white bg-gray-100 dark:bg-gray-700 underline p-2'
-            }
-          >
-            {storyName}
-          </div>
-          <div className={'py-4'}>{Template(story)}</div>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 export const stories = {
   'States - Disabled': {

@@ -1,0 +1,99 @@
+cabal-version: 1.12
+
+-- This file is generated using hpack.
+-- Do not modify it directly. Instead, edit package.yaml and then run:
+--     make server/lib/error-message/hasura-error-message.cabal
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hasura-error-message
+version:        1.0.0
+description:    An error message type that makes it difficult to convert back to text.
+homepage:       https://github.com/hasura/github-engine#readme
+bug-reports:    https://github.com/hasura/github-engine/issues
+author:         Hasura, Inc.
+maintainer:     Hasura, Inc.
+build-type:     Simple
+extra-source-files:
+    ../../../LICENSE
+
+source-repository head
+  type: git
+  location: https://github.com/hasura/github-engine
+
+flag optimize-hasura
+  description: Compile hasura code with appropriate optimizations
+  manual: False
+  default: True
+
+flag profiling
+  description: Configures the project to be profiling-compatible
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      Hasura.Base.ErrorMessage
+      Hasura.Base.ErrorValue
+      Hasura.Base.ToErrorValue
+  other-modules:
+      Paths_hasura_error_message
+  hs-source-dirs:
+      src
+  default-extensions:
+      BlockArguments
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      OverloadedStrings
+      ScopedTypeVariables
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
+  build-depends:
+      aeson
+    , base
+    , graphql-parser
+    , text
+    , unordered-containers
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
+  default-language: Haskell2010
+
+test-suite tests
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Hasura.Base.ErrorMessageSpec
+      Paths_hasura_error_message
+  hs-source-dirs:
+      test
+  default-extensions:
+      BlockArguments
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      OverloadedStrings
+      ScopedTypeVariables
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists -main-is Main
+  build-depends:
+      aeson
+    , base
+    , graphql-parser
+    , hashable
+    , hasura-error-message
+    , hspec
+    , text
+    , unordered-containers
+    , vector
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
+  default-language: Haskell2010

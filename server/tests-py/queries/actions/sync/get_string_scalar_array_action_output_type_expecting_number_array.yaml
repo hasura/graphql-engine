@@ -19,7 +19,7 @@
         kind: synchronous
         arguments:
         output_type: '[Int]!'
-        handler: http://127.0.0.1:5593/scalar-array-response
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-array-response"
 
 - description: Run scalar-array-response sync action
   url: /v1/graphql
@@ -54,7 +54,7 @@
               action:
                 name: scalar_array_response
               request_query: "mutation {\n  scalar_array_response\n}\n"
-            url: http://127.0.0.1:5593/scalar-array-response
+            url: "{{ACTION_WEBHOOK_HANDLER}}/scalar-array-response"
             headers: []
             transformed_request:
         path: $
@@ -73,4 +73,4 @@
         kind: synchronous
         arguments:
         output_type: '[String]!'
-        handler: http://127.0.0.1:5593/scalar-array-response
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-array-response"

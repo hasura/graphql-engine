@@ -1,10 +1,10 @@
 import React, { useCallback } from 'react';
-import Button from '../../../Common/Button';
+import { Button } from '@/new-components/Button';
 import { isJsonString, getConfirmation } from '../../../Common/utils/jsUtils';
 import { FilterState } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { permChangePermissions, permChangeTypes } from './Actions';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.module.scss';
 import { Dispatch } from '../../../../types';
 
 interface PermButtonSectionProps {
@@ -64,8 +64,7 @@ const PermButtonSection: React.FC<PermButtonSectionProps> = ({
     <div className={`${styles.add_mar_top} ${styles.add_pad_left}`}>
       <Button
         className={styles.add_mar_right}
-        color="yellow"
-        size="sm"
+        mode="primary"
         onClick={dispatchSavePermissions}
         disabled={
           permissionsState.applySamePermissions.length !== 0 || !permsChanged
@@ -77,8 +76,7 @@ const PermButtonSection: React.FC<PermButtonSectionProps> = ({
       </Button>
       <Button
         className={styles.add_mar_right}
-        color="red"
-        size="sm"
+        mode="destructive"
         onClick={dispatchRemoveAccess}
         disabled={!currQueryPermissions}
         title={!currQueryPermissions ? 'No permissions set' : ''}

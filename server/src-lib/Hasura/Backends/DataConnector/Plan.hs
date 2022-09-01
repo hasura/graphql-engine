@@ -8,7 +8,6 @@ where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec.Extended (ValueWrapper (..))
 import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
@@ -24,8 +23,8 @@ import Data.Text.Extended ((<>>))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
+import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
-import Hasura.Backends.DataConnector.IR.Export qualified as IR
 import Hasura.Backends.DataConnector.IR.Expression (UnaryComparisonOperator (CustomUnaryComparisonOperator))
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
@@ -44,6 +43,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
 import Hasura.SQL.Backend
 import Hasura.Session
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -52,21 +52,47 @@ data QueryPlan = QueryPlan
     _qpResponseReshaper :: forall m. (MonadError QErr m) => API.QueryResponse -> m J.Encoding
   }
 
--- | Error type for the postProcessor continuation. Failure can occur if the Agent
--- returns bad data.
-data ResponseError
-  = RequiredFieldMissing
-  | UnexpectedFields
-  | ExpectedObject
-  | ExpectedArray
-  deriving (Show, Eq)
+data FieldsAndAggregates = FieldsAndAggregates
+  { _faaFields :: HashMap FieldName IR.Q.Field,
+    _faaAggregates :: HashMap FieldName IR.A.Aggregate
+  }
+  deriving stock (Show, Eq)
+
+instance Semigroup FieldsAndAggregates where
+  left <> right =
+    FieldsAndAggregates
+      (_faaFields left <> _faaFields right)
+      (_faaAggregates left <> _faaAggregates right)
+
+instance Monoid FieldsAndAggregates where
+  mempty = FieldsAndAggregates mempty mempty
+
+newtype FieldPrefix = FieldPrefix (Maybe FieldName)
+  deriving stock (Show, Eq)
+
+instance Semigroup FieldPrefix where
+  (FieldPrefix Nothing) <> (FieldPrefix something) = FieldPrefix something
+  (FieldPrefix something) <> (FieldPrefix Nothing) = FieldPrefix something
+  (FieldPrefix (Just l)) <> (FieldPrefix (Just r)) = FieldPrefix . Just $ l <> "_" <> r
+
+instance Monoid FieldPrefix where
+  mempty = FieldPrefix Nothing
+
+noPrefix :: FieldPrefix
+noPrefix = FieldPrefix Nothing
+
+prefixWith :: FieldName -> FieldPrefix
+prefixWith = FieldPrefix . Just
+
+applyPrefix :: FieldPrefix -> FieldName -> FieldName
+applyPrefix (FieldPrefix fieldNamePrefix) fieldName = maybe fieldName (\prefix -> prefix <> "_" <> fieldName) fieldNamePrefix
 
 -- | Extract the 'IR.Q' from a 'Plan' and render it as 'Text'.
 --
 -- NOTE: This is for logging and debug purposes only.
 renderQuery :: IR.Q.QueryRequest -> Text
 renderQuery =
-  TE.decodeUtf8 . BL.toStrict . J.encode . IR.queryRequestToAPI
+  TE.decodeUtf8 . BL.toStrict . J.encode . Witch.into @API.QueryRequest
 
 -- | Map a 'QueryDB 'DataConnector' term into a 'Plan'
 mkPlan ::
@@ -85,16 +111,17 @@ mkPlan session (SourceConfig {}) ir = do
       m IR.Q.QueryRequest
     translateQueryDB =
       \case
-        QDBMultipleRows s -> translateAnnSelectToQueryRequest s
-        QDBSingleRow s -> translateAnnSelectToQueryRequest s
-        QDBAggregation {} -> throw400 NotSupported "QDBAggregation: not supported"
+        QDBMultipleRows annSelect -> translateAnnSelectToQueryRequest (translateAnnFields noPrefix) annSelect
+        QDBSingleRow annSelect -> translateAnnSelectToQueryRequest (translateAnnFields noPrefix) annSelect
+        QDBAggregation annSelect -> translateAnnSelectToQueryRequest translateTableAggregateFields annSelect
 
     translateAnnSelectToQueryRequest ::
-      AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+      (IR.T.Name -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates) ->
+      AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
       m IR.Q.QueryRequest
-    translateAnnSelectToQueryRequest selectG = do
+    translateAnnSelectToQueryRequest translateFieldsAndAggregates selectG = do
       tableName <- extractTableName selectG
-      (query, tableRelationships) <- CPS.runWriterT (translateAnnSelect tableName selectG)
+      (query, tableRelationships) <- CPS.runWriterT (translateAnnSelect translateFieldsAndAggregates tableName selectG)
       pure $
         IR.Q.QueryRequest
           { _qrTable = tableName,
@@ -102,7 +129,7 @@ mkPlan session (SourceConfig {}) ir = do
             _qrQuery = query
           }
 
-    extractTableName :: AnnSimpleSelectG 'DataConnector Void v -> m IR.T.Name
+    extractTableName :: AnnSelectG 'DataConnector fieldsType valueType -> m IR.T.Name
     extractTableName selectG =
       case _asnFrom selectG of
         FromTable tn -> pure tn
@@ -114,21 +141,22 @@ mkPlan session (SourceConfig {}) ir = do
       CPS.tell . IR.R.TableRelationships $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
 
     translateAnnSelect ::
+      (IR.T.Name -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates) ->
       IR.T.Name ->
-      AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+      AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
       CPS.WriterT IR.R.TableRelationships m IR.Q.Query
-    translateAnnSelect tableName selectG = do
-      fields <- translateFields tableName (_asnFields selectG)
+    translateAnnSelect translateFieldsAndAggregates tableName selectG = do
+      FieldsAndAggregates {..} <- translateFieldsAndAggregates tableName (_asnFields selectG)
       let whereClauseWithPermissions =
             case _saWhere (_asnArgs selectG) of
               Just expr -> BoolAnd [expr, _tpFilter (_asnPerm selectG)]
               Nothing -> _tpFilter (_asnPerm selectG)
-      whereClause <- translateBoolExp [] tableName whereClauseWithPermissions
-      orderBy <- lift $ translateOrderBy (_saOrderBy $ _asnArgs selectG)
+      whereClause <- translateBoolExpToExpression [] tableName whereClauseWithPermissions
+      orderBy <- traverse (translateOrderBy tableName) (_saOrderBy $ _asnArgs selectG)
       pure
         IR.Q.Query
-          { _qFields = fields,
-            _qAggregates = mempty,
+          { _qFields = _faaFields,
+            _qAggregates = _faaAggregates,
             _qLimit =
               fmap getMin $
                 foldMap
@@ -137,48 +165,126 @@ mkPlan session (SourceConfig {}) ir = do
                     _tpLimit (_asnPerm selectG)
                   ],
             _qOffset = fmap fromIntegral (_saOffset (_asnArgs selectG)),
-            _qWhere = Just whereClause,
+            _qWhere = whereClause,
             _qOrderBy = orderBy
           }
 
     translateOrderBy ::
-      Maybe (NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector))) ->
-      m [IR.O.OrderBy]
-    translateOrderBy = \case
-      Nothing -> pure []
-      Just orderBys ->
-        do
-          NE.toList
-          <$> for orderBys \OrderByItemG {..} -> case obiColumn of
-            AOCColumn (ColumnInfo {ciColumn = dynColumnName}) ->
-              pure
-                IR.O.OrderBy
-                  { column = dynColumnName,
-                    -- NOTE: Picking a default ordering.
-                    ordering = fromMaybe IR.O.Ascending obiType
-                  }
-            AOCObjectRelation {} ->
-              throw400 NotSupported "translateOrderBy: AOCObjectRelation unsupported in the Data Connector backend"
-            AOCArrayAggregation {} ->
-              throw400 NotSupported "translateOrderBy: AOCArrayAggregation unsupported in the Data Connector backend"
+      IR.T.Name ->
+      NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector)) ->
+      CPS.WriterT IR.R.TableRelationships m IR.O.OrderBy
+    translateOrderBy sourceTableName orderByItems = do
+      orderByElementsAndRelations <- for orderByItems \OrderByItemG {..} -> do
+        let orderDirection = fromMaybe IR.O.Ascending obiType
+        translateOrderByElement sourceTableName orderDirection [] obiColumn
+      relations <- lift . mergeOrderByRelations $ snd <$> orderByElementsAndRelations
+      pure
+        IR.O.OrderBy
+          { _obRelations = relations,
+            _obElements = fst <$> orderByElementsAndRelations
+          }
 
-    translateFields ::
+    translateOrderByElement ::
+      IR.T.Name ->
+      IR.O.OrderDirection ->
+      [IR.R.RelationshipName] ->
+      AnnotatedOrderByElement 'DataConnector (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m (IR.O.OrderByElement, HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+    translateOrderByElement sourceTableName orderDirection targetReversePath = \case
+      AOCColumn (ColumnInfo {..}) ->
+        pure
+          ( IR.O.OrderByElement
+              { _obeTargetPath = reverse targetReversePath,
+                _obeTarget = IR.O.OrderByColumn ciColumn,
+                _obeOrderDirection = orderDirection
+              },
+            mempty
+          )
+      AOCObjectRelation relationshipInfo filterExp orderByElement -> do
+        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement _rTargetTable orderDirection (relationshipName : targetReversePath) orderByElement
+
+        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp subOrderByRelations)]
+
+        pure (translatedOrderByElement, orderByRelations)
+      AOCArrayAggregation relationshipInfo filterExp aggregateOrderByElement -> do
+        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        orderByTarget <- case aggregateOrderByElement of
+          AAOCount ->
+            pure IR.O.OrderByStarCountAggregate
+          AAOOp aggFunctionTxt ColumnInfo {..} -> do
+            aggFunction <- lift $ translateSingleColumnAggregateFunction aggFunctionTxt
+            pure . IR.O.OrderBySingleColumnAggregate $ IR.A.SingleColumnAggregate aggFunction ciColumn
+
+        let translatedOrderByElement =
+              IR.O.OrderByElement
+                { _obeTargetPath = reverse (relationshipName : targetReversePath),
+                  _obeTarget = orderByTarget,
+                  _obeOrderDirection = orderDirection
+                }
+
+        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp mempty)]
+        pure (translatedOrderByElement, orderByRelations)
+
+    mergeOrderByRelations ::
+      Foldable f =>
+      f (HashMap IR.R.RelationshipName IR.O.OrderByRelation) ->
+      m (HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+    mergeOrderByRelations orderByRelationsList =
+      foldM mergeMap mempty orderByRelationsList
+      where
+        mergeMap :: HashMap IR.R.RelationshipName IR.O.OrderByRelation -> HashMap IR.R.RelationshipName IR.O.OrderByRelation -> m (HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+        mergeMap left right = foldM (\targetMap (relName, orderByRel) -> HashMap.alterF (maybe (pure $ Just orderByRel) (fmap Just . mergeOrderByRelation orderByRel)) relName targetMap) left $ HashMap.toList right
+
+        mergeOrderByRelation :: IR.O.OrderByRelation -> IR.O.OrderByRelation -> m IR.O.OrderByRelation
+        mergeOrderByRelation right left =
+          if IR.O._obrWhere left == IR.O._obrWhere right
+            then do
+              mergedSubrelations <- mergeMap (IR.O._obrSubrelations left) (IR.O._obrSubrelations right)
+              pure $ IR.O.OrderByRelation (IR.O._obrWhere left) mergedSubrelations
+            else throw500 "mergeOrderByRelations: Differing filter expressions found for the same table"
+
+    recordTableRelationshipFromRelInfo ::
+      IR.T.Name ->
+      RelInfo 'DataConnector ->
+      CPS.WriterT IR.R.TableRelationships m (IR.R.RelationshipName, IR.R.Relationship)
+    recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
+      let relationshipName = IR.R.mkRelationshipName riName
+      let relationshipType = case riType of
+            ObjRel -> IR.R.ObjectRelationship
+            ArrRel -> IR.R.ArrayRelationship
+      let relationship =
+            IR.R.Relationship
+              { _rTargetTable = riRTable,
+                _rRelationshipType = relationshipType,
+                _rColumnMapping = riMapping
+              }
+      recordTableRelationship
+        sourceTableName
+        relationshipName
+        relationship
+      pure (relationshipName, relationship)
+
+    translateAnnFields ::
+      FieldPrefix ->
       IR.T.Name ->
       AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m (HashMap Text IR.Q.Field)
-    translateFields sourceTableName fields = do
-      translatedFields <- traverse (traverse (translateField sourceTableName)) fields
+      CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates
+    translateAnnFields fieldNamePrefix sourceTableName fields = do
+      translatedFields <- traverse (traverse (translateAnnField sourceTableName)) fields
+      let translatedFields' = HashMap.fromList . catMaybes $ (\(fieldName, field) -> (applyPrefix fieldNamePrefix fieldName,) <$> field) <$> translatedFields
       pure $
-        HashMap.fromList $
-          mapMaybe
-            sequence
-            [(getFieldNameTxt f, field) | (f, field) <- translatedFields]
+        FieldsAndAggregates
+          translatedFields'
+          mempty
 
-    translateField ::
+    translateAnnField ::
       IR.T.Name ->
       AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
       CPS.WriterT IR.R.TableRelationships m (Maybe IR.Q.Field)
-    translateField sourceTableName = \case
+    translateAnnField sourceTableName = \case
       AFColumn colField ->
         -- TODO: make sure certain fields in colField are not in use, since we don't
         -- support them
@@ -186,8 +292,8 @@ mkPlan session (SourceConfig {}) ir = do
       AFObjectRelation objRel -> do
         let targetTable = _aosTableFrom (_aarAnnSelect objRel)
         let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName objRel
-        fields <- translateFields targetTable (_aosFields (_aarAnnSelect objRel))
-        whereClause <- translateBoolExp [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
+        FieldsAndAggregates {..} <- translateAnnFields noPrefix targetTable (_aosFields (_aarAnnSelect objRel))
+        whereClause <- translateBoolExpToExpression [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
 
         recordTableRelationship
           sourceTableName
@@ -202,36 +308,115 @@ mkPlan session (SourceConfig {}) ir = do
           IR.Q.RelationshipField
             relationshipName
             ( IR.Q.Query
-                { _qFields = fields,
-                  _qAggregates = mempty,
-                  _qWhere = Just whereClause,
+                { _qFields = _faaFields,
+                  _qAggregates = _faaAggregates,
+                  _qWhere = whereClause,
                   _qLimit = Nothing,
                   _qOffset = Nothing,
-                  _qOrderBy = []
+                  _qOrderBy = Nothing
                 }
             )
-      AFArrayRelation (ASSimple arrRel) -> do
-        targetTable <- lift $ extractTableName (_aarAnnSelect arrRel)
-        query <- translateAnnSelect targetTable (_aarAnnSelect arrRel)
-        let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName arrRel
-
-        recordTableRelationship
-          sourceTableName
-          relationshipName
-          IR.R.Relationship
-            { _rTargetTable = targetTable,
-              _rRelationshipType = IR.R.ArrayRelationship,
-              _rColumnMapping = _aarColumnMapping arrRel
-            }
-
-        pure . Just . IR.Q.RelField $
-          IR.Q.RelationshipField
-            relationshipName
-            query
-      AFArrayRelation (ASAggregate _) ->
-        lift $ throw400 NotSupported "translateField: AFArrayRelation ASAggregate not supported"
+      AFArrayRelation (ASSimple arrayRelationSelect) -> do
+        Just <$> translateArrayRelationSelect sourceTableName (translateAnnFields noPrefix) arrayRelationSelect
+      AFArrayRelation (ASAggregate arrayRelationSelect) ->
+        Just <$> translateArrayRelationSelect sourceTableName translateTableAggregateFields arrayRelationSelect
       AFExpression _literal ->
+        -- We ignore literal text fields (we don't send them to the data connector agent)
+        -- and add them back to the response JSON when we reshape what the agent returns
+        -- to us
         pure Nothing
+
+    translateArrayRelationSelect ::
+      IR.T.Name ->
+      (IR.T.Name -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates) ->
+      AnnRelationSelectG 'DataConnector (AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector)) ->
+      CPS.WriterT IR.R.TableRelationships m IR.Q.Field
+    translateArrayRelationSelect sourceTableName translateFieldsAndAggregates arrRel = do
+      targetTable <- lift $ extractTableName (_aarAnnSelect arrRel)
+      query <- translateAnnSelect translateFieldsAndAggregates targetTable (_aarAnnSelect arrRel)
+      let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName arrRel
+
+      recordTableRelationship
+        sourceTableName
+        relationshipName
+        IR.R.Relationship
+          { _rTargetTable = targetTable,
+            _rRelationshipType = IR.R.ArrayRelationship,
+            _rColumnMapping = _aarColumnMapping arrRel
+          }
+
+      pure . IR.Q.RelField $
+        IR.Q.RelationshipField
+          relationshipName
+          query
+
+    translateTableAggregateFields ::
+      IR.T.Name ->
+      TableAggregateFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates
+    translateTableAggregateFields sourceTableName fields = do
+      mconcat <$> traverse (uncurry (translateTableAggregateField sourceTableName)) fields
+
+    translateTableAggregateField ::
+      IR.T.Name ->
+      FieldName ->
+      TableAggregateFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates
+    translateTableAggregateField sourceTableName fieldName = \case
+      TAFAgg aggregateFields -> do
+        let fieldNamePrefix = prefixWith fieldName
+        translatedAggregateFields <- lift $ mconcat <$> traverse (uncurry (translateAggregateField fieldNamePrefix)) aggregateFields
+        pure $
+          FieldsAndAggregates
+            mempty
+            translatedAggregateFields
+      TAFNodes _ fields ->
+        translateAnnFields (prefixWith fieldName) sourceTableName fields
+      TAFExp _txt ->
+        -- We ignore literal text fields (we don't send them to the data connector agent)
+        -- and add them back to the response JSON when we reshape what the agent returns
+        -- to us
+        pure mempty
+
+    translateAggregateField ::
+      FieldPrefix ->
+      FieldName ->
+      AggregateField 'DataConnector ->
+      m (HashMap FieldName IR.A.Aggregate)
+    translateAggregateField fieldPrefix fieldName = \case
+      AFCount countAggregate -> pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) (IR.A.Count countAggregate)
+      AFOp AggregateOp {..} -> do
+        let fieldPrefix' = fieldPrefix <> prefixWith fieldName
+        aggFunction <- translateSingleColumnAggregateFunction _aoOp
+
+        fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
+          case columnField of
+            CFCol column _columnType ->
+              pure . Just $ (applyPrefix fieldPrefix' columnFieldName, IR.A.SingleColumn $ IR.A.SingleColumnAggregate aggFunction column)
+            CFExp _txt ->
+              -- We ignore literal text fields (we don't send them to the data connector agent)
+              -- and add them back to the response JSON when we reshape what the agent returns
+              -- to us
+              pure Nothing
+      AFExp _txt ->
+        -- We ignore literal text fields (we don't send them to the data connector agent)
+        -- and add them back to the response JSON when we reshape what the agent returns
+        -- to us
+        pure mempty
+
+    translateSingleColumnAggregateFunction :: Text -> m IR.A.SingleColumnAggregateFunction
+    translateSingleColumnAggregateFunction = \case
+      "avg" -> pure IR.A.Average
+      "max" -> pure IR.A.Max
+      "min" -> pure IR.A.Min
+      "stddev_pop" -> pure IR.A.StandardDeviationPopulation
+      "stddev_samp" -> pure IR.A.StandardDeviationSample
+      "stddev" -> pure IR.A.StandardDeviationSample
+      "sum" -> pure IR.A.Sum
+      "var_pop" -> pure IR.A.VariancePopulation
+      "var_samp" -> pure IR.A.VarianceSample
+      "variance" -> pure IR.A.VarianceSample
+      unknownFunc -> throw500 $ "translateSingleColumnAggregateFunction: Unknown aggregate function encountered: " <> unknownFunc
 
     prepareLiterals ::
       UnpreparedValue 'DataConnector ->
@@ -244,6 +429,14 @@ mkPlan session (SourceConfig {}) ir = do
         Nothing -> throw400 NotSupported ("prepareLiterals: session var not found: " <>> v)
         Just s -> pure (IR.S.ValueLiteral (IR.S.String s))
 
+    translateBoolExpToExpression ::
+      [IR.R.RelationshipName] ->
+      IR.T.Name ->
+      AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m (Maybe IR.E.Expression)
+    translateBoolExpToExpression columnRelationshipReversePath sourceTableName boolExp = do
+      removeAlwaysTrueExpression <$> translateBoolExp columnRelationshipReversePath sourceTableName boolExp
+
     translateBoolExp ::
       [IR.R.RelationshipName] ->
       IR.T.Name ->
@@ -251,28 +444,16 @@ mkPlan session (SourceConfig {}) ir = do
       CPS.WriterT IR.R.TableRelationships m IR.E.Expression
     translateBoolExp columnRelationshipReversePath sourceTableName = \case
       BoolAnd xs ->
-        mkIfZeroOrMany IR.E.And <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolOr xs ->
-        mkIfZeroOrMany IR.E.Or <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolNot x ->
         IR.E.Not <$> (translateBoolExp columnRelationshipReversePath sourceTableName) x
       BoolField (AVColumn c xs) ->
         lift $ mkIfZeroOrMany IR.E.And <$> traverse (translateOp columnRelationshipReversePath (ciColumn c)) xs
       BoolField (AVRelationship relationshipInfo boolExp) -> do
-        let relationshipName = IR.R.mkRelationshipName $ riName relationshipInfo
-        let targetTable = riRTable relationshipInfo
-        let relationshipType = case riType relationshipInfo of
-              ObjRel -> IR.R.ObjectRelationship
-              ArrRel -> IR.R.ArrayRelationship
-        recordTableRelationship
-          sourceTableName
-          relationshipName
-          IR.R.Relationship
-            { _rTargetTable = targetTable,
-              _rRelationshipType = relationshipType,
-              _rColumnMapping = riMapping relationshipInfo
-            }
-        translateBoolExp (relationshipName : columnRelationshipReversePath) targetTable boolExp
+        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        translateBoolExp (relationshipName : columnRelationshipReversePath) _rTargetTable boolExp
       BoolExists _ ->
         lift $ throw400 NotSupported "The BoolExists expression type is not supported by the Data Connector backend"
       where
@@ -282,6 +463,18 @@ mkPlan session (SourceConfig {}) ir = do
         mkIfZeroOrMany mk = \case
           [singleExp] -> singleExp
           zeroOrManyExps -> mk zeroOrManyExps
+
+    removeAlwaysTrueExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysTrueExpression = \case
+      IR.E.And [] -> Nothing
+      IR.E.Not (IR.E.Or []) -> Nothing
+      other -> Just other
+
+    removeAlwaysFalseExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysFalseExpression = \case
+      IR.E.Or [] -> Nothing
+      IR.E.Not (IR.E.And []) -> Nothing
+      other -> Just other
 
     translateOp ::
       [IR.R.RelationshipName] ->
@@ -384,19 +577,9 @@ reshapeResponseToQueryShape ::
   m J.Encoding
 reshapeResponseToQueryShape queryDb response =
   case queryDb of
-    QDBMultipleRows simpleSelect -> reshapeToAnnSimpleSelect Many simpleSelect response
-    QDBSingleRow simpleSelect -> reshapeToAnnSimpleSelect Single simpleSelect response
-    QDBAggregation _aggregateSelect -> throw400 NotSupported "QDBAggregation: not supported"
-
--- TODO(dchambers) Maybe inline this
-reshapeToAnnSimpleSelect ::
-  MonadError QErr m =>
-  Cardinality ->
-  AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  API.QueryResponse ->
-  m J.Encoding
-reshapeToAnnSimpleSelect cardinality simpleSelect queryResponse =
-  reshapeSimpleSelectRows cardinality (_asnFields simpleSelect) queryResponse
+    QDBMultipleRows simpleSelect -> reshapeSimpleSelectRows Many (_asnFields simpleSelect) response
+    QDBSingleRow simpleSelect -> reshapeSimpleSelectRows Single (_asnFields simpleSelect) response
+    QDBAggregation aggregateSelect -> reshapeTableAggregateFields (_asnFields aggregateSelect) response
 
 reshapeSimpleSelectRows ::
   MonadError QErr m =>
@@ -409,28 +592,82 @@ reshapeSimpleSelectRows cardinality fields API.QueryResponse {..} =
     Single ->
       case rows of
         [] -> pure $ J.toEncoding J.Null
-        [singleRow] -> reshapeFields fields singleRow
+        [singleRow] -> reshapeAnnFields noPrefix fields singleRow
         _multipleRows ->
           throw500 "Data Connector agent returned multiple rows when only one was expected" -- TODO(dchambers): Add pathing information for error clarity
     Many -> do
-      reshapedRows <- traverse (reshapeFields fields) rows
+      reshapedRows <- traverse (reshapeAnnFields noPrefix fields) rows
       pure $ JE.list id reshapedRows
   where
     rows = fromMaybe mempty _qrRows
 
-reshapeFields ::
+reshapeTableAggregateFields ::
   MonadError QErr m =>
+  TableAggregateFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  API.QueryResponse ->
+  m J.Encoding
+reshapeTableAggregateFields tableAggregateFields API.QueryResponse {..} = do
+  reshapedFields <- forM tableAggregateFields $ \(fieldName@(FieldName fieldNameText), tableAggregateField) -> do
+    case tableAggregateField of
+      TAFAgg aggregateFields -> do
+        reshapedAggregateFields <- reshapeAggregateFields (prefixWith fieldName) aggregateFields responseAggregates
+        pure $ (fieldNameText, reshapedAggregateFields)
+      TAFNodes _ annFields -> do
+        reshapedRows <- traverse (reshapeAnnFields (prefixWith fieldName) annFields) responseRows
+        pure $ (fieldNameText, JE.list id reshapedRows)
+      TAFExp txt ->
+        pure $ (fieldNameText, JE.text txt)
+  pure $ encodeAssocListAsObject reshapedFields
+  where
+    responseRows = fromMaybe mempty _qrRows
+    responseAggregates = fromMaybe mempty _qrAggregates
+
+reshapeAggregateFields ::
+  MonadError QErr m =>
+  FieldPrefix ->
+  AggregateFields 'DataConnector ->
+  KeyMap API.Value ->
+  m J.Encoding
+reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
+  reshapedFields <- forM aggregateFields $ \(fieldName@(FieldName fieldNameText), aggregateField) ->
+    case aggregateField of
+      AFCount _countAggregate -> do
+        let fieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldPrefix fieldName
+        responseAggregateValue <-
+          KM.lookup fieldNameKey responseAggregates
+            `onNothing` throw500 ("Unable to find expected aggregate " <> K.toText fieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+        pure (fieldNameText, J.toEncoding responseAggregateValue)
+      AFOp AggregateOp {..} -> do
+        reshapedColumnFields <- forM _aoFields $ \(columnFieldName@(FieldName columnFieldNameText), columnField) ->
+          case columnField of
+            CFCol _column _columnType -> do
+              let fieldPrefix' = fieldPrefix <> prefixWith fieldName
+              let columnFieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldPrefix' columnFieldName
+              responseAggregateValue <-
+                KM.lookup columnFieldNameKey responseAggregates
+                  `onNothing` throw500 ("Unable to find expected aggregate " <> K.toText columnFieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+              pure (columnFieldNameText, J.toEncoding responseAggregateValue)
+            CFExp txt ->
+              pure (columnFieldNameText, JE.text txt)
+        pure (fieldNameText, encodeAssocListAsObject reshapedColumnFields)
+      AFExp txt ->
+        pure (fieldNameText, JE.text txt)
+  pure $ encodeAssocListAsObject reshapedFields
+
+reshapeAnnFields ::
+  MonadError QErr m =>
+  FieldPrefix ->
   AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   KeyMap API.FieldValue ->
   m J.Encoding
-reshapeFields fields responseRow = do
-  reshapedFields <- forM fields $ \((FieldName fieldName), field) -> do
-    let fieldNameKey = K.fromText fieldName
+reshapeAnnFields fieldNamePrefix fields responseRow = do
+  reshapedFields <- forM fields $ \(fieldName@(FieldName fieldNameText), field) -> do
+    let fieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldNamePrefix fieldName
     let responseField =
           KM.lookup fieldNameKey responseRow
-            `onNothing` throw500 ("Unable to find expected field " <> fieldName <> " in row returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+            `onNothing` throw500 ("Unable to find expected field " <> K.toText fieldNameKey <> " in row returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
     reshapedField <- reshapeField field responseField
-    pure (fieldName, reshapedField)
+    pure (fieldNameText, reshapedField)
 
   pure $ encodeAssocListAsObject reshapedFields
 
@@ -449,24 +686,30 @@ reshapeField ::
 reshapeField field responseFieldValue =
   case field of
     AFColumn _columnField -> do
-      responseFieldValue' <- responseFieldValue
-      case responseFieldValue' of
-        API.ColumnFieldValue (ValueWrapper responseColumnFieldValue) -> pure $ J.toEncoding responseColumnFieldValue
-        API.RelationshipFieldValue _ -> throw500 "Found relationship field value where column field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
+      columnFieldValue <- API.deserializeAsColumnFieldValue <$> responseFieldValue
+      pure $ J.toEncoding columnFieldValue
     AFObjectRelation objectRelationField -> do
-      responseFieldValue' <- responseFieldValue
-      case responseFieldValue' of
-        API.ColumnFieldValue _ -> throw500 "Found column field value where relationship field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
-        API.RelationshipFieldValue (ValueWrapper subqueryResponse) ->
+      relationshipFieldValue <- API.deserializeAsRelationshipFieldValue <$> responseFieldValue
+      case relationshipFieldValue of
+        Left err -> throw500 $ "Found column field value where relationship field value was expected in field returned by Data Connector agent: " <> err -- TODO(dchambers): Add pathing information for error clarity
+        Right subqueryResponse ->
           let fields = _aosFields $ _aarAnnSelect objectRelationField
            in reshapeSimpleSelectRows Single fields subqueryResponse
-    AFArrayRelation (ASSimple simpleArrayRelationField) -> do
-      responseFieldValue' <- responseFieldValue
-      case responseFieldValue' of
-        API.ColumnFieldValue _ -> throw500 "Found column field value where relationship field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
-        API.RelationshipFieldValue (ValueWrapper subqueryResponse) ->
-          let annSimpleSelect = _aarAnnSelect simpleArrayRelationField
-           in reshapeToAnnSimpleSelect Many annSimpleSelect subqueryResponse
-    AFArrayRelation (ASAggregate _aggregateArrayRelation) ->
-      throw400 NotSupported "reshapeField: AFArrayRelation ASAggregate not supported"
+    AFArrayRelation (ASSimple simpleArrayRelationField) ->
+      reshapeAnnRelationSelect (reshapeSimpleSelectRows Many) simpleArrayRelationField =<< responseFieldValue
+    AFArrayRelation (ASAggregate aggregateArrayRelationField) ->
+      reshapeAnnRelationSelect reshapeTableAggregateFields aggregateArrayRelationField =<< responseFieldValue
     AFExpression txt -> pure $ JE.text txt
+
+reshapeAnnRelationSelect ::
+  MonadError QErr m =>
+  (Fields (fieldType (UnpreparedValue 'DataConnector)) -> API.QueryResponse -> m J.Encoding) ->
+  AnnRelationSelectG 'DataConnector (AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector)) ->
+  API.FieldValue ->
+  m J.Encoding
+reshapeAnnRelationSelect reshapeFields annRelationSelect fieldValue =
+  case API.deserializeAsRelationshipFieldValue fieldValue of
+    Left err -> throw500 $ "Found column field value where relationship field value was expected in field returned by Data Connector agent: " <> err -- TODO(dchambers): Add pathing information for error clarity
+    Right subqueryResponse ->
+      let annSimpleSelect = _aarAnnSelect annRelationSelect
+       in reshapeFields (_asnFields annSimpleSelect) subqueryResponse

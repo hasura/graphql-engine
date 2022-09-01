@@ -66,6 +66,7 @@ export interface TableConfig {
 export interface TableEntry {
   table: QualifiedTable;
   is_enum?: boolean;
+  apollo_federation_config?: { enable: 'v1' };
   configuration?: TableConfig;
   event_triggers?: EventTrigger[];
   computed_fields?: ComputedField[];
@@ -89,6 +90,8 @@ export interface CustomRootFields {
   select_by_pk?: string | CustomRootField | null;
   /** Customise the `<table-name>_aggregate` root field */
   select_aggregate?: string | CustomRootField | null;
+  /** Customise the `<table-name>_stream` root field */
+  select_stream?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>` root field */
   insert?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>_one` root field */
@@ -520,6 +523,8 @@ export interface CronTrigger {
   include_in_metadata: boolean;
   /**	Custom comment. */
   comment?: string;
+  /** Rest connectors. */
+  request_transform?: RequestTransform;
 }
 
 /**
@@ -737,9 +742,17 @@ export interface QueryCollection {
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
  */
+
+type AllowListScope =
+  | {
+      global: false;
+      roles: string[];
+    }
+  | { global: true };
 export interface AllowList {
   /** Name of a query collection to be added to the allow-list */
   collection: CollectionName;
+  scope?: AllowListScope;
 }
 
 // //////////////////////////////
@@ -925,6 +938,9 @@ interface RequestTransformFields {
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
 
+/**
+ * https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs/#requesttransformation
+ */
 interface RequestTransformV1 extends RequestTransformFields {
   version: 1;
   body?: string;
@@ -1098,9 +1114,10 @@ type GraphQLCustomizationMetadata = {
 
 export interface MetadataDataSource {
   name: string;
-  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
+  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus' | 'cockroach';
   configuration?: {
     connection_info?: SourceConnectionInfo;
+    extensions_schema?: string;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
     service_account?: BigQueryServiceAccount;

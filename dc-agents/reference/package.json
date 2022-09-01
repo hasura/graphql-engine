@@ -24,8 +24,9 @@
   "dependencies": {
     "@fastify/cors": "^7.0.0",
     "fastify": "^3.29.0",
+    "mathjs": "^11.0.0",
     "pino-pretty": "^8.0.0",
-    "xml2js": "^0.4.23"
+    "xml2js": "github:Leonidas-from-XIV/node-xml2js"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.2",

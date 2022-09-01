@@ -6,22 +6,16 @@
 -- Please see Test.Parser.Expectation for how to build these tests.
 module Hasura.GraphQL.Schema.Build.UpdateSpec (spec) where
 
-import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
-import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
 import Hasura.Backends.Postgres.Types.Update (UpdateOpExpression (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..))
 import Hasura.RQL.IR.Returning (MutFldG (..), MutationOutputG (..))
-import Hasura.RQL.IR.Value (UnpreparedValue (..))
-import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
 import Hasura.RQL.Types.Instances ()
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax qualified as Syntax
+import Test.Backend.Postgres.Misc qualified as P
 import Test.Hspec
 import Test.Parser.Expectation
 import Test.Parser.Field qualified as GQL
-
-type PG = 'Postgres 'Vanilla
 
 -- | These tests are samples and happy path testers.
 --
@@ -35,12 +29,12 @@ spec = do
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [nameColumn],
+              utsColumns = [P.nameColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                    utbWhere = [(nameColumn, [AEQ True oldValue])],
-                    utbUpdate = UpdateTable [(nameColumn, UpdateSet newValue)]
+                    utbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])],
+                    utbUpdate = UpdateTable [(P.nameColumnBuilder, UpdateSet P.textNew)]
                   },
               utsField =
                 [GQL.field|
@@ -57,15 +51,15 @@ update_artist(
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [nameColumn, descColumn],
+              utsColumns = [P.nameColumnBuilder, P.descColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                    utbWhere = [(nameColumn, [AEQ True oldValue])],
+                    utbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])],
                     utbUpdate =
                       UpdateTable
-                        [ (nameColumn, UpdateSet newValue),
-                          (descColumn, UpdateSet otherValue)
+                        [ (P.nameColumnBuilder, UpdateSet P.textNew),
+                          (P.descColumnBuilder, UpdateSet P.textOther)
                         ]
                   },
               utsField =
@@ -83,7 +77,7 @@ update_artist(
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [nameColumn, descColumn, idColumn],
+              utsColumns = [P.nameColumnBuilder, P.descColumnBuilder, P.idColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
@@ -91,10 +85,10 @@ update_artist(
                     utbUpdate =
                       UpdateMany
                         [ MultiRowUpdateBuilder
-                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
+                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
                               mrubUpdate =
-                                [ (nameColumn, UpdateSet newValue),
-                                  (descColumn, UpdateSet otherValue)
+                                [ (P.nameColumnBuilder, UpdateSet P.textNew),
+                                  (P.descColumnBuilder, UpdateSet P.textOther)
                                 ]
                             }
                         ]
@@ -117,7 +111,7 @@ update_artist_many(
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [nameColumn, descColumn, idColumn],
+              utsColumns = [P.nameColumnBuilder, P.descColumnBuilder, P.idColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
@@ -125,15 +119,15 @@ update_artist_many(
                     utbUpdate =
                       UpdateMany
                         [ MultiRowUpdateBuilder
-                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
+                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
                               mrubUpdate =
-                                [ (nameColumn, UpdateSet newValue),
-                                  (descColumn, UpdateSet otherValue)
+                                [ (P.nameColumnBuilder, UpdateSet P.textNew),
+                                  (P.descColumnBuilder, UpdateSet P.textOther)
                                 ]
                             },
                           MultiRowUpdateBuilder
-                            { mrubWhere = [(idColumn, [AEQ True integerTwo])],
-                              mrubUpdate = [(descColumn, UpdateSet otherValue)]
+                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])],
+                              mrubUpdate = [(P.descColumnBuilder, UpdateSet P.textOther)]
                             }
                         ]
                   },
@@ -158,7 +152,7 @@ update_artist_many(
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [nameColumn, descColumn, idColumn],
+              utsColumns = [P.nameColumnBuilder, P.descColumnBuilder, P.idColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
@@ -166,16 +160,16 @@ update_artist_many(
                     utbUpdate =
                       UpdateMany
                         [ MultiRowUpdateBuilder
-                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
-                              mrubUpdate = [(nameColumn, UpdateSet newValue)]
+                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
+                              mrubUpdate = [(P.nameColumnBuilder, UpdateSet P.textNew)]
                             },
                           MultiRowUpdateBuilder
-                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
-                              mrubUpdate = [(nameColumn, UpdateSet oldValue)]
+                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
+                              mrubUpdate = [(P.nameColumnBuilder, UpdateSet P.textOld)]
                             },
                           MultiRowUpdateBuilder
-                            { mrubWhere = [(idColumn, [AEQ True integerTwo])],
-                              mrubUpdate = [(nameColumn, UpdateSet otherValue)]
+                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])],
+                              mrubUpdate = [(P.nameColumnBuilder, UpdateSet P.textOther)]
                             }
                         ]
                   },
@@ -198,70 +192,3 @@ update_artist_many(
 }
 |]
             }
-
-idColumn :: ColumnInfoBuilder
-idColumn =
-  ColumnInfoBuilder
-    { cibName = "id",
-      cibType = ColumnScalar PGInteger,
-      cibNullable = False,
-      cibIsPrimaryKey = True
-    }
-
-nameColumn :: ColumnInfoBuilder
-nameColumn =
-  ColumnInfoBuilder
-    { cibName = "name",
-      cibType = ColumnScalar PGText,
-      cibNullable = False,
-      cibIsPrimaryKey = False
-    }
-
-oldValue :: UnpreparedValue PG
-oldValue =
-  UVParameter Nothing $
-    ColumnValue
-      { cvType = ColumnScalar PGText,
-        cvValue = PGValText "old name"
-      }
-
-newValue :: UnpreparedValue PG
-newValue =
-  UVParameter Nothing $
-    ColumnValue
-      { cvType = ColumnScalar PGText,
-        cvValue = PGValText "new name"
-      }
-
-descColumn :: ColumnInfoBuilder
-descColumn =
-  ColumnInfoBuilder
-    { cibName = "description",
-      cibType = ColumnScalar PGText,
-      cibNullable = False,
-      cibIsPrimaryKey = False
-    }
-
-otherValue :: UnpreparedValue PG
-otherValue =
-  UVParameter Nothing $
-    ColumnValue
-      { cvType = ColumnScalar PGText,
-        cvValue = PGValText "other"
-      }
-
-integerOne :: UnpreparedValue PG
-integerOne =
-  UVParameter Nothing $
-    ColumnValue
-      { cvType = ColumnScalar PGInteger,
-        cvValue = PGValInteger 1
-      }
-
-integerTwo :: UnpreparedValue PG
-integerTwo =
-  UVParameter Nothing $
-    ColumnValue
-      { cvType = ColumnScalar PGInteger,
-        cvValue = PGValInteger 2
-      }

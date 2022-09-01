@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.App
   ( ExitCode (DatabaseMigrationError, DowngradeProcessError, MetadataCleanError, MetadataExportError, SchemaCacheInitError),
@@ -107,6 +108,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -121,6 +123,11 @@ import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Migrate (migrateCatalog)
+import Hasura.Server.Prometheus
+  ( PrometheusMetrics (..),
+    decWarpThreads,
+    incWarpThreads,
+  )
 import Hasura.Server.SchemaCacheRef
   ( SchemaCacheRef,
     getSchemaCache,
@@ -322,6 +329,15 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
   instanceId <- liftIO generateInstanceId
   latch <- liftIO newShutdownLatch
   loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+  when (null soAdminSecret) $ do
+    let errMsg :: Text
+        errMsg = "WARNING: No admin secret provided"
+    unLogger logger $
+      StartupLog
+        { slLogLevel = LevelWarn,
+          slKind = "no_admin_secret",
+          slInfo = A.toJSON errMsg
+        }
   -- log serve options
   unLogger logger $ serveOptsToLog so
 
@@ -341,14 +357,11 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
                     _ppsConnectionLifetime = Q.cpMbLifetime soConnParams
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
-           in PostgresConnConfiguration sourceConnInfo Nothing
-      dangerouslyCollapseBooleans
-        | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
-        | otherwise = Options.Don'tDangerouslyCollapseBooleans
+           in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
       optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
         | otherwise = Options.Don'tOptimizePermissionFilters
-      sqlGenCtx = SQLGenCtx soStringifyNum dangerouslyCollapseBooleans optimizePermissionFilters
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -373,6 +386,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
         serverConfigCtx
         (mkPgSourceResolver pgLogger)
         mkMSSQLSourceResolver
+        soExtensionsSchema
 
   -- Start a background thread for listening schema sync events from other server instances,
   metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
@@ -380,9 +394,9 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
   -- An interval of 0 indicates that no schema sync is required
   case soSchemaPollInterval of
     Skip -> unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" "Schema sync disabled"
-    Interval i -> do
-      unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show i)
-      void $ startSchemaSyncListenerThread logger metadataDbPool instanceId i metaVersionRef
+    Interval interval -> do
+      unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show interval)
+      void $ startSchemaSyncListenerThread logger metadataDbPool instanceId interval metaVersionRef
 
   schemaCacheRef <- initialiseSchemaCacheRef serverMetrics rebuildableSchemaCache
 
@@ -422,6 +436,7 @@ migrateCatalogSchema ::
   ServerConfigCtx ->
   SourceResolver ('Postgres 'Vanilla) ->
   SourceResolver ('MSSQL) ->
+  ExtensionsSchema ->
   m RebuildableSchemaCache
 migrateCatalogSchema
   env
@@ -431,7 +446,8 @@ migrateCatalogSchema
   httpManager
   serverConfigCtx
   pgSourceResolver
-  mssqlSourceResolver = do
+  mssqlSourceResolver
+  extensionsSchema = do
     initialiseResult <- runExceptT $ do
       -- TODO: should we allow the migration to happen during maintenance mode?
       -- Allowing this can be a sanity check, to see if the hdb_catalog in the
@@ -441,6 +457,7 @@ migrateCatalogSchema
         Q.runTx pool (Q.Serializable, Just Q.ReadWrite) $
           migrateCatalog
             defaultSourceConfig
+            extensionsSchema
             (_sccMaintenanceMode serverConfigCtx)
             currentTime
       let cacheBuildParams =
@@ -553,17 +570,23 @@ runHGEServer ::
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
+  -- | A hook which can be called to indicate when the server is started succesfully
+  Maybe (IO ()) ->
+  PrometheusMetrics ->
   ManagedT m ()
-runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore = do
+runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore startupStatusHook prometheusMetrics = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore
+    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics
 
+  -- `startupStatusHook`: add `Service started successfully` message to config_status
+  -- table when a tenant starts up in multitenant
   let warpSettings :: Warp.Settings
       warpSettings =
-        Warp.setPort (soPort serveOptions)
+        Warp.setPort (_getPort $ soPort serveOptions)
           . Warp.setHost (soHost serveOptions)
           . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
           . Warp.setInstallShutdownHandler shutdownHandler
+          . Warp.setBeforeMainLoop (onJust startupStatusHook id)
           . setForkIOWithMetrics
           $ Warp.defaultSettings
 
@@ -573,8 +596,14 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
           C.forkIOWithUnmask
             ( \unmask ->
                 bracket_
-                  (EKG.Gauge.inc $ smWarpThreads serverMetrics)
-                  (EKG.Gauge.dec $ smWarpThreads serverMetrics)
+                  ( do
+                      EKG.Gauge.inc (smWarpThreads serverMetrics)
+                      incWarpThreads (pmConnections prometheusMetrics)
+                  )
+                  ( do
+                      EKG.Gauge.dec (smWarpThreads serverMetrics)
+                      decWarpThreads (pmConnections prometheusMetrics)
+                  )
                   (f unmask)
             )
 
@@ -628,8 +657,9 @@ mkHGEServer ::
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
+  PrometheusMetrics ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore = do
+mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore prometheusMetrics = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -638,14 +668,10 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
   liftIO disableAssertNF
 
-  let dangerouslyCollapseBooleans
-        | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
-        | otherwise = Options.Don'tDangerouslyCollapseBooleans
-
-      optimizePermissionFilters
+  let optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
         | otherwise = Options.Don'tOptimizePermissionFilters
-      sqlGenCtx = SQLGenCtx soStringifyNum dangerouslyCollapseBooleans optimizePermissionFilters
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
       Loggers loggerCtx logger _ = _scLoggers
 
   authModeRes <-
@@ -684,6 +710,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           _scSchemaCacheRef
           ekgStore
           serverMetrics
+          prometheusMetrics
           soEnableRemoteSchemaPermissions
           soInferFunctionPermissions
           soConnectionOptions
@@ -884,21 +911,21 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
 
     startEventTriggerPollerThread logger lockedEventsCtx cacheRef = do
-      let maxEvThrds = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
-          fetchI = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
+      let maxEventThreads = Numeric.getPositiveInt soEventsHttpPoolSize
+          fetchInterval = milliseconds $ Numeric.getNonNegative soEventsFetchInterval
           allSources = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
 
-      unless (getNonNegativeInt soEventsFetchBatchSize == 0 || soEventsFetchInterval == Just 0) $ do
+      unless (Numeric.getNonNegativeInt soEventsFetchBatchSize == 0 || fetchInterval == 0) $ do
         -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
         -- prepare event triggers data
-        eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI soEventsFetchBatchSize
+        eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEventThreads fetchInterval soEventsFetchBatchSize
         let eventsGracefulShutdownAction =
               waitForProcessingAction
                 logger
                 "event_triggers"
                 (length <$> readTVarIO (leEvents lockedEventsCtx))
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
-                soGracefulShutdownTimeout
+                (Numeric.getNonNegative soGracefulShutdownTimeout)
         unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
         void $
           C.forkManagedTWithGracefulShutdown
@@ -912,13 +939,14 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
               eventEngineCtx
               lockedEventsCtx
               serverMetrics
+              (pmEventTriggerMetrics prometheusMetrics)
               soEnableMaintenanceMode
 
     startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState = do
       -- start a background thread to handle async actions
       case soAsyncActionsFetchInterval of
         Skip -> pure () -- Don't start the poller thread
-        Interval sleepTime -> do
+        Interval (Numeric.getNonNegative -> sleepTime) -> do
           let label = "asyncActionsProcessor"
               asyncActionGracefulShutdownAction =
                 ( liftWithStateless \lowerIO ->
@@ -927,7 +955,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                         "async_actions"
                         (length <$> readTVarIO (leActionEvents lockedEventsCtx))
                         (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
-                        soGracefulShutdownTimeout
+                        (Numeric.getNonNegative soGracefulShutdownTimeout)
                     )
                 )
 
@@ -963,7 +991,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                     "scheduled_events"
                     (getProcessingScheduledEventsCount lockedEventsCtx)
                     (MetadataDBShutdownAction (hoist lowerIO unlockAllLockedScheduledEvents))
-                    soGracefulShutdownTimeout
+                    (Numeric.getNonNegative soGracefulShutdownTimeout)
                 )
             )
 
@@ -983,7 +1011,7 @@ instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)
 
 instance (Monad m) => HasResourceLimits (PGMetadataStorageAppT m) where
   askHTTPHandlerLimit = pure $ ResourceLimits id
-  askGraphqlOperationLimit = pure $ \_ _ -> ResourceLimits id
+  askGraphqlOperationLimit _ = pure $ \_ _ -> ResourceLimits id
 
 instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
   type ExtraHttpLogMetadata (PGMetadataStorageAppT m) = ()
@@ -1204,7 +1232,7 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
           }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do

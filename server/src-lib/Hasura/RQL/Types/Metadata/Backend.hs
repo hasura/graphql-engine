@@ -26,11 +26,14 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
+import Network.HTTP.Client qualified as HTTP
 
 class
   ( Backend b,
+    Eq (AggregationPredicates b (PartialSQLExp b)),
     Eq (BooleanOperators b (PartialSQLExp b)),
     Eq (FunctionArgumentExp b (PartialSQLExp b)),
+    Hashable (AggregationPredicates b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
     Hashable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
@@ -59,12 +62,14 @@ class
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
     (MonadIO m, MonadResolveSource m) =>
+    DataConnectorCapabilities ->
     Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->
     BackendSourceKind b ->
     BackendConfig b ->
     Env.Environment ->
+    HTTP.Manager ->
     m (Either QErr (SourceConfig b))
 
   -- | Function that introspects a database for tables, columns, functions etc.

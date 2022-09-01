@@ -4,8 +4,8 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
+import { Button } from '@/new-components/Button';
 import globals from '../../../../../Globals';
-import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
 import { getAddETRoute } from '../../../../Common/utils/routesUtils';
 import {
@@ -51,8 +51,7 @@ insert_user(objects: [{name: "testuser"}] ){
     return (
       <Button
         data-test="data-create-trigger"
-        color="yellow"
-        size="sm"
+        mode="primary"
         type="submit"
         className="ml-md"
         onClick={handleClick}

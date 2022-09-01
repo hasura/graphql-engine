@@ -18,11 +18,7 @@ import TabItem from '@theme/TabItem';
 
 To understand the basics of access control in Hasura, let's take a look at this analogy to a SQL query:
 
-<Thumbnail
-  src='/img/graphql/core/auth/permissions-rule-analogy.png'
-  alt='Understanding access control in Hasura'
-  width='700px'
-/>
+<Thumbnail src='/img/auth/permissions-rule-analogy.png' alt='Understanding access control in Hasura' width='700px' />
 
 This query returns the right set of results by defining the requirements for columns and rows in a given table. Hasura's
 rule-based access control works similarly - you define the following permissions for a combination of **role**,
@@ -81,7 +77,7 @@ query {
 The response of the above query contains all the authors as, by default, the GraphQL query runs with **admin**
 permissions.
 
-<Thumbnail src='/img/graphql/core/auth/fetch-authors.png' alt='Run a query without access control' width='1200px' />
+<Thumbnail src='/img/auth/fetch-authors.png' alt='Run a query without access control' width='1200px' />
 
 ### Define access control rules
 
@@ -93,11 +89,7 @@ Now let's define an access control rule for the `authors` table for a role `user
 Head to the **Permissions** section of the table (`Data -> [table] -> Permissions` tab) and define permissions as shown
 below:
 
-<Thumbnail
-  src='/img/graphql/core/auth/permission-basics-simple-example.png'
-  alt='Define access control rules'
-  width='1100px'
-/>
+<Thumbnail src='/img/auth/permission-basics-simple-example.png' alt='Define access control rules' width='1100px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -169,7 +161,7 @@ included to indicate role and user information. These session variables are pass
 `GraphiQL` as highlighted below:
 
 <Thumbnail
-  src='/img/graphql/core/auth/permission-basics-query-with-access-control.png'
+  src='/img/auth/permission-basics-query-with-access-control.png'
   alt='Run a query with access control'
   width='1200px'
 />

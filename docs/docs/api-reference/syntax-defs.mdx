@@ -87,11 +87,11 @@ keywords:
 
 ## PGConfiguration {#pgconfiguration}
 
-| Key             | Required | Schema                                                | Description                                                                                 |
-|-----------------|----------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| connection_info | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                        |
-| read_replicas   | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
-
+| Key               | Required | Schema                                                | Description                                                                                        |
+|-------------------|----------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| connection_info   | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                               |
+| read_replicas     | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)*        |
+| extensions_schema | false    | String                                                | Name of the schema where the graphql-engine will install database extensions (default: `public`)   |
 
 ## MsSQLConfiguration {#mssqlconfiguration}
 
@@ -263,6 +263,7 @@ String
 | select           | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>` root field. Using a `String` customises the field name.              |
 | select_by_pk     | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>_by_pk` root field. Using a `String` customises the field name.        |
 | select_aggregate | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>_aggregate` root field. Using a `String` customises the field name.    |
+| select_stream    | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>_stream` root field. Using a `String` customises the field name.       |
 | insert           | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `insert_<table-name>` root field. Using a `String` customises the field name.       |
 | insert_one       | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `insert_<table-name>_one` root field. Using a `String` customises the field name.   |
 | update           | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `update_<table-name>` root field. Using a `String` customises the field name.       |
@@ -1557,3 +1558,9 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | retry_interval_seconds | false    | Integer | Number of seconds to wait between each retry. Default: 10                                                                                                                           |
 | timeout_seconds        | false    | Integer | Number of seconds to wait for response before timing out. Default: 60                                                                                                               |
 | tolerance_seconds      | false    | Integer | Number of seconds between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped. Default: 21600 (6 hours) |
+
+## ApolloFederationConfig {#apollofederationconfig}
+
+| Key    | required | Schema  | Description                                    |
+|--------|----------|---------|------------------------------------------------|
+| enable | true     | String  | Apollo federation version (can be `"v1"` only) |

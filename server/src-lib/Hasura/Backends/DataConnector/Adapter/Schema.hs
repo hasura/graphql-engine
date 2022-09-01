@@ -34,6 +34,7 @@ import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Source qualified as RQL
+import Hasura.RQL.Types.SourceCustomization qualified as RQL
 import Hasura.RQL.Types.Table qualified as RQL
 import Hasura.SQL.Backend (BackendType (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -46,13 +47,13 @@ instance BackendSchema 'DataConnector where
 
   buildTableRelayQueryFields = experimentalBuildTableRelayQueryFields
 
-  buildFunctionQueryFields _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ = pure []
-  buildTableInsertMutationFields _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ = pure []
-  buildTableStreamingSubscriptionFields _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
+  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
+  buildTableStreamingSubscriptionFields _ _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -80,17 +81,18 @@ instance BackendTableSelectSchema 'DataConnector where
 
 experimentalBuildTableRelayQueryFields ::
   MonadBuildSchema 'DataConnector r m n =>
+  RQL.MkRootFieldName ->
   RQL.SourceInfo 'DataConnector ->
   RQL.TableName 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
   NESeq (RQL.ColumnInfo 'DataConnector) ->
-  m [a]
-experimentalBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
+  m [P.FieldParser n a]
+experimentalBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 columnParser' ::
-  (MonadSchema n m, MonadError QErr m) =>
+  (MonadParse n, MonadError QErr m) =>
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
   m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
@@ -125,12 +127,13 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
             )
           ]
   where
-    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing [] P.EnumValueInfo
 
 comparisonExps' ::
   forall m n r.
   ( BackendSchema 'DataConnector,
-    MonadSchema n m,
+    P.MonadMemoize m,
+    MonadParse n,
     MonadError QErr m,
     MonadReader r m,
     Has SchemaOptions r,
@@ -143,15 +146,12 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
   collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
 
   typedParser <- columnParser' columnType (GQL.Nullability False)
-  nullableTextParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability True)
-  textParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability False)
   let name = P.getName typedParser <> $$(GQL.litName "_Dynamic_comparison_exp")
       desc =
         GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
-      textListParser = fmap IR.openValueOrigin <$> P.list textParser
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
   pure $
     P.object name (Just desc) $
@@ -202,10 +202,10 @@ countTypeInput' ::
   Maybe (P.Parser 'P.Both n IR.C.Name) ->
   P.InputFieldsParser n (IR.CountDistinct -> IR.A.CountAggregate)
 countTypeInput' = \case
-  Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._columns Nothing (P.list columnEnum)
+  Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._column Nothing columnEnum
   Nothing -> pure $ mkCountAggregate Nothing
   where
-    mkCountAggregate :: Maybe [IR.C.Name] -> IR.CountDistinct -> IR.A.CountAggregate
+    mkCountAggregate :: Maybe IR.C.Name -> IR.CountDistinct -> IR.A.CountAggregate
     mkCountAggregate Nothing _ = IR.A.StarCount
-    mkCountAggregate (Just cols) IR.SelectCountDistinct = maybe IR.A.StarCount IR.A.ColumnDistinctCount $ nonEmpty cols
-    mkCountAggregate (Just cols) IR.SelectCountNonDistinct = maybe IR.A.StarCount IR.A.ColumnCount $ nonEmpty cols
+    mkCountAggregate (Just column) IR.SelectCountDistinct = IR.A.ColumnDistinctCount column
+    mkCountAggregate (Just column) IR.SelectCountNonDistinct = IR.A.ColumnCount column

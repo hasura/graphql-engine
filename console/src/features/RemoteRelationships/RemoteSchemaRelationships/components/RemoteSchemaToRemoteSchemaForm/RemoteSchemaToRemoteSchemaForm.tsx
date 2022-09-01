@@ -40,7 +40,11 @@ const SetDefaults = ({
   typeName,
   existingRelationshipName,
 }: ResetterProps) => {
-  const { data: defaultValues, isLoading, isError } = useDefaultValues({
+  const {
+    data: defaultValues,
+    isLoading,
+    isError,
+  } = useDefaultValues({
     sourceRemoteSchema,
     typeName,
     remoteRelationshipName: existingRelationshipName,
@@ -162,7 +166,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
             <div>
               <Button
                 mode="primary"
-                size="sm"
+                size="md"
                 type="submit"
                 isLoading={mutation.isLoading}
                 loadingText={

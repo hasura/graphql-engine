@@ -1,0 +1,83 @@
+spec-version: 0.34.7
+
+name: hasura-schema-parsers
+description: >
+  Parsers built from GraphQL schemas.
+
+_common: !include "../common.yaml"
+<<: *common-boilerplate
+<<: *common-lib
+
+default-extensions:
+  - AllowAmbiguousTypes
+  - ApplicativeDo
+  - BangPatterns
+  - BlockArguments
+  - DataKinds
+  - DeriveFoldable
+  - DeriveFunctor
+  - DeriveLift
+  - DeriveGeneric
+  - DeriveTraversable
+  - DerivingStrategies
+  - ExplicitNamespaces
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - ImportQualifiedPost
+  - KindSignatures
+  - LambdaCase
+  - MultiWayIf
+  - MultiParamTypeClasses
+  - NamedFieldPuns
+  - OverloadedStrings
+  - RankNTypes
+  - RecordWildCards
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - StrictData
+  - TupleSections
+  - TypeApplications
+  - TypeFamilies
+  - TypeOperators
+
+library:
+  source-dirs:
+    - src
+  dependencies: &library-dependencies
+    - base
+
+    - aeson
+    - dependent-map
+    - dependent-sum
+    - graphql-parser
+    - hashable
+    - hasura-error-message
+    - insert-ordered-containers
+    - lens
+    - mtl
+    - scientific
+    - some
+    - template-haskell
+    - text
+    - th-lift
+    - unordered-containers
+    - uuid
+    - vector
+    - witherable
+
+tests:
+  tests:
+    source-dirs:
+      - test
+    main: Main
+    dependencies:
+      - hasura-schema-parsers
+      - hspec
+
+    when:
+      # Merges the library dependencies with the above list, using `when:` to cheat.
+      - condition: true
+        dependencies: *library-dependencies

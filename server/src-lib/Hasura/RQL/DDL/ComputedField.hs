@@ -29,11 +29,11 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 
 data AddComputedField b = AddComputedField
-  { _afcSource :: !SourceName,
-    _afcTable :: !(TableName b),
-    _afcName :: !ComputedFieldName,
-    _afcDefinition :: !(ComputedFieldDefinition b),
-    _afcComment :: !Comment
+  { _afcSource :: SourceName,
+    _afcTable :: TableName b,
+    _afcName :: ComputedFieldName,
+    _afcDefinition :: ComputedFieldDefinition b,
+    _afcComment :: Comment
   }
   deriving stock (Generic)
 
@@ -73,10 +73,10 @@ runAddComputedField q = do
     computedFieldName = _afcName q
 
 data DropComputedField b = DropComputedField
-  { _dccSource :: !SourceName,
-    _dccTable :: !(TableName b),
-    _dccName :: !ComputedFieldName,
-    _dccCascade :: !Bool
+  { _dccSource :: SourceName,
+    _dccTable :: TableName b,
+    _dccName :: ComputedFieldName,
+    _dccCascade :: Bool
   }
 
 instance (Backend b) => FromJSON (DropComputedField b) where

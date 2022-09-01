@@ -3,16 +3,16 @@
 #
 # Run the following to get started:
 #
-#     docker-compose up -d
+#     docker compose up -d
 #
 # That will start up services in the background. To take them down,
 # you have to run
 #
-#     docker-compose down
+#     docker compose down
 #
 # If you changed DB init scripts, then you should also run:
 #
-#     docker-compose down --volumes
+#     docker compose down --volumes
 #
 # That'll delete the volumes. Otherwise e.g. PostgreSQL will skip
 # initializing if a DB already exists.
@@ -28,9 +28,9 @@
 # * The login credentials are, where possible, all "hasura" to avoid
 #   unnecessary mental overhead.
 
-version: "3.3"
-services:
+version: "3.6"
 
+services:
   mariadb:
     image: mariadb:10.6.4-focal@sha256:c014ba1efc5dbd711d0520c7762d57807f35549de3414eb31e942a420c8a2ed2
     ports:
@@ -40,9 +40,11 @@ services:
       MARIADB_PASSWORD: "hasura"
       MARIADB_DATABASE: "hasura"
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
+    volumes:
+      - mariadb-data:/var/lib/mysql
 
   postgres:
-    image: postgres:14-alpine@sha256:1cf551de75fd602ebc94ccda93305a4e411f941bf9465f59d850bdcfd474ca52
+    image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
     ports:
       - "65002:5432"
     environment:
@@ -50,7 +52,8 @@ services:
       POSTGRES_PASSWORD: "hasura"
       POSTGRES_DB: "hasura"
     volumes:
-        - ${PWD}/docker-compose/postgres:/docker-entrypoint-initdb.d
+        - postgres-data:/var/lib/postgresql/data
+        - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   sqlserver:
     build: ./docker-compose/sqlserver/
@@ -60,6 +63,8 @@ services:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "DockerComposePassword!"
       MSSQL_SA_PASSWORD: "DockerComposePassword!"
+    volumes:
+      - mssql-data:/var/opt/mssql
 
   citus:
     image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
@@ -70,9 +75,39 @@ services:
       POSTGRES_PASSWORD: "hasura"
       POSTGRES_DB: "hasura"
     volumes:
-        - ${PWD}/docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh
+      - citus-data:/var/lib/postgresql/data
+      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+
+  cockroach:
+    image: cockroachdb/cockroach:v22.1.5@sha256:66ee50d6fdc92a6994d79a74eb689b6fd2a931c4c72ac98b4cb7dba4c6ce3f8f
+    command:
+      - start-single-node
+      - --insecure
+      - --accept-sql-without-tls
+    ports:
+      - "65008:26257"
+    environment:
+      COCKROACH_USER: "root"
+      COCKROACH_DATABASE: "hasura"
+    volumes:
+        - cockroach-data:/cockroach/cockroach-data
+        - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   dc-reference-agent:
     build: ./dc-agents/reference/
     ports:
       - "65005:8100"
+
+  dc-sqlite-agent:
+    build: ./dc-agents/sqlite/
+    ports:
+      - "65007:8100"
+    volumes:
+      - "./dc-agents/sqlite/test/db.chinook.sqlite:/db.chinook.sqlite"
+
+volumes:
+  citus-data:
+  mariadb-data:
+  mssql-data:
+  postgres-data:
+  cockroach-data:

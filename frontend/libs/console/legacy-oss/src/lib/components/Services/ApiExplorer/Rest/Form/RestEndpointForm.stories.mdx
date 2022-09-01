@@ -1,0 +1,147 @@
+import { DevTool } from '@hookform/devtools';
+import dedent from 'dedent';
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
+import { z } from 'zod';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { RestEndpointForm } from '@/components/Services/ApiExplorer/Rest/Form/RestEndpointForm';
+
+<Meta
+  title="Features/REST endpoints/Form ✨"
+  component={RestEndpointForm}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+/>
+
+export const Template = args => <RestEndpointForm {...args} />;
+
+export const stories = {
+  'Demo - Creation form': {
+    formState: {
+      request: dedent`query Catalog {
+          catalog {
+            id
+            name
+            description
+          }
+        }`,
+    },
+  },
+  'Demo - Edition form': {
+    mode: 'edit',
+    formState: {
+      name: 'The endpoint name',
+      comment: 'The endpoint description',
+      url: 'location',
+      methods: ['GET', 'PATCH'],
+      request: dedent`query Catalog {
+          catalog {
+            id
+            name
+            description
+          }
+        }`,
+    },
+  },
+  'State - Loading form': {
+    mode: 'edit',
+    formState: {
+      name: 'The endpoint name',
+      comment: 'The endpoint description',
+      url: 'location',
+      methods: ['GET', 'PATCH'],
+      request: dedent`query Catalog {
+          catalog {
+            id
+            name
+            description
+          }
+        }`,
+    },
+    loading: true,
+  },
+  'API playground': {
+    disableSnapshotTesting: true,
+    formState: {
+      request: dedent`query Catalog {
+          catalog {
+            id
+            name
+            description
+          }
+        }`,
+    },
+  },
+};
+
+# REST endpoint form
+
+- [💠 REST Endpoint Creation](#-rest-endpoint-creation)
+- [💠 REST Endpoint Edition](#-rest-endpoint-edition)
+- [🔁 REST Endpoint Loading](#-rest-endpoint-loading)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/components/Services/ApiExplorer/Rest/Create/RestEndpointForm.tsx)
+
+## 💠 REST Endpoint Creation
+
+<Canvas>
+  <Story name="Creation form" args={stories['Demo - Creation form']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## 💠 REST Endpoint Edition
+
+<Canvas>
+  <Story name="Edition form" args={stories['Demo - Edition form']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## 🔁 REST Endpoint Loading
+
+<Canvas>
+  <Story name="Loading form" args={stories['State - Loading form']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+## 🧪 Testing
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={stories}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

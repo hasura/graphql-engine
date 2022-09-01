@@ -17,6 +17,8 @@ If you are a first-time contributor, feel free to post your doubts/questions in 
 
 The following dependencies need to be installed in order to work on the CLI codebase:
 
+- [Docker](https://www.docker.com/get-started/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 - [Go >= 1.16](https://golang.org/doc/install)
 - [Node.js >= 10.19.0 and npm >= 6.14.4](https://nodejs.org/en/download/)
 - [GNU Make](https://www.gnu.org/software/make/) (optional)
@@ -45,13 +47,12 @@ make deps
 
 Once everything is installed and running, you can start working on the feature/fix that you picked up.
 
-
 ### Run the server
 
-[Docker Compose](https://github.com/hasura/graphql-engine/tree/stable/install-manifests/docker-compose) is the easiest way to run graphql-engine.
+[Our Docker Compose manifest](https://github.com/hasura/graphql-engine/tree/stable/install-manifests/docker-compose) is the easiest way to run graphql-engine.
 
 1. From the `graphql-engine` directory, run `cd install-manifests/docker-compose`.
-2. From inside that directory, run `docker-compose up -d`.
+2. From inside that directory, run `docker compose up -d`.
 
 The GraphQL endpoint will be at `https://localhost:8080/v1/graphql`.
 

@@ -1,11 +1,12 @@
 import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
 import { FiSearch } from 'react-icons/fi';
 
 import { TemplateStoriesFactory } from '@/utils/StoryUtils';
 import { Button } from '@/new-components/Button/';
 
 <Meta
-  title="components/Button ✨"
+  title="components/Button ⚛️"
   component={Button}
   parameters={{
     docs: { source: { type: 'code' } },
@@ -21,12 +22,12 @@ import { Button } from '@/new-components/Button/';
   }}
 />
 
-# Button
+# Button ⚛️
 
 - [🧰 Overview](#-overview)
 - [🔁 States](#-states)
 - [🎭 Variants](#-variants)
-- [⚙️ API](#-api)
+- [⚙️ API](#%EF%B8%8F-api)
 - [🧪 Testing](#-testing)
 - [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Button/Button.tsx)
 
@@ -51,13 +52,17 @@ import { Button } from '@/new-components/Button';
 
 <Canvas>
   <Story name="Overview">
-    <Button mode={'primary'}>
+    <Button mode={'primary'} onClick={action('onClick')}>
       <span>The button label</span>
     </Button>
   </Story>
 </Canvas>
 
-export const Template = args => <Button {...args}>{args.content}</Button>;
+export const Template = args => (
+  <Button {...args} onClick={action('onClick')}>
+    {args.content}
+  </Button>
+);
 
 export const stories = {
   'States - Loading': {
@@ -89,6 +94,11 @@ export const stories = {
     content: <span>Medium button</span>,
     size: 'md',
   },
+  'Variant - Size lg': {
+    content: <span>Large button</span>,
+    size: 'lg',
+    mode: 'primary',
+  },
   'Variant - Icon start': {
     content: <span>Icon start button</span>,
     icon: <FiSearch />,
@@ -98,6 +108,9 @@ export const stories = {
     content: <span>Icon end button</span>,
     icon: <FiSearch />,
     iconPosition: 'end',
+  },
+  'Variant - Icon only': {
+    icon: <FiSearch />,
   },
   'API playground': {
     content: <span>The button content</span>,
@@ -167,6 +180,7 @@ export const stories = {
     args={{
       'Variant - Size sm': stories['Variant - Size sm'],
       'Variant - Size md': stories['Variant - Size md'],
+      'Variant - Size lg': stories['Variant - Size lg'],
     }}
   >
     {TemplateStoriesFactory(Template).bind({})}
@@ -185,6 +199,7 @@ export const stories = {
     args={{
       'Variant - Icon start': stories['Variant - Icon start'],
       'Variant - Icon end': stories['Variant - Icon end'],
+      'Variant - Icon only': stories['Variant - Icon only'],
     }}
   >
     {TemplateStoriesFactory(Template).bind({})}

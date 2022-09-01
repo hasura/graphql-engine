@@ -43,7 +43,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 buildRemoteParser ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   IntrospectionResult ->
   RemoteSchemaRelationships ->
   RemoteSchemaInfo ->
@@ -85,7 +85,7 @@ makeResultCustomizer remoteSchemaCustomizer IR.GraphQLField {..} =
 
 buildRawRemoteParser ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   IntrospectionResult ->
   RemoteSchemaRelationships ->
   RemoteSchemaInfo ->
@@ -259,7 +259,7 @@ newtype Altered = Altered {getAltered :: Bool}
 -- unmodified.
 inputValueDefinitionParser ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   G.InputValueDefinition ->
   m (InputFieldsParser n (Maybe (Altered, G.Value RemoteSchemaVariable)))
@@ -376,7 +376,7 @@ remoteFieldScalarParser customizeTypename (G.ScalarTypeDefinition description na
     }
   where
     customizedTypename = runMkTypename customizeTypename name
-    schemaType = TNamed NonNullable $ Definition customizedTypename description Nothing TIScalar
+    schemaType = TNamed NonNullable $ Definition customizedTypename description Nothing [] TIScalar
     gType = toGraphQLType schemaType
 
     mkRemoteGType = \case
@@ -391,7 +391,7 @@ remoteFieldEnumParser ::
 remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directives valueDefns) =
   let enumValDefns =
         valueDefns <&> \(G.EnumValueDefinition enumDesc enumName _) ->
-          ( Definition (G.unEnumValue enumName) enumDesc Nothing P.EnumValueInfo,
+          ( Definition (G.unEnumValue enumName) enumDesc Nothing [] P.EnumValueInfo,
             G.VEnum enumName
           )
    in fmap (Altered False,) $ P.enum (runMkTypename customizeTypename name) desc $ NE.fromList enumValDefns
@@ -420,7 +420,7 @@ remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directi
 -- memoization: we know for sure that the preset fields won't generate a recursive call!
 remoteInputObjectParser ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition ->
   m
@@ -518,7 +518,7 @@ shortCircuitIfUnaltered parser =
 -- contains values that contain presets further down, then this result is labelled as altered.
 argumentsParser ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   G.ArgumentsDefinition RemoteSchemaInputValueDefinition ->
   RemoteSchemaIntrospection ->
   m (InputFieldsParser n (Altered, HashMap G.Name (G.Value RemoteSchemaVariable)))
@@ -558,7 +558,7 @@ aggregateListAndAlteration = first mconcat . unzip . catMaybes
 
 remoteSchemaRelationships ::
   forall r n m.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaRelationships ->
   G.Name ->
   m [FieldParser n (IR.SchemaRemoteRelationshipSelect (IR.RemoteRelationshipField IR.UnpreparedValue))]
@@ -575,7 +575,7 @@ remoteSchemaRelationships relationships typeName =
 -- | 'remoteSchemaObject' returns a output parser for a given 'ObjectTypeDefinition'.
 remoteSchemaObject ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.ObjectTypeDefinition RemoteSchemaInputValueDefinition ->
@@ -757,7 +757,7 @@ constructed query.
 --   Also check Note [Querying remote schema interfaces]
 remoteSchemaInterface ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition ->
@@ -799,7 +799,7 @@ remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinit
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.UnionTypeDefinition ->
@@ -829,7 +829,7 @@ remoteSchemaUnion schemaDoc remoteRelationships defn@(G.UnionTypeDefinition desc
 
 remoteFieldFromDefinition ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   G.Name ->
   RemoteSchemaRelationships ->
@@ -839,12 +839,12 @@ remoteFieldFromDefinition schemaDoc parentTypeName remoteRelationships (G.FieldD
   convertType gType
   where
     addNullableList :: FieldParser n a -> FieldParser n a
-    addNullableList (P.FieldParser (Definition name' desc origin (FieldInfo args typ)) parser) =
-      P.FieldParser (Definition name' desc origin (FieldInfo args (TList Nullable typ))) parser
+    addNullableList (P.FieldParser (Definition name' desc origin dLst (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc origin dLst (FieldInfo args (TList Nullable typ))) parser
 
     addNonNullableList :: FieldParser n a -> FieldParser n a
-    addNonNullableList (P.FieldParser (Definition name' desc origin (FieldInfo args typ)) parser) =
-      P.FieldParser (Definition name' desc origin (FieldInfo args (TList NonNullable typ))) parser
+    addNonNullableList (P.FieldParser (Definition name' desc origin dLst (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc origin dLst (FieldInfo args (TList NonNullable typ))) parser
 
     -- TODO add directives, deprecation
     convertType ::
@@ -864,7 +864,7 @@ remoteFieldFromDefinition schemaDoc parentTypeName remoteRelationships (G.FieldD
 --   in the 'RemoteSchemaIntrospection'.
 remoteFieldFromName ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.Name ->
@@ -883,7 +883,7 @@ remoteFieldFromName sdoc remoteRelationships parentTypeName fieldName descriptio
 --   GraphQL 'Input' kind is provided, then error will be thrown.
 remoteField ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.Name ->
@@ -953,7 +953,7 @@ remoteField sdoc remoteRelationships parentTypeName fieldName description argsDe
 --   reason 'getObject' is an argument to this function
 getObjectParser ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   (G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)) ->
@@ -979,14 +979,6 @@ customizeRemoteNamespace remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fie
         let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName rsCustomizer
          in IR.RemoteSchemaRootField remoteSchemaInfo resultCustomizer $ IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
     mkNamespaceTypename = MkTypename $ const $ runMkTypename (remoteSchemaCustomizeTypeName rsCustomizer) rootTypeName
-
-{-
-NOTE: Unused. Should we remove?
-type MonadBuildRemoteSchema r m n = (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has CustomizeRemoteFieldName r)
-
-runMonadBuildRemoteSchema :: Monad m => SchemaT n (ReaderT (MkTypename, CustomizeRemoteFieldName) m) a -> m a
-runMonadBuildRemoteSchema m = flip runReaderT (mempty, mempty) $ runSchemaT m
--}
 
 withRemoteSchemaCustomization ::
   forall m r a.

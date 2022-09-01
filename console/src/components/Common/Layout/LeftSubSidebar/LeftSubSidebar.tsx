@@ -2,8 +2,8 @@ import React from 'react';
 import { Link } from 'react-router';
 import { FaSearch } from 'react-icons/fa';
 
-import Button from '../../Button/Button';
-import styles from './LeftSubSidebar.scss';
+import { Button } from '@/new-components/Button';
+import styles from './LeftSubSidebar.module.scss';
 
 interface Props extends React.ComponentProps<'div'> {
   showAddBtn: boolean;
@@ -36,7 +36,7 @@ const LeftSubSidebar: React.FC<Props> = props => {
           className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
         >
           <Link className={styles.padd_remove_full} to={addLink}>
-            <Button size="xs" color="white" data-test={addTestString}>
+            <Button size="sm" mode="default" data-test={addTestString}>
               {addLabel}
             </Button>
           </Link>

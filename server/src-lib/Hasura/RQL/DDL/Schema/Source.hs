@@ -1,35 +1,63 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.RQL.DDL.Schema.Source
-  ( AddSource,
-    DropSource (..),
-    RenameSource,
-    UpdateSource,
+  ( -- * Add Source
+    AddSource,
     runAddSource,
+    -- Drop Source
+    DropSource (..),
     runDropSource,
-    runRenameSource,
     dropSource,
     runPostDropSourceHook,
+
+    -- * Rename Source
+    RenameSource,
+    runRenameSource,
+
+    -- * Update Source
+    UpdateSource,
     runUpdateSource,
+
+    -- * Get Source Tables
+    GetSourceTables (..),
+    runGetSourceTables,
+
+    -- * Get Table Name
+    GetTableInfo (..),
+    runGetTableInfo,
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson qualified as Aeson
 import Data.Aeson.Extended
 import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text.Extended
+import Data.Text.Extended qualified as Text.E
+import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
+import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
 import Hasura.Base.Error
+import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON
+import Hasura.EncJSON qualified as EncJSON
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Backend qualified as RQL.Types
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
@@ -39,18 +67,25 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.AnyBackend qualified as AnyBackend
 import Hasura.SQL.Backend
+import Hasura.SQL.Backend qualified as Backend
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
+import Hasura.Tracing qualified as Tracing
+import Network.HTTP.Client.Manager qualified as HTTP.Manager
+import Servant.Client ((//))
+import Servant.Client.Generic qualified as Servant.Client
 
 --------------------------------------------------------------------------------
 -- Add source
 
 data AddSource b = AddSource
-  { _asName :: !SourceName,
-    _asBackendKind :: !(BackendSourceKind b),
-    _asConfiguration :: !(SourceConnConfiguration b),
-    _asReplaceConfiguration :: !Bool,
-    _asCustomization :: !SourceCustomization
+  { _asName :: SourceName,
+    _asBackendKind :: BackendSourceKind b,
+    _asConfiguration :: SourceConnConfiguration b,
+    _asReplaceConfiguration :: Bool,
+    _asCustomization :: SourceCustomization
   }
 
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) where
@@ -82,7 +117,8 @@ runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourc
               pure $ updateConfig . updateCustomization
             else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
         else do
-          let sourceMetadata = mkSourceMetadata @b name backendKind sourceConfig sourceCustomization
+          let sourceMetadata =
+                mkSourceMetadata @b name backendKind sourceConfig sourceCustomization
           pure $ metaSources %~ OMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier
@@ -92,8 +128,8 @@ runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourc
 -- Rename source
 
 data RenameSource = RenameSource
-  { _rmName :: !SourceName,
-    _rmNewName :: !SourceName
+  { _rmName :: SourceName,
+    _rmNewName :: SourceName
   }
 
 $(deriveFromJSON hasuraJSON ''RenameSource)
@@ -127,11 +163,8 @@ runRenameSource RenameSource {..} = do
     renameBackendSourceMetadata oldKey newKey m =
       case OMap.lookup oldKey m of
         Just val ->
-          OMap.insert
-            newKey
-            (AB.mapBackend val (renameSource newKey))
-            . OMap.delete oldKey
-            $ m
+          let renamedSource = BackendSourceMetadata (AB.mapBackend (unBackendSourceMetadata val) (renameSource newKey))
+           in OMap.insert newKey renamedSource $ OMap.delete oldKey $ m
         Nothing -> m
 
     renameSource :: forall b. SourceName -> SourceMetadata b -> SourceMetadata b
@@ -141,8 +174,8 @@ runRenameSource RenameSource {..} = do
 -- Drop source
 
 data DropSource = DropSource
-  { _dsName :: !SourceName,
-    _dsCascade :: !Bool
+  { _dsName :: SourceName,
+    _dsCascade :: Bool
   }
   deriving (Show, Eq)
 
@@ -244,9 +277,9 @@ runPostDropSourceHook sourceName sourceInfo = do
 -- update source
 
 data UpdateSource b = UpdateSource
-  { _usName :: !SourceName,
-    _usConfiguration :: !(Maybe (SourceConnConfiguration b)),
-    _usCustomization :: !(Maybe SourceCustomization)
+  { _usName :: SourceName,
+    _usConfiguration :: Maybe (SourceConnConfiguration b),
+    _usCustomization :: Maybe SourceCustomization
   }
 
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (UpdateSource b) where
@@ -277,3 +310,116 @@ runUpdateSource (UpdateSource name sourceConfig sourceCustomization) = do
 
   buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
+
+--------------------------------------------------------------------------------
+
+newtype GetSourceTables = GetSourceTables {_gstSourceName :: Common.SourceName}
+
+instance FromJSON GetSourceTables where
+  parseJSON = Aeson.withObject "GetSourceTables" \o -> do
+    _gstSourceName <- o .: "source"
+    pure $ GetSourceTables {..}
+
+-- | Fetch a list of tables for the request data source. Currently
+-- this is only supported for Data Connectors.
+runGetSourceTables ::
+  ( Has (L.Logger L.Hasura) r,
+    HTTP.Manager.HasHttpManagerM m,
+    MonadReader r m,
+    MonadError Error.QErr m,
+    Metadata.MetadataM m,
+    MonadIO m
+  ) =>
+  GetSourceTables ->
+  m EncJSON
+runGetSourceTables GetSourceTables {..} = do
+  metadata <- Metadata.getMetadata
+
+  let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
+      bmap = Metadata._metaBackendConfigs metadata
+
+  abSourceMetadata <-
+    InsOrdHashMap.lookup _gstSourceName sources
+      `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt _gstSourceName <> "' not found")
+
+  AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
+    case _smKind of
+      Backend.DataConnectorKind dcName -> do
+        logger :: L.Logger L.Hasura <- asks getter
+        manager <- HTTP.Manager.askHttpManager
+        let timeout = DC.Types.timeout _smConfiguration
+            apiConfig = DC.Types.value _smConfiguration
+
+        DC.Types.DataConnectorOptions {..} <- do
+          let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
+          onNothing
+            (InsOrdHashMap.lookup dcName =<< backendConfig)
+            (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
+
+        schemaResponse <-
+          Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
+            . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
+            $ (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) apiConfig
+
+        let fullyQualifiedTableNames = fmap API.dtiName $ API.srTables schemaResponse
+            tableNames = fmap (fold . NonEmpty.intersperse "." . API.unTableName) fullyQualifiedTableNames
+        pure $ EncJSON.encJFromJValue tableNames
+      backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+
+--------------------------------------------------------------------------------
+
+data GetTableInfo = GetTableInfo
+  { _gtiSourceName :: Common.SourceName,
+    _gtiTableName :: API.TableName
+  }
+
+instance FromJSON GetTableInfo where
+  parseJSON = Aeson.withObject "GetSourceTables" \o -> do
+    _gtiSourceName <- o .: "source"
+    _gtiTableName <- o .: "table"
+    pure $ GetTableInfo {..}
+
+-- | Fetch a list of tables for the request data source. Currently
+-- this is only supported for Data Connectors.
+runGetTableInfo ::
+  ( Has (L.Logger L.Hasura) r,
+    HTTP.Manager.HasHttpManagerM m,
+    MonadReader r m,
+    MonadError Error.QErr m,
+    Metadata.MetadataM m,
+    MonadIO m
+  ) =>
+  GetTableInfo ->
+  m EncJSON
+runGetTableInfo GetTableInfo {..} = do
+  metadata <- Metadata.getMetadata
+
+  let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
+      bmap = Metadata._metaBackendConfigs metadata
+
+  abSourceMetadata <-
+    InsOrdHashMap.lookup _gtiSourceName sources
+      `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt _gtiSourceName <> "' not found")
+
+  AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
+    case _smKind of
+      Backend.DataConnectorKind dcName -> do
+        logger :: L.Logger L.Hasura <- asks getter
+        manager <- HTTP.Manager.askHttpManager
+        let timeout = DC.Types.timeout _smConfiguration
+            apiConfig = DC.Types.value _smConfiguration
+
+        DC.Types.DataConnectorOptions {..} <- do
+          let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
+          onNothing
+            (InsOrdHashMap.lookup dcName =<< backendConfig)
+            (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
+
+        schemaResponse <-
+          Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
+            . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
+            $ (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) apiConfig
+
+        let table = find ((== _gtiTableName) . API.dtiName) $ API.srTables schemaResponse
+        pure $ EncJSON.encJFromJValue table
+      backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")

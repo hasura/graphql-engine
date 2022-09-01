@@ -1,0 +1,498 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SchemaSharing state apply schema should apply migration 1`] = `
+Object {
+  "globalConfigState": "success",
+  "templates": Object {
+    "sections": Array [
+      Object {
+        "name": "AAAAAAAA",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template one",
+            "details": Object {
+              "blogPostLink": "https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/",
+              "imageUrl": "https://raw.githubusercontent.com/hasura/template-gallery/main/./postgres-template-1/someImage.url",
+              "longDescription": "long long description",
+              "metadataObject": Object {
+                "metadata": Object {
+                  "sources": Array [
+                    Object {
+                      "configuration": Object {
+                        "connection_info": Object {
+                          "database_url": Object {
+                            "from_env": "HASURA_GRAPHQL_DATABASE_URL_OTHER",
+                          },
+                          "isolation_level": "read-committed",
+                          "pool_settings": Object {
+                            "connection_lifetime": 6000,
+                            "idle_timeout": 1800,
+                            "max_connections": 500,
+                            "retries": 10,
+                          },
+                          "use_prepared_statements": true,
+                        },
+                      },
+                      "kind": "postgres",
+                      "name": "default",
+                      "tables": Array [
+                        Object {
+                          "object_relationships": Array [
+                            Object {
+                              "name": "passport_info",
+                              "using": Object {
+                                "foreign_key_constraint_on": Object {
+                                  "column": "owner_id",
+                                  "table": Object {
+                                    "name": "passport_info",
+                                    "schema": "_onetoone",
+                                  },
+                                },
+                              },
+                            },
+                          ],
+                          "table": Object {
+                            "name": "owner",
+                            "schema": "_onetoone",
+                          },
+                        },
+                        Object {
+                          "object_relationships": Array [
+                            Object {
+                              "name": "owner",
+                              "using": Object {
+                                "foreign_key_constraint_on": "owner_id",
+                              },
+                            },
+                          ],
+                          "table": Object {
+                            "name": "passport_info",
+                            "schema": "_onetoone",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                  "version": 3,
+                },
+                "resource_version": 13,
+              },
+              "publicUrl": "https://github.com/hasura/template-gallery/blob/main/./postgres-template-1",
+              "sql": "
+CREATE SCHEMA _onetoone;
+
+-- Create Tables
+CREATE TABLE _onetoone.owner (
+    id serial PRIMARY KEY,
+    name text NOT NULL
+);
+
+CREATE TABLE _onetoone.passport_info (
+    id serial PRIMARY KEY,
+    passport_number text NOT NULL UNIQUE,
+    owner_id integer REFERENCES _onetoone.owner(id) NOT NULL
+);
+
+INSERT INTO \\"_onetoone\\".\\"owner\\" (\\"name\\") VALUES
+('Coleman Spickett'),
+('Gallard Dreye'),;
+
+INSERT INTO \\"_onetoone\\".\\"passport_info\\" (\\"passport_number\\", \\"owner_id\\") VALUES
+('553221', 1),
+('839016', 2),",
+            },
+            "dialect": "postgres",
+            "fetchingStatus": "success",
+            "isPartialData": false,
+            "key": "template-1",
+            "metadataVersion": 3,
+            "relativeFolderPath": "./postgres-template-1",
+            "templateVersion": 1,
+            "title": "template-1",
+            "type": "database",
+          },
+        ],
+      },
+      Object {
+        "name": "BBBBBBBB",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template two",
+            "dialect": "postgres",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-2",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-2",
+            "type": "database",
+          },
+          Object {
+            "description": "This is the description of template 3",
+            "dialect": "mysql",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-3",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-3",
+            "type": "database",
+          },
+        ],
+      },
+    ],
+  },
+}
+`;
+
+exports[`SchemaSharing state fetch single config file should populate with all the data from the gihtub api 1`] = `
+Object {
+  "globalConfigState": "success",
+  "templates": Object {
+    "sections": Array [
+      Object {
+        "name": "AAAAAAAA",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template one",
+            "details": Object {
+              "blogPostLink": "https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/",
+              "imageUrl": "https://raw.githubusercontent.com/hasura/template-gallery/main/./postgres-template-1/someImage.url",
+              "longDescription": "long long description",
+              "metadataObject": Object {
+                "metadata": Object {
+                  "sources": Array [
+                    Object {
+                      "configuration": Object {
+                        "connection_info": Object {
+                          "database_url": Object {
+                            "from_env": "HASURA_GRAPHQL_DATABASE_URL_OTHER",
+                          },
+                          "isolation_level": "read-committed",
+                          "pool_settings": Object {
+                            "connection_lifetime": 6000,
+                            "idle_timeout": 1800,
+                            "max_connections": 500,
+                            "retries": 10,
+                          },
+                          "use_prepared_statements": true,
+                        },
+                      },
+                      "kind": "postgres",
+                      "name": "default",
+                      "tables": Array [
+                        Object {
+                          "object_relationships": Array [
+                            Object {
+                              "name": "passport_info",
+                              "using": Object {
+                                "foreign_key_constraint_on": Object {
+                                  "column": "owner_id",
+                                  "table": Object {
+                                    "name": "passport_info",
+                                    "schema": "_onetoone",
+                                  },
+                                },
+                              },
+                            },
+                          ],
+                          "table": Object {
+                            "name": "owner",
+                            "schema": "_onetoone",
+                          },
+                        },
+                        Object {
+                          "object_relationships": Array [
+                            Object {
+                              "name": "owner",
+                              "using": Object {
+                                "foreign_key_constraint_on": "owner_id",
+                              },
+                            },
+                          ],
+                          "table": Object {
+                            "name": "passport_info",
+                            "schema": "_onetoone",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                  "version": 3,
+                },
+                "resource_version": 13,
+              },
+              "publicUrl": "https://github.com/hasura/template-gallery/blob/main/./postgres-template-1",
+              "sql": "
+CREATE SCHEMA _onetoone;
+
+-- Create Tables
+CREATE TABLE _onetoone.owner (
+    id serial PRIMARY KEY,
+    name text NOT NULL
+);
+
+CREATE TABLE _onetoone.passport_info (
+    id serial PRIMARY KEY,
+    passport_number text NOT NULL UNIQUE,
+    owner_id integer REFERENCES _onetoone.owner(id) NOT NULL
+);
+
+INSERT INTO \\"_onetoone\\".\\"owner\\" (\\"name\\") VALUES
+('Coleman Spickett'),
+('Gallard Dreye'),;
+
+INSERT INTO \\"_onetoone\\".\\"passport_info\\" (\\"passport_number\\", \\"owner_id\\") VALUES
+('553221', 1),
+('839016', 2),",
+            },
+            "dialect": "postgres",
+            "fetchingStatus": "success",
+            "isPartialData": false,
+            "key": "template-1",
+            "metadataVersion": 3,
+            "relativeFolderPath": "./postgres-template-1",
+            "templateVersion": 1,
+            "title": "template-1",
+            "type": "database",
+          },
+        ],
+      },
+      Object {
+        "name": "BBBBBBBB",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template two",
+            "dialect": "postgres",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-2",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-2",
+            "type": "database",
+          },
+          Object {
+            "description": "This is the description of template 3",
+            "dialect": "mysql",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-3",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-3",
+            "type": "database",
+          },
+        ],
+      },
+    ],
+  },
+}
+`;
+
+exports[`SchemaSharing state fetch single config file should set imageUrl as undefined when there is no image 1`] = `
+Object {
+  "globalConfigState": "success",
+  "templates": Object {
+    "sections": Array [
+      Object {
+        "name": "AAAAAAAA",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template one",
+            "details": Object {
+              "blogPostLink": "https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/",
+              "imageUrl": undefined,
+              "longDescription": "long long description",
+              "metadataObject": Object {
+                "metadata": Object {
+                  "sources": Array [
+                    Object {
+                      "configuration": Object {
+                        "connection_info": Object {
+                          "database_url": Object {
+                            "from_env": "HASURA_GRAPHQL_DATABASE_URL_OTHER",
+                          },
+                          "isolation_level": "read-committed",
+                          "pool_settings": Object {
+                            "connection_lifetime": 6000,
+                            "idle_timeout": 1800,
+                            "max_connections": 500,
+                            "retries": 10,
+                          },
+                          "use_prepared_statements": true,
+                        },
+                      },
+                      "kind": "postgres",
+                      "name": "default",
+                      "tables": Array [
+                        Object {
+                          "object_relationships": Array [
+                            Object {
+                              "name": "passport_info",
+                              "using": Object {
+                                "foreign_key_constraint_on": Object {
+                                  "column": "owner_id",
+                                  "table": Object {
+                                    "name": "passport_info",
+                                    "schema": "_onetoone",
+                                  },
+                                },
+                              },
+                            },
+                          ],
+                          "table": Object {
+                            "name": "owner",
+                            "schema": "_onetoone",
+                          },
+                        },
+                        Object {
+                          "object_relationships": Array [
+                            Object {
+                              "name": "owner",
+                              "using": Object {
+                                "foreign_key_constraint_on": "owner_id",
+                              },
+                            },
+                          ],
+                          "table": Object {
+                            "name": "passport_info",
+                            "schema": "_onetoone",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                  "version": 3,
+                },
+                "resource_version": 13,
+              },
+              "publicUrl": "https://github.com/hasura/template-gallery/blob/main/./postgres-template-1",
+              "sql": "
+CREATE SCHEMA _onetoone;
+
+-- Create Tables
+CREATE TABLE _onetoone.owner (
+    id serial PRIMARY KEY,
+    name text NOT NULL
+);
+
+CREATE TABLE _onetoone.passport_info (
+    id serial PRIMARY KEY,
+    passport_number text NOT NULL UNIQUE,
+    owner_id integer REFERENCES _onetoone.owner(id) NOT NULL
+);
+
+INSERT INTO \\"_onetoone\\".\\"owner\\" (\\"name\\") VALUES
+('Coleman Spickett'),
+('Gallard Dreye'),;
+
+INSERT INTO \\"_onetoone\\".\\"passport_info\\" (\\"passport_number\\", \\"owner_id\\") VALUES
+('553221', 1),
+('839016', 2),",
+            },
+            "dialect": "postgres",
+            "fetchingStatus": "success",
+            "isPartialData": false,
+            "key": "template-1",
+            "metadataVersion": 3,
+            "relativeFolderPath": "./postgres-template-1",
+            "templateVersion": 1,
+            "title": "template-1",
+            "type": "database",
+          },
+        ],
+      },
+      Object {
+        "name": "BBBBBBBB",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template two",
+            "dialect": "postgres",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-2",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-2",
+            "type": "database",
+          },
+          Object {
+            "description": "This is the description of template 3",
+            "dialect": "mysql",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-3",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-3",
+            "type": "database",
+          },
+        ],
+      },
+    ],
+  },
+}
+`;
+
+exports[`SchemaSharing state global config get flow should dispatch the root config success when the api works 1`] = `
+Object {
+  "globalConfigState": "success",
+  "templates": Object {
+    "sections": Array [
+      Object {
+        "name": "AAAAAAAA",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template one",
+            "dialect": "postgres",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-1",
+            "metadataVersion": 3,
+            "relativeFolderPath": "./postgres-template-1",
+            "templateVersion": 1,
+            "title": "template-1",
+            "type": "database",
+          },
+        ],
+      },
+      Object {
+        "name": "BBBBBBBB",
+        "templates": Array [
+          Object {
+            "description": "This is the description of template two",
+            "dialect": "postgres",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-2",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-2",
+            "type": "database",
+          },
+          Object {
+            "description": "This is the description of template 3",
+            "dialect": "mysql",
+            "fetchingStatus": "none",
+            "isPartialData": true,
+            "key": "template-3",
+            "metadataVersion": 3,
+            "relativeFolderPath": "/home",
+            "templateVersion": 1,
+            "title": "template-3",
+            "type": "database",
+          },
+        ],
+      },
+    ],
+  },
+}
+`;

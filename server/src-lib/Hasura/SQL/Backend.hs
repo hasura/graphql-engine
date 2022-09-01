@@ -14,12 +14,13 @@ module Hasura.SQL.Backend
   )
 where
 
+import Autodocodec (HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, literalTextCodec, parseAlternatives)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Proxy
 import Data.Text (unpack)
 import Data.Text.Extended
-import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, nonEmptyTextQQ)
+import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, nonEmptyTextCodec, nonEmptyTextQQ)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
 import Hasura.Incremental
 import Hasura.Prelude
@@ -30,6 +31,7 @@ import Witch qualified
 data PostgresKind
   = Vanilla
   | Citus
+  | Cockroach
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Hashable, Cacheable)
 
@@ -47,6 +49,7 @@ data BackendType
 instance Witch.From BackendType NonEmptyText where
   from (Postgres Vanilla) = [nonEmptyTextQQ|postgres|]
   from (Postgres Citus) = [nonEmptyTextQQ|citus|]
+  from (Postgres Cockroach) = [nonEmptyTextQQ|cockroach|]
   from MSSQL = [nonEmptyTextQQ|mssql|]
   from BigQuery = [nonEmptyTextQQ|bigquery|]
   from MySQL = [nonEmptyTextQQ|mysql|]
@@ -75,6 +78,7 @@ instance Cacheable (Proxy (b :: BackendType))
 data BackendSourceKind (b :: BackendType) where
   PostgresVanillaKind :: BackendSourceKind ('Postgres 'Vanilla)
   PostgresCitusKind :: BackendSourceKind ('Postgres 'Citus)
+  PostgresCockroachKind :: BackendSourceKind ('Postgres 'Cockroach)
   MSSQLKind :: BackendSourceKind 'MSSQL
   BigQueryKind :: BackendSourceKind 'BigQuery
   MySQLKind :: BackendSourceKind 'MySQL
@@ -94,6 +98,7 @@ instance Witch.From (BackendSourceKind b) NonEmptyText where
   -- this area for consideration and update if another BackendType is added
   from k@PostgresVanillaKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@PostgresCitusKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
+  from k@PostgresCockroachKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@MSSQLKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@BigQueryKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@MySQLKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
@@ -114,6 +119,9 @@ instance FromJSON (BackendSourceKind ('Postgres 'Vanilla)) where
 
 instance FromJSON (BackendSourceKind ('Postgres 'Citus)) where
   parseJSON = mkParseStaticBackendSourceKind PostgresCitusKind
+
+instance FromJSON (BackendSourceKind ('Postgres 'Cockroach)) where
+  parseJSON = mkParseStaticBackendSourceKind PostgresCockroachKind
 
 instance FromJSON (BackendSourceKind ('MSSQL)) where
   parseJSON = mkParseStaticBackendSourceKind MSSQLKind
@@ -138,6 +146,46 @@ mkParseStaticBackendSourceKind backendSourceKind =
   where
     validValues = backendTextNames $ backendTypeFromBackendSourceKind backendSourceKind
 
+instance HasCodec (BackendSourceKind ('Postgres 'Vanilla)) where
+  codec = mkCodecStaticBackendSourceKind PostgresVanillaKind
+
+instance HasCodec (BackendSourceKind ('Postgres 'Citus)) where
+  codec = mkCodecStaticBackendSourceKind PostgresCitusKind
+
+instance HasCodec (BackendSourceKind ('Postgres 'Cockroach)) where
+  codec = mkCodecStaticBackendSourceKind PostgresCockroachKind
+
+instance HasCodec (BackendSourceKind ('MSSQL)) where
+  codec = mkCodecStaticBackendSourceKind MSSQLKind
+
+instance HasCodec (BackendSourceKind ('BigQuery)) where
+  codec = mkCodecStaticBackendSourceKind BigQueryKind
+
+instance HasCodec (BackendSourceKind ('MySQL)) where
+  codec = mkCodecStaticBackendSourceKind MySQLKind
+
+instance HasCodec (BackendSourceKind ('DataConnector)) where
+  codec = dimapCodec dec enc nonEmptyTextCodec
+    where
+      dec = DataConnectorKind . DataConnectorName
+      enc = Witch.into
+
+mkCodecStaticBackendSourceKind :: BackendSourceKind b -> JSONCodec (BackendSourceKind b)
+mkCodecStaticBackendSourceKind backendSourceKind =
+  bimapCodec dec enc $
+    parseAlternatives (literalTextCodec longName) (literalTextCodec <$> aliases)
+  where
+    dec text =
+      if text `elem` validValues
+        then Right backendSourceKind
+        else Left ("got: " <> unpack text <> ", expected one of: " <> unpack (commaSeparated validValues))
+
+    enc = toTxt
+
+    validValues = backendTextNames $ backendTypeFromBackendSourceKind backendSourceKind
+    longName = head validValues
+    aliases = tail validValues
+
 -- | Some generated APIs use a shortened version of the backend's name rather than its full
 -- name. This function returns the "short form" of a backend, if any.
 backendShortName :: BackendType -> Maybe Text
@@ -149,6 +197,7 @@ supportedBackends :: [BackendType]
 supportedBackends =
   [ Postgres Vanilla,
     Postgres Citus,
+    Postgres Cockroach,
     MSSQL,
     BigQuery,
     MySQL,
@@ -182,6 +231,7 @@ backendTypeFromBackendSourceKind :: BackendSourceKind b -> BackendType
 backendTypeFromBackendSourceKind = \case
   PostgresVanillaKind -> Postgres Vanilla
   PostgresCitusKind -> Postgres Citus
+  PostgresCockroachKind -> Postgres Cockroach
   MSSQLKind -> MSSQL
   BigQueryKind -> BigQuery
   MySQLKind -> MySQL

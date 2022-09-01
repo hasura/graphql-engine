@@ -214,18 +214,15 @@ data RemoteSourceJoin b = RemoteSourceJoin
 
 deriving instance
   ( Backend b,
-    Show (ScalarValue b),
-    Show (SourceConfig b),
-    Show (BooleanOperators b (IR.UnpreparedValue b)),
-    Show (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Show (IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
+    Show (SourceConfig b)
   ) =>
   Show (RemoteSourceJoin b)
 
 deriving instance
   ( Backend b,
-    Eq (ScalarValue b),
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
+    Eq (SourceConfig b)
   ) =>
   Eq (RemoteSourceJoin b)
 

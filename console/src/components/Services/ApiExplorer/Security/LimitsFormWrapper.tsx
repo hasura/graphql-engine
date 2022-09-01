@@ -1,38 +1,34 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button } from '../../../Common';
+import { Button } from '@/new-components/Button';
 import { TableFormProps } from '../../../Common/Table';
 import { RoleLimits, RoleState } from './utils';
-import styles from './Security.scss';
+import styles from './Security.module.scss';
 import { removeAPILimits, updateAPILimits } from './actions';
 import { apiLimitActions, ApiLimitsFormSate } from './state';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { Dispatch } from '../../../../types';
 import { LimitsForm } from './LimitsForm';
 
-export const labels: Record<
-  keyof RoleLimits,
-  { title: string; info: string }
-> = {
-  depth_limit: {
-    title: 'Depth Limit',
-    info: 'Set the maximum relation depth a request can traverse.',
-  },
-  node_limit: {
-    title: 'Node Limit',
-    info:
-      'Set the maximum number of nodes which can be requested in a request.',
-  },
-  rate_limit: {
-    title: 'Request Rate Limit (Requests Per Minute)',
-    info:
-      'Set a request rate limit for this role. You can also combine additional unique parameters for more granularity.',
-  },
-  time_limit: {
-    title: 'Operation time limit',
-    info: 'Global timeout for GraphQL operations.',
-  },
-};
+export const labels: Record<keyof RoleLimits, { title: string; info: string }> =
+  {
+    depth_limit: {
+      title: 'Depth Limit',
+      info: 'Set the maximum relation depth a request can traverse.',
+    },
+    node_limit: {
+      title: 'Node Limit',
+      info: 'Set the maximum number of nodes which can be requested in a request.',
+    },
+    rate_limit: {
+      title: 'Request Rate Limit (Requests Per Minute)',
+      info: 'Set a request rate limit for this role. You can also combine additional unique parameters for more granularity.',
+    },
+    time_limit: {
+      title: 'Operation time limit',
+      info: 'Global timeout for GraphQL operations.',
+    },
+  };
 
 interface LimitsFormWrapperProps extends TableFormProps<RoleLimits> {
   disabled: boolean;
@@ -111,42 +107,41 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
         return dispatch(apiLimitActions.updateRateLimitState(state));
     }
   };
-  const onInputChange = (limit: keyof RoleLimits, role: string) => (
-    val: string
-  ) => {
-    const value = parseInt(val, 10);
-    if (Number.isNaN(value)) return;
-    if (role !== 'global') {
+  const onInputChange =
+    (limit: keyof RoleLimits, role: string) => (val: string) => {
+      const value = parseInt(val, 10);
+      if (Number.isNaN(value)) return;
+      if (role !== 'global') {
+        switch (limit) {
+          case 'depth_limit':
+            return dispatch(
+              apiLimitActions.updateDepthLimitRole({ role, limit: value })
+            );
+          case 'node_limit':
+            return dispatch(
+              apiLimitActions.updateNodeLimitRole({ role, limit: value })
+            );
+          case 'time_limit':
+            return dispatch(
+              apiLimitActions.updateTimeLimitRole({ role, limit: value })
+            );
+          default:
+            return dispatch(
+              apiLimitActions.updateMaxReqPerMin({ role, limit: value })
+            );
+        }
+      }
       switch (limit) {
         case 'depth_limit':
-          return dispatch(
-            apiLimitActions.updateDepthLimitRole({ role, limit: value })
-          );
+          return dispatch(apiLimitActions.updateGlobalDepthLimit(value));
         case 'node_limit':
-          return dispatch(
-            apiLimitActions.updateNodeLimitRole({ role, limit: value })
-          );
+          return dispatch(apiLimitActions.updateGlobalNodeLimit(value));
         case 'time_limit':
-          return dispatch(
-            apiLimitActions.updateTimeLimitRole({ role, limit: value })
-          );
+          return dispatch(apiLimitActions.updateGlobalTimeLimit(value));
         default:
-          return dispatch(
-            apiLimitActions.updateMaxReqPerMin({ role, limit: value })
-          );
+          return dispatch(apiLimitActions.updateGlobalMaxReqPerMin(value));
       }
-    }
-    switch (limit) {
-      case 'depth_limit':
-        return dispatch(apiLimitActions.updateGlobalDepthLimit(value));
-      case 'node_limit':
-        return dispatch(apiLimitActions.updateGlobalNodeLimit(value));
-      case 'time_limit':
-        return dispatch(apiLimitActions.updateGlobalTimeLimit(value));
-      default:
-        return dispatch(apiLimitActions.updateGlobalMaxReqPerMin(value));
-    }
-  };
+    };
 
   const removeBtnClickHandler = (role: string) => {
     parentDispatch(
@@ -160,7 +155,7 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
   return (
     <section className={styles.form_section}>
       <div className={styles.top}>
-        <Button size="xs" onClick={() => collapseForm()}>
+        <Button size="sm" onClick={() => collapseForm()}>
           Close
         </Button>
         <h5>
@@ -195,8 +190,8 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
         <div className={styles.form_footer}>
           <div className="submit_btn">
             <Button
-              size="xs"
-              color="yellow"
+              size="md"
+              mode="primary"
               type="submit"
               disabled={isDisabled(currentRowKey)}
             >
@@ -205,8 +200,8 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
           </div>
           <div className={styles.padding_left_sm}>
             <Button
-              size="sm"
-              color="red"
+              size="md"
+              mode="destructive"
               disabled={isDisabled(currentRowKey)}
               onClick={() => removeBtnClickHandler(currentRowKey)}
             >

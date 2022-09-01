@@ -317,6 +317,56 @@ You can update all objects in a table using the `{}` expression as the `where` a
 }`}
 />
 
+## Run multiple updates with different conditions{#multiple-updates}
+
+You can run multiple updates in sequence, each with its own `where` and `_set`, `_inc`, etc. clauses.
+
+**Example**:
+
+
+<GraphiQLIDE
+  query={`mutation update_many_articles {
+  update_article_many (
+    updates: [
+      {
+        where: {rating: {_lte: 1}},
+        _set: {is_published: false}
+      },
+      {
+       where: {rating: {_gte: 4}},
+        _set: {is_published: true}
+      }
+    ]
+  ) {
+    affected_rows
+  }
+}`}
+  response={`{
+  "data": {
+    "update_article_many": [
+      { "affected_rows": 3 },
+      { "affected_rows": 6 }
+    ]
+  }
+}`}
+/>
+
+
+:::info Note
+
+- The result is an array with the results of each entry in `updates` returned in order.
+- If any of the updates error for whatever reason, all the others are rolled back as the
+  updates are executed inside a transaction.
+
+:::
+
+:::tip Supported from
+
+The `update_<table>_many` mutation is supported in versions `v2.10.0` and above.
+
+:::
+
+
 ## Increment/Decrement **int** columns
 
 You can increment/decrement an `int` column with a given value using the `_inc` operator.

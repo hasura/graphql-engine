@@ -4,6 +4,7 @@ import { screen, waitFor as testLibWaitFor } from '@testing-library/react';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { useMetadataMigration } from '../../hooks/useMetadataMigration';
 import { useMetadataVersion } from '../../hooks/useMetadataVersion';
 import {
@@ -54,6 +55,7 @@ const server = setupServer(
         ctx.json({ message: 'mock success response from cli server' })
       );
     }
+    return undefined;
   })
 );
 
@@ -86,15 +88,15 @@ describe('in CLI mode', () => {
 
       return (
         <>
-          <button
+          <Button
             onClick={() => {
               mutation.mutate({
                 query: { type: 'pg_create_remote_relationship', args: {} },
               });
             }}
           >
-            mutate
-          </button>
+            Mutate
+          </Button>
           <h1>{query.isSuccess ? JSON.stringify(query.data) : 'NA'}</h1>
         </>
       );

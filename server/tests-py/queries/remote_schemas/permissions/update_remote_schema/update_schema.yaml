@@ -3,6 +3,6 @@ args:
   name: my-remote-schema
   comment: this is from update query
   definition:
-    url: http://localhost:4021
+    url: "{{GRAPHQL_SERVICE_2}}"
     forward_client_headers: True
     timeout_seconds: 120

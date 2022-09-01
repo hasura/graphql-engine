@@ -81,10 +81,6 @@ try_jq() {
   fi
 }
 
-# Bump this to:
-#  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.7
-
 case "${1-}" in
   graphql-engine)
     case "${2-}" in
@@ -160,18 +156,19 @@ echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 # Note: this does not help at all on 'nix' environments since 'pyenv' is not
 # something you normally use under nix.
 if command -v pyenv >/dev/null; then
-  # For now I guess use the greatest python3 >= 3.5
-  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 && $1 < 3.8  { print $1 }' | tail -n1)
-  if [ -z "$v" ]; then
+  # Use the latest version of Python installed with `pyenv`.
+  # Ensure that it is at least v3.6, so that format strings are supported.
+  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 { print $1 }' | tail -n1)"
+  if [[ -z "$v" ]]; then
     # shellcheck disable=SC2016
     echo_error 'Please `pyenv install` a version of python >= 3.6 so we can use it'
     exit 2
   fi
-  echo_pretty "Pyenv found. Using python version: $v"
+  echo_pretty "Pyenv found. Using Python version: $v"
   export PYENV_VERSION=$v
   python3 --version
 else
-  echo_warn "Pyenv not installed. Proceeding with system python version: $(python3 --version)"
+  echo_warn "Pyenv not installed. Proceeding with Python from the path, version: $(python3 --version)"
 fi
 
 
@@ -473,10 +470,14 @@ elif [ "$MODE" = "test" ]; then
 
   # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
-  export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
-  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
-  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
-  export ACTION_WEBHOOK_HANDLER="http://127.0.0.1:5593"
+  export EVENT_WEBHOOK_HANDLER="http://localhost:5592"
+  export ACTION_WEBHOOK_HANDLER="http://localhost:5593"
+  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://localhost:5594"
+  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://localhost:5000"
+  export GRAPHQL_SERVICE_HANDLER="http://localhost:4001"
+  export GRAPHQL_SERVICE_1="http://localhost:4020"
+  export GRAPHQL_SERVICE_2="http://localhost:4021"
+  export GRAPHQL_SERVICE_3="http://localhost:4022"
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     # It's better UX to build first (possibly failing) before trying to launch
@@ -526,8 +527,8 @@ elif [ "$MODE" = "test" ]; then
     # are defined.
     export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
     export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
-    export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles, naming_convention"
     export HASURA_GRAPHQL_MSSQL_SOURCE_URL=$MSSQL_CONN_STR
+    export HGE_URL="http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT"
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
@@ -554,66 +555,28 @@ elif [ "$MODE" = "test" ]; then
 
     add_sources $HASURA_GRAPHQL_SERVER_PORT
 
-    cd "$PROJECT_ROOT/server/tests-py"
+    TEST_DIR="server/tests-py"
 
-    ## Install misc test dependencies:
-    if [ ! -d "node_modules" ]; then
-      npm_config_loglevel=error npm install remote_schemas/nodejs/
-    else
-      echo_pretty "It looks like node dependencies have been installed already. Skipping."
-      echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/node_modules\""
-    fi
+    # Install and load Python test dependencies
+    PY_VENV="${TEST_DIR}/.hasura-dev-python-venv"
+    make "$PY_VENV"
+    source "${PY_VENV}/bin/activate"
 
-    ### Check for and install dependencies in venv
-    PY_VENV=.hasura-dev-python-venv
-    DEVSH_VERSION_FILE=.devsh_version
-    # Do we need to force reinstall?
-    if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
-      true # ok
-    else
-      echo_warn 'dev.sh version was bumped or fresh install. Forcing reinstallation of dependencies.'
-      rm -rf "$PY_VENV"
-    fi
-    # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
-    export CRYPTOGRAPHY_DONT_BUILD_RUST=1
-    set +u  # for venv activate
-    if [ ! -d "$PY_VENV" ]; then
-      python3 -m venv "$PY_VENV"
-      source "$PY_VENV/bin/activate"
-      pip3 install wheel
-      # If the maintainer of this script or pytests needs to change dependencies:
-      #  - alter requirements-top-level.txt as needed
-      #  - delete requirements.txt
-      #  - run this script, then check in the new frozen requirements.txt
-      if [ -f requirements.txt ]; then
-        pip3 install -r requirements.txt
-      else
-        pip3 install -r requirements-top-level.txt
-        pip3 freeze > requirements.txt
-      fi
-      echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
-    else
-      echo_pretty "It looks like python dependencies have been installed already. Skipping."
-      echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/$PY_VENV\""
+    # Install node.js test dependencies
+    make "${TEST_DIR}/node_modules"
 
-      source "$PY_VENV/bin/activate"
-    fi
+    cd "$TEST_DIR"
 
     # TODO MAYBE: fix deprecation warnings, make them an error
     if ! pytest \
-          -W ignore::DeprecationWarning \
           --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT \
           --pg-urls "$PG_DB_URL" \
-          --durations=20 \
           --assert=plain \
           "${PYTEST_ARGS[@]}"
     then
       echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv
-    set -u
 
     cd "$PROJECT_ROOT/server"
     # Kill the cabal new-run and its children. INT so we get hpc report:

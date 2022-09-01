@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { isEmpty } from '@/components/Common/utils/jsUtils';
 import { replace } from 'react-router-redux';
 import TableHeader from '../TableCommon/TableHeader';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
 import globals from '../../../../Globals';
@@ -179,8 +179,7 @@ class EditItem extends Component {
                 {elements}
                 <Button
                   type="submit"
-                  color="yellow"
-                  size="sm"
+                  mode="primary"
                   onClick={handleSaveClick}
                   data-test="edit-save-button"
                 >

@@ -1,8 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
-import { FaQuestionCircle } from 'react-icons/fa';
+import { IconTooltip } from '@/new-components/Tooltip';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import {
@@ -49,58 +47,59 @@ class Common extends React.Component {
       timeoutConf,
       forwardClientHeaders,
       comment,
-      isNew = false,
       customization,
     } = this.props;
 
     const { isModify } = this.props.editState;
 
-    const isDisabled = !isNew && !isModify;
+    const isDisabled = !isModify;
     const urlRequired = !manualUrl && !envName;
 
     const tooltips = {
       graphqlurl: (
-        <Tooltip id="tooltip-cascade">
-          Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql
-        </Tooltip>
+        <IconTooltip
+          message="Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql"
+          side="right"
+        />
       ),
       clientHeaderForward: (
-        <Tooltip id="tooltip-cascade">
-          Toggle forwarding headers sent by the client app in the request to
-          your remote GraphQL server
-        </Tooltip>
+        <IconTooltip
+          message="Toggle forwarding headers sent by the client app in the request to your remote GraphQL server"
+          side="right"
+        />
       ),
       additionalHeaders: (
-        <Tooltip id="tooltip-cascade">
-          Custom headers to be sent to the remote GraphQL server
-        </Tooltip>
+        <IconTooltip
+          message="Custom headers to be sent to the remote GraphQL server"
+          side="right"
+        />
       ),
       schema: (
-        <Tooltip id="tooltip-cascade">
-          Give this GraphQL schema a friendly name.
-        </Tooltip>
+        <IconTooltip
+          message="Give this GraphQL schema a friendly name."
+          side="right"
+        />
       ),
       timeoutConf: (
-        <Tooltip id="tooltip-cascade">
-          Configure timeout for your remote GraphQL server. Defaults to 60
-          seconds.
-        </Tooltip>
+        <IconTooltip
+          message="Configure timeout for your remote GraphQL server. Defaults to 60 seconds."
+          side="right"
+        />
       ),
       comment: (
-        <Tooltip id="tooltip-cascade">
-          A statement to help describe the remote schema in brief
-        </Tooltip>
+        <IconTooltip
+          message="A statement to help describe the remote schema in brief"
+          side="right"
+        />
       ),
     };
 
     const getTimeoutSection = () => {
       return (
         <React.Fragment>
-          <div className={subHeading}>
+          <div className={`${subHeading} flex items-center`}>
             GraphQL server timeout
-            <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
-              <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
-            </OverlayTrigger>
+            {tooltips.timeoutConf}
           </div>
           <label className="ml-0 pl-0">
             <input
@@ -122,11 +121,8 @@ class Common extends React.Component {
 
     return (
       <div>
-        <div className={`${subHeading} pt-md`}>
-          Remote Schema name *
-          <OverlayTrigger placement="right" overlay={tooltips.schema}>
-            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
-          </OverlayTrigger>
+        <div className={`${subHeading} pt-md flex items-center`}>
+          Remote Schema name *{tooltips.schema}
         </div>
         <label className="ml-0 pl-0 w-80">
           <input
@@ -136,7 +132,7 @@ class Common extends React.Component {
             value={name}
             data-key="name"
             onChange={this.handleInputChange.bind(this)}
-            disabled={!isNew}
+            disabled
             required
             data-test="remote-schema-schema-name"
             pattern="^[a-zA-Z0-9-_]*$"
@@ -144,11 +140,8 @@ class Common extends React.Component {
           />
         </label>
         <hr className="my-md" />
-        <div className={subHeading}>
-          GraphQL server URL *
-          <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
-            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
-          </OverlayTrigger>
+        <div className={`${subHeading} flex items-center`}>
+          GraphQL server URL *{tooltips.graphqlurl}
         </div>
         <div className={'w-80'}>
           <DropdownButton
@@ -188,8 +181,8 @@ class Common extends React.Component {
         <div className={`${subHeading} pt-md`}>
           Headers for the remote GraphQL server
         </div>
-        <div>
-          <label className="mb-md justify-center mr-sm">
+        <div className={`${subHeading} flex items-center mb-md`}>
+          <label className="flex justify-center mr-sm">
             <input
               onChange={this.toggleForwardHeaders.bind(this)}
               className={`${focusYellowRing} m-0`}
@@ -200,22 +193,12 @@ class Common extends React.Component {
               disabled={isDisabled}
             />
             <span className="ml-md">Forward all headers from client</span>
+            {tooltips.clientHeaderForward}
           </label>
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltips.clientHeaderForward}
-          >
-            <FaQuestionCircle aria-hidden="true" size={'1em'} />
-          </OverlayTrigger>
         </div>
-        <div className={`${subHeading} font-normal`}>
+        <div className={`${subHeading} font-normal flex items-center`}>
           Additional headers:
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltips.additionalHeaders}
-          >
-            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
-          </OverlayTrigger>
+          {tooltips.additionalHeaders}
         </div>
         <CommonHeader
           eventPrefix="REMOTE_SCHEMA"
@@ -232,11 +215,9 @@ class Common extends React.Component {
         <hr className="my-md" />
         {getTimeoutSection()}
         <hr className="my-md" />
-        <div className={subHeading}>
+        <div className={`${subHeading} flex items-center`}>
           Comment
-          <OverlayTrigger placement="right" overlay={tooltips.comment}>
-            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
-          </OverlayTrigger>
+          {tooltips.comment}
         </div>
         <label className="pl-0">
           <input
@@ -251,31 +232,20 @@ class Common extends React.Component {
           />
         </label>
         <hr className="my-lg" />
-        {/* <GraphQLCustomization mode="edit" customization={customization} dispatch={this.props.dispatch} /> */}
-        {isNew ? null : (
-          <>
-            <div className="text-lg font-bold">
-              GraphQL Customizations{' '}
-              <OverlayTrigger
-                placement="right"
-                overlay={
-                  <Tooltip id="tooltip-cascade">
-                    Individual Types and Fields will be editable after saving.
-                  </Tooltip>
-                }
-              >
-                <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
-              </OverlayTrigger>
-            </div>
-            <GraphQLCustomizationEdit
-              remoteSchemaName={name}
-              graphQLCustomization={customization}
-              dispatch={this.props.dispatch}
-              onChange={this.handleCustomizationInputChange.bind(this)}
-              isDisabled={isDisabled}
-            />
-          </>
-        )}
+        <div className="text-lg font-bold flex items-center">
+          GraphQL Customizations{' '}
+          <IconTooltip
+            message="Individual Types and Fields will be editable after saving."
+            side="right"
+          />
+        </div>
+        <GraphQLCustomizationEdit
+          remoteSchemaName={name}
+          graphQLCustomization={customization}
+          dispatch={this.props.dispatch}
+          onChange={this.handleCustomizationInputChange.bind(this)}
+          isDisabled={isDisabled}
+        />
       </div>
     );
   }

@@ -1,0 +1,622 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Dev/Testing/3. Testing Best Practices" />
+
+# Testing Best Practices
+
+This is a non-exhaustive list of testing best practices we apply when writing tests. It also acts as a reference to be linked from the various PR's feedback.
+
+- [Alternate actions and assertions](#alternate-actions-and-assertions)
+- [Always close the test with an assertion](#always-close-the-test-with-an-assertion)
+- [Opt for speaking assertions and errors](#opt-for-speaking-assertions-and-errors)
+- [Reduce the abstraction](#reduce-the-abstraction)
+- [Get WET instead of [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) (simplified: repeat the code)](#get-wet-instead-of-dry-simplified-repeat-the-code)
+- [Get the good parts of TypeScript in the tests](#get-the-good-parts-of-typescript-in-the-tests)
+- [test.each special cases](#testeach-special-cases)
+- [Avoid mocks as much as possible](#avoid-mocks-as-much-as-possible)
+- [Prefer Testing Library's selectors over data-testids](#prefer-testing-librarys-selectors-over-data-testids)
+- [Use test-ids for sections](#use-test-ids-for-sections)
+- [Use clear selectors](#use-clear-selectors)
+- [Avoid snapshot testing](#avoid-snapshot-testing)
+- [If you use snapshot testing, explain why](#if-you-use-snapshot-testing-explain-why)
+- [Respect naming conventions](#respect-naming-conventions)
+- [Respect test description conventions](#respect-test-description-conventions)
+- [Use `describe` to give more context](#use-describe-to-give-more-context)
+- [Do not use E2E test apart for the happy paths](#do-not-use-e2e-test-apart-for-the-happy-paths)
+- [Tests must not depend on execution order](#tests-must-not-depend-on-execution-order)
+- [Do not make your tests sleeping](#do-not-make-your-tests-sleeping)
+- [Log whatever could help the readers understanding what you are doing](#log-whatever-could-help-the-readers-understanding-what-you-are-doing)
+- [What else?](#what-else)
+
+## Alternate actions and assertions
+
+Assertions act as checkpoints for understanding if the subject under test is performing as expected. The more the assertions, **the less actions you have to debug in case of test failure**. This is especially valid for testing flows in Storybook or Cypress.
+
+```ts
+// ❌ don't
+test('', () => {
+  // action
+  // action
+  // action
+  // action
+  expect(/*...*/);
+});
+
+// ✅ do
+test('', () => {
+  // action
+  // action
+  expect(/*...*/);
+  // action
+  // action
+  expect(/*...*/);
+});
+```
+
+## Always close the test with an assertion
+
+If a test ends without an assertion, it is not clear what is the expected behaviour. Should the subject tested just not failing? Should the subject trigger any side-effect? This ambiguity does not help trusting the test when refactoring the subject.
+
+```ts
+// ❌ don't
+test('', () => {
+  // action
+  // action
+  expect(/*...*/);
+  // action
+  // action
+
+  // ??? What is the expected behaviour?
+});
+
+// ✅ do
+test('', () => {
+  // action
+  // action
+  expect(/*...*/);
+  // action
+  // action
+  expect(/*...*/);
+});
+```
+
+## Opt for speaking assertions and errors
+
+The same thing can be asserted in tens of ways. Always opt for the most "speaking" assertion that leverage the tool capabilities and provide more meaningful feedback to the reader when a test fails.
+
+```ts
+// Jest example
+// ❌ don't
+test('', () => {
+  // ...
+  expect(mock.calls[0]).toEquel(['foo', 'bar']);
+});
+
+// ✅ do
+test('', () => {
+  // action
+  expect(mock).toHaveBeenCalledWith('foo', 'bar');
+});
+
+// Cypress example
+// ❌ don't
+it('', () => {
+  // ...
+  expect(response.body).to.have.property('result_type');
+});
+
+// ✅ do
+it('', () => {
+  // action
+  expect(response.body).to.have.property(
+    'result_type',
+    'The response does not contain the result_type' // <-- will be printed in case of error
+  );
+});
+```
+
+## Reduce the abstraction
+
+The readers must not spend their time building a mental model of what the test does. The code of the test must be simple and stupid, allowing the readers to immediately gets an overview of what the subject under test does.
+
+```ts
+// ❌ don't
+export const expectNotification = (
+  {
+    type,
+    title,
+    message,
+  }: {
+    type: 'success' | 'error';
+    title: string;
+    message?: string;
+  },
+  timeout = 10000
+) => {
+  const types: Record<string, string> = {
+    error: '.notification-error',
+    success: '.notification-success',
+  };
+
+  const el = cy.get(types[type], { timeout });
+  el.should('be.visible');
+  el.should('contain', title);
+  if (message) el.should('contain', message);
+};
+
+test('', () => {
+  // action
+  expectNotification({type: 'success', title: 'Table created!'}) // <-- if it fails something inside here... Good luck at debugging it
+});
+
+
+// ✅ do
+function expectSuccessNotification = (title: string) {
+  cy.get('.notification-success')
+    .should('be.visible')
+    .should('contain', title)
+}
+
+test('', () => {
+  // action
+  expectSuccessNotification('Table created!') // <-- less complex, more vertical, way dmore debuggable
+});
+```
+
+## Get [WET](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself#WET) instead of [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) (simplified: repeat the code)
+
+Zero-abstraction code is easier to read, think about, and debug. While writing tests the cost of abstraction grows a lot, limit it as much as possible
+
+```ts
+// ❌ don't
+function expectSuccessNotification = (title: string) {
+  cy.get('.notification-success')
+    .should('be.visible')
+    .should('contain', title)
+}
+
+test('', () => {
+  // action
+  expectSuccessNotification('Database created!')
+
+  // action
+  expectSuccessNotification('Table created!')
+});
+
+// ✅ do
+test('', () => {
+  // action
+  cy.get('.notification-success')
+    .should('be.visible')
+    .should('contain', 'Database created!')
+
+  // action
+  cy.get('.notification-success')
+    .should('be.visible')
+    .should('contain', 'Table created!')
+});
+```
+
+## Get the good parts of TypeScript in the tests
+
+TypeScript prevents error failures (and so wasting time), leverage it as much as possible by using app-related types (not test-related ones) with the test's variables to bring type-safety to them.
+
+```ts
+// ❌ don't
+test('', () => {
+  expect(subject({ foo: 'bar' })).toEqual({ baz: 'qux' });
+});
+
+// ✅ do
+test('', () => {
+  const params: Params = { foo: 'bar' }; // <-- if Params change, TS throws
+  const expected: Result = { baz: 'qux' }; // <-- if Params change, TS throws
+  expect(subject(params)).toEqual(expected);
+});
+```
+
+## test.each special cases
+
+`test.each` could be very convenient and also more readable in a few sweet spots, such as
+
+1. the inputs and expected output can be expressed on a single line and they reult readable
+2. the list of combinations to test is long (otherwise, the higher cognitive load does not pay off)
+3. the test is a one-liner (otherwise, the test's code is hard to decipher due to the long code involved)
+
+if you are dealing with this sweet spot, remember to use the table version
+
+```ts
+// ✅ do
+describe('getStatusForForecast', () => {
+  it.each`
+    homeScore | awayScore | estimatedHome | estimatedAway | expectedStatus
+    ${2}      | ${1}      | ${2}          | ${1}          | ${Forecast_Status_Enum.Perfect}
+    ${2}      | ${1}      | ${3}          | ${0}          | ${Forecast_Status_Enum.Partial}
+    ${2}      | ${1}      | ${2}          | ${4}          | ${Forecast_Status_Enum.Miss}
+    ${1}      | ${2}      | ${1}          | ${2}          | ${Forecast_Status_Enum.Perfect}
+    ${1}      | ${2}      | ${0}          | ${3}          | ${Forecast_Status_Enum.Partial}
+    ${1}      | ${2}      | ${1}          | ${4}          | ${Forecast_Status_Enum.Partial}
+    ${1}      | ${2}      | ${3}          | ${2}          | ${Forecast_Status_Enum.Miss}
+    ${0}      | ${0}      | ${0}          | ${0}          | ${Forecast_Status_Enum.Perfect}
+    ${0}      | ${0}      | ${1}          | ${1}          | ${Forecast_Status_Enum.Partial}
+    ${0}      | ${0}      | ${1}          | ${2}          | ${Forecast_Status_Enum.Miss}
+    ${1}      | ${1}      | ${0}          | ${0}          | ${Forecast_Status_Enum.Partial}
+    ${1}      | ${1}      | ${1}          | ${1}          | ${Forecast_Status_Enum.Perfect}
+    ${1}      | ${1}      | ${2}          | ${2}          | ${Forecast_Status_Enum.Partial}
+  `(
+    'should, given a $homeScore:$awayScore match and a $estimatedHome:$estimatedAway forecast, return $expectedStatus as a status',
+    ({
+      homeScore,
+      awayScore,
+      estimatedHome,
+      estimatedAway,
+      expectedStatus,
+    }) => {
+      expect(
+        getStatusForForecast(
+          { homeScore, awayScore },
+          { estimatedAway, estimatedHome, profileId: '', matchId: '' }
+        )
+      ).toEqual(expectedStatus);
+    }
+  );
+});
+```
+
+Apart from the abovementioned sweet spot, using test loops usually reduce the readability and makes hard to run/skip only some tests, avoid using them.
+
+```ts
+// ❌ don't
+const cases = [
+  [2, 2, 4],
+  [-2, -2, -4],
+  [2, -2, 0],
+];
+
+describe("'add' utility", () => {
+  test.each(cases)(
+    // <-- prevents using skip/only
+    'given %p and %p as arguments, returns %p', // <-- reading it is hard and there is no correlation between the terminal feedback and the code of the test
+    (firstArg, secondArg, expectedResult) => {
+      const result = add(firstArg, secondArg); // <-- dynamic tests are hard to read
+      expect(result).toEqual(expectedResult);
+    }
+  );
+});
+
+// ✅ do
+describe("'add' utility", () => {
+  it('given 2 and 2 as arguments, returns 4', () => {
+    const result = add(2, 2);
+    expect(result).toEqual(4);
+  });
+  it('given -2 and -2 as arguments, returns -4', () => {
+    const result = add(-2, -2);
+    expect(result).toEqual(-4);
+  });
+  it('given 2 and -2 as arguments, returns 0', () => {
+    const result = add(2, -2);
+    expect(result).toEqual(0);
+  });
+});
+```
+
+## Avoid mocks as much as possible
+
+Mocks are fragile by definition and prevent TypeScript from helping us when the mocked module change. Avoid them if you can.
+
+```ts
+// ❌ don't
+
+// canAccessReadReplica.ts
+import { isProConsole } from './proConsole';
+export const canAccessReadReplica = () => isProConsole(window.__env);
+
+// canAccessReadReplica.test.ts
+import * as proConsole from '../proConsole';
+import { canAccessReadReplica } from '../canAccessReadReplica';
+
+jest.mock('../proConsole', () => ({
+  // <-- mocking is fragile
+  isProConsole: jest.fn(() => true),
+}));
+
+const mockedIsProConsole = jest.spyOn(proConsole, 'isProConsole');
+
+describe('canAccessReadReplica', () => {
+  it('returns true on pro console', () => {
+    mockedIsProConsole.mockImplementation(() => true);
+    expect(canAccessReadReplica()).toBe(true);
+  });
+
+  it('returns false if console is NOT pro', () => {
+    mockedIsProConsole.mockImplementation(() => false);
+    expect(canAccessReadReplica()).toBe(false);
+  });
+});
+
+// ✅ do
+// In the above case, prefer not to write a test at all, canAccessReadReplica's code is extremely simple
+// and mocking proConsole is fragile, testing this integration is not worth.
+```
+
+## Prefer Testing Library's selectors over data-testids
+
+Testing Library's selectors are famous for well expressing what the searched element is and also for simplyfying debugging the tests.
+
+```ts
+// ❌ don't
+test('', () => {
+  const element = screen.getByTestId('new-db-name');
+  // ...
+});
+
+// ✅ do
+test('', () => {
+  const element = screen.getByLabel('New Database name');
+  // ...
+});
+```
+
+## Use test-ids for sections
+
+`data-testid` attributes are great for UI sections to reduce Testing Library selectors' scope and for expressing the same UI hierarchy through the test selectors.
+
+```ts
+// ❌ don't
+test('', () => {
+  cy.findByLabel('New Database name').type(/* ... */);
+  cy.findByLabel('New Database type').type(/* ... */);
+  cy.findByLabel('New Table name').type(/* ... */);
+  cy.findByLabel('New Table type').type(/* ... */);
+});
+
+// ✅ do
+test('When the name is correct, should allow creating the database', () => {
+  cy.findByTextId('new-database-section').within(() => {
+    cy.findByLabel('New Database name').type(/* ... */);
+    cy.findByLabel('New Database type').type(/* ... */);
+  });
+
+  cy.findByTextId('new-table-section').within(() => {
+    cy.findByLabel('New Table name').type(/* ... */);
+    cy.findByLabel('New Table type').type(/* ... */);
+  });
+});
+```
+
+## Use clear selectors
+
+When Testing Library-like selectors are not an option, do your best to explain to the readers what is the element you are looking for.
+
+```ts
+// ❌ don't
+test('', () => {
+  cy.get('textarea').eq(0).type(/* ... */);
+  // ...
+});
+
+// ✅ do
+test('', () => {
+  cy.get('textarea').eq(0).as('graphiQlTextarea');
+  cy.get('@graphiQlTextarea').type(/* ... */);
+  // ...
+});
+```
+
+## Avoid snapshot testing
+
+Snapshot testing adds ambiguity to the tests, opt for a long list of assertions instead.
+
+```ts
+// ❌ don't
+test('', () => {
+  // ...
+  expect(result).toMatchSnapshot();
+});
+
+// ✅ do
+test('', () => {
+  // ...
+  expect(result).toHaveProperty('milk', '2');
+  expect(result).toHaveProperty('eggs', '10');
+});
+```
+
+## If you use snapshot testing, explain why
+
+There are some cases for snapshot testing, but it is better off commenting them to tell the readers why snapshot testing is there. And prefer `toMatchInlineSnapshot` over `toMatchSnapshot`
+
+```ts
+// ❌ don't
+test('', () => {
+  // ...
+  expect(result).toHaveProperty('milk', '2');
+  expect(result).toHaveProperty('eggs', '10');
+  expect(result).toMatchInlineSnapshot(`{
+    milk: 2,
+    eggs: 10,
+  }`);
+});
+
+// ✅ do
+test('', () => {
+  // ...
+  expect(result).toHaveProperty('milk', '2');
+  expect(result).toHaveProperty('eggs', '10');
+  // Checks that no other properties exist, every added property must be considered an error
+  expect(result).toMatchInlineSnapshot(`{
+    milk: 2,
+    eggs: 10,
+  }`);
+});
+```
+
+```ts
+// ❌ don't
+test('', () => {
+  // ...
+  expect(result).toMatchSnapshot();
+});
+
+// ✅ do
+test('', () => {
+  // ...
+  // A the time of introducing a small change, understanding what the function does would take too much time.
+  // To be able add the small change, let's at least freeze the current behaviour.
+  // Every change in the returned result must be considered an error.
+  expect(result).toMatchSnapshot();
+});
+```
+
+## Respect naming conventions
+
+Cypress' test names tell about their content and purpose, other tests are generic at the moment (we will see in the future if we need more granularity).
+
+```
+// ❌ don't
+- cypress/e2e/databases/test.ts
+- src/features/databases/components/Create.spec.tsx
+
+// ✅ do
+- cypress/e2e/databases/crud.e2e.ts
+- src/features/databases/components/Create.test.tsx
+```
+
+## Respect test description conventions
+
+Respect the "When..., then..." [BDD-style](https://en.wikipedia.org/wiki/Given-When-Then) convention, and be as descriptive as possible. In case of failures, the reader should be able to understand what did not work before digging into the code.
+
+```ts
+// ❌ don't
+test('fetches data', () => {
+  // ...
+});
+
+// ✅ do
+test('When invoked, then immediately fetches the config data', () => {
+  // ...
+});
+```
+
+## Use `describe` to give more context
+
+A top-level `describe` is always useful, at least including the function name that allows the reader to immediately look for the file starting from the CLI output, without passing from the test.
+
+```ts
+// ❌ don't
+test('When invoked, then immediately fetches the config data', () => {
+  awesomeFetcher();
+});
+
+// ✅ do
+test('awesomeFetcher', () => {
+  test('When invoked, then immediately fetches the config data', () => {
+    awesomeFetcher();
+  });
+});
+```
+
+## Do not use E2E test apart for the happy paths
+
+E2E tests give total confidence at the cost of execution speed. Use them only to check the happy paths, not all the possible paths.
+
+```ts
+// ❌ don't
+test('When the name is correct, should allow creating the database', () => {
+  // Happy path testing
+});
+test('When the name is not correct, should not allow creating the database', () => {
+  // Error path testing
+});
+test('When the name is empty, should not allow creating the database', () => {
+  // Error path testing
+});
+
+// ✅ do
+test('When the name is correct, should allow creating the database', () => {
+  // Happy path testing
+});
+```
+
+## Tests must not depend on execution order
+
+The #1 reason for test failures is relying on execution order. **Every test must be independent**! This is mostly, but not only, related to E2E tests where we tend to write concatenated tests.
+
+```ts
+// ❌ don't
+test('', () => {
+  // create an 🍎
+});
+test('', () => {
+  // edit an 🍎
+});
+
+// ✅ do
+test('', () => {
+  // create an 🍎
+  // edit an 🍎
+});
+
+// or...
+
+// ✅ do
+test('', () => {
+  // create an 🍎
+});
+test('', () => {
+  // create an 🍎 if it does not exist
+  // edit an 🍎
+});
+```
+
+## Do not make your tests sleeping
+
+Sleeps (or waits) slow down the tests without expressing to the readers what is been awaited. Instead, always wait for the precise thing you awaiting for.
+
+```ts
+// ❌ don't
+test('', () => {
+  cy.get('button').click();
+
+  cy.wait(10000);
+
+  expectSuccessNotification('Database created!');
+});
+
+// ✅ do
+test('', () => {
+  cy.intercept('POST', 'http://localhost:8080/createdb').as('createDbRequest');
+
+  cy.get('button').click();
+
+  cy.wait('@createDbRequest');
+
+  expectSuccessNotification('Database created!');
+});
+```
+
+## Log whatever could help the readers understanding what you are doing
+
+Cypress has a great test runner that logs whatever happens in the test. Anyway, "translating" back the logs is not an easy task. Custom logs will help the readers understand the intentions in plain English.
+
+```ts
+// ❌ don't
+test('', () => {
+  cy.findByLabel('Key').type(/* ... */);
+});
+
+// ✅ do
+test('', () => {
+  cy.log('**--- Set the key of the first key/value header**');
+  cy.findByLabel('Key').type(/* ... */);
+});
+```
+
+## What else?
+
+We have not talked yet about
+
+1. Code coverage: the codebase and the testing patterns are not mature enough to speak about Code Coverage
+2. Screenshot testing: because it is automatically covered by Chromatic in our codebase
+3. Mutation testing, Property-based testing, and other "esotheric" approaches, it is quite too early and the return of investment should be carefully analyzed

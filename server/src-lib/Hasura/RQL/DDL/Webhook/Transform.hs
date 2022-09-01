@@ -55,13 +55,13 @@ where
 import Control.Lens (Lens', lens, set, traverseOf, view)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.Extended qualified as J
+import Data.Aeson.Kriti.Functions qualified as KFunc
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Coerce (Coercible)
 import Data.Functor.Barbie (AllBF, ApplicativeB, ConstraintsB, FunctorB, TraversableB)
 import Data.Functor.Barbie qualified as B
-import Data.HashMap.Strict qualified as M
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
@@ -73,9 +73,7 @@ import Hasura.RQL.DDL.Webhook.Transform.Headers (Headers (..), HeadersTransformF
 import Hasura.RQL.DDL.Webhook.Transform.Method
 import Hasura.RQL.DDL.Webhook.Transform.QueryParams
 import Hasura.RQL.DDL.Webhook.Transform.Url
-import Hasura.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
-import Kriti qualified (runKriti)
-import Kriti.Error qualified as Kriti (CustomFunctionError (CustomFunctionError), serialize)
+import Hasura.Session (SessionVariables)
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 -------------------------------------------------------------------------------
@@ -376,18 +374,8 @@ buildRespTransformCtx reqCtx sessionVars engine respBody =
     { responseTransformBody = fromMaybe J.Null $ J.decode @J.Value respBody,
       responseTransformReqCtx = J.toJSON reqCtx,
       responseTransformEngine = engine,
-      responseTransformFunctions = M.singleton "getSessionVariable" getSessionVar
+      responseTransformFunctions = KFunc.sessionFunctions sessionVars
     }
-  where
-    getSessionVar :: J.Value -> Either Kriti.CustomFunctionError J.Value
-    getSessionVar inp = case inp of
-      J.String txt ->
-        case sessionVarValue of
-          Just x -> Right $ J.String x
-          Nothing -> Left . Kriti.CustomFunctionError $ "Session variable \"" <> txt <> "\" not found"
-        where
-          sessionVarValue = sessionVars >>= getSessionVariableValue (mkSessionVariable txt)
-      _ -> Left $ Kriti.CustomFunctionError "Session variable name should be a string"
 
 -- | Construct a Template Transformation function for Responses
 --
@@ -403,7 +391,7 @@ mkRespTemplateTransform _ Body.Remove _ = pure J.Null
 mkRespTemplateTransform engine (Body.ModifyAsJSON (Template template)) ResponseTransformCtx {..} =
   let context = [("$body", responseTransformBody), ("$request", responseTransformReqCtx)]
    in case engine of
-        Kriti -> first (TransformErrorBundle . pure . J.toJSON . Kriti.serialize) $ Kriti.runKriti template context
+        Kriti -> first (TransformErrorBundle . pure . J.toJSON) $ KFunc.runKriti template context
 mkRespTemplateTransform engine (Body.ModifyAsFormURLEncoded formTemplates) context =
   case engine of
     Kriti -> do

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { TableMachine } from '../hooks';
 import { PermissionsIcon } from './PermissionsIcons';
 
@@ -51,7 +52,7 @@ export const InputCell: React.FC<InputCellProps> = ({
           type="checkbox"
           value={roleName}
           checked={isSelected}
-          className={`rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 ${
+          className={`rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 m-0 ${
             !isSelectable && 'cursor-not-allowed'
           }`}
           disabled={!isSelectable}
@@ -89,7 +90,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
   return (
     <td>
-      <button
+      <Button
         type="submit"
         className={`cursor-pointer h-20 border-none w-full whitespace-nowrap text-center ${
           isCurrentEdit ? 'bg-secondary' : 'hover:bg-indigo-50'
@@ -97,7 +98,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         {...rest}
       >
         <PermissionsIcon type={access} selected={isCurrentEdit} />
-      </button>
+      </Button>
     </td>
   );
 };

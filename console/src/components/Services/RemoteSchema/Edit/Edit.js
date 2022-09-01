@@ -12,7 +12,7 @@ import {
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 
@@ -133,22 +133,23 @@ class Edit extends React.Component {
 
     const generateMigrateBtns = () => {
       return (
-        <div className="mt-lg">
+        <div className="mt-lg flex">
+          <div className="mr-sm">
+            <Button
+              mode="primary"
+              type="submit"
+              disabled={isRequesting}
+              data-test={'remote-schema-edit-save-btn'}
+              isLoading={isRequesting}
+              loadingText="Saving..."
+            >
+              Save
+            </Button>
+          </div>
           <Button
-            className="mr-sm"
-            color="yellow"
-            size="sm"
-            type="submit"
-            disabled={isRequesting}
-            data-test={'remote-schema-edit-save-btn'}
-          >
-            {isRequesting ? 'Saving' : 'Save'}
-          </Button>
-          <Button
-            color="red"
-            size="sm"
+            mode="destructive"
+            size="md"
             onClick={e => {
-              e.preventDefault();
               this.handleDeleteRemoteSchema(e);
             }}
             disabled={isRequesting || inconsistencyDetails}
@@ -200,9 +201,11 @@ class Edit extends React.Component {
 
     return (
       <div>
-        <Helmet
-          title={`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
-        />
+        <Helmet>
+          <title data-heap-redact-text="true">
+            {`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
+          </title>
+        </Helmet>
         <Tabs
           appPrefix={appPrefix}
           currentTab="modify"

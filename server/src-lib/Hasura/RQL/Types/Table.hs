@@ -60,12 +60,14 @@ module Hasura.RQL.Types.Table
     sortCols,
     tableInfoName,
     getRolePermInfo,
+    tableArrayRelationships,
     tcCustomName,
     tcCustomRootFields,
     tcComment,
     tcColumnConfig,
     tciCustomConfig,
     tciDescription,
+    tciApolloFederationConfig,
     tciEnumValues,
     tciExtraTableMetadata,
     tciFieldInfoMap,
@@ -326,36 +328,33 @@ data InsPermInfo (b :: BackendType) = InsPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (InsPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (InsPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (PreSetColsPartial b)
   ) =>
   NFData (InsPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b),
+    Cacheable (PreSetColsPartial b)
   ) =>
   Cacheable (InsPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (InsPermInfo b)
   where
@@ -454,36 +453,36 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b),
+    Eq (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Eq (SelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b),
+    Show (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Show (SelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   NFData (SelPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b),
+    Cacheable (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Cacheable (SelPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b),
+    ToJSON (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   ToJSON (SelPermInfo b)
   where
@@ -502,36 +501,33 @@ data UpdPermInfo (b :: BackendType) = UpdPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (UpdPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (UpdPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (PreSetColsPartial b)
   ) =>
   NFData (UpdPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b),
+    Cacheable (PreSetColsPartial b)
   ) =>
   Cacheable (UpdPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (UpdPermInfo b)
   where
@@ -547,36 +543,31 @@ data DelPermInfo (b :: BackendType) = DelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (DelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (DelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b)
   ) =>
   NFData (DelPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
+    Cacheable (AnnBoolExpPartialSQL b)
   ) =>
   Cacheable (DelPermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (DelPermInfo b)
   where
@@ -590,9 +581,24 @@ data RolePermInfo (b :: BackendType) = RolePermInfo
   }
   deriving (Generic)
 
-instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b)), NFData (FunctionArgumentExp b (PartialSQLExp b))) => NFData (RolePermInfo b)
+instance
+  ( Backend b,
+    NFData (InsPermInfo b),
+    NFData (SelPermInfo b),
+    NFData (UpdPermInfo b),
+    NFData (DelPermInfo b)
+  ) =>
+  NFData (RolePermInfo b)
 
-instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (RolePermInfo b) where
+instance
+  ( Backend b,
+    ToJSON (InsPermInfo b),
+    ToJSON (SelPermInfo b),
+    ToJSON (UpdPermInfo b),
+    ToJSON (DelPermInfo b)
+  ) =>
+  ToJSON (RolePermInfo b)
+  where
   toJSON = genericToJSON hasuraJSON
 
 makeLenses ''RolePermInfo
@@ -749,7 +755,7 @@ instance (Backend b) => ToJSON (TableConfig b) where
           -- custom_column_names is a deprecated property that has been replaced by column_config.
           -- We are retaining it here, sourcing its values from column_config, for backwards-compatibility
           -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
-          "custom_column_names" .= M.mapMaybe _ccfgCustomName _tcColumnConfig,
+          "custom_column_names" .= mapMaybe _ccfgCustomName _tcColumnConfig,
           "column_config" .= M.filter (/= mempty) _tcColumnConfig,
           "custom_name" .= _tcCustomName,
           "comment" .= _tcComment
@@ -867,7 +873,8 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
     _tciViewInfo :: Maybe ViewInfo,
     _tciEnumValues :: Maybe EnumValues,
     _tciCustomConfig :: TableConfig b,
-    _tciExtraTableMetadata :: ExtraTableMetadata b
+    _tciExtraTableMetadata :: ExtraTableMetadata b,
+    _tciApolloFederationConfig :: Maybe ApolloFederationConfig
   }
   deriving (Generic)
 
@@ -904,7 +911,15 @@ data TableInfo (b :: BackendType) = TableInfo
   }
   deriving (Generic)
 
-instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (TableInfo b) where
+instance
+  ( Backend b,
+    ToJSON (EventTriggerInfoMap b),
+    ToJSON (RolePermInfo b),
+    ToJSON (RolePermInfoMap b),
+    ToJSON (TableCoreInfo b)
+  ) =>
+  ToJSON (TableInfo b)
+  where
   toJSON = genericToJSON hasuraJSON
 
 $(makeLenses ''TableInfo)
@@ -914,6 +929,9 @@ tiName = tiCoreInfo . tciName
 
 tableInfoName :: TableInfo b -> TableName b
 tableInfoName = view tiName
+
+tableArrayRelationships :: TableInfo b -> [RelInfo b]
+tableArrayRelationships ti = [rel | rel <- getRels . _tciFieldInfoMap . _tiCoreInfo $ ti, riType rel == ArrRel]
 
 getRolePermInfo :: RoleName -> TableInfo b -> RolePermInfo b
 getRolePermInfo role tableInfo

@@ -30,6 +30,12 @@ Hasura GraphQL engine supports:
 - [BigQuery](/databases/bigquery/index.mdx)
 - **MySQL** (in preview) - See the [preview guide](/guides/mysql-preview.mdx)
 
+:::tip Tip
+
+Although it is safe to use Hasura with a serverless database, caution must be maintained because some functionalities - such as subscriptions or event triggers - will force a serverless database to be always on.
+
+:::
+
 ### Feature support
 
 The below matrices show the database wise support for the different GraphQL features under schema, queries, mutations
@@ -51,7 +57,7 @@ Each ✅ below links **directly** to the feature within a particular type of dat
 | Functions            | [✅](/schema/postgres/custom-functions.mdx)           | [✅](/schema/postgres/custom-functions.mdx)           | ❌                                                         | ❌                                                   |
 | Enums                | [✅](/schema/postgres/enums.mdx)                      | [✅](/schema/postgres/enums.mdx)                      | ❌                                                         | ❌                                                   |
 | Computed Fields      | [✅](/schema/postgres/computed-fields.mdx)            | [✅](/schema/postgres/computed-fields.mdx)            | ❌                                                         | [✅](/schema/bigquery/computed-fields.mdx)           |
-| Data Validations     | [✅](/schema/postgres/data-validations.mdx)           | [✅](/schema/postgres/data-validations.mdx)           | ✅                                                         | ❌                                                   |
+| Data Validations     | [✅](/schema/postgres/data-validations.mdx)           | [✅](/schema/postgres/data-validations.mdx)           | ✅                                                         | [✅](/schema/bigquery/data-validations.mdx)          |
 | Relay Schema         | [✅](/schema/postgres/relay-schema.mdx)               | [✅](/schema/postgres/relay-schema.mdx)               | ❌                                                         | ❌                                                   |
 | Naming Conventions   | [✅](/schema/postgres/naming-convention.mdx)          | ❌                                                    | ❌                                                         | ❌                                                   |
 

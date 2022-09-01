@@ -8,7 +8,7 @@ import { TemplateStoriesFactory } from '@/utils/StoryUtils';
 import { CodeEditorField, Form } from '@/new-components/Form';
 
 <Meta
-  title="components/Forms/CodeEditorField ✨"
+  title="components/Forms 🦠/CodeEditorField 🧬"
   component={CodeEditorField}
   parameters={{
     docs: { source: { type: 'code' } },
@@ -16,12 +16,12 @@ import { CodeEditorField, Form } from '@/new-components/Form';
   }}
 />
 
-# CodeEditorField
+# CodeEditorField 🧬
 
 - [🧰 Overview](#-overview)
 - [🔁 States](#-states)
 - [🎭 Variants](#-variants)
-- [⚙️ API](#-api)
+- [⚙️ API](#%EF%B8%8F-api)
 - [🧪 Testing](#-testing)
 - [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Form/CodeEditorField.tsx)
 
@@ -128,25 +128,6 @@ export const Template = args => {
     >
       {() => <CodeEditorField {...args} />}
     </Form>
-  );
-};
-
-export const TemplateStories = stories => {
-  return (
-    <div>
-      {Object.entries(stories).map(([storyName, story]) => (
-        <div key={storyName}>
-          <div
-            className={
-              'text-black dark:text-white bg-gray-100 dark:bg-gray-700 underline p-2'
-            }
-          >
-            {storyName}
-          </div>
-          <div>{Template(story)}</div>
-        </div>
-      ))}
-    </div>
   );
 };
 

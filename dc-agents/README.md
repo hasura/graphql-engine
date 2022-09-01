@@ -40,13 +40,13 @@ POST /v1/metadata
           "kind": "reference",
           "tables": [
             {
-              "table": "Album",
+              "table": ["Album"],
               "object_relationships": [
                 {
                   "name": "Artist",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Artist",
+                      "remote_table": ["Artist"],
                       "column_mapping": {
                         "ArtistId": "ArtistId"
                       }
@@ -56,13 +56,13 @@ POST /v1/metadata
               ]
             },
             {
-              "table": "Artist",
+              "table": ["Artist"],
               "array_relationships": [
                 {
                   "name": "Album",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Album",
+                      "remote_table": ["Album"],
                       "column_mapping": {
                         "ArtistId": "ArtistId"
                       }
@@ -73,7 +73,9 @@ POST /v1/metadata
             }
           ],
           "configuration": {
-            "tables": [ "Artist", "Album" ]
+            "value": {
+              "tables": [ "Artist", "Album" ]
+            }
           }
         }
       ]
@@ -165,7 +167,7 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
 {
   "tables": [
     {
-      "name": "Artist",
+      "name": ["Artist"],
       "primary_key": ["ArtistId"],
       "description": "Collection of artists of music",
       "columns": [
@@ -184,7 +186,7 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
       ]
     },
     {
-      "name": "Album",
+      "name": ["Album"],
       "primary_key": ["AlbumId"],
       "description": "Collection of music albums created by artists",
       "columns": [
@@ -216,6 +218,8 @@ The `tables` section describes the two available tables, as well as their column
 
 Notice that the names of tables and columns are used in the metadata document to describe tracked tables and relationships.
 
+Table names are described as an array of strings. This allows agents to fully qualify their table names with whatever namespacing requirements they have. For example, if the agent connects to a database that puts tables inside schemas, the agent could use table names such as `["my_schema", "my_table"]`.
+
 #### Type definitions
 
 The `SchemaResponse` TypeScript type from [the reference implementation](./reference/src/types/index.ts) describes the valid response body for the `GET /schema` endpoint.
@@ -239,14 +243,14 @@ and here is the resulting query request payload:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [],
   "query": {
     "where": {
       "expressions": [],
       "type": "and"
     },
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "offset": null,
     "fields": {
@@ -267,7 +271,7 @@ The implementation of the service is responsible for intepreting this data struc
 
 Let's break down the request:
 
-- The `table` field tells us which table to fetch the data from, namely the `Artist` table.
+- The `table` field tells us which table to fetch the data from, namely the `Artist` table. The table name (ie. the array of strings) must be one that was returned previously by the `/schema` endpoint.
 - The `table_relationships` field that lists any relationships used to join between tables in the query. This query does not use any relationships, so this is just an empty list here.
 - The `query` field contains further information about how to query the specified table:
   - The `where` field tells us that there is currently no (interesting) predicate being applied to the rows of the data set (just an empty conjunction, which ought to return every row).
@@ -283,21 +287,21 @@ The response body for a call to `POST /query` must conform to a specific query r
 {
   "rows": [
     {
-      "ArtistId": { "type": "column", "value": 1 },
-      "Name": { "type": "column", "value": "AC/DC" }
+      "ArtistId": 1,
+      "Name": "AC/DC"
     },
     {
-      "ArtistId": { "type": "column", "value": 2 },
-      "Name": { "type": "column", "value": "Accept" }
+      "ArtistId": 2,
+      "Name": "Accept"
     }
   ]
 }
 ```
 
-The rows returned by the query must be put into the `rows` property array in the query response object. Each object within this array represents a row, and the row object properties are the fields requested in the query. The value of the row object properties can be one of two types of object:
+The rows returned by the query must be put into the `rows` property array in the query response object. Each object within this array represents a row, and the row object properties are the fields requested in the query. The value of the row object properties can be one of two types:
 
-- `column`: The field was a column field, then `value` must be the value of that column for this row
-- `relationship`: If the field was a relationship field, then the `value` must be a new query response object that contains the results of navigating that relationship for the current row. (The query response structure is recursive via relationship-typed field values). Examples of this can be seen in the Relationships section below.
+- `column`: The field was a column field, then value of that column for this row is used
+- `relationship`: If the field was a relationship field, then a new query response object that contains the results of navigating that relationship for the current row must be used. (The query response structure is recursive via relationship-typed field values). Examples of this can be seen in the Relationships section below.
 
 #### Pagination
 
@@ -408,27 +412,6 @@ Here's another example, which corresponds to the predicate "`first_name` is the 
 }
 ```
 
-#### Ordering
-
-The `order_by` field specifies an array of zero-or-more _orderings_, each of which consists of a field to order records by, and an order which is either `asc` (ascending) or `desc` (descending).
-
-If there are multiple orderings specified then records should be ordered lexicographically, with earlier orderings taking precedence.
-
-For example, to order records principally by `last_name`, delegating to `first_name` in the case where two last names are equal, we would use the following `order_by` structure:
-
-```json
-[
-  {
-    "field": "last_name",
-    "order_type": "asc"
-  },
-  {
-    "field": "first_name",
-    "order_type": "asc"
-  }
-]
-```
-
 #### Relationships
 
 If the call to `GET /capabilities` returns a `capabilities` record with a `relationships` field then the query structure may include fields corresponding to relationships.
@@ -458,13 +441,13 @@ This will generate the following JSON query if the agent supports relationships:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [
     {
-      "source_table": "Artist",
+      "source_table": ["Artist"],
       "relationships": {
         "ArtistAlbums": {
-          "target_table": "Album",
+          "target_table": ["Album"],
           "relationship_type": "array",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -479,7 +462,7 @@ This will generate the following JSON query if the agent supports relationships:
       "type": "and"
     },
     "offset": null,
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "fields": {
       "Albums": {
@@ -491,8 +474,7 @@ This will generate the following JSON query if the agent supports relationships:
             "type": "and"
           },
           "offset": null,
-          "from": "albums",
-          "order_by": [],
+          "order_by": null,
           "limit": null,
           "fields": {
             "Title": {
@@ -523,8 +505,7 @@ Note the `Albums` field in particular, which traverses the `Artists` -> `Albums`
       "type": "and"
     },
     "offset": null,
-    "from": "albums",
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "fields": {
       "Title": {
@@ -547,35 +528,29 @@ Here's an example (truncated) response:
   "rows": [
     {
       "Albums": {
-        "type": "relationship",
-        "value": {
-          "rows": [
-            {
-              "Title": { "type": "column", "value": "For Those About To Rock We Salute You" }
-            },
-            {
-              "Title": { "type": "column", "value": "Let There Be Rock" }
-            }
-          ]
-        }
+        "rows": [
+          {
+            "Title": "For Those About To Rock We Salute You"
+          },
+          {
+            "Title": "Let There Be Rock"
+          }
+        ]
       },
-      "Name": { "type": "column", "value": "AC/DC" }
+      "Name": "AC/DC"
     },
     {
       "Albums": {
-        "type": "relationship",
-        "value": {
-          "rows": [
-            {
-              "Title": { "type": "column", "value": "Balls to the Wall" }
-            },
-            {
-              "Title": { "type": "column", "value": "Restless and Wild" }
-            }
-          ]
-        }
+        "rows": [
+          {
+            "Title": "Balls to the Wall"
+          },
+          {
+            "Title": "Restless and Wild"
+          }
+        ]
       },
-      "Name": { "type": "column", "value": "Accept" }
+      "Name": "Accept"
     }
     // Truncated, more Artist rows here
   ]
@@ -608,13 +583,13 @@ POST /v1/metadata
           "kind": "reference",
           "tables": [
             {
-              "table": "Customer",
+              "table": ["Customer"],
               "object_relationships": [
                 {
                   "name": "SupportRep",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "Employee",
+                      "remote_table": ["Employee"],
                       "column_mapping": {
                         "SupportRepId": "EmployeeId"
                       }
@@ -645,7 +620,7 @@ POST /v1/metadata
               ]
             },
             {
-              "table": "Employee"
+              "table": ["Employee"]
             }
           ],
           "configuration": {}
@@ -674,13 +649,13 @@ We would get the following query request JSON:
 
 ```json
 {
-  "table": "Customer",
+  "table": ["Customer"],
   "table_relationships": [
     {
-      "source_table": "Customer",
+      "source_table": ["Customer"],
       "relationships": {
         "SupportRep": {
-          "target_table": "Employee",
+          "target_table": ["Employee"],
           "relationship_type": "object",
           "column_mapping": {
             "SupportRepId": "EmployeeId"
@@ -759,7 +734,7 @@ This would cause the following query request to be performed:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [],
   "query": {
     "aggregates": {
@@ -802,7 +777,7 @@ query {
 
 ```json
 {
-  "table": "Album",
+  "table": ["Album"],
   "table_relationships": [],
   "query": {
     "aggregates": {
@@ -854,7 +829,7 @@ The `nodes` part of the query ends up as standard `fields` in the `Query`, and t
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [],
   "query": {
     "aggregates": {
@@ -897,8 +872,8 @@ The response from this query would include both the `aggregates` and the matchin
   },
   "rows": [
     {
-      "nodes_ArtistId": { "type": "column", "value": 155 },
-      "nodes_Name": { "type": "column", "value": "Zeca Pagodinho" }
+      "nodes_ArtistId": 155,
+      "nodes_Name": "Zeca Pagodinho"
     }
   ]
 }
@@ -923,13 +898,13 @@ This would generate the following `QueryRequest`:
 
 ```json
 {
-  "table": "Artist",
+  "table": ["Artist"],
   "table_relationships": [
     {
-      "source_table": "Artist",
+      "source_table": ["Artist"],
       "relationships": {
         "Albums": {
-          "target_table": "Album",
+          "target_table": ["Album"],
           "relationship_type": "array",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -962,34 +937,198 @@ This would generate the following `QueryRequest`:
 }
 ```
 
-This would be expected to return the following response, with the rows from the Artist table, and the aggregates from the related Albums nested under the `relationship` field values for each Album row:
+This would be expected to return the following response, with the rows from the Artist table, and the aggregates from the related Albums nested under the relationship field values for each Album row:
 
 ```json
 {
   "rows": [
     {
       "Albums_aggregate": {
-        "type": "relationship",
-        "value": {
-          "aggregates": {
-            "aggregate_count": 2
-          }
+        "aggregates": {
+          "aggregate_count": 2
         }
       },
-      "Name": { "type": "column", "value": "Accept" }
+      "Name": "Accept"
     },
     {
       "Albums_aggregate": {
-        "type": "relationship",
-        "value": {
-          "aggregates": {
-            "aggregate_count": 1
-          }
+        "aggregates": {
+          "aggregate_count": 1
         }
       },
-      "Name": { "type": "column", "value": "Aerosmith" }
+      "Name": "Aerosmith"
     }
   ]
+}
+```
+
+#### Ordering
+
+The `order_by` field can either be null, which means no particular ordering is required, or an object with two properties:
+
+```json
+{
+  "relations": {},
+  "elements": [
+    {
+      "target_path": [],
+      "target": {
+        "type": "column",
+        "column": "last_name"
+      },
+      "order_direction": "asc"
+    },
+    {
+      "target_path": [],
+      "target": {
+        "type": "column",
+        "column": "first_name"
+      },
+      "order_direction": "desc"
+    }
+  ]
+}
+```
+
+The `elements` field specifies an array of one-or-more ordering elements. Each element represents a "target" to order, and a direction to order by. The direction can either be `asc` (ascending) or `desc` (descending). If there are multiple elements specified, then rows should be ordered with earlier elements in the array taking precedence. In the above example, rows are principally ordered by `last_name`, delegating to `first_name` in the case where two last names are equal.
+
+The order by element `target` is specified as an object, whose `type` property specifies a different sort of ordering target:
+
+| type | Additional fields | Description |
+|------|-------------------|-------------|
+| `column` | `column` | Sort by the `column` specified |
+| `star_count_aggregate` | - | Sort by the count of all rows on the related target table (a non-empty `target_path` will always be specified) |
+| `single_column_aggregate` | `function`, `column` | Sort by the value of applying the specified aggregate function to the column values of the rows in the related target table (a non-empty `target_path` will always be specified) |
+
+The `target_path` property is a list of relationships to navigate before finding the `target` to sort on. This is how sorting on columns or aggregates on related tables is expressed. Note that aggregate-typed targets will never be found on the current table (ie. a `target_path` of `[]`) and are always applied to a related table.
+
+Here's an example of applying an ordering by a related table; the Album table is being queried and sorted by the Album's Artist's Name.
+
+```json
+{
+  "table": ["Album"],
+  "table_relationships": [
+    {
+      "source_table": ["Album"],
+      "relationships": {
+        "Artist": {
+          "target_table": ["Artist"],
+          "relationship_type": "object",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Title": { "type": "column", "column": "Title" }
+    },
+    "order_by": {
+      "relations": {
+        "Artist": {
+          "where": null,
+          "subrelations": {}
+        }
+      },
+      "elements": [
+        {
+          "target_path": ["Artist"],
+          "target": {
+            "type": "column",
+            "column": "Name"
+          },
+          "order_direction": "desc"
+        }
+      ]
+    }
+  }
+}
+```
+
+Note that the `target_path` specifies the relationship path of `["Artist"]`, and that this relationship is defined in the top-level `table_relationships`. The ordering element target column `Name` would therefore be found on the `Artist` table after joining to it from each `Album`. (See the [Relationships](#Relationships) section for more information about relationships.)
+
+The `relations` property of `order_by` will contain all the relations used in the order by, for the purpose of specifying filters that must be applied to the joined tables before using them for sorting. The `relations` property captures all `target_path`s used in the `order_by` in a recursive fashion, so for example, if the following `target_path`s were used in the `order_by`'s `elements`:
+
+* `["Artist", "Albums"]`
+* `["Artist"]`
+* `["Tracks"]`
+
+Then the value of the `relations` property would look like this:
+
+```json
+{
+  "Artist": {
+    "where": null,
+    "subrelations": {
+      "Albums": {
+        "where": null,
+        "subrelations": {}
+      }
+    }
+  },
+  "Tracks": {
+    "where": null,
+    "subrelations": {}
+  }
+}
+```
+
+The `where` properties may contain filtering expressions that must be applied to the joined table before using it for sorting. The filtering expressions are defined in the same manner as specified in the [Filters](#Filters) section of this document, where they are used on the `where` property of Queries.
+
+For example, here's a query that retrieves artists ordered descending by the count of all their albums where the album title is greater than 'T'.
+
+```json
+{
+  "table": ["Artist"],
+  "table_relationships": [
+    {
+      "source_table": ["Artist"],
+      "relationships": {
+        "Albums": {
+          "target_table": ["Album"],
+          "relationship_type": "array",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Name": { "type": "column", "column": "Name" }
+    },
+    "order_by": {
+      "relations": {
+        "Albums": {
+          "where": {
+            "type": "binary_op",
+            "operator": "greater_than",
+            "column": {
+              "path": [],
+              "name": "Title"
+            },
+            "value": {
+              "type": "scalar",
+              "value": "T"
+            }
+          },
+          "subrelations": {}
+        }
+      },
+      "elements": [
+        {
+          "target_path": ["Albums"],
+          "target": {
+            "type": "star_count_aggregate"
+          },
+          "order_direction": "desc"
+        }
+      ]
+    }
+  }
 }
 ```
 

@@ -24,28 +24,28 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | An error validating the remote relationship.
 data ValidationError
-  = RemoteSchemaNotFound !RemoteSchemaName
-  | CouldntFindRemoteField !G.Name !G.Name
-  | FieldNotFoundInRemoteSchema !G.Name
-  | NoSuchArgumentForRemote !G.Name
-  | MissingRequiredArgument !G.Name
-  | TypeNotFound !G.Name
-  | JoinFieldNonExistent !LHSIdentifier !FieldName !(HS.HashSet FieldName)
-  | ExpectedTypeButGot !G.GType !G.GType
-  | InvalidType !G.GType !Text
-  | InvalidVariable !G.Name !(HS.HashSet G.Name)
+  = RemoteSchemaNotFound RemoteSchemaName
+  | CouldntFindRemoteField G.Name G.Name
+  | FieldNotFoundInRemoteSchema G.Name
+  | NoSuchArgumentForRemote G.Name
+  | MissingRequiredArgument G.Name
+  | TypeNotFound G.Name
+  | JoinFieldNonExistent LHSIdentifier FieldName (HS.HashSet FieldName)
+  | ExpectedTypeButGot G.GType G.GType
+  | InvalidType G.GType Text
+  | InvalidVariable G.Name (HS.HashSet G.Name)
   | NullNotAllowedHere
-  | InvalidGTypeForStripping !G.GType
+  | InvalidGTypeForStripping G.GType
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
-  | InvalidGraphQLName !Text
-  | IDTypeJoin !G.Name
+  | InvalidGraphQLName Text
+  | IDTypeJoin G.Name
   | -- | TODO: Can this be made not reachable?
     -- This is the case where the type of the columns that are mapped do not
     -- have a graphql representation. This case is probably not reachable as
     -- having a db type which can't be representable in GraphQL should definitely
     -- fail the entire schema generation process
-    CannotGenerateGraphQLTypeName !G.Name
+    CannotGenerateGraphQLTypeName G.Name
   deriving (Show, Eq)
 
 errorToText :: ValidationError -> Text
@@ -218,7 +218,7 @@ stripInMap ::
     (Either ValidationError)
     (HM.HashMap G.Name RemoteSchemaInputValueDefinition)
 stripInMap relName lhsIdentifier types schemaArguments providedArguments =
-  fmap HM.catMaybes $
+  fmap catMaybes $
     HM.traverseWithKey
       ( \name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
           case HM.lookup name providedArguments of

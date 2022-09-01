@@ -1,8 +1,8 @@
 import React from 'react';
 import DateTimePicker from 'react-datetime';
 import { Moment } from 'moment';
+import { Button } from '@/new-components/Button';
 import { useAdhocEventAdd } from './state';
-import Button from '../../../../Common/Button/Button';
 import { Dispatch } from '../../../../../types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
@@ -18,15 +18,8 @@ type Props = {
 
 const Add: React.FC<Props> = ({ dispatch }) => {
   const { state, setState } = useAdhocEventAdd();
-  const {
-    webhook,
-    time,
-    payload,
-    headers,
-    retryConf,
-    comment,
-    loading,
-  } = state;
+  const { webhook, time, payload, headers, retryConf, comment, loading } =
+    state;
 
   const setWebhookValue = (e: React.ChangeEvent<HTMLInputElement>) =>
     setState.webhook(e.target.value);
@@ -124,8 +117,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
         </FormSection>
       </CollapsibleToggle>
       <Button
-        size="s"
-        color="yellow"
+        mode="primary"
         onClick={save}
         disabled={loading}
         data-test="create-schedule-event"

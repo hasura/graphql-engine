@@ -11,23 +11,21 @@ keywords:
   - data federation
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
-import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # Remote Schema to database relationships
 
 ## Introduction
 
-Remote schema to database relationships extend the concept of joining data across
-tables, to joining across tables and remote GraphQL sources. Once you
-create relationships between types from your database and types created
-from the remote schema, you can then "join" them by running GraphQL queries.
+Remote schema to database relationships extend the concept of joining data across tables, to joining across tables and
+remote GraphQL sources. Once you create relationships between types from your database and types created from the remote
+schema, you can then "join" them by running GraphQL queries.
 
-Because Hasura is meant to be a GraphQL server that you can expose
-directly to your apps, Hasura also handles security and authorization
-while providing remote joins.
+Because Hasura is meant to be a GraphQL server that you can expose directly to your apps, Hasura also handles security
+and authorization while providing remote joins.
 
 :::tip Supported from
 
@@ -39,26 +37,22 @@ Relationships from remote schema to database are supported from versions `v2.6.0
 
 ### Step 0: Add a remote schema and a database
 
-Add a remote schema and a database as described [here](/remote-schemas/adding-schema.mdx)
-and [here](/databases/connect-db/index.mdx), if not already added.
+Add a remote schema and a database as described [here](/remote-schemas/adding-schema.mdx) and
+[here](/databases/connect-db/index.mdx), if not already added.
 
 ### Step 1: Define and create the relationship
 
 The following fields can be defined for a remote schema relationship:
 
 - **Name**: Define a name for the relationship.
-- **Remote Schema**: Select a remote schema among all the ones you've
-  created.
-- **Configuration**: Set up the join configuration, to inject values
-  as input arguments of the remote schema field.
+- **Remote Schema**: Select a remote schema among all the ones you've created.
+- **Configuration**: Set up the join configuration, to inject values as input arguments of the remote schema field.
   - **From column**: Input injected from table column values.
-  - **From static value**: Input injected from a static value of
-    your choice.
+  - **From static value**: Input injected from a static value of your choice.
 
-For example, let's assume that our database has a table
-`user(id integer, name text)` and we've added a remote schema
-`order-remote-schema` which is another GraphQL API. Now we want to create a relationship between the `order` field
-of the remote schema and the `user` table of the source database.
+For example, let's assume that our database has a table `user(id integer, name text)` and we've added a remote schema
+`order-remote-schema` which is another GraphQL API. Now we want to create a relationship between the `order` field of
+the remote schema and the `user` table of the source database.
 
 1.  We name the relationship `user`.
 2.  We select the source type `Order` of the remote schema that we'd like to join.
@@ -72,18 +66,14 @@ of the remote schema and the `user` table of the source database.
 - Click the `Add a new relationship` button.
 
   <Thumbnail
-    src="/img/graphql/core/schema/create-relationship-from-remote-schema.png"
-    alt="Opening the remote relationship section"
-    width="1000px"
+    src='/img/schema/create-relationship-from-remote-schema.png'
+    alt='Opening the remote relationship section'
+    width='1000px'
   />
 
 - Define the relationship and hit `Add Relationship`.
 
-  <Thumbnail
-    src="/img/graphql/core/schema/configure-relationship-rs-to-db.png"
-    alt="Defining the relationship"
-    width="800px"
-  />
+  <Thumbnail src='/img/schema/configure-relationship-rs-to-db.png' alt='Defining the relationship' width='800px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -118,7 +108,10 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add a remote schema relationship by using the
-[create_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-create-remote-schema-remote-relationship) metadata API and update it by using the [update_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-update-remote-schema-remote-relationship) metadata API:
+[create_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-create-remote-schema-remote-relationship)
+metadata API and update it by using the
+[update_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-update-remote-schema-remote-relationship)
+metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1

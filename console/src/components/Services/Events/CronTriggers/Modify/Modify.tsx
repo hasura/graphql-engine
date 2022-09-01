@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQueryClient } from 'react-query';
-import Button from '../../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { useScheduledTrigger } from '../state';
 import { ScheduledTrigger } from '../../types';
 import { Dispatch } from '../../../../../types';
@@ -58,25 +58,27 @@ const Modify: React.FC<Props> = props => {
   return (
     <div className="mb-md">
       <CronTriggerFrom state={state} setState={setState} />
-      <div>
-        <Button
-          onClick={onSave}
-          color="yellow"
-          size="sm"
-          disabled={state.loading.modify}
-          className="mr-md"
-        >
-          {state.loading.modify ? 'Saving...' : 'Save'}
-        </Button>
-        <Button
-          onClick={deleteFunc}
-          color="red"
-          size="sm"
-          disabled={state.loading.delete}
-          className="mr-md"
-        >
-          {state.loading.delete ? 'Deleting...' : 'Delete'}
-        </Button>
+      <div className="flex">
+        <div className="mr-md">
+          <Button
+            onClick={onSave}
+            mode="primary"
+            disabled={state.loading.modify}
+            loadingText="Saving..."
+            isLoading={state.loading.modify}
+          >
+            Save
+          </Button>
+        </div>
+        <div className="mr-md">
+          <Button
+            onClick={deleteFunc}
+            mode="destructive"
+            disabled={state.loading.delete}
+          >
+            {state.loading.delete ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
       </div>
     </div>
   );

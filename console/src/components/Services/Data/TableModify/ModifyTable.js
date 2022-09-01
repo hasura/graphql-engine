@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import { getAllDataTypeMap } from '../Common/utils';
 import {
@@ -9,6 +10,7 @@ import {
   RESET,
   setUniqueKeys,
   toggleTableAsEnum,
+  toggleAsApollofederation,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
@@ -16,7 +18,6 @@ import {
   RESET_COLUMN_TYPE_INFO,
   fetchFunctionInit,
 } from '../DataActions';
-import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
@@ -54,6 +55,7 @@ import FeatureDisabled from '../FeatureDisabled';
 import IndexFields from './IndexFields';
 import PartitionInfo from './PartitionInfo';
 import { FaFlask } from 'react-icons/fa';
+import { ApolloFederationSupport } from '../Common/Components/ApolloFederationSupport';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -122,7 +124,6 @@ class ModifyTable extends React.Component {
       <Button
         type="submit"
         className="mr-sm"
-        color="white"
         size="sm"
         onClick={() => {
           const confirmMessage = `This will remove the table "${tableName}" from the GraphQL schema`;
@@ -140,7 +141,7 @@ class ModifyTable extends React.Component {
     const deleteBtn = (
       <Button
         type="submit"
-        color="red"
+        mode="destructive"
         size="sm"
         onClick={() => {
           const confirmMessage = `This will permanently delete the table "${tableName}" from the database`;
@@ -168,6 +169,9 @@ class ModifyTable extends React.Component {
         </React.Fragment>
       );
     };
+
+    const toggleApollofederation = () =>
+      dispatch(toggleAsApollofederation(table.is_apollo_federation_supported));
 
     return (
       <RightContainer>
@@ -397,6 +401,13 @@ class ModifyTable extends React.Component {
               )}
               {isFeatureSupported('tables.modify.setAsEnum') &&
                 getEnumsSection()}
+
+              <ApolloFederationSupport
+                toggleApollofederation={toggleApollofederation}
+                isApolloFederationSupported={
+                  table.is_apollo_federation_supported
+                }
+              />
 
               <div className="mb-lg">
                 {isFeatureSupported('tables.modify.untrack') && untrackBtn}

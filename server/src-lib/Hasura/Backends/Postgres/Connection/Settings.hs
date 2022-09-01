@@ -16,9 +16,11 @@ module Hasura.Backends.Postgres.Connection.Settings
     DefaultPostgresPoolSettings (..),
     getDefaultPGPoolSettingIfNotExists,
     defaultPostgresPoolSettings,
+    defaultPostgresExtensionsSchema,
     setPostgresPoolSettings,
     pccConnectionInfo,
     pccReadReplicas,
+    pccExtensionsSchema,
     psciDatabaseUrl,
     psciPoolSettings,
     psciUsePreparedStatements,
@@ -27,6 +29,7 @@ module Hasura.Backends.Postgres.Connection.Settings
   )
 where
 
+import Autodocodec (HasCodec (codec), named)
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (aesonDrop)
@@ -43,18 +46,20 @@ import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as Q
 import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf (..))
+import Hasura.SQL.Types (ExtensionsSchema (..))
 import Hasura.Server.Utils (parseConnLifeTime, readIsoLevel)
 import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
 
 data PostgresPoolSettings = PostgresPoolSettings
-  { _ppsMaxConnections :: !(Maybe Int),
-    _ppsIdleTimeout :: !(Maybe Int),
-    _ppsRetries :: !(Maybe Int),
-    _ppsPoolTimeout :: !(Maybe NominalDiffTime),
-    _ppsConnectionLifetime :: !(Maybe NominalDiffTime)
+  { _ppsMaxConnections :: Maybe Int,
+    _ppsIdleTimeout :: Maybe Int,
+    _ppsRetries :: Maybe Int,
+    _ppsPoolTimeout :: Maybe NominalDiffTime,
+    _ppsConnectionLifetime :: Maybe NominalDiffTime
   }
   deriving (Show, Eq, Generic)
 
@@ -76,10 +81,10 @@ instance FromJSON PostgresPoolSettings where
       <*> ((o .:? "connection_lifetime") <&> parseConnLifeTime)
 
 data DefaultPostgresPoolSettings = DefaultPostgresPoolSettings
-  { _dppsMaxConnections :: !Int,
-    _dppsIdleTimeout :: !Int,
-    _dppsRetries :: !Int,
-    _dppsConnectionLifetime :: !(Maybe NominalDiffTime)
+  { _dppsMaxConnections :: Int,
+    _dppsIdleTimeout :: Int,
+    _dppsRetries :: Int,
+    _dppsConnectionLifetime :: Maybe NominalDiffTime
   }
   deriving (Show, Eq)
 
@@ -233,11 +238,11 @@ instance ToJSON Q.TxIsolation where
   toJSON Q.Serializable = "serializable"
 
 data PostgresSourceConnInfo = PostgresSourceConnInfo
-  { _psciDatabaseUrl :: !UrlConf,
-    _psciPoolSettings :: !(Maybe PostgresPoolSettings),
-    _psciUsePreparedStatements :: !Bool,
-    _psciIsolationLevel :: !Q.TxIsolation,
-    _psciSslConfiguration :: !(Maybe (PGClientCerts CertVar CertVar))
+  { _psciDatabaseUrl :: UrlConf,
+    _psciPoolSettings :: Maybe PostgresPoolSettings,
+    _psciUsePreparedStatements :: Bool,
+    _psciIsolationLevel :: Q.TxIsolation,
+    _psciSslConfiguration :: Maybe (PGClientCerts CertVar CertVar)
   }
   deriving (Show, Eq, Generic)
 
@@ -259,9 +264,13 @@ instance FromJSON PostgresSourceConnInfo where
       <*> o .:? "isolation_level" .!= Q.ReadCommitted
       <*> o .:? "ssl_configuration"
 
+defaultPostgresExtensionsSchema :: ExtensionsSchema
+defaultPostgresExtensionsSchema = ExtensionsSchema "public"
+
 data PostgresConnConfiguration = PostgresConnConfiguration
-  { _pccConnectionInfo :: !PostgresSourceConnInfo,
-    _pccReadReplicas :: !(Maybe (NonEmpty PostgresSourceConnInfo))
+  { _pccConnectionInfo :: PostgresSourceConnInfo,
+    _pccReadReplicas :: Maybe (NonEmpty PostgresSourceConnInfo),
+    _pccExtensionsSchema :: ExtensionsSchema
   }
   deriving (Show, Eq, Generic)
 
@@ -271,5 +280,21 @@ instance Hashable PostgresConnConfiguration
 
 instance NFData PostgresConnConfiguration
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''PostgresConnConfiguration)
+instance FromJSON PostgresConnConfiguration where
+  parseJSON = withObject "PostgresConnConfiguration" $ \o ->
+    PostgresConnConfiguration
+      <$> o .: "connection_info"
+      <*> o .:? "read_replicas"
+      <*> o .:? "extensions_schema" .!= defaultPostgresExtensionsSchema
+
+instance ToJSON PostgresConnConfiguration where
+  toJSON PostgresConnConfiguration {..} =
+    object $
+      ["connection_info" .= _pccConnectionInfo]
+        <> maybe mempty (\readReplicas -> ["read_replicas" .= readReplicas]) _pccReadReplicas
+        <> bool mempty (["extensions_schema" .= _pccExtensionsSchema]) (_pccExtensionsSchema /= defaultPostgresExtensionsSchema)
+
+instance HasCodec PostgresConnConfiguration where
+  codec = named "PostgresConnConfiguration" $ placeholderCodecViaJSON
+
 $(makeLenses ''PostgresConnConfiguration)

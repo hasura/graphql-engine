@@ -10,6 +10,6 @@ query:
   args:
     name: err-unknown-types
     definition:
-      url: http://localhost:5000/union-graphql-err-wrapped-type
+      url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/union-graphql-err-wrapped-type"
       headers: []
       forward_client_headers: true

@@ -2,9 +2,9 @@ import React, { useRef } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
 
+import { Button } from '@/new-components/Button';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
-import Button from '../../../Common/Button/Button';
 import { Badge } from '../../../UIKit/atoms';
 import { Dispatch, ReduxState } from '../../../../types';
 import _push from '../../Data/push';
@@ -57,8 +57,8 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
             {endpointState.name}
           </h2>
           <Button
-            color="yellow"
-            size="xs"
+            mode="primary"
+            size="md"
             className="ml-md"
             onClick={onClickEdit}
           >
@@ -105,7 +105,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
             <AceEditor
               name="query-viewer"
               value={endpointState.currentQuery}
-              placeholder={`query SampleQuery {}`}
+              placeholder="query SampleQuery {}"
               height="300px"
               width="100%"
               mode="graphqlschema"

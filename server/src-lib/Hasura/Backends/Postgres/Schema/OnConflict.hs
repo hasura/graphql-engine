@@ -37,7 +37,7 @@ import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -56,14 +56,17 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- enum. See <https://github.com/hasura/graphql-engine/issues/6804>.
 onConflictFieldParser ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  ( MonadBuildSchema ('Postgres pgKind) r m n,
+    AggregationPredicatesSchema ('Postgres pgKind)
+  ) =>
   SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
 onConflictFieldParser sourceInfo tableInfo = do
   tCase <- asks getter
-  permissions <- tablePermissions tableInfo
-  let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
+  roleName <- retrieve scRole
+  let permissions = getRolePermInfo roleName tableInfo
+      maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
       maybeConflictObject = conflictObjectParser sourceInfo tableInfo (_permUpd permissions) <$> maybeConstraints
   case maybeConflictObject of
     Just conflictObject -> conflictObject <&> P.fieldOptional (applyFieldNameCaseCust tCase Name._on_conflict) (Just "upsert condition")
@@ -72,19 +75,21 @@ onConflictFieldParser sourceInfo tableInfo = do
 -- | Create a parser for the @_on_conflict@ object of the given table.
 conflictObjectParser ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  ( MonadBuildSchema ('Postgres pgKind) r m n,
+    AggregationPredicatesSchema ('Postgres pgKind)
+  ) =>
   SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   Maybe (UpdPermInfo ('Postgres pgKind)) ->
   NonEmpty (UniqueConstraint ('Postgres pgKind)) ->
   m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 conflictObjectParser sourceInfo tableInfo maybeUpdatePerms constraints = do
+  tCase <- asks getter
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
   constraintParser <- conflictConstraint constraints sourceInfo tableInfo
   whereExpParser <- boolExp sourceInfo tableInfo
-  tableGQLName <- getTableGQLName tableInfo
-  objectName <- mkTypename $ tableGQLName <> Name.__on_conflict
-
+  tableGQLName <- getTableIdentifierName tableInfo
+  objectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkOnConflictTypeName tableGQLName
   let objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
       (presetColumns, updateFilter) = fromMaybe (HM.empty, IR.gBoolExpTrue) $ do
         UpdPermInfo {..} <- maybeUpdatePerms
@@ -136,8 +141,9 @@ conflictConstraint ::
   TableInfo ('Postgres pgKind) ->
   m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 conflictConstraint constraints sourceInfo tableInfo =
-  memoizeOn 'conflictConstraint (_siName sourceInfo, tableName) $ do
-    tableGQLName <- getTableGQLName tableInfo
+  P.memoizeOn 'conflictConstraint (_siName sourceInfo, tableName) $ do
+    tCase <- asks getter
+    tableGQLName <- getTableIdentifierName tableInfo
     constraintEnumValues <- for
       constraints
       \c@(UniqueConstraint (Constraint {_cName}) cCols) -> do
@@ -147,10 +153,11 @@ conflictConstraint constraints sourceInfo tableInfo =
               name
               (Just $ "unique or primary key constraint on columns " <> coerce (showPGCols (HS.toList cCols)))
               Nothing
+              []
               P.EnumValueInfo,
             c
           )
-    enumName <- mkTypename $ tableGQLName <> Name.__constraint
+    enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableConstraintTypeName tableGQLName
     let enumDesc = G.Description $ "unique or primary key constraints on table " <>> tableName
     pure $ P.enum enumName (Just enumDesc) constraintEnumValues
   where

@@ -3,7 +3,7 @@ module Hasura.GraphQL.Execute
     ResolvedExecutionPlan (..),
     ET.GraphQLQueryType (..),
     getResolvedExecPlan,
-    getExecPlanPartial,
+    makeGQLContext,
     execRemoteGQ,
     SubscriptionExecution (..),
     buildSubscriptionPlan,
@@ -40,8 +40,8 @@ import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Directives
-import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.RemoteServer (execRemoteGQ)
+import Hasura.GraphQL.Schema.Parser (runParse, toQErr)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
@@ -56,6 +56,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -71,19 +72,23 @@ data ExecutionCtx = ExecutionCtx
     _ecxSchemaCacheVer :: SchemaCacheVer,
     _ecxHttpManager :: HTTP.Manager,
     _ecxEnableAllowList :: Bool,
-    _ecxReadOnlyMode :: ReadOnlyMode
+    _ecxReadOnlyMode :: ReadOnlyMode,
+    _ecxPrometheusMetrics :: PrometheusMetrics
   }
 
 -- | Construct a single step of an execution plan.
-getExecPlanPartial ::
-  (MonadError QErr m) =>
+makeGQLContext ::
   UserInfo ->
   SchemaCache ->
   ET.GraphQLQueryType ->
-  GQLReqParsed ->
-  m (C.GQLContext, SingleOperation)
-getExecPlanPartial userInfo sc queryType req =
-  (getGCtx,) <$> getSingleOperation req
+  C.GQLContext
+makeGQLContext userInfo sc queryType =
+  case Map.lookup role contextMap of
+    Nothing -> defaultContext
+    Just (C.RoleContext frontend backend) ->
+      case _uiBackendOnlyFieldAccess userInfo of
+        BOFAAllowed -> fromMaybe frontend backend
+        BOFADisallowed -> frontend
   where
     role = _uiRole userInfo
 
@@ -96,15 +101,6 @@ getExecPlanPartial userInfo sc queryType req =
       case queryType of
         ET.QueryHasura -> scUnauthenticatedGQLContext sc
         ET.QueryRelay -> scUnauthenticatedRelayContext sc
-
-    getGCtx :: C.GQLContext
-    getGCtx =
-      case Map.lookup role contextMap of
-        Nothing -> defaultContext
-        Just (C.RoleContext frontend backend) ->
-          case _uiBackendOnlyFieldAccess userInfo of
-            BOFAAllowed -> fromMaybe frontend backend
-            BOFADisallowed -> frontend
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
@@ -221,6 +217,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
     go (accLiveQueryFields, accStreamingFields) (gName, field) = case field of
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+      IR.RFMulti _ -> throw400 NotSupported "not supported over subscriptions"
       IR.RFDB src e -> do
         let subscriptionType =
               case AB.unpackAnyBackend @('Postgres 'Vanilla) e of
@@ -302,6 +299,7 @@ checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
 
 -- | Construct a 'ResolvedExecutionPlan' from a 'GQLReqParsed' and a
 -- bunch of metadata.
+{-# INLINEABLE getResolvedExecPlan #-}
 getResolvedExecPlan ::
   forall m.
   ( MonadError QErr m,
@@ -322,7 +320,9 @@ getResolvedExecPlan ::
   ET.GraphQLQueryType ->
   HTTP.Manager ->
   [HTTP.Header] ->
-  (GQLReqUnparsed, GQLReqParsed) ->
+  GQLReqUnparsed ->
+  SingleOperation -> -- the first step of the execution plan
+  Maybe G.Name ->
   RequestId ->
   m (ParameterizedQueryHash, ResolvedExecutionPlan)
 getResolvedExecPlan
@@ -336,14 +336,13 @@ getResolvedExecPlan
   queryType
   httpManager
   reqHeaders
-  (reqUnparsed, reqParsed)
+  reqUnparsed
+  queryParts -- the first step of the execution plan
+  maybeOperationName
   reqId = do
-    -- 1. Construct the first step of the execution plan.
-    (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
+    let gCtx = makeGQLContext userInfo sc queryType
 
-    let maybeOperationName = (Just <$> _unOperationName) =<< _grOperationName reqParsed
-
-    -- 2. Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
+    -- Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
     (parameterizedQueryHash, resolvedExecPlan) <-
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
@@ -395,8 +394,7 @@ getResolvedExecPlan
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-
-            runParse
-              (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
+            toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
 
           -- A subscription should have exactly one root field.
           -- However, for testing purposes, we may allow several root fields; we check for this by

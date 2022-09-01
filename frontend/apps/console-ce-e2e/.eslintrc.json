@@ -1,0 +1,27 @@
+{
+  "extends": [
+    "plugin:cypress/recommended",
+    "../../.eslintrc.json",
+    "plugin:chai-friendly/recommended"
+  ],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        // TODO: restore it to "error". At the beginning of the Nx migration, we must keep it as is because
+        // of the huge number of cy.wait() around the legacy tests
+        "cypress/no-unnecessary-waiting": "warn",
+
+        "no-underscore-dangle": "off",
+        "@typescript-eslint/no-unused-expressions": "off",
+        "no-plusplus": [
+          "error",
+          {
+            "allowForLoopAfterthoughts": true
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -16,17 +16,9 @@ module Hasura.RQL.Types.Common
     isSystemDefined,
     SQLGenCtx (..),
     successMsg,
-    NonNegativeDiffTime,
-    unNonNegativeDiffTime,
-    unsafeNonNegativeDiffTime,
-    mkNonNegativeDiffTime,
     InputWebhook (..),
     ResolvedWebhook (..),
     resolveWebhook,
-    NonNegativeInt,
-    getNonNegativeInt,
-    mkNonNegativeInt,
-    unsafeNonNegativeInt,
     Timeout (..),
     defaultActionTimeoutSecs,
     UrlConf (..),
@@ -45,10 +37,18 @@ module Hasura.RQL.Types.Common
     commentToMaybeText,
     commentFromMaybeText,
     EnvRecord (..),
+    ApolloFederationConfig (..),
+    ApolloFederationVersion (..),
+    isApolloFedV1enabled,
+    CapabilitiesInfo (..),
+    mkCapabilitiesInfo,
+    DataConnectorCapabilities (..),
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Aeson.Types (prependFailure, typeMismatch)
@@ -60,12 +60,15 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.URL.Template
 import Database.PG.Query qualified as Q
+import Hasura.Backends.DataConnector.API.V0.Capabilities (Capabilities, CapabilitiesResponse (..))
+import Hasura.Backends.DataConnector.API.V0.ConfigSchema (ConfigSchemaResponse)
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Incremental (Cacheable)
+import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -196,7 +199,7 @@ class ToAesonPairs a where
 
 data SourceName
   = SNDefault
-  | SNName !NonEmptyText
+  | SNName NonEmptyText
   deriving (Show, Eq, Ord, Generic)
 
 instance FromJSON SourceName where
@@ -204,9 +207,19 @@ instance FromJSON SourceName where
     "default" -> pure SNDefault
     t -> SNName <$> parseJSON (String t)
 
+instance HasCodec SourceName where
+  codec = dimapCodec dec enc nonEmptyTextCodec
+    where
+      dec t
+        | t == defaultSourceName = SNDefault
+        | otherwise = SNName t
+
+      enc SNDefault = defaultSourceName
+      enc (SNName t) = t
+
 sourceNameToText :: SourceName -> Text
 sourceNameToText = \case
-  SNDefault -> "default"
+  SNDefault -> unNonEmptyText defaultSourceName
   SNName t -> unNonEmptyText t
 
 instance ToJSON SourceName where
@@ -231,11 +244,14 @@ instance Cacheable SourceName
 defaultSource :: SourceName
 defaultSource = SNDefault
 
+defaultSourceName :: NonEmptyText
+defaultSourceName = mkNonEmptyTextUnsafe "default"
+
 data InpValInfo = InpValInfo
-  { _iviDesc :: !(Maybe G.Description),
-    _iviName :: !G.Name,
-    _iviDefVal :: !(Maybe (G.Value Void)),
-    _iviType :: !G.GType
+  { _iviDesc :: Maybe G.Description,
+    _iviName :: G.Name,
+    _iviDefVal :: Maybe (G.Value Void),
+    _iviType :: G.GType
   }
   deriving (Show, Eq, TH.Lift, Generic)
 
@@ -256,40 +272,6 @@ data SQLGenCtx = SQLGenCtx
 
 successMsg :: EncJSON
 successMsg = encJFromBuilder "{\"message\":\"success\"}"
-
-newtype NonNegativeInt = NonNegativeInt {getNonNegativeInt :: Int}
-  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
-
-mkNonNegativeInt :: Int -> Maybe NonNegativeInt
-mkNonNegativeInt x = case x >= 0 of
-  True -> Just $ NonNegativeInt x
-  False -> Nothing
-
-unsafeNonNegativeInt :: Int -> NonNegativeInt
-unsafeNonNegativeInt = NonNegativeInt
-
-instance FromJSON NonNegativeInt where
-  parseJSON = withScientific "NonNegativeInt" $ \t -> do
-    case t >= 0 of
-      True -> maybe (fail "integer passed is out of bounds") (pure . NonNegativeInt) $ toBoundedInteger t
-      False -> fail "negative value not allowed"
-
-newtype NonNegativeDiffTime = NonNegativeDiffTime {unNonNegativeDiffTime :: DiffTime}
-  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
-
-unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
-unsafeNonNegativeDiffTime = NonNegativeDiffTime
-
-mkNonNegativeDiffTime :: DiffTime -> Maybe NonNegativeDiffTime
-mkNonNegativeDiffTime x = case x >= 0 of
-  True -> Just $ NonNegativeDiffTime x
-  False -> Nothing
-
-instance FromJSON NonNegativeDiffTime where
-  parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case t >= 0 of
-      True -> return $ NonNegativeDiffTime . realToFrac $ t
-      False -> fail "negative value not allowed"
 
 newtype ResolvedWebhook = ResolvedWebhook {unResolvedWebhook :: Text}
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Generic)
@@ -345,11 +327,11 @@ defaultActionTimeoutSecs = Timeout 30
 -- | See API reference here:
 --   https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
 data PGConnectionParams = PGConnectionParams
-  { _pgcpHost :: !Text,
-    _pgcpUsername :: !Text,
-    _pgcpPassword :: !(Maybe Text),
-    _pgcpPort :: !Int,
-    _pgcpDatabase :: !Text
+  { _pgcpHost :: Text,
+    _pgcpUsername :: Text,
+    _pgcpPassword :: Maybe Text,
+    _pgcpPort :: Int,
+    _pgcpDatabase :: Text
   }
   deriving (Show, Eq, Generic)
 
@@ -372,11 +354,11 @@ instance FromJSON PGConnectionParams where
 
 data UrlConf
   = -- | the database connection string
-    UrlValue !InputWebhook
+    UrlValue InputWebhook
   | -- | the name of environment variable containing the connection string
-    UrlFromEnv !T.Text
+    UrlFromEnv T.Text
   | -- | the minimum required `connection parameters` to construct a valid connection string
-    UrlFromParams !PGConnectionParams
+    UrlFromParams PGConnectionParams
   deriving (Show, Eq, Generic)
 
 instance NFData UrlConf
@@ -482,9 +464,9 @@ getEnv env k = do
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig
   { -- | should the query-variables be logged and analyzed for metrics
-    _mcAnalyzeQueryVariables :: !Bool,
+    _mcAnalyzeQueryVariables :: Bool,
     -- | should the response-body be analyzed for empty and null responses
-    _mcAnalyzeResponseBody :: !Bool
+    _mcAnalyzeResponseBody :: Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -544,3 +526,53 @@ instance (ToJSON a) => ToJSON (EnvRecord a) where
   toJSON (EnvRecord envVar _envValue) = object ["env_var" .= envVar]
 
 instance (FromJSON a) => FromJSON (EnvRecord a)
+
+data ApolloFederationVersion = V1 deriving (Show, Eq, Generic)
+
+instance Cacheable ApolloFederationVersion
+
+instance ToJSON ApolloFederationVersion where
+  toJSON V1 = J.String "v1"
+
+instance FromJSON ApolloFederationVersion where
+  parseJSON = withText "ApolloFederationVersion" $
+    \case
+      "v1" -> pure V1
+      _ -> fail "enable takes the version of apollo federation. Supported value is v1 only."
+
+instance NFData ApolloFederationVersion
+
+data ApolloFederationConfig = ApolloFederationConfig
+  { enable :: ApolloFederationVersion
+  }
+  deriving (Show, Eq, Generic)
+
+instance Cacheable ApolloFederationConfig
+
+instance ToJSON ApolloFederationConfig
+
+instance FromJSON ApolloFederationConfig
+
+instance NFData ApolloFederationConfig
+
+isApolloFedV1enabled :: Maybe ApolloFederationConfig -> Bool
+isApolloFedV1enabled = isJust
+
+data CapabilitiesInfo = CapabiltiesInfo
+  { ciCapabilities :: Capabilities,
+    ciConfigSchemaResponse :: ConfigSchemaResponse
+  }
+  deriving stock (Eq, Show, Generic)
+
+instance Cacheable CapabilitiesInfo where
+  unchanged = const (==)
+
+instance ToJSON CapabilitiesInfo
+
+mkCapabilitiesInfo :: CapabilitiesResponse -> CapabilitiesInfo
+mkCapabilitiesInfo CapabilitiesResponse {..} = CapabiltiesInfo crCapabilities crConfigSchemaResponse
+
+newtype DataConnectorCapabilities = DataConnectorCapabilities
+  { unDataConnectorCapabilities :: HashMap DataConnectorName CapabilitiesInfo
+  }
+  deriving newtype (ToJSON, Semigroup, Monoid, Eq, Cacheable)

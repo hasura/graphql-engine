@@ -21,7 +21,7 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/block
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}/block"
     retry_conf:
       # We will manuallally unblock() before this is reached:
       timeout_sec: 60

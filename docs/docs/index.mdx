@@ -15,7 +15,6 @@ import Link from '@docusaurus/Link';
 import VersionedLink from '@site/src/components/VersionedLink';
 import ArrowRight from '@site/static/icons/arrow_right.svg';
 
-
 # Hasura GraphQL Engine Documentation
 
 <div className='gallery'>
@@ -28,9 +27,15 @@ import ArrowRight from '@site/static/icons/arrow_right.svg';
       <br />
       <Link to='https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=hasura-cloud&tech=default' target='_blank'>
         Hasura Cloud
-      </Link> empowers you to create highly optimised, managed and massively scalable Hasura instances in seconds and includes
+      </Link> empowers you to create highly optimized, managed and massively scalable Hasura instances in seconds and includes
       extra reliability, monitoring, caching, tracing, security and deployment features. You can also deploy Hasura manually
       using our Community Edition Docker image which includes all the core features of GraphQL Engine.
+      <br />
+      <br />
+      <VersionedLink to='/enterprise/index'>Hasura Enterprise Edition (EE)</VersionedLink> builds on all the features of
+      the Hasura GraphQL Engine while giving you an enterprise-ready solution - complete with key features like
+      observability, security, and performance - deployable in minutes. Designed to work with your container platform of
+      choice, Hasura EE can quickly be set up on AWS ECS, Kubernetes, and Google Cloud Run.
     </p>
   </div>
   <div className='sub-heading'>
@@ -67,6 +72,13 @@ import ArrowRight from '@site/static/icons/arrow_right.svg';
     </p>
     <VersionedLink to='/auth/index'>
       See Auth <ArrowRight className='arrow' />
+    </VersionedLink>
+  </div>
+  <div className='card'>
+    <h4>Enterprise</h4>
+    <p>Deploy an enterprise-ready instance of Hasura in minutes using your container platform of choice.</p>
+    <VersionedLink to='/enterprise/index'>
+      See Hasura Enterprise <ArrowRight className='arrow' />
     </VersionedLink>
   </div>
   <div className='card'>
@@ -123,16 +135,6 @@ import ArrowRight from '@site/static/icons/arrow_right.svg';
     </p>
     <VersionedLink to='/deployment/regression-tests'>
       See Regression Tests <ArrowRight className='arrow' />
-    </VersionedLink>
-  </div>
-  <div className='card'>
-    <h4>GraphQL API Explorer</h4>
-    <p>
-      Browse, query, mutate, and subscribe to any GraphQL endpoint with our free, full-featured, in-browser GraphiQL app
-      without having to log into Hasura.
-    </p>
-    <VersionedLink to='/graphql-api-explorer'>
-      See API Explorer <ArrowRight className='arrow' />
     </VersionedLink>
   </div>
   <div className='card'>

@@ -44,6 +44,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
@@ -293,3 +294,4 @@ versionToTopic :: Version -> Topic
 versionToTopic = \case
   VersionDev _ -> Topic "server_metrics_v2_test"
   VersionRelease _ -> Topic "server_metrics_v2"
+  VersionCE _ -> Topic "server_metrics_v2"

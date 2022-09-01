@@ -20,6 +20,7 @@ module Hasura.Backends.MSSQL.Connection
   )
 where
 
+import Autodocodec (HasCodec (codec), named)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
@@ -33,6 +34,7 @@ import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 
 class MonadError QErr m => MonadMSSQLTx m where
@@ -63,8 +65,8 @@ instance Hashable MSPool.ConnectionString
 instance NFData MSPool.ConnectionString
 
 data InputConnectionString
-  = RawString !MSPool.ConnectionString
-  | FromEnvironment !Text
+  = RawString MSPool.ConnectionString
+  | FromEnvironment Text
   deriving stock (Show, Eq, Generic)
 
 instance Cacheable InputConnectionString
@@ -87,8 +89,8 @@ instance FromJSON InputConnectionString where
       _ -> fail "one of string or object must be provided"
 
 data MSSQLPoolSettings = MSSQLPoolSettings
-  { _mpsMaxConnections :: !Int,
-    _mpsIdleTimeout :: !Int
+  { _mpsMaxConnections :: Int,
+    _mpsIdleTimeout :: Int
   }
   deriving (Show, Eq, Generic)
 
@@ -114,8 +116,8 @@ defaultMSSQLPoolSettings =
     }
 
 data MSSQLConnectionInfo = MSSQLConnectionInfo
-  { _mciConnectionString :: !InputConnectionString,
-    _mciPoolSettings :: !MSSQLPoolSettings
+  { _mciConnectionString :: InputConnectionString,
+    _mciPoolSettings :: MSSQLPoolSettings
   }
   deriving (Show, Eq, Generic)
 
@@ -134,8 +136,8 @@ instance FromJSON MSSQLConnectionInfo where
       <*> o .:? "pool_settings" .!= defaultMSSQLPoolSettings
 
 data MSSQLConnConfiguration = MSSQLConnConfiguration
-  { _mccConnectionInfo :: !MSSQLConnectionInfo,
-    _mccReadReplicas :: !(Maybe (NonEmpty MSSQLConnectionInfo))
+  { _mccConnectionInfo :: MSSQLConnectionInfo,
+    _mccReadReplicas :: Maybe (NonEmpty MSSQLConnectionInfo)
   }
   deriving (Show, Eq, Generic)
 
@@ -146,6 +148,11 @@ instance Hashable MSSQLConnConfiguration
 instance NFData MSSQLConnConfiguration
 
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
+
+-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
+-- instances.
+instance HasCodec MSSQLConnConfiguration where
+  codec = named "MSSQLConnConfiguration" $ placeholderCodecViaJSON
 
 createMSSQLPool ::
   MonadIO m =>
@@ -204,8 +211,8 @@ mkMSSQLExecCtx pool =
     }
 
 data MSSQLSourceConfig = MSSQLSourceConfig
-  { _mscConnectionString :: !MSPool.ConnectionString,
-    _mscExecCtx :: !MSSQLExecCtx
+  { _mscConnectionString :: MSPool.ConnectionString,
+    _mscExecCtx :: MSSQLExecCtx
   }
   deriving (Generic)
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
+import { GDC_TREE_VIEW_DEV } from '@/utils/featureFlags';
 import {
   FaDatabase,
   FaFolder,
@@ -10,14 +11,13 @@ import {
 import { Key } from 'antd/lib/table/interface';
 import { Link } from 'react-router';
 import './custom.css';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import {
   getFunctionModifyRoute,
   getTableBrowseRoute,
 } from '../../Common/utils/routesUtils';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { GDCTree } from './GDCTree/GDCTree';
-import { GDCSource } from './GDCTree/types';
 
 type SourceItemsTypes =
   | 'database'
@@ -433,6 +433,7 @@ const TreeView: React.FC<TreeViewProps> = ({
       </li>
     );
   }
+
   return (
     <div className={styles.treeNav}>
       {items.map((item, key) => (
@@ -448,8 +449,11 @@ const TreeView: React.FC<TreeViewProps> = ({
           schemaLoading={schemaLoading}
         />
       ))}
-
-      <GDCTree<GDCSource> onSelect={gdcItemClick} />
+      {GDC_TREE_VIEW_DEV === 'enabled' ? (
+        <div id="tree-container" className="inline-block">
+          <GDCTree onSelect={gdcItemClick} />
+        </div>
+      ) : null}
     </div>
   );
 };

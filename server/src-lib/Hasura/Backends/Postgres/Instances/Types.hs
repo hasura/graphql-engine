@@ -9,6 +9,7 @@ module Hasura.Backends.Postgres.Instances.Types
   )
 where
 
+import Autodocodec (HasCodec)
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
 import Data.Kind (Type)
@@ -25,6 +26,7 @@ import Hasura.Backends.Postgres.Types.Insert qualified as PG (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as PG
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
@@ -54,6 +56,9 @@ instance PostgresBackend 'Vanilla where
 instance PostgresBackend 'Citus where
   type PgExtraTableMetadata 'Citus = Citus.ExtraTableMetadata
 
+instance PostgresBackend 'Cockroach where
+  type PgExtraTableMetadata 'Cockroach = ()
+
 ----------------------------------------------------------------
 -- Backend instance
 
@@ -61,7 +66,8 @@ instance
   ( HasTag ('Postgres pgKind),
     Typeable ('Postgres pgKind),
     PostgresBackend pgKind,
-    FromJSON (BackendSourceKind ('Postgres pgKind))
+    FromJSON (BackendSourceKind ('Postgres pgKind)),
+    HasCodec (BackendSourceKind ('Postgres pgKind))
   ) =>
   Backend ('Postgres pgKind)
   where
@@ -89,6 +95,8 @@ instance
   type ComputedFieldReturn ('Postgres pgKind) = PG.ComputedFieldReturn
 
   type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate pgKind
+
+  type AggregationPredicates ('Postgres pgKind) = Agg.AggregationPredicatesImplementation ('Postgres pgKind)
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
   type BackendInsert ('Postgres pgKind) = PG.BackendInsert pgKind

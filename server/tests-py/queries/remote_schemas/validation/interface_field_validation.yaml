@@ -7,7 +7,7 @@
         "args": {
             "name": "character-foo",
             "definition": {
-                "url": "http://localhost:5000/character-iface-graphql",
+                "url": "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/character-iface-graphql",
                 "customization": { "field_names": [{"parent_type": "Droid", "mapping": {"primaryFunction": "name", "name": "primaryFunction"}}] }
             }
         }
@@ -26,7 +26,7 @@
         "args": {
             "name": "character-foo",
             "definition": {
-                "url": "http://localhost:5000/character-iface-graphql",
+                "url": "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/character-iface-graphql",
                 "customization": { "type_names": {"mapping": {"Droid": "Foo", "Human": "Foo"}} }
             }
         }
@@ -45,7 +45,7 @@
         "args": {
             "name": "character-foo",
             "definition": {
-                "url": "http://localhost:5000/character-iface-graphql",
+                "url": "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/character-iface-graphql",
                 "customization": { "field_names": [{"parent_type": "Droid", "mapping": {"primaryFunction": "name"}}] }
             }
         }
@@ -64,7 +64,7 @@
         "args": {
             "name": "character-foo",
             "definition": {
-                "url": "http://localhost:5000/character-iface-graphql",
+                "url": "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/character-iface-graphql",
                 "customization": { "field_names": [{"parent_type": "Droid", "mapping": {"__typename": "my_typename"}}] }
             }
         }

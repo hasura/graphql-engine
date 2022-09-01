@@ -283,6 +283,6 @@ const schema = new ApolloServer(
           return err;
       } });
 
-schema.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
+schema.listen({ port: process.env.PORT || 4001 }).then(({ url }) => {
     console.log(`schema ready at ${url}`);
 });

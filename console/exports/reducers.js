@@ -6,6 +6,7 @@ export { default as apiExplorerReducer } from '../src/components/Services/ApiExp
 export { default as telemetryReducer } from '../src/telemetry/Actions';
 export { default as invokeEventTriggerReducer } from '../src/components/Services/Events/EventTriggers/InvokeManualTrigger/InvokeManualTriggerAction';
 export { remoteSchemaReducer } from '../src/components/Services/RemoteSchema';
+export { modalReducer } from '../src/store/modal/modal.reducer';
 
 export { metadataReducer } from '../src/metadata/reducer';
 export { default as mainReducer } from '../src/components/Main/Actions';

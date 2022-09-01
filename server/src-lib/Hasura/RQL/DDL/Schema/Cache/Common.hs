@@ -5,7 +5,9 @@
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
 module Hasura.RQL.DDL.Schema.Cache.Common
-  ( BuildOutputs (..),
+  ( ApolloFederationConfig (..),
+    ApolloFederationVersion (..),
+    BuildOutputs (..),
     CacheBuild,
     CacheBuildParams (CacheBuildParams),
     InvalidationKeys (..),
@@ -25,6 +27,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     boActions,
     boCronTriggers,
     boCustomTypes,
+    boDataConnectorCapabilities,
     boEndpoints,
     boQueryCollections,
     boRemoteSchemas,
@@ -81,9 +84,9 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
-  { _ikMetadata :: !Inc.InvalidationKey,
-    _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey),
-    _ikSources :: !(HashMap SourceName Inc.InvalidationKey)
+  { _ikMetadata :: Inc.InvalidationKey,
+    _ikRemoteSchemas :: HashMap RemoteSchemaName Inc.InvalidationKey,
+    _ikSources :: HashMap SourceName Inc.InvalidationKey
   }
   deriving (Show, Eq, Generic)
 
@@ -112,9 +115,10 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
 data TableBuildInput b = TableBuildInput
-  { _tbiName :: !(TableName b),
-    _tbiIsEnum :: !Bool,
-    _tbiConfiguration :: !(TableConfig b)
+  { _tbiName :: TableName b,
+    _tbiIsEnum :: Bool,
+    _tbiConfiguration :: TableConfig b,
+    _tbiApolloFederationConfig :: Maybe ApolloFederationConfig
   }
   deriving (Show, Eq, Generic)
 
@@ -123,20 +127,20 @@ instance (Backend b) => NFData (TableBuildInput b)
 instance (Backend b) => Inc.Cacheable (TableBuildInput b)
 
 data NonColumnTableInputs b = NonColumnTableInputs
-  { _nctiTable :: !(TableName b),
-    _nctiObjectRelationships :: ![ObjRelDef b],
-    _nctiArrayRelationships :: ![ArrRelDef b],
-    _nctiComputedFields :: ![ComputedFieldMetadata b],
-    _nctiRemoteRelationships :: ![RemoteRelationship]
+  { _nctiTable :: TableName b,
+    _nctiObjectRelationships :: [ObjRelDef b],
+    _nctiArrayRelationships :: [ArrRelDef b],
+    _nctiComputedFields :: [ComputedFieldMetadata b],
+    _nctiRemoteRelationships :: [RemoteRelationship]
   }
   deriving (Show, Eq, Generic)
 
 data TablePermissionInputs b = TablePermissionInputs
-  { _tpiTable :: !(TableName b),
-    _tpiInsert :: ![InsPermDef b],
-    _tpiSelect :: ![SelPermDef b],
-    _tpiUpdate :: ![UpdPermDef b],
-    _tpiDelete :: ![DelPermDef b]
+  { _tpiTable :: TableName b,
+    _tpiInsert :: [InsPermDef b],
+    _tpiSelect :: [SelPermDef b],
+    _tpiUpdate :: [UpdPermDef b],
+    _tpiDelete :: [DelPermDef b]
   }
   deriving (Generic)
 
@@ -151,7 +155,7 @@ mkTableInputs ::
 mkTableInputs TableMetadata {..} =
   (buildInput, nonColumns, permissions)
   where
-    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration _tmApolloFederationConfig
     nonColumns =
       NonColumnTableInputs
         _tmTable
@@ -172,30 +176,31 @@ mkTableInputs TableMetadata {..} =
 -- 'MonadWriter' side channel.
 data BuildOutputs = BuildOutputs
   { _boSources :: SourceCache,
-    _boActions :: !ActionCache,
+    _boActions :: ActionCache,
     -- | We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
     -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
     -- generation (because of field conflicts).
-    _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)),
-    _boAllowlist :: !InlinedAllowlist,
-    _boCustomTypes :: !AnnotatedCustomTypes,
-    _boCronTriggers :: !(M.HashMap TriggerName CronTriggerInfo),
-    _boEndpoints :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText)),
-    _boApiLimits :: !ApiLimit,
-    _boMetricsConfig :: !MetricsConfig,
-    _boRoles :: !(HashMap RoleName Role),
-    _boTlsAllowlist :: ![TlsAllow],
-    _boQueryCollections :: !QueryCollections
+    _boRemoteSchemas :: HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject),
+    _boAllowlist :: InlinedAllowlist,
+    _boCustomTypes :: AnnotatedCustomTypes,
+    _boCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
+    _boEndpoints :: M.HashMap EndpointName (EndpointMetadata GQLQueryWithText),
+    _boApiLimits :: ApiLimit,
+    _boMetricsConfig :: MetricsConfig,
+    _boRoles :: HashMap RoleName Role,
+    _boTlsAllowlist :: [TlsAllow],
+    _boQueryCollections :: QueryCollections,
+    _boDataConnectorCapabilities :: DataConnectorCapabilities
   }
 
 $(makeLenses ''BuildOutputs)
 
 -- | Parameters required for schema cache build
 data CacheBuildParams = CacheBuildParams
-  { _cbpManager :: !HTTP.Manager,
-    _cbpPGSourceResolver :: !(SourceResolver ('Postgres 'Vanilla)),
-    _cbpMSSQLSourceResolver :: !(SourceResolver 'MSSQL),
-    _cbpServerConfigCtx :: !ServerConfigCtx
+  { _cbpManager :: HTTP.Manager,
+    _cbpPGSourceResolver :: SourceResolver ('Postgres 'Vanilla),
+    _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL,
+    _cbpServerConfigCtx :: ServerConfigCtx
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -251,9 +256,9 @@ runCacheBuildM m = do
   runCacheBuild params m
 
 data RebuildableSchemaCache = RebuildableSchemaCache
-  { lastBuiltSchemaCache :: !SchemaCache,
-    _rscInvalidationMap :: !InvalidationKeys,
-    _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
+  { lastBuiltSchemaCache :: SchemaCache,
+    _rscInvalidationMap :: InvalidationKeys,
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache
   }
 
 bindErrorA ::
@@ -309,7 +314,7 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
                   >-> (\info -> join info >- returnA)
             )
         |)
-    >-> (\infoMap -> M.catMaybes infoMap >- returnA)
+    >-> (\infoMap -> catMaybes infoMap >- returnA)
 {-# INLINEABLE buildInfoMap #-}
 
 -- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.

@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Button } from '@/new-components/Button';
 import { getParentNodeByAttribute } from '../../../utils/domFunctions';
-import styles from './Dropdown.scss';
+import styles from './Dropdown.module.scss';
 
 export type DropdownPosition = 'bottom' | 'right';
 export type DropdownOption = {
@@ -30,15 +31,14 @@ const DropdownList: React.VFC<DropdownListProps> = ({
       {options.map((option, i) => (
         <li key={i}>
           {option.onClick ? (
-            <button
-              className={styles.cursorPointer}
+            <Button
               onClick={() => {
                 option?.onClick?.();
                 dismiss();
               }}
             >
               {option.content}
-            </button>
+            </Button>
           ) : (
             option.content
           )}
@@ -80,20 +80,20 @@ const Dropdown: React.VFC<DropdownProps> = ({
   const dismissDropdown = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const dataElement = getParentNodeByAttribute(e.target, 'data-element');
+      if (!dataElement || dataElement.getAttribute('data-element') !== nodeId) {
+        setIsOpen(false);
+      }
+    };
     if (isOpen) {
-      const handler = (e: MouseEvent) => {
-        const dataElement = getParentNodeByAttribute(e.target, 'data-element');
-        if (
-          !dataElement ||
-          dataElement.getAttribute('data-element') !== nodeId
-        ) {
-          setIsOpen(false);
-        }
-      };
       document.addEventListener('click', handler);
-
-      return () => document.removeEventListener('click', handler);
     }
+    return () => {
+      if (isOpen) {
+        document.removeEventListener('click', handler);
+      }
+    };
   }, [isOpen, nodeId]);
 
   return (
@@ -111,7 +111,7 @@ const Dropdown: React.VFC<DropdownProps> = ({
           {typeof children === 'function' ? (
             children({ onClick: toggle })
           ) : (
-            <button onClick={toggle}>{children}</button>
+            <Button onClick={toggle}>{children}</Button>
           )}
         </div>
         {isOpen && (

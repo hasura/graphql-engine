@@ -106,6 +106,14 @@
           "prefix": null,
           "namespace": "mynamespace"
         }
+      },
+      "health_check": {
+        "interval": 10,
+        "retries": 3,
+        "test": {
+          "sql": "SELECT 1"
+        },        
+        "timeout": 5
       }
     },
     {

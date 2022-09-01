@@ -52,7 +52,7 @@ import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.Server.Init (DowngradeOptions (..), databaseUrlEnv)
+import Hasura.Server.Init (DowngradeOptions (..), databaseUrlOption, _envVar)
 import Hasura.Server.Logging (StartupLog (..))
 import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.LatestVersion
@@ -105,10 +105,11 @@ migrateCatalog ::
     MonadBaseControl IO m
   ) =>
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
+  ExtensionsSchema ->
   MaintenanceMode () ->
   UTCTime ->
   m (MigrationResult, Metadata)
-migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
+migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrationTime = do
   catalogSchemaExists <- doesSchemaExist (SchemaName "hdb_catalog")
   versionTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version")
   metadataTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_metadata")
@@ -139,7 +140,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
       liftTx $
         Q.catchE defaultTxErrorHandler $
           when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
-      enablePgcryptoExtension
+      enablePgcryptoExtension extensionsSchema
       multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= Q.sqlFromFile)
       updateCatalogVersion
 
@@ -149,8 +150,16 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
               -- insert metadata with default source
               let defaultSourceMetadata =
                     AB.mkAnyBackend $
-                      SourceMetadata @('Postgres 'Vanilla) defaultSource PostgresVanillaKind mempty mempty defaultSourceConfig Nothing emptySourceCustomization
-                  sources = OMap.singleton defaultSource defaultSourceMetadata
+                      SourceMetadata
+                        @('Postgres 'Vanilla)
+                        defaultSource
+                        PostgresVanillaKind
+                        mempty
+                        mempty
+                        defaultSourceConfig
+                        Nothing
+                        emptySourceCustomization
+                  sources = OMap.singleton defaultSource $ BackendSourceMetadata defaultSourceMetadata
                in emptyMetadata {_metaSources = sources}
 
       liftTx $ insertMetadataInCatalog emptyMetadata'
@@ -313,12 +322,13 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
           defaultSourceConfig <-
             onNothing maybeDefaultSourceConfig $
               throw400 NotSupported $
-                "cannot migrate to catalog version 43 without --database-url or env var " <> tshow (fst databaseUrlEnv)
+                "cannot migrate to catalog version 43 without --database-url or env var " <> tshow (_envVar databaseUrlOption)
           let metadataV3 =
                 let MetadataNoSources {..} = metadataV2
                     defaultSourceMetadata =
-                      AB.mkAnyBackend $
-                        SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization
+                      BackendSourceMetadata $
+                        AB.mkAnyBackend $
+                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization
                  in Metadata
                       (OMap.singleton defaultSource defaultSourceMetadata)
                       _mnsRemoteSchemas
@@ -347,7 +357,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                 MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
           metadataV2 <- case OMap.toList _metaSources of
             [] -> pure emptyMetadataNoSources
-            [(_, exists)] ->
+            [(_, BackendSourceMetadata exists)] ->
               pure $ case AB.unpackAnyBackend exists of
                 Nothing -> emptyMetadataNoSources
                 Just SourceMetadata {..} ->

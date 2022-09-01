@@ -598,7 +598,7 @@ class TestMetadataOrder:
         assert export_resp['resource_version'] == export_resp_1['resource_version']
 
 
-@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres', 'bigquery'])
+@pytest.mark.backend('citus', 'mssql', 'postgres', 'bigquery')
 @usefixtures('per_class_tests_db_state')
 class TestSetTableCustomizationPostgresMSSQLCitusBigquery:
 
@@ -609,7 +609,7 @@ class TestSetTableCustomizationPostgresMSSQLCitusBigquery:
     def test_set_table_customization(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + hge_ctx.backend_suffix('/set_table_customization') + '.yaml')
 
-@pytest.mark.parametrize("backend", ['bigquery'])
+@pytest.mark.backend('bigquery')
 @usefixtures('per_method_tests_db_state')
 class TestMetadataBigquery:
 

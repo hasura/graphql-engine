@@ -55,7 +55,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- @tablename@ defined /and/ these grant non-empty column permissions.
 ifMatchedFieldParser ::
   forall r m n.
-  MonadBuildSchema 'MSSQL r m n =>
+  ( MonadBuildSchema 'MSSQL r m n,
+    AggregationPredicatesSchema 'MSSQL
+  ) =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
@@ -66,13 +68,16 @@ ifMatchedFieldParser sourceInfo tableInfo = do
 -- | Parse a @tablename_if_matched@ object.
 ifMatchedObjectParser ::
   forall r m n.
-  MonadBuildSchema 'MSSQL r m n =>
+  ( MonadBuildSchema 'MSSQL r m n,
+    AggregationPredicatesSchema 'MSSQL
+  ) =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
 ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
   -- Short-circuit if we don't have sufficient permissions.
-  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+  roleName <- retrieve scRole
+  updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
   matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceInfo tableInfo
   lift do
     updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
@@ -132,7 +137,7 @@ tableInsertMatchColumnsEnum sourceInfo tableInfo = do
         ]
   where
     define name =
-      P.Definition name (Just $ G.Description "column name") Nothing P.EnumValueInfo
+      P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
 
 -- | Check whether a column can be used for match_columns.
 isMatchColumnValid :: ColumnInfo 'MSSQL -> Bool

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="21" height="24.009" viewBox="0 0 21 24.009">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#1eb4d4;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px}
+        </style>
+    </defs>
+    <g id="prefix__streamline-icon-shield-key_24x24" data-name="streamline-icon-shield-key@24x24" transform="translate(.75 .75)">
+        <path id="prefix__Path_3018" d="M2.25 3.923v7.614a11.907 11.907 0 0 0 7.632 11.112l1.041.4a3 3 0 0 0 2.154 0l1.041-.4a11.907 11.907 0 0 0 7.632-11.113V3.923a1.488 1.488 0 0 0-.868-1.362A21.709 21.709 0 0 0 12 .75a21.709 21.709 0 0 0-8.882 1.811 1.488 1.488 0 0 0-.868 1.362z" class="prefix__cls-1" data-name="Path 3018" transform="translate(-2.25 -.749)"/>
+        <path id="prefix__Path_3019" d="M10.545 12.925a.375.375 0 1 1 0 .53.374.374 0 0 1 0-.529" class="prefix__cls-1" data-name="Path 3019" transform="translate(-2.25 -.75)"/>
+        <path id="prefix__Path_3020" d="M14.587 11.71l3.687-3.688a1.626 1.626 0 0 0-2.3-2.3L12.29 9.413a4.06 4.06 0 1 0 2.3 2.3z" class="prefix__cls-1" data-name="Path 3020" transform="translate(-2.25 -.749)"/>
+    </g>
+</svg>

@@ -383,12 +383,18 @@ def generate_regression_report():
     # For each benchmark set we uploaded, for PR_NUMBER...
     for o in s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents']:
         this_prefix, benchmark_set_name = o['Key'].split('/')
-        this_report           = fetch_report_json(this_prefix,                benchmark_set_name)
+        this_report = fetch_report_json(this_prefix, benchmark_set_name)
         try:
             merge_base_report = fetch_report_json(f"mono-pr-{merge_base_pr}", benchmark_set_name)
         except botocore.exceptions.ClientError:
             # This will happen, e.g. when a new benchmark set is added in this change set
             warn(f"No results for {benchmark_set_name} found for PR #{merge_base_pr}. Skipping")
+            continue
+
+        # A benchmark set may contain no queries (e.g. If it's just using the
+        # ad hoc operation mode), in which case the results are an empty array.
+        # Skip in those cases for now
+        if not (this_report and merge_base_report):
             continue
 
         benchmark_set_results = []

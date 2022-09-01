@@ -18,8 +18,8 @@ import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Directives
+import Hasura.GraphQL.Schema.Parser (runParse, toQErr)
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
@@ -111,36 +111,39 @@ convertMutationSelectionSet
       liftEither $ mutationParser resolvedSelSet
 
     -- Process directives on the mutation
-    _dirMap <-
-      runParse
-        (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
+    _dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = do
+          case rootFieldUnpreparedValue of
+            RFDB sourceName exists ->
+              AB.dispatchAnyBackend @BackendExecute
+                exists
+                \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do
+                  let mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
+                      queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
+                      (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST
+                  pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
+            RFRemote remoteField -> do
+              RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
+              let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField resolvedRemoteField
+              pure $
+                buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
+            RFAction action -> do
+              let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
+              (actionName, _fch) <- pure $ case noRelsDBAST of
+                AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
+                AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
+              plan <- convertMutationAction env logger userInfo manager reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
+              pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
+              -- definition which is currently being ignored for actions that are mutations
+            RFRaw customFieldVal -> flip onLeft throwError =<< executeIntrospection userInfo customFieldVal introspectionDisabledRoles
+            RFMulti lst -> do
+              allSteps <- traverse (resolveExecutionSteps rootFieldName) lst
+              pure $ ExecStepMulti allSteps
+
     -- Transform the RQL AST into a prepared SQL query
-    txs <- flip OMap.traverseWithKey unpreparedQueries $ \rootFieldName rootFieldUnpreparedValue -> do
-      case rootFieldUnpreparedValue of
-        RFDB sourceName exists ->
-          AB.dispatchAnyBackend @BackendExecute
-            exists
-            \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do
-              let mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
-                  queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
-                  (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
-              dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST
-              pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
-        RFRemote remoteField -> do
-          RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
-          let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField resolvedRemoteField
-          pure $
-            buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
-        RFAction action -> do
-          let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
-          (actionName, _fch) <- pure $ case noRelsDBAST of
-            AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
-            AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-          plan <- convertMutationAction env logger userInfo manager reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
-          pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
-          -- definition which is currently being ignored for actions that are mutations
-        RFRaw s -> flip onLeft throwError =<< executeIntrospection userInfo s introspectionDisabledRoles
+    txs <- flip OMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
     return (txs, parameterizedQueryHash)

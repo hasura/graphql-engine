@@ -1,8 +1,8 @@
 import React, { ReactElement } from 'react';
 import { FaCopy, FaTrash } from 'react-icons/fa';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import Header from './Header';
-import styles from './PermissionsSummary.scss';
+import styles from './PermissionsSummary.module.scss';
 
 type IconButtonProps = {
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -11,9 +11,7 @@ type IconButtonProps = {
 };
 
 const IconButton: React.FC<IconButtonProps> = ({ onClick, icon, title }) => (
-  <Button color="white" size="xs" onClick={onClick} title={title}>
-    {icon}
-  </Button>
+  <Button size="sm" onClick={onClick} title={title} icon={icon} />
 );
 
 type RolesHeaderProps = {

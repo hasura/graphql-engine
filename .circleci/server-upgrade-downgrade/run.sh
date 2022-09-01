@@ -57,7 +57,7 @@ wait_for_port() {
 		PIDMSG=", PID ($PID)"
 	fi
 	echo "waiting for ${PORT}${PIDMSG}"
-	for i in $(seq 1 60); do
+	for _i in $(seq 1 60); do
 		nc -z localhost $PORT && echo "port $PORT is ready" && return
 		echo -n .
 		sleep 1
@@ -73,7 +73,7 @@ wait_for_port() {
 }
 
 wait_for_postgres() {
-        for i in $(seq 1 60); do
+        for _i in $(seq 1 60); do
                 psql "$1" -c '' >/dev/null 2>&1 && \
                         echo "postgres is ready at $1" && \
                         return
@@ -98,13 +98,12 @@ log() { echo $'\e[1;33m'"--> $*"$'\e[0m'; }
 LATEST_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-latest-release-server.log
 CURRENT_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-current-server.log
 
-HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 # export them so that GraphQL Engine can use it
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES="$HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
 # Required for testing caching
 export GHCRTS='-N1'
 # Required for event trigger tests
-export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+export EVENT_WEBHOOK_HANDLER="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
@@ -204,6 +203,12 @@ get_server_upgrade_tests() {
 		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
 		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
 		--deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
 		  1>/dev/null 2>/dev/null
 	set +x
 	# Choose the subset of jobs to run based on possible parallelism in this buildkite job
@@ -245,6 +250,12 @@ run_server_upgrade_pytest() {
 			--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
 		    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
 			--deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
 			-v $tests_to_run
 		set +x
 		cd -

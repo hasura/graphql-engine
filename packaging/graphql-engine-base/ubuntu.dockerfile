@@ -1,6 +1,6 @@
 # DATE VERSION: 2022-05-16
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
-FROM ubuntu:focal-20220531
+FROM ubuntu:focal-20220801
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
 ARG TARGETPLATFORM
@@ -31,7 +31,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main" > /etc/ap
   && find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 
 # Cleanup unwanted files and packages
-RUN apt-get -y remove curl gnupg2 \
+RUN apt-get -y remove gnupg2 \
   && apt-get -y auto-remove \
   && apt-get -y clean \
   && rm -rf /var/lib/apt/lists/* \

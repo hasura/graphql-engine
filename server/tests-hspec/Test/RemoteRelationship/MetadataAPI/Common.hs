@@ -24,10 +24,10 @@
 -- The RHS source in the below tests have the source name as "target"
 -- The LHS source in the below tests have the source name as "source"
 module Test.RemoteRelationship.MetadataAPI.Common
-  ( dbTodbRemoteRelationshipContext,
-    dbToRemoteSchemaRemoteRelationshipContext,
-    remoteSchemaToDBRemoteRelationshipContext,
-    remoteSchemaToremoteSchemaRemoteRelationshipContext,
+  ( dbTodbRemoteRelationshipFixture,
+    dbToRemoteSchemaRemoteRelationshipFixture,
+    remoteSchemaToDBRemoteRelationshipFixture,
+    remoteSchemaToremoteSchemaRemoteRelationshipFixture,
     LocalTestTestEnvironment (..),
   )
 where
@@ -36,26 +36,20 @@ where
 -- Debugging
 
 import Data.Char (isUpper, toLower)
-import Data.Foldable (traverse_)
-import Data.Function ((&))
-import Data.List (intercalate, sortBy)
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
-import Data.Text (Text)
 import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.Test.Context (Context (..))
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
-import Prelude
+import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -65,81 +59,110 @@ data LocalTestTestEnvironment = LocalTestTestEnvironment
     _rhsServer :: Maybe Server
   }
 
-dbTodbRemoteRelationshipContext :: Context LocalTestTestEnvironment
-dbTodbRemoteRelationshipContext =
-  Context
-    { name = Context.Combine (Context.Backend Context.Postgres) (Context.Backend Context.Postgres),
-      mkLocalTestEnvironment = \_testEnvironment ->
+dbTodbRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
+dbTodbRemoteRelationshipFixture =
+  ( Fixture.fixture $
+      Fixture.Combine
+        (Fixture.Backend Fixture.Postgres)
+        (Fixture.Backend Fixture.Postgres)
+  )
+    { Fixture.mkLocalTestEnvironment = \_testEnvironment ->
         pure $ LocalTestTestEnvironment Nothing Nothing,
-      setup = \(testEnvironment, _) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        rhsPostgresSetup testEnvironment
-        lhsPostgresSetup (testEnvironment, Nothing)
-        createSourceRemoteRelationship testEnvironment,
-      teardown = \(testEnvironment, _) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        lhsPostgresTeardown
-        rhsPostgresTeardown
-        pure (),
-      customOptions = Nothing
+      Fixture.setupTeardown = \(testEnvironment, _) ->
+        [ clearMetadataSetupAction testEnvironment,
+          Fixture.SetupAction
+            { Fixture.setupAction = rhsPostgresSetup testEnvironment,
+              Fixture.teardownAction = \_ -> rhsPostgresTeardown
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
+              Fixture.teardownAction = \_ -> lhsPostgresTeardown
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = createSourceRemoteRelationship testEnvironment,
+              Fixture.teardownAction = \_ -> pure ()
+            }
+        ]
     }
 
-dbToRemoteSchemaRemoteRelationshipContext :: Context LocalTestTestEnvironment
-dbToRemoteSchemaRemoteRelationshipContext =
-  Context
-    { name = Context.Combine (Context.Backend Context.Postgres) Context.RemoteGraphQLServer,
-      mkLocalTestEnvironment = \testEnvironment -> do
+dbToRemoteSchemaRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
+dbToRemoteSchemaRemoteRelationshipFixture =
+  (Fixture.fixture $ Fixture.Combine (Fixture.Backend Fixture.Postgres) Fixture.RemoteGraphQLServer)
+    { Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         rhsServer <- rhsRemoteServerMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment Nothing rhsServer,
-      setup = \(testEnvironment, LocalTestTestEnvironment _ rhsSever) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        rhsRemoteServerSetup (testEnvironment, rhsSever)
-        lhsPostgresSetup (testEnvironment, Nothing)
-        createRemoteSchemaRemoteRelationship testEnvironment,
-      teardown = \(testEnvironment, LocalTestTestEnvironment _ rhsSever) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        lhsPostgresTeardown
-        rhsRemoteServerTeardown (testEnvironment, rhsSever),
-      customOptions = Nothing
+      Fixture.setupTeardown = \(testEnvironment, LocalTestTestEnvironment _ rhsServer) ->
+        [ clearMetadataSetupAction testEnvironment,
+          Fixture.SetupAction
+            { Fixture.setupAction = rhsRemoteServerSetup (testEnvironment, rhsServer),
+              Fixture.teardownAction = \_ -> rhsRemoteServerTeardown (testEnvironment, rhsServer)
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
+              Fixture.teardownAction = \_ -> lhsPostgresTeardown
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = createRemoteSchemaRemoteRelationship testEnvironment,
+              Fixture.teardownAction = \_ -> pure ()
+            }
+        ]
     }
 
-remoteSchemaToDBRemoteRelationshipContext :: Context LocalTestTestEnvironment
-remoteSchemaToDBRemoteRelationshipContext =
-  Context
-    { name = Context.Combine Context.RemoteGraphQLServer (Context.Backend Context.Postgres),
-      mkLocalTestEnvironment = \testEnvironment -> do
+remoteSchemaToDBRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
+remoteSchemaToDBRemoteRelationshipFixture =
+  (Fixture.fixture $ Fixture.Combine Fixture.RemoteGraphQLServer (Fixture.Backend Fixture.Postgres))
+    { Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         lhsServer <- lhsRemoteServerMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment lhsServer Nothing,
-      setup = \(testEnvironment, LocalTestTestEnvironment lhsServer _) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        rhsPostgresSetup testEnvironment
-        lhsRemoteServerSetup (testEnvironment, lhsServer)
-        addRStoDBRelationship testEnvironment,
-      teardown = \(testEnvironment, LocalTestTestEnvironment lhsServer _) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        lhsRemoteServerTeardown (testEnvironment, lhsServer)
-        rhsPostgresTeardown,
-      customOptions = Nothing
+      Fixture.setupTeardown = \(testEnvironment, LocalTestTestEnvironment lhsServer _) ->
+        [ clearMetadataSetupAction testEnvironment,
+          Fixture.SetupAction
+            { Fixture.setupAction = rhsPostgresSetup testEnvironment,
+              Fixture.teardownAction = \_ -> rhsPostgresTeardown
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = lhsRemoteServerSetup (testEnvironment, lhsServer),
+              Fixture.teardownAction = \_ -> lhsRemoteServerTeardown (testEnvironment, lhsServer)
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = addRStoDBRelationship testEnvironment,
+              Fixture.teardownAction = \_ -> pure ()
+            }
+        ]
     }
 
-remoteSchemaToremoteSchemaRemoteRelationshipContext :: Context LocalTestTestEnvironment
-remoteSchemaToremoteSchemaRemoteRelationshipContext =
-  Context
-    { name = Context.Combine Context.RemoteGraphQLServer Context.RemoteGraphQLServer,
-      mkLocalTestEnvironment = \testEnvironment -> do
+remoteSchemaToremoteSchemaRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
+remoteSchemaToremoteSchemaRemoteRelationshipFixture =
+  (Fixture.fixture $ Fixture.Combine Fixture.RemoteGraphQLServer Fixture.RemoteGraphQLServer)
+    { Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         lhsServer <- lhsRemoteServerMkLocalTestEnvironment testEnvironment
         rhsServer <- rhsRemoteServerMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment lhsServer rhsServer,
-      setup = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        rhsRemoteServerSetup (testEnvironment, rhsServer)
-        lhsRemoteServerSetup (testEnvironment, lhsServer)
-        addRStoRSRelationship testEnvironment,
-      teardown = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) -> do
-        GraphqlEngine.clearMetadata testEnvironment
-        lhsRemoteServerTeardown (testEnvironment, lhsServer)
-        rhsRemoteServerTeardown (testEnvironment, rhsServer),
-      customOptions = Nothing
+      Fixture.setupTeardown = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) ->
+        [ clearMetadataSetupAction testEnvironment,
+          Fixture.SetupAction
+            { Fixture.setupAction = rhsRemoteServerSetup (testEnvironment, rhsServer),
+              Fixture.teardownAction =
+                \_ -> rhsRemoteServerTeardown (testEnvironment, rhsServer)
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = lhsRemoteServerSetup (testEnvironment, lhsServer),
+              Fixture.teardownAction = \_ -> lhsRemoteServerTeardown (testEnvironment, lhsServer)
+            },
+          Fixture.SetupAction
+            { Fixture.setupAction = addRStoRSRelationship testEnvironment,
+              Fixture.teardownAction = \_ -> pure ()
+            }
+        ]
+    }
+
+--------------------------------------------------------------------------------
+
+clearMetadataSetupAction :: TestEnvironment -> Fixture.SetupAction
+clearMetadataSetupAction testEnv =
+  Fixture.SetupAction
+    { Fixture.setupAction = GraphqlEngine.clearMetadata testEnv,
+      Fixture.teardownAction = \_ -> GraphqlEngine.clearMetadata testEnv
     }
 
 --------------------------------------------------------------------------------
@@ -201,9 +224,9 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable albumTable
+  Postgres.createTable testEnvironment albumTable
   Postgres.insertTable albumTable
-  Schema.trackTable Context.Postgres sourceName albumTable testEnvironment
+  Schema.trackTable Fixture.Postgres sourceName albumTable testEnvironment
 
 rhsPostgresTeardown :: IO ()
 rhsPostgresTeardown = Postgres.dropTable albumTable
@@ -223,13 +246,13 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable track
+  Postgres.createTable testEnvironment track
   Postgres.insertTable track
-  Schema.trackTable Context.Postgres sourceName track testEnvironment
+  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
 
 createSourceRemoteRelationship :: TestEnvironment -> IO ()
 createSourceRemoteRelationship testEnvironment = do
-  let schemaName = Context.defaultSchema Context.Postgres
+  let schemaName = Schema.getSchemaName testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -264,7 +287,8 @@ lhsPostgresTeardown = Postgres.dropTable track
 
 createRemoteSchemaRemoteRelationship :: TestEnvironment -> IO ()
 createRemoteSchemaRemoteRelationship testEnvironment = do
-  let schemaName = Context.defaultSchema Context.Postgres
+  let schemaName = Schema.getSchemaName testEnvironment
+
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -507,7 +531,7 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
           orderByFunction = case ta_order_by of
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
-          limitFunction = maybe Prelude.id take ta_limit
+          limitFunction = maybe Hasura.Prelude.id take ta_limit
       pure $
         tracks
           & filter filterFunction

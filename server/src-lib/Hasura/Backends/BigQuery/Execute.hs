@@ -9,6 +9,8 @@ module Hasura.Backends.BigQuery.Execute
     streamBigQuery,
     executeBigQuery,
     executeProblemMessage,
+    insertDataset,
+    deleteDataset,
     BigQuery (..),
     Execute,
     ExecuteProblem (..),
@@ -58,8 +60,8 @@ import Network.HTTP.Types
 -- we choose a naive implementation in the interest of getting other
 -- work done.
 data RecordSet = RecordSet
-  { rows :: !(Vector (InsOrdHashMap FieldNameText OutputValue)),
-    wantedFields :: !(Maybe [Text])
+  { rows :: Vector (InsOrdHashMap FieldNameText OutputValue),
+    wantedFields :: Maybe [Text]
   }
   deriving (Show)
 
@@ -70,20 +72,20 @@ newtype FieldNameText
   deriving (Show, Ord, Eq, Hashable, Aeson.FromJSON, Aeson.ToJSONKey, IsString)
 
 data OutputValue
-  = DecimalOutputValue !Decimal
-  | BigDecimalOutputValue !BigDecimal
-  | IntegerOutputValue !Int64
-  | FloatOutputValue !Float64
-  | GeographyOutputValue !Geography
-  | TextOutputValue !Text
-  | TimestampOutputValue !Timestamp
-  | DateOutputValue !Date
-  | TimeOutputValue !Time
-  | DatetimeOutputValue !Datetime
-  | BytesOutputValue !Base64
-  | BoolOutputValue !Bool
-  | ArrayOutputValue !(Vector OutputValue)
-  | RecordOutputValue !(InsOrdHashMap FieldNameText OutputValue)
+  = DecimalOutputValue Decimal
+  | BigDecimalOutputValue BigDecimal
+  | IntegerOutputValue Int64
+  | FloatOutputValue Float64
+  | GeographyOutputValue Geography
+  | TextOutputValue Text
+  | TimestampOutputValue Timestamp
+  | DateOutputValue Date
+  | TimeOutputValue Time
+  | DatetimeOutputValue Datetime
+  | BytesOutputValue Base64
+  | BoolOutputValue Bool
+  | ArrayOutputValue (Vector OutputValue)
+  | RecordOutputValue (InsOrdHashMap FieldNameText OutputValue)
   | NullOutputValue -- TODO: Consider implications.
   deriving (Show, Eq, Generic)
 
@@ -92,28 +94,29 @@ instance Hashable OutputValue
 instance Aeson.ToJSON OutputValue where
   toJSON = \case
     NullOutputValue -> Aeson.toJSON Aeson.Null
-    DecimalOutputValue !i -> Aeson.toJSON i
-    BigDecimalOutputValue !i -> Aeson.toJSON i
-    FloatOutputValue !i -> Aeson.toJSON i
-    TextOutputValue !i -> Aeson.toJSON i
-    BytesOutputValue !i -> Aeson.toJSON i
-    DateOutputValue !i -> Aeson.toJSON i
-    TimestampOutputValue !i -> Aeson.toJSON i
-    TimeOutputValue !i -> Aeson.toJSON i
-    DatetimeOutputValue !i -> Aeson.toJSON i
-    GeographyOutputValue !i -> Aeson.toJSON i
-    BoolOutputValue !i -> Aeson.toJSON i
-    IntegerOutputValue !i -> Aeson.toJSON i
-    ArrayOutputValue !vector -> Aeson.toJSON vector
-    RecordOutputValue !record -> Aeson.toJSON record
+    DecimalOutputValue i -> Aeson.toJSON i
+    BigDecimalOutputValue i -> Aeson.toJSON i
+    FloatOutputValue i -> Aeson.toJSON i
+    TextOutputValue i -> Aeson.toJSON i
+    BytesOutputValue i -> Aeson.toJSON i
+    DateOutputValue i -> Aeson.toJSON i
+    TimestampOutputValue i -> Aeson.toJSON i
+    TimeOutputValue i -> Aeson.toJSON i
+    DatetimeOutputValue i -> Aeson.toJSON i
+    GeographyOutputValue i -> Aeson.toJSON i
+    BoolOutputValue i -> Aeson.toJSON i
+    IntegerOutputValue i -> Aeson.toJSON i
+    ArrayOutputValue vector -> Aeson.toJSON vector
+    RecordOutputValue record -> Aeson.toJSON record
 
 data ExecuteReader = ExecuteReader
-  { sourceConfig :: !BigQuerySourceConfig
+  { sourceConfig :: BigQuerySourceConfig
   }
 
 data ExecuteProblem
   = GetJobDecodeProblem String
   | CreateQueryJobDecodeProblem String
+  | InsertDatasetDecodeProblem String
   | ExecuteRunBigQueryProblem BigQueryProblem
   | RESTRequestNonOK Status Aeson.Value
   deriving (Generic)
@@ -130,6 +133,7 @@ instance Aeson.ToJSON ExecuteProblem where
       GetJobDecodeProblem err -> ["get_job_decode_problem" Aeson..= err]
       CreateQueryJobDecodeProblem err -> ["create_query_job_decode_problem" Aeson..= err]
       ExecuteRunBigQueryProblem problem -> ["execute_run_bigquery_problem" Aeson..= problem]
+      InsertDatasetDecodeProblem problem -> ["insert_dataset__bigquery_problem" Aeson..= problem]
       RESTRequestNonOK _ resp -> ["rest_request_non_ok" Aeson..= resp]
 
 executeProblemMessage :: ShowDetails -> ExecuteProblem -> Text
@@ -137,6 +141,7 @@ executeProblemMessage showDetails = \case
   GetJobDecodeProblem err -> "Fetching BigQuery job status, cannot decode HTTP response; " <> tshow err
   CreateQueryJobDecodeProblem err -> "Creating BigQuery job, cannot decode HTTP response: " <> tshow err
   ExecuteRunBigQueryProblem _ -> "Cannot execute BigQuery request"
+  InsertDatasetDecodeProblem _ -> "Cannot create BigQuery dataset"
   RESTRequestNonOK status body ->
     let summary = "BigQuery HTTP request failed with status " <> tshow (statusCode status) <> " " <> tshow (statusMessage status)
      in case showDetails of
@@ -176,14 +181,14 @@ data BigQueryType
   deriving (Show, Eq)
 
 data BigQuery = BigQuery
-  { query :: !LT.Text,
-    parameters :: !(InsOrdHashMap ParameterName Parameter)
+  { query :: LT.Text,
+    parameters :: InsOrdHashMap ParameterName Parameter
   }
   deriving (Show)
 
 data Parameter = Parameter
-  { typ :: !BigQueryType,
-    value :: !Value
+  { typ :: BigQueryType,
+    value :: Value
   }
   deriving (Show)
 
@@ -192,9 +197,9 @@ newtype ParameterName
   deriving (Show, Aeson.ToJSON, Ord, Eq, Hashable)
 
 data BigQueryField = BigQueryField
-  { name :: !FieldNameText,
-    typ :: !BigQueryFieldType,
-    mode :: !Mode
+  { name :: FieldNameText,
+    typ :: BigQueryFieldType,
+    mode :: Mode
   }
   deriving (Show)
 
@@ -230,6 +235,10 @@ data IsNullable
 -- | Delay between attempts to get job results if the job is incomplete.
 streamDelaySeconds :: DiffTime
 streamDelaySeconds = 1
+
+bigQueryProjectUrl :: Text -> String
+bigQueryProjectUrl projectId =
+  "https://bigquery.googleapis.com/bigquery/v2/projects/" <> T.unpack projectId
 
 --------------------------------------------------------------------------------
 -- Executing the planned actions forest
@@ -375,9 +384,9 @@ valueToBigQueryJson = go
 -- response. Until that test has been done, we should consider this a
 -- preliminary implementation.
 streamBigQuery ::
-  MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem RecordSet)
+  (MonadIO m) => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem RecordSet)
 streamBigQuery conn bigquery = do
-  jobResult <- createQueryJob conn bigquery
+  jobResult <- runExceptT $ createQueryJob conn bigquery
   case jobResult of
     Right job -> loop Nothing Nothing
       where
@@ -409,7 +418,7 @@ streamBigQuery conn bigquery = do
 -- | Execute a query without expecting any output (e.g. CREATE TABLE or INSERT)
 executeBigQuery :: MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem ())
 executeBigQuery conn bigquery = do
-  jobResult <- createQueryJob conn bigquery
+  jobResult <- runExceptT $ createQueryJob conn bigquery
   case jobResult of
     Right job -> loop Nothing
       where
@@ -477,54 +486,53 @@ data Fetch = Fetch
 
 -- | Get results of a job.
 getJobResults ::
-  MonadIO m =>
+  (MonadIO m) =>
   BigQueryConnection ->
   Job ->
   Fetch ->
   m (Either ExecuteProblem JobResultsResponse)
-getJobResults conn Job {jobId, location} Fetch {pageToken} =
-  liftIO run
-  where
-    -- https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get#query-parameters
-    url =
-      "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-        <> T.unpack (_bqProjectId conn)
-        <> "/queries/"
-        <> T.unpack jobId
-        <> "?alt=json&prettyPrint=false"
-        <> "&location="
-        <> T.unpack location
-        <> "&"
-        <> T.unpack (encodeParams extraParameters)
-    run = do
-      let req =
-            setRequestHeader "Content-Type" ["application/json"] $
-              parseRequest_ url
-      eResp <- runBigQuery conn req
-      case eResp of
-        Left e -> pure (Left (ExecuteRunBigQueryProblem e))
-        Right resp ->
-          case getResponseStatusCode resp of
-            200 -> case Aeson.eitherDecode (getResponseBody resp) of
-              Left e -> pure (Left (GetJobDecodeProblem e))
-              Right results -> pure (Right results)
-            _ -> do
-              pure $ Left $ RESTRequestNonOK (getResponseStatus resp) $ parseAsJsonOrText $ getResponseBody resp
-    extraParameters = pageTokenParam
-      where
-        pageTokenParam =
-          case pageToken of
-            Nothing -> []
-            Just token -> [("pageToken", token)]
-    encodeParams = T.intercalate "&" . map (\(k, v) -> k <> "=" <> v)
+getJobResults conn Job {jobId, location} Fetch {pageToken} = runExceptT $ do
+  -- https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get#query-parameters
+  let url =
+        "GET " <> bigQueryProjectUrl (_bqProjectId conn)
+          <> "/queries/"
+          <> T.unpack jobId
+          <> "?alt=json&prettyPrint=false"
+          <> "&location="
+          <> T.unpack location
+          <> "&"
+          <> T.unpack (encodeParams extraParameters)
+
+      req =
+        jsonRequestHeader (parseRequest_ url)
+
+      extraParameters = pageTokenParam
+        where
+          pageTokenParam =
+            case pageToken of
+              Nothing -> []
+              Just token -> [("pageToken", token)]
+
+      encodeParams = T.intercalate "&" . map (\(k, v) -> k <> "=" <> v)
+
+  resp <- runBigQueryExcept conn req
+  case getResponseStatusCode resp of
+    200 ->
+      Aeson.eitherDecode (getResponseBody resp)
+        `onLeft` (throwError . GetJobDecodeProblem)
+    _ ->
+      throwError $
+        RESTRequestNonOK
+          (getResponseStatus resp)
+          $ parseAsJsonOrText $ getResponseBody resp
 
 --------------------------------------------------------------------------------
 -- Creating jobs
 
 data Job = Job
-  { state :: !Text,
-    jobId :: !Text,
-    location :: !Text
+  { state :: Text,
+    jobId :: Text,
+    location :: Text
   }
   deriving (Show)
 
@@ -548,56 +556,139 @@ instance Aeson.FromJSON Job where
             else fail ("Invalid kind: " <> show kind)
       )
 
+-- | Make a Request return `JSON`
+jsonRequestHeader :: Request -> Request
+jsonRequestHeader =
+  setRequestHeader "Content-Type" ["application/json"]
+
 -- | Create a job asynchronously.
-createQueryJob :: MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem Job)
-createQueryJob conn BigQuery {..} =
-  liftIO run
-  where
-    run = do
-      let url =
-            "POST https://content-bigquery.googleapis.com/bigquery/v2/projects/"
-              <> T.unpack (_bqProjectId conn)
-              <> "/jobs?alt=json&prettyPrint=false"
-      let req =
-            setRequestHeader "Content-Type" ["application/json"] $
-              setRequestBodyLBS body $
-                parseRequest_ url
-      eResp <- runBigQuery conn req
-      case eResp of
-        Left e -> pure (Left (ExecuteRunBigQueryProblem e))
-        Right resp ->
-          case getResponseStatusCode resp of
-            200 ->
-              case Aeson.eitherDecode (getResponseBody resp) of
-                Left e -> pure (Left (CreateQueryJobDecodeProblem e))
-                Right job -> pure (Right job)
-            _ -> do
-              pure $ Left $ RESTRequestNonOK (getResponseStatus resp) $ parseAsJsonOrText $ getResponseBody resp
-    body =
-      Aeson.encode
-        ( Aeson.object
-            [ "configuration"
-                .= Aeson.object
-                  [ "jobType" .= "QUERY",
-                    "query"
-                      .= Aeson.object
-                        [ "query" .= query,
-                          "useLegacySql" .= False, -- Important, it makes `quotes` work properly.
-                          "parameterMode" .= "NAMED",
-                          "queryParameters"
-                            .= map
-                              ( \(name, Parameter {..}) ->
-                                  Aeson.object
-                                    [ "name" .= Aeson.toJSON name,
-                                      "parameterType" .= Aeson.toJSON typ,
-                                      "parameterValue" .= valueToBigQueryJson value
-                                    ]
-                              )
-                              (OMap.toList parameters)
-                        ]
-                  ]
-            ]
-        )
+createQueryJob :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> BigQuery -> m Job
+createQueryJob conn BigQuery {..} = do
+  let url =
+        "POST " <> bigQueryProjectUrl (_bqProjectId conn)
+          <> "/jobs?alt=json&prettyPrint=false"
+
+      req =
+        jsonRequestHeader $
+          setRequestBodyLBS body $
+            parseRequest_ url
+
+      body =
+        Aeson.encode
+          ( Aeson.object
+              [ "configuration"
+                  .= Aeson.object
+                    [ "jobType" .= "QUERY",
+                      "query"
+                        .= Aeson.object
+                          [ "query" .= query,
+                            "useLegacySql" .= False, -- Important, it makes `quotes` work properly.
+                            "parameterMode" .= "NAMED",
+                            "queryParameters"
+                              .= map
+                                ( \(name, Parameter {..}) ->
+                                    Aeson.object
+                                      [ "name" .= Aeson.toJSON name,
+                                        "parameterType" .= Aeson.toJSON typ,
+                                        "parameterValue" .= valueToBigQueryJson value
+                                      ]
+                                )
+                                (OMap.toList parameters)
+                          ]
+                    ]
+              ]
+          )
+
+  resp <- runBigQueryExcept conn req
+  case getResponseStatusCode resp of
+    200 ->
+      Aeson.eitherDecode (getResponseBody resp)
+        `onLeft` (throwError . CreateQueryJobDecodeProblem)
+    _ ->
+      throwError $
+        RESTRequestNonOK
+          (getResponseStatus resp)
+          $ parseAsJsonOrText $ getResponseBody resp
+
+data Dataset = Dataset
+  { datasetId :: Text
+  }
+  deriving (Show)
+
+instance Aeson.FromJSON Dataset where
+  parseJSON =
+    Aeson.withObject
+      "Dataset"
+      ( \o -> do
+          datasetId <- o .: "id"
+          pure (Dataset datasetId)
+      )
+
+-- | Delete a dataset
+deleteDataset :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> Text -> m ()
+deleteDataset conn datasetId = do
+  let url =
+        "DELETE " <> bigQueryProjectUrl (_bqProjectId conn)
+          <> "/datasets/"
+          <> T.unpack datasetId
+
+  let req = jsonRequestHeader (parseRequest_ url)
+
+  resp <- runBigQueryExcept conn req
+  case getResponseStatusCode resp of
+    204 -> pure ()
+    _ ->
+      throwError $
+        RESTRequestNonOK
+          (getResponseStatus resp)
+          $ parseAsJsonOrText $ getResponseBody resp
+
+-- | Run request and map errors into ExecuteProblem
+runBigQueryExcept ::
+  (MonadError ExecuteProblem m, MonadIO m) =>
+  BigQueryConnection ->
+  Request ->
+  m (Response BL.ByteString)
+runBigQueryExcept conn req = do
+  runBigQuery conn req >>= \case
+    Right a -> pure a
+    Left e -> throwError (ExecuteRunBigQueryProblem e)
+
+-- | Insert a new dataset
+insertDataset :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> Text -> m Dataset
+insertDataset conn datasetId =
+  do
+    let url =
+          "POST " <> bigQueryProjectUrl (_bqProjectId conn)
+            <> "/datasets?alt=json&prettyPrint=false"
+
+        req =
+          jsonRequestHeader $
+            setRequestBodyLBS body $
+              parseRequest_ url
+
+        body =
+          Aeson.encode
+            ( Aeson.object
+                [ "id" .= datasetId,
+                  "datasetReference"
+                    .= Aeson.object
+                      [ "datasetId" .= datasetId,
+                        "projectId" .= _bqProjectId conn
+                      ]
+                ]
+            )
+
+    resp <- runBigQueryExcept conn req
+    case getResponseStatusCode resp of
+      200 ->
+        Aeson.eitherDecode (getResponseBody resp)
+          `onLeft` (throwError . InsertDatasetDecodeProblem)
+      _ ->
+        throwError $
+          RESTRequestNonOK
+            (getResponseStatus resp)
+            $ parseAsJsonOrText $ getResponseBody resp
 
 -- | Parse given @'ByteString' as JSON value. If not a valid JSON, encode to plain text.
 parseAsJsonOrText :: BL.ByteString -> Aeson.Value

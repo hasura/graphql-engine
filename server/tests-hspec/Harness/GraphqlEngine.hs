@@ -13,6 +13,7 @@ module Harness.GraphqlEngine
     postMetadata_,
     postMetadata,
     postMetadataWithStatus,
+    postExplain,
     exportMetadata,
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
@@ -39,10 +40,11 @@ where
 
 -------------------------------------------------------------------------------
 
-import Control.Concurrent (forkIO)
+import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value, object, (.=))
+import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
 import Data.Environment qualified as Env
 import Data.Text qualified as T
@@ -51,14 +53,15 @@ import Harness.Constants qualified as Constants
 import Harness.Exceptions (HasCallStack, bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Quoter.Yaml (yaml)
-import Harness.TestEnvironment (Server (..), TestEnvironment, getServer, serverUrl)
+import Harness.TestEnvironment (Server (..), TestEnvironment, getServer, serverUrl, testLog, testLogBytestring)
 import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (PGConnectionParams (..), UrlConf (..))
-import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..))
+import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
+import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Network.Socket qualified as Socket
 import Network.Wai.Handler.Warp qualified as Warp
 import System.Metrics qualified as EKG
@@ -94,7 +97,10 @@ post_ testEnvironment path v = void $ withFrozenCallStack $ postWithHeaders_ tes
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders ::
   HasCallStack => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeaders v = withFrozenCallStack $ postWithHeadersStatus 200 v
+postWithHeaders testEnv url headers json = do
+  testLog testEnv $ "Posting to " <> url
+  testLogBytestring testEnv (AP.encodePretty json)
+  withFrozenCallStack $ postWithHeadersStatus 200 testEnv url headers json
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -153,6 +159,18 @@ postGraphqlWithHeaders ::
   HasCallStack => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
 postGraphqlWithHeaders testEnvironment headers value =
   withFrozenCallStack $ postGraphqlYamlWithHeaders testEnvironment headers (object ["query" .= value])
+
+-- | post to /v1/graphql/explain endpoint
+postExplain :: HasCallStack => TestEnvironment -> Value -> IO Value
+postExplain testEnvironment value =
+  withFrozenCallStack $
+    post
+      testEnvironment
+      "/v1/graphql/explain"
+      [yaml|
+          query:
+            query: *value
+        |]
 
 -- | Same as 'post_', but defaults to the @"v1/metadata"@ endpoint.
 --
@@ -222,18 +240,18 @@ args:
 -- The port availability is subject to races.
 startServerThread :: Maybe (String, Int) -> IO Server
 startServerThread murlPrefixport = do
-  (urlPrefix, port, threadId) <-
+  (urlPrefix, port, thread) <-
     case murlPrefixport of
       Just (urlPrefix, port) -> do
-        threadId <- forkIO (forever (sleep 1)) -- Just wait.
-        pure (urlPrefix, port, threadId)
+        thread <- Async.async (forever (sleep 1)) -- Just wait.
+        pure (urlPrefix, port, thread)
       Nothing -> do
         port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
         let urlPrefix = "http://127.0.0.1"
-        threadId <-
-          forkIO (runApp Constants.serveOptions {soPort = fromIntegral port})
-        pure (urlPrefix, port, threadId)
-  let server = Server {port = fromIntegral port, urlPrefix, threadId}
+        thread <-
+          Async.async (runApp Constants.serveOptions {soPort = unsafePort port})
+        pure (urlPrefix, port, thread)
+  let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck (serverUrl server)
   pure server
 
@@ -268,6 +286,7 @@ runApp serveOptions = do
         serverMetrics <-
           liftIO $ createServerMetrics $ EKG.subset ServerSubset store
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
+    prometheusMetrics <- makeDummyPrometheusMetrics
     runManagedT (App.initialiseServeCtx env globalCtx serveOptions serverMetrics) $ \serveCtx ->
       do
         let Loggers _ _logger pgLogger = _scLoggers serveCtx
@@ -283,6 +302,8 @@ runApp serveOptions = do
               Nothing
               serverMetrics
               ekgStore
+              Nothing
+              prometheusMetrics
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

@@ -9,9 +9,8 @@ where
 
 -------------------------------------------------------------------------------
 
-import Control.Concurrent (forkIO)
+import Control.Concurrent.Async qualified as Async
 import Control.Exception.Safe (bracket)
-import Control.Monad.IO.Class (liftIO)
 import Data.Aeson qualified as Aeson
 import Data.ByteString.Lazy qualified as Lazy (ByteString)
 import Data.Morpheus qualified as Morpheus (interpreter)
@@ -26,11 +25,11 @@ import Data.Morpheus.Types
   )
 import Harness.Http qualified as Http
 import Harness.TestEnvironment (Server (..), serverUrl)
+import Hasura.Prelude
 import Network.Socket qualified as Socket
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Web.Spock.Core qualified as Spock
-import Prelude
 
 -------------------------------------------------------------------------------
 
@@ -59,7 +58,7 @@ run ::
 run (Interpreter interpreter) = do
   let urlPrefix = "http://127.0.0.1"
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
-  threadId <- forkIO $
+  thread <- Async.async $
     Spock.runSpockNoBanner port $
       Spock.spockT id $ do
         Spock.get "/" $ do
@@ -70,7 +69,7 @@ run (Interpreter interpreter) = do
           result <- liftIO $ interpreter body
           Spock.setHeader "Content-Type" "application/json; charset=utf-8"
           Spock.lazyBytes result
-  let server = Server {port = fromIntegral port, urlPrefix, threadId}
+  let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck $ serverUrl server
   pure server
 

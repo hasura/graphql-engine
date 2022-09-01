@@ -14,6 +14,7 @@ module Hasura.Backends.Postgres.SQL.DML
     FromExp (..),
     FromItem (..),
     FunctionAlias (FunctionAlias),
+    FunctionDefinitionListItem (..),
     FunctionArgs (FunctionArgs),
     FunctionExp (FunctionExp),
     GroupByExp (GroupByExp),
@@ -115,16 +116,16 @@ import Text.Builder qualified as TB
 data Select = Select
   { -- | Unlike 'SelectWith', does not allow data-modifying statements (as those are only allowed at
     -- the top level of a query).
-    selCTEs :: ![(TableAlias, Select)],
-    selDistinct :: !(Maybe DistinctExpr),
-    selExtr :: ![Extractor],
-    selFrom :: !(Maybe FromExp),
-    selWhere :: !(Maybe WhereFrag),
-    selGroupBy :: !(Maybe GroupByExp),
-    selHaving :: !(Maybe HavingExp),
-    selOrderBy :: !(Maybe OrderByExp),
-    selLimit :: !(Maybe LimitExp),
-    selOffset :: !(Maybe OffsetExp)
+    selCTEs :: [(TableAlias, Select)],
+    selDistinct :: Maybe DistinctExpr,
+    selExtr :: [Extractor],
+    selFrom :: Maybe FromExp,
+    selWhere :: Maybe WhereFrag,
+    selGroupBy :: Maybe GroupByExp,
+    selHaving :: Maybe HavingExp,
+    selOrderBy :: Maybe OrderByExp,
+    selLimit :: Maybe LimitExp,
+    selOffset :: Maybe OffsetExp
   }
   deriving (Show, Eq, Generic, Data)
 
@@ -171,9 +172,9 @@ newtype OrderByExp
 
 -- |
 data OrderByItem = OrderByItem
-  { oExpression :: !SQLExp,
-    oOrdering :: !(Maybe OrderType),
-    oNullsOrder :: !(Maybe NullsOrder)
+  { oExpression :: SQLExp,
+    oOrdering :: Maybe OrderType,
+    oNullsOrder :: Maybe NullsOrder
   }
   deriving (Show, Eq, Generic, Data)
 
@@ -223,10 +224,12 @@ instance ToSQL NullsOrder where
   toSQL NullsLast = "NULLS LAST"
 
 instance J.FromJSON NullsOrder where
-  parseJSON = J.genericParseJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 1}
+  -- Todo: write a proper parser https://github.com/hasura/graphql-engine-mono/issues/5484
+  parseJSON = J.genericParseJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 5}
 
 instance J.ToJSON NullsOrder where
-  toJSON = J.genericToJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 1}
+  -- Todo: write a proper parser https://github.com/hasura/graphql-engine-mono/issues/5484
+  toJSON = J.genericToJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 5}
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =
@@ -317,9 +320,9 @@ mkQIdenExp :: (IsIdentifier a, IsIdentifier b) => a -> b -> SQLExp
 mkQIdenExp q t = SEQIdentifier $ mkQIdentifier q t
 
 data Qual
-  = QualifiedIdentifier !Identifier !(Maybe TypeAnn)
-  | QualTable !QualifiedTable
-  | QualVar !Text
+  = QualifiedIdentifier Identifier (Maybe TypeAnn)
+  | QualTable QualifiedTable
+  | QualVar Text
   deriving (Show, Eq, Generic, Data)
 
 instance NFData Qual
@@ -344,7 +347,7 @@ mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
 mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
 
 data QIdentifier
-  = QIdentifier !Qual !Identifier
+  = QIdentifier Qual Identifier
   deriving (Show, Eq, Generic, Data)
 
 instance NFData QIdentifier
@@ -422,8 +425,8 @@ boolTypeAnn = mkTypeAnn $ CollectableTypeScalar PGBoolean
 
 data CountType
   = CTStar
-  | CTSimple ![PGCol]
-  | CTDistinct ![PGCol]
+  | CTSimple [PGCol]
+  | CTDistinct [PGCol]
   deriving (Show, Eq, Generic, Data)
 
 instance NFData CountType
@@ -448,32 +451,32 @@ instance ToSQL TupleExp where
     parenB $ ", " <+> exps
 
 data SQLExp
-  = SEPrep !Int
+  = SEPrep Int
   | SENull
-  | SELit !Text
-  | SEUnsafe !Text
-  | SESelect !Select
+  | SELit Text
+  | SEUnsafe Text
+  | SESelect Select
   | -- | all fields (@*@) or all fields from relation (@iden.*@)
-    SEStar !(Maybe Qual)
+    SEStar (Maybe Qual)
   | -- | A column name
-    SEIdentifier !Identifier
+    SEIdentifier Identifier
   | -- | SEIdentifier and SERowIdentifier are distinguished for easier rewrite rules
-    SERowIdentifier !Identifier
+    SERowIdentifier Identifier
   | -- | A qualified column name
-    SEQIdentifier !QIdentifier
+    SEQIdentifier QIdentifier
   | -- | this is used to apply a sql function to an expression. The 'Text' is the function name
-    SEFnApp !Text ![SQLExp] !(Maybe OrderByExp)
-  | SEOpApp !SQLOp ![SQLExp]
-  | SETyAnn !SQLExp !TypeAnn
-  | SECond !BoolExp !SQLExp !SQLExp
-  | SEBool !BoolExp
-  | SEExcluded !Identifier
-  | SEArray ![SQLExp]
-  | SEArrayIndex !SQLExp !SQLExp
-  | SETuple !TupleExp
-  | SECount !CountType
-  | SENamedArg !Identifier !SQLExp
-  | SEFunction !FunctionExp
+    SEFnApp Text [SQLExp] (Maybe OrderByExp)
+  | SEOpApp SQLOp [SQLExp]
+  | SETyAnn SQLExp TypeAnn
+  | SECond BoolExp SQLExp SQLExp
+  | SEBool BoolExp
+  | SEExcluded Identifier
+  | SEArray [SQLExp]
+  | SEArrayIndex SQLExp SQLExp
+  | SETuple TupleExp
+  | SECount CountType
+  | SENamedArg Identifier SQLExp
+  | SEFunction FunctionExp
   deriving (Show, Eq, Generic, Data)
 
 instance NFData SQLExp
@@ -505,7 +508,7 @@ columnAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
 
 -- | Represents an alias assignment for a table, relation or row
 newtype TableAlias = TableAlias {getTableAlias :: Identifier}
-  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
+  deriving (Show, Eq, NFData, Data, Generic, Cacheable, Hashable)
 
 instance IsIdentifier TableAlias where
   toIdentifier (TableAlias identifier) = identifier
@@ -585,7 +588,7 @@ int64ToSQLExp :: Int64 -> SQLExp
 int64ToSQLExp = SEUnsafe . tshow
 
 -- | Extractor can be used to apply Postgres alias to a column
-data Extractor = Extractor !SQLExp !(Maybe ColumnAlias)
+data Extractor = Extractor SQLExp (Maybe ColumnAlias)
   deriving (Show, Eq, Generic, Data)
 
 instance NFData Extractor
@@ -632,7 +635,7 @@ instance ToSQL Extractor where
 
 data DistinctExpr
   = DistinctSimple
-  | DistinctOn ![SQLExp]
+  | DistinctOn [SQLExp]
   deriving (Show, Eq, Generic, Data)
 
 instance NFData DistinctExpr
@@ -647,8 +650,8 @@ instance ToSQL DistinctExpr where
     "DISTINCT ON" <~> parenB ("," <+> exprs)
 
 data FunctionArgs = FunctionArgs
-  { fasPostional :: ![SQLExp],
-    fasNamed :: !(HM.HashMap Text SQLExp)
+  { fasPostional :: [SQLExp],
+    fasNamed :: (HM.HashMap Text SQLExp)
   }
   deriving (Show, Eq, Generic, Data)
 
@@ -664,21 +667,21 @@ instance ToSQL FunctionArgs where
           \(argName, argVal) -> SENamedArg (Identifier argName) argVal
      in parenB $ ", " <+> (positionalArgs <> namedArgs)
 
-data DefinitionListItem = DefinitionListItem
-  { _dliColumn :: PGCol,
+data FunctionDefinitionListItem = FunctionDefinitionListItem
+  { _dliColumn :: ColumnAlias,
     _dliType :: PGScalarType
   }
   deriving (Show, Eq, Data, Generic)
 
-instance NFData DefinitionListItem
+instance NFData FunctionDefinitionListItem
 
-instance Cacheable DefinitionListItem
+instance Cacheable FunctionDefinitionListItem
 
-instance Hashable DefinitionListItem
+instance Hashable FunctionDefinitionListItem
 
-instance ToSQL DefinitionListItem where
-  toSQL (DefinitionListItem column columnType) =
-    toSQL column <~> toSQL columnType
+instance ToSQL FunctionDefinitionListItem where
+  toSQL (FunctionDefinitionListItem column columnType) =
+    columnAliasToSqlWithoutAs column <~> toSQL columnType
 
 -- | We can alias the result of a function call that returns a @SETOF RECORD@
 --   by naming the result relation, and the columns and their types. For example:
@@ -689,8 +692,8 @@ instance ToSQL DefinitionListItem where
 --   Note: a function that returns a table (instead of a record) cannot name the types
 --         as seen in the above example.
 data FunctionAlias = FunctionAlias
-  { _faIdentifier :: !TableAlias,
-    _faDefinitionList :: !(Maybe [DefinitionListItem])
+  { _faIdentifier :: TableAlias,
+    _faDefinitionList :: Maybe [FunctionDefinitionListItem]
   }
   deriving (Show, Eq, Data, Generic)
 
@@ -700,10 +703,10 @@ instance Cacheable FunctionAlias
 
 instance Hashable FunctionAlias
 
-mkFunctionAlias :: Identifier -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
-mkFunctionAlias identifier listM =
-  FunctionAlias (toTableAlias identifier) $
-    fmap (map (uncurry DefinitionListItem)) listM
+mkFunctionAlias :: TableAlias -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
+mkFunctionAlias alias listM =
+  FunctionAlias alias $
+    fmap (map (uncurry FunctionDefinitionListItem)) listM
 
 instance ToSQL FunctionAlias where
   toSQL (FunctionAlias tableAlias (Just definitionList)) =
@@ -713,9 +716,9 @@ instance ToSQL FunctionAlias where
 
 -- | A function call
 data FunctionExp = FunctionExp
-  { feName :: !QualifiedFunction,
-    feArgs :: !FunctionArgs,
-    feAlias :: !(Maybe FunctionAlias)
+  { feName :: QualifiedFunction,
+    feArgs :: FunctionArgs,
+    feAlias :: Maybe FunctionAlias
   }
   deriving (Show, Eq, Generic, Data)
 
@@ -748,7 +751,7 @@ data FromItem
     FIUnnest [SQLExp] TableAlias [ColumnAlias]
   | FISelect Lateral Select TableAlias
   | FISelectWith Lateral (SelectWithG Select) TableAlias
-  | FIValues ValuesExp TableAlias (Maybe [PGCol])
+  | FIValues ValuesExp TableAlias (Maybe [ColumnAlias])
   | FIJoin JoinExpr
   deriving (Show, Eq, Generic, Data)
 
@@ -767,10 +770,6 @@ mkSelectWithFromItem = FISelectWith (Lateral False)
 mkLateralFromItem :: Select -> TableAlias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
 
-toColTupExp :: [PGCol] -> SQLExp
-toColTupExp =
-  SETuple . TupleExp . map (SEIdentifier . Identifier . getPGColTxt)
-
 instance ToSQL FromItem where
   toSQL (FISimple qualifiedTable tableAlias) =
     toSQL qualifiedTable <~> maybe "" tableAliasToSqlWithAs tableAlias
@@ -787,9 +786,11 @@ instance ToSQL FromItem where
     toSQL isLateral <~> parenB (toSQL select) <~> tableAliasToSqlWithAs alias
   toSQL (FISelectWith isLateral selectWith alias) =
     toSQL isLateral <~> parenB (toSQL selectWith) <~> tableAliasToSqlWithAs alias
-  toSQL (FIValues valsExp alias cols) =
+  toSQL (FIValues valsExp alias columnAliases) =
     parenB (toSQL valsExp) <~> tableAliasToSqlWithAs alias
-      <~> toSQL (toColTupExp <$> cols)
+      <~> case columnAliases of
+        Nothing -> ""
+        Just cols -> parenB (", " <+> map columnAliasToSqlWithoutAs cols)
   toSQL (FIJoin je) =
     toSQL je
 
@@ -801,10 +802,10 @@ instance ToSQL Lateral where
   toSQL (Lateral False) = mempty
 
 data JoinExpr = JoinExpr
-  { tjeLeft :: !FromItem,
-    tjeType :: !JoinType,
-    tjeRight :: !FromItem,
-    tjeJC :: !JoinCond
+  { tjeLeft :: FromItem,
+    tjeType :: JoinType,
+    tjeRight :: FromItem,
+    tjeJC :: JoinCond
   }
   deriving (Show, Eq, Generic, Data)
 
@@ -841,8 +842,8 @@ instance ToSQL JoinType where
   toSQL FullOuter = "FULL OUTER JOIN"
 
 data JoinCond
-  = JoinOn !BoolExp
-  | JoinUsing ![PGCol]
+  = JoinOn BoolExp
+  | JoinUsing [Identifier]
   deriving (Show, Eq, Generic, Data)
 
 instance NFData JoinCond
@@ -858,18 +859,18 @@ instance ToSQL JoinCond where
     "USING" <~> parenB ("," <+> cols)
 
 data BoolExp
-  = BELit !Bool
-  | BEBin !BinOp !BoolExp !BoolExp
-  | BENot !BoolExp
-  | BECompare !CompareOp !SQLExp !SQLExp
+  = BELit Bool
+  | BEBin BinOp BoolExp BoolExp
+  | BENot BoolExp
+  | BECompare CompareOp SQLExp SQLExp
   | -- this is because l = (ANY (e)) is not valid
     -- i.e, (ANY(e)) is not same as ANY(e)
-    BECompareAny !CompareOp !SQLExp !SQLExp
-  | BENull !SQLExp
-  | BENotNull !SQLExp
-  | BEExists !Select
-  | BEIN !SQLExp ![SQLExp]
-  | BEExp !SQLExp
+    BECompareAny CompareOp SQLExp SQLExp
+  | BENull SQLExp
+  | BENotNull SQLExp
+  | BEExists Select
+  | BEIN SQLExp [SQLExp]
+  | BEExp SQLExp
   deriving (Show, Eq, Generic, Data)
 
 instance NFData BoolExp
@@ -1006,10 +1007,10 @@ instance ToSQL CompareOp where
   toSQL = fromString . show
 
 data SQLDelete = SQLDelete
-  { delTable :: !QualifiedTable,
-    delUsing :: !(Maybe UsingExp),
-    delWhere :: !(Maybe WhereFrag),
-    delRet :: !(Maybe RetExp)
+  { delTable :: QualifiedTable,
+    delUsing :: Maybe UsingExp,
+    delWhere :: Maybe WhereFrag,
+    delRet :: Maybe RetExp
   }
   deriving (Show, Eq)
 
@@ -1091,8 +1092,8 @@ instance ToSQL SetExpItem where
     toSQL col <~> "=" <~> toSQL val
 
 data SQLConflictTarget
-  = SQLColumn ![PGCol]
-  | SQLConstraint !ConstraintName
+  = SQLColumn [PGCol]
+  | SQLConstraint ConstraintName
   deriving (Show, Eq)
 
 instance ToSQL SQLConflictTarget where
@@ -1103,8 +1104,8 @@ instance ToSQL SQLConflictTarget where
   toSQL (SQLConstraint cons) = "ON CONSTRAINT" <~> toSQL cons
 
 data SQLConflict
-  = DoNothing !(Maybe SQLConflictTarget)
-  | Update !SQLConflictTarget !SetExp !(Maybe WhereFrag)
+  = DoNothing (Maybe SQLConflictTarget)
+  | Update SQLConflictTarget SetExp (Maybe WhereFrag)
   deriving (Show, Eq)
 
 instance ToSQL SQLConflict where
@@ -1128,11 +1129,11 @@ instance ToSQL ValuesExp where
     "VALUES" <~> (", " <+> tuples)
 
 data SQLInsert = SQLInsert
-  { siTable :: !QualifiedTable,
-    siCols :: ![PGCol],
-    siValues :: !ValuesExp,
-    siConflict :: !(Maybe SQLConflict),
-    siRet :: !(Maybe RetExp)
+  { siTable :: QualifiedTable,
+    siCols :: [PGCol],
+    siValues :: ValuesExp,
+    siConflict :: (Maybe SQLConflict),
+    siRet :: (Maybe RetExp)
   }
   deriving (Show, Eq)
 
@@ -1156,10 +1157,10 @@ instance ToSQL SQLInsert where
 --   Postgres supports mutations only in top-level CTEs.
 --   See <https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING>
 data TopLevelCTE
-  = CTESelect !Select
-  | CTEInsert !SQLInsert
-  | CTEUpdate !SQLUpdate
-  | CTEDelete !SQLDelete
+  = CTESelect Select
+  | CTEInsert SQLInsert
+  | CTEUpdate SQLUpdate
+  | CTEDelete SQLDelete
   deriving (Show, Eq)
 
 instance ToSQL TopLevelCTE where
@@ -1180,8 +1181,8 @@ instance ToSQL TopLevelCTE where
 --   at the top level.
 --   See <https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING>
 data SelectWithG statement = SelectWith
-  { swCTEs :: ![(TableAlias, statement)],
-    swSelect :: !Select
+  { swCTEs :: [(TableAlias, statement)],
+    swSelect :: Select
   }
   deriving (Show, Eq, Generic, Data)
 

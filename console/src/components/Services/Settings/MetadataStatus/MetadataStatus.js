@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
@@ -24,20 +24,18 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const resolveInconsistentInheritedRole = inconsistentInheritedRoleObj => {
-    const {
-      table,
-      source,
-      permission_type,
-    } = inconsistentInheritedRoleObj.entity;
+    const { table, source, permission_type } =
+      inconsistentInheritedRoleObj.entity;
     const role = inconsistentInheritedRoleObj.name;
     const schema = metadata.metadataObject.sources
       .find(s => s.name === source)
       .tables.find(t => t.table.name === table).table.schema;
 
-    const driver = metadata.metadataObject.sources.find(s => s.name === source)
-      .kind;
+    const driver = metadata.metadataObject.sources.find(
+      s => s.name === source
+    ).kind;
 
-    /* 
+    /*
       Load up the database details and schema details
     */
 
@@ -268,11 +266,12 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         </div>
         <div className={`flex mt-sm`}>
           <Button
-            color="red"
+            mode="destructive"
             size="sm"
             className="mr-md"
             onClick={verifyAndDropAll}
-            disabled={isLoading}
+            isLoading={isLoading}
+            loadingText={'Deleting...'}
           >
             Delete all
           </Button>

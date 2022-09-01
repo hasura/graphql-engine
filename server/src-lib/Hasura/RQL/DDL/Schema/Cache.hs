@@ -37,6 +37,8 @@ import Data.Proxy
 import Data.Set qualified as S
 import Data.Text.Extended
 import Data.These (These (..))
+import Hasura.Backends.DataConnector.Adapter.Metadata (getDataConnectorCapabilities)
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, DataConnectorOptions)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Schema (buildGQLContext)
@@ -82,6 +84,7 @@ import Hasura.RQL.Types.Roles.Internal (CheckPermission (..))
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCache.Instances ()
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
@@ -345,9 +348,52 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           scMetadataResourceVersion = Nothing,
           scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata,
           scTlsAllowlist = _boTlsAllowlist resolvedOutputs,
-          scQueryCollections = _boQueryCollections resolvedOutputs
+          scQueryCollections = _boQueryCollections resolvedOutputs,
+          scDataConnectorCapabilities = _boDataConnectorCapabilities resolvedOutputs
         }
   where
+    getDataConnectorCapabilitiesIfNeeded ::
+      forall arr m.
+      ( ArrowChoice arr,
+        Inc.ArrowCache m arr,
+        ArrowWriter (Seq CollectedInfo) arr,
+        MonadIO m,
+        HasHttpManagerM m
+      ) =>
+      (DataConnectorName, DataConnectorOptions) `arr` Maybe CapabilitiesInfo
+    getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (dataConnectorName, dataConnectorOptions) -> do
+      let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ toJSON dataConnectorName
+      httpMgr <- bindA -< askHttpManager
+      (|
+        withRecordInconsistency
+          ( liftEitherA <<< bindA -< fmap mkCapabilitiesInfo <$> getDataConnectorCapabilities logger dataConnectorOptions httpMgr
+          )
+        |) metadataObj
+
+    resolveDataConnectorCapabilities ::
+      forall arr m.
+      ( ArrowChoice arr,
+        Inc.ArrowCache m arr,
+        Inc.ArrowDistribute arr,
+        ArrowWriter (Seq CollectedInfo) arr,
+        MonadIO m,
+        HasHttpManagerM m
+      ) =>
+      (BackendMap BackendConfigWrapper) `arr` DataConnectorCapabilities
+    resolveDataConnectorCapabilities = proc (backendConfigs) -> do
+      case BackendMap.lookup @'DataConnector backendConfigs of
+        Nothing ->
+          returnA -< mempty
+        Just (BackendConfigWrapper dataConnectorConfig) -> do
+          maybeDataConnectorCapabilities <-
+            (|
+              Inc.keyed
+                ( \dataConnectorName dataConnectorOptions -> do
+                    getDataConnectorCapabilitiesIfNeeded -< (dataConnectorName, dataConnectorOptions)
+                )
+              |) (OMap.toHashMap dataConnectorConfig)
+          returnA -< DataConnectorCapabilities (M.catMaybes maybeDataConnectorCapabilities)
+
     getSourceConfigIfNeeded ::
       forall b arr m.
       ( ArrowChoice arr,
@@ -355,21 +401,24 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         ArrowWriter (Seq CollectedInfo) arr,
         MonadIO m,
         MonadResolveSource m,
+        HasHttpManagerM m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
         SourceName,
         SourceConnConfiguration b,
         BackendSourceKind b,
-        BackendConfig b
+        BackendConfig b,
+        DataConnectorCapabilities
       )
         `arr` Maybe (SourceConfig b)
-    getSourceConfigIfNeeded = Inc.cache proc (invalidationKeys, sourceName, sourceConfig, backendKind, backendConfig) -> do
+    getSourceConfigIfNeeded = Inc.cache proc (invalidationKeys, sourceName, sourceConfig, backendKind, backendConfig, dataConnectorCapabilities) -> do
       let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
+      httpMgr <- bindA -< askHttpManager
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (|
         withRecordInconsistency
-          ( liftEitherA <<< bindA -< resolveSourceConfig @b logger sourceName sourceConfig backendKind backendConfig env
+          ( liftEitherA <<< bindA -< resolveSourceConfig @b dataConnectorCapabilities logger sourceName sourceConfig backendKind backendConfig env httpMgr
           )
         |) metadataObj
 
@@ -381,13 +430,15 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
+        HasHttpManagerM m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
-        BackendConfigAndSourceMetadata b
+        BackendConfigAndSourceMetadata b,
+        DataConnectorCapabilities
       )
         `arr` Maybe (ResolvedSource b)
-    resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, BackendConfigAndSourceMetadata {..}) -> do
+    resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, BackendConfigAndSourceMetadata {..}, dataConnectorCapabilities) -> do
       let sourceName = _smName _bcasmSourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
           logAndResolveDatabaseMetadata :: SourceConfig b -> SourceTypeCustomization -> m (Either QErr (ResolvedSource b))
@@ -396,7 +447,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             for_ resSource $ liftIO . unLogger logger
             pure resSource
 
-      maybeSourceConfig <- getSourceConfigIfNeeded @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendConfig)
+      maybeSourceConfig <- getSourceConfigIfNeeded @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendConfig, dataConnectorCapabilities)
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
         Just sourceConfig ->
@@ -474,7 +525,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         ArrowWriter (Seq CollectedInfo) arr,
         HasServerConfigCtx m,
         MonadError QErr m,
-        BackendMetadata b
+        BackendMetadata b,
+        GetAggregationPredicatesDeps b
       ) =>
       ( HashMap SourceName (AB.AnyBackend PartiallyResolvedSource),
         SourceMetadata b,
@@ -522,8 +574,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             )
           |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
 
-      defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
-      isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
+      !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+      !isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
 
       -- sql functions
       functionCache <-
@@ -564,7 +616,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         |) metadataObject
                   )
               |)
-          >-> (\infos -> M.catMaybes infos >- returnA)
+          >-> (\infos -> catMaybes infos >- returnA)
 
       returnA -< AB.mkAnyBackend $ SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig sourceCustomization
 
@@ -605,7 +657,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           sourceRoles =
             HS.fromList $
               concat $
-                OMap.elems sources >>= \e ->
+                OMap.elems sources >>= \(BackendSourceMetadata e) ->
                   AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _ _ _) -> do
                     table <- OMap.elems tables
                     pure $
@@ -639,8 +691,10 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, OMap.elems remoteSchemas)
       let remoteSchemaCtxMap = M.map (fst . fst) remoteSchemaMap
 
-      defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
-      isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
+      !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+      !isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
+
+      dataConnectorCapabilities <- resolveDataConnectorCapabilities -< backendConfigs
 
       -- sources are build in two steps
       -- first we resolve them, and build the table cache
@@ -649,11 +703,11 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.keyed
             ( \_ exists ->
                 AB.dispatchAnyBackendArrow @BackendMetadata @BackendEventTrigger
-                  ( proc (backendConfigAndSourceMetadata, (invalidationKeys, defaultNC, isNamingConventionEnabled)) -> do
+                  ( proc (backendConfigAndSourceMetadata, (invalidationKeys, defaultNC, isNamingConventionEnabled, dataConnectorCapabilities)) -> do
                       let sourceMetadata = _bcasmSourceMetadata backendConfigAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
-                      maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, backendConfigAndSourceMetadata)
+                      maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, backendConfigAndSourceMetadata, dataConnectorCapabilities)
                       case maybeResolvedSource of
                         Nothing -> returnA -< Nothing
                         Just (source :: ResolvedSource b) -> do
@@ -696,10 +750,10 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                   PartiallyResolvedSource sourceMetadata source tablesCoreInfo eventTriggerInfoMaps
                   )
                   -<
-                    (exists, (invalidationKeys, defaultNC, isNamingConventionEnabled))
+                    (exists, (invalidationKeys, defaultNC, isNamingConventionEnabled, dataConnectorCapabilities))
             )
         |) (M.fromList $ OMap.toList backendConfigAndSourceMetadata)
-          >-> (\infos -> M.catMaybes infos >- returnA)
+          >-> (\infos -> catMaybes infos >- returnA)
 
       -- then we can build the entire source output
       -- we need to have the table cache of all sources to build cross-sources relationships
@@ -707,7 +761,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         (|
           Inc.keyed
             ( \_ exists ->
-                AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata
+                -- Note that it's a bit of a coincidence that
+                -- 'AB.dispatchAnyBackendArrow' accepts exactly two constraints,
+                -- and that we happen to want to apply to exactly two
+                -- constraints.
+                -- Ideally the function should be able to take an arbitrary
+                -- number of constraints.
+                AB.dispatchAnyBackendArrow @BackendMetadata @GetAggregationPredicatesDeps
                   ( proc
                       ( partiallyResolvedSource :: PartiallyResolvedSource b,
                         (allResolvedSources, remoteSchemaCtxMap, orderedRoles)
@@ -801,7 +861,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                       returnA
                         -<
                           ( remoteSchemaCtx
-                              { _rscPermissions = M.catMaybes $ M.fromList resolvedPermissions,
+                              { _rscPermissions = catMaybes $ M.fromList resolvedPermissions,
                                 _rscRemoteRelationships = OMap.catMaybes <$> OMap.fromList resolvedRelationships
                               },
                             metadataObj
@@ -857,7 +917,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               _boMetricsConfig = metricsConfig,
               _boRoles = mapFromL _rRoleName $ _unOrderedRoles orderedRoles,
               _boTlsAllowlist = (networkTlsAllowlist networkConfig),
-              _boQueryCollections = collections
+              _boQueryCollections = collections,
+              _boDataConnectorCapabilities = dataConnectorCapabilities
             }
 
     mkEndpointMetadataObject (name, createEndpoint) =
@@ -958,7 +1019,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.keyed
             (\remoteSchemaName infos -> combine -< (remoteSchemaName, infos))
           |) (align baseInfo extraInfo)
-      returnA -< M.catMaybes combinedInfo
+      returnA -< catMaybes combinedInfo
       where
         combine :: (RemoteSchemaName, These a [b]) `arr` Maybe (a, [b])
         combine = proc (remoteSchemaName, infos) -> case infos of
@@ -1324,11 +1385,11 @@ instance (Backend b) => Inc.Cacheable (BackendConfigAndSourceMetadata b)
 
 joinBackendConfigsToSources ::
   BackendMap BackendConfigWrapper ->
-  InsOrdHashMap SourceName (AB.AnyBackend SourceMetadata) ->
+  InsOrdHashMap SourceName BackendSourceMetadata ->
   InsOrdHashMap SourceName (AB.AnyBackend BackendConfigAndSourceMetadata)
 joinBackendConfigsToSources backendConfigs sources =
   flip OMap.map sources $ \abSourceMetadata ->
-    AB.dispatchAnyBackend @Backend abSourceMetadata $ \(sourceMetadata :: SourceMetadata b) ->
+    AB.dispatchAnyBackend @Backend (unBackendSourceMetadata abSourceMetadata) $ \(sourceMetadata :: SourceMetadata b) ->
       let _bcasmBackendConfig = maybe mempty unBackendConfigWrapper (BackendMap.lookup @b backendConfigs)
           _bcasmSourceMetadata = sourceMetadata
        in AB.mkAnyBackend @b BackendConfigAndSourceMetadata {..}

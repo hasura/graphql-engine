@@ -1,13 +1,17 @@
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Metadata () where
+module Hasura.Backends.DataConnector.Adapter.Metadata (getDataConnectorCapabilities) where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Environment (Environment)
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
+import Data.HashSet qualified as HashSet
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as Text
@@ -28,13 +32,14 @@ import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
-import Hasura.RQL.Types.Common (OID (..), SourceName)
+import Hasura.RQL.Types.Common (CapabilitiesInfo (..), DataConnectorCapabilities (..), OID (..), SourceName)
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.RQL.Types.Source (ResolvedSource (..))
 import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
+import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
@@ -48,7 +53,7 @@ import Servant.Client.Generic (genericClient)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
-  prepareCatalog = const $ pure RETDoNothing
+  prepareCatalog _ = pure RETDoNothing
   resolveSourceConfig = resolveSourceConfig'
   resolveDatabaseMetadata = resolveDatabaseMetadata'
   parseBoolExpOperations = parseBoolExpOperations'
@@ -61,47 +66,65 @@ instance BackendMetadata 'DataConnector where
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
 
+getDataConnectorCapabilities ::
+  MonadIO m =>
+  Logger Hasura ->
+  DC.DataConnectorOptions ->
+  HTTP.Manager ->
+  m (Either QErr API.CapabilitiesResponse)
+getDataConnectorCapabilities logger DC.DataConnectorOptions {..} manager = runExceptT do
+  runTraceTWithReporter noReporter "capabilities"
+    . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
+    $ genericClient // API._capabilities
+
 resolveSourceConfig' ::
   MonadIO m =>
+  DataConnectorCapabilities ->
   Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->
   BackendSourceKind 'DataConnector ->
-  DC.DataConnectorBackendConfig ->
+  InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions ->
   Environment ->
+  HTTP.Manager ->
   m (Either QErr DC.SourceConfig)
-resolveSourceConfig' logger sourceName csc@ConnSourceConfig {template, value = originalConfig} (DataConnectorKind dataConnectorName) backendConfig env = runExceptT do
-  DC.DataConnectorOptions {..} <-
-    OMap.lookup dataConnectorName backendConfig
-      `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
+resolveSourceConfig'
+  dataConnectorCapabilities
+  logger
+  sourceName
+  csc@ConnSourceConfig {template, timeout, value = originalConfig}
+  (DataConnectorKind dataConnectorName)
+  backendConfig
+  env
+  manager = runExceptT do
+    DC.DataConnectorOptions {..} <-
+      OMap.lookup dataConnectorName backendConfig
+        `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend config")
 
-  transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
-  manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
+    transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
 
-  -- TODO: capabilities applies to all sources for an agent.
-  -- We should be able to call it once per agent and store it in the SchemaCache
-  API.CapabilitiesResponse {..} <-
-    runTraceTWithReporter noReporter "capabilities"
-      . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
-      $ genericClient // API._capabilities
+    CapabiltiesInfo {..} <-
+      HashMap.lookup dataConnectorName (unDataConnectorCapabilities dataConnectorCapabilities)
+        `onNothing` throw400 DataConnectorError ("Capabilities not found for data connector " <>> toTxt dataConnectorName)
 
-  validateConfiguration sourceName dataConnectorName crConfigSchemaResponse transformedConfig
+    validateConfiguration sourceName dataConnectorName ciConfigSchemaResponse transformedConfig
 
-  schemaResponse <-
-    runTraceTWithReporter noReporter "resolve source"
-      . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
-      $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
+    schemaResponse <-
+      runTraceTWithReporter noReporter "resolve source"
+        . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
+        $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
 
-  pure
-    DC.SourceConfig
-      { _scEndpoint = _dcoUri,
-        _scConfig = originalConfig,
-        _scTemplate = template,
-        _scCapabilities = crCapabilities,
-        _scSchema = schemaResponse,
-        _scManager = manager,
-        _scDataConnectorName = dataConnectorName
-      }
+    pure
+      DC.SourceConfig
+        { _scEndpoint = _dcoUri,
+          _scConfig = originalConfig,
+          _scTemplate = template,
+          _scCapabilities = ciCapabilities,
+          _scSchema = schemaResponse,
+          _scManager = manager,
+          _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),
+          _scDataConnectorName = dataConnectorName
+        }
 
 validateConfiguration ::
   MonadError QErr m =>
@@ -125,7 +148,9 @@ resolveDatabaseMetadata' ::
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'DataConnector))
 resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {..}}) customization =
-  let tables = Map.fromList $ do
+  -- We need agents to provide the foreign key contraints inside 'API.SchemaResponse'
+  let foreignKeys = fmap API.dtiForeignKeys srTables
+      tables = Map.fromList $ do
         API.TableInfo {..} <- srTables
         let primaryKeyColumns = Seq.fromList $ coerce <$> fromMaybe [] dtiPrimaryKey
         let meta =
@@ -143,9 +168,9 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
                           -- TODO: Add Column Mutability to the 'TableInfo'
                           rciMutability = RQL.T.C.ColumnMutability False False
                         },
-                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint () (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
+                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (IR.T.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
-                  _ptmiForeignKeys = mempty,
+                  _ptmiForeignKeys = buildForeignKeySet foreignKeys,
                   _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,
                   _ptmiDescription = fmap PGDescription dtiDescription,
                   _ptmiExtraTableMetadata = ()
@@ -160,6 +185,26 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
               _rsFunctions = mempty,
               _rsScalars = mempty
             }
+
+-- | Construct a 'HashSet' 'RQL.T.T.ForeignKeyMetadata'
+-- 'DataConnector' to build the foreign key constraints in the table
+-- metadata.
+buildForeignKeySet :: [Maybe API.ForeignKeys] -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
+buildForeignKeySet (catMaybes -> foreignKeys) =
+  HashSet.fromList $
+    join $
+      foreignKeys <&> \(API.ForeignKeys constraints) ->
+        constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
+          \constraintName API.Constraint {..} -> maybeToList do
+            let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (Witch.from k, Witch.from v) : acc) [] cColumnMapping
+            columnMapping <- NEHashMap.fromList columnMapAssocList
+            let foreignKey =
+                  RQL.T.T.ForeignKey
+                    { _fkConstraint = RQL.T.T.Constraint (Witch.from constraintName) (OID 1),
+                      _fkForeignTable = Witch.from cForeignTable,
+                      _fkColumnMapping = columnMapping
+                    }
+            pure $ RQL.T.T.ForeignKeyMetadata foreignKey
 
 -- | This is needed to get permissions to work
 parseBoolExpOperations' ::

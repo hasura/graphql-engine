@@ -8,7 +8,6 @@ import Data.ByteString (ByteString)
 import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
-import Data.Text.Casing qualified as C
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.MySQL.Base.Types qualified as MySQL
@@ -22,8 +21,8 @@ import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
+    MonadMemoize,
     MonadParse,
-    MonadSchema,
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
@@ -35,7 +34,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend as RQL
 import Hasura.RQL.Types.Column as RQL
-import Hasura.RQL.Types.Function as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
 import Hasura.RQL.Types.Source as RQL
 import Hasura.SQL.Backend
@@ -43,19 +41,19 @@ import Language.GraphQL.Draft.Syntax qualified as GQL
 
 instance BackendSchema 'MySQL where
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields = buildTableRelayQueryFields'
+  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields = buildTableInsertMutationFields'
-  buildTableUpdateMutationFields = buildTableUpdateMutationFields'
-  buildTableDeleteMutationFields = buildTableDeleteMutationFields'
-  buildFunctionQueryFields = buildFunctionQueryFields'
-  buildFunctionRelayQueryFields = buildFunctionRelayQueryFields'
-  buildFunctionMutationFields = buildFunctionMutationFields'
+  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
   relayExtension = Nothing
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
   columnParser = columnParser'
-  scalarSelectionArgumentsParser = scalarSelectionArgumentsParser'
+  scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = orderByOperators'
   comparisonExps = comparisonExps'
   countTypeInput = mysqlCountTypeInput
@@ -91,86 +89,11 @@ mysqlTableArgs sourceInfo tableInfo = do
           IR._saDistinct = Nothing
         }
 
-buildTableRelayQueryFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  NESeq (ColumnInfo 'MySQL) ->
-  m [a]
-buildTableRelayQueryFields' _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns =
-  pure []
-
-buildTableInsertMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  Scenario ->
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  m [a]
-buildTableInsertMutationFields' _scenario _sourceInfo _tableName _tableInfo _gqlName =
-  pure []
-
-buildTableUpdateMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  Scenario ->
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  m [a]
-buildTableUpdateMutationFields' _scenario _sourceInfo _tableName _tableInfo _gqlName =
-  pure []
-
-buildTableDeleteMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  Scenario ->
-  RQL.SourceInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  TableInfo 'MySQL ->
-  C.GQLNameIdentifier ->
-  m [a]
-buildTableDeleteMutationFields' _scenario _sourceInfo _tableName _tableInfo _gqlName =
-  pure []
-
-buildFunctionQueryFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.SourceInfo 'MySQL ->
-  FunctionName 'MySQL ->
-  FunctionInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  m [a]
-buildFunctionQueryFields' _ _ _ _ =
-  pure []
-
-buildFunctionRelayQueryFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.SourceInfo 'MySQL ->
-  FunctionName 'MySQL ->
-  FunctionInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  NESeq (ColumnInfo 'MySQL) ->
-  m [a]
-buildFunctionRelayQueryFields' _sourceInfo _functionName _functionInfo _tableName _pkeyColumns =
-  pure []
-
-buildFunctionMutationFields' ::
-  MonadBuildSchema 'MySQL r m n =>
-  RQL.SourceInfo 'MySQL ->
-  FunctionName 'MySQL ->
-  FunctionInfo 'MySQL ->
-  RQL.TableName 'MySQL ->
-  m [a]
-buildFunctionMutationFields' _ _ _ _ =
-  pure []
-
 bsParser :: MonadParse m => Parser 'Both m ByteString
 bsParser = encodeUtf8 <$> P.string
 
 columnParser' ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'MySQL ->
   GQL.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
@@ -196,13 +119,13 @@ columnParser' columnType (GQL.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
+        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
         pure $
           P.Parser
             { pType = schemaType,
               pParser =
                 P.valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (P.parseErrorWith ParseFailed . toErrorMessage . qeError) pure . (MySQL.parseScalarValue scalarType)
+                  >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MySQL.parseScalarValue scalarType)
             }
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (HM.toList enumValues) of
@@ -217,15 +140,9 @@ columnParser' columnType (GQL.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (GQL.Description <$> description) Nothing P.EnumValueInfo,
+      ( P.Definition value (GQL.Description <$> description) Nothing [] P.EnumValueInfo,
         MySQL.VarcharValue $ GQL.unName value
       )
-
-scalarSelectionArgumentsParser' ::
-  MonadParse n =>
-  ColumnType 'MySQL ->
-  InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
-scalarSelectionArgumentsParser' _columnType = pure Nothing
 
 orderByOperators' :: NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 orderByOperators' _tCase =
@@ -252,27 +169,23 @@ orderByOperators' _tCase =
         )
       ]
   where
-    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing [] P.EnumValueInfo
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
   forall m n r.
-  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (BackendSchema 'MySQL, MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'MySQL ->
   m (Parser 'Input n [ComparisonExp 'MySQL])
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (GQL.Nullability False)
-  _nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability True)
-  textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability False)
   let name = P.getName typedParser <> Name.__MySQL_comparison_exp
       desc =
         GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
-      _textListParser = fmap openValueOrigin <$> P.list textParser
-      _columnListParser = fmap openValueOrigin <$> P.list typedParser
   pure $
     P.object name (Just desc) $
       catMaybes
@@ -285,13 +198,6 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
             P.fieldOptional Name.__gte Nothing (AGTE . mkParameter <$> typedParser),
             P.fieldOptional Name.__lte Nothing (ALTE . mkParameter <$> typedParser)
           ]
-
-{-
-NOTE: Should this be removed?
-offsetParser' :: MonadParse n => Parser 'Both n (SQLExpression 'MySQL)
-offsetParser' =
-  MySQL.ValueExpression . MySQL.BigValue . fromIntegral <$> P.int
--}
 
 mysqlCountTypeInput ::
   MonadParse n =>

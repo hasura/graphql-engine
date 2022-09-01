@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Scalar.Value

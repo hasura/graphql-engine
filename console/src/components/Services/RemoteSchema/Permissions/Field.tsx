@@ -5,6 +5,7 @@ import React, {
   useState,
   MouseEvent,
 } from 'react';
+import { Button } from '@/new-components/Button';
 import { FieldType } from './types';
 import { PermissionEditorContext } from './context';
 import { CollapsedField } from './CollapsedField';
@@ -27,9 +28,8 @@ export const Field: React.FC<FieldProps> = ({
   expanded,
 }) => {
   const [inputPresetMode, setInputPresetMode] = useState<boolean>(false);
-  const [autoExpandInputPresets, setAutoExpandInputPresets] = useState<boolean>(
-    false
-  );
+  const [autoExpandInputPresets, setAutoExpandInputPresets] =
+    useState<boolean>(false);
   const context: any = useContext(PermissionEditorContext);
   let initState;
   if (i.parentName) {
@@ -155,9 +155,7 @@ export const Field: React.FC<FieldProps> = ({
       )}
       {/* show pen icon for input object types presets */}
       {i.isInputObjectType && !inputPresetMode && !autoExpandInputPresets ? (
-        <button onClick={() => setInputPresetMode(true)}>
-          <Pen />
-        </button>
+        <Button icon={<Pen />} onClick={() => setInputPresetMode(true)} />
       ) : null}
       {i.isInputObjectType && inputPresetMode && isFirstLevelInputObjPreset ? (
         <ArgSelect

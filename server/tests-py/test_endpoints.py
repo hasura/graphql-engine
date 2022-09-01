@@ -6,7 +6,7 @@ from context import PytestConf
 import redis
 
 @pytest.mark.parametrize("transport", ['http'])
-@pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.usefixtures('postgis', 'per_class_tests_db_state')
 class TestCustomEndpoints:
     def flushRedis(self):
         # TODO: Move this into setup/teardown

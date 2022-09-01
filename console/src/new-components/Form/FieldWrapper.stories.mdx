@@ -4,7 +4,7 @@ import { TemplateStoriesFactory } from '@/utils/StoryUtils';
 import { FieldWrapper } from '@/new-components/Form/FieldWrapper';
 
 <Meta
-  title="components/Forms/FieldWrapper ✨"
+  title="components/Forms 🦠/FieldWrapper 🧬"
   component={FieldWrapper}
   parameters={{
     docs: { source: { type: 'code' } },
@@ -37,6 +37,16 @@ export const stories = {
   'States - With error message': {
     children: ChildrenExample,
     label: 'The field wrapper label',
+    description: 'The field wrapper description',
+    tooltip: 'The field wrapper tooltip',
+    error: { message: 'The error message' },
+  },
+  'States - Horizontal with error message': {
+    horizontal: true,
+    children: ChildrenExample,
+    label: 'The field wrapper label',
+    description: 'The field wrapper description',
+    tooltip: 'The field wrapper tooltip',
     error: { message: 'The error message' },
   },
   'Variant - With description': {
@@ -50,6 +60,31 @@ export const stories = {
     tooltip: 'The field wrapper tooltip',
   },
   'Variant - With tooltip and description': {
+    children: ChildrenExample,
+    label: 'The field wrapper label',
+    description: 'The field wrapper description',
+    tooltip: 'The field wrapper tooltip',
+  },
+  'Variant - Horizontal with error message': {
+    horizontal: true,
+    children: ChildrenExample,
+    label: 'The field wrapper label',
+    error: { message: 'The error message' },
+  },
+  'Variant - Horizontal with description': {
+    horizontal: true,
+    children: ChildrenExample,
+    label: 'The field wrapper label',
+    description: 'The field wrapper description',
+  },
+  'Variant - Horizontal with tooltip': {
+    horizontal: true,
+    children: ChildrenExample,
+    label: 'The field wrapper label',
+    tooltip: 'The field wrapper tooltip',
+  },
+  'Variant - Horizontal with tooltip and description': {
+    horizontal: true,
     children: ChildrenExample,
     label: 'The field wrapper label',
     description: 'The field wrapper description',
@@ -72,12 +107,12 @@ export const stories = {
   },
 };
 
-# FieldWrapper
+# FieldWrapper 🧬
 
 - [🧰 Overview](#-overview)
 - [🔁 States](#-states)
 - [🎭 Variants](#-variants)
-- [⚙️ API](#-api)
+- [⚙️ API](#%EF%B8%8F-api)
 - [🧪 Testing](#-testing)
 
 ## 🧰 Overview
@@ -118,9 +153,13 @@ import { FieldWrapper } from '@/new-components/Form';
 <Canvas>
   <Story
     name="States - With error message"
-    args={stories['States - With error message']}
+    args={{
+      'States - With error message': stories['States - With error message'],
+      'States - Horizontal with error message':
+        stories['States - Horizontal with error message'],
+    }}
   >
-    {Template.bind({})}
+    {TemplateStoriesFactory(Template).bind({})}
   </Story>
 </Canvas>
 
@@ -151,6 +190,39 @@ import { FieldWrapper } from '@/new-components/Form';
   <Story
     name="Variant - With tooltip and description"
     args={stories['Variant - With tooltip and description']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🎭 Horizontal with description
+
+<Canvas>
+  <Story
+    name="Variant - Horizontal with description"
+    args={stories['Variant - Horizontal with description']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🎭 Horizontal with tooltip
+
+<Canvas>
+  <Story
+    name="Variant - Horizontal with tooltip"
+    args={stories['Variant - Horizontal with tooltip']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🎭 Horizontal with tooltip and description
+
+<Canvas>
+  <Story
+    name="Variant - Horizontal with tooltip and description"
+    args={stories['Variant - Horizontal with tooltip and description']}
   >
     {Template.bind({})}
   </Story>

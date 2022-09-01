@@ -4,12 +4,15 @@ import { screen, waitFor as testLibWaitFor } from '@testing-library/react';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { useMetadataVersion } from '../../hooks/useMetadataVersion';
 import { useMetadataMigration } from '../../hooks/useMetadataMigration';
 import {
   wrapper,
   renderWithClient,
 } from '../../../../hooks/__tests__/common/decorator';
+
+// NOTE: this test seems to be flaky, it failed when I ran the whole test suite, but it worked when run it alone
 
 const metadata = {
   resource_version: 1,
@@ -31,6 +34,8 @@ const server = setupServer(
         ctx.json({ message: 'mock success response from server' })
       );
     }
+
+    return Promise.resolve();
   })
 );
 
@@ -62,15 +67,15 @@ describe('using the mutation in server mode', () => {
 
       return (
         <>
-          <button
+          <Button
             onClick={() => {
               mutation.mutate({
                 query: { type: 'pg_create_remote_relationship', args: {} },
               });
             }}
           >
-            mutate
-          </button>
+            Mutate
+          </Button>
           <h1>{query.isSuccess ? JSON.stringify(query.data) : 'NA'}</h1>
         </>
       );

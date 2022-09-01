@@ -96,7 +96,7 @@ buildPostgresSpecs = do
 
   pgUrlText <- flip onLeft printErrExit $
     runWithEnv env $ do
-      let envVar = fst databaseUrlEnv
+      let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
         throwError $ "Expected: " <> envVar
@@ -105,7 +105,7 @@ buildPostgresSpecs = do
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
         PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True Q.ReadCommitted Nothing
-      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing
+      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
 
   pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams {Q.cpConns = 1} print
   let pgContext = mkPGExecCtx Q.Serializable pgPool
@@ -146,7 +146,7 @@ buildPostgresSpecs = do
           metadata <-
             snd
               <$> (liftEitherM . runExceptT . runTx pgContext Q.ReadWrite)
-                (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
+                (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)
 

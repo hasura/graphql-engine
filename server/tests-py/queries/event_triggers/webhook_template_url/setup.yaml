@@ -25,4 +25,4 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: '{{WEBHOOK_FROM_ENV}}/trigger'
+    webhook: '{{EVENT_WEBHOOK_HANDLER}}/trigger'

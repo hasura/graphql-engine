@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { OverlayTrigger } from 'react-bootstrap';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import { GraphQLSchema } from 'graphql';
-import { FaQuestionCircle } from 'react-icons/fa';
-import { Button } from '../../../../Common';
+import { IconTooltip } from '@/new-components/Tooltip';
+import { Button } from '@/new-components/Button';
 import { graphQLCustomization as GType } from '../../types';
 import TypeMapping from './TypeMapping';
 import FieldNames from './FieldNames';
@@ -82,9 +80,8 @@ const GraphQLCustomizationEdit = ({
   >(null);
   const [typeNames, setTypesNames] = useState<null | TypeNamesType>(null);
   const [fieldNames, setFieldNames] = useState<null | FieldNamesType[]>(null);
-  const [showFieldCustomizationBtn, updateShowFieldCustomizationBtn] = useState(
-    true
-  );
+  const [showFieldCustomizationBtn, updateShowFieldCustomizationBtn] =
+    useState(true);
   const [tempFieldName, setTempFieldName] = useState<
     FieldNamesType | undefined
   >(undefined);
@@ -135,37 +132,29 @@ const GraphQLCustomizationEdit = ({
     <>
       <br />
       {!openEditor ? (
-        <Button
-          size="xs"
-          className="mt-md"
-          onClick={() => setOpenEditor(true)}
-          disabled={isDisabled}
-          data-test="remote-schema-customization-editor-expand-btn"
-        >
-          {!graphQLCustomization ? 'Add' : 'Edit'}
-        </Button>
+        <div className="mt-md">
+          <Button
+            size="sm"
+            onClick={() => setOpenEditor(true)}
+            disabled={isDisabled}
+            data-test="remote-schema-customization-editor-expand-btn"
+          >
+            {!graphQLCustomization ? 'Add' : 'Edit'}
+          </Button>
+        </div>
       ) : (
         <div
           className="border border-gray-300 p-md mt-xs w-[700px] bg-white"
           data-test="remote-schema-editor"
         >
-          <Button size="xs" onClick={() => setOpenEditor(false)}>
+          <Button size="sm" onClick={() => setOpenEditor(false)}>
             close
           </Button>
 
           <div className="flex items-center mt-md">
             <label className="w-1/3">
               Root Field Namespace{' '}
-              <OverlayTrigger
-                placement="right"
-                overlay={
-                  <Tooltip id="tooltip-cascade">
-                    Root field type names will be prefixed by this name.
-                  </Tooltip>
-                }
-              >
-                <FaQuestionCircle aria-hidden="true" />
-              </OverlayTrigger>
+              <IconTooltip message="Root field type names will be prefixed by this name." />
             </label>
             <div className="w-2/3">
               <input
@@ -232,16 +221,10 @@ const GraphQLCustomizationEdit = ({
 
           <div className="text-lg font-bold mt-md">
             Rename Type Names{' '}
-            <OverlayTrigger
-              placement="right"
-              overlay={
-                <Tooltip id="tooltip-cascade">
-                  Type remapping takes precedence to prefixes and suffixes.
-                </Tooltip>
-              }
-            >
-              <FaQuestionCircle aria-hidden="true" />
-            </OverlayTrigger>
+            <IconTooltip
+              message="Type remapping takes precedence to prefixes and suffixes."
+              side="right"
+            />
           </div>
 
           <TypeMapping
@@ -301,14 +284,16 @@ const GraphQLCustomizationEdit = ({
 
           {/* Adding a new field name */}
           {showFieldCustomizationBtn ? (
-            <Button
-              size="xs"
-              className="mt-md"
-              onClick={() => updateShowFieldCustomizationBtn(false)}
-              data-test="remote-schema-customization-open-field-mapping"
-            >
-              Add Field Mapping
-            </Button>
+            <div className="mt-md">
+              <Button
+                size="md"
+                mode="primary"
+                onClick={() => updateShowFieldCustomizationBtn(false)}
+                data-test="remote-schema-customization-open-field-mapping"
+              >
+                Add Field Mapping
+              </Button>
+            </div>
           ) : (
             <FieldNames
               mode="create"

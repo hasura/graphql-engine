@@ -1,18 +1,21 @@
-import React from 'react';
+import React, { ReactText } from 'react';
 import AceEditor from 'react-ace';
 import {
   removeAll as removeNotifications,
   show as displayNotification,
   NotificationLevel,
 } from 'react-notification-system-redux';
-import Button from '../../Common/Button/Button';
+import { showModal } from '@/store/modal/modal.actions';
+import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
+import { Button } from '@/new-components/Button';
 import { Thunk } from '../../../types';
 import { Json } from '../../Common/utils/tsUtils';
 
 import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
-import styles from './Notification/Notification.scss';
+import styles from './Notification/Notification.module.scss';
+import { AlternateActionButton } from './AlternateActionButton';
 
 export interface Notification {
   title?: string | JSX.Element;
@@ -27,6 +30,11 @@ export interface Notification {
     label: string;
     callback?: () => void;
   };
+  alternateActionButtonProps?: {
+    label: ReactText;
+    onClick: () => void;
+    trackId?: string;
+  };
 }
 
 export const showNotification = (
@@ -39,15 +47,27 @@ export const showNotification = (
       dispatch(removeNotifications());
     }
 
+    const commonNotificationConfig = {
+      position: options.position || 'tr',
+      autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
+      dismissible: ['error', 'warning'].includes(level)
+        ? ('button' as any) // bug in @types/react-notification-system-redux types
+        : ('click' as any),
+      ...options,
+    };
+
+    if (!options.alternateActionButtonProps) {
+      dispatch(displayNotification(commonNotificationConfig, level));
+      return;
+    }
+
     dispatch(
       displayNotification(
         {
-          position: options.position || 'tr',
-          autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level)
-            ? ('button' as any) // bug in @types/react-notification-system-redux types
-            : ('click' as any),
-          ...options,
+          ...commonNotificationConfig,
+          children: (
+            <AlternateActionButton {...options.alternateActionButtonProps} />
+          ),
         },
         level
       )
@@ -77,56 +97,129 @@ export const getNotificationDetails = (
     </div>
   );
 };
+
+// NOTE: this type has been created by reverse-engineering the original getErrorMessage function
+type Error =
+  | undefined
+  | null
+  | string
+  | {
+      message?:
+        | {
+            code?: number | string;
+            error?:
+              | {
+                  message?: string;
+                  code?: number | string;
+                }
+              | string;
+            internal?: {
+              error: {
+                message?: string;
+              };
+            };
+          }
+        | string;
+      info?: string;
+      code?: number | string;
+      error?:
+        | {
+            message: string;
+          }
+        | string;
+      custom?: string;
+      internal?: {
+        error?: {
+          message?: string;
+          description: string;
+        };
+      };
+      path?: string;
+      callToAction?: string;
+    };
+
 export const getErrorMessage = (
   message: string | null,
-  error?: Record<string, any>
-) => {
-  let notificationMessage;
-
-  if (error) {
-    if (isString(error)) {
-      notificationMessage = error;
-    } else if (
-      error.message &&
-      (error.message.error === 'postgres query error' ||
-        error.message.error === 'query execution failed')
-    ) {
-      if (error.message.internal) {
-        notificationMessage = `${error.message.code}: ${error.message.internal.error.message}`;
-      } else {
-        notificationMessage = `${error.code}: ${error.message.error}`;
-      }
-    } else if ('info' in error) {
-      notificationMessage = error.info;
-    } else if ('message' in error) {
-      if (error.code) {
-        if (error.message.error) {
-          notificationMessage = error.message.error.message;
-        } else {
-          notificationMessage = error.message;
-        }
-      } else if (error.message && isString(error.message)) {
-        notificationMessage = error.message;
-      } else if (error.message && 'code' in error.message) {
-        notificationMessage = `${error.message.code} : ${message}`;
-      } else {
-        notificationMessage = error.code;
-      }
-    } else if ('internal' in error && 'error' in error.internal) {
-      notificationMessage = `${error.internal.error.message}.
-      ${error.internal.error.description}`;
-    } else if ('custom' in error) {
-      notificationMessage = error.custom;
-    } else if ('code' in error && 'error' in error && 'path' in error) {
-      // Data API error
-      notificationMessage = error.error;
-    }
-  } else {
-    notificationMessage = message;
+  error?: Error
+): string => {
+  if (!error) {
+    return message ?? '';
   }
 
-  return notificationMessage;
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (
+    typeof error?.message !== 'string' &&
+    (error?.message?.error === 'postgres query error' ||
+      error?.message?.error === 'query execution failed')
+  ) {
+    if (error.message?.internal) {
+      return `${error.message.code}: ${error.message.internal.error.message}`;
+    }
+
+    return `${error.code}: ${error.message.error}`;
+  }
+
+  if (error?.info) {
+    return error.info ?? '';
+  }
+
+  if (error?.message) {
+    if (error.code) {
+      if (
+        typeof error?.message !== 'string' &&
+        error?.message?.error &&
+        typeof error.message.error !== 'string'
+      ) {
+        return error.message.error?.message ?? '';
+      }
+
+      if (typeof error.message === 'string') {
+        return error.message;
+      }
+    }
+
+    if (typeof error.message === 'string') {
+      return error.message;
+    }
+
+    if (typeof error?.message !== 'string' && error?.message?.code) {
+      return `${error.message.code} : ${message}`;
+    }
+
+    if (typeof error.code === 'string') {
+      return error.code ?? '';
+    }
+
+    if (typeof error.code === 'number') {
+      return String(error.code);
+    }
+  }
+
+  if (error?.internal && error?.internal && error?.internal?.error) {
+    return `${error.internal?.error?.message}.${error.internal?.error?.description}`;
+  }
+
+  if (error?.custom) {
+    return error.custom ?? '';
+  }
+
+  if (error?.code && error?.error && error?.path) {
+    // Data API error
+    if (typeof error.error === 'object') return error.error.message ?? '';
+
+    return error.error ?? '';
+  }
+
+  if (error?.callToAction && message) {
+    return message;
+  }
+
+  return '';
 };
+
 const showErrorNotification = (
   title: string,
   message?: string | null,
@@ -136,9 +229,8 @@ const showErrorNotification = (
     if (error && 'action' in error) {
       return (
         <Button
+          mode="primary"
           className={styles.add_mar_top_small}
-          color="yellow"
-          size="sm"
           onClick={e => {
             e.preventDefault();
             window.location.reload();
@@ -172,14 +264,12 @@ const showErrorNotification = (
 
   return dispatch => {
     const getNotificationAction = () => {
-      let action;
-
       if (errorJson) {
         const errorDetails = [
           getNotificationDetails(errorJson, getRefreshBtn()),
         ];
 
-        action = {
+        const action = {
           label: 'Details',
           callback: () => {
             dispatch(
@@ -195,17 +285,40 @@ const showErrorNotification = (
             );
           },
         };
+        return action;
       }
 
-      return action;
+      const isAddTableView = window.location.pathname.includes('table/add');
+      if (errorMessage?.includes('found duplicate fields') && !isAddTableView) {
+        const action = {
+          label: 'Resolve Conflict',
+          callback: () => {
+            dispatch(showModal(TableTrackingCustomizationModalKey));
+          },
+        };
+        return action;
+      }
+
+      if (error?.callToAction === 'reload-metadata') {
+        const action = {
+          label: 'Reload database metadata',
+          callback: () => {
+            error?.callback();
+          },
+        };
+        return action;
+      }
+
+      return undefined;
     };
 
+    const action = getNotificationAction();
     dispatch(
       showNotification(
         {
           title,
           message: errorMessage,
-          action: getNotificationAction(),
+          action,
         },
         'error'
       )

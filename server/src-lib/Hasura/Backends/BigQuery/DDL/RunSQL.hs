@@ -41,7 +41,7 @@ import Hasura.SQL.Backend
 
 data BigQueryRunSQL = BigQueryRunSQL
   { _mrsSql :: Text,
-    _mrsSource :: !SourceName
+    _mrsSource :: SourceName
   }
   deriving (Show, Eq)
 

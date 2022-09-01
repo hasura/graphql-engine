@@ -182,7 +182,7 @@ Query data from the `authors` table:
 
 Head to the `Modify` tab of the table/view and click on the `Add` button in the `Computed fields` section:
 
-<Thumbnail src='/img/graphql/core/schema/computed-field-create.png' alt='Add computed field' />
+<Thumbnail src='/img/schema/computed-field-create.png' alt='Add computed field' />
 
 :::tip Supported from
 
@@ -358,7 +358,7 @@ certain field from a `json` column and join it with a field in a remote schema b
 computed field which returns a scalar type of the field value in the `json` column and use it to join the graphql field
 of the remote schema. Consider the following Postgres schema.
 
-<Thumbnail src='/img/graphql/core/databases/postgres/schema/computed-fields-remote-relationship.png' width='700px' />
+<Thumbnail src='/img/databases/postgres/schema/computed-fields-remote-relationship.png' width='700px' />
 
 ```plsql
 CREATE TABLE "user" (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, address json NOT NULL);

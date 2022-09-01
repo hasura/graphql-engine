@@ -3,7 +3,7 @@ import { CgSpinner } from 'react-icons/cg';
 import clsx from 'clsx';
 
 type ButtonModes = 'default' | 'destructive' | 'primary';
-type ButtonSize = 'sm' | 'md';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ComponentProps<'button'> {
   /**
@@ -38,24 +38,31 @@ interface ButtonProps extends React.ComponentProps<'button'> {
    * The button icon position
    */
   iconPosition?: 'start' | 'end';
+  /**
+   * The button will take the maximum with possible
+   */
+  full?: boolean;
 }
 
 const buttonSizing: Record<ButtonSize, string> = {
+  lg: 'px-md py-sm',
   md: 'h-btn px-sm',
-  sm: 'h-btnsm px-sm',
+  sm: 'h-btnsm px-sm ',
 };
 
 const buttonModesStyles: Record<ButtonModes, string> = {
   default:
-    'text-gray-600 bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus:from-bg-gray-50 focus:to-bg-gray-50',
+    'text-gray-600 bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus-visible:from-bg-gray-50 focus-visible:to-bg-gray-50',
   destructive:
-    'text-red-600 bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus:from-bg-gray-50 focus:to-bg-gray-50',
+    'text-red-600 bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus-visible:from-bg-gray-50 focus-visible:to-bg-gray-50',
   primary:
-    'text-gray-600 from-primary to-primary-light border-primary-dark hover:border-primary-darker focus:from-primary focus:to-primary disabled:border-primary-dark',
+    'text-gray-600 from-primary to-primary-light border-primary-dark hover:border-primary-darker focus-visible:from-primary focus-visible:to-primary disabled:border-primary-dark',
 };
 
 const sharedButtonStyle =
-  'inline-flex space-x-2 items-center font-semibold bg-gradient-to-t border rounded shadow-sm focus:outline-none focus:bg-gradient-to-t focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 disabled:opacity-60';
+  'items-center justify-center inline-flex items-center text-sm font-sans font-semibold bg-gradient-to-t border rounded shadow-sm focus-visible:outline-none focus-visible:bg-gradient-to-t focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-400 disabled:opacity-60';
+
+const fullWidth = 'w-full';
 
 export const Button = (props: ButtonProps) => {
   const {
@@ -68,23 +75,34 @@ export const Button = (props: ButtonProps) => {
     isLoading,
     loadingText,
     disabled,
+    full,
     ...rest
   } = props;
   const isDisabled = disabled || isLoading;
 
-  // Primary button is only available in md size
-  const buttonSize = mode === 'primary' ? 'md' : size;
+  if (
+    mode === 'primary' &&
+    size === 'sm' &&
+    process.env.mode !== 'production'
+  ) {
+    console.warn(
+      '%cPrimary buttons should not be used with small size',
+      'font-weight: bold; font-size: 50px; color: red; text-shadow: 3px 3px 0 rgb(217, 31, 38) , 6px 6px 0 rgb(226, 91, 14), 9px 9px 0 rgb(245, 221, 8), 12px 12px 0 rgb(5, 148, 68), 15px 15px 0 rgb(2, 135, 206), 18px 18px 0 rgb(4, 77, 245), 21px 21px 0 rgb(42, 21, 113); line-height: 2.5;padding-right: 20px'
+    );
+  }
 
   return (
     <button
       type={type}
+      {...rest}
       className={clsx(
         sharedButtonStyle,
-        buttonSizing[buttonSize],
         buttonModesStyles[mode],
-        isDisabled ? 'cursor-not-allowed' : ''
+        buttonSizing[size],
+        isDisabled ? 'cursor-not-allowed' : '',
+        full && fullWidth,
+        rest?.className
       )}
-      {...rest}
       disabled={isDisabled}
     >
       {isLoading ? (
@@ -93,25 +111,23 @@ export const Button = (props: ButtonProps) => {
             <span className="whitespace-nowrap">{loadingText}</span>
           ) : null}
           <CgSpinner
-            className={`animate-spin ${
-              buttonSize === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
-            }`}
+            className={`animate-spin ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}
           />
         </>
       ) : (
         <>
           {icon && iconPosition === 'start'
             ? React.cloneElement(icon, {
-                className: `inline-flex ${
-                  buttonSize === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
+                className: `inline-flex ${children && 'mr-2'} ${
+                  size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
                 }`,
               })
             : null}
           <span className="whitespace-nowrap">{children}</span>
           {icon && iconPosition === 'end'
             ? React.cloneElement(icon, {
-                className: `inline-flex ${
-                  buttonSize === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
+                className: `inline-flex ${children && 'ml-2'} ${
+                  size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
                 }`,
               })
             : null}

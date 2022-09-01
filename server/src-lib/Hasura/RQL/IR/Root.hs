@@ -42,6 +42,7 @@ data RootField (db :: BackendType -> Type) remote action raw where
   RFRemote :: remote -> RootField db remote action raw
   RFAction :: action -> RootField db remote action raw
   RFRaw :: raw -> RootField db remote action raw
+  RFMulti :: [RootField db remote action raw] -> RootField db remote action raw
 
 data MutationDB (b :: BackendType) (r :: Type) v
   = MDBInsert (AnnotatedInsert b r v)
@@ -53,13 +54,13 @@ data MutationDB (b :: BackendType) (r :: Type) v
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 data ActionQuery (r :: Type)
-  = AQQuery !(AnnActionExecution r)
-  | AQAsync !(AnnActionAsyncQuery ('Postgres 'Vanilla) r)
+  = AQQuery (AnnActionExecution r)
+  | AQAsync (AnnActionAsyncQuery ('Postgres 'Vanilla) r)
   deriving stock (Functor, Foldable, Traversable)
 
 data ActionMutation (r :: Type)
-  = AMSync !(AnnActionExecution r)
-  | AMAsync !AnnActionMutationAsync
+  = AMSync (AnnActionExecution r)
+  | AMAsync AnnActionMutationAsync
 
 -- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all
 -- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have

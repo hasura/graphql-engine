@@ -11,7 +11,6 @@ module Hasura.Backends.DataConnector.API.V0.ExpressionSpec
   )
 where
 
-import Autodocodec.Extended
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
@@ -22,7 +21,6 @@ import Hedgehog
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Internal.Range
 import Test.Aeson.Utils (jsonOpenApiProperties, testToFromJSONToSchema)
-import Test.Autodocodec.Extended (genValueWrapper, genValueWrapper2, genValueWrapper3)
 import Test.Hspec
 
 spec :: Spec
@@ -76,24 +74,24 @@ spec = do
   describe "ComparisonValue" $ do
     describe "AnotherColumn" $
       testToFromJSONToSchema
-        (AnotherColumn $ ValueWrapper (ComparisonColumn [] (ColumnName "my_column_name")))
+        (AnotherColumn $ ComparisonColumn [] (ColumnName "my_column_name"))
         [aesonQQ|{"type": "column", "column": {"path": [], "name": "my_column_name"}}|]
     describe "ScalarValue" $
       testToFromJSONToSchema
-        (ScalarValue . ValueWrapper $ String "scalar value")
+        (ScalarValue $ String "scalar value")
         [aesonQQ|{"type": "scalar", "value": "scalar value"}|]
 
     jsonOpenApiProperties genComparisonValue
 
   describe "Expression" $ do
     let comparisonColumn = ComparisonColumn [] (ColumnName "my_column_name")
-    let scalarValue = ScalarValue . ValueWrapper $ String "scalar value"
+    let scalarValue = ScalarValue $ String "scalar value"
     let scalarValues = [String "scalar value"]
-    let unaryComparisonExpression = ApplyUnaryComparisonOperator $ ValueWrapper2 IsNull comparisonColumn
+    let unaryComparisonExpression = ApplyUnaryComparisonOperator IsNull comparisonColumn
 
     describe "And" $ do
       testToFromJSONToSchema
-        (And $ ValueWrapper [unaryComparisonExpression])
+        (And [unaryComparisonExpression])
         [aesonQQ|
           {
             "type": "and",
@@ -109,7 +107,7 @@ spec = do
 
     describe "Or" $ do
       testToFromJSONToSchema
-        (Or $ ValueWrapper [unaryComparisonExpression])
+        (Or [unaryComparisonExpression])
         [aesonQQ|
           {
             "type": "or",
@@ -125,7 +123,7 @@ spec = do
 
     describe "Not" $ do
       testToFromJSONToSchema
-        (Not $ ValueWrapper unaryComparisonExpression)
+        (Not unaryComparisonExpression)
         [aesonQQ|
           {
             "type": "not",
@@ -138,7 +136,7 @@ spec = do
         |]
     describe "BinaryComparisonOperator" $ do
       testToFromJSONToSchema
-        (ApplyBinaryComparisonOperator $ ValueWrapper3 Equal comparisonColumn scalarValue)
+        (ApplyBinaryComparisonOperator Equal comparisonColumn scalarValue)
         [aesonQQ|
           {
             "type": "binary_op",
@@ -150,7 +148,7 @@ spec = do
 
     describe "BinaryArrayComparisonOperator" $ do
       testToFromJSONToSchema
-        (ApplyBinaryArrayComparisonOperator $ ValueWrapper3 In comparisonColumn scalarValues)
+        (ApplyBinaryArrayComparisonOperator In comparisonColumn scalarValues)
         [aesonQQ|
           {
             "type": "binary_arr_op",
@@ -203,21 +201,21 @@ genComparisonColumn =
 genComparisonValue :: MonadGen m => m ComparisonValue
 genComparisonValue =
   Gen.choice
-    [ AnotherColumn <$> genValueWrapper genComparisonColumn,
-      ScalarValue <$> genValueWrapper genValue
+    [ AnotherColumn <$> genComparisonColumn,
+      ScalarValue <$> genValue
     ]
 
 genExpression :: MonadGen m => m Expression
 genExpression =
   Gen.recursive
     Gen.choice
-    [ ApplyBinaryComparisonOperator <$> genValueWrapper3 genBinaryComparisonOperator genComparisonColumn genComparisonValue,
-      ApplyBinaryArrayComparisonOperator <$> genValueWrapper3 genBinaryArrayComparisonOperator genComparisonColumn (Gen.list (linear 0 1) genValue),
-      ApplyUnaryComparisonOperator <$> genValueWrapper2 genUnaryComparisonOperator genComparisonColumn
+    [ ApplyBinaryComparisonOperator <$> genBinaryComparisonOperator <*> genComparisonColumn <*> genComparisonValue,
+      ApplyBinaryArrayComparisonOperator <$> genBinaryArrayComparisonOperator <*> genComparisonColumn <*> (Gen.list (linear 0 1) genValue),
+      ApplyUnaryComparisonOperator <$> genUnaryComparisonOperator <*> genComparisonColumn
     ]
-    [ And <$> genValueWrapper genExpressions,
-      Or <$> genValueWrapper genExpressions,
-      Not <$> genValueWrapper genExpression
+    [ And <$> genExpressions,
+      Or <$> genExpressions,
+      Not <$> genExpression
     ]
   where
     genExpressions = Gen.list (linear 0 1) genExpression

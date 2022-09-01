@@ -14,6 +14,7 @@ else
 fi
 
 CITUS_PASSWORD=hasuraCITUS2
+CITUS_VOLUME_NAME='hasura-dev-citus-single'
 CITUS_CONTAINER_NAME="hasura-dev-citus-single-$CITUS_PORT"
 CITUS_DB_URL="postgres://postgres:$CITUS_PASSWORD@127.0.0.1:$CITUS_PORT/postgres"
 CITUS_DB_DOCKER_URL="postgres://postgres:$CITUS_PASSWORD@127.0.0.1:5432/postgres"
@@ -24,14 +25,17 @@ CITUS_DOCKER="docker exec -u postgres -it $CITUS_CONTAINER_NAME psql $CITUS_DB_D
 #     Functions      #
 ######################
 
-function citus_launch_container(){
+function citus_launch_container {
   echo_pretty "Launching Citus container: $CITUS_CONTAINER_NAME"
+  docker volume create "$CITUS_VOLUME_NAME"
   docker run \
     --name "$CITUS_CONTAINER_NAME" \
-    -p 127.0.0.1:"$CITUS_PORT":5432 \
+    -p "127.0.0.1:$CITUS_PORT:5432" \
     --expose="$CITUS_PORT" \
-    -e POSTGRES_PASSWORD="$CITUS_PASSWORD" \
-    -d citusdata/citus:10.1
+    --volume="${CITUS_VOLUME_NAME}:/var/lib/postgresql/data" \
+    --env=POSTGRES_PASSWORD="$CITUS_PASSWORD" \
+    --detach \
+    citusdata/citus:10.1
 }
 
 function citus_wait {
@@ -42,10 +46,11 @@ function citus_wait {
   echo " Ok"
 }
 
-function citus_cleanup(){
+function citus_cleanup {
   echo_pretty "Removing $CITUS_CONTAINER_NAME and its volumes in 5 seconds!"
   echo_pretty "  PRESS CTRL-C TO ABORT removal of all containers, or ENTER to clean up right away"
   read -t5 || true
   docker stop "$CITUS_CONTAINER_NAME"
   docker rm -v "$CITUS_CONTAINER_NAME"
+  docker volume rm "$CITUS_VOLUME_NAME"
 }

@@ -7,6 +7,7 @@ import {
   availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
+import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,
@@ -23,7 +24,6 @@ import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
-import Button from '../../../Common/Button/Button';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
@@ -31,8 +31,8 @@ import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import styles from '../TableModify/ModifyTable.scss';
-import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+import styles from '../TableModify/ModifyTable.module.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.module.scss';
 import {
   currentDriver,
   findAllFromRel,
@@ -42,6 +42,7 @@ import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
 import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
+import { areTablesEqual } from '@/features/RelationshipsTable/utils';
 
 const addRelationshipCellView = (
   dispatch,
@@ -90,8 +91,7 @@ const addRelationshipCellView = (
       <div className={styles.textNoNewLine}>
         {selectedRelationship === rel ? null : (
           <Button
-            size="xs"
-            color="yellow"
+            mode="primary"
             onClick={onAdd}
             data-test={
               relMetaData[0] === 'object'
@@ -119,8 +119,7 @@ const addRelationshipCellView = (
             &nbsp;
             <Button
               type="submit"
-              color="yellow"
-              size="xs"
+              mode="primary"
               data-test={
                 relMetaData[0] === 'object'
                   ? `obj-rel-save-${relMetaData[1]}`
@@ -294,7 +293,6 @@ const AddRelationship = ({
       </div>
       <Button
         className="hide"
-        color="white"
         size="sm"
         onClick={e => {
           e.preventDefault();
@@ -325,6 +323,7 @@ const Relationships = ({
   schemaList,
   readOnlyMode,
   currentSource,
+  source,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
@@ -336,10 +335,19 @@ const Relationships = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const {
-    data: featureFlagsData,
-    isLoading: isFeatureFlagsLoading,
-  } = useFeatureFlags();
+  /**
+   * Metadata table object - this is the "table" that needs to be passed for all our new components
+   * The existing `NormalizedTable` stuff has to be phased out slowly
+   * */
+  const table = source.tables.find(t => {
+    return areTablesEqual(t.table, {
+      table_schema: tableSchema.table_schema,
+      table_name: tableSchema.table_name,
+    });
+  });
+
+  const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
+    useFeatureFlags();
   if (isFeatureFlagsLoading) return <div>Loading...</div>;
 
   if (!isFeatureSupported('tables.relationships.enabled')) {
@@ -369,6 +377,7 @@ const Relationships = ({
     return (
       <DatabaseRelationshipsTab
         table={tableSchema}
+        metadataTable={table.table}
         driver={currentDriver}
         currentSource={currentSource}
         migrationMode={migrationMode}
@@ -486,7 +495,6 @@ const Relationships = ({
       addRelSection = (
         <Button
           type="submit"
-          color="white"
           size="sm"
           onClick={() => {
             dispatch(addNewRelClicked());
@@ -603,6 +611,9 @@ const mapStateToProps = (state, ownProps) => {
     remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
     adminHeaders: state.tables.dataHeaders,
     currentSource: state.tables.currentDataSource,
+    source: state.metadata.metadataObject.sources.find(
+      s => s.name === state.tables.currentDataSource
+    ),
     ...state.tables.modify,
   };
 };

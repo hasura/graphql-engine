@@ -1,8 +1,8 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
+import { Button } from '@/new-components/Button';
 import { useScheduledTrigger, LocalScheduledTriggerState } from '../state';
-import Button from '../../../../Common/Button/Button';
 import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
 import {
   getReactHelmetTitle,
@@ -40,15 +40,17 @@ const Main: React.FC<Props> = props => {
       </div>
       <CronTriggerFrom state={state} setState={setState} />
       {!readOnlyMode && (
-        <Button
-          onClick={onSave}
-          color="yellow"
-          size="sm"
-          disabled={state.loading.add}
-          className="mr-xl"
-        >
-          {state.loading.add ? 'Creating...' : 'Create'}
-        </Button>
+        <div className="mr-xl">
+          <Button
+            isLoading={state.loading.add}
+            loadingText="Creating..."
+            onClick={onSave}
+            mode="primary"
+            disabled={state.loading.add}
+          >
+            Create
+          </Button>
+        </div>
       )}
     </div>
   );

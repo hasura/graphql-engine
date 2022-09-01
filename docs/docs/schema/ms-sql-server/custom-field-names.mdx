@@ -11,17 +11,16 @@ keywords:
   - rename
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # MS SQL Server: Customise auto-generated field names
 
 ## Introduction
 
-Hasura auto-generates GraphQL field names based on your database table
-and column names. If you'd like to change the defaults, it is possible
-to override and rename the auto-generated table and column field names
-exposed over the GraphQL API.
+Hasura auto-generates GraphQL field names based on your database table and column names. If you'd like to change the
+defaults, it is possible to override and rename the auto-generated table and column field names exposed over the GraphQL
+API.
 
 :::tip Supported from
 
@@ -40,7 +39,7 @@ Console support coming soon
 
 Head to the ``Data -> [table-name] -> Modify``. On the relevant field, click ``Edit`` and change the GraphQL field name to a name of your choice.
 
-     .. thumbnail:: /img/graphql/core/schema/custom-field-name-column.png
+     .. thumbnail:: /img/schema/custom-field-name-column.png
         :alt: Customise GraphQL field name
 
 -->
@@ -48,8 +47,7 @@ Head to the ``Data -> [table-name] -> Modify``. On the relevant field, click ``E
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can customize auto-generated field names in the `tables.yaml` file
-inside the `metadata` directory:
+You can customize auto-generated field names in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {4-6}
 - table:
@@ -72,8 +70,10 @@ hasura metadata apply
 
 A custom field name can be set for a column via the following 2 methods:
 
-1.  Passing a [Table config](/api-reference/syntax-defs.mdx#table-config) with the [ColumnConfig](/api-reference/syntax-defs.mdx#columnconfig) to the
-    [mssql_set_table_customization](/api-reference/metadata-api/table-view.mdx#mssql-set-table-customization) API while tracking a table:
+1.  Passing a [Table config](/api-reference/syntax-defs.mdx#table-config) with the
+    [ColumnConfig](/api-reference/syntax-defs.mdx#columnconfig) to the
+    [mssql_set_table_customization](/api-reference/metadata-api/table-view.mdx#mssql-set-table-customization) API while
+    tracking a table:
 
     ```http
     POST /v1/metadata HTTP/1.1
@@ -113,7 +113,7 @@ Console support coming soon
 
 Head to the ``Data -> [table-name] -> Modify``. Click the ``Edit`` button in the ``Custom GraphQL Root Fields`` section and define names over which you'd like to expose the table root fields.
 
-     .. thumbnail:: /img/graphql/core/schema/custom-field-name-root-fields.png
+     .. thumbnail:: /img/schema/custom-field-name-root-fields.png
         :alt: Customise GraphQL root field
 
 -->
@@ -121,8 +121,8 @@ Head to the ``Data -> [table-name] -> Modify``. Click the ``Edit`` button in the
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can expose table root fields with a different name in the GraphQL
-API in the `tables.yaml` file inside the `metadata` directory:
+You can expose table root fields with a different name in the GraphQL API in the `tables.yaml` file inside the
+`metadata` directory:
 
 ```yaml {4-6}
 - table:
@@ -142,11 +142,12 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-A custom field name can be set for a table root field via the following
-2 methods:
+A custom field name can be set for a table root field via the following 2 methods:
 
-1.  Passing a [Table config](/api-reference/syntax-defs.mdx#table-config) with the [Custom Root Fields](/api-reference/syntax-defs.mdx#custom-root-fields) to the
-    [mssql_set_table_customization](/api-reference/metadata-api/table-view.mdx#mssql-set-table-customization) API while tracking a table:
+1.  Passing a [Table config](/api-reference/syntax-defs.mdx#table-config) with the
+    [Custom Root Fields](/api-reference/syntax-defs.mdx#custom-root-fields) to the
+    [mssql_set_table_customization](/api-reference/metadata-api/table-view.mdx#mssql-set-table-customization) API while
+    tracking a table:
 
     ```http
     POST /v1/metadata HTTP/1.1

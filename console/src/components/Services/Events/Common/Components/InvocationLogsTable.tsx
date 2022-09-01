@@ -4,6 +4,7 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
+import { Button } from '@/new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
@@ -17,7 +18,6 @@ import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 import { getInvocationLogStatus } from './utils';
-import Button from '../../../../Common/Button/Button';
 import { QualifiedTable } from '../../../../../metadata/types';
 
 type RedeliverButtonProps = {
@@ -28,14 +28,12 @@ const RedliverEventButton: React.FC<RedeliverButtonProps> = ({
   onClickHandler,
 }) => (
   <Button
-    color="white"
-    size="xs"
+    size="sm"
     title="Redeliver event"
     onClick={onClickHandler}
-    className="cursor-pointer mr-xs"
-  >
-    <ReloadIcon />
-  </Button>
+    className="mr-xs"
+    icon={<ReloadIcon />}
+  />
 );
 
 interface Props extends FilterTableProps {
@@ -46,9 +44,8 @@ interface Props extends FilterTableProps {
 
 const InvocationLogsTable: React.FC<Props> = props => {
   const { rows, filterState, runQuery, columns, count, dispatch } = props;
-  const [redeliveredEventId, setRedeliveredEventId] = React.useState<
-    Nullable<string>
-  >(null);
+  const [redeliveredEventId, setRedeliveredEventId] =
+    React.useState<Nullable<string>>(null);
   const [isRedelivering, setIsRedelivering] = React.useState(false);
   const [currentPage, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(10);
@@ -142,6 +139,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
     expander: true,
     Header: '',
     accessor: 'expander',
+    width: 100,
     Expander: ({ isExpanded, viewIndex }) => {
       const row = rows[viewIndex];
       return (

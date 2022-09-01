@@ -1,6 +1,7 @@
 module Hasura.Server.Types
   ( ExperimentalFeature (..),
     InstanceId (..),
+    generateInstanceId,
     MetadataDbId (..),
     DbUid (..),
     mdDbIdToDbUid,
@@ -12,7 +13,6 @@ module Hasura.Server.Types
     pgToDbVersion,
     RequestId (..),
     ServerConfigCtx (..),
-    StreamingSubscriptionsCtx (..),
     HasServerConfigCtx (..),
     getRequestId,
   )
@@ -65,11 +65,16 @@ mdDbIdToDbUid = DbUid . getMetadataDbId
 newtype InstanceId = InstanceId {getInstanceId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
 
+-- | Generate an 'InstanceId' from a 'UUID'
+generateInstanceId :: IO InstanceId
+generateInstanceId = InstanceId <$> generateFingerprint
+
 data ExperimentalFeature
   = EFInheritedRoles
   | EFOptimizePermissionFilters
   | EFNamingConventions
   | EFStreamingSubscriptions
+  | EFApolloFederation
   deriving (Show, Eq, Generic)
 
 instance Hashable ExperimentalFeature
@@ -80,7 +85,8 @@ instance FromJSON ExperimentalFeature where
     "optimize_permission_filters" -> pure EFOptimizePermissionFilters
     "naming_convention" -> pure EFNamingConventions
     "streaming_subscriptions" -> pure EFStreamingSubscriptions
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_convention or streaming_subscriptions"
+    "apollo_federation" -> pure EFApolloFederation
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_convention, streaming_subscriptions or apollo_federation"
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
@@ -88,6 +94,7 @@ instance ToJSON ExperimentalFeature where
     EFOptimizePermissionFilters -> "optimize_permission_filters"
     EFNamingConventions -> "naming_convention"
     EFStreamingSubscriptions -> "streaming_subscriptions"
+    EFApolloFederation -> "apollo_federation"
 
 data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
   deriving (Show, Eq)
@@ -99,9 +106,6 @@ instance FromJSON (MaintenanceMode ()) where
 
 instance ToJSON (MaintenanceMode ()) where
   toJSON = Bool . (== MaintenanceModeEnabled ())
-
-data StreamingSubscriptionsCtx = StreamingSubscriptionsEnabled | StreamingSubscriptionsDisabled
-  deriving (Show, Eq)
 
 -- | See Note [ReadOnly Mode]
 data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled

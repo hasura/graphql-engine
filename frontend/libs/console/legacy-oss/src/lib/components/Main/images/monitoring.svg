@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24.433" height="24.328" viewBox="0 0 24.433 24.328">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#1eb4d4;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px}
+        </style>
+    </defs>
+    <g id="prefix__streamline-icon-love-it-search_24x24" data-name="streamline-icon-love-it-search@24x24" transform="translate(.875 .768)">
+        <path id="prefix__Path_3007" d="M15.747 10.5a5.25 5.25 0 1 1-5.25 5.25 5.25 5.25 0 0 1 5.25-5.25z" class="prefix__cls-1" data-name="Path 3007" transform="translate(-.75 -.749)"/>
+        <path id="prefix__Path_3008" d="M23.247 23.25l-3.787-3.788" class="prefix__cls-1" data-name="Path 3008" transform="translate(-.75 -.75)"/>
+        <path id="prefix__Path_3009" d="M7.507 15.749l-5.095-5.314a5.673 5.673 0 0 1-1.063-6.549 5.671 5.671 0 0 1 9.085-1.473L12 3.978l1.566-1.565a5.673 5.673 0 0 1 9.085 1.473A5.678 5.678 0 0 1 22.632 9" class="prefix__cls-1" data-name="Path 3009" transform="translate(-.75 -.749)"/>
+    </g>
+</svg>

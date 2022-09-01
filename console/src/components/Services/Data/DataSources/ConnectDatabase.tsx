@@ -34,7 +34,7 @@ import {
 } from './utils';
 import ReadReplicaForm from './ReadReplicaForm';
 import EditDataSource from './EditDataSource';
-import DataSourceFormWrapper from './DataSourceFromWrapper';
+import DataSourceFormWrapper from './DataSourceFormWrapper';
 import { getSupportedDrivers } from '../../../../dataSources';
 import { newSampleDBTrial } from './SampleDatabase';
 
@@ -60,10 +60,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     readReplicaReducer,
     []
   );
-  const [
-    connectDBStateForReadReplica,
-    connectDBReadReplicaDispatch,
-  ] = useReducer(connectDBReducer, defaultState);
+  const [connectDBStateForReadReplica, connectDBReadReplicaDispatch] =
+    useReducer(connectDBReducer, defaultState);
   const [readReplicaConnectionType, updateReadReplicaConnectionType] = useState(
     connectionTypes.DATABASE_URL
   );
@@ -110,6 +108,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           preparedStatements: connectionInfo?.use_prepared_statements ?? false,
           isolationLevel: connectionInfo?.isolation_level ?? 'read-committed',
           sslConfiguration: connectionInfo?.ssl_configuration,
+          extensionsSchema: currentSourceInfo.configuration?.extensions_schema,
           customization: {
             rootFields: currentSourceInfo?.customization?.root_fields,
             typeNames: currentSourceInfo?.customization?.type_names,
@@ -345,12 +344,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
 
     // construct the connection string from connection params and
     // make the same call as done for connection of type DATABASE_URL
-    const {
-      host,
-      port,
-      username,
-      database,
-    } = connectDBInputState.connectionParamState;
+    const { host, port, username, database } =
+      connectDBInputState.connectionParamState;
 
     if (connectDBInputState.dbType !== 'bigquery') {
       if (!host || !port || !username || !database) {

@@ -1,0 +1,57 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Hooks/useMetadataMigration" />
+
+<h1 class="text-xl font-semibold mb-md">useMetadataMigration</h1>
+
+<h2 class="text-lg font-semibold mb-xs">Overview</h2>
+
+```typescript
+import { useMetadataMigration } from '@features/MetadataAPI';
+```
+
+<p class="mb-md text-muted mb-sm">
+  This hook performs a metadata change on Hasura. It can be called in a generic
+  way for both console's server and CLI mode. During CLI mode, the hook will
+  call the CLI server to update its filesystem after a successful metadata call
+  to the Hasura server.
+</p>
+
+```typescript
+
+const mutation = useMetadataMigration();
+
+mutation.mutate({
+  query: {
+    type: 'add_remote_schema_remote_relationship',
+    args: {
+     ...
+    },
+  },
+});
+```
+
+<p class="mb-md text-muted mb-sm">
+  You can also pass custom `onSuccess` and `onError` callbacks to the
+  `useMetadataMigration` hook that will be fired depeding on the situation
+</p>
+
+```typescript
+const mutation = useMetadataMigration({
+  onSuccess: () => {
+    fireNotification({
+      title: 'Success!',
+      message: 'Relationship saved successfully',
+      type: 'success',
+    });
+    if (onSuccess) onSuccess();
+  },
+  onError: (error: Error) => {
+    fireNotification({
+      title: 'Error',
+      message: error?.message ?? 'Error while creating the relationship',
+      type: 'error',
+    });
+  },
+});
+```

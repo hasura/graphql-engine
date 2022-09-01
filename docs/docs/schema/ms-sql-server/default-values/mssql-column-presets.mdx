@@ -120,12 +120,12 @@ select from the_ `article` _table_):
 As mentioned earlier, you'll notice when you add the `X-Hasura-Role` header that the field, `user_id`, is no longer
 available as the mutation type's field:
 
-<Thumbnail src='/img/graphql/core/schema/column-preset-schema-change-for-role.png' alt='Write an insert mutation' />
+<Thumbnail src='/img/schema/column-preset-schema-change-for-role.png' alt='Write an insert mutation' />
 
 Now, if we run the following insert mutation, we'll see that the `user_id` field is indeed being set with the value
 passed in the `X-Hasura-User-Id` variable:
 
-<Thumbnail src='/img/graphql/core/schema/column-preset-mutation-result.png' alt='Run the insert mutation' />
+<Thumbnail src='/img/schema/column-preset-mutation-result.png' alt='Run the insert mutation' />
 
 :::info Note
 

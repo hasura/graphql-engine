@@ -13,8 +13,8 @@
 --       before adding any new migration if you haven't already looked at it.
 module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
-    fetchTableMetadata,
-    fetchFunctionMetadata,
+    FetchTableMetadata (..),
+    FetchFunctionMetadata (..),
     prepareCatalog,
     postDropSourceHook,
     resolveDatabaseMetadata,
@@ -29,6 +29,7 @@ import Data.Aeson (ToJSON, toJSON)
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
+import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
@@ -37,6 +38,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
+import Hasura.Backends.Postgres.DDL.EventTrigger (dropTriggerQ)
 import Hasura.Backends.Postgres.DDL.Source.Version
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
 import Hasura.Backends.Postgres.Types.ComputedField
@@ -57,7 +59,7 @@ import Hasura.Server.Migrate.Version (MetadataCatalogVersion (..))
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 
--- | We differentiate the handling of metadata between Citus and Vanilla
+-- | We differentiate the handling of metadata between Citus, Cockroach and Vanilla
 -- Postgres because Citus imposes limitations on the types of joins that it
 -- permits, which then limits the types of relations that we can track.
 class ToMetadataFetchQuery (pgKind :: PostgresKind) where
@@ -69,6 +71,9 @@ instance ToMetadataFetchQuery 'Vanilla where
 instance ToMetadataFetchQuery 'Citus where
   tableMetadata = $(makeRelativeToProject "src-rsr/citus_table_metadata.sql" >>= Q.sqlFromFile)
 
+instance ToMetadataFetchQuery 'Cockroach where
+  tableMetadata = $(makeRelativeToProject "src-rsr/cockroach_table_metadata.sql" >>= Q.sqlFromFile)
+
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
   Logger Hasura ->
@@ -77,21 +82,22 @@ resolveSourceConfig ::
   BackendSourceKind ('Postgres pgKind) ->
   BackendConfig ('Postgres pgKind) ->
   Env.Environment ->
+  manager ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig _logger name config _backendKind _backendConfig _env = runExceptT do
+resolveSourceConfig _logger name config _backendKind _backendConfig _env _manager = runExceptT do
   sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 
 -- | 'PGSourceLockQuery' is a data type which represents the contents of a single object of the
 --   locked queries which are queried from the `pg_stat_activity`. See `logPGSourceCatalogMigrationLockedQueries`.
 data PGSourceLockQuery = PGSourceLockQuery
-  { _psqaQuery :: !Text,
-    _psqaLockGranted :: !(Maybe Bool),
-    _psqaLockMode :: !Text,
-    _psqaTransactionStartTime :: !UTCTime,
-    _psqaQueryStartTime :: !UTCTime,
-    _psqaWaitEventType :: !Text,
-    _psqaBlockingQuery :: !Text
+  { _psqaQuery :: Text,
+    _psqaLockGranted :: Maybe Bool,
+    _psqaLockMode :: Text,
+    _psqaTransactionStartTime :: UTCTime,
+    _psqaQueryStartTime :: UTCTime,
+    _psqaWaitEventType :: Text,
+    _psqaBlockingQuery :: Text
   }
 
 $(deriveJSON hasuraJSON ''PGSourceLockQuery)
@@ -145,7 +151,13 @@ logPGSourceCatalogMigrationLockedQueries logger sourceConfig = forever $ do
 
 resolveDatabaseMetadata ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadIO m, MonadBaseControl IO m) =>
+  ( Backend ('Postgres pgKind),
+    ToMetadataFetchQuery pgKind,
+    FetchFunctionMetadata pgKind,
+    FetchTableMetadata pgKind,
+    MonadIO m,
+    MonadBaseControl IO m
+  ) =>
   SourceMetadata ('Postgres pgKind) ->
   SourceConfig ('Postgres pgKind) ->
   SourceTypeCustomization ->
@@ -156,7 +168,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
     let allFunctions =
           OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
             <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
-    functionsMeta <- fetchFunctionMetadata allFunctions
+    functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
     pgScalars <- fetchPgScalars
     let scalarsMap = Map.fromList do
           scalar <- Set.toList pgScalars
@@ -183,7 +195,7 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) Q.ReadWrite do
       -- Fresh database
       | not hdbCatalogExist -> liftTx do
         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-        enablePgcryptoExtension
+        enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
         initPgSourceCatalog
         return RETDoNothing
       -- Only 'hdb_catalog' schema defined
@@ -317,13 +329,37 @@ upMigrationsUntil43 =
            (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
    )
 
+-- | We differentiate for CockroachDB and other PG implementations
+-- as our CockroachDB table fetching SQL does not require table information,
+-- and fails if it receives unused prepared arguments
+-- this distinction should no longer be necessary if this issue is resolved:
+-- https://github.com/cockroachdb/cockroach/issues/86375
+class FetchTableMetadata (pgKind :: PostgresKind) where
+  fetchTableMetadata ::
+    forall m.
+    ( Backend ('Postgres pgKind),
+      ToMetadataFetchQuery pgKind,
+      MonadTx m
+    ) =>
+    [QualifiedTable] ->
+    m (DBTablesMetadata ('Postgres pgKind))
+
+instance FetchTableMetadata 'Vanilla where
+  fetchTableMetadata = pgFetchTableMetadata
+
+instance FetchTableMetadata 'Citus where
+  fetchTableMetadata = pgFetchTableMetadata
+
+instance FetchTableMetadata 'Cockroach where
+  fetchTableMetadata = cockroachFetchTableMetadata
+
 -- | Fetch Postgres metadata of all user tables
-fetchTableMetadata ::
+pgFetchTableMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
   [QualifiedTable] ->
   m (DBTablesMetadata ('Postgres pgKind))
-fetchTableMetadata tables = do
+pgFetchTableMetadata tables = do
   results <-
     liftTx $
       Q.withQE
@@ -336,9 +372,43 @@ fetchTableMetadata tables = do
       flip map results $
         \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
+-- | Fetch Cockroach metadata of all user tables
+cockroachFetchTableMetadata ::
+  forall pgKind m.
+  (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
+  [QualifiedTable] ->
+  m (DBTablesMetadata ('Postgres pgKind))
+cockroachFetchTableMetadata _tables = do
+  results <-
+    liftTx $
+      Q.rawQE
+        defaultTxErrorHandler
+        (tableMetadata @pgKind)
+        []
+        True
+  pure $
+    Map.fromList $
+      flip map results $
+        \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
+
+class FetchFunctionMetadata (pgKind :: PostgresKind) where
+  fetchFunctionMetadata ::
+    (MonadTx m) =>
+    [QualifiedFunction] ->
+    m (DBFunctionsMetadata ('Postgres pgKind))
+
+instance FetchFunctionMetadata 'Vanilla where
+  fetchFunctionMetadata = pgFetchFunctionMetadata
+
+instance FetchFunctionMetadata 'Citus where
+  fetchFunctionMetadata = pgFetchFunctionMetadata
+
+instance FetchFunctionMetadata 'Cockroach where
+  fetchFunctionMetadata _ = pure mempty
+
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsMetadata ('Postgres pgKind))
-fetchFunctionMetadata functions = do
+pgFetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsMetadata ('Postgres pgKind))
+pgFetchFunctionMetadata functions = do
   results <-
     liftTx $
       Q.withQE
@@ -371,7 +441,7 @@ postDropSourceHook ::
   SourceConfig ('Postgres pgKind) ->
   TableEventTriggers ('Postgres pgKind) ->
   m ()
-postDropSourceHook sourceConfig _tableTriggerMap = do
+postDropSourceHook sourceConfig tableTriggersMap = do
   -- Clean traces of Hasura in source database
   --
   -- There are three type of database we have to consider here, which we
@@ -405,7 +475,11 @@ postDropSourceHook sourceConfig _tableTriggerMap = do
           -- handle both cases uniformly, doing "ideally" nothing in the type 2
           -- database, and for default databases, we drop only source-related
           -- tables from the database's "hdb_catalog" schema.
-          | hdbMetadataTableExist ->
+          | hdbMetadataTableExist -> do
+            -- drop the event trigger functions from the table for default sources
+            for_ (HM.toList tableTriggersMap) $ \(_table, triggers) ->
+              for_ triggers $ \triggerName ->
+                liftTx $ dropTriggerQ triggerName
             Q.multiQE
               defaultTxErrorHandler
               $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= Q.sqlFromFile)

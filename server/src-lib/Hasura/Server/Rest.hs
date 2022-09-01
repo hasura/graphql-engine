@@ -136,7 +136,7 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
 
               resolvedVariablesMaybe <- joinedVars `onLeft` throw400 BadRequest
 
-              let resolvedVariables = M.catMaybes resolvedVariablesMaybe
+              let resolvedVariables = catMaybes resolvedVariablesMaybe
 
               -- Construct a graphql query by pairing the resolved variables
               -- with the query string from the schema cache, and pass it

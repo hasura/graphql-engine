@@ -62,6 +62,9 @@ X-Hasura-Role: admin
         }
       },
       "comment": "Authors of books"
+    },
+    "apollo_federation_config": {
+      "enable": "v1"
     }
   }
 }
@@ -110,11 +113,12 @@ Hasura GraphQL engine requires the constraint names (if any) of a table to be
 
 ### Args syntax {#metadata-pg-track-table-syntax}
 
-| Key           | Required | Schema                                                      | Description                                                   |
-| ------------- | -------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
-| table         | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)       | Name of the table                                             |
-| configuration | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
-| source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the table (default: `default`) |
+| Key                      | Required | Schema                                                                          | Description                                                   |
+|--------------------------|----------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                                             |
+| configuration            | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config)                     | Configuration for the table/view                              |
+| source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                 |
 
 ## pg_untrack_table {#metadata-pg-untrack-table}
 
@@ -143,7 +147,7 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-pg-untrack-table-syntax}
 
 | Key     | Required | Schema                                                  | Description                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|---------|----------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table                                                                                                                  |
 | cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
@@ -176,7 +180,7 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-pg-set-table-is-enum-syntax}
 
 | Key     | Required | Schema                                                  | Description                                                              |
-| ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------ |
+|---------|----------|---------------------------------------------------------|--------------------------------------------------------------------------|
 | table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table                                                        |
 | is_enum | true     | Boolean                                                 | Whether or not the table should be used as an `enum table <enum table>`. |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)            |
@@ -225,10 +229,48 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-pg-set-table-customization-syntax}
 
 | Key           | Required | Schema                                                     | Description                                                   |
-| ------------- | -------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
+|---------------|----------|------------------------------------------------------------|---------------------------------------------------------------|
 | table         | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)      | Name of the table                                             |
 | configuration | false    | [TableConfig](/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
 | source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)    | Name of the source database of the table (default: `default`) |
+
+## pg_set_apollo_federation_config {#metadata-pg-set-apollo-federation-config}
+
+`pg_set_apollo_federation_config` allows you to set apollo federation configuration for an already tracked postgres
+table. Enabling Apollo Federation will allow you to use the table type generated by Hasura in other subgraphs.
+
+Set the Apollo Federation configuration for a postgres table called `author`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_set_apollo_federation_config",
+  "args": {
+    "table": "author_details",
+    "source": "default",
+    "apollo_federation_config": {
+      "enable": "v1"
+    }
+  }
+}
+```
+
+### Args syntax {#metadata-pg-set-apollo-federation-config-syntax}
+
+| Key                      | Required | Schema                                                                          | Description                                                   |
+|--------------------------|----------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                                             |
+| source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Configuration for the table/view                              |
+
+:::info Note
+
+Setting `apollo_federation_config` to `null` will disable Apollo Federation support on the table.
+
+:::
 
 ## mssql_track_table {#mssql-track-table}
 
@@ -300,11 +342,12 @@ Hasura GraphQL engine requires the constraint names (if any) of a table to be
 
 ### Args syntax {#mssql-track-table-syntax}
 
-| Key           | Required | Schema                                                      | Description                                                   |
-| ------------- | -------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
-| table         | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)       | Name of the table                                             |
-| configuration | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
-| source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the table (default: `default`) |
+| Key                      | Required | Schema                                                                          | Description                                                   |
+|--------------------------|----------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                                             |
+| configuration            | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config)                     | Configuration for the table/view                              |
+| source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                 |
 
 ## mssql_untrack_table {#mssql-untrack-table}
 
@@ -333,7 +376,7 @@ X-Hasura-Role: admin
 ### Args syntax {#mssql-untrack-table-syntax}
 
 | Key     | Required | Schema                                                  | Description                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|---------|----------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table                                                                                                                  |
 | cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
@@ -375,10 +418,48 @@ X-Hasura-Role: admin
 ### Args syntax {#mssql-set-table-customization-syntax}
 
 | Key           | Required | Schema                                                     | Description                                                   |
-| ------------- | -------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
+|---------------|----------|------------------------------------------------------------|---------------------------------------------------------------|
 | table         | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)      | Name of the table                                             |
 | configuration | false    | [TableConfig](/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
 | source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)    | Name of the source database of the table (default: `default`) |
+
+## mssql_set_apollo_federation_config {#metadata-mssql-set-apollo-federation-config}
+
+`mssql_set_apollo_federation_config` allows you to set apollo federation configuration for an already tracked mssql
+table. Enabling Apollo Federation will allow you to use the table type generated by Hasura in other subgraphs.
+
+Set the Apollo Federation configuration for a mssql table called `author`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_set_apollo_federation_config",
+  "args": {
+    "table": "author_details",
+    "source": "default",
+    "apollo_federation_config": {
+      "enable": "v1"
+    }
+  }
+}
+```
+
+### Args syntax {#metadata-mssql-set-apollo-federation-config-syntax}
+
+| Key                      | Required | Schema                                                                          | Description                                                   |
+|--------------------------|----------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                                             |
+| source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Configuration for the table/view                              |
+
+:::info Note
+
+Setting `apollo_federation_config` to `null` will disable Apollo Federation support on the table.
+
+:::
 
 ## bigquery_track_table {#metadata-bigquery-track-table}
 
@@ -488,11 +569,12 @@ Hasura GraphQL engine requires the constraint names (if any) of a table to be
 
 ### Args syntax {#metadata-bigquery-track-table-syntax}
 
-| Key           | Required | Schema                                                      | Description                                                   |
-| ------------- | -------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
-| table         | true     | {"dataset":\_, "name":\_}                                   | Name of the table                                             |
-| configuration | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
-| source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the table (default: `default`) |
+| Key                      | Required | Schema                                                                          | Description                                                   |
+|--------------------------|----------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table                    | true     | {"dataset":\_, "name":\_}                                                       | Name of the table                                             |
+| configuration            | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config)                     | Configuration for the table/view                              |
+| source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                 |
 
 ## bigquery_untrack_table {#metadata-bigquery-untrack-table}
 
@@ -521,7 +603,7 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-bigquery-untrack-table-syntax}
 
 | Key     | Required | Schema                                                  | Description                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|---------|----------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | table   | true     | {"dataset":\_, "name":\_}                               | Name of the table                                                                                                                  |
 | cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
@@ -566,7 +648,45 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-bigquery-set-table-customization-syntax}
 
 | Key           | Required | Schema                                                     | Description                                                   |
-| ------------- | -------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
+|---------------|----------|------------------------------------------------------------|---------------------------------------------------------------|
 | table         | true     | {"dataset":\_, "name":\_}                                  | Name of the table                                             |
 | configuration | false    | [TableConfig](/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
 | source        | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)    | Name of the source database of the table (default: `default`) |
+
+## bigquery_set_apollo_federation_config {#metadata-bigquery-set-apollo-federation-config}
+
+`bigquery_set_apollo_federation_config` allows you to set apollo federation configuration for an already tracked
+bigquery table. Enabling Apollo Federation will allow you to use the table type generated by Hasura in other subgraphs.
+
+Set the Apollo Federation configuration for a bigquery table called `author`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_set_apollo_federation_config",
+  "args": {
+    "table": "author_details",
+    "source": "default",
+    "apollo_federation_config": {
+      "enable": "v1"
+    }
+  }
+}
+```
+
+### Args syntax {#metadata-bigquery-set-apollo-federation-config-syntax}
+
+| Key                      | Required | Schema                                                                          | Description                                                   |
+|--------------------------|----------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                                             |
+| source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Configuration for the table/view                              |
+
+:::info Note
+
+Setting `apollo_federation_config` to `null` will disable Apollo Federation support on the table.
+
+:::

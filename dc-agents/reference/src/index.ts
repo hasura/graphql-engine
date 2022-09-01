@@ -1,6 +1,6 @@
 ﻿import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
-import { filterAvailableTables, getSchema, loadStaticData } from './data';
+import { filterAvailableTables, getSchema, getTable, loadStaticData } from './data';
 import { queryData } from './query';
 import { getConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
@@ -34,7 +34,7 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const config = getConfig(request);
   const data = filterAvailableTables(staticData, config);
-  return queryData(data, request.body);
+  return queryData(getTable(data, config), request.body);
 });
 
 server.get("/health", async (request, response) => {

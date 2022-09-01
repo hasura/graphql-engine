@@ -22,6 +22,7 @@ export function useRoles() {
     MetadataSelector.getTablesFromAllSources
   );
   const { data: remoteSchemas } = useMetadata(d => d.metadata.remote_schemas);
+  const { data: allowlists } = useMetadata(d => d.metadata.allowlist);
   const { data: securitySettings } = useMetadata(
     MetadataSelector.getSecuritySettings
   );
@@ -36,6 +37,11 @@ export function useRoles() {
   );
   remoteSchemas?.forEach(remoteSchema => {
     remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
+  });
+  allowlists?.forEach(allowlist => {
+    if (allowlist?.scope?.global === false) {
+      allowlist?.scope?.roles?.forEach(role => roleNames.push(role));
+    }
   });
 
   Object.entries(securitySettings?.api_limits ?? {}).forEach(
