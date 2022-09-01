@@ -647,8 +647,7 @@
             "type": "object"
           },
           "foreign_table": {
-            "description": "The table referenced by the foreign key in the child table.",
-            "type": "string"
+            "$ref": "#/components/schemas/TableName"
           }
         },
         "required": [
