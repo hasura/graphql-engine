@@ -582,17 +582,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right True
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right Options.DangerouslyCollapseBooleans
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDangerousBooleanCollapse = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDangerousBooleanCollapse = Just Options.Don'tDangerouslyCollapseBooleans}
             -- When
             env = [(UUT._envVar UUT.dangerousBooleanCollapseOption, "true")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right False
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right Options.Don'tDangerouslyCollapseBooleans
 
     Hspec.describe "soEnabledAPIs" $ do
       Hspec.it "Default == metadata,graphql,pgdump,config" $ do

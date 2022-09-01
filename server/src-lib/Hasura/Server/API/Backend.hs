@@ -75,8 +75,7 @@ commandParser ::
   -- | corresponding parser
   (a -> RQLMetadataV1) ->
   CommandParser b
-commandParser =
-  commandParserWithExplicitParser (const J.parseJSON) -- Ignore the backend source kind and just parse using the FromJSON instance
+commandParser = commandParserWithExplicitParser (const J.parseJSON) -- Ignore the backend source kind and just parse using the FromJSON instance
 
 commandParserWithBackendKind ::
   FromJSONWithContext (BackendSourceKind b) a =>
@@ -88,18 +87,7 @@ commandParserWithBackendKind ::
 commandParserWithBackendKind =
   commandParserWithExplicitParser parseJSONWithContext
 
-sourceCommands,
-  tableCommands,
-  tablePermissionsCommands,
-  functionCommands,
-  functionPermissionsCommands,
-  relationshipCommands,
-  remoteRelationshipCommands,
-  eventTriggerCommands,
-  computedFieldCommands ::
-    forall (b :: BackendType).
-    Backend b =>
-    [CommandParser b]
+sourceCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 sourceCommands =
   [ commandParserWithBackendKind "add_source" $ RMAddSource . mkAnyBackend @b,
     commandParser "drop_source" $ RMDropSource,
@@ -107,10 +95,14 @@ sourceCommands =
     commandParser "set_apollo_federation_config" $ RMSetApolloFederationConfig . mkAnyBackend @b,
     commandParserWithBackendKind "update_source" $ RMUpdateSource . mkAnyBackend @b
   ]
+
+tableCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 tableCommands =
   [ commandParser "track_table" $ RMTrackTable . mkAnyBackend @b,
     commandParser "untrack_table" $ RMUntrackTable . mkAnyBackend @b
   ]
+
+tablePermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 tablePermissionsCommands =
   [ commandParser "create_insert_permission" $ RMCreateInsertPermission . mkAnyBackend @b,
     commandParser "create_select_permission" $ RMCreateSelectPermission . mkAnyBackend @b,
@@ -122,15 +114,21 @@ tablePermissionsCommands =
     commandParser "drop_delete_permission" $ RMDropDeletePermission . mkAnyBackend @b,
     commandParser "set_permission_comment" $ RMSetPermissionComment . mkAnyBackend @b
   ]
+
+functionCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 functionCommands =
   [ commandParser "track_function" $ RMTrackFunction . mkAnyBackend @b,
     commandParser "untrack_function" $ RMUntrackFunction . mkAnyBackend @b,
     commandParser "set_function_customization" $ RMSetFunctionCustomization . mkAnyBackend @b
   ]
+
+functionPermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 functionPermissionsCommands =
   [ commandParser "create_function_permission" $ RMCreateFunctionPermission . mkAnyBackend @b,
     commandParser "drop_function_permission" $ RMDropFunctionPermission . mkAnyBackend @b
   ]
+
+relationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 relationshipCommands =
   [ commandParser "create_object_relationship" $ RMCreateObjectRelationship . mkAnyBackend @b,
     commandParser "create_array_relationship" $ RMCreateArrayRelationship . mkAnyBackend @b,
@@ -138,17 +136,23 @@ relationshipCommands =
     commandParser "rename_relationship" $ RMRenameRelationship . mkAnyBackend @b,
     commandParser "drop_relationship" $ RMDropRelationship . mkAnyBackend @b
   ]
+
+remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 remoteRelationshipCommands =
   [ commandParser "create_remote_relationship" $ RMCreateRemoteRelationship . mkAnyBackend @b,
     commandParser "update_remote_relationship" $ RMUpdateRemoteRelationship . mkAnyBackend @b,
     commandParser "delete_remote_relationship" $ RMDeleteRemoteRelationship . mkAnyBackend @b
   ]
+
+eventTriggerCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 eventTriggerCommands =
   [ commandParser "invoke_event_trigger" $ RMInvokeEventTrigger . mkAnyBackend @b,
     commandParser "create_event_trigger" $ RMCreateEventTrigger . mkAnyBackend @b,
     commandParser "delete_event_trigger" $ RMDeleteEventTrigger . mkAnyBackend @b,
     commandParser "redeliver_event" $ RMRedeliverEvent . mkAnyBackend @b
   ]
+
+computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 computedFieldCommands =
   [ commandParser "add_computed_field" $ RMAddComputedField . mkAnyBackend @b,
     commandParser "drop_computed_field" $ RMDropComputedField . mkAnyBackend @b

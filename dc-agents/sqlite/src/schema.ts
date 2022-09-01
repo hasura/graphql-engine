@@ -1,6 +1,7 @@
-import { SchemaResponse, ScalarType, ColumnInfo, TableInfo } from "./types"
+import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "./types"
 import { Config } from "./config";
 import { connect, SqlLogger } from './db';
+import { logDeep } from "./util";
 
 var sqliteParser = require('sqlite-parser');
 
@@ -69,12 +70,15 @@ function formatTableInfo(info : TableInfoInternal): TableInfo {
   const ast = sqliteParser(info.sql);
   const ddl = ddlColumns(ast);
   const pks = ddlPKs(ast);
+  const fks = ddlFKs(ast);
   const pk  = pks.length > 0 ? { primary_key: pks } : {};
+  const fk  = fks.length > 0 ? { foreign_keys: Object.fromEntries(fks) } : {};
 
   // TODO: Should we include something for the description here?
   return {
     name: [info.name],
     ...pk,
+    ...fk,
     description: info.sql,
     columns: getColumns(ddl)
   }
@@ -124,9 +128,70 @@ function ddlColumns(ddl: any): Array<any> {
   })
 }
 
-function ddlPKs(ddl: any): Array<any> {
+/**
+ * Example:
+ *
+ * foreign_keys: {
+ *   "ArtistId->Artist.ArtistId": {
+ *     column_mapping: {
+ *       "ArtistId": "ArtistId"
+ *     },
+ *     foreign_table: "Artist",
+ *   }
+ * }
+ *
+ * NOTE: We currently don't log if the structure of the DDL is unexpected, which could be the case for composite FKs, etc.
+ * NOTE: There could be multiple paths between tables.
+ * NOTE: Composite keys are not currently supported.
+ *
+ * @param ddl
+ * @returns Array<[name, FK constraint definition]>
+ */
+function ddlFKs(ddl: any): Array<[string, Constraint]>  {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
-    throw new Error("Encountered a non-statement or non-list when parsing DDL for table.");
+    throw new Error("Encountered a non-statement or non-list DDL for table.");
+  }
+  return ddl.statement.flatMap((t: any) => {
+    if(t.type !=  'statement' || t.variant != 'create' || t.format != 'table') {
+      return [];
+    }
+    return t.definition.flatMap((c: any) => {
+      if(c.type != 'definition' || c.variant != 'constraint'
+          || c.definition.length != 1 || c.definition[0].type != 'constraint' || c.definition[0].variant != 'foreign key') {
+        return [];
+      }
+      if(c.columns.length != 1) {
+        return [];
+      }
+
+      const definition = c.definition[0];
+      const sourceColumn = c.columns[0];
+
+      if(sourceColumn.type != 'identifier' || sourceColumn.variant != 'column') {
+        return [];
+      }
+
+      if(definition.references == null || definition.references.columns == null || definition.references.columns.length != 1) {
+        return [];
+      }
+
+      const destinationColumn = definition.references.columns[0];
+
+      return [[
+        `${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
+        { foreign_table: [definition.references.name],
+          column_mapping: {
+            [sourceColumn.name]: destinationColumn.name
+          }
+        }
+      ]];
+    });
+  })
+}
+
+function ddlPKs(ddl: any): Array<string> {
+  if(ddl.type != 'statement' || ddl.variant != 'list') {
+    throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
   return ddl.statement.flatMap((t: any) => {
     if(t.type !=  'statement' || t.variant != 'create' || t.format != 'table') {

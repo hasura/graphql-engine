@@ -959,7 +959,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoDangerousBooleanCollapse result `Hspec.shouldSatisfy` \case
-        Opt.Success dangerousBooleanCollapse -> dangerousBooleanCollapse == Just True
+        Opt.Success dangerousBooleanCollapse -> dangerousBooleanCollapse == Just Options.DangerouslyCollapseBooleans
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

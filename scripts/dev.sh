@@ -569,7 +569,6 @@ elif [ "$MODE" = "test" ]; then
 
     # TODO MAYBE: fix deprecation warnings, make them an error
     if ! pytest \
-          -W ignore::DeprecationWarning \
           --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT \
           --pg-urls "$PG_DB_URL" \
           --assert=plain \

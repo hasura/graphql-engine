@@ -4,7 +4,6 @@ import * as customTasks from './cypress/support/tasks';
 
 export default defineConfig({
   env: {
-    BASE_URL: 'http://localhost:3000',
     TEST_MODE: 'parallel',
     MIGRATE_URL: 'http://localhost:9693/apis/migrate',
   },
@@ -13,7 +12,6 @@ export default defineConfig({
   chromeWebSecurity: false,
   video: false,
   projectId: '5yiuic',
-  retries: 1,
   numTestsKeptInMemory: 10,
   e2e: {
     // We've imported your old cypress plugins here.

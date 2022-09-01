@@ -1,0 +1,183 @@
+---
+sidebar_label: Quickstart with Docker
+description: Quickstart with Docker for Hasura Enterprise Edition
+title: 'Quickstart with Docker'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import LatestRelease from '@site/src/components/LatestRelease';
+
+# Quickstart with Docker
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Introduction
+
+This guide will help you get the Enterprise Edition of Hasura GraphQL Engine, a Postgres database to store its metadata,
+and a Redis database running as Docker containers using Docker Compose. This is the easiest way to set up Hasura
+Enterprise Edition on your **local environment**.
+
+**This guide requires HGE versions `v2.12.0-beta.1` and above.** Installation instructions are below.
+
+## Deploying Hasura EE using Docker
+
+### Prerequisites
+
+This tutorial assumes that the following prerequisites have been met:
+
+- You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
+  working on your machine.
+
+### Step 1: Get the docker-compose file
+
+The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
+installation manifests required to deploy Hasura anywhere. Get the docker compose file from there:
+
+```bash
+# in a new directory run
+wget https://raw.githubusercontent.com/hasura/graphql-engine/beta/install-manifests/enterprise/docker-compose/docker-compose.yaml
+# or run
+curl https://raw.githubusercontent.com/hasura/graphql-engine/beta/install-manifests/enterprise/docker-compose/docker-compose.yaml -o docker-compose.yml
+```
+
+### Step 2: Set the Hasura EE license key and the admin secret
+
+Edit the downloaded `docker-compose.yml` and set the license key and admin secret:
+
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to configure an
+admin secret key.
+
+#### Run the Docker container with the license key and admin secret env var
+
+```yaml {4-5}
+graphql-engine:
+  image: hasura/graphql-engine:v2.12.0-beta.1
+  environment:
+    HASURA_GRAPHQL_EE_LICENSE_KEY: ""
+    HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+  ...
+```
+
+:::info Note
+
+The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+information on setting up authentication.
+
+:::
+
+### Step 3: Run Hasura GraphQL engine
+
+The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
+
+```bash
+docker-compose up -d
+```
+
+Check if the containers are running:
+
+```bash
+docker ps
+
+CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
+097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
+b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
+```
+
+### Step 4 (optional): Use your PostgreSQL and Redis instances
+
+The Hasura EE Docker compose files come with containerized open-source versions of PostgreSQL and Redis. Note that these
+are not managed by Hasura.
+
+We highly recommend using managed PostgreSQL and Redis instances in production.
+
+To switch to using your PostgreSQL or Redis instances, set the following environment variables:
+
+```yaml {4-6}
+graphql-engine:
+  image: hasura/graphql-engine:v2.12.0-beta.1
+  environment:
+    HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+    HASURA_GRAPHQL_REDIS_URL: "redis://redis:6379"
+    HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: "redis://redis:6379"
+  ...
+```
+
+### Step 5: Start using Hasura
+
+Congratulations! You have successfully set up Hasura EE on Docker.
+[Start using Hasura EE now](/start-using-hasura-ee.mdx).
+
+## Hasura GraphQL engine server logs {#docker-logs}
+
+You can check the logs of the Hasura GraphQL engine deployed using Docker by checking the logs of the GraphQL engine
+container:
+
+```bash
+docker ps
+
+CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
+097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
+b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
+
+
+docker logs 097f58433a2b
+
+{"timestamp":"2018-10-09T11:20:32.054+0000", "level":"info", "type":"http-log", "detail":{"status":200, "query_hash":"01640c6dd131826cff44308111ed40d7fbd1cbed", "http_version":"HTTP/1.1", "query_execution_time":3.0177627e-2, "request_id":null, "url":"/v1/graphql", "user":{"x-hasura-role":"admin"}, "ip":"127.0.0.1", "response_size":209329, "method":"POST", "detail":null}}
+...
+```
+
+**See:**
+
+- [Docker logs](https://docs.docker.com/config/containers/logging) for more details on logging in Docker.
+- [Hasura GraphQL engine logs](/deployment/logging.mdx) for more details on Hasura logs.
+
+## Updating Hasura GraphQL engine {#docker-update}
+
+This guide will help you update the Hasura GraphQL engine running with Docker. This guide assumes that you already have
+Hasura GraphQL engine running with Docker.
+
+### Step 1: Check the latest release version
+
+The current latest version is:
+
+<code>
+  hasura/graphql-engine:
+  <LatestRelease />
+</code>
+
+All the versions can be found [here](https://github.com/hasura/graphql-engine/releases).
+
+### Step 2: Update the Docker image
+
+In the `docker compose` command that you're running, update the image tag to this latest version.
+
+For example, if you had:
+
+```yaml
+graphql-engine:
+  image: hasura/graphql-engine:v2.9.0
+```
+
+you should change it to:
+
+<pre>
+  <code>
+    graphql-engine:
+    <br />
+    {'  '}image: hasura/graphql-engine:
+    <LatestRelease />
+  </code>
+</pre>
+
+:::info Note
+
+If you are downgrading to an older version of the GraphQL engine, you might need to downgrade your metadata catalogue
+version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx).
+
+:::

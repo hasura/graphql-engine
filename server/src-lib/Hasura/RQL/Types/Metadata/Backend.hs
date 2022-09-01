@@ -62,6 +62,7 @@ class
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
     (MonadIO m, MonadResolveSource m) =>
+    DataConnectorCapabilities ->
     Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->

@@ -16,7 +16,7 @@ export const useFindRelationship = ({
   return useQuery({
     queryKey: ['get_existing_relationship', dataSourceName, relationshipName],
     queryFn: async () => {
-      const metadata = await exportMetadata({ httpClient });
+      const { metadata } = await exportMetadata({ httpClient });
       const metadataSource = metadata.sources.find(
         source => source.name === dataSourceName
       );

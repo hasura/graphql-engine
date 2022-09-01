@@ -34,6 +34,11 @@ module Harness.Test.Schema
     mkObjectRelationshipName,
     mkArrayRelationshipName,
     getSchemaName,
+    trackFunction,
+    untrackFunction,
+    trackComputedField,
+    untrackComputedField,
+    runSQL,
   )
 where
 
@@ -127,6 +132,7 @@ data Column = Column
 data BackendScalarType = BackendScalarType
   { bstMysql :: Maybe Text,
     bstCitus :: Maybe Text,
+    bstCockroach :: Maybe Text,
     bstPostgres :: Maybe Text,
     bstBigQuery :: Maybe Text,
     bstMssql :: Maybe Text
@@ -140,6 +146,7 @@ defaultBackendScalarType =
   BackendScalarType
     { bstMysql = Nothing,
       bstCitus = Nothing,
+      bstCockroach = Nothing,
       bstMssql = Nothing,
       bstPostgres = Nothing,
       bstBigQuery = Nothing
@@ -189,6 +196,7 @@ formatBackendScalarValueType (Unquoted text) = text
 data BackendScalarValue = BackendScalarValue
   { bsvMysql :: Maybe BackendScalarValueType,
     bsvCitus :: Maybe BackendScalarValueType,
+    bsvCockroach :: Maybe BackendScalarValueType,
     bsvPostgres :: Maybe BackendScalarValueType,
     bsvBigQuery :: Maybe BackendScalarValueType,
     bsvMssql :: Maybe BackendScalarValueType
@@ -202,6 +210,7 @@ defaultBackendScalarValue =
   BackendScalarValue
     { bsvMysql = Nothing,
       bsvCitus = Nothing,
+      bsvCockroach = Nothing,
       bsvPostgres = Nothing,
       bsvBigQuery = Nothing,
       bsvMssql = Nothing
@@ -250,6 +259,7 @@ defaultSerialType =
       { bstMysql = Nothing,
         bstMssql = Just "INT IDENTITY(1,1)",
         bstCitus = Just "SERIAL",
+        bstCockroach = Just "SERIAL",
         bstPostgres = Just "SERIAL",
         bstBigQuery = Nothing
       }
@@ -298,6 +308,89 @@ args:
   table:
     schema: *schema
     name: *tableName
+|]
+
+trackFunction :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
+trackFunction backend source functionName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+      requestType = backendType <> "_track_function"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  function:
+    schema: *schema
+    name: *functionName
+  source: *source
+|]
+
+-- | Unified untrack function
+untrackFunction :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
+untrackFunction backend source functionName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+  let requestType = backendType <> "_untrack_function"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  function:
+    schema: *schema
+    name: *functionName
+|]
+
+trackComputedField ::
+  HasCallStack =>
+  BackendType ->
+  String ->
+  Table ->
+  String ->
+  String ->
+  TestEnvironment ->
+  IO ()
+trackComputedField backend source Table {tableName} functionName asFieldName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+      requestType = backendType <> "_add_computed_field"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  comment: null
+  table:
+    schema: *schema
+    name: *tableName
+  name: *asFieldName
+  definition:
+    function:
+      schema: *schema
+      name: *functionName
+    table_argument: null
+    session_argument: null
+|]
+
+-- | Unified untrack computed field
+untrackComputedField :: HasCallStack => BackendType -> String -> Table -> String -> TestEnvironment -> IO ()
+untrackComputedField backend source Table {tableName} fieldName testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+      schema = getSchemaName testEnvironment
+  let requestType = backendType <> "_drop_computed_field"
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    schema: *schema
+    name: *tableName
+  name: *fieldName
 |]
 
 -- | Helper to create the object relationship name
@@ -462,3 +555,21 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
       relationship: *objectRelationshipName
     |]
       )
+
+-- | Unified RunSQL
+runSQL :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
+runSQL backend source sql testEnvironment = do
+  let prefix = case backend of
+        Postgres -> ""
+        _ -> defaultBackendTypeString backend <> "_"
+      requestType = prefix <> "run_sql"
+  GraphqlEngine.postV2Query_
+    testEnvironment
+    [yaml|
+type: *requestType
+args:
+  source: *source
+  sql: *sql
+  cascade: false
+  read_only: false
+|]

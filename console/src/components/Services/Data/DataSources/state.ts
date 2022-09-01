@@ -12,6 +12,7 @@ import {
   GraphQLFieldCustomization,
   NamingConventionOptions,
 } from '../../../../metadata/types';
+import { isPostgresFlavour } from './utils';
 
 export const connectionTypes = {
   DATABASE_URL: 'DATABASE_URL',
@@ -157,7 +158,7 @@ export const connectDataSource = (
       currentState.dbType
     )
   ) {
-    if (currentState.dbType === 'postgres' || currentState.dbType === 'citus') {
+    if (isPostgresFlavour(currentState.dbType)) {
       connectionParams = currentState.connectionParamState;
     }
     databaseURL = makeConnectionStringFromConnectionParams({

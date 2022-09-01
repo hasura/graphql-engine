@@ -1,18 +1,19 @@
 module Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..)) where
 
-import Autodocodec (Autodocodec (Autodocodec), HasCodec (codec), object, optionalField, requiredField, (.=))
+import Autodocodec (Autodocodec (Autodocodec), HasCodec (codec), object, optionalField, requiredFieldWith, (.=))
 import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.OpenApi qualified as OpenApi
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray, PlaceholderObject)
 import Hasura.Metadata.DTO.Utils (versionField)
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata.Common (Sources, sourcesCodec)
 
 -- | Revision 3 of the Metadata export format. Note that values of the types,
 -- 'PlaceholderArray' and 'PlaceholderObject' are placeholders that will
 -- eventually be expanded to represent more detail.
 data MetadataV3 = MetadataV3
-  { metaV3Sources :: PlaceholderArray,
+  { metaV3Sources :: Sources,
     metaV3RemoteSchemas :: Maybe PlaceholderArray,
     metaV3QueryCollections :: Maybe PlaceholderArray,
     metaV3Allowlist :: Maybe PlaceholderArray,
@@ -40,7 +41,7 @@ instance HasCodec MetadataV3 where
     object "MetadataV3" $
       MetadataV3
         <$ versionField 3
-        <*> requiredField "sources" "configured databases" .= metaV3Sources
+        <*> requiredFieldWith "sources" sourcesCodec "configured databases" .= metaV3Sources
         <*> optionalField "remote_schemas" "merge remote GraphQL schemas and provide a unified GraphQL API" .= metaV3RemoteSchemas
         <*> optionalField "query_collections" "group queries using query collections" .= metaV3QueryCollections
         <*> optionalField "allowlist" "safe GraphQL operations - when allow lists are enabled only these operations are allowed" .= metaV3Allowlist

@@ -48,11 +48,11 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just _qpRequest,
-          dbsiAction = buildAction sourceName transformedSourceConfig queryPlan
+          dbsiAction = buildQueryAction sourceName transformedSourceConfig queryPlan
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir = do
-    DC.QueryPlan {..} <- DC.mkPlan _uiSession sourceConfig ir
+    queryPlan@DC.QueryPlan {..} <- DC.mkPlan _uiSession sourceConfig ir
     transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.object [])] Env.emptyEnvironment
     pure $
       mkAnyBackend @'DataConnector
@@ -60,7 +60,7 @@ instance BackendExecute 'DataConnector where
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = transformedSourceConfig,
             dbsiPreparedQuery = Just _qpRequest,
-            dbsiAction = pure . encJFromJValue . toExplainPlan fieldName $ _qpRequest
+            dbsiAction = buildExplainAction fieldName sourceName transformedSourceConfig queryPlan
           }
   mkDBMutationPlan _ _ _ _ _ =
     throw400 NotSupported "mkDBMutationPlan: not implemented for the Data Connector backend."
@@ -73,12 +73,8 @@ instance BackendExecute 'DataConnector where
   mkSubscriptionExplain _ =
     throw400 NotSupported "mkSubscriptionExplain: not implemented for the Data Connector backend."
 
-toExplainPlan :: GQL.RootFieldAlias -> IR.Q.QueryRequest -> ExplainPlan
-toExplainPlan fieldName queryRequest =
-  ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ queryRequest])
-
-buildAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> DC.QueryPlan -> AgentClientT m EncJSON
-buildAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
+buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> DC.QueryPlan -> AgentClientT m EncJSON
+buildQueryAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
   when (DC.queryHasRelations _qpRequest && isNothing (API.cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
@@ -86,3 +82,22 @@ buildAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
   queryResponse <- (genericClient // API._query) (toTxt sourceName) _scConfig apiQueryRequest
   reshapedResponse <- _qpResponseReshaper queryResponse
   pure . encJFromBuilder $ J.fromEncoding reshapedResponse
+
+-- Delegates the generation to the Agent's /explain endpoint if it has that capability,
+-- otherwise, returns the IR sent to the agent.
+buildExplainAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => GQL.RootFieldAlias -> RQL.SourceName -> SourceConfig -> DC.QueryPlan -> AgentClientT m EncJSON
+buildExplainAction fieldName sourceName SourceConfig {..} DC.QueryPlan {..} =
+  case API.cExplain _scCapabilities of
+    Nothing -> pure . encJFromJValue . toExplainPlan fieldName $ _qpRequest
+    Just API.ExplainCapabilities -> do
+      let apiQueryRequest = Witch.into @API.QueryRequest _qpRequest
+      explainResponse <- (genericClient // API._explain) (toTxt sourceName) _scConfig apiQueryRequest
+      pure . encJFromJValue $
+        ExplainPlan
+          fieldName
+          (Just (API._erQuery explainResponse))
+          (Just (API._erLines explainResponse))
+
+toExplainPlan :: GQL.RootFieldAlias -> IR.Q.QueryRequest -> ExplainPlan
+toExplainPlan fieldName queryRequest =
+  ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ queryRequest])

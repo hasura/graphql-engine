@@ -1,0 +1,189 @@
+---
+sidebar_label: Quickstart with Kubernetes
+description: Quickstart with Kubernetes for Hasura Enterprise Edition
+title: 'Quickstart with Kubernetes'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 3
+---
+
+import LatestRelease from '@site/src/components/LatestRelease';
+
+# Quickstart with Kubernetes
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Introduction
+
+This tutorial helps you set up Hasura Enterprise Edition on Kubernetes and connect it to your Postgres database.
+
+**This guide requires HGE versions `v2.12.0-beta.1` and above.** Installation instructions are below.
+
+## Deploying Hasura EE on Kubernetes
+
+### Prerequisites
+
+This tutorial assumes that the following prerequisites have been met:
+
+- A functioning Kubernetes cluster.
+- This tutorial uses a container image hosted on the public Docker hub, so your Kubernetes cluster must have internet
+  access.
+- You have a Postgres database for storing metadata and Redis for caching / rate limiting, preferably a managed service.
+- The latest version of [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) compatible with your cluster has been
+  installed and configured.
+
+### Step 1: Get the Kubernetes deployment and service files
+
+The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
+installation manifests required to deploy Hasura anywhere. Get the Kubernetes deployment and service files from there:
+
+```bash
+wget https://raw.githubusercontent.com/hasura/graphql-engine/beta/install-manifests/enterprise/kubernetes/deployment.yaml
+```
+
+### Step 2: Set the license key, metadata database URL, Redis database URL and the admin secret
+
+Edit `deployment.yaml` and set the right values:
+
+```yaml {4,6,8,10,12}
+---
+env:
+  - name: HASURA_GRAPHQL_EE_LICENSE_KEY
+    value: ''
+  - name: HASURA_GRAPHQL_METADATA_DATABASE_URL
+    value: postgres://<username>:<password>@hostname:<port>/<dbname>
+  - name: HASURA_GRAPHQL_REDIS_URL
+    value: redis://redis:6379
+  - name: HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL
+    value: redis://redis:6379
+  - name: HASURA_GRAPHQL_ADMIN_SECRET
+    value: adminsecret
+```
+
+Examples of `HASURA_GRAPHQL_METADATA_DATABASE_URL`:
+
+- `postgres://admin:password@postgres:5432/my_db`
+- `postgres://admin:@postgres:5432/my_db` _(if there is no password)_
+
+Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`:
+
+- `redis://admin:password@redis:6379`
+- `redis://redis:6379` _(if there is no password)_
+
+:::info Note
+
+- If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
+  `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var (e.g. %40 for @).
+
+  You can check the [logs](#kubernetes-logs) to see if the database credentials are proper and if Hasura is able to
+  connect to the database.
+
+- The Hasura GraphQL engine needs access permissions on your Postgres database as described in
+  [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
+
+- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+  the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+  information on setting up authentication.
+
+- Move confidential environment variables such as Postgres / Redis URLs, admin / metrics secrets to fetch from
+  kubernetes secrets / vault / your preferred approach.
+
+:::
+
+### Step 3: Create the Kubernetes deployment and service
+
+```bash
+kubectl create -f deployment.yaml
+```
+
+### Step 4: Open the Hasura console
+
+The above creates a LoadBalancer type service with port 80. So you should be able to access the console at the external
+IP.
+
+For example, using Docker-for-desktop on Mac:
+
+```bash
+kubectl get svc
+NAME         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+hasura       LoadBalancer   10.96.214.240   localhost     80:30303/TCP   4m
+kubernetes   ClusterIP      10.96.0.1       <none>        443/TCP        8m
+```
+
+Head to: `http://localhost` and the console should load!
+
+### Step 5: Start using Hasura
+
+Congratulations! You have successfully set up Hasura EE on Docker.
+[Start using Hasura EE now](/start-using-hasura-ee.mdx).
+
+## Hasura GraphQL engine server logs {#kubernetes-logs}
+
+You can check the logs of the Hasura GraphQL engine deployed on Kubernetes by checking the logs of the GraphQL engine
+service, i.e. `hasura`:
+
+```bash
+kubectl logs -f svc/hasura
+
+{"timestamp":"2018-10-09T11:20:32.054+0000", "level":"info", "type":"http-log", "detail":{"status":200, "query_hash":"01640c6dd131826cff44308111ed40d7fbd1cbed", "http_version":"HTTP/1.1", "query_execution_time":3.0177627e-2, "request_id":null, "url":"/v1/graphql", "user":{"x-hasura-role":"admin"}, "ip":"127.0.0.1", "response_size":209329, "method":"POST", "detail":null}}
+...
+```
+
+**See:**
+
+- [Kubernetes logs](https://kubernetes.io/docs/concepts/cluster-administration/logging) for more details on logging in
+  Kubernetes.
+- [Hasura GraphQL engine logs](/deployment/logging.mdx) for more details on Hasura logs.
+
+## Updating Hasura GraphQL engine {#kubernetes-update}
+
+This guide will help you update the Hasura GraphQL engine running on Kubernetes. This guide assumes that you already
+have the Hasura GraphQL engine running on Kubernetes.
+
+### Step 1: Check the latest release version
+
+The current latest version is:
+
+<code>
+  hasura/graphql-engine:
+  <LatestRelease />
+</code>
+
+All the versions can be found at [here](https://github.com/hasura/graphql-engine/releases).
+
+### Step 2: Update the container image
+
+In the `deployment.yaml` file, update the image tag to this latest version.
+
+For example, if you had:
+
+```yaml
+containers:
+  - image: hasura/graphql-engine:v1.0.0-alpha01
+```
+
+you should change it to:
+
+<pre>
+  <code>
+    containers:
+    <br />
+    {'  '}- image: hasura/graphql-engine:
+    <LatestRelease />
+  </code>
+</pre>
+
+### Step 3: Roll out the change
+
+```bash
+kubectl replace -f deployment.yaml
+```
+
+:::info Note
+
+If you are downgrading to an older version of the GraphQL engine, you might need to downgrade your metadata catalogue
+version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx).
+
+:::

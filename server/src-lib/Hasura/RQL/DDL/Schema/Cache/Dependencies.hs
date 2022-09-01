@@ -238,6 +238,7 @@ deleteMetadataObject = \case
         _boAllowlist = removeFromAllowList lq _boAllowlist,
         _boQueryCollections = removeFromQueryCollections cName lq _boQueryCollections
       }
+  MODataConnectorAgent agentName -> boDataConnectorCapabilities %~ DataConnectorCapabilities . M.delete agentName . unDataConnectorCapabilities
   where
     removeHostFromAllowList hst bo =
       bo

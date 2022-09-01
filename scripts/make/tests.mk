@@ -23,6 +23,18 @@ test-citus: spawn-postgres spawn-citus wait-for-postgres wait-for-citus remove-t
 	$(call stop_after, \
 		cabal run tests-hspec -- -m 'Citus')
 
+.PHONY: test-data-connectors
+## test-data-connectors: run tests for Data Connectors
+test-data-connectors: start-postgres start-dc-reference-agent remove-tix-file
+	$(call stop_after, \
+		cabal run tests-hspec -- -m 'DataConnector')
+
+.PHONY: test-cockroach
+## test-cockroach: run tests for Cockroach backend
+test-cockroach: spawn-postgres spawn-cockroach wait-for-postgres wait-for-cockroach remove-tix-file
+	$(call stop_after, \
+		cabal run tests-hspec -- -m 'Cockroach')
+
 .PHONY: test-backends
 ## test-backends: run tests for all backends
 # BigQuery tests will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/tests-hspec#required-setup-for-bigquery-tests

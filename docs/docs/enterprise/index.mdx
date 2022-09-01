@@ -9,15 +9,27 @@ keywords:
 slug: index
 ---
 
-import HeadingIcon from '@site/src/components/HeadingIcon';
-
 # Hasura Enterprise
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
 
-## Topics
+## Introduction
 
-- [Introduction](/enterprise/introduction.mdx)
-- [Control Plane](/enterprise/control-plane/index.mdx)
-- [Manage Migrations](/enterprise/data-plane/index.mdx)
-- [Glossary](/glossary.mdx)
+Hasura Enterprise Edition (EE) has built-in enterprise features for running Hasura in production. These features have
+key capabilities for observability, security and performance.
+
+## Features
+
+Hasura EE capabilities include all the features of the Hasura Open Source Community Edition plus:
+
+- **Performance**
+  - [Caching](/enterprise/caching.mdx)
+  - [Read Replicas](/databases/connect-db/read-replicas.mdx)
+- **Security**
+  - [API Limiting](/security/api-limits.mdx)
+- **Observability**
+  - [Logs](/deployment/logging.mdx)
+  - [Metrics via Prometheus](/enterprise/metrics.mdx)
+
+Hasura EE also has additional capabilities for SSO, tracing, and APM integrations. If you'd like to learn more, please
+[contact us](mailto:sales@hasura.io).

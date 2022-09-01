@@ -6,6 +6,7 @@ module Harness.Backend.DataConnector.MockAgent
   )
 where
 
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as HMap
 import Data.IORef qualified as I
 import Data.OpenApi qualified as OpenApi
@@ -37,7 +38,8 @@ capabilities =
             API.cSubscriptions = Nothing,
             API.cFiltering = Nothing,
             API.cRelationships = Just API.RelationshipCapabilities {},
-            API.cMetrics = Just API.MetricsCapabilities {}
+            API.cMetrics = Just API.MetricsCapabilities {},
+            API.cExplain = Just API.ExplainCapabilities {}
           },
       crConfigSchemaResponse =
         API.ConfigSchemaResponse
@@ -82,7 +84,8 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "ArtistId"],
-              API.dtiDescription = Just "Collection of artists of music"
+              API.dtiDescription = Just "Collection of artists of music",
+              API.dtiForeignKeys = Nothing
             },
           API.TableInfo
             { API.dtiName = mkTableName "Album",
@@ -107,7 +110,11 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "AlbumId"],
-              API.dtiDescription = Just "Collection of music albums created by artists"
+              API.dtiDescription = Just "Collection of music albums created by artists",
+              API.dtiForeignKeys =
+                Just $
+                  API.ForeignKeys $
+                    HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton "ArtistId" "ArtistId"))
             },
           API.TableInfo
             { API.dtiName = mkTableName "Customer",
@@ -192,7 +199,11 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "CustomerId"],
-              API.dtiDescription = Just "Collection of customers who can buy tracks"
+              API.dtiDescription = Just "Collection of customers who can buy tracks",
+              API.dtiForeignKeys =
+                Just $
+                  API.ForeignKeys $
+                    HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton "SupportRepId" "EmployeeId"))
             },
           API.TableInfo
             { API.dtiName = mkTableName "Employee",
@@ -289,7 +300,11 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "EmployeeId"],
-              API.dtiDescription = Just "Collection of employees who work for the business"
+              API.dtiDescription = Just "Collection of employees who work for the business",
+              API.dtiForeignKeys =
+                Just $
+                  API.ForeignKeys $
+                    HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton "ReportsTo" "EmployeeId"))
             },
           API.TableInfo
             { API.dtiName = mkTableName "Genre",
@@ -308,7 +323,8 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "GenreId"],
-              API.dtiDescription = Just "Genres of music"
+              API.dtiDescription = Just "Genres of music",
+              API.dtiForeignKeys = Nothing
             },
           API.TableInfo
             { API.dtiName = mkTableName "Invoice",
@@ -369,7 +385,12 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "InvoiceId"],
-              API.dtiDescription = Just "Collection of invoices of music purchases by a customer"
+              API.dtiDescription = Just "Collection of invoices of music purchases by a customer",
+              API.dtiForeignKeys =
+                Just $
+                  API.ForeignKeys $
+                    HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
+                      API.Constraint (mkTableName "Customer") (HashMap.singleton "CustomerId" "CustomerId")
             },
           API.TableInfo
             { API.dtiName = mkTableName "InvoiceLine",
@@ -406,7 +427,14 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "InvoiceLineId"],
-              API.dtiDescription = Just "Collection of track purchasing line items of invoices"
+              API.dtiDescription = Just "Collection of track purchasing line items of invoices",
+              API.dtiForeignKeys =
+                Just $
+                  API.ForeignKeys $
+                    HashMap.fromList
+                      [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton "InvoiceId" "InvoiceId")),
+                        (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton "TrackId" "TrackId"))
+                      ]
             },
           API.TableInfo
             { API.dtiName = mkTableName "MediaType",
@@ -425,7 +453,8 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "MediaTypeId"],
-              API.dtiDescription = Just "Collection of media types that tracks can be encoded in"
+              API.dtiDescription = Just "Collection of media types that tracks can be encoded in",
+              API.dtiForeignKeys = Nothing
             },
           API.TableInfo
             { API.dtiName = mkTableName "Track",
@@ -486,7 +515,15 @@ schema =
                     }
                 ],
               API.dtiPrimaryKey = Just [API.ColumnName "TrackId"],
-              API.dtiDescription = Just "Collection of music tracks"
+              API.dtiDescription = Just "Collection of music tracks",
+              API.dtiForeignKeys =
+                Just $
+                  API.ForeignKeys $
+                    HashMap.fromList
+                      [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton "AlbumId" "AlbumId")),
+                        (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton "GenreId" "GenreId")),
+                        (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton "MediaTypeId" "MediaTypeId"))
+                      ]
             }
         ]
     }
@@ -520,6 +557,10 @@ mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ 
   I.writeIORef mQueryCfg (Just queryConfig)
   pure $ handler query
 
+-- Returns an empty explain response for now
+explainHandler :: API.SourceName -> API.Config -> API.QueryRequest -> Handler API.ExplainResponse
+explainHandler _sourceName _queryConfig _query = pure $ API.ExplainResponse [] ""
+
 healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
 healthcheckHandler _sourceName _config = pure NoContent
 
@@ -531,6 +572,7 @@ dcMockableServer mcfg mquery mQueryConfig =
   mockCapabilitiesHandler mcfg
     :<|> mockSchemaHandler mcfg mQueryConfig
     :<|> mockQueryHandler mcfg mquery mQueryConfig
+    :<|> explainHandler
     :<|> healthcheckHandler
     :<|> metricsHandler
 

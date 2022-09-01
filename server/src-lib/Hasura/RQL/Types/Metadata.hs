@@ -169,13 +169,13 @@ instance FromJSON Metadata where
         network
         backendConfigs
     where
-      parseSourceMetadata :: Value -> Parser (AB.AnyBackend SourceMetadata)
+      parseSourceMetadata :: Value -> Parser BackendSourceMetadata
       parseSourceMetadata = withObject "SourceMetadata" \o -> do
         backendSourceKind <- explicitParseFieldMaybe AB.parseBackendSourceKindFromJSON o "kind" .!= AB.mkAnyBackend PostgresVanillaKind
         AB.dispatchAnyBackend @Backend
           backendSourceKind
           ( \(kind :: BackendSourceKind b) ->
-              AB.mkAnyBackend @b <$> parseJSONWithContext kind (Object o)
+              BackendSourceMetadata . AB.mkAnyBackend @b <$> parseJSONWithContext kind (Object o)
           )
 
 emptyMetadata :: Metadata
@@ -443,7 +443,7 @@ metadataToDTO
       backendConfigs
     ) =
     MetadataV3
-      { metaV3Sources = placeholder $ sourcesToOrdJSONList sources,
+      { metaV3Sources = sources,
         metaV3RemoteSchemas = placeholder <$> remoteSchemasToOrdJSONList remoteSchemas,
         metaV3QueryCollections = placeholder <$> queryCollectionsToOrdJSONList queryCollections,
         metaV3Allowlist = placeholder <$> allowlistToOrdJSONList allowlist,

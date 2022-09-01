@@ -6,10 +6,12 @@ module Data.Text.NonEmpty
     mkNonEmptyText,
     unNonEmptyText,
     nonEmptyText,
+    nonEmptyTextCodec,
     nonEmptyTextQQ,
   )
 where
 
+import Autodocodec (HasCodec (codec), JSONCodec, bimapCodec, textCodec)
 import Data.Aeson
 import Data.Text qualified as T
 import Data.Text.Extended
@@ -38,6 +40,12 @@ parseNonEmptyText text = mkNonEmptyText text `onNothing` fail "empty string not 
 nonEmptyText :: Text -> Q (TExp NonEmptyText)
 nonEmptyText = parseNonEmptyText >=> \text -> [||text||]
 
+nonEmptyTextCodec :: JSONCodec NonEmptyText
+nonEmptyTextCodec = bimapCodec dec enc textCodec
+  where
+    dec = maybeToEither "empty string not allowed" . parseNonEmptyText
+    enc = unNonEmptyText
+
 -- | Construct 'NonEmptyText' literals at compile-time via quasiquotation.
 nonEmptyTextQQ :: QuasiQuoter
 nonEmptyTextQQ =
@@ -60,3 +68,6 @@ instance Q.FromCol NonEmptyText where
   fromCol bs =
     mkNonEmptyText <$> Q.fromCol bs
       >>= maybe (Left "empty string not allowed") Right
+
+instance HasCodec NonEmptyText where
+  codec = nonEmptyTextCodec

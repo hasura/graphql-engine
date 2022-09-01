@@ -383,6 +383,7 @@ library dc-api
                      , Hasura.Backends.DataConnector.API.V0.Expression
                      , Hasura.Backends.DataConnector.API.V0.OrderBy
                      , Hasura.Backends.DataConnector.API.V0.Query
+                     , Hasura.Backends.DataConnector.API.V0.Explain
                      , Hasura.Backends.DataConnector.API.V0.Relationships
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Type
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Value
@@ -408,6 +409,7 @@ library
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.Multi
                      , Data.HashMap.Strict.NonEmpty
+                     , Data.HashMap.Strict.InsOrd.Autodocodec
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.List.Extended
                      , Data.Parser.CacheControl
@@ -1076,6 +1078,7 @@ test-suite graphql-engine-tests
     Hasura.Server.MigrateSuite
     Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec
+    Hasura.Server.VersionSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
     Hasura.SessionSpec
@@ -1105,6 +1108,7 @@ test-suite tests-hspec
     , Spock-core
     , aeson
     , aeson-casing
+    , aeson-pretty
     , aeson-qq
     , async
     , base
@@ -1218,6 +1222,7 @@ test-suite tests-hspec
  -- Harness.Backend
     Harness.Backend.BigQuery
     Harness.Backend.Citus
+    Harness.Backend.Cockroach
     Harness.Backend.DataConnector
     Harness.Backend.DataConnector.MockAgent
     Harness.Backend.Mysql
@@ -1246,6 +1251,7 @@ test-suite tests-hspec
     Test.BigQuery.Schema.RunSQLSpec
     Test.BigQuery.TypeInterpretationSpec
     Test.DataConnector.AggregateQuerySpec
+    Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
@@ -1259,12 +1265,14 @@ test-suite tests-hspec
     Test.DisableRootFields.SelectPermission.EnableAggSpec
     Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.EventTrigger.EventTriggerDropSourceCleanupSpec
-    Test.EventTrigger.EventTriggersExtensionSchemaSpec
-    Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec
-    Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
-    Test.EventTrigger.EventTriggersRecreationSpec
-    Test.EventTrigger.EventTriggersRunSQLSpec
+    Test.EventTrigger.PG.EventTriggersRecreationSpec
+    Test.EventTrigger.PG.EventTriggersRunSQLSpec
+    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
+    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
+    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
+    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
@@ -1287,11 +1295,13 @@ test-suite tests-hspec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
+    Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
+    Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
@@ -1368,6 +1378,7 @@ test-suite tests-dc-api
     , Test.Expectations
     , Test.HealthSpec
     , Test.MetricsSpec
+    , Test.ExplainSpec
     , Test.QuerySpec
     , Test.QuerySpec.AggregatesSpec
     , Test.QuerySpec.BasicSpec

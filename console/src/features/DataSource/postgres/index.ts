@@ -10,6 +10,11 @@ export type PostgresTable = { name: string; schema: string };
 
 export const postgres: Database = {
   introspection: {
+    getDriverInfo: async () => ({
+      name: 'postgres',
+      displayName: 'Postgres',
+      release: 'GA',
+    }),
     getDatabaseConfiguration,
     getTrackableTables,
     getDatabaseHierarchy: async () => {

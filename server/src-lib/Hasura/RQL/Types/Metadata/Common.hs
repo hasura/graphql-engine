@@ -8,7 +8,7 @@
 module Hasura.RQL.Types.Metadata.Common
   ( Actions,
     BackendConfigWrapper (..),
-    BackendSourceMetadata,
+    BackendSourceMetadata (..),
     CatalogState (..),
     CatalogStateType (..),
     ComputedFieldMetadata (..),
@@ -33,6 +33,7 @@ module Hasura.RQL.Types.Metadata.Common
     Sources,
     TableMetadata (..),
     Tables,
+    backendSourceMetadataCodec,
     fmComment,
     fmConfiguration,
     fmFunction,
@@ -58,6 +59,7 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
+    sourcesCodec,
     tmArrayRelationships,
     tmComputedFields,
     tmConfiguration,
@@ -75,18 +77,23 @@ module Hasura.RQL.Types.Metadata.Common
   )
 where
 
+import Autodocodec hiding (object, (.=))
+import Autodocodec qualified as AC
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended (FromJSONWithContext (..))
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.Aeson.Types
+import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec, sortedElemsCodecWith)
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
+import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -111,6 +118,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.SQL.Tag (BackendTag, HasTag (backendTag), reify)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -264,6 +272,13 @@ instance (Backend b) => Cacheable (TableMetadata b)
 instance (Backend b) => ToJSON (TableMetadata b) where
   toJSON = genericToJSON hasuraJSON
 
+-- TODO: Write a proper codec for 'TableMetadata'
+instance (Backend b) => HasCodec (TableMetadata b) where
+  codec = named (codecNamePrefix @b <> "TableMetadata") placeholderCodecViaJSON
+
+codecNamePrefix :: forall b. (HasTag b) => Text
+codecNamePrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b
+
 $(makeLenses ''TableMetadata)
 
 mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
@@ -367,6 +382,10 @@ instance (Backend b) => FromJSON (FunctionMetadata b) where
       <*> o .:? "permissions" .!= []
       <*> o .:? "comment"
 
+-- TODO: Write a proper codec for 'FunctionMetadata'
+instance (Backend b) => HasCodec (FunctionMetadata b) where
+  codec = named (codecNamePrefix @b <> "FunctionMetadata") $ placeholderCodecViaJSON
+
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
@@ -381,6 +400,7 @@ type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
 
 type InheritedRoles = InsOrdHashMap RoleName InheritedRole
 
+-- | Source configuration for a source of backend type @b@ as stored in the Metadata DB.
 data SourceMetadata b = SourceMetadata
   { _smName :: SourceName,
     _smKind :: BackendSourceKind b,
@@ -410,6 +430,60 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
     pure SourceMetadata {..}
 
+backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
+backendSourceMetadataCodec =
+  named "SourceMetadata" $
+    -- Attempt to match against @SourceMetadata@ codecs for each native backend
+    -- type. If none match then apply the @SourceMetadata DataConnector@ codec.
+    -- DataConnector is the fallback case because the possible values for its
+    -- @_smKind@ property are not statically-known so it is difficult to
+    -- unambiguously distinguish a native source value from a dataconnector
+    -- source.
+    disjointMatchChoicesCodec
+      (matcherWithBackendCodec <$> filter (/= DataConnector) supportedBackends) -- list of codecs to try
+      (mkCodec (backendTag @('DataConnector))) -- codec for fallback case
+  where
+    matcherWithBackendCodec :: BackendType -> (BackendSourceMetadata -> Maybe BackendSourceMetadata, JSONCodec BackendSourceMetadata)
+    matcherWithBackendCodec backendType =
+      (matches backendType, AB.dispatchAnyBackend @Backend (AB.liftTag backendType) mkCodec)
+
+    mkCodec :: forall b. Backend b => (BackendTag b) -> JSONCodec BackendSourceMetadata
+    mkCodec _ = anySourceMetadataCodec $ codec @(SourceMetadata b)
+
+    matches :: BackendType -> BackendSourceMetadata -> Maybe BackendSourceMetadata
+    matches backendType input =
+      if runBackendType input == backendType
+        then Just input
+        else Nothing
+
+    runBackendType :: BackendSourceMetadata -> BackendType
+    runBackendType (BackendSourceMetadata input) = AB.runBackend input \sourceMeta ->
+      backendTypeFromBackendSourceKind $ _smKind sourceMeta
+
+anySourceMetadataCodec :: (HasTag b) => JSONCodec (SourceMetadata b) -> JSONCodec BackendSourceMetadata
+anySourceMetadataCodec = dimapCodec dec enc
+  where
+    dec :: HasTag b => SourceMetadata b -> BackendSourceMetadata
+    dec = BackendSourceMetadata . AB.mkAnyBackend
+
+    -- This encoding function is partial, but that should be ok.
+    enc :: HasTag b => BackendSourceMetadata -> SourceMetadata b
+    enc input = fromJust $ AB.unpackAnyBackend $ unBackendSourceMetadata input
+
+instance Backend b => HasCodec (SourceMetadata b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "SourceMetadata") $
+      SourceMetadata
+        <$> requiredField' "name" .== _smName
+        <*> requiredField' "kind" .== _smKind
+        <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable) .== _smTables
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) (OM.fromList []) .== _smFunctions
+        <*> requiredField' "configuration" .== _smConfiguration
+        <*> optionalFieldOrNullWith' "query_tags" placeholderCodecViaJSON .== _smQueryTags -- TODO: replace placeholder
+        <*> optionalFieldOrNullWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
+    where
+      (.==) = (AC..=)
+
 mkSourceMetadata ::
   forall (b :: BackendType).
   Backend b =>
@@ -419,26 +493,32 @@ mkSourceMetadata ::
   SourceCustomization ->
   BackendSourceMetadata
 mkSourceMetadata name backendSourceKind config customization =
-  AB.mkAnyBackend $
-    SourceMetadata
-      @b
-      name
-      backendSourceKind
-      mempty
-      mempty
-      config
-      Nothing
-      customization
+  BackendSourceMetadata $
+    AB.mkAnyBackend $
+      SourceMetadata
+        @b
+        name
+        backendSourceKind
+        mempty
+        mempty
+        config
+        Nothing
+        customization
 
-type BackendSourceMetadata = AB.AnyBackend SourceMetadata
+-- | Source configuration as stored in the Metadata DB for some existentialized backend.
+newtype BackendSourceMetadata = BackendSourceMetadata {unBackendSourceMetadata :: AB.AnyBackend SourceMetadata}
+  deriving newtype (Eq, Show)
 
 toSourceMetadata :: forall b. (Backend b) => Prism' BackendSourceMetadata (SourceMetadata b)
-toSourceMetadata = prism' AB.mkAnyBackend AB.unpackAnyBackend
+toSourceMetadata = prism' (BackendSourceMetadata . AB.mkAnyBackend) (AB.unpackAnyBackend . unBackendSourceMetadata)
 
 getSourceName :: BackendSourceMetadata -> SourceName
-getSourceName e = AB.dispatchAnyBackend @Backend e _smName
+getSourceName e = AB.dispatchAnyBackend @Backend (unBackendSourceMetadata e) _smName
 
 type Sources = InsOrdHashMap SourceName BackendSourceMetadata
+
+sourcesCodec :: AC.JSONCodec Sources
+sourcesCodec = sortedElemsCodecWith backendSourceMetadataCodec getSourceName
 
 parseNonSourcesMetadata ::
   Object ->

@@ -11,6 +11,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     ComparisonOperators (..),
     RelationshipCapabilities (..),
     MetricsCapabilities (..),
+    ExplainCapabilities (..),
     CapabilitiesResponse (..),
     emptyCapabilities,
   )
@@ -37,14 +38,15 @@ data Capabilities = Capabilities
     cSubscriptions :: Maybe SubscriptionCapabilities,
     cFiltering :: Maybe FilteringCapabilities,
     cRelationships :: Maybe RelationshipCapabilities,
-    cMetrics :: Maybe MetricsCapabilities
+    cMetrics :: Maybe MetricsCapabilities,
+    cExplain :: Maybe ExplainCapabilities
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 emptyCapabilities :: Capabilities
-emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing
+emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -56,6 +58,7 @@ instance HasCodec Capabilities where
         <*> optionalField "filtering" "The agent's filtering capabilities" .= cFiltering
         <*> optionalField "relationships" "The agent's relationship capabilities" .= cRelationships
         <*> optionalField "metrics" "The agent's metrics capabilities" .= cMetrics
+        <*> optionalField "explain" "The agent's explain capabilities" .= cExplain
 
 data QueryCapabilities = QueryCapabilities
   { qcSupportsPrimaryKeys :: Bool
@@ -102,6 +105,15 @@ data MetricsCapabilities = MetricsCapabilities {}
 instance HasCodec MetricsCapabilities where
   codec =
     object "MetricsCapabilities" $ pure MetricsCapabilities
+
+data ExplainCapabilities = ExplainCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ExplainCapabilities
+
+instance HasCodec ExplainCapabilities where
+  codec =
+    object "ExplainCapabilities" $ pure ExplainCapabilities
 
 data FilteringCapabilities = FilteringCapabilities
   { fcBooleanOperators :: BooleanOperators,

@@ -1,3 +1,4 @@
+import { Driver } from '@/dataSources';
 import { NetworkArgs } from './api';
 import { RemoteField } from '../RemoteRelationships';
 
@@ -5,13 +6,31 @@ export type Ref = { $ref: string };
 
 export type OneOf = { oneOf: (Property | Ref)[]; description?: string };
 
+export const isFreeFormObjectField = (
+  property: Property & { type: 'object' }
+): property is Property & {
+  type: 'object';
+  additionalProperties: true;
+} => {
+  if (!('additionalProperties' in property)) return false;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const additionalProperties = property.additionalProperties;
+
+  return true;
+};
+
 export type Property = {
   description?: string;
-  nullable: boolean;
+  nullable?: boolean;
 } & (
   | {
       type: 'object';
       properties: Record<string, Ref | Property | OneOf>;
+    }
+  | {
+      type: 'object';
+      additionalProperties: true;
     }
   | {
       type: 'string';
@@ -23,14 +42,30 @@ export type Property = {
   | {
       type: 'boolean';
     }
+  | {
+      type: 'array';
+      items:
+        | { type: 'string' | 'number' }
+        | {
+            type: 'object';
+            properties: Record<string, Ref | Property | OneOf>;
+          }
+        | {
+            type: 'object';
+            additionalProperties: true;
+            nullable?: boolean;
+          }
+        | Ref;
+    }
 );
 
-// export type supportedDrivers = 'postgres' | 'mssql' | 'bigquery' | 'citus';
+// export type supportedDrivers = 'postgres' | 'mssql' | 'bigquery' | 'citus' | 'cockroach' | 'gdc';
 export type SupportedDrivers =
   | 'postgres'
   | 'bigquery'
   | 'mssql'
   | 'citus'
+  | 'cockroach'
   | 'gdc';
 
 export type RemoteDBRelationship = {
@@ -211,23 +246,19 @@ export type Source = {
 };
 
 export type Metadata = {
-  version: number;
-  sources: Source[];
-};
-
-type SqlTable = {
-  name: string;
-  schema: string;
-};
-
-type BigQueryTable = {
-  name: string;
-  dataset: string;
+  resource_version: number;
+  metadata: {
+    version: number;
+    sources: Source[];
+    backend_configs?: {
+      dataconnector: Record<string, { uri: string }>;
+    };
+  };
 };
 
 export type IntrospectedTable = {
   name: string;
-  table: SqlTable | BigQueryTable;
+  table: Table;
   type: string;
 };
 
@@ -266,6 +297,14 @@ export type TableFkRelationships = {
     table: string;
     column: string[];
   };
+};
+
+type ReleaseType = 'GA' | 'Beta';
+
+export type DriverInfoResponse = {
+  name: Driver;
+  displayName: string;
+  release: ReleaseType;
 };
 
 export { NetworkArgs };

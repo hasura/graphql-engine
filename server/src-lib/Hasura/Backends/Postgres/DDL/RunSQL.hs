@@ -22,12 +22,15 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
+import Data.List (nub)
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.DDL.EventTrigger
 import Hasura.Backends.Postgres.DDL.Source
-  ( ToMetadataFetchQuery,
+  ( FetchFunctionMetadata,
+    FetchTableMetadata,
+    ToMetadataFetchQuery,
     fetchFunctionMetadata,
     fetchTableMetadata,
   )
@@ -140,14 +143,20 @@ the metadata check as well. -}
 -- | Fetch metadata of tracked tables/functions and build @'TableMeta'/@'FunctionMeta'
 -- to calculate diff later in @'withMetadataCheck'.
 fetchTablesFunctionsMetadata ::
-  (ToMetadataFetchQuery pgKind, BackendMetadata ('Postgres pgKind), MonadTx m) =>
+  forall pgKind m.
+  ( ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
+    BackendMetadata ('Postgres pgKind),
+    MonadTx m
+  ) =>
   TableCache ('Postgres pgKind) ->
   [TableName ('Postgres pgKind)] ->
   [FunctionName ('Postgres pgKind)] ->
   m ([TableMeta ('Postgres pgKind)], [FunctionMeta ('Postgres pgKind)])
 fetchTablesFunctionsMetadata tableCache tables functions = do
   tableMetaInfos <- fetchTableMetadata tables
-  functionMetaInfos <- fetchFunctionMetadata functions
+  functionMetaInfos <- fetchFunctionMetadata @pgKind functions
   pure (buildTableMeta tableMetaInfos functionMetaInfos, buildFunctionMeta functionMetaInfos)
   where
     buildTableMeta tableMetaInfos functionMetaInfos =
@@ -172,6 +181,8 @@ runRunSQL ::
   forall (pgKind :: PostgresKind) m.
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
     CacheRWM m,
     HasServerConfigCtx m,
     MetadataM m,
@@ -213,6 +224,8 @@ withMetadataCheck ::
   forall (pgKind :: PostgresKind) a m.
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
     CacheRWM m,
     HasServerConfigCtx m,
     MetadataM m,
@@ -263,6 +276,8 @@ runTxWithMetadataCheck ::
   forall m a (pgKind :: PostgresKind).
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
     CacheRWM m,
     MonadIO m,
     MonadBaseControl IO m,
@@ -285,7 +300,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
         -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.
         let tableNames = M.keys tableCache
             computedFieldFunctions = concatMap getComputedFieldFunctions (M.elems tableCache)
-            functionNames = M.keys functionCache <> computedFieldFunctions
+            functionNames = nub $ M.keys functionCache <> computedFieldFunctions
         (preTxTablesMeta, preTxFunctionsMeta) <- fetchTablesFunctionsMetadata tableCache tableNames functionNames
 
         -- Since the @'tx' may alter table/function names we use the OIDs of underlying tables

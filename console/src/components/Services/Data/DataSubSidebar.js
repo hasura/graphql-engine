@@ -286,7 +286,7 @@ const DataSubSidebar = props => {
             databaseLoading ||
             sidebarLoadingState ||
             isFetching ? (
-              <div className={styles.inline_display}>
+              <div className={styles.inline_display} id="spinner">
                 <Spinner className={styles.spinner} />
               </div>
             ) : (

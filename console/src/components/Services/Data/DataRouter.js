@@ -33,6 +33,7 @@ import ConnectDatabase from './DataSources/ConnectDatabase';
 import { setDriver } from '../../../dataSources';
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { getSourcesFromMetadata } from '../../../metadata/selector';
+import { ManageContainer } from '@/features/Data';
 
 const makeDataRouter = (
   connect,
@@ -50,6 +51,10 @@ const makeDataRouter = (
         component={migrationsConnector(connect)}
       />
       <IndexRedirect to="manage" />
+
+      <Route path="v2">
+        <Route path="manage" component={ManageContainer} />
+      </Route>
 
       <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />

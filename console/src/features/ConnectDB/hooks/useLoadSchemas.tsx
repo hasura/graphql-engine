@@ -1,21 +1,7 @@
-import axios from 'axios';
 import { useQueries } from 'react-query';
-
+import { useHttpClient } from '@/features/Network';
 import { DataSource } from '@/features/DataSource';
 import { useDefaultValues } from './useDefaultValues';
-
-const fetch = axios.create();
-const dataSourceFetch = DataSource(fetch);
-
-const possibleFormSchemasQuery = {
-  queryKey: ['validation-schemas'],
-  queryFn: async () => dataSourceFetch.connectDB.getFormSchema(),
-};
-
-const availableDriversQuery = {
-  queryKey: ['getDrivers'],
-  queryFn: async () => dataSourceFetch.driver.getSupportedDrivers(),
-};
 
 interface Args {
   name: string;
@@ -23,7 +9,18 @@ interface Args {
 }
 
 export const useLoadSchema = ({ name, driver }: Args) => {
-  const results = useQueries([possibleFormSchemasQuery, availableDriversQuery]);
+  const httpClient = useHttpClient();
+  const results = useQueries([
+    {
+      queryKey: ['validation-schemas'],
+      queryFn: async () =>
+        DataSource(httpClient).connectDB.getFormSchema(driver),
+    },
+    {
+      queryKey: ['getDrivers'],
+      queryFn: async () => DataSource(httpClient).driver.getAllSourceKinds(),
+    },
+  ]);
 
   // get default values if existing connection info is passed in
   // it would be nice to do this as part of the useQueries array above

@@ -28,7 +28,7 @@ define run_ghcid_main_tests
 			--width=$(PANE_WIDTH) \
 			--height=$(PANE_HEIGHT); \
 	else \
-  	HSPEC_MATCH="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HSPEC_MATCH="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main" \
 			--setup ":set args $(2)"; \
 	fi
@@ -83,6 +83,11 @@ ghcid-test-mysql: start-postgres start-mysql remove-tix-file
 ## ghcid-test-citus: run tests for Citus backend in ghcid
 ghcid-test-citus: start-postgres start-citus remove-tix-file
 	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Citus)
+
+.PHONY: ghcid-test-data-connectors
+## ghcid-test-data-connectors: run tests for DataConnectors in ghcid
+ghcid-test-data-connectors: start-postgres start-dc-reference-agent remove-tix-file
+	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,DataConnector)
 
 .PHONY: ghcid-library-pro
 ## ghcid-library-pro: build and watch pro library in ghcid

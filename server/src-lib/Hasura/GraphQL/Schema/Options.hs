@@ -38,6 +38,18 @@ data DangerouslyCollapseBooleans
   | Don'tDangerouslyCollapseBooleans
   deriving (Eq, Show)
 
+instance FromJSON DangerouslyCollapseBooleans where
+  parseJSON =
+    withBool "DangerouslyCollapseBooleans" $
+      pure . \case
+        True -> DangerouslyCollapseBooleans
+        False -> Don'tDangerouslyCollapseBooleans
+
+instance ToJSON DangerouslyCollapseBooleans where
+  toJSON = \case
+    DangerouslyCollapseBooleans -> Bool True
+    Don'tDangerouslyCollapseBooleans -> Bool False
+
 -- | Should we infer function permissions? If this flag is set to
 -- 'InferFunctionPermissions', we may fail to build expression parsers
 -- in 'buildQueryAndSubscriptionFields' for users with unrecognised roles.

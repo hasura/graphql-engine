@@ -11,10 +11,10 @@ export type StaticData = {
   [tableName: string]: Record<string, string | number | boolean | null>[]
 }
 
-const streamToBuffer = async (stream : stream.Readable) : Promise<Buffer> => {
+const streamToBuffer = async (stream: stream.Readable): Promise<Buffer> => {
   const chunks = [];
   for await (const chunk of stream) {
-      chunks.push(Buffer.from(chunk));
+    chunks.push(Buffer.from(chunk));
   }
   return Buffer.concat(chunks);
 }
@@ -33,7 +33,7 @@ const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
 
 export const loadStaticData = async (): Promise<StaticData> => {
   const gzipReadStream = fs.createReadStream(__dirname + "/ChinookData.xml.gz");
-  const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => {});
+  const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => { });
   const xmlStr = (await streamToBuffer(unzipStream)).toString("utf16le");
   const xml = await xml2js.parseStringPromise(xmlStr, { explicitArray: false, emptyTag: () => null, valueProcessors: [parseNumbersInNumericColumns(schema)] });
   const data = xml.ChinookDataSet;
@@ -83,6 +83,14 @@ const schema: SchemaResponse = {
     {
       name: ["Album"],
       primary_key: ["AlbumId"],
+      foreign_keys: {
+        "Artist": {
+          column_mapping: {
+            "ArtistId": "ArtistId"
+          },
+          foreign_table: ["Artist"],
+        }
+      },
       description: "Collection of music albums created by artists",
       columns: [
         {
@@ -108,6 +116,14 @@ const schema: SchemaResponse = {
     {
       name: ["Customer"],
       primary_key: ["CustomerId"],
+      foreign_keys: {
+        "CustomerSupportRep": {
+          column_mapping: {
+            "SupportRepId": "EmployeeId"
+          },
+          foreign_table: ["Employee"],
+        }
+      },
       description: "Collection of customers who can buy tracks",
       columns: [
         {
@@ -193,6 +209,14 @@ const schema: SchemaResponse = {
     {
       name: ["Employee"],
       primary_key: ["EmployeeId"],
+      foreign_keys: {
+        "EmployeeReportsTo": {
+          column_mapping: {
+            "ReportsTo": "EmployeeId"
+          },
+          foreign_table: ["Employee"],
+        }
+      },
       description: "Collection of employees who work for the business",
       columns: [
         {
@@ -309,6 +333,14 @@ const schema: SchemaResponse = {
     {
       name: ["Invoice"],
       primary_key: ["InvoiceId"],
+      foreign_keys: {
+        "InvoiceCustomer": {
+          column_mapping: {
+            "CustomerId": "CustomerId"
+          },
+          foreign_table: ["Customer"],
+        }
+      },
       description: "Collection of invoices of music purchases by a customer",
       columns: [
         {
@@ -370,6 +402,20 @@ const schema: SchemaResponse = {
     {
       name: ["InvoiceLine"],
       primary_key: ["InvoiceLineId"],
+      foreign_keys: {
+        "Invoice": {
+          column_mapping: {
+            "InvoiceId": "InvoiceId"
+          },
+          foreign_table: ["Invoice"],
+        },
+        "Track": {
+          column_mapping: {
+            "TrackId": "TrackId"
+          },
+          foreign_table: ["Track"],
+        }
+      },
       description: "Collection of track purchasing line items of invoices",
       columns: [
         {
@@ -445,6 +491,20 @@ const schema: SchemaResponse = {
     {
       name: ["PlaylistTrack"],
       primary_key: ["PlaylistId", "TrackId"],
+      foreign_keys: {
+        "Playlist": {
+          column_mapping: {
+            "PlaylistId": "PlaylistId"
+          },
+          foreign_table: ["Playlist"],
+        },
+        "Track": {
+          column_mapping: {
+            "TrackId": "TrackId"
+          },
+          foreign_table: ["Track"],
+        }
+      },
       description: "Associations between playlists and tracks",
       columns: [
         {
@@ -464,6 +524,26 @@ const schema: SchemaResponse = {
     {
       name: ["Track"],
       primary_key: ["TrackId"],
+      foreign_keys: {
+        "Album": {
+          column_mapping: {
+            "AlbumId": "AlbumId"
+          },
+          foreign_table: ["Album"],
+        },
+        "Genre": {
+          column_mapping: {
+            "GenreId": "GenreId"
+          },
+          foreign_table: ["Genre"],
+        },
+        "MediaType": {
+          column_mapping: {
+            "MediaTypeId": "MediaTypeId"
+          },
+          foreign_table: ["MediaType"],
+        }
+      },
       description: "Collection of music tracks",
       columns: [
         {

@@ -17,7 +17,7 @@ module Hasura.RQL.DDL.Metadata
   )
 where
 
-import Control.Lens ((.~), (^.), (^?))
+import Control.Lens (to, (.~), (^.), (^?))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
@@ -36,7 +36,7 @@ import Data.List qualified as L
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
-import Data.Text.Extended ((<<>))
+import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as HL
@@ -77,6 +77,8 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend (BackendType (..))
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -96,7 +98,7 @@ runClearMetadata _ = do
   metadata <- getMetadata
   -- Clean up all sources, drop hdb_catalog schema from source
   for_ (OMap.toList $ _metaSources metadata) $ \(sourceName, backendSourceMetadata) ->
-    AB.dispatchAnyBackend @BackendMetadata backendSourceMetadata \(_sourceMetadata :: SourceMetadata b) -> do
+    AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata backendSourceMetadata) \(_sourceMetadata :: SourceMetadata b) -> do
       sourceInfo <- askSourceInfo @b sourceName
       -- We do not bother dropping all dependencies on the source, because the
       -- metadata is going to be replaced with an empty metadata. And dropping the
@@ -108,7 +110,7 @@ runClearMetadata _ = do
   -- We can infer whether the server is started with `--database-url` option
   -- (or corresponding env variable) by checking the existence of @'defaultSource'
   -- in current metadata.
-  let maybeDefaultSourceMetadata = metadata ^? metaSources . ix defaultSource
+  let maybeDefaultSourceMetadata = metadata ^? metaSources . ix defaultSource . to unBackendSourceMetadata
       emptyMetadata' = case maybeDefaultSourceMetadata of
         Nothing -> emptyMetadata
         Just exists ->
@@ -116,16 +118,17 @@ runClearMetadata _ = do
           -- which contains only default source without any tables and functions.
           let emptyDefaultSource =
                 AB.dispatchAnyBackend @Backend exists \(s :: SourceMetadata b) ->
-                  AB.mkAnyBackend @b $
-                    SourceMetadata
-                      @b
-                      defaultSource
-                      (_smKind @b s)
-                      mempty
-                      mempty
-                      (_smConfiguration @b s)
-                      Nothing
-                      emptySourceCustomization
+                  BackendSourceMetadata $
+                    AB.mkAnyBackend @b $
+                      SourceMetadata
+                        @b
+                        defaultSource
+                        (_smKind @b s)
+                        mempty
+                        mempty
+                        (_smConfiguration @b s)
+                        Nothing
+                        emptySourceCustomization
            in emptyMetadata
                 & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'
@@ -205,11 +208,12 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
         onNothing maybeDefaultSourceMetadata $
           throw400 NotSupported "cannot import metadata without sources since no default source is defined"
       let newDefaultSourceMetadata =
-            AB.mkAnyBackend
-              defaultSourceMetadata
-                { _smTables = _mnsTables,
-                  _smFunctions = _mnsFunctions
-                }
+            BackendSourceMetadata $
+              AB.mkAnyBackend
+                defaultSourceMetadata
+                  { _smTables = _mnsTables,
+                    _smFunctions = _mnsFunctions
+                  }
       pure $
         Metadata
           (OMap.singleton defaultSource newDefaultSourceMetadata)
@@ -227,6 +231,17 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           emptyNetwork
           mempty
   putMetadata metadata
+
+  -- Check for duplicate trigger names in the new source metadata
+  let oldSources = (_metaSources oldMetadata)
+  let newSources = (_metaSources metadata)
+  for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
+    onJust (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
+      dispatch newBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
+        let newTriggerNames = concatMap (OMap.keys . _tmEventTriggers) (OMap.elems $ _smTables newSourceMetadata)
+            duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (hashNub newTriggerNames)
+        unless (null duplicateTriggerNamesInNewMetadata) $ do
+          throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
 
   case _rmv2AllowInconsistentMetadata of
     AllowInconsistentMetadata ->
@@ -317,7 +332,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
       -- using `DROP IF EXISTS..` meaning this silently fails without throwing an error.
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
         onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
-          compose source newBackendSourceMetadata oldBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
+          compose source (unBackendSourceMetadata newBackendSourceMetadata) (unBackendSourceMetadata oldBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               let oldTriggersMap = getTriggersMap oldSourceMetadata
                   newTriggersMap = getTriggersMap newSourceMetadata
@@ -354,8 +369,6 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                         tableName <- getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName
                         dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (Set.fromList $ catMaybes droppedOps)
       where
-        dispatch = AB.dispatchAnyBackend @BackendEventTrigger
-
         compose ::
           SourceName ->
           AB.AnyBackend i ->
@@ -363,6 +376,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           (forall b. BackendEventTrigger b => i b -> i b -> m ()) ->
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ SB.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
+
+    dispatch (BackendSourceMetadata bs) = AB.dispatchAnyBackend @BackendEventTrigger bs
 
 -- | Only includes the cron triggers with `included_in_metadata` set to `True`
 processCronTriggersMetadata :: Metadata -> Metadata
@@ -496,6 +511,10 @@ purgeMetadataObj = \case
   MOInheritedRole role -> dropInheritedRoleInMetadata role
   MOHostTlsAllowlist host -> dropHostFromAllowList host
   MOQueryCollectionsQuery cName lq -> dropListedQueryFromQueryCollections cName lq
+  MODataConnectorAgent agentName ->
+    MetadataModifier $
+      metaBackendConfigs
+        %~ BackendMap.modify @'DataConnector (BackendConfigWrapper . OMap.delete agentName . unBackendConfigWrapper)
   where
     handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case

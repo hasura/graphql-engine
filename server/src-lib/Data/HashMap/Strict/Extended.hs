@@ -9,6 +9,7 @@ module Data.HashMap.Strict.Extended
     unionWithM,
     unionsAll,
     homogenise,
+    catMaybes,
   )
 where
 
@@ -111,3 +112,6 @@ homogenise defaultValue maps =
   let ks = S.unions $ L.map M.keysSet maps
       defaults = M.fromList [(k, defaultValue) | k <- S.toList ks]
    in (ks, L.map (<> defaults) maps)
+
+catMaybes :: HashMap k (Maybe v) -> HashMap k v
+catMaybes = mapMaybe id

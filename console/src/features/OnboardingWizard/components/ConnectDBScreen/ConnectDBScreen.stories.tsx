@@ -9,7 +9,9 @@ export default {
   component: ConnectDBScreen,
 } as ComponentMeta<typeof ConnectDBScreen>;
 
-export const Base: Story = () => <ConnectDBScreen closeWizard={() => {}} />;
+export const Base: Story = () => (
+  <ConnectDBScreen skipOnboarding={() => {}} completeOnboarding={() => {}} />
+);
 
 Base.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

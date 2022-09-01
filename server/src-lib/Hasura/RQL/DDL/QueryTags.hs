@@ -48,13 +48,12 @@ runSetQueryTagsConfig (SetQueryTagsConfig sourceName queryTagsConfig) = do
     Just exists -> do
       let backendType = getBackendType exists
       case backendType of
-        Postgres Vanilla -> setQueryTagsConfigInMetadata exists (Just queryTagsConfig)
-        Postgres Citus -> setQueryTagsConfigInMetadata exists (Just queryTagsConfig)
+        Postgres _ -> setQueryTagsConfigInMetadata (unBackendSourceMetadata exists) (Just queryTagsConfig)
         _ -> queryTagsNotSupported backendType
   where
     getBackendType :: BackendSourceMetadata -> BackendType
     getBackendType exists =
-      AB.dispatchAnyBackend @Backend exists $ \(_sourceMetadata :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend (unBackendSourceMetadata exists) $ \(_sourceMetadata :: SourceMetadata b) ->
         reify $ backendTag @b
 
     setQueryTagsConfigInMetadata exists qtConfig = do

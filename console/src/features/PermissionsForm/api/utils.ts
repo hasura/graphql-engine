@@ -10,6 +10,7 @@ export const driverPrefixes = {
   mssql: 'mssql',
   bigquery: 'bigquery',
   citus: 'citus',
+  cockroach: 'cockroach',
 } as const;
 
 type DriverPrefixKeys = keyof typeof driverPrefixes;

@@ -6,6 +6,7 @@ import { mySqlQueries } from './mysql';
 import { postgresSqlQueries } from './postgres';
 import { bigquerySqlQueries } from './bigquery';
 import { citusSqlQueries } from './citus';
+import { cockroachDbSqlQueries } from './cockroach';
 
 export interface DatasourceSqlQueries {
   getFetchTablesListQuery: (options: TableORSchemaArg) => string;
@@ -22,4 +23,5 @@ export const dataSourceSqlQueries: Record<Driver, DatasourceSqlQueries> = {
   mssql: msSqlQueries,
   bigquery: bigquerySqlQueries,
   citus: citusSqlQueries,
+  cockroach: cockroachDbSqlQueries,
 };

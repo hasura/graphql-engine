@@ -29,6 +29,8 @@ module Harness.Constants
     httpHealthCheckIntervalSeconds,
     citusConnectionString,
     citusDb,
+    cockroachConnectionString,
+    cockroachDb,
     serveOptions,
     dataConnectorDb,
     maxRetriesRateLimitExceeded,
@@ -125,6 +127,32 @@ citusConnectionString =
     ++ show citusPort
     ++ "/"
     ++ citusDb
+
+-- * Cockroach
+
+cockroachUser :: String
+cockroachUser = "root"
+
+cockroachDb :: String
+cockroachDb = "hasura"
+
+cockroachHost :: String
+cockroachHost = "127.0.0.1"
+
+cockroachPort :: Word16
+cockroachPort = 65008
+
+cockroachConnectionString :: String
+cockroachConnectionString =
+  "postgresql://"
+    ++ cockroachUser
+    ++ "@"
+    ++ cockroachHost
+    ++ ":"
+    ++ show cockroachPort
+    ++ "/"
+    ++ cockroachDb
+    ++ "?sslmode=disable"
 
 -- * DataConnector
 
@@ -223,7 +251,7 @@ serveOptions =
       soConsoleAssetsDir = Just "../console/static/dist",
       soEnableTelemetry = False,
       soStringifyNum = Options.StringifyNumbers,
-      soDangerousBooleanCollapse = False,
+      soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soStreamingQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,

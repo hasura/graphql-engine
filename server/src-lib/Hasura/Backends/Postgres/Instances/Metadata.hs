@@ -118,6 +118,8 @@ instance PostgresMetadata 'Cockroach where
 instance
   ( Backend ('Postgres pgKind),
     PostgresMetadata pgKind,
+    PG.FetchTableMetadata pgKind,
+    PG.FetchFunctionMetadata pgKind,
     PG.ToMetadataFetchQuery pgKind
   ) =>
   BackendMetadata ('Postgres pgKind)
@@ -125,7 +127,7 @@ instance
   prepareCatalog = PG.prepareCatalog
   buildComputedFieldInfo = PG.buildComputedFieldInfo
   fetchAndValidateEnumValues = PG.fetchAndValidateEnumValues
-  resolveSourceConfig = PG.resolveSourceConfig
+  resolveSourceConfig = const PG.resolveSourceConfig
   resolveDatabaseMetadata = PG.resolveDatabaseMetadata
   parseBoolExpOperations = PG.parseBoolExpOperations
   buildFunctionInfo = PG.buildFunctionInfo

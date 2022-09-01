@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hasura
+  name: hasura
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hasura
+  template:
+    metadata:
+      labels:
+        app: hasura
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      containers:
+        - image: hasura/graphql-engine:v2.12.0-beta.1
+          imagePullPolicy: IfNotPresent
+          name: hasura
+          readinessProbe:
+            httpGet:
+              path: '/healthz'
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: '/healthz'
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 60
+            successThreshold: 1
+            failureThreshold: 5
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - sleep 10
+          env:
+            ## add your license key below
+            - name: HASURA_GRAPHQL_EE_LICENSE_KEY
+              value: ''
+            ## configure the postgres database url to be used for metadata
+            - name: HASURA_GRAPHQL_METADATA_DATABASE_URL
+              value: postgres://username:password@hostname:port/dbname
+            ## configure redis url to be used for caching and rate limiting
+            - name: HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL
+              value: 'redis://admin:password@localhost:6379'
+            - name: HASURA_GRAPHQL_REDIS_URL
+              value: 'redis://admin:password@localhost:6379'
+            ## secure graphql endpoint with a secret
+            - name: HASURA_GRAPHQL_ADMIN_SECRET
+              value: 'myadminsecret'
+            ## enable required apis; metrics api exposes a prometheus endpoint, uncomment to enable
+            # - name: HASURA_GRAPHQL_ENABLED_APIS
+            #   value: "graphql,metadata,config,developer,pgdump,metrics"
+            ## secure metrics endpoint with a secret, uncomment to enable
+            # - name: HASURA_GRAPHQL_METRICS_SECRET
+            #   value: "secret"
+            - name: HASURA_GRAPHQL_CONSOLE_ASSETS_DIR
+              value: '/srv/console-assets'
+            ## enable the console served by server
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: 'true'
+            ## enable debugging mode. It is recommended to disable this in production
+            - name: HASURA_GRAPHQL_DEV_MODE
+              value: 'true'
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              memory: '2048Mi'
+              cpu: '1000m'
+            limits:
+              memory: '2048Mi'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hasura
+  labels:
+    app: hasura
+spec:
+  selector:
+    app: hasura
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
