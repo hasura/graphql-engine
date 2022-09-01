@@ -1,0 +1,130 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { Badge } from '@/new-components/Badge/';
+
+<Meta
+  title="components/Badge ⚛️"
+  component={Badge}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+  decorators={[Story => <div className={'p-4'}>{Story()}</div>]}
+  argTypes={{
+    content: {
+      table: {
+        disable: true,
+      },
+    },
+  }}
+/>
+
+# Badge ⚛️
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#%EF%B8%8F-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Badge/Badge.tsx)
+
+## 🧰 Overview
+
+A component that displays a badge of a particular color.
+
+### Basic usage
+
+```ts
+import { Badge } from '@/new-components/Badge';
+```
+
+```tsx
+<Badge color='green'>
+  The badge label</span>
+</Badge>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <div>
+      <Badge color={'green'} onClick={action('onClick')}>
+        Hello from badge!
+      </Badge>
+    </div>
+  </Story>
+</Canvas>
+
+export const Template = ({ content, ...rest }) => (
+  <Badge {...rest}>{content}</Badge>
+);
+
+export const stories = {
+  Green: {
+    content: 'Green Badge',
+    color: 'green',
+  },
+  Red: {
+    content: 'Red Badge',
+    color: 'red',
+  },
+  'API playground': {
+    content: 'The badge content',
+    color: 'indigo',
+  },
+};
+
+#### 🚦 Usage
+
+- The badge could be used to represent tags or positive/negative status, like a feature that can be enabled or disabled
+- You specify the color of the badge, then background and foreground colors are derived from it
+- You can also specify an onClick handler to be called when the badge is clicked
+
+### 🎭 Color
+
+<Canvas>
+  <Story
+    name="Variant - Color"
+    args={{
+      Green: stories['Green'],
+      Red: stories['Red'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={stories}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

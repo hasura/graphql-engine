@@ -69,6 +69,7 @@ export const metadataQueryTypes = [
   'add_existing_table_or_view',
   'create_query_collection',
   'drop_query_collection',
+  'rename_query_collection',
   'add_query_to_collection',
   'drop_query_from_collection',
   'add_collection_to_allowlist',
