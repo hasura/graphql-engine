@@ -1,7 +1,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Metadata () where
+module Hasura.Backends.DataConnector.Adapter.Metadata (getDataConnectorCapabilities) where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
@@ -32,7 +32,7 @@ import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
-import Hasura.RQL.Types.Common (OID (..), SourceName)
+import Hasura.RQL.Types.Common (CapabilitiesInfo (..), DataConnectorCapabilities (..), OID (..), SourceName)
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
@@ -66,8 +66,20 @@ instance BackendMetadata 'DataConnector where
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
 
+getDataConnectorCapabilities ::
+  MonadIO m =>
+  Logger Hasura ->
+  DC.DataConnectorOptions ->
+  HTTP.Manager ->
+  m (Either QErr API.CapabilitiesResponse)
+getDataConnectorCapabilities logger DC.DataConnectorOptions {..} manager = runExceptT do
+  runTraceTWithReporter noReporter "capabilities"
+    . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
+    $ genericClient // API._capabilities
+
 resolveSourceConfig' ::
   MonadIO m =>
+  DataConnectorCapabilities ->
   Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->
@@ -76,38 +88,43 @@ resolveSourceConfig' ::
   Environment ->
   HTTP.Manager ->
   m (Either QErr DC.SourceConfig)
-resolveSourceConfig' logger sourceName csc@ConnSourceConfig {template, timeout, value = originalConfig} (DataConnectorKind dataConnectorName) backendConfig env manager = runExceptT do
-  DC.DataConnectorOptions {..} <-
-    OMap.lookup dataConnectorName backendConfig
-      `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
+resolveSourceConfig'
+  dataConnectorCapabilities
+  logger
+  sourceName
+  csc@ConnSourceConfig {template, timeout, value = originalConfig}
+  (DataConnectorKind dataConnectorName)
+  backendConfig
+  env
+  manager = runExceptT do
+    DC.DataConnectorOptions {..} <-
+      OMap.lookup dataConnectorName backendConfig
+        `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend config")
 
-  transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
+    transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
 
-  -- TODO: capabilities applies to all sources for an agent.
-  -- We should be able to call it once per agent and store it in the SchemaCache
-  API.CapabilitiesResponse {..} <-
-    runTraceTWithReporter noReporter "capabilities"
-      . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
-      $ genericClient // API._capabilities
+    CapabiltiesInfo {..} <-
+      HashMap.lookup dataConnectorName (unDataConnectorCapabilities dataConnectorCapabilities)
+        `onNothing` throw400 DataConnectorError ("Capabilities not found for data connector " <>> toTxt dataConnectorName)
 
-  validateConfiguration sourceName dataConnectorName crConfigSchemaResponse transformedConfig
+    validateConfiguration sourceName dataConnectorName ciConfigSchemaResponse transformedConfig
 
-  schemaResponse <-
-    runTraceTWithReporter noReporter "resolve source"
-      . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
-      $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
+    schemaResponse <-
+      runTraceTWithReporter noReporter "resolve source"
+        . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
+        $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
 
-  pure
-    DC.SourceConfig
-      { _scEndpoint = _dcoUri,
-        _scConfig = originalConfig,
-        _scTemplate = template,
-        _scCapabilities = crCapabilities,
-        _scSchema = schemaResponse,
-        _scManager = manager,
-        _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),
-        _scDataConnectorName = dataConnectorName
-      }
+    pure
+      DC.SourceConfig
+        { _scEndpoint = _dcoUri,
+          _scConfig = originalConfig,
+          _scTemplate = template,
+          _scCapabilities = ciCapabilities,
+          _scSchema = schemaResponse,
+          _scManager = manager,
+          _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),
+          _scDataConnectorName = dataConnectorName
+        }
 
 validateConfiguration ::
   MonadError QErr m =>

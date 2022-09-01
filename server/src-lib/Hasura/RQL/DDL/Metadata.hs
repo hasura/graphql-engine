@@ -77,6 +77,8 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend (BackendType (..))
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -509,6 +511,10 @@ purgeMetadataObj = \case
   MOInheritedRole role -> dropInheritedRoleInMetadata role
   MOHostTlsAllowlist host -> dropHostFromAllowList host
   MOQueryCollectionsQuery cName lq -> dropListedQueryFromQueryCollections cName lq
+  MODataConnectorAgent agentName ->
+    MetadataModifier $
+      metaBackendConfigs
+        %~ BackendMap.modify @'DataConnector (BackendConfigWrapper . OMap.delete agentName . unBackendConfigWrapper)
   where
     handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case

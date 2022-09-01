@@ -503,7 +503,8 @@ data SchemaCache = SchemaCache
     scMetadataResourceVersion :: Maybe MetadataResourceVersion,
     scSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
     scTlsAllowlist :: [TlsAllow],
-    scQueryCollections :: QueryCollections
+    scQueryCollections :: QueryCollections,
+    scDataConnectorCapabilities :: DataConnectorCapabilities
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all
@@ -528,7 +529,8 @@ instance ToJSON SchemaCache where
         "metadata_resource_version" .= toJSON scMetadataResourceVersion,
         "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions,
         "tls_allowlist" .= toJSON scTlsAllowlist,
-        "query_collection" .= toJSON scQueryCollections
+        "query_collection" .= toJSON scQueryCollections,
+        "data_connector_capabilities" .= toJSON scDataConnectorCapabilities
       ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
