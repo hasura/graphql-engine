@@ -42,6 +42,7 @@ import Data.Aeson.Types
 import Data.HashMap.Strict.Extended qualified as M
 import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
 import Hasura.Prelude
@@ -101,6 +102,7 @@ data MetadataObjId
   | MOEndpoint EndpointName
   | MOHostTlsAllowlist String
   | MOQueryCollectionsQuery CollectionName ListedQuery
+  | MODataConnectorAgent DataConnectorName
   deriving (Show, Eq, Generic)
 
 $(makePrisms ''MetadataObjId)
@@ -125,6 +127,7 @@ moiTypeName = \case
   MOEndpoint _ -> "rest_endpoint"
   MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
   MOQueryCollectionsQuery _ _ -> "query_collections"
+  MODataConnectorAgent _ -> "data_connector_agent"
   where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
@@ -158,6 +161,7 @@ moiName objectId =
     MOEndpoint name -> toTxt name
     MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
     MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
+    MODataConnectorAgent agentName -> toTxt agentName
   where
     handleSourceObj ::
       forall b.

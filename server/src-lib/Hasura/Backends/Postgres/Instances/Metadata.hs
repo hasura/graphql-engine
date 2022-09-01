@@ -127,7 +127,7 @@ instance
   prepareCatalog = PG.prepareCatalog
   buildComputedFieldInfo = PG.buildComputedFieldInfo
   fetchAndValidateEnumValues = PG.fetchAndValidateEnumValues
-  resolveSourceConfig = PG.resolveSourceConfig
+  resolveSourceConfig = const PG.resolveSourceConfig
   resolveDatabaseMetadata = PG.resolveDatabaseMetadata
   parseBoolExpOperations = PG.parseBoolExpOperations
   buildFunctionInfo = PG.buildFunctionInfo
