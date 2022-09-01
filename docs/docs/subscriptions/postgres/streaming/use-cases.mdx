@@ -98,8 +98,8 @@ To stream the latest undelivered messages:
 
 ```graphql
 subscription getUndeliveredMessages {
-  # will get all the messages that have `created_at > 2022-01-01` in batches of 100 rows
-  messages_stream(cursor: { created_at: "2022-01-01", ordering: ASC }, batch_size: 2) {
+  # will get all the messages that have `created_at > 2022-01-01` in batches of 2 rows
+  messages_stream(cursor: {initial_value: {created_at: "2022-01-01"}, ordering: ASC}, batch_size: 2) {
     id
     from {
       first_name
