@@ -1,31 +1,36 @@
+---
+sidebar_position: 5
+---
+
 # Working with Docusaurus
 
-Whats better place than the [Docusaurus docs](https://docusaurus.io/docs) site itself?
+If you're interested in a deep dive on Docusaurus and how it works, check out [their docs](https://docusaurus.io/docs).
+This page is intended to serve as a crash course on common conventions within Docusaurus and how they apply to Hasura's
+docs 🤙
 
 :::info Guides
 
-Also checkout the [Guides](https://docusaurus.io/docs/category/guides) they are pretty detailed.
+Also checkout their [Guides](https://docusaurus.io/docs/category/guides), they are pretty detailed.
 
-Please check the [Advanced Guides](https://docusaurus.io/docs/advanced) to learn in depth about Architecture, Plugins, Routing etc.,
+Please check the [Advanced Guides](https://docusaurus.io/docs/advanced) to learn in depth about Architecture, Plugins,
+Routing etc.
 
 :::
 
 ## docusaurus.config.js
 
-All the magic happens here.
-[SEO](https://docusaurus.io/docs/seo),
-[Theme](https://docusaurus.io/docs/api/themes),
-[Plugins](https://docusaurus.io/docs/api/plugins),
-[Navbar](https://docusaurus.io/docs/api/themes/configuration#navbar),
+All the magic happens here. [SEO](https://docusaurus.io/docs/seo), [Theme](https://docusaurus.io/docs/api/themes),
+[Plugins](https://docusaurus.io/docs/api/plugins), [Navbar](https://docusaurus.io/docs/api/themes/configuration#navbar),
 [Footer](https://docusaurus.io/docs/api/themes/configuration#footer-1),
-[Search Config](https://docusaurus.io/docs/search#using-algolia-docsearch),
-and [what not..](https://docusaurus.io/docs/category/guides)
+[Search Config](https://docusaurus.io/docs/search#using-algolia-docsearch), and
+[what not...](https://docusaurus.io/docs/category/guides)
 
-Please check the [API for all possible config options here](https://docusaurus.io/docs/api/docusaurus-config)
+Please check the [API for all possible config options here](https://docusaurus.io/docs/api/docusaurus-config).
 
-## Cleint API - Components, Hooks etc.,
+## Cleint API - Components, Hooks etc.
 
-Please check the [clent API docs](https://docusaurus.io/docs/docusaurus-core) for available React components, hooks & modules.
+Please check the [client API docs](https://docusaurus.io/docs/docusaurus-core) for available React components, hooks &
+modules.
 
 ## Sidebar
 
@@ -65,10 +70,10 @@ Checkout Docusaurus Docs for Sidebar - https://docusaurus.io/docs/sidebar
 
 ### index.mdx file only directories
 
-This is known and default behavior from docusaurus. `index` is considered direct link to directory index and won't be visible unless there is one more file.
+This is known and default behavior from docusaurus. `index` is considered direct link to directory index and won't be
+visible unless there is one more file.
 
 If you only have an index.mdx file, prefer `directory.mdx` over `directory/index.mdx`.
-
 
 ## URL Slug
 
@@ -76,7 +81,8 @@ This only applies for index.mdx files.
 
 index file routes are resolved to `directory/` and not `directory/index`
 
-Use `slug` metadata to manually set the slug to `index`. Please check [this PR on docusaurus](https://github.com/facebook/docusaurus/pull/5830) for more information.
+Use `slug` metadata to manually set the slug to `index`. Please check
+[this PR on docusaurus](https://github.com/facebook/docusaurus/pull/5830) for more information.
 
 ```markdown title="graphql/core/actions/index.mdx"
 ---
@@ -86,13 +92,16 @@ slug: index
 
 ## Styling
 
-Majority of styles is controlled through css variables - there is a heavy list available (use browser inspect element to see the complete list).
+The majority of styles is controlled through CSS variables - there is a heavy list available (use the browser inspect element to
+see the complete list).
 
-These variables can be overridden and new custom styles to be added in `src/css/custom.scss` and `src/css/_custom-dark.scss` for light and dark themes respectively.
+These variables can be overridden and new custom styles to be added in `src/css/custom.scss` and
+`src/css/_custom-dark.scss` for light and dark themes respectively.
 
 ## React Components
 
-Add any new React Components to `src/components/ComponentName` directory. Add `index.tsx` file and use `styles.module.scss` for styling to not let this collide with global styles.
+Add any new React Components to the `src/components/ComponentName` directory. Add the `index.tsx` file and use
+`styles.module.scss` for styling to not let this collide with global styles.
 
 Then this component can be imported with `@site` global directive.
 
@@ -104,16 +113,15 @@ Check existing components for a better idea.
 
 :::
 
-
 ## Static Assets
 
 All the static assets lives in `static` directory.
 
-| Asset    | Directory      |
-|----------|----------------|
-| Images   | `static/img`   |
-| Fonts    | `static/fonts` |
-| Icons    | `static/icons` |
+| Asset  | Directory      |
+| ------ | -------------- |
+| Images | `static/img`   |
+| Fonts  | `static/fonts` |
+| Icons  | `static/icons` |
 
 ## Updating to latest Docusaurus Version
 
@@ -123,14 +131,15 @@ Please ensure to check breaking changes and re-swizzle any swizzled components g
 
 Any [swizzled](https://docusaurus.io/docs/swizzling) component will be cloned to `src/theme`.
 
-**An Example:**
-The `TOCInline` and `TOCItems` components are [swizzled](https://docusaurus.io/docs/swizzling) and custom logic is added.
+**An Example:** The `TOCInline` and `TOCItems` components are [swizzled](https://docusaurus.io/docs/swizzling) and
+custom logic is added.
 
-The custom added logic (`src/theme/TOCInline`, `src/theme/TOCItems`) is indicated by comments - `// Customization START` and `// Customization END`. If reswizzled in future only these blocks need an update.
+The custom added logic (`src/theme/TOCInline`, `src/theme/TOCItems`) is indicated by comments - `// Customization START`
+and `// Customization END`. If reswizzled in the future, only these blocks need an update.
 
-[`toc` is a flat array](https://docusaurus.io/docs/markdown-features/inline-toc#custom-table-of-contents) and has no concept of nested tree children structure. This behavior is changed in `2.0.0-beta.16`.
-Please check the [Breaking changes that forced us to swizzle](https://docusaurus.io/changelog/2.0.0-beta.16#-breaking-change)
-
+[`toc` is a flat array](https://docusaurus.io/docs/markdown-features/inline-toc#custom-table-of-contents) and has no
+concept of nested tree children structure. This behavior is changed in `2.0.0-beta.16`. Please check the
+[Breaking changes that forced us to swizzle](https://docusaurus.io/changelog/2.0.0-beta.16#-breaking-change).
 
 ## Docusaurus Support
 
