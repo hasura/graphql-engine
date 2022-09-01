@@ -1,16 +1,6 @@
 # Hasura GraphQL Engine Changelog
 
-## Next release
-
-### Bug fixes and improvements
-
-- server: enable streaming subscriptions by default in the graphql-engine
-- server: add `rename_query_collection` metadata API
-- server: fix behaviour of custom table name for `graphql-default` naming convention
-- server: require non-negative integers for '--stripes', '--connections', '--timeout', 'conn-lifetime', '--pool-timeout', '--events-fetch-interval', '--async-actions-fetch-interval', '--websocket-keepalive', '--schema-sync-poll-interval', '--events-fetch-batch-size', '--graceful-shutdown-timeout', and '--websocket-connection-init-timeout'
-- cli: add  `--disallow-inconsistent-metadata`  flag in `hasura metadata apply`. Setting this flag will prevent applying metadata which can introduce inconsistencies.
-- console: fix browse rows on BigQuery when the data sources are misaligned
-- server: use varchar literals to compare with varchar columns where possible in SQLServer (fix #8735)
+:warning: This file is deprecated and contains changelog only for older releases. Please visit [this page](https://hasura.io/changelog) or [the github releases page](https://github.com/hasura/graphql-engine/releases) to view the changelog for latest releases :warning:
 
 ## v2.10.1
 
