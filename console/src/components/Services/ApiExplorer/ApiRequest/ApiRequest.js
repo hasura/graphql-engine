@@ -592,7 +592,11 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={'h-[calc(100vh-400px)] min-h-[500px] pb-[50px]'}>
+            <div
+              className={
+                'h-[calc(100vh-450px)] min-h-[500px] mt-[20px] mb-[50px] resize-y overflow-auto'
+              }
+            >
               <GraphiQLWrapper
                 mode={mode}
                 data={this.props}
