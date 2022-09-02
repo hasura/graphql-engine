@@ -98,7 +98,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">BB.lazyByteString</span></span><span>
 </span><span id="line-72"></span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#encJFromLBS"><span class="hs-pragma hs-type">encJFromLBS</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span id="local-6989586621689638108"><span class="annot"><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-type">encJFromJValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689638108"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689638108"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-74"></span><span id="local-6989586621689640573"><span class="annot"><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-type">encJFromJValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689640573"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640573"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-75"></span><span id="encJFromJValue"><span class="annot"><span class="annottext">encJFromJValue :: a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var hs-var">encJFromJValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromBuilder"><span class="hs-identifier hs-var">encJFromBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">(Builder -&gt; EncJSON) -&gt; (a -&gt; Builder) -&gt; a -&gt; EncJSON
@@ -168,36 +168,36 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-99"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;[]&quot;</span></span><span>
-</span><span id="line-100"></span><span>    </span><span id="local-6989586621689638080"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689638080"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689638079"><span class="annot"><span class="annottext">[EncJSON]
-</span><a href="#local-6989586621689638079"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span id="line-100"></span><span>    </span><span id="local-6989586621689640545"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621689640545"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689640544"><span class="annot"><span class="annottext">[EncJSON]
+</span><a href="#local-6989586621689640544"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;[&quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; Builder
 </span><a href="Hasura.EncJSON.html#unEncJSON"><span class="hs-identifier hs-var hs-var">unEncJSON</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689638080"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+</span><a href="#local-6989586621689640545"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; Builder -&gt; Builder) -&gt; Builder -&gt; [EncJSON] -&gt; Builder
 forall (t :: * -&gt; *) a b.
 Foldable t =&gt;
 (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b
 </span><span class="hs-identifier hs-var">foldr</span></span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; Builder -&gt; Builder
-</span><a href="#local-6989586621689638077"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Builder
+</span><a href="#local-6989586621689640542"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;]&quot;</span></span><span> </span><span class="annot"><span class="annottext">[EncJSON]
-</span><a href="#local-6989586621689638079"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621689640544"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-101"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-102"></span><span>        </span><span id="local-6989586621689638077"><span class="annot"><span class="annottext">go :: EncJSON -&gt; Builder -&gt; Builder
-</span><a href="#local-6989586621689638077"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689638076"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689638076"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621689638075"><span class="annot"><span class="annottext">Builder
-</span><a href="#local-6989586621689638075"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span id="line-102"></span><span>        </span><span id="local-6989586621689640542"><span class="annot"><span class="annottext">go :: EncJSON -&gt; Builder -&gt; Builder
+</span><a href="#local-6989586621689640542"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689640541"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621689640541"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621689640540"><span class="annot"><span class="annottext">Builder
+</span><a href="#local-6989586621689640540"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;,&quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; Builder
 </span><a href="Hasura.EncJSON.html#unEncJSON"><span class="hs-identifier hs-var hs-var">unEncJSON</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689638076"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+</span><a href="#local-6989586621689640541"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Builder
-</span><a href="#local-6989586621689638075"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621689640540"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="hs-comment">-- from association list</span><span>
 </span><span id="line-105"></span><span class="annot"><a href="Hasura.EncJSON.html#encJFromAssocList"><span class="hs-identifier hs-type">encJFromAssocList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
@@ -210,14 +210,14 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-108"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;{}&quot;</span></span><span>
-</span><span id="line-109"></span><span>    </span><span id="local-6989586621689638074"><span class="annot"><span class="annottext">(Text, EncJSON)
-</span><a href="#local-6989586621689638074"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689638073"><span class="annot"><span class="annottext">[(Text, EncJSON)]
-</span><a href="#local-6989586621689638073"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span id="line-109"></span><span>    </span><span id="local-6989586621689640539"><span class="annot"><span class="annottext">(Text, EncJSON)
+</span><a href="#local-6989586621689640539"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689640538"><span class="annot"><span class="annottext">[(Text, EncJSON)]
+</span><a href="#local-6989586621689640538"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;{&quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(Text, EncJSON) -&gt; Builder
-</span><a href="#local-6989586621689638072"><span class="hs-identifier hs-var">builder'</span></a></span><span> </span><span class="annot"><span class="annottext">(Text, EncJSON)
-</span><a href="#local-6989586621689638074"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+</span><a href="#local-6989586621689640537"><span class="hs-identifier hs-var">builder'</span></a></span><span> </span><span class="annot"><span class="annottext">(Text, EncJSON)
+</span><a href="#local-6989586621689640539"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">((Text, EncJSON) -&gt; Builder -&gt; Builder)
 -&gt; Builder -&gt; [(Text, EncJSON)] -&gt; Builder
@@ -225,39 +225,39 @@ forall (t :: * -&gt; *) a b.
 Foldable t =&gt;
 (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b
 </span><span class="hs-identifier hs-var">foldr</span></span><span> </span><span class="annot"><span class="annottext">(Text, EncJSON) -&gt; Builder -&gt; Builder
-</span><a href="#local-6989586621689638071"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Builder
+</span><a href="#local-6989586621689640536"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;}&quot;</span></span><span> </span><span class="annot"><span class="annottext">[(Text, EncJSON)]
-</span><a href="#local-6989586621689638073"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621689640538"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-110"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-111"></span><span>        </span><span id="local-6989586621689638071"><span class="annot"><span class="annottext">go :: (Text, EncJSON) -&gt; Builder -&gt; Builder
-</span><a href="#local-6989586621689638071"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689638070"><span class="annot"><span class="annottext">(Text, EncJSON)
-</span><a href="#local-6989586621689638070"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621689638069"><span class="annot"><span class="annottext">Builder
-</span><a href="#local-6989586621689638069"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span id="line-111"></span><span>        </span><span id="local-6989586621689640536"><span class="annot"><span class="annottext">go :: (Text, EncJSON) -&gt; Builder -&gt; Builder
+</span><a href="#local-6989586621689640536"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689640535"><span class="annot"><span class="annottext">(Text, EncJSON)
+</span><a href="#local-6989586621689640535"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621689640534"><span class="annot"><span class="annottext">Builder
+</span><a href="#local-6989586621689640534"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;,&quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(Text, EncJSON) -&gt; Builder
-</span><a href="#local-6989586621689638072"><span class="hs-identifier hs-var">builder'</span></a></span><span> </span><span class="annot"><span class="annottext">(Text, EncJSON)
-</span><a href="#local-6989586621689638070"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+</span><a href="#local-6989586621689640537"><span class="hs-identifier hs-var">builder'</span></a></span><span> </span><span class="annot"><span class="annottext">(Text, EncJSON)
+</span><a href="#local-6989586621689640535"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Builder
-</span><a href="#local-6989586621689638069"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621689640534"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-112"></span><span>        </span><span class="hs-comment">-- builds &quot;key&quot;:value from (key,value)</span><span>
-</span><span id="line-113"></span><span>        </span><span id="local-6989586621689638072"><span class="annot"><span class="annottext">builder' :: (Text, EncJSON) -&gt; Builder
-</span><a href="#local-6989586621689638072"><span class="hs-identifier hs-var hs-var">builder'</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689638068"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689638068"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689638067"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689638067"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Encoding' Any -&gt; Builder
+</span><span id="line-113"></span><span>        </span><span id="local-6989586621689640537"><span class="annot"><span class="annottext">builder' :: (Text, EncJSON) -&gt; Builder
+</span><a href="#local-6989586621689640537"><span class="hs-identifier hs-var hs-var">builder'</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640533"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640533"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689640532"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621689640532"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Encoding' Any -&gt; Builder
 forall tag. Encoding' tag -&gt; Builder
 </span><span class="hs-identifier hs-var hs-var">J.fromEncoding</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Encoding' Any
 forall a. Text -&gt; Encoding' a
 </span><span class="hs-identifier hs-var">J.text</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689638068"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+</span><a href="#local-6989586621689640533"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;:&quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; Builder
 </span><a href="Hasura.EncJSON.html#unEncJSON"><span class="hs-identifier hs-var hs-var">unEncJSON</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689638067"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689640532"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="annot"><a href="Hasura.EncJSON.html#encJFromInsOrdHashMap"><span class="hs-identifier hs-type">encJFromInsOrdHashMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-116"></span><span id="encJFromInsOrdHashMap"><span class="annot"><span class="annottext">encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -&gt; EncJSON
@@ -275,8 +275,8 @@ forall k v. InsOrdHashMap k v -&gt; [(k, v)]
 </span><span id="line-119"></span><span class="annot"><a href="Hasura.EncJSON.html#encJFromOrderedValue"><span class="hs-identifier hs-type">encJFromOrderedValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-120"></span><span id="encJFromOrderedValue"><span class="annot"><span class="annottext">encJFromOrderedValue :: Value -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromOrderedValue"><span class="hs-identifier hs-var hs-var">encJFromOrderedValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-121"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Object</span></a></span><span> </span><span id="local-6989586621689638063"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689638063"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-121"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Object</span></a></span><span> </span><span id="local-6989586621689640528"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689640528"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">[(Text, EncJSON)] -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromAssocList"><span class="hs-identifier hs-var">encJFromAssocList</span></a></span><span> </span><span class="annot"><span class="annottext">([(Text, EncJSON)] -&gt; EncJSON) -&gt; [(Text, EncJSON)] -&gt; EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -300,9 +300,9 @@ a b c -&gt; a (d, b) (d, c)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Text, Value)]
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.toList</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689638063"><span class="hs-identifier hs-var">obj</span></a></span><span>
-</span><span id="line-123"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Array</span></a></span><span> </span><span id="local-6989586621689638059"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689638059"><span class="hs-identifier hs-var">vec</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689640528"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Array</span></a></span><span> </span><span id="local-6989586621689640524"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689640524"><span class="hs-identifier hs-var">vec</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">[EncJSON] -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromList"><span class="hs-identifier hs-var">encJFromList</span></a></span><span> </span><span class="annot"><span class="annottext">([EncJSON] -&gt; EncJSON) -&gt; [EncJSON] -&gt; EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -314,22 +314,22 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Array -&gt; [Value]
 forall a. Vector a -&gt; [a]
 </span><span class="hs-identifier hs-var">V.toList</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689638059"><span class="hs-identifier hs-var">vec</span></a></span><span>
-</span><span id="line-125"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.String</span></a></span><span> </span><span id="local-6989586621689638056"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689638056"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
+</span><a href="#local-6989586621689640524"><span class="hs-identifier hs-var">vec</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.String</span></a></span><span> </span><span id="local-6989586621689640521"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640521"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689638056"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-126"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Number</span></a></span><span> </span><span id="local-6989586621689638054"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689638054"><span class="hs-identifier hs-var">sci</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; EncJSON
+</span><a href="#local-6989586621689640521"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Number</span></a></span><span> </span><span id="local-6989586621689640519"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689640519"><span class="hs-identifier hs-var">sci</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689638054"><span class="hs-identifier hs-var">sci</span></a></span><span>
-</span><span id="line-127"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Bool</span></a></span><span> </span><span id="local-6989586621689638052"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689638052"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; EncJSON
+</span><a href="#local-6989586621689640519"><span class="hs-identifier hs-var">sci</span></a></span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-type">JO.Bool</span></a></span><span> </span><span id="local-6989586621689640517"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689640517"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689638052"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621689640517"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-128"></span><span>  </span><span class="annot"><span class="annottext">Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.Null</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
