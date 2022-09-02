@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import { QueryType } from '../types';
 
 export interface BackEndOnlySectionProps {

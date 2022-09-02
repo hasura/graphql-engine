@@ -32,7 +32,7 @@ export type CheckboxProps = FieldWrapperPassThroughProps & {
 
 export const Checkbox: React.FC<CheckboxProps> = ({
   name,
-  options,
+  options = [],
   orientation = 'vertical',
   disabled = false,
   dataTest,
