@@ -1,0 +1,31 @@
+---
+description: Hasura installation health check API route
+title: 'Cloud: Source health check'
+keywords:
+  - hasura
+  - source health check
+  - source health
+sidebar_label: Healthz Check
+sidebar_position: 10
+---
+
+# Healthz Check
+
+Hasura provides a health check endpoint to monitor the status of the GraphQL API. This is available under the
+`/healthz` endpoint for all Hasura projects (including the OSS GraphQL Engine).
+
+Make a `GET` request to the `/healthz` endpoint to fetch the status:
+
+```bash
+curl -XGET https://advanced-hasura.hasura.app/healthz
+```
+
+Replace `advanced-hasura` with your project name.
+
+The status could be one of the following:
+
+- `200, OK` - This requires no action. Everything is working as expected.
+- `200, WARN, inconsistent objects in schema` - This requires a review of metadata since some inconsistent objects have
+been identified. Usually occurs when there is a metadata apply that had the wrong objects.
+- `500, ERROR` - This means the API is not working and the [logs](/deployment/logging.mdx#health-check-log-structure)
+need to be checked.

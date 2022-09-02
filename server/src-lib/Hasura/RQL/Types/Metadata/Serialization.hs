@@ -115,12 +115,14 @@ sourcesToOrdJSONList sources =
             customizationPair =
               guard (_smCustomization /= emptySourceCustomization)
                 *> [("customization", AO.toOrdered _smCustomization)]
+            healthCheckPair = maybe [] (\healthCheckConfig -> [("health_check", AO.toOrdered healthCheckConfig)]) _smHealthCheckConfig
          in AO.object $
               [sourceNamePair, sourceKindPair, tablesPair]
                 <> maybeToList functionsPair
                 <> configurationPair
                 <> queryTagsConfigPair
                 <> customizationPair
+                <> healthCheckPair
 
     tableMetaToOrdJSON :: (Backend b) => TableMetadata b -> AO.Value
     tableMetaToOrdJSON

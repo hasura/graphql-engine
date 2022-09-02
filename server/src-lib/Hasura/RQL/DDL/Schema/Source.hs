@@ -56,6 +56,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Backend qualified as RQL.Types
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Common qualified as Common
+import Hasura.RQL.Types.HealthCheck (HealthCheckConfig)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.Metadata.Backend
@@ -85,7 +86,8 @@ data AddSource b = AddSource
     _asBackendKind :: BackendSourceKind b,
     _asConfiguration :: SourceConnConfiguration b,
     _asReplaceConfiguration :: Bool,
-    _asCustomization :: SourceCustomization
+    _asCustomization :: SourceCustomization,
+    _asHealthCheckConfig :: Maybe (HealthCheckConfig b)
   }
 
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) where
@@ -96,13 +98,14 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) 
       <*> o .: "configuration"
       <*> o .:? "replace_configuration" .!= False
       <*> o .:? "customization" .!= emptySourceCustomization
+      <*> o .:? "health_check"
 
 runAddSource ::
   forall m b.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   AddSource b ->
   m EncJSON
-runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourceCustomization) = do
+runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourceCustomization healthCheckConfig) = do
   sources <- scSources <$> askSchemaCache
 
   metadataModifier <-
@@ -118,7 +121,7 @@ runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourc
             else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
         else do
           let sourceMetadata =
-                mkSourceMetadata @b name backendKind sourceConfig sourceCustomization
+                mkSourceMetadata @b name backendKind sourceConfig sourceCustomization healthCheckConfig
           pure $ metaSources %~ OMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier
@@ -279,7 +282,8 @@ runPostDropSourceHook sourceName sourceInfo = do
 data UpdateSource b = UpdateSource
   { _usName :: SourceName,
     _usConfiguration :: Maybe (SourceConnConfiguration b),
-    _usCustomization :: Maybe SourceCustomization
+    _usCustomization :: Maybe SourceCustomization,
+    _usHealthCheckConfig :: Maybe (HealthCheckConfig b)
   }
 
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (UpdateSource b) where
@@ -288,13 +292,14 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (UpdateSource 
       <$> o .: "name"
       <*> o .:? "configuration"
       <*> o .:? "customization"
+      <*> o .:? "health_check"
 
 runUpdateSource ::
   forall m b.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   UpdateSource b ->
   m EncJSON
-runUpdateSource (UpdateSource name sourceConfig sourceCustomization) = do
+runUpdateSource (UpdateSource name sourceConfig sourceCustomization healthCheckConfig) = do
   sources <- scSources <$> askSchemaCache
 
   metadataModifier <-
@@ -304,7 +309,8 @@ runUpdateSource (UpdateSource name sourceConfig sourceCustomization) = do
           let sMetadata = metaSources . ix name . toSourceMetadata @b
               updateConfig = maybe id (\scc -> sMetadata . smConfiguration .~ scc) sourceConfig
               updateCustomization = maybe id (\scc -> sMetadata . smCustomization .~ scc) sourceCustomization
-          pure $ updateConfig . updateCustomization
+              updateHealthCheckConfig = maybe id (\hcc -> sMetadata . smHealthCheckConfig .~ Just hcc) healthCheckConfig
+          pure $ updateHealthCheckConfig . updateConfig . updateCustomization
         else do
           throw400 NotExists $ "source with name " <> name <<> " does not exist"
 

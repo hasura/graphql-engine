@@ -70,6 +70,9 @@ instance Backend 'DataConnector where
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
 
+  type HealthCheckTest 'DataConnector = Void
+  defaultHealthCheckTest = error "defaultHealthCheckTest: not implemented for Data Connector backend"
+
   isComparableType :: ScalarType 'DataConnector -> Bool
   isComparableType = \case
     IR.S.T.Number -> True

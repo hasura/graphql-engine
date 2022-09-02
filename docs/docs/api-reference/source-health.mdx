@@ -1,0 +1,102 @@
+---
+description: Source health check API reference
+keywords:
+  - hasura
+  - cloud
+  - docs
+  - health API
+  - source health API
+  - API reference
+sidebar_position: 14
+sidebar_label: Source Health Check API
+sidebar_class_name: cloud-icon
+---
+
+# Source Health Check API Reference
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+
+## Introduction
+
+The Source Health API is an admin-only endpoint which reports the health of sources whose health check is configured.
+[Documentation here](/deployment/health-checks/source-health-check.mdx).
+
+## Endpoint
+
+All requests are `GET` requests to the `/healthz/sources` endpoint.
+
+## API Spec
+
+### Request
+
+```http
+GET /healthz/sources HTTP/1.1
+X-Hasura-Role: admin
+```
+
+### Response
+
+The response is an object with the source name as key and health status as value.
+
+```none
+{
+    "source_1": HealthStatus,
+    "source_2": HealthStatus,
+     ...        ...
+    "source_n": HealthStatus
+
+}
+```
+
+The `HealthStatus` is an object with the following members.
+
+| Name      | Type       | Description                                                                          |
+|-----------|------------|--------------------------------------------------------------------------------------|
+| status    | `string`   | The status of the health check                                                       |
+| error     | any `json` | An additional field whose value varies based on the `status`                         |
+| timestamp | `string`   | A [UTC time](https://en.wikipedia.org/wiki/Coordinated_Universal_Time) encoded value |
+
+Find the possible values of `status` field in the following along with corresponding `error` field value.
+
+| status    | error              | Description                                                                        |
+|-----------|--------------------|------------------------------------------------------------------------------------|
+| "OK"      | `null`             | Health check succeeded with configured test; the source is healthy                 |
+| "TIMEOUT" | `null`             | Health check timed out                                                             |
+| "ERROR"   | `HealthCheckError` | Exceptions occurred after running health check; refer `error` for in-depth details |
+| "FAILED"  | `String`           | Health check failed due to bad configuration                                       |
+
+The `HealthCheckError` is an object with the following members.
+
+| Name    | Type       | Description                                                  |
+|---------|------------|--------------------------------------------------------------|
+| message | `string`   | A very short description of the error                        |
+| extra   | any `json` | An optional value that contains more details about the error |
+
+### Sample response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "mssql_source_name": {
+    "error": null,
+    "status": "OK",
+    "timestamp": "2022-08-09T09:32:05.235347837Z"
+  },
+  "postgres_source_name": {
+    "error": {
+      "message": "connection error",
+      "extra": "connection to server at \"localhost\" (::1), port 6432 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\nconnection to server at \"localhost\" (127.0.0.1), port 6432 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\n"
+    },
+    "status": "ERROR",
+    "timestamp": "2022-08-09T09:30:05.235347837Z"
+  }
+}
+```
+
+:::info Note
+
+The `healthz/sources` API endpoint cannot be disabled.
+
+:::

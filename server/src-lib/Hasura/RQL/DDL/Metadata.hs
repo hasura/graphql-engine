@@ -129,6 +129,7 @@ runClearMetadata _ = do
                         (_smConfiguration @b s)
                         Nothing
                         emptySourceCustomization
+                        Nothing
            in emptyMetadata
                 & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'

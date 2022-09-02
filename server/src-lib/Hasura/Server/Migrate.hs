@@ -159,6 +159,7 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
                         defaultSourceConfig
                         Nothing
                         emptySourceCustomization
+                        Nothing
                   sources = OMap.singleton defaultSource $ BackendSourceMetadata defaultSourceMetadata
                in emptyMetadata {_metaSources = sources}
 
@@ -328,7 +329,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                     defaultSourceMetadata =
                       BackendSourceMetadata $
                         AB.mkAnyBackend $
-                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization
+                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization Nothing
                  in Metadata
                       (OMap.singleton defaultSource defaultSourceMetadata)
                       _mnsRemoteSchemas
