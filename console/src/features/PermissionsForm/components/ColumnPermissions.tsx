@@ -2,7 +2,7 @@ import React from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Button } from '@/new-components/Button';
 
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 
 import { getEdForm } from '../../../components/Services/Data/utils';
 import { useIsDisabled } from '../hooks/useIsDisabled';

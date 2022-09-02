@@ -5,10 +5,25 @@ import { FaChevronRight } from 'react-icons/fa';
 import { IconTooltip } from '@/new-components/Tooltip';
 
 export interface CollapseHeaderProps extends React.HTMLAttributes<HTMLElement> {
+  /**
+   * The collapse header title
+   */
   title?: string;
+  /**
+   * The collapse header tooltip content
+   */
   tooltip?: string;
+  /**
+   * The collapse header status
+   */
   status?: string;
+  /**
+   * The collapse header disabled status
+   */
   disabled?: boolean;
+  /**
+   * The collapse header disabled status message
+   */
   disabledMessage?: string;
 }
 

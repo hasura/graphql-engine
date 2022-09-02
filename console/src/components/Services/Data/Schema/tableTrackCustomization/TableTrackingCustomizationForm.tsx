@@ -1,4 +1,4 @@
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import React, { useState } from 'react';
 import { UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
 import { FaExclamationCircle } from 'react-icons/fa';

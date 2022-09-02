@@ -5,7 +5,7 @@ import { isFreeFormObjectField } from '@/features/DataSource/types';
 import { Property } from '@/features/DataSource';
 import { Switch } from '@/new-components/Switch';
 import { CodeEditorField, InputField, Select } from '@/new-components/Form';
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import { Field } from './Fields';
 import { ArrayInput } from './ArrayInputs';
 

@@ -90,7 +90,7 @@ export const InputField: React.FC<InputFieldProps> = ({
               ? 'border-red-600 hover:border-red-700'
               : 'border-gray-300',
             disabled
-              ? 'cursor-not-allowed bg-gray-100 border-gray-100'
+              ? 'cursor-not-allowed bg-gray-200 border-gray-200'
               : 'hover:border-gray-400',
             {
               'pl-10': iconPosition === 'start' && icon,

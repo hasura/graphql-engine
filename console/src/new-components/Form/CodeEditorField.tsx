@@ -90,12 +90,7 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
 
   return (
     <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
-      <div
-        className={clsx(
-          'relative w-full max-w-xl',
-          disabled ? 'cursor-not-allowed' : ''
-        )}
-      >
+      <div className="relative w-full max-w-xl">
         <Controller
           name={name}
           control={control}
@@ -119,6 +114,8 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                   value={value}
                   theme={theme}
                   mode={mode}
+                  readOnly={disabled}
+                  highlightActiveLine={!disabled}
                   onChange={onChange}
                   onBlur={() => {
                     setTipState('ANY');
@@ -164,12 +161,12 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                   setOptions={editorOptions}
                   data-test={dataTest}
                   className={clsx(
-                    'block relative inset-0 !w-inherit w-full max-w-xl h-code input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-within:outline-0 focus-within:ring-2 focus-within:ring-yellow-200 focus-within:border-yellow-400 placeholder-gray-500',
+                    'block relative inset-0 !w-inherit w-full max-w-xl h-code input shadow-sm rounded border border-gray-300 focus-within:outline-0 focus-within:ring-2 focus-within:ring-yellow-200 focus-within:border-yellow-400 placeholder-gray-500',
                     maybeError
                       ? 'border-red-600 hover:border-red-700'
                       : 'border-gray-300',
                     disabled
-                      ? 'bg-gray-100 border-gray-100 pointer-events-none'
+                      ? 'bg-gray-200 border-gray-200 hover:border-gray-200'
                       : 'hover:border-gray-400'
                   )}
                   data-testid={name}

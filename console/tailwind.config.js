@@ -79,6 +79,26 @@ module.exports = {
             scale: '1',
           },
         },
+        collapsibleContentOpen: {
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-collapsible-content-height)',
+          },
+        },
+        collapsibleContentClose: {
+          from: {
+            height: 'var(--radix-collapsible-content-height)',
+          },
+          to: {
+            height: '0',
+          },
+        },
+      },
+      animation: {
+        collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
+        collapsibleContentClose: 'collapsibleContentClose 300ms ease-out',
       },
     },
   },

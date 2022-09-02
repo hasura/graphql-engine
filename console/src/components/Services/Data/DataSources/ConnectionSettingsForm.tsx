@@ -1,5 +1,5 @@
 import React, { Dispatch, useState } from 'react';
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import { IconTooltip } from '@/new-components/Tooltip';
 
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';

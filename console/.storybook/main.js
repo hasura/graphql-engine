@@ -2,6 +2,8 @@ const util = require('util');
 const webpack = require('webpack');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const path = require('path');
+const remarkSlug = require('remark-slug');
+const remarkExternalLinks = require('remark-external-links');
 
 const isConfigDebugMode = process.env.STORYBOOK_CONFIG_LOG === 'debug';
 
@@ -63,6 +65,19 @@ module.exports = {
         configFile: path.resolve(__dirname, '../tsconfig.json'),
       })
     );
+    // Fix storybook bug preventing ids to be added to MDX items https://github.com/storybookjs/storybook/issues/18395
+    config.module.rules.map(rule => {
+      const useWithMdxCsfLoader = rule?.use?.find(use =>
+        use?.loader?.includes('@storybook/mdx1-csf')
+      );
+      if (useWithMdxCsfLoader) {
+        useWithMdxCsfLoader.options = {
+          skipCsf: false,
+          remarkPlugins: [remarkSlug, remarkExternalLinks],
+        };
+      }
+      return rule;
+    });
     config.resolve.alias['@'] = path.resolve(__dirname, '../src');
 
     if (isConfigDebugMode) {
