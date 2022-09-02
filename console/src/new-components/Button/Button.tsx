@@ -120,7 +120,7 @@ export const Button = (props: ButtonProps) => {
             ? React.cloneElement(icon, {
                 className: `inline-flex ${children && 'mr-2'} ${
                   size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
-                }`,
+                } ${icon.props.className}`,
               })
             : null}
           <span className="whitespace-nowrap max-w-full">{children}</span>
@@ -128,7 +128,7 @@ export const Button = (props: ButtonProps) => {
             ? React.cloneElement(icon, {
                 className: `inline-flex ${children && 'ml-2'} ${
                   size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
-                }`,
+                } ${icon.props.className}`,
               })
             : null}
         </>

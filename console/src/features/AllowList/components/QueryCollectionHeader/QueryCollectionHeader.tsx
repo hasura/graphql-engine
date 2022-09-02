@@ -1,7 +1,7 @@
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
 import { QueryCollectionEntry } from '@/metadata/types';
 import { Button } from '@/new-components/Button';
-import { DropdownButton } from '@/new-components/DropdownButton';
+import { DropdownMenu } from '@/new-components/DropdownMenu';
 import React, { useState } from 'react';
 import { FaEllipsisH, FaPlusCircle } from 'react-icons/fa';
 import { useDeleteQueryCollections } from '../../../QueryCollections/hooks/useDeleteQueryCollections';
@@ -35,7 +35,7 @@ export const QueryCollectionHeader: React.FC<QueryCollectionHeaderProps> =
             </p>
           </div>
           <div className="relative ml-auto mr-sm">
-            <DropdownButton
+            <DropdownMenu
               items={[
                 [
                   <div
@@ -75,8 +75,10 @@ export const QueryCollectionHeader: React.FC<QueryCollectionHeaderProps> =
                 ],
               ]}
             >
-              <FaEllipsisH />
-            </DropdownButton>
+              <Button>
+                <FaEllipsisH />
+              </Button>
+            </DropdownMenu>
           </div>
           <Button mode="primary" icon={<FaPlusCircle />}>
             Add Operation
