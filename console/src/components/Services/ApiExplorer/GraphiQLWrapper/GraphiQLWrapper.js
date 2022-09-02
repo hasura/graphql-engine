@@ -303,7 +303,7 @@ class GraphiQLWrapper extends Component {
 
     return (
       <GraphiQLErrorBoundary>
-        <div className="w-full h-full border mt-md overflow-hidden rounded border-gray-300">
+        <div className="w-full h-full border overflow-hidden rounded border-gray-300">
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
             endpoint={getGraphQLEndpoint(mode)}
