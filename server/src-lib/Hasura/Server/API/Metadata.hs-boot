@@ -38,6 +38,7 @@ data RQLMetadataV1
   | RMRenameSource !RenameSource
   | RMUpdateSource !(AnyBackend UpdateSource)
   | RMListSourceKinds !ListSourceKinds
+  | RMGetSourceKindCapabilities !GetSourceKindCapabilities
   | RMGetSourceTables !GetSourceTables
   | RMGetTableInfo !GetTableInfo
   | -- Tables
