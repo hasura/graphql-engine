@@ -1,3 +1,4 @@
+-- | Metadata API Actions relating to Source Kinds
 module Hasura.RQL.DDL.SourceKinds
   ( -- * List Source Kinds
     ListSourceKinds (..),
@@ -6,6 +7,10 @@ module Hasura.RQL.DDL.SourceKinds
     -- * Source Kind Info
     SourceKindInfo (..),
     SourceType (..),
+
+    -- * List Capabilities
+    GetSourceKindCapabilities (..),
+    runGetSourceKindCapabilities,
   )
 where
 
@@ -13,16 +18,23 @@ where
 
 import Data.Aeson (FromJSON, ToJSON, (.:), (.=))
 import Data.Aeson qualified as Aeson
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt (..))
+import Data.Text.Extended qualified as Text.E
+import Data.Text.NonEmpty (NonEmptyText)
 import Data.Text.NonEmpty qualified as NE.Text
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
+import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.EncJSON qualified as EncJSON
 import Hasura.Prelude
+import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata qualified as Metadata
+import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Network.HTTP.Client.Manager qualified as HTTP.Manager
 
 --------------------------------------------------------------------------------
 
@@ -86,3 +98,35 @@ runListSourceKinds ListSourceKinds = do
   agents <- agentSourceKinds
 
   pure $ EncJSON.encJFromJValue $ Aeson.object ["sources" .= (builtins <> agents)]
+
+--------------------------------------------------------------------------------
+
+newtype GetSourceKindCapabilities = GetSourceKindCapabilities {_gskcKind :: NonEmptyText}
+
+instance FromJSON GetSourceKindCapabilities where
+  parseJSON = Aeson.withObject "GetSourceKindCapabilities" \o -> do
+    _gskcKind <- o .: "name"
+    pure $ GetSourceKindCapabilities {..}
+
+-- | List Backend Capabilities. Currently this only supports Data Connector Backends.
+runGetSourceKindCapabilities ::
+  ( HTTP.Manager.HasHttpManagerM m,
+    MonadError Error.QErr m,
+    SchemaCache.CacheRM m
+  ) =>
+  GetSourceKindCapabilities ->
+  m EncJSON
+runGetSourceKindCapabilities GetSourceKindCapabilities {..} = do
+  case Backend.backendTypeFromText $ NE.Text.unNonEmptyText _gskcKind of
+    -- NOTE: A succesful parse here implies a native backend
+    Just backend -> Error.throw400 Error.DataConnectorError (Text.E.toTxt backend <> " does not support Capabilities.")
+    Nothing -> do
+      capabilitiesMap <- fmap SchemaCache.scDataConnectorCapabilities $ SchemaCache.askSchemaCache
+      let dataConnectorName = DC.Types.DataConnectorName _gskcKind
+
+      capabilities <-
+        fmap Common.ciCapabilities $
+          HashMap.lookup dataConnectorName (Common.unDataConnectorCapabilities capabilitiesMap)
+            `onNothing` Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt dataConnectorName <> " was not found.")
+
+      pure $ EncJSON.encJFromJValue capabilities

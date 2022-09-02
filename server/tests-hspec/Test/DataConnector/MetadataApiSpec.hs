@@ -109,6 +109,22 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
           - GenreId
         |]
 
+  describe "get_source_kind_capabilities" $ do
+    it "success" $ \(testEnvironment, _) -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+            type: get_source_kind_capabilities
+            args:
+              name: reference
+          |]
+        )
+        [yaml|
+          relationships: {}
+        |]
+
 schemaCrudTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 schemaCrudTests opts = describe "A series of actions to setup and teardown a source with tracked tables and relationships" $ do
   describe "dc_add_agent" $ do

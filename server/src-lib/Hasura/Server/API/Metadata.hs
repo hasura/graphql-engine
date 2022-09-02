@@ -83,6 +83,7 @@ data RQLMetadataV1
   | RMRenameSource !RenameSource
   | RMUpdateSource !(AnyBackend UpdateSource)
   | RMListSourceKinds !ListSourceKinds
+  | RMGetSourceKindCapabilities !GetSourceKindCapabilities
   | RMGetSourceTables !GetSourceTables
   | RMGetTableInfo !GetTableInfo
   | -- Tables
@@ -249,6 +250,7 @@ instance FromJSON RQLMetadataV1 where
       "dc_add_agent" -> RMDCAddAgent <$> args
       "dc_delete_agent" -> RMDCDeleteAgent <$> args
       "list_source_kinds" -> RMListSourceKinds <$> args
+      "get_source_kind_capabilities" -> RMGetSourceKindCapabilities <$> args
       "get_source_tables" -> RMGetSourceTables <$> args
       "get_table_info" -> RMGetTableInfo <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
@@ -475,6 +477,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRenameSource q -> runRenameSource q
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMListSourceKinds q -> runListSourceKinds q
+  RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
   RMGetSourceTables q -> runGetSourceTables q
   RMGetTableInfo q -> runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
