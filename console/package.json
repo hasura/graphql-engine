@@ -62,6 +62,20 @@
       "pre-commit": "node ./scripts/preCommit.js"
     }
   },
+  "overrides": {
+    "codemirror": "5.51.0",
+    "graphql-language-service-utils": "2.4.3",
+    "graphiql": {
+      "codemirror-graphql": {
+        ".": "0.12.2",
+        "graphql-language-service-parser": "1.6.4",
+        "graphql-language-service-interface": {
+          ".": "2.4.2",
+          "graphql-language-service-types": "1.6.3"
+        }
+      }
+    }
+  },
   "dependencies": {
     "@ant-design/icons": "4.7.0",
     "@babel/plugin-transform-runtime": "^7.14.5",
@@ -85,6 +99,7 @@
     "brace": "0.11.1",
     "case-sensitive-paths-webpack-plugin": "^2.3.0",
     "clsx": "1.1.1",
+    "codemirror": "5.51.0",
     "graphiql": "1.0.0-alpha.0",
     "graphiql-code-exporter": "2.0.8",
     "graphiql-explorer": "0.6.2",
