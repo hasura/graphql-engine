@@ -59,6 +59,7 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
+    smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
     tmComputedFields,
@@ -106,6 +107,7 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.QueryTags
@@ -408,7 +410,8 @@ data SourceMetadata b = SourceMetadata
     _smFunctions :: Functions b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
-    _smCustomization :: SourceCustomization
+    _smCustomization :: SourceCustomization,
+    _smHealthCheckConfig :: Maybe (HealthCheckConfig b)
   }
   deriving (Generic)
 
@@ -428,6 +431,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
+    _smHealthCheckConfig <- o .:? "health_check"
     pure SourceMetadata {..}
 
 backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
@@ -481,6 +485,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
         <*> requiredField' "configuration" .== _smConfiguration
         <*> optionalFieldOrNullWith' "query_tags" placeholderCodecViaJSON .== _smQueryTags -- TODO: replace placeholder
         <*> optionalFieldOrNullWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
+        <*> optionalFieldOrNull' "health_check" .== _smHealthCheckConfig
     where
       (.==) = (AC..=)
 
@@ -491,8 +496,9 @@ mkSourceMetadata ::
   BackendSourceKind b ->
   SourceConnConfiguration b ->
   SourceCustomization ->
+  Maybe (HealthCheckConfig b) ->
   BackendSourceMetadata
-mkSourceMetadata name backendSourceKind config customization =
+mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
   BackendSourceMetadata $
     AB.mkAnyBackend $
       SourceMetadata
@@ -504,6 +510,7 @@ mkSourceMetadata name backendSourceKind config customization =
         config
         Nothing
         customization
+        healthCheckConfig
 
 -- | Source configuration as stored in the Metadata DB for some existentialized backend.
 newtype BackendSourceMetadata = BackendSourceMetadata {unBackendSourceMetadata :: AB.AnyBackend SourceMetadata}

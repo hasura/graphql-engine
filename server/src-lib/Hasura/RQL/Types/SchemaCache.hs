@@ -504,7 +504,8 @@ data SchemaCache = SchemaCache
     scSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
     scTlsAllowlist :: [TlsAllow],
     scQueryCollections :: QueryCollections,
-    scDataConnectorCapabilities :: DataConnectorCapabilities
+    scDataConnectorCapabilities :: DataConnectorCapabilities,
+    scSourceHealthChecks :: SourceHealthCheckCache
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all

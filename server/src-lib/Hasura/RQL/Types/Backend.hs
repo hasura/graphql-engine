@@ -83,6 +83,7 @@ class
     Representable (ComputedFieldDefinition b),
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
+    Representable (HealthCheckTest b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
@@ -97,6 +98,7 @@ class
     FromJSON (ExtraTableMetadata b),
     FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
+    FromJSON (HealthCheckTest b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (SourceConnConfiguration b),
@@ -114,6 +116,7 @@ class
     ToJSON (ComputedFieldDefinition b),
     ToJSON (ComputedFieldImplicitArguments b),
     ToJSON (ComputedFieldReturn b),
+    ToJSON (HealthCheckTest b),
     ToJSONKey (Column b),
     ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
@@ -230,6 +233,12 @@ class
 
   -- | Computed field return information
   type ComputedFieldReturn b :: Type
+
+  -- | A config type for health check tests
+  type HealthCheckTest b :: Type
+
+  -- | Default health check test config
+  defaultHealthCheckTest :: HealthCheckTest b
 
   -- Backend-specific IR types
 

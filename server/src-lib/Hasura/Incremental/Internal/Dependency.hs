@@ -233,6 +233,8 @@ instance Cacheable Word16 where unchanged _ = (==)
 
 instance Cacheable Key where unchanged _ = (==)
 
+instance Cacheable Seconds where unchanged _ = (==)
+
 -- instances for CronSchedule from package `cron`
 instance Cacheable StepField
 

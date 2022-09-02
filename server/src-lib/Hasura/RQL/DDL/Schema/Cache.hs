@@ -236,6 +236,22 @@ instance
         invalidations
       )
 
+-- | Generate health checks related cache from sources metadata
+buildHealthCheckCache :: Sources -> SourceHealthCheckCache
+buildHealthCheckCache sources =
+  catMaybes $ M.fromList $ map (second mkSourceHealthCheck) (OMap.toList sources)
+  where
+    mkSourceHealthCheck :: BackendSourceMetadata -> Maybe BackendSourceHealthCheckInfo
+    mkSourceHealthCheck (BackendSourceMetadata sourceMetadata) =
+      AB.traverseBackend @Backend sourceMetadata mkSourceHealthCheckBackend
+
+    mkSourceHealthCheckBackend :: SourceMetadata b -> Maybe (SourceHealthCheckInfo b)
+    mkSourceHealthCheckBackend sourceMetadata =
+      let sourceName = _smName sourceMetadata
+          connection = _smConfiguration sourceMetadata
+          healthCheck = _smHealthCheckConfig sourceMetadata
+       in SourceHealthCheckInfo sourceName connection <$> healthCheck
+
 buildSchemaCacheRule ::
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
@@ -349,7 +365,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata,
           scTlsAllowlist = _boTlsAllowlist resolvedOutputs,
           scQueryCollections = _boQueryCollections resolvedOutputs,
-          scDataConnectorCapabilities = _boDataConnectorCapabilities resolvedOutputs
+          scDataConnectorCapabilities = _boDataConnectorCapabilities resolvedOutputs,
+          scSourceHealthChecks = buildHealthCheckCache (_metaSources metadata)
         }
   where
     getDataConnectorCapabilitiesIfNeeded ::
@@ -540,7 +557,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       )
         `arr` BackendSourceInfo
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, _dbTables, dbFunctions, remoteSchemaMap, orderedRoles) -> do
-      let SourceMetadata sourceName _backendKind tables functions _ queryTagsConfig sourceCustomization = sourceMetadata
+      let SourceMetadata sourceName _backendKind tables functions _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -658,7 +675,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             HS.fromList $
               concat $
                 OMap.elems sources >>= \(BackendSourceMetadata e) ->
-                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _ _ _) -> do
+                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _ _ _ _) -> do
                     table <- OMap.elems tables
                     pure $
                       OMap.keys (_tmInsertPermissions table)

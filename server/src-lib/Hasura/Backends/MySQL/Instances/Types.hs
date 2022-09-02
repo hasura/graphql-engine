@@ -42,6 +42,9 @@ instance Backend 'MySQL where
   type XNestedInserts 'MySQL = XDisable
   type XStreamingSubscription 'MySQL = XDisable
 
+  type HealthCheckTest 'MySQL = Void
+  defaultHealthCheckTest = error "defaultHealthCheckTest"
+
   isComparableType :: ScalarType 'MySQL -> Bool
   isComparableType = isNumType @'MySQL -- TODO: For now we only allow comparisons for numeric types
 

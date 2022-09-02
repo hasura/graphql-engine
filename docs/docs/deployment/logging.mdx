@@ -59,7 +59,7 @@ Configurable log-types
 Apart from the above, there are other internal log-types which cannot be configured:
 
 | Log type             | Description                                                                                         | Log Level          |
-| -------------------- | --------------------------------------------------------------------------------------------------- | ------------------ |
+|----------------------|-----------------------------------------------------------------------------------------------------|--------------------|
 | `pg-client`          | Logs from the postgres client library                                                               | `warn`             |
 | `metadata`           | Logs inconsistent metadata items                                                                    | `warn`             |
 | `jwk-refresh-log`    | Logs information and errors about periodic refreshing of JWK                                        | `info` and `error` |
@@ -67,6 +67,7 @@ Apart from the above, there are other internal log-types which cannot be configu
 | `event-trigger`      | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
 | `ws-server`          | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |
 | `schema-sync-thread` | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
+| `health-check-log`   | Logs source health check events which includes health status of a data source                       | `info` and `warn`  |
 
 Internal log-types
 
@@ -394,6 +395,122 @@ This is how the Websocket logs look like:
   }
 }
 ```
+
+### **health-check-log** structure
+
+The GraphQL Engine does recurring health checks on data sources and logs the status with other
+details. This is how the health check log looks like:
+
+- On successful health check
+
+```json
+{
+  "level": "info",
+  "timestamp": "2022-07-28T12:23:56.555+0530",
+  "type": "health-check-log",
+  "detail": {
+    "source_name": "mssql",
+    "status": "OK",
+    "timestamp": "2022-07-28T06:53:56.555Z",
+    "error": null,
+    "internal": {
+      "interval": 5,
+      "max_retries": 3,
+      "retry_iteration": 0,
+      "timeout": 3
+    }
+  }
+}
+```
+
+- When health check is timed out
+
+```json
+{
+  "level": "warn",
+  "timestamp": "2022-07-28T12:28:16.165+0530",
+  "type": "health-check-log",
+  "detail": {
+    "source_name": "mssql",
+    "status": "TIMEOUT",
+    "timestamp": "2022-07-28T06:58:16.165Z",
+    "error": null,
+    "internal": {
+      "interval": 5,
+      "max_retries": 3,
+      "retry_iteration": 3,
+      "timeout": 3
+    }
+  }
+}
+```
+
+- When health check results in an error
+
+```json
+{
+  "level": "warn",
+  "timestamp": "2022-07-28T12:30:06.643+0530",
+  "type": "health-check-log",
+  "detail": {
+    "source_name": "postgres",
+    "status": "ERROR",
+    "timestamp": "2022-07-28T07:00:06.643Z",
+    "error": {
+      "message": "connection error",
+      "extra": "connection to server at \"localhost\" (::1), port 6432 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\nconnection to server at \"localhost\" (127.0.0.1), port 6432 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\n"
+    },
+    "internal": {
+      "interval": 10,
+      "max_retries": 3,
+      "retry_iteration": 3,
+      "timeout": 5
+    }
+  }
+}
+```
+
+The `type` in the log will be `health-check-log` and details of the health check will be under `detail` key.
+
+The `detail` field value is an object contains the following members.
+
+| Name          | Type                       | Description                                            |
+|---------------|----------------------------|--------------------------------------------------------|
+| `source_name` | string                     | The name of the source                                 |
+| `status`      | `HealthCheckStatus` string | The health status of the source                        |
+| `timestamp`   | string                     | The timestamp in UTC when the health check is finished |
+| `error`       | `HealthCheckError` value   | The details of the error                               |
+| `internal`    | `Internal` object          | Internals of the health check config                   |
+
+- **HealthCheckStatus** is a mandatory field whose values are as follows.
+
+   | Health check status | Description                                                                          | Log level |
+   |---------------------|--------------------------------------------------------------------------------------|-----------|
+   | `OK`                | Health check succeeded with no errors.                                               | `info`    |
+   | `FAILED`            | Health check is failed maybe due to bad connection config.                           | `warn`    |
+   | `TIMEOUT`           | Health check is timed out. The timeout value is specified in the healch check config | `warn`    |
+   | `ERROR`             | Health check results in an exception.                                                | `warn`    |
+
+- **HealthCheckError** contains more information about the health check exception when the status is `ERROR`.
+  For other statuses the value will be `null`. The `error` object contains the following fields
+  - `message`: _string_. A very brief description about the error.
+  - `extra`: _any json_. Contains extra and detailed information about the error.
+
+- **Internal** is an object contains the following fields.
+  - `interval`: _int_. Health check interval in seconds.
+  - `max_retries`: _int_. Maximum # of retries configured.
+  - `retry_interation`: _int_. The iteration on which the health check is succeeded. In case of unsuccessful health check, the retry iteration is same as `max_retries`.
+  - `retry_interval`: _int_. The retry interval in seconds.
+  - `timeout`: _int_. Health check time out value in seconds.
+
+:::info Note
+
+The GraphQL Engine logs the health check status only when
+
+- the `status` is not `OK`
+- the previous check `status` was not `OK` and current `status` is `OK`
+
+:::
 
 ## Monitoring frameworks
 
