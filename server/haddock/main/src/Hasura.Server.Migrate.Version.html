@@ -16,7 +16,7 @@
 </span><span id="line-16"></span><span>    </span><span id="MetadataCatalogVersion"><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-var">MetadataCatalogVersion</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-17"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Maintained for compatibility with catalog version 0.8.</span><span>
 </span><span id="line-18"></span><span>    </span><span id="MetadataCatalogVersion08"><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion08"><span class="hs-identifier hs-var">MetadataCatalogVersion08</span></a></span></span><span>
-</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689577123"><span id="local-6989586621689577125"><span class="annot"><span class="annottext">MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Bool
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689662989"><span id="local-6989586621689662991"><span class="annot"><span class="annottext">MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Bool
 (MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Bool)
 -&gt; (MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Bool)
 -&gt; Eq MetadataCatalogVersion
@@ -25,7 +25,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Bool
 == :: MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Bool
 $c== :: MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689577118"><span id="local-6989586621689577120"><span class="annot"><span class="annottext">MetadataCatalogVersion -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689662984"><span id="local-6989586621689662986"><span class="annot"><span class="annottext">MetadataCatalogVersion -&gt; Q Exp
 MetadataCatalogVersion -&gt; Q (TExp MetadataCatalogVersion)
 (MetadataCatalogVersion -&gt; Q Exp)
 -&gt; (MetadataCatalogVersion -&gt; Q (TExp MetadataCatalogVersion))
@@ -37,8 +37,8 @@ lift :: MetadataCatalogVersion -&gt; Q Exp
 $clift :: MetadataCatalogVersion -&gt; Q Exp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689577103"><span id="local-6989586621689577105"><span id="local-6989586621689577107"><span id="local-6989586621689577109"><span id="local-6989586621689577111"><span id="local-6989586621689577113"><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-22"></span><span>  </span><span id="local-6989586621689577101"><span class="annot"><span class="annottext">compare :: MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Ordering
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689662969"><span id="local-6989586621689662971"><span id="local-6989586621689662973"><span id="local-6989586621689662975"><span id="local-6989586621689662977"><span id="local-6989586621689662979"><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621689662967"><span class="annot"><span class="annottext">compare :: MetadataCatalogVersion -&gt; MetadataCatalogVersion -&gt; Ordering
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">compare</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Ordering
 forall a. Ord a =&gt; a -&gt; a -&gt; Ordering
 </span><span class="hs-identifier hs-var">compare</span></span><span> </span><span class="annot"><span class="annottext">(Float -&gt; Float -&gt; Ordering)
@@ -48,60 +48,60 @@ forall a. Ord a =&gt; a -&gt; a -&gt; Ordering
 -&gt; Ordering
 forall b c a. (b -&gt; b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">`on`</span></span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion -&gt; Float
-</span><a href="#local-6989586621689577098"><span class="hs-identifier hs-var">toFloat</span></a></span><span>
+</span><a href="#local-6989586621689662964"><span class="hs-identifier hs-var">toFloat</span></a></span><span>
 </span><span id="line-23"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>      </span><span class="annot"><a href="#local-6989586621689577098"><span class="hs-identifier hs-type">toFloat</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span>
-</span><span id="line-25"></span><span>      </span><span id="local-6989586621689577098"><span class="annot"><span class="annottext">toFloat :: MetadataCatalogVersion -&gt; Float
-</span><a href="#local-6989586621689577098"><span class="hs-identifier hs-var hs-var">toFloat</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span id="local-6989586621689577097"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577097"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Float
+</span><span id="line-24"></span><span>      </span><span class="annot"><a href="#local-6989586621689662964"><span class="hs-identifier hs-type">toFloat</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span>
+</span><span id="line-25"></span><span>      </span><span id="local-6989586621689662964"><span class="annot"><span class="annottext">toFloat :: MetadataCatalogVersion -&gt; Float
+</span><a href="#local-6989586621689662964"><span class="hs-identifier hs-var hs-var">toFloat</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span id="local-6989586621689662963"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689662963"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Float
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577097"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-26"></span><span>      </span><span class="annot"><a href="#local-6989586621689577098"><span class="hs-identifier hs-var">toFloat</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion
+</span><a href="#local-6989586621689662963"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-26"></span><span>      </span><span class="annot"><a href="#local-6989586621689662964"><span class="hs-identifier hs-var">toFloat</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion
 </span><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion08"><span class="hs-identifier hs-var">MetadataCatalogVersion08</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Float
 </span><span class="hs-number">0.8</span></span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689577083"><span id="local-6989586621689577085"><span id="local-6989586621689577087"><span id="local-6989586621689577089"><span id="local-6989586621689577093"><span id="local-6989586621689577095"><span class="annot"><span class="hs-identifier hs-type">Enum</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-29"></span><span>  </span><span id="local-6989586621689577081"><span class="annot"><span class="annottext">toEnum :: Int -&gt; MetadataCatalogVersion
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689662949"><span id="local-6989586621689662951"><span id="local-6989586621689662953"><span id="local-6989586621689662955"><span id="local-6989586621689662959"><span id="local-6989586621689662961"><span class="annot"><span class="hs-identifier hs-type">Enum</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621689662947"><span class="annot"><span class="annottext">toEnum :: Int -&gt; MetadataCatalogVersion
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toEnum</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; MetadataCatalogVersion
 </span><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-var">MetadataCatalogVersion</span></a></span><span>
-</span><span id="line-30"></span><span>  </span><span id="local-6989586621689577079"><span class="annot"><span class="annottext">fromEnum :: MetadataCatalogVersion -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromEnum</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span id="local-6989586621689577077"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577077"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577077"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621689662945"><span class="annot"><span class="annottext">fromEnum :: MetadataCatalogVersion -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromEnum</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span id="local-6989586621689662943"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689662943"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689662943"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-31"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">fromEnum</span></span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion
 </span><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion08"><span class="hs-identifier hs-var">MetadataCatalogVersion08</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Int
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;Cannot enumerate unstable catalog versions.&quot;</span></span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689577071"><span id="local-6989586621689577074"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-34"></span><span>  </span><span id="local-6989586621689577069"><span class="annot"><span class="annottext">show :: MetadataCatalogVersion -&gt; [Char]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span id="local-6989586621689577067"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577067"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [Char]
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689662937"><span id="local-6989586621689662940"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621689662935"><span class="annot"><span class="annottext">show :: MetadataCatalogVersion -&gt; [Char]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span> </span><span id="local-6989586621689662933"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689662933"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [Char]
 forall a. Show a =&gt; a -&gt; [Char]
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577067"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689662933"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-35"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion
 </span><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion08"><span class="hs-identifier hs-var">MetadataCatalogVersion08</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;0.8&quot;</span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689577060"><span id="local-6989586621689577062"><span id="local-6989586621689577064"><span class="annot"><span class="hs-identifier hs-type">Read</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621689577058"><span class="annot"><span class="annottext">readsPrec :: Int -&gt; ReadS MetadataCatalogVersion
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">readsPrec</span></span></span><span> </span><span id="local-6989586621689577056"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577056"><span class="hs-identifier hs-var">prec</span></a></span></span><span> </span><span id="local-6989586621689577055"><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621689577055"><span class="hs-identifier hs-var">s</span></a></span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689662926"><span id="local-6989586621689662928"><span id="local-6989586621689662930"><span class="annot"><span class="hs-identifier hs-type">Read</span></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621689662924"><span class="annot"><span class="annottext">readsPrec :: Int -&gt; ReadS MetadataCatalogVersion
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">readsPrec</span></span></span><span> </span><span id="local-6989586621689662922"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689662922"><span class="hs-identifier hs-var">prec</span></a></span></span><span> </span><span id="local-6989586621689662921"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621689662921"><span class="hs-identifier hs-var">s</span></a></span></span><span>
 </span><span id="line-39"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;0.8&quot;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; [Char] -&gt; Bool
 forall a. Eq a =&gt; [a] -&gt; [a] -&gt; Bool
 </span><span class="hs-operator hs-var">`isPrefixOf`</span></span><span> </span><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621689577055"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689662921"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-40"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataCatalogVersion
 </span><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion08"><span class="hs-identifier hs-var">MetadataCatalogVersion08</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
 forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">3</span></span><span> </span><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621689577055"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689662921"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-41"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">((Int, [Char]) -&gt; (MetadataCatalogVersion, [Char]))
@@ -131,12 +131,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ReadS Int
 forall a. Read a =&gt; Int -&gt; ReadS a
 </span><span class="hs-identifier hs-var">readsPrec</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689577056"><span class="hs-identifier hs-var">prec</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621689577055"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689662922"><span class="hs-identifier hs-var">prec</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621689662921"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- | This is the source catalog version, used when deciding whether to (re-)create event triggers.</span><span>
-</span><span id="line-45"></span><span class="hs-keyword">newtype</span><span> </span><span id="SourceCatalogVersion"><span class="annot"><a href="Hasura.Server.Migrate.Version.html#SourceCatalogVersion"><span class="hs-identifier hs-var">SourceCatalogVersion</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689577052"><span class="annot"><a href="#local-6989586621689577052"><span class="hs-identifier hs-type">backend</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceCatalogVersion"><span class="annot"><a href="Hasura.Server.Migrate.Version.html#SourceCatalogVersion"><span class="hs-identifier hs-var">SourceCatalogVersion</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689577047"><span id="local-6989586621689577049"><span class="annot"><span class="annottext">SourceCatalogVersion backend
+</span><span id="line-45"></span><span class="hs-keyword">newtype</span><span> </span><span id="SourceCatalogVersion"><span class="annot"><a href="Hasura.Server.Migrate.Version.html#SourceCatalogVersion"><span class="hs-identifier hs-var">SourceCatalogVersion</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689662918"><span class="annot"><a href="#local-6989586621689662918"><span class="hs-identifier hs-type">backend</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceCatalogVersion"><span class="annot"><a href="Hasura.Server.Migrate.Version.html#SourceCatalogVersion"><span class="hs-identifier hs-var">SourceCatalogVersion</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689662913"><span id="local-6989586621689662915"><span class="annot"><span class="annottext">SourceCatalogVersion backend
 -&gt; SourceCatalogVersion backend -&gt; Bool
 (SourceCatalogVersion backend
  -&gt; SourceCatalogVersion backend -&gt; Bool)
@@ -157,7 +157,7 @@ SourceCatalogVersion backend
 $c== :: forall (backend :: BackendType).
 SourceCatalogVersion backend
 -&gt; SourceCatalogVersion backend -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689577031"><span id="local-6989586621689577033"><span id="local-6989586621689577035"><span id="local-6989586621689577037"><span id="local-6989586621689577039"><span id="local-6989586621689577041"><span id="local-6989586621689577043"><span id="local-6989586621689577045"><span class="annot"><span class="annottext">Int -&gt; SourceCatalogVersion backend
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689662897"><span id="local-6989586621689662899"><span id="local-6989586621689662901"><span id="local-6989586621689662903"><span id="local-6989586621689662905"><span id="local-6989586621689662907"><span id="local-6989586621689662909"><span id="local-6989586621689662911"><span class="annot"><span class="annottext">Int -&gt; SourceCatalogVersion backend
 SourceCatalogVersion backend -&gt; Int
 SourceCatalogVersion backend -&gt; [SourceCatalogVersion backend]
 SourceCatalogVersion backend -&gt; SourceCatalogVersion backend
@@ -241,7 +241,7 @@ SourceCatalogVersion backend -&gt; SourceCatalogVersion backend
 succ :: SourceCatalogVersion backend -&gt; SourceCatalogVersion backend
 $csucc :: forall (backend :: BackendType).
 SourceCatalogVersion backend -&gt; SourceCatalogVersion backend
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689577025"><span id="local-6989586621689577027"><span id="local-6989586621689577029"><span class="annot"><span class="annottext">Int -&gt; SourceCatalogVersion backend -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689662891"><span id="local-6989586621689662893"><span id="local-6989586621689662895"><span class="annot"><span class="annottext">Int -&gt; SourceCatalogVersion backend -&gt; ShowS
 [SourceCatalogVersion backend] -&gt; ShowS
 SourceCatalogVersion backend -&gt; [Char]
 (Int -&gt; SourceCatalogVersion backend -&gt; ShowS)
@@ -265,7 +265,7 @@ SourceCatalogVersion backend -&gt; [Char]
 showsPrec :: Int -&gt; SourceCatalogVersion backend -&gt; ShowS
 $cshowsPrec :: forall (backend :: BackendType).
 Int -&gt; SourceCatalogVersion backend -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689577017"><span id="local-6989586621689577019"><span id="local-6989586621689577021"><span id="local-6989586621689577023"><span class="annot"><span class="annottext">ReadPrec [SourceCatalogVersion backend]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689662883"><span id="local-6989586621689662885"><span id="local-6989586621689662887"><span id="local-6989586621689662889"><span class="annot"><span class="annottext">ReadPrec [SourceCatalogVersion backend]
 ReadPrec (SourceCatalogVersion backend)
 Int -&gt; ReadS (SourceCatalogVersion backend)
 ReadS [SourceCatalogVersion backend]
@@ -298,7 +298,7 @@ readsPrec :: Int -&gt; ReadS (SourceCatalogVersion backend)
 $creadsPrec :: forall (backend :: BackendType).
 Int -&gt; ReadS (SourceCatalogVersion backend)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689577013"><span id="local-6989586621689577015"><span class="annot"><span class="annottext">SourceCatalogVersion backend -&gt; Q Exp
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689662879"><span id="local-6989586621689662881"><span class="annot"><span class="annottext">SourceCatalogVersion backend -&gt; Q Exp
 SourceCatalogVersion backend
 -&gt; Q (TExp (SourceCatalogVersion backend))
 (SourceCatalogVersion backend -&gt; Q Exp)
