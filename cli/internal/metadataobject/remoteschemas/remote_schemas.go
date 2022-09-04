@@ -9,9 +9,9 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/sirupsen/logrus"
-	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/formatter"
+	"github.com/vektah/gqlparser/v2/parser"
 	"gopkg.in/yaml.v3"
 )
 
@@ -69,7 +69,7 @@ func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.Err
 
 type remoteSchema struct {
 	Name                interface{}  `yaml:"name,omitempty"`
-	Defintion           yaml.Node    `yaml:"definition,omitempty"`
+	Definition          yaml.Node    `yaml:"definition,omitempty"`
 	Comment             yaml.Node    `yaml:"comment,omitempty"`
 	Permissions         []permission `yaml:"permissions,omitempty"`
 	RemoteRelationships yaml.Node    `yaml:"remote_relationships,omitempty"`
@@ -102,7 +102,7 @@ func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][
 			for pIdx := range remoteSchemas[rsIdx].Permissions {
 				buf := new(bytes.Buffer)
 				gqlFormatter := formatter.NewFormatter(buf, formatter.WithIndent("  "))
-				schema, err := gqlparser.LoadSchema(&ast.Source{
+				schema, err := parser.ParseSchema(&ast.Source{
 					Input: remoteSchemas[rsIdx].Permissions[pIdx].Definition.Schema,
 				})
 				if err != nil {
@@ -110,7 +110,7 @@ func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][
 					r.logger.Debugf("loading schema failed for role: %v remote schema: %v error: %v", remoteSchemas[rsIdx].Permissions[pIdx].Role, remoteSchemas[rsIdx].Name, err)
 					continue
 				}
-				gqlFormatter.FormatSchema(schema)
+				gqlFormatter.FormatSchemaDocument(schema)
 				if buf.Len() > 0 {
 					remoteSchemas[rsIdx].Permissions[pIdx].Definition.Schema = buf.String()
 				}
