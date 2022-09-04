@@ -2,7 +2,6 @@ package remoteschemas
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -48,7 +47,7 @@ func (r *RemoteSchemaConfig) CreateFiles() error {
 	if err := os.MkdirAll(filepath.Dir(path), 0744); err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(path, buf.Bytes(), 0644)
+	err = os.WriteFile(path, buf.Bytes(), 0644)
 	if err != nil {
 		return err
 	}
