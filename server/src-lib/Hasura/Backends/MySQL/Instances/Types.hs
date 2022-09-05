@@ -15,6 +15,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MySQL where
   type BackendConfig 'MySQL = ()
+  type BackendInfo 'MySQL = ()
   type SourceConfig 'MySQL = MySQL.SourceConfig
   type SourceConnConfiguration 'MySQL = MySQL.ConnSourceConfig
   type TableName 'MySQL = MySQL.TableName

@@ -37,6 +37,7 @@ type Unimplemented = ()
 
 instance Backend 'DataConnector where
   type BackendConfig 'DataConnector = InsOrdHashMap Adapter.DataConnectorName Adapter.DataConnectorOptions
+  type BackendInfo 'DataConnector = HashMap Adapter.DataConnectorName Adapter.DataConnectorInfo
   type SourceConfig 'DataConnector = Adapter.SourceConfig
   type SourceConnConfiguration 'DataConnector = Adapter.ConnSourceConfig
 

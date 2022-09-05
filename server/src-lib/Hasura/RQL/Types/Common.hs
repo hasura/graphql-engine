@@ -40,9 +40,6 @@ module Hasura.RQL.Types.Common
     ApolloFederationConfig (..),
     ApolloFederationVersion (..),
     isApolloFedV1enabled,
-    CapabilitiesInfo (..),
-    mkCapabilitiesInfo,
-    DataConnectorCapabilities (..),
   )
 where
 
@@ -60,9 +57,6 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.URL.Template
 import Database.PG.Query qualified as Q
-import Hasura.Backends.DataConnector.API.V0.Capabilities (Capabilities, CapabilitiesResponse (..))
-import Hasura.Backends.DataConnector.API.V0.ConfigSchema (ConfigSchemaResponse)
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
@@ -557,22 +551,3 @@ instance NFData ApolloFederationConfig
 
 isApolloFedV1enabled :: Maybe ApolloFederationConfig -> Bool
 isApolloFedV1enabled = isJust
-
-data CapabilitiesInfo = CapabiltiesInfo
-  { ciCapabilities :: Capabilities,
-    ciConfigSchemaResponse :: ConfigSchemaResponse
-  }
-  deriving stock (Eq, Show, Generic)
-
-instance Cacheable CapabilitiesInfo where
-  unchanged = const (==)
-
-instance ToJSON CapabilitiesInfo
-
-mkCapabilitiesInfo :: CapabilitiesResponse -> CapabilitiesInfo
-mkCapabilitiesInfo CapabilitiesResponse {..} = CapabiltiesInfo crCapabilities crConfigSchemaResponse
-
-newtype DataConnectorCapabilities = DataConnectorCapabilities
-  { unDataConnectorCapabilities :: HashMap DataConnectorName CapabilitiesInfo
-  }
-  deriving newtype (ToJSON, Semigroup, Monoid, Eq, Cacheable)

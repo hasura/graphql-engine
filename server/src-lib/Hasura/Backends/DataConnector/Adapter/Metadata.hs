@@ -1,14 +1,16 @@
+{-# LANGUAGE Arrows #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Metadata (getDataConnectorCapabilities) where
+module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
+import Control.Arrow.Extended
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Environment (Environment)
-import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
@@ -28,15 +30,18 @@ import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
 import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw500, withPathK)
+import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
-import Hasura.RQL.Types.Common (CapabilitiesInfo (..), DataConnectorCapabilities (..), OID (..), SourceName)
+import Hasura.RQL.Types.Common (OID (..), SourceName)
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source (ResolvedSource (..))
 import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
@@ -48,12 +53,14 @@ import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Tracing (noReporter, runTraceTWithReporter)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Client.Manager
 import Servant.Client.Core.HasClient ((//))
 import Servant.Client.Generic (genericClient)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
   prepareCatalog _ = pure RETDoNothing
+  resolveBackendInfo = resolveBackendInfo'
   resolveSourceConfig = resolveSourceConfig'
   resolveDatabaseMetadata = resolveDatabaseMetadata'
   parseBoolExpOperations = parseBoolExpOperations'
@@ -66,48 +73,81 @@ instance BackendMetadata 'DataConnector where
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
 
-getDataConnectorCapabilities ::
-  MonadIO m =>
+resolveBackendInfo' ::
+  ( ArrowChoice arr,
+    Inc.ArrowCache m arr,
+    Inc.ArrowDistribute arr,
+    ArrowWriter (Seq CollectedInfo) arr,
+    MonadIO m,
+    HasHttpManagerM m
+  ) =>
   Logger Hasura ->
-  DC.DataConnectorOptions ->
-  HTTP.Manager ->
-  m (Either QErr API.CapabilitiesResponse)
-getDataConnectorCapabilities logger DC.DataConnectorOptions {..} manager = runExceptT do
-  runTraceTWithReporter noReporter "capabilities"
-    . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
-    $ genericClient // API._capabilities
+  InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
+resolveBackendInfo' logger = proc (optionsMap) -> do
+  maybeDataConnectorCapabilities <-
+    (|
+      Inc.keyed
+        ( \dataConnectorName dataConnectorOptions -> do
+            getDataConnectorCapabilitiesIfNeeded -< (dataConnectorName, dataConnectorOptions)
+        )
+      |) (OMap.toHashMap optionsMap)
+  returnA -< HashMap.catMaybes maybeDataConnectorCapabilities
+  where
+    getDataConnectorCapabilitiesIfNeeded ::
+      forall arr m.
+      ( ArrowChoice arr,
+        Inc.ArrowCache m arr,
+        ArrowWriter (Seq CollectedInfo) arr,
+        MonadIO m,
+        HasHttpManagerM m
+      ) =>
+      (DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
+    getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (dataConnectorName, dataConnectorOptions) -> do
+      let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
+      httpMgr <- bindA -< askHttpManager
+      (|
+        withRecordInconsistency
+          ( liftEitherA <<< bindA -< getDataConnectorCapabilities dataConnectorOptions httpMgr
+          )
+        |) metadataObj
+
+    getDataConnectorCapabilities ::
+      MonadIO m =>
+      DC.DataConnectorOptions ->
+      HTTP.Manager ->
+      m (Either QErr DC.DataConnectorInfo)
+    getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
+      API.CapabilitiesResponse {..} <-
+        runTraceTWithReporter noReporter "capabilities"
+          . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
+          $ genericClient // API._capabilities
+      return $ DC.DataConnectorInfo options crCapabilities crConfigSchemaResponse
 
 resolveSourceConfig' ::
   MonadIO m =>
-  DataConnectorCapabilities ->
   Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->
   BackendSourceKind 'DataConnector ->
-  InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions ->
+  HashMap DC.DataConnectorName DC.DataConnectorInfo ->
   Environment ->
   HTTP.Manager ->
   m (Either QErr DC.SourceConfig)
 resolveSourceConfig'
-  dataConnectorCapabilities
   logger
   sourceName
   csc@ConnSourceConfig {template, timeout, value = originalConfig}
   (DataConnectorKind dataConnectorName)
-  backendConfig
+  backendInfo
   env
   manager = runExceptT do
-    DC.DataConnectorOptions {..} <-
-      OMap.lookup dataConnectorName backendConfig
-        `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend config")
+    DC.DataConnectorInfo {DC._dciOptions = DC.DataConnectorOptions {..}, ..} <-
+      Map.lookup dataConnectorName backendInfo
+        `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
 
     transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
 
-    CapabiltiesInfo {..} <-
-      HashMap.lookup dataConnectorName (unDataConnectorCapabilities dataConnectorCapabilities)
-        `onNothing` throw400 DataConnectorError ("Capabilities not found for data connector " <>> toTxt dataConnectorName)
-
-    validateConfiguration sourceName dataConnectorName ciConfigSchemaResponse transformedConfig
+    validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
 
     schemaResponse <-
       runTraceTWithReporter noReporter "resolve source"
@@ -119,7 +159,7 @@ resolveSourceConfig'
         { _scEndpoint = _dcoUri,
           _scConfig = originalConfig,
           _scTemplate = template,
-          _scCapabilities = ciCapabilities,
+          _scCapabilities = _dciCapabilities,
           _scSchema = schemaResponse,
           _scManager = manager,
           _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),

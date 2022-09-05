@@ -5,6 +5,7 @@ module Hasura.Backends.DataConnector.Adapter.Types
     SourceConfig (..),
     DataConnectorName (..),
     DataConnectorOptions (..),
+    DataConnectorInfo (..),
     CountType (..),
     SourceTimeout (),
     sourceTimeoutMicroseconds,
@@ -132,6 +133,25 @@ instance FromJSON DataConnectorOptions where
 
 instance ToJSON DataConnectorOptions where
   toJSON = genericToJSON hasuraJSON
+
+data DataConnectorInfo = DataConnectorInfo
+  { _dciOptions :: DataConnectorOptions,
+    _dciCapabilities :: API.Capabilities,
+    _dciConfigSchemaResponse :: API.ConfigSchemaResponse
+  }
+  deriving stock (Eq, Show, Generic)
+
+instance FromJSON DataConnectorInfo where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DataConnectorInfo where
+  toJSON = genericToJSON hasuraJSON
+
+instance Cacheable DataConnectorInfo where
+  unchanged a dci0 dci1 =
+    unchanged a (_dciOptions dci0) (_dciOptions dci1)
+      && _dciCapabilities dci0 == _dciCapabilities dci1
+      && _dciConfigSchemaResponse dci0 == _dciConfigSchemaResponse dci1
 
 data CountType
   = StarCount

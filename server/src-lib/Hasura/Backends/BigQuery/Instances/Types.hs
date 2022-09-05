@@ -17,6 +17,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'BigQuery where
   type BackendConfig 'BigQuery = ()
+  type BackendInfo 'BigQuery = ()
   type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   type TableName 'BigQuery = BigQuery.TableName

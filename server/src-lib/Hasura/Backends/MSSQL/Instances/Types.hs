@@ -22,6 +22,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MSSQL where
   type BackendConfig 'MSSQL = ()
+  type BackendInfo 'MSSQL = ()
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type TableName 'MSSQL = MSSQL.TableName
