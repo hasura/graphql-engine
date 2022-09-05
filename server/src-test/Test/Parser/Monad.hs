@@ -5,9 +5,9 @@
 -- Warning: a lot of the implementations are currently 'undefined'. As we write
 -- more advanced tests, they might require implementations.
 module Test.Parser.Monad
-  ( ParserTestT (..),
+  ( ParserTestM (..),
     SchemaEnvironment,
-    SchemaTestT (..),
+    SchemaTestM (..),
     notImplementedYet,
   )
 where
@@ -30,7 +30,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.SourceCustomization (CustomizeRemoteFieldName, MkRootFieldName)
 import Hasura.Session (adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
-import Test.Hspec
+import Test.HUnit.Lang (assertFailure)
 
 -- | Placeholder value for test inputs that are not relevant yet.
 notImplementedYet :: HasCallStack => String -> a
@@ -45,7 +45,7 @@ notImplementedYet thing =
 -- | Monad builder environment.
 --
 -- Parser functions generally have a return type of @m (Parser n)@. The @m@
--- parameter is mocked through 'SchemaTestT', which requires a bunch of 'Has'
+-- parameter is mocked through 'SchemaTestM', which requires a bunch of 'Has'
 -- instances, as well as a 'ReaderT' instance for environment
 -- settings/configurations. This type repesents these settings.
 --
@@ -110,45 +110,47 @@ instance Has CustomizeRemoteFieldName SchemaEnvironment where
 
 -------------------------------------------------------------------------------
 
--- | SchemaTestT
-newtype SchemaTestT a = SchemaTestT a
+-- | SchemaTestM
+newtype SchemaTestM a = SchemaTestM {runSchemaTestM :: a}
   deriving stock (Functor)
   deriving (Applicative, Monad) via Identity
 
-instance MonadError QErr SchemaTestT where
-  throwError :: forall a. QErr -> SchemaTestT a
-  throwError = notImplementedYet "throwError<MonadError QErr SchemaTestT>"
+instance MonadError QErr SchemaTestM where
+  throwError :: forall a. QErr -> SchemaTestM a
+  throwError = notImplementedYet "throwError<MonadError QErr SchemaTestM>"
 
-  catchError :: forall a. SchemaTestT a -> (QErr -> SchemaTestT a) -> SchemaTestT a
-  catchError = notImplementedYet "catchError<MonadError QErr SchemaTestT>"
+  catchError :: forall a. SchemaTestM a -> (QErr -> SchemaTestM a) -> SchemaTestM a
+  catchError = notImplementedYet "catchError<MonadError QErr SchemaTestM>"
 
 -- | Note this is not used because all the actual getters/setters for
 -- SchemaEnvironment are @const X@, so these bottoms never actually get
 -- evaluated.
-instance MonadReader SchemaEnvironment SchemaTestT where
-  ask :: SchemaTestT SchemaEnvironment
-  ask = notImplementedYet "ask<MonadReader SchemaEnvironment SchemaTestT>"
+instance MonadReader SchemaEnvironment SchemaTestM where
+  ask :: SchemaTestM SchemaEnvironment
+  ask = notImplementedYet "ask<MonadReader SchemaEnvironment SchemaTestM>"
 
-  local :: (SchemaEnvironment -> SchemaEnvironment) -> SchemaTestT a -> SchemaTestT a
-  local = notImplementedYet "local<MonadReader SchemaEnvironment SchemaTestT>"
+  local :: (SchemaEnvironment -> SchemaEnvironment) -> SchemaTestM a -> SchemaTestM a
+  local = notImplementedYet "local<MonadReader SchemaEnvironment SchemaTestM>"
 
 -------------------------------------------------------------------------------
 
--- | ParserTestT
+-- | ParserTestM
 --
 -- Encodes an assertion error (as `Left`) or a value as `Right`.
-newtype ParserTestT a = ParserTestT (Either (IO ()) a)
+-- newtype ParserTestM a = ParserTestM {runParserTestM :: Either (IO ()) a}
+newtype ParserTestM a = ParserTestM {runParserTestM :: IO a}
   deriving stock (Functor)
-  deriving (Applicative, Monad) via (Either (IO ()))
+  -- deriving (Applicative, Monad) via (Either (IO ()))
+  deriving newtype (Applicative, Monad)
 
-instance MonadMemoize SchemaTestT where
-  memoizeOn :: TH.Name -> a -> SchemaTestT p -> SchemaTestT p
+instance MonadMemoize SchemaTestM where
+  memoizeOn :: TH.Name -> a -> SchemaTestM p -> SchemaTestM p
   memoizeOn _ _ = id
 
-instance MonadParse ParserTestT where
-  withKey :: JSONPathElement -> ParserTestT a -> ParserTestT a
+instance MonadParse ParserTestM where
+  withKey :: JSONPathElement -> ParserTestM a -> ParserTestM a
   withKey = const id
 
-  parseErrorWith :: ParseErrorCode -> ErrorMessage -> ParserTestT a
+  parseErrorWith :: ParseErrorCode -> ErrorMessage -> ParserTestM a
   parseErrorWith code text =
-    ParserTestT . Left . expectationFailure $ show code <> ": " <> T.unpack (fromErrorMessage text)
+    ParserTestM . assertFailure $ show code <> ": " <> T.unpack (fromErrorMessage text)

@@ -85,15 +85,13 @@ data UpdateExpectationBuilder = UpdateExpectationBuilder
 runUpdateFieldTest :: UpdateTestSetup -> Expectation
 runUpdateFieldTest UpdateTestSetup {..} =
   case mkParser (TableInfoBuilder table utsColumns) of
-    SchemaTestT [] -> expectationFailure "expected at least one parser"
-    SchemaTestT parsers ->
+    SchemaTestM [] -> expectationFailure "expected at least one parser"
+    SchemaTestM parsers ->
       case find (byName (Syntax._fName utsField)) parsers of
         Nothing -> expectationFailure $ "could not find parser " <> show (Syntax._fName utsField)
-        Just FieldParser {..} ->
-          case fParser utsField of
-            ParserTestT (Right annUpdate) ->
-              coerce annUpdate `shouldBe` expected
-            ParserTestT (Left err) -> err
+        Just FieldParser {..} -> do
+          annUpdate <- runParserTestM $ fParser utsField
+          coerce annUpdate `shouldBe` expected
   where
     UpdateExpectationBuilder {..} = utsExpect
 
