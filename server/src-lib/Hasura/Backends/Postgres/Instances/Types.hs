@@ -73,6 +73,7 @@ instance
   Backend ('Postgres pgKind)
   where
   type BackendConfig ('Postgres pgKind) = ()
+  type BackendInfo ('Postgres pgKind) = ()
   type SourceConfig ('Postgres pgKind) = PG.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
   type TableName ('Postgres pgKind) = PG.QualifiedTable

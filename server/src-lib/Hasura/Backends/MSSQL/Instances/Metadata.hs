@@ -8,7 +8,6 @@ module Hasura.Backends.MSSQL.Instances.Metadata () where
 
 import Hasura.Backends.MSSQL.DDL qualified as MSSQL
 import Hasura.Base.Error (throw500)
-import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
 
@@ -16,7 +15,7 @@ instance BackendMetadata 'MSSQL where
   prepareCatalog = MSSQL.prepareCatalog
   buildComputedFieldInfo = MSSQL.buildComputedFieldInfo
   fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
-  resolveSourceConfig = const MSSQL.resolveSourceConfig
+  resolveSourceConfig = MSSQL.resolveSourceConfig
   resolveDatabaseMetadata _ = MSSQL.resolveDatabaseMetadata
   parseBoolExpOperations = MSSQL.parseBoolExpOperations
   buildFunctionInfo = MSSQL.buildFunctionInfo

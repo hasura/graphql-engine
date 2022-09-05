@@ -114,6 +114,8 @@ module Hasura.RQL.Types.SchemaCache
     BoolExpM (..),
     BoolExpCtx (..),
     getOpExpDeps,
+    BackendInfoWrapper (..),
+    BackendCache,
   )
 where
 
@@ -163,6 +165,8 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
+import Hasura.SQL.BackendMap
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -484,6 +488,18 @@ askFunctionInfo sourceName functionName = do
 
 -------------------------------------------------------------------------------
 
+newtype BackendInfoWrapper (b :: BackendType) = BackendInfoWrapper {unBackendInfoWrapper :: BackendInfo b}
+
+deriving newtype instance (ToJSON (BackendInfo b)) => ToJSON (BackendInfoWrapper b)
+
+deriving newtype instance (Semigroup (BackendInfo b)) => Semigroup (BackendInfoWrapper b)
+
+deriving newtype instance (Monoid (BackendInfo b)) => Monoid (BackendInfoWrapper b)
+
+type BackendCache = BackendMap BackendInfoWrapper
+
+-------------------------------------------------------------------------------
+
 data SchemaCache = SchemaCache
   { scSources :: SourceCache,
     scActions :: ActionCache,
@@ -504,7 +520,7 @@ data SchemaCache = SchemaCache
     scSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
     scTlsAllowlist :: [TlsAllow],
     scQueryCollections :: QueryCollections,
-    scDataConnectorCapabilities :: DataConnectorCapabilities,
+    scBackendCache :: BackendCache,
     scSourceHealthChecks :: SourceHealthCheckCache
   }
 
@@ -531,7 +547,7 @@ instance ToJSON SchemaCache where
         "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions,
         "tls_allowlist" .= toJSON scTlsAllowlist,
         "query_collection" .= toJSON scQueryCollections,
-        "data_connector_capabilities" .= toJSON scDataConnectorCapabilities
+        "backend_cache" .= toJSON scBackendCache
       ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
