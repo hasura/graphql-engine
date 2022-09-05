@@ -35,9 +35,7 @@ $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-ma
 
 Edit `deployment.yaml` and set the right database url:
 
-```yaml {4}
-
----
+```yaml {2}
 env:
   - name: HASURA_GRAPHQL_DATABASE_URL
     value: postgres://<username>:<password>@hostname:<port>/<dbname>
