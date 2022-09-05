@@ -1291,6 +1291,7 @@ test-suite tests-hspec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Simple.NoQueriesAvailableSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
