@@ -376,7 +376,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               dummyParamQueryHash
               Nothing
               reqId
-              [G.name|"numbers_stream"|]
+              [G.name|numbers_stream|]
               subscriptionQueryPlan
               (const (pure ()))
 
