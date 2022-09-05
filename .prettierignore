@@ -1,2 +1,3 @@
 /.hlint.yaml
+/CHANGELOG.md
 /server/tests-py/**/*
