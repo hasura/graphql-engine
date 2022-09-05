@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { FaDatabase, FaTrash } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 import { Dispatch, ReduxState } from '../../../types';
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import styles from '../../Common/Common.module.scss';
-import Button from '../../Common/Button/Button';
 import { createNewSchema, deleteSchema } from './Schema/Actions';
 import { updateCurrentSchema } from './DataActions';
 import {
@@ -49,8 +49,8 @@ const AddSchema: React.VFC = () => {
     return (
       <Button
         data-test="data-create-schema"
-        color="yellow"
-        size="sm"
+        mode="primary"
+        size="md"
         className={`${styles.add_mar_left}, ${styles.display_flex}`}
         onClick={() => setIsCreateActive(true)}
       >
@@ -75,8 +75,8 @@ const AddSchema: React.VFC = () => {
       </div>
       <Button
         data-test="data-create-schema"
-        color="yellow"
-        size="sm"
+        mode="primary"
+        size="md"
         className={styles.add_mar_left}
         onClick={handleCreateSchema}
       >
@@ -84,7 +84,7 @@ const AddSchema: React.VFC = () => {
       </Button>
       <Button
         color="white"
-        size="xs"
+        size="md"
         className={styles.add_mar_left_mid}
         onClick={() => {
           setIsCreateActive(false);
@@ -148,32 +148,18 @@ const SourceView: React.FC<Props> = props => {
           {schemaList.length ? (
             schemaList.map((schema, key: number) => {
               return (
-                <div
-                  className={`${styles.padd_small} ${styles.padd_left_remove}`}
-                  key={key}
-                >
-                  <Button
-                    color="white"
-                    size="xs"
-                    onClick={() => handleView(schema)}
-                  >
+                <div className="flex gap-3 py-1 items-center" key={key}>
+                  <Button size="sm" onClick={() => handleView(schema)}>
                     View
                   </Button>
                   <Button
-                    color="white"
-                    size="xs"
-                    className={styles.mar_small_left}
+                    size="sm"
                     onClick={() => handlePermissionsSummary(schema)}
                   >
                     Permissions Summary
                   </Button>
                   {isFeatureSupported('schemas.delete.enabled') ? (
-                    <Button
-                      color="white"
-                      size="xs"
-                      className={styles.mar_small_left}
-                      onClick={() => handleDelete(schema)}
-                    >
+                    <Button size="sm" onClick={() => handleDelete(schema)}>
                       <FaTrash aria-hidden="true" />
                     </Button>
                   ) : null}

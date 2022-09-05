@@ -5,7 +5,7 @@ import ReactTable, {
 } from 'react-table';
 import 'react-table/react-table.css';
 import { FaTimes } from 'react-icons/fa';
-
+import { Button } from '@/new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import EventsSubTable from './EventsSubTable';
@@ -14,7 +14,6 @@ import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
-import Button from '../../../../Common/Button';
 import { SupportedEvents } from '../../../../../metadata/queryUtils';
 
 type CancelButtonProps = {
@@ -26,19 +25,15 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
   id,
   onClickHandler,
 }) => (
-  <Button
-    key={id}
-    className="mr-xs"
-    onClick={onClickHandler}
-    color="white"
-    size="xs"
-    title="Cancel Event"
-    onMouseDown={e => {
-      e.preventDefault();
-    }}
-  >
-    <FaTimes />
-  </Button>
+  <div className="mr-2">
+    <Button
+      key={id}
+      onClick={onClickHandler}
+      size="sm"
+      title="Cancel Event"
+      icon={<FaTimes />}
+    />
+  </div>
 );
 
 interface Props extends FilterTableProps {
@@ -117,6 +112,7 @@ const EventsTable: React.FC<Props> = props => {
 
   const expanderActions: GridHeadingProps = {
     expander: true,
+    width: 128,
     Header: '',
     accessor: 'expander',
     Expander: ({ isExpanded, viewIndex }) => {
@@ -126,9 +122,8 @@ const EventsTable: React.FC<Props> = props => {
           {columns.includes('actions') && (
             <CancelEventButton
               id={row.id}
-              onClickHandler={event => {
+              onClickHandler={() => {
                 onCancelHandler(row.id, row.scheduled_time);
-                event.stopPropagation();
               }}
             />
           )}

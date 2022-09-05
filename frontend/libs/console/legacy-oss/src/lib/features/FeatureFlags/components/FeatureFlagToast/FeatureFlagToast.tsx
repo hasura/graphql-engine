@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { useDispatch } from 'react-redux';
 import { FaChevronRight } from 'react-icons/fa';
 import { useFeatureFlagDismiss } from '../../hooks/useFeatureFlagDismiss';
@@ -42,13 +43,12 @@ export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
         <FaChevronRight className="ml-2" aria-hidden="true" />
       </div>
       <div className="flex p-4 justify-between border-t">
-        <button onClick={() => setDismissed(true)}>Hide for now</button>
-        <button
-          className="text-gray-400"
+        <Button onClick={() => setDismissed(true)}>Hide for now</Button>
+        <Button
           onClick={() => setPermanentDismiss.mutate(featureFlag?.id ?? '')}
         >
           Don&apos;t show me again
-        </button>
+        </Button>
       </div>
     </div>
   );

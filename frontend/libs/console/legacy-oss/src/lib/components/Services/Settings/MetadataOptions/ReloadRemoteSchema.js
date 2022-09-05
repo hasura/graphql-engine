@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
 import {
   showSuccessNotification,
@@ -44,7 +44,6 @@ class ReloadRemoteSchema extends Component {
       <div className="inline-block">
         <Button
           data-test="data-reload-metadata"
-          color="white"
           size="sm"
           onClick={reloadRemoteMetadataHandler}
         >

@@ -39,6 +39,9 @@ export const allowedMetadataTypesArr = [
   'update_remote_schema_remote_relationship',
   'delete_remote_schema_remote_relationship',
   'add_remote_schema',
+  'update_scope_of_collection_in_allowlist',
+  'drop_collection_from_allowlist',
+  'add_collection_from_allowlist',
   'bulk',
 ] as const;
 
@@ -58,12 +61,15 @@ export interface DbToDbRelationship {
   fieldMapping: Record<string, string>;
 }
 
+type GDCSourcePrefix = string;
+
 type SupportedDataSourcesPrefix =
   | 'mysql_'
   | 'mssql_'
   | 'bigquery_'
   | 'citus_'
-  | 'pg_';
+  | 'pg_'
+  | `${GDCSourcePrefix}_`;
 
 export interface TableRelationship {
   name: string;

@@ -1,7 +1,7 @@
 import pickBy from 'lodash.pickby';
 
 import { z, ZodSchema } from 'zod';
-import type { OneOf, Property, Ref } from '../types';
+import { isFreeFormObjectField, OneOf, Property, Ref } from '../types';
 import { getProperty, isOneOf, isRef } from './utils';
 
 function createZodObject(
@@ -71,7 +71,43 @@ export function createZodSchema(
           .transform(x => parseInt(x, 10) || '');
       return z.string().transform(x => parseInt(x, 10) || '');
 
+    case 'array':
+      if (!isRef(property.items)) {
+        if (property.items.type === 'string') {
+          if (property.nullable === false)
+            return z
+              .array(z.string())
+              .min(
+                1,
+                property.description
+                  ? `${property.description} is Required`
+                  : 'Required!'
+              );
+
+          return z.array(z.string()).optional();
+        }
+
+        if (property.items.type === 'number') {
+          if (property.nullable === false) {
+            return z
+              .array(z.string())
+              .min(1, 'Required')
+              .transform(x => x.map(y => parseInt(y, 10) || ''));
+          }
+          return z
+            .array(z.string())
+            .transform(x => x.map(y => parseInt(y, 10) || ''))
+            .optional();
+        }
+      }
+
+      return z.any();
+
     case 'object':
+      if (isFreeFormObjectField(property)) {
+        return z.any(); // any valid json
+      }
+
       const propertiesArray = Object.entries(property.properties);
       const zodObject = createZodObject(propertiesArray, otherSchemas);
 

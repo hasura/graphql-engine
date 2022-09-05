@@ -3,6 +3,7 @@ import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { Meta, Story } from '@storybook/react';
 import React from 'react';
+import { MetadataDataSource } from '@/metadata/types';
 
 import { useMetadata } from '../hooks/useMetadata';
 import { MetadataSelector } from '../hooks/metadataSelectors';
@@ -12,7 +13,7 @@ import { handlers } from './mocks/handlers.mock';
 const testTransformer = (
   args: {
     source: string;
-    kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
+    kind: MetadataDataSource['kind'];
   }[]
 ) => {
   return args.map(({ source, kind }) => ({

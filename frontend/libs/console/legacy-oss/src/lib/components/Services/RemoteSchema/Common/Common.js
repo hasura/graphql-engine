@@ -47,13 +47,12 @@ class Common extends React.Component {
       timeoutConf,
       forwardClientHeaders,
       comment,
-      isNew = false,
       customization,
     } = this.props;
 
     const { isModify } = this.props.editState;
 
-    const isDisabled = !isNew && !isModify;
+    const isDisabled = !isModify;
     const urlRequired = !manualUrl && !envName;
 
     const tooltips = {
@@ -133,7 +132,7 @@ class Common extends React.Component {
             value={name}
             data-key="name"
             onChange={this.handleInputChange.bind(this)}
-            disabled={!isNew}
+            disabled
             required
             data-test="remote-schema-schema-name"
             pattern="^[a-zA-Z0-9-_]*$"
@@ -233,25 +232,20 @@ class Common extends React.Component {
           />
         </label>
         <hr className="my-lg" />
-        {/* <GraphQLCustomization mode="edit" customization={customization} dispatch={this.props.dispatch} /> */}
-        {isNew ? null : (
-          <>
-            <div className="text-lg font-bold flex items-center">
-              GraphQL Customizations{' '}
-              <IconTooltip
-                message="Individual Types and Fields will be editable after saving."
-                side="right"
-              />
-            </div>
-            <GraphQLCustomizationEdit
-              remoteSchemaName={name}
-              graphQLCustomization={customization}
-              dispatch={this.props.dispatch}
-              onChange={this.handleCustomizationInputChange.bind(this)}
-              isDisabled={isDisabled}
-            />
-          </>
-        )}
+        <div className="text-lg font-bold flex items-center">
+          GraphQL Customizations{' '}
+          <IconTooltip
+            message="Individual Types and Fields will be editable after saving."
+            side="right"
+          />
+        </div>
+        <GraphQLCustomizationEdit
+          remoteSchemaName={name}
+          graphQLCustomization={customization}
+          dispatch={this.props.dispatch}
+          onChange={this.handleCustomizationInputChange.bind(this)}
+          isDisabled={isDisabled}
+        />
       </div>
     );
   }

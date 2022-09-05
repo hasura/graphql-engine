@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Button from '../../../Common/Button';
+import { Button } from '@/new-components/Button';
 import TextInput from '../../../Common/TextInput/TextInput';
 import { InheritedRole } from '../../../../metadata/types';
 import { focusYellowRing, inputStyles } from '../constants';
@@ -131,8 +131,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
           <div>
             <div className="flex">
               <Button
-                color="white"
-                size="xs"
+                size="sm"
                 onClick={() => {
                   cancelCb();
                 }}
@@ -160,10 +159,10 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                 bsclass={`mb-xs ${inputStyles}`}
               />
               <div>
-                <Button color="white" size="xs" onClick={selectAll}>
+                <Button size="sm" onClick={selectAll}>
                   Select all
                 </Button>{' '}
-                <Button color="white" size="xs" onClick={clearAll}>
+                <Button size="sm" onClick={clearAll}>
                   Clear all
                 </Button>
               </div>
@@ -194,7 +193,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
             <hr className="my-md" />
             <div>
               <Button
-                color="yellow"
+                mode="primary"
                 onClick={saveRole}
                 disabled={
                   !options.filter((option: Option) => option.isChecked).length

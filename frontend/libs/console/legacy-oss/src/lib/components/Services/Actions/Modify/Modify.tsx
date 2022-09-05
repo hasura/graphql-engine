@@ -8,6 +8,7 @@ import {
   getValidateTransformOptions,
   getTransformState,
 } from '@/components/Common/ConfigureTransformation/utils';
+import { Button } from '@/new-components/Button';
 import requestAction from '@/utils/requestAction';
 import {
   getActionRequestTransformDefaultState,
@@ -38,7 +39,6 @@ import {
   RequestTransformMethod,
 } from '@/metadata/types';
 import ActionEditor from '../Common/components/ActionEditor';
-import Button from '../../../Common/Button';
 import ActionContainer from '../Containers/ActionContainer';
 import { getModifyState } from './utils';
 import {
@@ -412,21 +412,19 @@ const ModifyAction: React.FC<ModifyProps> = ({
           <div className="flex items-start mb-lg">
             {!readOnlyMode && (
               <>
+                <div className="mr-5">
+                  <Button
+                    mode="primary"
+                    onClick={onSave}
+                    disabled={!allowSave}
+                    data-test="save-modify-action-changes"
+                  >
+                    Save Action
+                  </Button>
+                </div>
                 <Button
-                  color="yellow"
-                  size="sm"
-                  type="submit"
-                  onClick={onSave}
-                  disabled={!allowSave}
-                  className="mb-5 mr-5"
-                  data-test="save-modify-action-changes"
-                >
-                  Save Action
-                </Button>
-                <Button
-                  color="red"
-                  size="sm"
-                  type="submit"
+                  mode="destructive"
+                  size="md"
                   onClick={onDelete}
                   disabled={isFetching}
                   data-test="delete-action"

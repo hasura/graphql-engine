@@ -1,45 +1,53 @@
-import {
-  DbToDbRelationship,
-  DbToRemoteSchemaRelationship,
-} from '@/features/MetadataAPI';
-import { ArrayRelationship, ObjectRelationship } from '@/metadata/types';
+import { Table } from '@/features/DataSource';
 
-type BaseTypes = {
+type SourceDef = {
+  source: string;
+  table: Table;
+  columns: string[];
+};
+
+type RemoteSchemaDef = {
+  remoteSchema: string;
+  fields: string[];
+};
+
+export type Relationship = {
   name: string;
-  reference: string;
-  referenceTable: string;
-  target: string;
-  targetTable?: string;
-  fieldsFrom: string[];
-  fieldsTo: string[];
-};
-
-type DbToDb = {
-  fromType: 'table';
-  toType: 'database';
-  type: 'Object' | 'Array';
-  relationship: DbToDbRelationship;
-} & BaseTypes;
-
-type LocalObject = {
-  fromType: 'table';
-  toType: 'table';
-  type: 'Object';
-  relationship: ObjectRelationship;
-};
-
-type LocalArray = {
-  fromType: 'table';
-  toType: 'table';
-  type: 'Array';
-  relationship: ArrayRelationship;
-};
-
-type Remote = {
-  fromType: 'table';
-  toType: 'remote_schema';
-  type: 'Remote Schema';
-  relationship: DbToRemoteSchemaRelationship;
-};
-
-export type RowData = (DbToDb | LocalObject | LocalArray | Remote) & BaseTypes;
+} & (
+  | {
+      type: 'toLocalTableManual' | 'toLocalTableFk';
+      toLocalTable: Table;
+      relationship_type: 'Array' | 'Object';
+      mapping: {
+        from: SourceDef;
+        to: SourceDef;
+      };
+    }
+  | {
+      type: 'toSameTableFk';
+      toLocalTable: Table;
+      relationship_type: 'Object';
+      mapping: {
+        from: SourceDef;
+        to: SourceDef;
+      };
+    }
+  | {
+      type: 'toSource';
+      toSource: string;
+      relationship_type: 'array' | 'object';
+      mapping: {
+        from: SourceDef;
+        to: SourceDef;
+      };
+    }
+  | {
+      type: 'toRemoteSchema';
+      toRemoteSchema: string;
+      relationship_type: 'Remote Schema';
+      mapping: {
+        from: SourceDef;
+        to: RemoteSchemaDef;
+      };
+    }
+);

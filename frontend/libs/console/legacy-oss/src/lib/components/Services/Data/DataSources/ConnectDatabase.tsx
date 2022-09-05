@@ -34,7 +34,7 @@ import {
 } from './utils';
 import ReadReplicaForm from './ReadReplicaForm';
 import EditDataSource from './EditDataSource';
-import DataSourceFormWrapper from './DataSourceFromWrapper';
+import DataSourceFormWrapper from './DataSourceFormWrapper';
 import { getSupportedDrivers } from '../../../../dataSources';
 import { newSampleDBTrial } from './SampleDatabase';
 

@@ -36,7 +36,7 @@ export const RadioGroup = ({ property, otherSchemas, name }: Props) => {
   return (
     <div className="bg-white p-6 border border-gray-300 rounded space-y-4 mb-6 max-w-xl">
       <div>
-        <label className="text-base text-gray-600 font-semibold">
+        <label className="text-base text-gray-600 font-semibold mb-0">
           {property.description}
         </label>
         <p className="leading-5 text-gray-500">Select an option</p>
@@ -51,7 +51,7 @@ export const RadioGroup = ({ property, otherSchemas, name }: Props) => {
                 name="notification-method"
                 type="radio"
                 defaultChecked={i === currentOption}
-                className="focus:ring-blue-500 text-blue-60"
+                className="focus:ring-blue-500 text-blue-60 mt-0"
                 onChange={() => {
                   setCurrentOption(i);
                   setValue(name, undefined);
@@ -59,7 +59,7 @@ export const RadioGroup = ({ property, otherSchemas, name }: Props) => {
               />
               <label
                 htmlFor={option}
-                className="ml-3 block font-medium text-gray-700"
+                className="ml-3 block font-medium text-gray-700 mb-0"
               >
                 {option}
               </label>

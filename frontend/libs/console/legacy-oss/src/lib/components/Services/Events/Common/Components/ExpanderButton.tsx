@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaCompress, FaExpand } from 'react-icons/fa';
-import Button from '../../../../Common/Button';
+import { Button } from '@/new-components/Button';
 
 interface Props extends React.ComponentProps<React.FC> {
   isExpanded: boolean;
@@ -8,17 +8,11 @@ interface Props extends React.ComponentProps<React.FC> {
 
 const ExpanderButton: React.FC<Props> = ({ isExpanded }) => (
   <Button
-    color="white"
-    size="xs"
+    size="sm"
     title={isExpanded ? 'Collapse row' : 'Expand row'}
-    // This is needed to remove focus on button when clicked (to avoid button style change)
-    onMouseDown={e => {
-      e.preventDefault();
-    }}
+    icon={isExpanded ? <FaCompress /> : <FaExpand />}
     data-test={isExpanded ? 'collapse-event' : 'expand-event'}
-  >
-    {isExpanded ? <FaCompress /> : <FaExpand />}
-  </Button>
+  />
 );
 
 export default ExpanderButton;

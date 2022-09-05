@@ -1,15 +1,14 @@
 import React from 'react';
-
-import { RowData } from '@/features/RelationshipsTable';
 import { DataTarget } from '@/features/Datasources';
 import { Driver } from '@/dataSources';
-
+// eslint-disable-next-line no-restricted-imports
+import { Relationship } from '@/features/RelationshipsTable/DatabaseRelationshipsTable/types';
 import { FormLayout } from './FormLayout';
 import { CreateRelationshipForm } from './CreateRelationshipForm';
 import { EditRelationshipForm } from './EditRelationshipForm';
 
 interface Props {
-  existingRelationship?: RowData;
+  existingRelationship?: Relationship;
   sourceTableInfo: DataTarget;
   driver: Driver;
   /**

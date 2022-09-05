@@ -12,7 +12,11 @@ const unixEpochLength = 14;
 export const maxAllowedMigrationLength = maxAllowedLength - unixEpochLength;
 
 export type TMigration = {
-  query: { type: allowedMetadataTypes; args: Record<string, any> };
+  query: {
+    type: allowedMetadataTypes;
+    args: Record<string, any>;
+    resource_version?: number;
+  };
 };
 
 export function useMetadataMigration(

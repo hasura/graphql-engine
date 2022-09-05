@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ReactText } from 'react';
 import { GraphQLEnumType, GraphQLInputField, GraphQLScalarType } from 'graphql';
+import { Button } from '@/new-components/Button';
 import Pen from './Pen';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import { isNumberString } from '../../../Common/utils/jsUtils';
@@ -93,19 +94,17 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
             onChange={e => setLocalValue(e.target.value)}
           />
           {isSessionvar() && (
-            <button
-              value="X-Hasura-User-Id"
-              onClick={toggleSessionVariable}
-              className="text-green-600 cursor-pointer text-xs font-bold"
-            >
+            <Button value="X-Hasura-User-Id" onClick={toggleSessionVariable}>
               [X-Hasura-User-Id]
-            </button>
+            </Button>
           )}
         </>
       ) : (
-        <button data-test={`pen-${k}`} onClick={() => setEditMode(true)}>
-          <Pen />
-        </button>
+        <Button
+          icon={<Pen />}
+          data-test={`pen-${k}`}
+          onClick={() => setEditMode(true)}
+        />
       )}
     </>
   );
