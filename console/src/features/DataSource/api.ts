@@ -1,6 +1,5 @@
-import { getRunSqlType } from '@/components/Common/utils/v1QueryUtils';
 import { AxiosInstance } from 'axios';
-import { Metadata, Source, SupportedDrivers } from './types';
+import { Metadata, Source, SupportedDrivers } from '@/features/MetadataAPI';
 
 export interface NetworkArgs {
   httpClient: AxiosInstance;
@@ -19,7 +18,7 @@ export const exportMetadata = async ({
 };
 
 type RunSqlArgs = {
-  source: Omit<Source, 'tables'>;
+  source: Pick<Source, 'kind' | 'name'>;
   sql: string;
 };
 
@@ -32,6 +31,12 @@ export type RunSQLResponse =
       result_type: 'CommandOk';
       result: null;
     };
+
+const getRunSqlType = (driver: SupportedDrivers) => {
+  if (driver === 'postgres') return 'run_sql';
+
+  return `${driver}_run_sql`;
+};
 
 export const runSQL = async ({
   source,

@@ -1,12 +1,8 @@
 import { useQuery } from 'react-query';
 import { useHttpClient } from '@/features/Network';
-import {
-  DataSource,
-  Feature,
-  exportMetadata,
-  Table,
-} from '@/features/DataSource';
-import type { IntrospectedTable, MetadataTable } from '@/features/DataSource';
+import { Table, MetadataTable } from '@/features/MetadataAPI';
+import { DataSource, Feature, exportMetadata } from '@/features/DataSource';
+import type { IntrospectedTable } from '@/features/DataSource';
 
 import type { TrackableTable } from '../types';
 

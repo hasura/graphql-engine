@@ -1,5 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
+import { SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { postgres } from './postgres';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
@@ -10,8 +11,6 @@ import * as utils from './common/utils';
 import type {
   Property,
   IntrospectedTable,
-  Table,
-  SupportedDrivers,
   TableColumn,
   GetTrackableTablesProps,
   GetTableColumnsProps,
