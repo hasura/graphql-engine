@@ -1,4 +1,4 @@
-import { SchemaResponse, TableName } from "../types"
+import { SchemaResponse, TableName } from "@hasura/dc-api-types"
 import { Config } from "../config";
 import xml2js from "xml2js"
 import fs from "fs"

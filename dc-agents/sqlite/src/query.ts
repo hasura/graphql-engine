@@ -1,4 +1,4 @@
-﻿import { Config }  from "./config";
+import { Config }  from "./config";
 import { connect, SqlLogger } from "./db";
 import { coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable, logDeep } from "./util";
 import {
@@ -19,7 +19,7 @@ import {
     OrderDirection,
     UnaryComparisonOperator,
     ExplainResponse,
-  } from "./types";
+  } from "@hasura/dc-api-types";
 
 const SqlString = require('sqlstring-sqlite');
 

@@ -1,4 +1,4 @@
-﻿import { TableName } from "./types";
+﻿import { TableName } from "@hasura/dc-api-types";
 
 export const coerceUndefinedToNull = <T>(v: T | undefined): T | null => v === undefined ? null : v;
 
