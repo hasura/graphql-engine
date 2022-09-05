@@ -94,12 +94,16 @@ services:
         - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   dc-reference-agent:
-    build: ./dc-agents/reference/
+    build:
+      context: ./dc-agents
+      dockerfile: ./Dockerfile-reference
     ports:
       - "65005:8100"
 
   dc-sqlite-agent:
-    build: ./dc-agents/sqlite/
+    build:
+      context: ./dc-agents
+      dockerfile: ./Dockerfile-sqlite
     ports:
       - "65007:8100"
     volumes:

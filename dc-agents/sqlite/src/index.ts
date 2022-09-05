@@ -1,10 +1,10 @@
-﻿import Fastify from 'fastify';
+import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
 import { getSchema } from './schema';
 import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse } from './types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse } from '@hasura/dc-api-types';
 import { connect } from './db';
 import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
@@ -80,7 +80,7 @@ const queryHistogram = new prometheus.Histogram({
   name: 'query_durations',
   help: 'Histogram of the duration of query response times.',
   buckets: prometheus.exponentialBuckets(0.0001, 10, 8),
-  labelNames: ['route'],
+  labelNames: ['route'] as const,
 });
 
 const sqlLogger = (sql: string): void => {

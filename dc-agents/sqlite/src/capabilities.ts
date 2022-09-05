@@ -1,5 +1,5 @@
 import { configSchema } from "./config"
-import { CapabilitiesResponse } from "./types"
+import { CapabilitiesResponse } from "@hasura/dc-api-types"
 import { envToBool } from "./util"
 
 export const capabilitiesResponse: CapabilitiesResponse = {
@@ -17,4 +17,3 @@ export const capabilitiesResponse: CapabilitiesResponse = {
     ... ( envToBool('METRICS') ?  { metrics: {} } : {} )
   },
 }
-

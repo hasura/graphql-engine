@@ -4,7 +4,7 @@ import { filterAvailableTables, getSchema, getTable, loadStaticData } from './da
 import { queryData } from './query';
 import { getConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse } from './types';
+import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse } from '@hasura/dc-api-types';
 
 const port = Number(process.env.PORT) || 8100;
 const server = Fastify({ logger: { prettyPrint: true } });

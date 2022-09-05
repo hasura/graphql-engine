@@ -1,4 +1,4 @@
-import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "./types"
+import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
 import { Config } from "./config";
 import { connect, SqlLogger } from './db';
 import { logDeep } from "./util";
