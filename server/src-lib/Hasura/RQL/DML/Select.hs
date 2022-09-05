@@ -319,7 +319,7 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
 
 selectP2 :: JsonAggSelect -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
-  encJFromBS . runIdentity . Q.getRow
+  runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel

@@ -42,7 +42,7 @@ import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Backends.Postgres.Types.Update qualified as BackendUpdate
 import Hasura.Base.Error (QErr)
-import Hasura.EncJSON (EncJSON, encJFromBS, encJFromJValue)
+import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
     DBStepInfo (..),
@@ -405,7 +405,7 @@ asSingleRowJsonResp ::
   [Q.PrepArg] ->
   Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =
-  encJFromBS . runIdentity . Q.getRow
+  runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler query args True
 
 -- convert a query from an intermediate representation to... another
