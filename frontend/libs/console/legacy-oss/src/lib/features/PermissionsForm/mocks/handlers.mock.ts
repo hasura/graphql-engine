@@ -1,10 +1,12 @@
 import { rest } from 'msw';
 
-export const handlers = () => [
-  rest.post(`/v2/query`, (req, res, ctx) => {
+const baseUrl = 'http://localhost:8080';
+
+export const handlers = (url = baseUrl) => [
+  rest.post(`${url}/v2/query`, (req, res, ctx) => {
     const body = req.body as Record<string, any>;
 
-    const isUseSchemaList = body?.['args']?.sql?.includes('SELECT schema_name');
+    const isUseSchemaList = body?.args?.sql?.includes('SELECT schema_name');
 
     if (isUseSchemaList) {
       return res(
@@ -28,10 +30,10 @@ export const handlers = () => [
     );
   }),
 
-  rest.post(`/v1/metadata`, (req, res, ctx) => {
+  rest.post(`${url}/v1/metadata`, (req, res, ctx) => {
     const body = req.body as Record<string, any>;
 
-    if (body['type'] === 'export_metadata') {
+    if (body.type === 'export_metadata') {
       return res(
         ctx.json({
           resource_version: 30,

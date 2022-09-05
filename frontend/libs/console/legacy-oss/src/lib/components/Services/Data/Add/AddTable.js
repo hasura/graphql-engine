@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
 import ForeignKeyWrapper from './ForeignKeyWrapper';
 import UniqueKeyWrapper from './UniqueKeyWrapper';
@@ -622,10 +622,9 @@ class AddTable extends Component {
           <div>
             <Button
               type="submit"
-              onClick={this.validateAndSubmit}
+              mode="primary"
               data-test="table-create"
-              color="yellow"
-              size="sm"
+              onClick={this.validateAndSubmit}
             >
               {getCreateBtnText()}
             </Button>

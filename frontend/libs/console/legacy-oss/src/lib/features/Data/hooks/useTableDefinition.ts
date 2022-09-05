@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 //  TYPES
-type QueryStringParseResult =
+export type QueryStringParseResult =
   | {
       querystringParseResult: 'success';
       data: TableDefinition;
@@ -12,7 +12,7 @@ type QueryStringParseResult =
     };
 
 // TODO better types once GDC kicks in
-type TableDefinition = { database: string; table?: Record<string, any> };
+type TableDefinition = { database: string; table?: unknown };
 
 //  CONSTANTS
 const TABLE_DEFINITION_SEARCH_KEY = 'table';

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
+import { Button } from '@/new-components/Button';
 import { Dispatch, ReduxState } from '../../../../types';
-import Button from '../../../Common/Button/Button';
 import AddDomain from './AddDomain';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { deleteInsecureDomain } from '../../../../metadata/actions';
@@ -52,13 +52,13 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
                 insecureDomains.map(domain => (
                   <div className="p-xs px-sm bg-white border-t border-gray-300 flex justify-between">
                     <div data-test={domain.host}>{domain.host}</div>
-                    <button
-                      className="text-red-700 cursor-pointer"
+                    <Button
+                      mode="destructive"
                       onClick={() => handleDeleteDomain(domain.host)}
                       data-test={`delete-domain-${domain.host}`}
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 ))
               ) : (
@@ -73,12 +73,7 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
         </div>
       </div>
       {!toggle && (
-        <Button
-          color="white"
-          size="xm"
-          data-test="add-insecure-domain"
-          onClick={() => setToggle(true)}
-        >
+        <Button data-test="add-insecure-domain" onClick={() => setToggle(true)}>
           Add Domain
         </Button>
       )}

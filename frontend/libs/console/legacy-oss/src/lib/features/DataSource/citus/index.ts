@@ -2,12 +2,17 @@ import { Database, Feature } from '..';
 import { runSQL } from '../api';
 import { adaptIntrospectedTables } from '../common/utils';
 import { GetTrackableTablesProps } from '../types';
-import { getTableColumns } from './introspection';
+import { getTableColumns, getFKRelationships } from './introspection';
 
 export type CitusTable = { name: string; schema: string };
 
 export const citus: Database = {
   introspection: {
+    getDriverInfo: async () => ({
+      name: 'citus',
+      displayName: 'Citus',
+      release: 'GA',
+    }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
@@ -48,5 +53,6 @@ export const citus: Database = {
       return ['schema', 'name'];
     },
     getTableColumns,
+    getFKRelationships,
   },
 };

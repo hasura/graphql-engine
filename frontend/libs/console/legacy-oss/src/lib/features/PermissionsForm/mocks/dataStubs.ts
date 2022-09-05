@@ -1,4 +1,4 @@
-import { HasuraMetadataV3 } from '@/metadata/types';
+import { MetadataResponse } from '../../MetadataAPI';
 
 export const schemaList = {
   result_type: 'TuplesOk',
@@ -15,9 +15,10 @@ export const query = {
   ],
 };
 
-export const metadata = {
+export const metadata: MetadataResponse = {
   resource_version: 30,
   metadata: {
+    inherited_roles: [],
     version: 3,
     sources: [
       {
@@ -67,5 +68,5 @@ export const metadata = {
         },
       },
     ],
-  } as HasuraMetadataV3,
+  },
 };

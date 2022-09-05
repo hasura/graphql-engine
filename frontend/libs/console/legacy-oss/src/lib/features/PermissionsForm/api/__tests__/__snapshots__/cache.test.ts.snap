@@ -3,6 +3,7 @@
 exports[`update metadata in cache 1`] = `
 Object {
   "metadata": Object {
+    "inherited_roles": Array [],
     "sources": Array [
       Object {
         "configuration": Object {

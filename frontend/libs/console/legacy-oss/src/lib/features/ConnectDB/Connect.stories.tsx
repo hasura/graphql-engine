@@ -16,12 +16,12 @@ export default {
 } as ComponentMeta<typeof Connect>;
 
 export const Primary: ComponentStory<typeof Connect> = () => (
-  <Connect name="new_connection" driver="postgres" />
+  <Connect name="new_connection" driver="postgres" onDriverChange={() => {}} />
 );
 
 // existing config currently only works with database url
 // we don't know what format the metadata will be returned for gdc yet
 // therefore editing exiting config won't be enabled for gdc on the first iteration anyway
 export const WithExistingConfig: ComponentStory<typeof Connect> = () => (
-  <Connect name="default" driver="postgres" />
+  <Connect name="default" driver="postgres" onDriverChange={() => {}} />
 );

@@ -121,7 +121,7 @@ export const Create = ({ onSuccess }: Props) => {
               <div className="relative w-full">
                 <input
                   type="text"
-                  className="block w-full shadow-sm rounded pr-10 border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                  className="font-normal block w-full shadow-sm rounded pr-10 border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                   placeholder="60"
                   {...options.register('timeout_seconds')}
                   data-testid="timeout_seconds"
@@ -196,7 +196,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="namespace_"
                         {...options.register(
                           'customization.root_fields_namespace'
@@ -220,7 +220,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="prefix_"
                         {...options.register('customization.type_prefix')}
                         data-testid="customization.type_prefix"
@@ -236,7 +236,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="_suffix"
                         {...options.register('customization.type_suffix')}
                         data-testid="customization.type_suffix"
@@ -271,7 +271,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="Query/query_root"
                         {...options.register(
                           'customization.query_root.parent_type'
@@ -290,7 +290,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="prefix_"
                         {...options.register('customization.query_root.prefix')}
                         data-testid="customization.query_root.prefix"
@@ -307,7 +307,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="_suffix"
                         {...options.register('customization.query_root.suffix')}
                         data-testid="customization.query_root.suffix"
@@ -338,7 +338,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="Mutation/mutation_root"
                         {...options.register(
                           'customization.mutation_root.parent_type'
@@ -357,7 +357,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="prefix_"
                         {...options.register(
                           'customization.mutation_root.prefix'
@@ -375,7 +375,7 @@ export const Create = ({ onSuccess }: Props) => {
                     <div className="col-span-8">
                       <input
                         type="text"
-                        className="w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                        className="font-normal w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                         placeholder="_suffix"
                         {...options.register(
                           'customization.mutation_root.suffix'

@@ -44,6 +44,7 @@ export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
       ) : null}
 
       <Button
+        data-testid="add-header"
         icon={<FaPlusCircle />}
         onClick={() => {
           append({

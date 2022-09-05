@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 import sqlFormatter from 'sql-formatter';
 import hljs from 'highlight.js';
+import { Button } from '@/new-components/Button';
 import RootFields from './RootFields';
 import { ImCopy } from 'react-icons/im';
 
@@ -74,9 +75,7 @@ export default class QueryAnalyser extends React.Component {
         <div className="bg-[#43495a] border-b border-gray-200 py-sm px-md flex justify-between">
           <div className="font-xl font-bold text-[#ffc627]">Query Analysis</div>
           <div className="text-[#ccc] font-bold">
-            <button onClick={clearAnalyse} className="">
-              x
-            </button>
+            <Button onClick={clearAnalyse}>X</Button>
           </div>
         </div>
         <div className="flex min-h-full bg-white border border-gray-500">
@@ -99,7 +98,8 @@ export default class QueryAnalyser extends React.Component {
                   Generated SQL
                 </div>
                 <div className="w-full overflow-y-scroll h-[calc(30vh)] mb-sm">
-                  <button
+                  <Button
+                    icon={<ImCopy />}
                     onClick={() =>
                       this.copyToClip(
                         'sql',
@@ -109,11 +109,10 @@ export default class QueryAnalyser extends React.Component {
                         )
                       )
                     }
-                    className="cursor-pointer rounded-sm bg-gray-50 p-1 absolute right-24 mt-2"
+                    className="absolute right-24 mt-2"
                   >
-                    <ImCopy className="mr-sm" />
                     {this.state.previouslyCopied === 'sql' ? 'Copied!' : 'Copy'}
-                  </button>
+                  </Button>
                   <pre className="bg-[#fdf9ed]">
                     <code
                       dangerouslySetInnerHTML={{
@@ -139,7 +138,8 @@ export default class QueryAnalyser extends React.Component {
                   </div>
                   <div className="w-full h-[calc(30vh)] overflow-y-scroll mb-sm">
                     <pre className="bg-[#fdf9ed]">
-                      <button
+                      <Button
+                        icon={<ImCopy />}
                         onClick={() =>
                           this.copyToClip(
                             'plan',
@@ -148,13 +148,12 @@ export default class QueryAnalyser extends React.Component {
                             ].plan.join('\n')
                           )
                         }
-                        className="cursor-pointer rounded-sm bg-gray-50 p-1 absolute right-24"
+                        className="absolute right-24"
                       >
-                        <ImCopy className="mr-sm" />
                         {this.state.previouslyCopied === 'plan'
                           ? 'Copied!'
                           : 'Copy'}
-                      </button>
+                      </Button>
                       <code>
                         {this.state.activeNode >= 0 &&
                         this.state.analyseData.length > 0

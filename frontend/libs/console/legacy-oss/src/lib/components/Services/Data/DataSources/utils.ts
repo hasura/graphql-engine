@@ -1,4 +1,4 @@
-import { Driver } from '@/dataSources';
+import { Driver, getSupportedDrivers } from '@/dataSources';
 import { addSource } from './../../../../metadata/sourcesUtils';
 import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';
@@ -9,6 +9,9 @@ import {
 } from '../../../../metadata/types';
 import { connectionTypes } from './state';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
+
+export const isPostgresFlavour = (driver: Driver) =>
+  driver === 'postgres' || driver === 'citus' || driver === 'cockroach';
 
 export const getErrorMessageFromMissingFields = (
   host: string,
@@ -222,4 +225,21 @@ export const getReadReplicaDBUrlInfo = (
     };
   }
   return null;
+};
+
+export const isDBSupported = (driver: Driver, connectionType: string) => {
+  switch (connectionType) {
+    case 'CONNECTION_PARAMETERS':
+      return getSupportedDrivers('connectDbForm.connectionParameters').includes(
+        driver
+      );
+
+    case 'ENVIRONMENT_VARIABLES':
+      return getSupportedDrivers('connectDbForm.environmentVariable').includes(
+        driver
+      );
+
+    default:
+      return getSupportedDrivers('connectDbForm.databaseURL').includes(driver);
+  }
 };

@@ -1,4 +1,5 @@
 import { Driver } from '../../../../dataSources';
+import { isPostgresFlavour } from './utils';
 
 export const parseURI = (url: string) => {
   try {
@@ -55,7 +56,7 @@ export const makeConnectionStringFromConnectionParams = ({
   if (password) {
     tPassword = password.trim();
   }
-  if (dbType === 'postgres' || dbType === 'citus') {
+  if (isPostgresFlavour(dbType)) {
     if (!password) {
       return `postgresql://${tUserName}@${tHost}:${tPort}/${tDatabase}`;
     }

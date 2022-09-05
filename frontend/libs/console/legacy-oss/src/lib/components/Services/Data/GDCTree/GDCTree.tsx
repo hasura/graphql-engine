@@ -26,7 +26,6 @@ const getCurrentActiveKeys = () => {
 
 type Props = {
   onSelect: (value: Key[]) => void;
-  headers: Record<string, string>;
 };
 
 /* 
@@ -39,7 +38,7 @@ export const GDCTree = (props: Props) => {
   const isGDCRouteActive = checkForGDCRoute();
 
   const activeKey = isGDCRouteActive ? getCurrentActiveKeys() : [];
-  const { data: gdcDatabases } = useTreeData({ headers: props.headers });
+  const { data: gdcDatabases } = useTreeData();
 
   if (!gdcDatabases || gdcDatabases.length === 0) return null;
 

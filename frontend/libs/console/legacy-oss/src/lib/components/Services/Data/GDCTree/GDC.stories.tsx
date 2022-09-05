@@ -11,5 +11,5 @@ export default {
 } as ComponentMeta<typeof GDCTree>;
 
 export const Primary: ComponentStory<typeof GDCTree> = args => (
-  <GDCTree onSelect={args.onSelect} headers={{}} />
+  <GDCTree onSelect={args.onSelect} />
 );

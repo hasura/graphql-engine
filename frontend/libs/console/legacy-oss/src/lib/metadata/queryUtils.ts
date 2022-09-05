@@ -137,6 +137,9 @@ export const getMetadataQuery = (
     case 'citus':
       prefix = 'citus_';
       break;
+    case 'cockroach':
+      prefix = 'cockroach_';
+      break;
     case 'postgres':
     default:
       prefix = 'pg_';

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '@/new-components/Button';
 import { FieldType, ExpandedItems, PermissionEdit } from './types';
 import { Field } from './Field';
 import { addDepFields, getExpandedItems } from './utils';
@@ -99,9 +100,9 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
                 />
               )}
               {i.children && (
-                <button onClick={toggleExpand(ix)}>
+                <Button onClick={toggleExpand(ix)}>
                   {expandedItems[ix] ? '-' : '+'}
-                </button>
+                </Button>
               )}
               <Field
                 i={i}

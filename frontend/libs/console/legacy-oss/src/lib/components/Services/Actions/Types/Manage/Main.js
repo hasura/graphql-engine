@@ -1,6 +1,6 @@
 import React from 'react';
 import CustomTypesContainer from '../../Containers/CustomTypesContainer';
-import Button from '../../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import {
   getTypesSdl,
   getTypesFromSdl,
@@ -64,17 +64,16 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
         allowEmpty
       />
       <hr className="my-md" />
-      <Button
-        onClick={onSave}
-        disabled={!allowSave}
-        color="yellow"
-        className="mr-5"
-      >
-        Save
-      </Button>
-      <Button onClick={init} color="white" disabled={readOnlyMode}>
-        Reset
-      </Button>
+      <div className="flex">
+        <div className="mr-5">
+          <Button onClick={onSave} disabled={!allowSave} mode="primary">
+            Save
+          </Button>
+        </div>
+        <Button onClick={init} mode="default" disabled={readOnlyMode}>
+          Reset
+        </Button>
+      </div>
       {readOnlyMode && (
         <ToolTip message="Modifying custom type is not allowed in Read only mode!" />
       )}

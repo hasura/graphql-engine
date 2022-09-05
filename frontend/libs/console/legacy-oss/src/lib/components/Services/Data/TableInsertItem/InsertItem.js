@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
 
@@ -234,8 +234,7 @@ class InsertItem extends Component {
                   <div className="mr-md">
                     <Button
                       type="submit"
-                      color="yellow"
-                      size="sm"
+                      mode="primary"
                       onClick={onClickSave}
                       data-test="insert-save-button"
                     >
@@ -243,12 +242,7 @@ class InsertItem extends Component {
                     </Button>
                   </div>
                   <div className="mr-md">
-                    <Button
-                      color="white"
-                      size="sm"
-                      onClick={onClickClear}
-                      data-test="clear-button"
-                    >
+                    <Button onClick={onClickClear} data-test="clear-button">
                       Clear
                     </Button>
                   </div>

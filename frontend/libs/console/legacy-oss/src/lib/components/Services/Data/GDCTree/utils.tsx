@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useLayoutEffect, useRef } from 'react';
 import { FaTable, FaDatabase, FaFolder } from 'react-icons/fa';
 import { DataSource, exportMetadata, NetworkArgs } from '@/features/DataSource';
 import { DataNode } from 'antd/lib/tree';
@@ -6,7 +6,7 @@ import { GDC_TREE_VIEW_DEV } from '@/utils/featureFlags';
 import { GDCSource } from './types';
 
 const getSources = async ({ httpClient }: NetworkArgs) => {
-  const metadata = await exportMetadata({ httpClient });
+  const { metadata } = await exportMetadata({ httpClient });
   const nativeDrivers = await DataSource(httpClient).getNativeDrivers();
   return metadata.sources
     .filter(source => !nativeDrivers.includes(source.kind))
@@ -101,3 +101,16 @@ export const getTreeData = async ({
 
   return [];
 };
+
+export function useIsUnmounted() {
+  const rIsUnmounted = useRef<'mounting' | 'mounted' | 'unmounted'>('mounting');
+
+  useLayoutEffect(() => {
+    rIsUnmounted.current = 'mounted';
+    return () => {
+      rIsUnmounted.current = 'unmounted';
+    };
+  }, []);
+
+  return useCallback(() => rIsUnmounted.current !== 'mounted', []);
+}

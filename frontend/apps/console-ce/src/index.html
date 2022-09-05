@@ -7,8 +7,87 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script>
+
+      // Needed since if the env var is not defined, it won't be replaced with undefined but keep as the string
+      const getEnv = (value) => value.startsWith('%NX') ? undefined : value;
+      const getEnvAsBool = (value) => Boolean(getEnv(value))
+
+      const serverEnvVars = {
+        dataApiUrl: getEnv('%NX_DATA_API_URL%'),
+        adminSecret: getEnv('%NX_ADMIN_SECRET%'),
+        isAdminSecretSet: getEnvAsBool('%NX_IS_ADMIN_SECRET_SET%'),
+        consoleMode: getEnv('%NX_CONSOLE_MODE%'),
+        nodeEnv: getEnv('%NODE_ENV%'),
+        serverVersion: getEnv('%NX_SERVER_VERSION%'),
+        urlPrefix: getEnv('%NX_URL_PREFIX%'),
+        consolePath: getEnv('%NX_CONSOLE_PATH%'),
+        enableTelemetry: getEnvAsBool('%NX_ENABLE_TELEMETRY%'),
+        assetsPath: getEnv('%NX_ASSETS_PATH%'),
+        assetsVersion: getEnv('%NX_ASSETS_VERSION%'),
+        cdnAssets: getEnvAsBool('%NX_CDN_ASSETS%'),
+        herokuOAuthClientId: getEnv('%NX_HEROKU_OAUTH_CLIENT_ID%') || '',
+        tenantID: getEnv('%NX_HASURA_CLOUD_TENANT_ID%') || '',
+        projectID: getEnv('%NX_HASURA_CLOUD_PROJECT_ID%') || '',
+        cloudRootDomain: getEnv('%NX_HASURA_CLOUD_ROOT_DOMAIN%'),
+        consoleType: getEnv('%NX_HASURA_CONSOLE_TYPE%')
+      };
+
+      const cliEnvVars = {
+        apiPort: getEnv('%NX_API_PORT%'),
+        apiHost: getEnv('%NX_API_HOST%'),
+        dataApiUrl: getEnv('%NX_DATA_API_URL%'),
+        adminSecret: getEnv('%NX_ADMIN_SECRET%'),
+        consoleMode: getEnv('%NX_CONSOLE_MODE%'),
+        nodeEnv: getEnv('%NODE_ENV%'),
+        enableTelemetry: getEnvAsBool('%NX_ENABLE_TELEMETRY%'),
+        assetsPath: getEnv('%NX_ASSETS_PATH%'),
+        assetsVersion: getEnv('%NX_ASSETS_VERSION%'),
+        serverVersion: getEnv('%NX_SERVER_VERSION%'),
+        cdnAssets: getEnvAsBool('%NX_CDN_ASSETS%'),
+        herokuOAuthClientId: getEnv('%NX_HEROKU_OAUTH_CLIENT_ID%') || '',
+        tenantID: getEnv('%NX_HASURA_CLOUD_TENANT_ID%') || '',
+        projectID: getEnv('%NX_HASURA_CLOUD_PROJECT_ID%') || '',
+        cloudRootDomain: getEnv('%NX_HASURA_CLOUD_ROOT_DOMAIN%'),
+      };
+
+      const envVars =
+      getEnv('%NX_CONSOLE_MODE%') === 'cli' ? cliEnvVars : serverEnvVars;
+
+      window.__env = envVars;
+
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+  <style>
+    .content {
+      display: 'none';
+      opacity: 0;
+      transition: opacity 0.2s linear;
+    }
+    .content.show {
+      display: 'block';
+      opacity: 1;
+      transition: opacity 0.2s linear;
+    }
+  </style>
+  <div id="loading">
+    <div
+      class="page-loading"
+      style="
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          font-family: sans-serif;
+          justify-content: center;
+        "
+    >
+        <span class="" style="font-size: 2em; margin-top: -3em; color: #848484">
+          Loading...
+        </span>
+    </div>
+  </div>
+  <div id="content" class="content"></div>
   </body>
 </html>

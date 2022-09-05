@@ -19,9 +19,10 @@
           "apps/console-ce/src/favicon.ico",
           "apps/console-ce/src/assets"
         ],
-        "styles": ["apps/console-ce/src/styles.css"],
+        "styles": ["apps/console-ce/src/css/tailwind.css", "apps/console-ce/src/css/legacy-boostrap.css"],
         "scripts": [],
-        "webpackConfig": "apps/console-ce/custom-webpack.config.js"
+        "webpackConfig": "apps/console-ce/custom-webpack.config.js",
+        "postcssConfig": "apps/console-ce/postcss.config.js"
       },
       "configurations": {
         "development": {

@@ -1,0 +1,127 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { HasuraLogoFull } from '@/new-components/HasuraLogo';
+
+<Meta
+  title="components/Hasura Logo/Hasura Logo Full ⚛️"
+  component={HasuraLogoFull}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+  decorators={[Story => <div className={'p-4'}>{Story()}</div>]}
+  argTypes={{
+    content: {
+      table: {
+        disable: true,
+      },
+    },
+  }}
+/>
+
+# Hasura Logo Full ⚛️
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/HasuraLogo/HasuraLogoIcon.tsx)
+
+## 🧰 Overview
+
+A component which provides customizable hasura logo svg.
+
+### Basic usage
+
+```ts
+import { HasuraLogoFull } from '@/new-components/HasuraLogo';
+```
+
+```tsx
+<HasuraLogoFull />
+```
+
+<Canvas>
+  <Story name="Overview">
+    <HasuraLogoFull />
+  </Story>
+</Canvas>
+
+export const Template = args => <HasuraLogoFull {...args} />;
+
+export const stories = {
+  'Variant - Mode default': {
+    mode: 'default',
+  },
+  'Variant - Mode primary': {
+    mode: 'primary',
+  },
+  'Variant - Size sm': {
+    size: 'sm',
+  },
+  'Variant - Size md': {
+    size: 'md',
+  },
+  'Variant - Size lg': {
+    size: 'lg',
+  },
+};
+
+## 🎭 Variants
+
+### 🎭 Mode
+
+<Canvas>
+  <Story
+    name="Variant - Mode"
+    args={{
+      'Variant - Mode default': stories['Variant - Mode default'],
+      'Variant - Mode primary': stories['Variant - Mode primary'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+#### 🚦 Usage
+
+- The default logo should be used in the vast majority of circumstances
+- The primary logo style could be used for dark backgrounds
+
+### 🎭 Size
+
+<Canvas>
+  <Story
+    name="Variant - Size"
+    args={{
+      'Variant - Size sm': stories['Variant - Size sm'],
+      'Variant - Size md': stories['Variant - Size md'],
+      'Variant - Size lg': stories['Variant - Size lg'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+#### 🚦 Usage
+
+- Small is typically used for icons within other svg, or titles.
+- Large and medium could be used for navbar / toolbars
+
+## 🧪 Testing
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={stories}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { RelationshipType } from '../types';
 
 type NameColumnCellProps = {
@@ -8,12 +9,7 @@ type NameColumnCellProps = {
 
 const NameColumnCell = ({ relationship, onClick }: NameColumnCellProps) => {
   return (
-    <button
-      onClick={() => onClick(relationship)}
-      className="text-secondary cursor-pointer"
-    >
-      {relationship?.name}
-    </button>
+    <Button onClick={() => onClick(relationship)}>{relationship?.name}</Button>
   );
 };
 

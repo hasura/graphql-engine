@@ -168,7 +168,7 @@ export const RemoteSchemaToDbForm = ({
               <Button
                 iconPosition="start"
                 mode="primary"
-                size="sm"
+                size="md"
                 type="submit"
                 isLoading={mutation.isLoading}
                 loadingText="Saving relationship"

@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import clsx from 'clsx';
 
 interface ChildrenProps {
   children?: ReactNode;
@@ -57,8 +58,13 @@ const TableBody = ({ children }: ChildrenProps) => {
   );
 };
 
-const TableBodyRow = ({ children }: ChildrenProps) => {
-  return <tr className="group">{children}</tr>;
+const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
+  const { children, className, ...tableRowAttributes } = props;
+  return (
+    <tr className={clsx('group', className)} {...tableRowAttributes}>
+      {children}
+    </tr>
+  );
 };
 
 const TableBodyCell = ({ children }: ChildrenProps) => {

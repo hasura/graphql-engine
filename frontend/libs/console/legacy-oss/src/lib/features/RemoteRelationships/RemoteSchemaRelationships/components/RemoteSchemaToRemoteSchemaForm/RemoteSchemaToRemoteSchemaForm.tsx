@@ -166,7 +166,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
             <div>
               <Button
                 mode="primary"
-                size="sm"
+                size="md"
                 type="submit"
                 isLoading={mutation.isLoading}
                 loadingText={

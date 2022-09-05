@@ -1,19 +1,8 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { useTableDefinition } from '../useTableDefinition';
-
-//  TYPES
-type QueryStringParseResult =
-  | {
-      querystringParseResult: 'success';
-      data: TableDefinition;
-    }
-  | {
-      querystringParseResult: 'error';
-      errorType: 'invalidTableDefinition' | 'invalidDatabaseDefinition';
-    };
-
-// TODO better types once GDC kicks in
-type TableDefinition = { database: string; table?: Record<string, any> };
+import {
+  QueryStringParseResult,
+  useTableDefinition,
+} from '../useTableDefinition';
 
 global.window = Object.create(window);
 describe('useTableDefinition', () => {
@@ -35,7 +24,7 @@ describe('useTableDefinition', () => {
     });
 
     const { result } = renderHook(() => useTableDefinition());
-    const data: QueryStringParseResult | undefined = result.current;
+    const data: QueryStringParseResult = result.current;
     expect(data).toStrictEqual({
       querystringParseResult: 'success',
       data: {

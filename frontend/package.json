@@ -8,6 +8,20 @@
     "test": "nx test"
   },
   "private": true,
+  "overrides": {
+    "codemirror": "5.51.0",
+    "graphql-language-service-utils": "2.4.3",
+    "graphiql": {
+      "codemirror-graphql": {
+        ".": "0.12.2",
+        "graphql-language-service-parser": "1.6.4",
+        "graphql-language-service-interface": {
+          ".": "2.4.2",
+          "graphql-language-service-types": "1.6.3"
+        }
+      }
+    }
+  },
   "dependencies": {
     "@ant-design/icons": "4.7.0",
     "@babel/plugin-transform-runtime": "^7.14.5",
@@ -16,10 +30,10 @@
     "@hookform/resolvers": "2.8.10",
     "@radix-ui/react-collapsible": "^0.1.1",
     "@radix-ui/react-dialog": "^0.1.7",
+    "@radix-ui/react-tabs": "^1.0.0",
     "@radix-ui/react-switch": "^0.1.5",
     "@radix-ui/react-tooltip": "^0.1.0",
     "@reduxjs/toolkit": "^1.5.1",
-    "@types/lodash.get": "^4.4.6",
     "@xstate/react": "^2.0.0",
     "ace-builds": "^1.4.11",
     "antd": "4.18.6",
@@ -29,6 +43,7 @@
     "brace": "0.11.1",
     "case-sensitive-paths-webpack-plugin": "^2.3.0",
     "clsx": "1.1.1",
+    "codemirror": "5.51.0",
     "core-js": "^3.6.5",
     "graphiql": "1.0.0-alpha.0",
     "graphiql-code-exporter": "2.0.8",
@@ -47,6 +62,7 @@
     "lodash.merge": "4.6.2",
     "lodash.pickby": "^4.6.0",
     "lodash.uniqueid": "^4.0.1",
+    "lodash.isequal": "^4.5.0",
     "moment": "^2.26.0",
     "piping": "0.3.2",
     "prop-types": "15.7.2",
@@ -131,6 +147,8 @@
     "@types/lodash": "^4.14.159",
     "@types/lodash.merge": "^4.6.6",
     "@types/lodash.pickby": "^4.6.7",
+    "@types/lodash.get": "^4.4.6",
+    "@types/lodash.isequal": "^4.5.6",
     "@types/lodash.uniqueid": "^4.0.7",
     "@types/mini-css-extract-plugin": "0.9.1",
     "@types/node": "16.11.7",

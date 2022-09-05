@@ -10,6 +10,7 @@ import {
 import PropTypes from 'prop-types';
 import jwt from 'jsonwebtoken';
 
+import { Button } from '@/new-components/Button';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -263,12 +264,7 @@ class ApiRequest extends Component {
           <div className="bg-[#f8fafb] pt-sm w-full top-0 z-20">
             <div className={'flex mb-md'}>
               <div className="flex items-center w-full">
-                <button
-                  type="button"
-                  className="inline-flex cursor-default h-input font-semibold items-center px-3 rounded-l border border-r-0 border-gray-300 bg-gray-50"
-                >
-                  {this.props.method}
-                </button>
+                <Button type="button">{this.props.method}</Button>
                 <input
                   value={getGraphQLEndpoint(mode)}
                   type="text"
@@ -596,7 +592,7 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={'h-[calc(100vh-400px)] pb-[50px]'}>
+            <div className={'h-[calc(100vh-400px)] min-h-[500px] pb-[50px]'}>
               <GraphiQLWrapper
                 mode={mode}
                 data={this.props}
