@@ -3,7 +3,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { wrapper } from '../../../hooks/__tests__/common/decorator';
 import { useListAvailableAgentsFromMetadata } from '../hooks';
-import { Metadata } from '../../DataSource';
+import { Metadata } from '../../MetadataAPI';
 import { DcAgent } from '../types';
 
 const metadata: Metadata = {

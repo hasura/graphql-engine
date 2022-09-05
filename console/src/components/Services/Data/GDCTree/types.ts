@@ -1,4 +1,4 @@
-import { Table } from '@/features/DataSource';
+import { Table } from '@/features/MetadataAPI';
 
 /*
  A GDC Source can be any user defined DB that can be added during run-time. We can only know a few properties during build time, such as name and kind

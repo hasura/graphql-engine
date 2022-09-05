@@ -1,6 +1,6 @@
 import { RemoteRelationshipFieldServer } from '@/components/Services/Data/TableRelationships/RemoteRelationships/utils';
 import isEqual from 'lodash.isequal';
-import { Table } from '../DataSource';
+import { Table } from '@/features/MetadataAPI';
 import { RelationshipSourceType, RelationshipType } from './types';
 
 export const getRemoteRelationType = (

@@ -1,4 +1,4 @@
-import { MetadataTable, Table } from '@/features/DataSource';
+import { MetadataTable, Table } from '@/features/MetadataAPI';
 
 export type TrackableTable = {
   /**

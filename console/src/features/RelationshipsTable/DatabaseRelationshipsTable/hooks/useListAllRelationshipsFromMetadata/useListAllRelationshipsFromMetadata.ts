@@ -1,6 +1,5 @@
 import {
   exportMetadata,
-  Table,
   isLocalTableObjectRelationship,
   isManualArrayRelationship,
   isManualObjectRelationship,
@@ -8,6 +7,7 @@ import {
   isRemoteSchemaRelationship,
   DataSource,
 } from '@/features/DataSource';
+import { Table } from '@/features/MetadataAPI';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { areTablesEqual } from '../../../utils';

@@ -1,11 +1,12 @@
 import { push } from 'react-router-redux';
 import {
   allowedMetadataTypes,
+  SupportedDrivers,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
 import { APIError } from '@/hooks/error';
 import { useFireNotification } from '@/new-components/Notifications';
-import { SupportedDrivers, getDriverPrefix } from '@/features/DataSource';
+import { getDriverPrefix } from '@/features/DataSource';
 import { useAppDispatch } from '@/store';
 import { exportMetadata } from '@/metadata/actions';
 import { useAvailableDrivers } from './useAvailableDrivers';

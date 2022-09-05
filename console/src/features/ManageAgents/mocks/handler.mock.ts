@@ -1,4 +1,4 @@
-import { Metadata } from '@/features/DataSource';
+import { Metadata } from '@/features/MetadataAPI';
 import { rest } from 'msw';
 
 const metadata: Metadata = {
