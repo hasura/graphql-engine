@@ -680,6 +680,13 @@ export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'
 `;
   };
 
+export const getAlterViewCommentSql: DataSourcesAPI['getAlterViewCommentSql'] =
+  ({ viewName, schemaName, comment }) => {
+    return `comment on view "${schemaName}"."${viewName}" is ${
+      comment ? sqlEscapeText(comment) : 'NULL'
+    }`;
+  };
+
 export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] =
   ({ functionName, schemaName, comment }) => {
     return `
