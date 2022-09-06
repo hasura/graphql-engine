@@ -20,6 +20,7 @@
   - [Streaming subscription polling](streaming-subscription-polling.md)
   - [Lifecycle of a streaming subscription poller](lifecycle-of-a-streaming-subscription-poller.md)
   - [Nullability in comparison operators](nullability-in-comparison-operators.md)
+  - [SchemaT and stacking](schemat-and-stacking.md)
   - [What introspection exposes](what-introspection-exposes.md)
   - [Relay Node Id](relay-node-id.md)
   - [Internal Relay HashMap](internal-relay-hashmap.md)

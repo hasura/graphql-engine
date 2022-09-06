@@ -22286,7 +22286,7 @@ RelaySchema :: NodeInterfaceParserBuilder -> SchemaKind
 isHasuraSchema :: SchemaKind -> Bool
 
 -- | The set of common constraints required to build the schema.
-type MonadBuildSchemaBase r m n = (MonadError QErr m, MonadReader r m, MonadMemoize m, MonadParse n, Has SchemaOptions r, Has SchemaContext r, Has MkTypename r, Has CustomizeRemoteFieldName r, Has NamingCase r)
+type MonadBuildSchemaBase r m n = (MonadError QErr m, MonadMemoize m, MonadParse n, Has SchemaContext r)
 
 -- | How a remote relationship field should be processed when building a
 --   schema. Injecting this function from the top level avoids having to
@@ -22299,7 +22299,7 @@ type MonadBuildSchemaBase r m n = (MonadError QErr m, MonadReader r m, MonadMemo
 --   will run, but avoids having to propagate type annotations to each call
 --   site.
 newtype RemoteRelationshipParserBuilder
-RemoteRelationshipParserBuilder :: (forall lhsJoinField r n m. MonadBuildSchemaBase r m n => RemoteFieldInfo lhsJoinField -> m (Maybe [FieldParser n (RemoteRelationshipField UnpreparedValue)])) -> RemoteRelationshipParserBuilder
+RemoteRelationshipParserBuilder :: (forall lhsJoinField r n m. MonadBuildSchemaBase r m n => RemoteFieldInfo lhsJoinField -> SchemaT r m (Maybe [FieldParser n (RemoteRelationshipField UnpreparedValue)])) -> RemoteRelationshipParserBuilder
 
 -- | A <a>RemoteRelationshipParserBuilder</a> that ignores the field
 --   altogether, that can be used in tests or to build a source or remote
@@ -22313,13 +22313,36 @@ ignoreRemoteRelationship :: RemoteRelationshipParserBuilder
 --   interface, in order to avoid the cross-sources cycles it creates
 --   otherwise.
 newtype NodeInterfaceParserBuilder
-NodeInterfaceParserBuilder :: (forall r n m. MonadBuildSchemaBase r m n => m (Parser 'Output n NodeMap)) -> NodeInterfaceParserBuilder
-[runNodeBuilder] :: NodeInterfaceParserBuilder -> forall r n m. MonadBuildSchemaBase r m n => m (Parser 'Output n NodeMap)
+NodeInterfaceParserBuilder :: (forall r m n. MonadBuildSourceSchema r m n => SchemaT r m (Parser 'Output n NodeMap)) -> NodeInterfaceParserBuilder
+[runNodeBuilder] :: NodeInterfaceParserBuilder -> forall r m n. MonadBuildSourceSchema r m n => SchemaT r m (Parser 'Output n NodeMap)
 retrieve :: (MonadReader r m, Has a r) => (a -> b) -> m b
-type MonadBuildSourceSchema r m n = MonadBuildSchemaBase r m n
-runSourceSchema :: SchemaContext -> SchemaOptions -> ReaderT (SchemaContext, SchemaOptions, MkTypename, CustomizeRemoteFieldName, NamingCase) m a -> m a
-type MonadBuildRemoteSchema r m n = MonadBuildSchemaBase r m n
-runRemoteSchema :: SchemaContext -> SchemaOptions -> ReaderT (SchemaContext, SchemaOptions, MkTypename, CustomizeRemoteFieldName, NamingCase) m a -> m a
+
+-- | The monad in which the schema is built.
+--   
+--   The implementation of <a>SchemaT</a> is intended to be opaque: running
+--   a computation in <a>SchemaT</a> is intended to be done via calls to
+--   <a>runSourceSchema</a> and <a>runRemoteSchema</a>, which also enforce
+--   what the <tt>r</tt> parameter should be in each case.
+--   
+--   The reason why we want to enforce that the schema is built in a reader
+--   on top of an arbitrary base monad is for performance: see Note
+--   [SchemaT and stacking] for more information.
+--   
+--   In the future, we might monomorphize this further to make
+--   <tt>MemoizeT</tt> explicit.
+newtype SchemaT r m a
+SchemaT :: ReaderT r m a -> SchemaT r m a
+[runSchemaT] :: SchemaT r m a -> ReaderT r m a
+type MonadBuildSourceSchema r m n = (MonadBuildSchemaBase r m n, Has SchemaOptions r, Has MkTypename r, Has NamingCase r)
+
+-- | Runs a schema-building computation with all the context required to
+--   build a source.
+runSourceSchema :: SchemaContext -> SchemaOptions -> SchemaT (SchemaContext, SchemaOptions, MkTypename, NamingCase) m a -> m a
+type MonadBuildRemoteSchema r m n = (MonadBuildSchemaBase r m n, Has CustomizeRemoteFieldName r, Has MkTypename r)
+
+-- | Runs a schema-building computation with all the context required to
+--   build a remote schema.
+runRemoteSchema :: SchemaContext -> SchemaT (SchemaContext, MkTypename, CustomizeRemoteFieldName) m a -> m a
 type SelectExp b = AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 type StreamSelectExp b = AnnSimpleStreamSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 type AggSelectExp b = AnnAggregateSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
@@ -22367,14 +22390,21 @@ optionalFieldParser :: (Functor n, Functor m) => (a -> b) -> m (Maybe (FieldPars
 mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m, Has NamingCase r) => EnumReference b -> m Name
 addEnumSuffix :: (MonadReader r m, Has MkTypename r) => GQLNameIdentifier -> Maybe Name -> NamingCase -> m Name
 peelWithOrigin :: MonadParse m => Parser 'Both m a -> Parser 'Both m (ValueWithOrigin a)
+instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.GraphQL.Schema.Common.SchemaT r m)
+instance Control.Monad.Trans.Class.MonadTrans (Hasura.GraphQL.Schema.Common.SchemaT r)
+instance Control.Monad.Memoize.MonadMemoize m => Control.Monad.Memoize.MonadMemoize (Hasura.GraphQL.Schema.Common.SchemaT r m)
+instance GHC.Base.Monad m => Control.Monad.Reader.Class.MonadReader r (Hasura.GraphQL.Schema.Common.SchemaT r m)
+instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.GraphQL.Schema.Common.SchemaT r m)
+instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.GraphQL.Schema.Common.SchemaT r m)
+instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.GraphQL.Schema.Common.SchemaT r m)
 instance GHC.Classes.Eq Hasura.GraphQL.Schema.Common.Scenario
 instance GHC.Show.Show Hasura.GraphQL.Schema.Common.Scenario
 instance GHC.Enum.Enum Hasura.GraphQL.Schema.Common.Scenario
 
 module Hasura.GraphQL.Schema.Remote
-buildRemoteParser :: forall r m n. MonadBuildRemoteSchema r m n => IntrospectionResult -> RemoteSchemaRelationships -> RemoteSchemaInfo -> m (RemoteSchemaParser n)
+buildRemoteParser :: forall r m n. MonadBuildRemoteSchema r m n => IntrospectionResult -> RemoteSchemaRelationships -> RemoteSchemaInfo -> SchemaT r m (RemoteSchemaParser n)
 makeResultCustomizer :: RemoteSchemaCustomizer -> GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable -> ResultCustomizer
-buildRawRemoteParser :: forall r m n. MonadBuildRemoteSchema r m n => IntrospectionResult -> RemoteSchemaRelationships -> RemoteSchemaInfo -> m ([FieldParser n (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)], Maybe [FieldParser n (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)], Maybe [FieldParser n (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)])
+buildRawRemoteParser :: forall r m n. MonadBuildRemoteSchema r m n => IntrospectionResult -> RemoteSchemaRelationships -> RemoteSchemaInfo -> SchemaT r m ([FieldParser n (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)], Maybe [FieldParser n (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)], Maybe [FieldParser n (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)])
 
 -- | Helper, used to track whether an input value was altered during its
 --   parsing. There are two possible sources of alteration: - preset
@@ -22396,7 +22426,7 @@ Altered :: Bool -> Altered
 --   Each parser also returns a boolean that indicates whether the parsed
 --   value was altered by presets. Presets might force the evaluation of
 --   variables that would otherwise be transmitted unmodified.
-inputValueDefinitionParser :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> InputValueDefinition -> m (InputFieldsParser n (Maybe (Altered, Value RemoteSchemaVariable)))
+inputValueDefinitionParser :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> InputValueDefinition -> SchemaT r m (InputFieldsParser n (Maybe (Altered, Value RemoteSchemaVariable)))
 
 -- | remoteFieldScalarParser attempts to parse a scalar value for a given
 --   remote field
@@ -22451,7 +22481,7 @@ remoteFieldEnumParser :: MonadParse n => MkTypename -> EnumTypeDefinition -> Par
 --   there is any non-preset field: if yes, we memoize that branch and
 --   proceed as normal. Otherwise we can omit the memoization: we know for
 --   sure that the preset fields won't generate a recursive call!
-remoteInputObjectParser :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> InputObjectTypeDefinition RemoteSchemaInputValueDefinition -> m (Either (InputFieldsParser n (Altered, Value RemoteSchemaVariable)) (Parser 'Input n (Altered, Value RemoteSchemaVariable)))
+remoteInputObjectParser :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> InputObjectTypeDefinition RemoteSchemaInputValueDefinition -> SchemaT r m (Either (InputFieldsParser n (Altered, Value RemoteSchemaVariable)) (Parser 'Input n (Altered, Value RemoteSchemaVariable)))
 
 -- | Variable expansion optimization. Since each parser returns a value
 --   that indicates whether it was altered, we can detect when no
@@ -22497,40 +22527,40 @@ shortCircuitIfUnaltered :: forall k n. ('Input <: k, MonadParse n) => Parser k n
 --   altered during parsing; if any of the fields is preset, or recursively
 --   contains values that contain presets further down, then this result is
 --   labelled as altered.
-argumentsParser :: forall r m n. MonadBuildRemoteSchema r m n => ArgumentsDefinition RemoteSchemaInputValueDefinition -> RemoteSchemaIntrospection -> m (InputFieldsParser n (Altered, HashMap Name (Value RemoteSchemaVariable)))
+argumentsParser :: forall r m n. MonadBuildRemoteSchema r m n => ArgumentsDefinition RemoteSchemaInputValueDefinition -> RemoteSchemaIntrospection -> SchemaT r m (InputFieldsParser n (Altered, HashMap Name (Value RemoteSchemaVariable)))
 aggregateListAndAlteration :: [Maybe (Altered, a)] -> (Altered, [a])
-remoteSchemaRelationships :: forall r n m. MonadBuildRemoteSchema r m n => RemoteSchemaRelationships -> Name -> m [FieldParser n (SchemaRemoteRelationshipSelect (RemoteRelationshipField UnpreparedValue))]
+remoteSchemaRelationships :: forall r n m. MonadBuildRemoteSchema r m n => RemoteSchemaRelationships -> Name -> SchemaT r m [FieldParser n (SchemaRemoteRelationshipSelect (RemoteRelationshipField UnpreparedValue))]
 
 -- | <a>remoteSchemaObject</a> returns a output parser for a given
 --   <tt>ObjectTypeDefinition</tt>.
-remoteSchemaObject :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> ObjectTypeDefinition RemoteSchemaInputValueDefinition -> m (Parser 'Output n (ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
+remoteSchemaObject :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> ObjectTypeDefinition RemoteSchemaInputValueDefinition -> SchemaT r m (Parser 'Output n (ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 
 -- | <a>remoteSchemaInterface</a> returns a output parser for a given
 --   <tt>InterfaceTypeDefinition</tt>. Also check Note [Querying remote
 --   schema interfaces]
-remoteSchemaInterface :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> InterfaceTypeDefinition [Name] RemoteSchemaInputValueDefinition -> m (Parser 'Output n (DeduplicatedSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
+remoteSchemaInterface :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> InterfaceTypeDefinition [Name] RemoteSchemaInputValueDefinition -> SchemaT r m (Parser 'Output n (DeduplicatedSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 
 -- | <a>remoteSchemaUnion</a> returns a output parser for a given
 --   <tt>UnionTypeDefinition</tt>.
-remoteSchemaUnion :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> UnionTypeDefinition -> m (Parser 'Output n (DeduplicatedSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
-remoteFieldFromDefinition :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> Name -> RemoteSchemaRelationships -> FieldDefinition RemoteSchemaInputValueDefinition -> m (FieldParser n (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
+remoteSchemaUnion :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> UnionTypeDefinition -> SchemaT r m (Parser 'Output n (DeduplicatedSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
+remoteFieldFromDefinition :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> Name -> RemoteSchemaRelationships -> FieldDefinition RemoteSchemaInputValueDefinition -> SchemaT r m (FieldParser n (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 
 -- | <a>remoteFieldFromName</a> accepts a GraphQL name and searches for its
 --   definition in the <a>RemoteSchemaIntrospection</a>.
-remoteFieldFromName :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> Name -> Name -> Maybe Description -> Name -> ArgumentsDefinition RemoteSchemaInputValueDefinition -> m (FieldParser n (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
+remoteFieldFromName :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> Name -> Name -> Maybe Description -> Name -> ArgumentsDefinition RemoteSchemaInputValueDefinition -> SchemaT r m (FieldParser n (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 
 -- | <a>remoteField</a> accepts a <a>TypeDefinition</a> and will returns a
 --   <a>FieldParser</a> for it. Note that the <a>TypeDefinition</a> should
 --   be of the GraphQL <a>Output</a> kind, when an GraphQL <a>Input</a>
 --   kind is provided, then error will be thrown.
-remoteField :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> Name -> Name -> Maybe Description -> ArgumentsDefinition RemoteSchemaInputValueDefinition -> TypeDefinition [Name] RemoteSchemaInputValueDefinition -> m (FieldParser n (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
+remoteField :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> Name -> Name -> Maybe Description -> ArgumentsDefinition RemoteSchemaInputValueDefinition -> TypeDefinition [Name] RemoteSchemaInputValueDefinition -> SchemaT r m (FieldParser n (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 
 -- | helper function to get a parser of an object with it's name This
 --   function is called from <a>remoteSchemaInterface</a> and
 --   <a>remoteSchemaObject</a> functions. Both of these have a slightly
 --   different implementation of <tt>getObject</tt>, which is the reason
 --   <tt>getObject</tt> is an argument to this function
-getObjectParser :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> (Name -> m (ObjectTypeDefinition RemoteSchemaInputValueDefinition)) -> Name -> m (Parser 'Output n (Name, ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
+getObjectParser :: forall r m n. MonadBuildRemoteSchema r m n => RemoteSchemaIntrospection -> RemoteSchemaRelationships -> (Name -> SchemaT r m (ObjectTypeDefinition RemoteSchemaInputValueDefinition)) -> Name -> SchemaT r m (Parser 'Output n (Name, ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 customizeRemoteNamespace :: forall n. MonadParse n => RemoteSchemaInfo -> Name -> [FieldParser n (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)] -> [FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
 withRemoteSchemaCustomization :: forall m r a. (MonadReader r m, Has MkTypename r, Has CustomizeRemoteFieldName r) => RemoteSchemaCustomizer -> m a -> m a
 instance GHC.Base.Monoid Hasura.GraphQL.Schema.Remote.Altered
@@ -24678,10 +24708,10 @@ type MonadBuildSchema b r m n = (BackendSchema b, MonadBuildSourceSchema r m n)
 --   
 --   See <a>Note BackendSchema modelling principles</a>.
 class Backend b => BackendSchema (b :: BackendType)
-buildTableQueryAndSubscriptionFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m ([FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], Maybe (Name, Parser 'Output n (ApolloFederationParserFunction n)))
-buildTableStreamingSubscriptionFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableRelayQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> NESeq (ColumnInfo b) -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableInsertMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableQueryAndSubscriptionFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m ([FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], Maybe (Name, Parser 'Output n (ApolloFederationParserFunction n)))
+buildTableStreamingSubscriptionFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableRelayQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> NESeq (ColumnInfo b) -> SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableInsertMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
 -- | This method is responsible for building the GraphQL Schema for
 --   mutations backed by <tt>UPDATE</tt> statements on some table, as
@@ -24690,24 +24720,24 @@ buildTableInsertMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) =>
 --   
 --   The suggested way to implement this is using building blocks in GSB,
 --   c.f. its namesake <tt>GSB.</tt><a>buildTableUpdateMutationFields</a>.
-buildTableUpdateMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableDeleteMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildFunctionQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> FunctionName b -> FunctionInfo b -> TableName b -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildFunctionRelayQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> FunctionName b -> FunctionInfo b -> TableName b -> NESeq (ColumnInfo b) -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildFunctionMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> FunctionName b -> FunctionInfo b -> TableName b -> m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableUpdateMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableDeleteMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildFunctionQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> FunctionName b -> FunctionInfo b -> TableName b -> SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildFunctionRelayQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> FunctionName b -> FunctionInfo b -> TableName b -> NESeq (ColumnInfo b) -> SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildFunctionMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> SourceInfo b -> FunctionName b -> FunctionInfo b -> TableName b -> SchemaT r m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
 -- | Make a parser for relationships. Default implementaton elides
 --   relationships altogether.
-mkRelationshipParser :: (BackendSchema b, MonadBuildSchema b r m n) => SourceInfo b -> RelInfo b -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
+mkRelationshipParser :: (BackendSchema b, MonadBuildSchema b r m n) => SourceInfo b -> RelInfo b -> SchemaT r m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 relayExtension :: BackendSchema b => Maybe (XRelay b)
 nodesAggExtension :: BackendSchema b => Maybe (XNodesAgg b)
 streamSubscriptionExtension :: BackendSchema b => Maybe (XStreamingSubscription b)
-columnParser :: (BackendSchema b, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => ColumnType b -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+columnParser :: (BackendSchema b, MonadBuildSchema b r m n) => ColumnType b -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
 
 -- | Parser for arguments on scalar fields in a selection set
 scalarSelectionArgumentsParser :: (BackendSchema b, MonadParse n) => ColumnType b -> InputFieldsParser n (Maybe (ScalarSelectionArguments b))
 orderByOperators :: BackendSchema b => SourceInfo b -> NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b)))
-comparisonExps :: (BackendSchema b, MonadBuildSchema b r m n) => SourceInfo b -> ColumnType b -> m (Parser 'Input n [ComparisonExp b])
+comparisonExps :: (BackendSchema b, MonadBuildSchema b r m n) => SourceInfo b -> ColumnType b -> SchemaT r m (Parser 'Input n [ComparisonExp b])
 
 -- | The input fields parser, for "count" aggregate field, yielding a
 --   function which generates @'CountType b' from optional "distinct" field
@@ -24716,7 +24746,7 @@ countTypeInput :: (BackendSchema b, MonadParse n) => Maybe (Parser 'Both n (Colu
 aggregateOrderByCountType :: BackendSchema b => ScalarType b
 
 -- | Computed field parser
-computedField :: (BackendSchema b, MonadBuildSchema b r m n) => SourceInfo b -> ComputedFieldInfo b -> TableName b -> TableInfo b -> m (Maybe (FieldParser n (AnnotatedField b)))
+computedField :: (BackendSchema b, MonadBuildSchema b r m n) => SourceInfo b -> ComputedFieldInfo b -> TableName b -> TableInfo b -> SchemaT r m (Maybe (FieldParser n (AnnotatedField b)))
 
 -- | The public interface for the schema of table queries exposed by a
 --   backend.
@@ -24730,10 +24760,10 @@ computedField :: (BackendSchema b, MonadBuildSchema b r m n) => SourceInfo b -> 
 --   
 --   Default implementations exist for all of these in <a>Select</a>.
 class Backend b => BackendTableSelectSchema (b :: BackendType)
-tableArguments :: (BackendTableSelectSchema b, MonadBuildSchemaBase r m n) => SourceInfo b -> TableInfo b -> m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
-tableSelectionSet :: (BackendTableSelectSchema b, MonadBuildSchemaBase r m n) => SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Output n (AnnotatedFields b)))
-selectTable :: (BackendTableSelectSchema b, MonadBuildSchemaBase r m n) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (SelectExp b)))
-selectTableAggregate :: (BackendTableSelectSchema b, MonadBuildSchemaBase r m n) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AggSelectExp b)))
+tableArguments :: (BackendTableSelectSchema b, MonadBuildSourceSchema r m n) => SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
+tableSelectionSet :: (BackendTableSelectSchema b, MonadBuildSourceSchema r m n) => SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+selectTable :: (BackendTableSelectSchema b, MonadBuildSourceSchema r m n) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (SelectExp b)))
+selectTableAggregate :: (BackendTableSelectSchema b, MonadBuildSourceSchema r m n) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
 
@@ -24763,7 +24793,7 @@ getTableIdentifierName :: forall b m. (Backend b, MonadError QErr m) => TableInf
 --   
 --   Return Nothing if there's no column the current user has "select"
 --   permissions for.
-tableSelectColumnsEnum :: forall b r m n. (Backend b, MonadBuildSchemaBase r m n) => SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Both n (Column b)))
+tableSelectColumnsEnum :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Both n (Column b)))
 
 -- | Table select columns enum of a certain type.
 --   
@@ -24774,15 +24804,15 @@ tableSelectColumnsEnum :: forall b r m n. (Backend b, MonadBuildSchemaBase r m n
 --   
 --   Return Nothing if there's no column the current user has "select"
 --   permissions for.
-tableSelectColumnsPredEnum :: forall b r m n. MonadBuildSchema b r m n => (ColumnType b -> Bool) -> Name -> SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Both n (Column b)))
+tableSelectColumnsPredEnum :: forall b r m n. MonadBuildSchema b r m n => (ColumnType b -> Bool) -> Name -> SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Both n (Column b)))
 
 -- | Table update columns enum
 --   
 --   Parser for an enum type that matches the columns of the given table.
 --   Used for conflict resolution in "insert" mutations, among others. Maps
 --   to the table_update_column object.
-tableUpdateColumnsEnum :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> m (Maybe (Parser 'Both n (Column b)))
-updateColumnsPlaceholderParser :: MonadBuildSchema backend r m n => TableInfo backend -> m (Parser 'Both n (Maybe (Column backend)))
+tableUpdateColumnsEnum :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> SchemaT r m (Maybe (Parser 'Both n (Column b)))
+updateColumnsPlaceholderParser :: MonadBuildSchema backend r m n => TableInfo backend -> SchemaT r m (Parser 'Both n (Maybe (Column backend)))
 tableSelectPermissions :: RoleName -> TableInfo b -> Maybe (SelPermInfo b)
 tableSelectFields :: forall b r m. (Backend b, MonadError QErr m, MonadReader r m, Has SchemaContext r) => SourceInfo b -> TableInfo b -> m [FieldInfo b]
 tableColumns :: forall b. TableInfo b -> [ColumnInfo b]
@@ -24810,8 +24840,8 @@ orderByOperator :: forall b n. (BackendSchema b, MonadParse n) => NamingCase -> 
 --     obj-rel: &lt;remote-table&gt;_order_by
 --   }
 --   </pre>
-orderByExp :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)])
-orderByAggregation :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (Parser 'Input n [OrderByItemG b (AnnotatedAggregateOrderBy b)])
+orderByExp :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)])
+orderByAggregation :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (Parser 'Input n [OrderByItemG b (AnnotatedAggregateOrderBy b)])
 orderByOperatorsHasuraCase :: forall b n. (BackendSchema b, MonadParse n) => SourceInfo b -> Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
 orderByOperatorsGraphqlCase :: forall b n. (BackendSchema b, MonadParse n) => SourceInfo b -> Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
 orderByOperator' :: forall b n. (BackendSchema b, MonadParse n) => NamingCase -> SourceInfo b -> Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
@@ -24829,7 +24859,7 @@ module Hasura.GraphQL.Schema.BoolExp
 --   particular, methods in `class BackendSchema` and `type
 --   MonadBuildSchema` should *NOT* include this class as a constraint.
 class AggregationPredicatesSchema (b :: BackendType)
-aggregationPredicatesParser :: forall r m n. (AggregationPredicatesSchema b, MonadBuildSchemaBase r m n) => SourceInfo b -> TableInfo b -> m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+aggregationPredicatesParser :: forall r m n. (AggregationPredicatesSchema b, MonadBuildSchemaBase r m n) => SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
 
 -- | <pre>
 --   input type_bool_exp {
@@ -24840,7 +24870,7 @@ aggregationPredicatesParser :: forall r m n. (AggregationPredicatesSchema b, Mon
 --     ...
 --   }
 --   </pre>
-boolExp :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => SourceInfo b -> TableInfo b -> m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
+boolExp :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => SourceInfo b -> TableInfo b -> SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 mkBoolOperator :: (MonadParse n, 'Input <: k) => NamingCase -> DangerouslyCollapseBooleans -> GQLNameIdentifier -> Maybe Description -> Parser k n a -> InputFieldsParser n (Maybe a)
 equalityOperators :: (MonadParse n, 'Input <: k) => NamingCase -> DangerouslyCollapseBooleans -> Parser k n (UnpreparedValue b) -> Parser k n (UnpreparedValue b) -> [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 comparisonOperators :: (MonadParse n, 'Input <: k) => NamingCase -> DangerouslyCollapseBooleans -> Parser k n (UnpreparedValue b) -> [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
@@ -24863,7 +24893,7 @@ module Hasura.GraphQL.Schema.Select
 --     col2: col2_type
 --   }: [table!]!
 --   </pre>
-defaultSelectTable :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (SelectExp b)))
+defaultSelectTable :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (SelectExp b)))
 
 -- | Simple table connection selection.
 --   
@@ -24886,7 +24916,7 @@ defaultSelectTable :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSel
 --     }
 --   }: table_nameConnection!
 --   </pre>
-selectTableConnection :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b, AggregationPredicatesSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> PrimaryKeyColumns b -> m (Maybe (FieldParser n (ConnectionSelectExp b)))
+selectTableConnection :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b, AggregationPredicatesSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> PrimaryKeyColumns b -> SchemaT r m (Maybe (FieldParser n (ConnectionSelectExp b)))
 
 -- | Table selection by primary key.
 --   
@@ -24900,7 +24930,7 @@ selectTableConnection :: forall b r m n. (MonadBuildSchema b r m n, BackendTable
 --   Returns Nothing if there's nothing that can be selected with current
 --   permissions or if there are primary keys the user doesn't have select
 --   permissions for.
-selectTableByPk :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (SelectExp b)))
+selectTableByPk :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (SelectExp b)))
 
 -- | Table aggregation selection
 --   
@@ -24910,7 +24940,7 @@ selectTableByPk :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelect
 --   
 --   Returns Nothing if there's nothing that can be selected with current
 --   permissions.
-defaultSelectTableAggregate :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AggSelectExp b)))
+defaultSelectTableAggregate :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 
 -- | Fields of a table
 --   
@@ -24932,11 +24962,11 @@ defaultSelectTableAggregate :: forall b r m n. (MonadBuildSchema b r m n, Backen
 --     remote_field: field_type
 --   }
 --   </pre>
-defaultTableSelectionSet :: forall b r m n. (AggregationPredicatesSchema b, BackendTableSelectSchema b, Eq (AnnBoolExp b (UnpreparedValue b)), MonadBuildSchema b r m n) => SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Output n (AnnotatedFields b)))
+defaultTableSelectionSet :: forall b r m n. (AggregationPredicatesSchema b, BackendTableSelectSchema b, Eq (AnnBoolExp b (UnpreparedValue b)), MonadBuildSchema b r m n) => SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 -- | List of table fields object. Just a <tt><a>nonNullableObjectList</a>
 --   wrapper over </tt><a>tableSelectionSet</a>. &gt; table_name: [table!]!
-tableSelectionList :: (MonadBuildSchemaBase r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Output n (AnnotatedFields b)))
+tableSelectionList :: (MonadBuildSourceSchema r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 -- | Converts an output type parser from object_type to [object_type!]!
 nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
@@ -24965,7 +24995,7 @@ nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
 --     node: table!
 --   }
 --   </pre>
-tableConnectionSelectionSet :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Output n (ConnectionFields b)))
+tableConnectionSelectionSet :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Output n (ConnectionFields b)))
 
 -- | Arguments for a table selection. Default implementation for
 --   BackendSchema.
@@ -24977,19 +25007,19 @@ tableConnectionSelectionSet :: forall b r m n. (MonadBuildSchema b r m n, Backen
 --   order_by: [table_order_by!]
 --   where: table_bool_exp
 --   </pre>
-defaultTableArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => SourceInfo b -> TableInfo b -> m (InputFieldsParser n (SelectArgs b))
+defaultTableArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
 
 -- | Argument to filter rows returned from table selection &gt; where:
 --   table_bool_exp
-tableWhereArg :: forall b r m n. (AggregationPredicatesSchema b, MonadBuildSchema b r m n) => SourceInfo b -> TableInfo b -> m (InputFieldsParser n (Maybe (AnnBoolExp b (UnpreparedValue b))))
+tableWhereArg :: forall b r m n. (AggregationPredicatesSchema b, MonadBuildSchema b r m n) => SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (Maybe (AnnBoolExp b (UnpreparedValue b))))
 
 -- | Argument to sort rows returned from table selection &gt; order_by:
 --   [table_order_by!]
-tableOrderByArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (InputFieldsParser n (Maybe (NonEmpty (AnnotatedOrderByItemG b (UnpreparedValue b)))))
+tableOrderByArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (AnnotatedOrderByItemG b (UnpreparedValue b)))))
 
 -- | Argument to distinct select on columns returned from table selection
 --   &gt; distinct_on: [table_select_column!]
-tableDistinctArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
+tableDistinctArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
 
 -- | Argument to limit rows returned from table selection &gt; limit:
 --   NonNegativeInt
@@ -25010,7 +25040,7 @@ tableOffsetArg :: forall n. MonadParse n => InputFieldsParser n (Maybe Int64)
 --   before: String
 --   after: String
 --   </pre>
-tableConnectionArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => PrimaryKeyColumns b -> SourceInfo b -> TableInfo b -> m (InputFieldsParser n (SelectArgs b, Maybe (NonEmpty (ConnectionSplit b (UnpreparedValue b))), Maybe ConnectionSlice))
+tableConnectionArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => PrimaryKeyColumns b -> SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (SelectArgs b, Maybe (NonEmpty (ConnectionSplit b (UnpreparedValue b))), Maybe ConnectionSlice))
 
 -- | Aggregation fields
 --   
@@ -25027,17 +25057,17 @@ tableConnectionArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPre
 --     min: table_min_fields
 --   }
 --   </pre>
-tableAggregationFields :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (Parser 'Output n (AggregateFields b))
+tableAggregationFields :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (Parser 'Output n (AggregateFields b))
 
 -- | An individual field of a table
 --   
 --   <pre>
 --   field_name(arg_name: arg_type, ...): field_type
 --   </pre>
-fieldSelection :: forall b r m n. (AggregationPredicatesSchema b, BackendTableSelectSchema b, Eq (AnnBoolExp b (UnpreparedValue b)), MonadBuildSchema b r m n) => SourceInfo b -> TableName b -> TableInfo b -> FieldInfo b -> m [FieldParser n (AnnotatedField b)]
+fieldSelection :: forall b r m n. (AggregationPredicatesSchema b, BackendTableSelectSchema b, Eq (AnnBoolExp b (UnpreparedValue b)), MonadBuildSchema b r m n) => SourceInfo b -> TableName b -> TableInfo b -> FieldInfo b -> SchemaT r m [FieldParser n (AnnotatedField b)]
 
 -- | Field parsers for a table relationship
-relationshipField :: forall b r m n. (AggregationPredicatesSchema b, BackendTableSelectSchema b, Eq (AnnBoolExp b (UnpreparedValue b)), MonadBuildSchema b r m n) => SourceInfo b -> TableName b -> RelInfo b -> m (Maybe [FieldParser n (AnnotatedField b)])
+relationshipField :: forall b r m n. (AggregationPredicatesSchema b, BackendTableSelectSchema b, Eq (AnnBoolExp b (UnpreparedValue b)), MonadBuildSchema b r m n) => SourceInfo b -> TableName b -> RelInfo b -> SchemaT r m (Maybe [FieldParser n (AnnotatedField b)])
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 
 
@@ -25056,48 +25086,48 @@ cursorBatchSizeArg :: forall n. MonadParse n => NamingCase -> InputFieldsParser 
 --     DESC
 --   }
 --   </pre>
-cursorOrderingArgParser :: forall n m r. (MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r, MonadReader r m) => m (Parser 'Both n CursorOrdering)
+cursorOrderingArgParser :: forall r m n. MonadBuildSourceSchema r m n => SchemaT r m (Parser 'Both n CursorOrdering)
 
 -- | Argument to specify the ordering of the cursor. &gt; ordering:
 --   cursor_ordering
-cursorOrderingArg :: forall n m r. (MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r, MonadReader r m) => m (InputFieldsParser n (Maybe CursorOrdering))
+cursorOrderingArg :: forall r m n. MonadBuildSourceSchema r m n => SchemaT r m (InputFieldsParser n (Maybe CursorOrdering))
 
 -- | Input fields parser to parse the value of a table's column &gt;
 --   column_name: column_type
-streamColumnParserArg :: forall b n m r. (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) => ColumnInfo b -> m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
+streamColumnParserArg :: forall b n m r. MonadBuildSchema b r m n => ColumnInfo b -> SchemaT r m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
 
 -- | Input object parser whose keys are the column names and the values are
 --   the initial values of those columns from where the streaming should
 --   start. &gt; input table_stream_cursor_value_input { &gt; col1:
 --   col1_type &gt; col2: col2_type ... &gt; }
-streamColumnValueParser :: forall b n m r. (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) => SourceInfo b -> Name -> [ColumnInfo b] -> m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+streamColumnValueParser :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> Name -> [ColumnInfo b] -> SchemaT r m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
 
 -- | Argument to accept the initial value from where the streaming should
 --   start. &gt; initial_value: table_stream_cursor_value_input!
-streamColumnValueParserArg :: forall b n m r. (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) => SourceInfo b -> Name -> [ColumnInfo b] -> m (InputFieldsParser n [(ColumnInfo b, ColumnValue b)])
+streamColumnValueParserArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> Name -> [ColumnInfo b] -> SchemaT r m (InputFieldsParser n [(ColumnInfo b, ColumnValue b)])
 
 -- | Argument to accept the cursor data. At the time of writing this, only
 --   a single column cursor is supported and if multiple column cursors are
 --   provided, then a parse error is thrown. &gt;
-tableStreamColumnArg :: forall n m r b. (BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) => SourceInfo b -> Name -> [ColumnInfo b] -> m (InputFieldsParser n [StreamCursorItem b])
+tableStreamColumnArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> Name -> [ColumnInfo b] -> SchemaT r m (InputFieldsParser n [StreamCursorItem b])
 
 -- | Input object that contains the initial value of a column along with
 --   how it needs to be ordered. &gt; input table_stream_cursor_input {
 --   &gt; initial_value: table_stream_cursor_value_input! &gt; ordering:
 --   cursor_ordering &gt; }
-tableStreamCursorExp :: forall m n r b. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (Parser 'Input n [StreamCursorItem b])
+tableStreamCursorExp :: forall m n r b. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (Parser 'Input n [StreamCursorItem b])
 
 -- | Argument to accept the cursor input object. &gt; cursor:
 --   [table_stream_cursor_input]!
-tableStreamCursorArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (InputFieldsParser n [StreamCursorItem b])
+tableStreamCursorArg :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n [StreamCursorItem b])
 
 -- | Arguments to the streaming subscription field. &gt; table_stream
 --   (cursor: [table_stream_cursor_input]!, batch_size: Int!, where:
 --   table_bool_exp)
-tableStreamArguments :: forall b r m n. (AggregationPredicatesSchema b, MonadBuildSchema b r m n) => SourceInfo b -> TableInfo b -> m (InputFieldsParser n (SelectStreamArgs b))
+tableStreamArguments :: forall b r m n. (AggregationPredicatesSchema b, MonadBuildSchema b r m n) => SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (SelectStreamArgs b))
 
 -- | Field parser for a streaming subscription for a table.
-selectStreamTable :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (StreamSelectExp b)))
+selectStreamTable :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (StreamSelectExp b)))
 
 module Hasura.GraphQL.Schema.Mutation
 
@@ -25108,7 +25138,7 @@ module Hasura.GraphQL.Schema.Mutation
 --   field accepts the following arguments: - objects: the list of objects
 --   to insert into the table (see <a>tableFieldsInput</a>) - parser for
 --   backend-specific fields, e.g. upsert fields on_conflict or if_matched
-insertIntoTable :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+insertIntoTable :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | Variant of <a>insertIntoTable</a> that inserts a single row.
 --   
@@ -25116,7 +25146,7 @@ insertIntoTable :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelec
 --   argument, this field instead expects a single <tt>object</tt>. Its
 --   selection set is also slightly different: it only allows selecting
 --   columns from the row being inserted.
-insertOneIntoTable :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+insertOneIntoTable :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | Creates the parser for an input object for a row of the given table.
 --   
@@ -25137,8 +25167,8 @@ insertOneIntoTable :: forall b r m n. MonadBuildSchema b r m n => BackendTableSe
 --    ) ...
 --   }
 --   </pre>
-tableFieldsInput :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (Parser 'Input n (AnnotatedInsertRow b (UnpreparedValue b)))
-mkDefaultRelationshipParser :: forall b r m n. MonadBuildSchema b r m n => (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> XNestedInserts b -> SourceInfo b -> RelInfo b -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
+tableFieldsInput :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> SchemaT r m (Parser 'Input n (AnnotatedInsertRow b (UnpreparedValue b)))
+mkDefaultRelationshipParser :: forall b r m n. MonadBuildSchema b r m n => (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> XNestedInserts b -> SourceInfo b -> RelInfo b -> SchemaT r m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 
 -- | Construct the parser for an input object that represents an insert
 --   through an object relationship.
@@ -25147,7 +25177,7 @@ mkDefaultRelationshipParser :: forall b r m n. MonadBuildSchema b r m n => (Sour
 --   relationships. This function creates the parser for an object that
 --   represents the insertion object across an object relationship; it is
 --   co-recursive with <a>tableFieldsInput</a>.
-objectRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
+objectRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
 
 -- | Construct the parser for an input object that represents an insert
 --   through an array relationship.
@@ -25156,33 +25186,33 @@ objectRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceIn
 --   relationships. This function creates the parser for an object that
 --   represents the insertion object across an array relationship; it is
 --   co-recursive with <a>tableFieldsInput</a>.
-arrayRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
+arrayRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
 
 -- | Helper function that creates an <tt>AnnIns</tt> object.
 mkInsertObject :: forall b f. BackendSchema b => f (AnnotatedInsertRow b (UnpreparedValue b)) -> TableInfo b -> BackendInsert b (UnpreparedValue b) -> InsPermInfo b -> Maybe (UpdPermInfo b) -> AnnotatedInsertData b f (UnpreparedValue b)
 
 -- | Construct a root field, normally called delete_tablename, that can be
 --   used to delete several rows from a DB table
-deleteFromTable :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+deleteFromTable :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | Construct a root field, normally called delete_tablename_by_pk, that
 --   can be used to delete an individual rows from a DB table, specified by
 --   primary key. Select permissions are required, as the user must be
 --   allowed to access all the primary keys of the table.
-deleteFromTableByPk :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+deleteFromTableByPk :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 mkDeleteObject :: Backend b => TableName b -> [ColumnInfo b] -> DelPermInfo b -> Maybe NamingCase -> (AnnBoolExp b (UnpreparedValue b), MutationOutputG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) -> AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 
 -- | All mutations allow returning results, such as what the updated
 --   database rows look like. This parser allows a query to specify what
 --   data to fetch.
-mutationSelectionSet :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => SourceInfo b -> TableInfo b -> m (Parser 'Output n (MutFldsG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+mutationSelectionSet :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => SourceInfo b -> TableInfo b -> SchemaT r m (Parser 'Output n (MutFldsG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 
 -- | How to specify a database row by primary key.
 --   
 --   This will give <tt>Nothing</tt> when either there are no primary keys
 --   defined for the table or when the given permissions do not permit
 --   selecting from all the columns that make up the key.
-primaryKeysArguments :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> m (Maybe (InputFieldsParser n (AnnBoolExp b (UnpreparedValue b))))
+primaryKeysArguments :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> SchemaT r m (Maybe (InputFieldsParser n (AnnBoolExp b (UnpreparedValue b))))
 
 
 -- | This module provides common building blocks for composing Schema
@@ -25200,10 +25230,10 @@ module Hasura.GraphQL.Schema.Update
 --   building blocks of common update operators (such as <a>setOp</a>,
 --   etc.) which have <tt>op ~ UnpreparedValue b</tt>. The Functor instance
 --   lets you wrap the generic update operators in backend-specific tags.
-data UpdateOperator b m n op
-UpdateOperator :: (ColumnInfo b -> Bool) -> (GQLNameIdentifier -> TableName b -> NonEmpty (ColumnInfo b) -> m (InputFieldsParser n (HashMap (Column b) op))) -> UpdateOperator b m n op
-[updateOperatorApplicableColumn] :: UpdateOperator b m n op -> ColumnInfo b -> Bool
-[updateOperatorParser] :: UpdateOperator b m n op -> GQLNameIdentifier -> TableName b -> NonEmpty (ColumnInfo b) -> m (InputFieldsParser n (HashMap (Column b) op))
+data UpdateOperator b r m n op
+UpdateOperator :: (ColumnInfo b -> Bool) -> (GQLNameIdentifier -> TableName b -> NonEmpty (ColumnInfo b) -> SchemaT r m (InputFieldsParser n (HashMap (Column b) op))) -> UpdateOperator b r m n op
+[updateOperatorApplicableColumn] :: UpdateOperator b r m n op -> ColumnInfo b -> Bool
+[updateOperatorParser] :: UpdateOperator b r m n op -> GQLNameIdentifier -> TableName b -> NonEmpty (ColumnInfo b) -> SchemaT r m (InputFieldsParser n (HashMap (Column b) op))
 
 -- | The top-level component for building update operators parsers.
 --   
@@ -25218,7 +25248,7 @@ UpdateOperator :: (ColumnInfo b -> Bool) -> (GQLNameIdentifier -> TableName b ->
 --   (either in the mutation query text or in update preset columns) and
 --   that each column is only used in one operator.</li>
 --   </ul>
-buildUpdateOperators :: forall b r m n op. MonadBuildSchema b r m n => HashMap (Column b) op -> [UpdateOperator b m n op] -> TableInfo b -> m (InputFieldsParser n (HashMap (Column b) op))
+buildUpdateOperators :: forall b r m n op. MonadBuildSchema b r m n => HashMap (Column b) op -> [UpdateOperator b r m n op] -> TableInfo b -> SchemaT r m (InputFieldsParser n (HashMap (Column b) op))
 
 -- | The columns that have <tt>preset</tt> definitions applied to them.
 --   (see
@@ -25229,7 +25259,7 @@ presetColumns :: UpdPermInfo b -> HashMap (Column b) (UnpreparedValue b)
 -- | Produce an InputFieldsParser from an UpdateOperator, but only if the
 --   operator applies to the table (i.e., it admits a non-empty column
 --   set).
-runUpdateOperator :: forall b r m n op. MonadBuildSchema b r m n => TableInfo b -> UpdateOperator b m n op -> m (Maybe (InputFieldsParser n (HashMap (Column b) op)))
+runUpdateOperator :: forall b r m n op. MonadBuildSchema b r m n => TableInfo b -> UpdateOperator b r m n op -> SchemaT r m (Maybe (InputFieldsParser n (HashMap (Column b) op)))
 
 -- | Merge the results of parsed update operators. Throws an error if the
 --   same column has been specified in multiple operators.
@@ -25252,24 +25282,24 @@ mergeDisjoint :: forall b m t. (Backend b, MonadParse m) => [HashMap (Column b) 
 --   <pre>
 --   M.fromList [("col1", MkOp (fp "x")), ("col2", MkOp (fp "y"))]
 --   </pre>
-updateOperator :: forall n r m b a. (MonadParse n, MonadReader r m, Has MkTypename r, Has NamingCase r, Backend b) => GQLNameIdentifier -> GQLNameIdentifier -> GQLNameIdentifier -> (ColumnInfo b -> m (Parser 'Both n a)) -> NonEmpty (ColumnInfo b) -> Description -> Description -> m (InputFieldsParser n (HashMap (Column b) a))
-setOp :: forall b n r m. (BackendSchema b, MonadReader r m, Has MkTypename r, Has NamingCase r, MonadError QErr m, MonadParse n) => UpdateOperator b m n (UnpreparedValue b)
-incOp :: forall b m n r. (Backend b, MonadReader r m, MonadError QErr m, MonadParse n, BackendSchema b, Has MkTypename r, Has NamingCase r) => UpdateOperator b m n (UnpreparedValue b)
+updateOperator :: forall n r m b a. MonadBuildSchema b r m n => GQLNameIdentifier -> GQLNameIdentifier -> GQLNameIdentifier -> (ColumnInfo b -> SchemaT r m (Parser 'Both n a)) -> NonEmpty (ColumnInfo b) -> Description -> Description -> SchemaT r m (InputFieldsParser n (HashMap (Column b) a))
+setOp :: forall b n r m. MonadBuildSchema b r m n => UpdateOperator b r m n (UnpreparedValue b)
+incOp :: forall b m n r. MonadBuildSchema b r m n => UpdateOperator b r m n (UnpreparedValue b)
 
 -- | Construct a root field, normally called update_tablename, that can be
 --   used to update rows in a DB table specified by filters. Only returns a
 --   parser if there are columns the user is allowed to update; otherwise
 --   returns Nothing.
-updateTable :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+updateTable :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | Construct a root field, normally called
 --   <tt>update_tablename_by_pk</tt>, that can be used to update a single
 --   in a DB table, specified by primary key. Only returns a parser if
 --   there are columns the user is allowed to update and if the user has
 --   select permissions on all primary keys; otherwise returns Nothing.
-updateTableByPk :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+updateTableByPk :: forall b r m n. MonadBuildSchema b r m n => BackendTableSelectSchema b => InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) -> Scenario -> SourceInfo b -> TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 mkUpdateObject :: Backend b => TableName b -> [ColumnInfo b] -> UpdPermInfo b -> Maybe NamingCase -> ((BackendUpdate b (UnpreparedValue b), AnnBoolExp b (UnpreparedValue b)), MutationOutputG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) -> AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
-instance (GHC.Base.Functor m, GHC.Base.Functor n) => GHC.Base.Functor (Hasura.GraphQL.Schema.Update.UpdateOperator b m n)
+instance (GHC.Base.Functor m, GHC.Base.Functor n) => GHC.Base.Functor (Hasura.GraphQL.Schema.Update.UpdateOperator b r m n)
 
 
 -- | This module provides building blocks for the GraphQL Schema that the
@@ -25334,9 +25364,9 @@ setFieldNameCase :: NamingCase -> TableInfo b -> CustomRootField -> (GQLNameIden
 --   table. It returns a tuple with array of field parsers that correspond
 --   to the field parsers of the query root and the field parsers of the
 --   subscription root
-buildTableQueryAndSubscriptionFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m ([FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], Maybe (Name, Parser 'Output n (ApolloFederationParserFunction n)))
-buildTableStreamingSubscriptionFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableInsertMutationFields :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableQueryAndSubscriptionFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m ([FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))], Maybe (Name, Parser 'Output n (ApolloFederationParserFunction n)))
+buildTableStreamingSubscriptionFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => MkRootFieldName -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableInsertMutationFields :: forall b r m n. (MonadBuildSchema b r m n, BackendTableSelectSchema b) => (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
 -- | This function is the basic building block for update mutations. It
 --   implements the mutation schema in the general shape described in
@@ -25362,8 +25392,8 @@ buildTableInsertMutationFields :: forall b r m n. (MonadBuildSchema b r m n, Bac
 --     buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields myBackendUpdateOperators
 --     ...
 --   </pre>
-buildTableUpdateMutationFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => (TableInfo b -> m (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))) -> MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableDeleteMutationFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableUpdateMutationFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => (TableInfo b -> SchemaT r m (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))) -> MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableDeleteMutationFields :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b, BackendTableSelectSchema b) => MkRootFieldName -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildFieldDescription :: Text -> Comment -> Maybe Description
 
 
@@ -25374,7 +25404,7 @@ module Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
 -- | This function is meant to serve as the default schema for Aggregation
 --   Predicates represented in the IR by the type
 --   <a>AggregationPredicates</a>.
-defaultAggregationPredicatesParser :: forall b r m n. (MonadBuildSchemaBase r m n, BackendSchema b, AggregationPredicatesSchema b) => [FunctionSignature b] -> SourceInfo b -> TableInfo b -> m (Maybe (InputFieldsParser n [AggregationPredicatesImplementation b (UnpreparedValue b)]))
+defaultAggregationPredicatesParser :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => [FunctionSignature b] -> SourceInfo b -> TableInfo b -> SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicatesImplementation b (UnpreparedValue b)]))
 data FunctionSignature (b :: BackendType)
 FunctionSignature :: Text -> Name -> ArgumentsSignature b -> ScalarType b -> FunctionSignature (b :: BackendType)
 [fnName] :: FunctionSignature (b :: BackendType) -> Text
@@ -25392,16 +25422,16 @@ ArgumentSignature :: ScalarType b -> Name -> ArgumentSignature (b :: BackendType
 module Hasura.Backends.Postgres.Schema.Select
 
 -- | User-defined function (AKA custom function)
-selectFunction :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
-selectFunctionAggregate :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
-selectFunctionConnection :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, AggregationPredicatesSchema ('Postgres pgKind), BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> PrimaryKeyColumns ('Postgres pgKind) -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
+selectFunction :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
+selectFunctionAggregate :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
+selectFunctionConnection :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, AggregationPredicatesSchema ('Postgres pgKind), BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> PrimaryKeyColumns ('Postgres pgKind) -> SchemaT r m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
 
 -- | Computed field parser
-computedFieldPG :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => SourceInfo ('Postgres pgKind) -> ComputedFieldInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
+computedFieldPG :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => SourceInfo ('Postgres pgKind) -> ComputedFieldInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> SchemaT r m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
 
 -- | The custom SQL functions' input "args" field parser &gt;
 --   function_name(args: function_args)
-customSQLFunctionArgs :: MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Name -> Name -> m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+customSQLFunctionArgs :: MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Name -> Name -> SchemaT r m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
 
 -- | Parses the arguments to the underlying sql function of a computed
 --   field or a custom function. All arguments to the underlying sql
@@ -25415,9 +25445,9 @@ customSQLFunctionArgs :: MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo
 --   user-provided (the session argument in the case of custom functions,
 --   the table row argument in the case of computed fields), the args
 --   object will be omitted.
-functionArgs :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionTrackedAs ('Postgres pgKind) -> Seq (FunctionInputArgument ('Postgres pgKind)) -> m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-buildFunctionQueryFieldsPG :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildFunctionMutationFieldsPG :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> m [FieldParser n (MutationDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+functionArgs :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionTrackedAs ('Postgres pgKind) -> Seq (FunctionInputArgument ('Postgres pgKind)) -> SchemaT r m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+buildFunctionQueryFieldsPG :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+buildFunctionMutationFieldsPG :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> SchemaT r m [FieldParser n (MutationDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 
 
 -- | Postgres Schema OnConflict
@@ -25444,11 +25474,11 @@ module Hasura.Backends.Postgres.Schema.OnConflict
 --   <tt>update_columns</tt> to support the "ON CONFLICT DO NOTHING" case.
 --   We do this by adding a placeholder value to the enum. See
 --   <a>https://github.com/hasura/graphql-engine/issues/6804</a>.
-onConflictFieldParser :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, AggregationPredicatesSchema ('Postgres pgKind)) => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> m (InputFieldsParser n (Maybe (OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
+onConflictFieldParser :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, AggregationPredicatesSchema ('Postgres pgKind)) => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> SchemaT r m (InputFieldsParser n (Maybe (OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
 
 -- | Create a parser for the <tt>_on_conflict</tt> object of the given
 --   table.
-conflictObjectParser :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, AggregationPredicatesSchema ('Postgres pgKind)) => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> Maybe (UpdPermInfo ('Postgres pgKind)) -> NonEmpty (UniqueConstraint ('Postgres pgKind)) -> m (Parser 'Input n (OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+conflictObjectParser :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind) r m n, AggregationPredicatesSchema ('Postgres pgKind)) => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> Maybe (UpdPermInfo ('Postgres pgKind)) -> NonEmpty (UniqueConstraint ('Postgres pgKind)) -> SchemaT r m (Parser 'Input n (OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
 
 -- | Constructs a Parser for the name of the constraints on a given table.
 --   
@@ -25460,7 +25490,7 @@ conflictObjectParser :: forall pgKind r m n. (MonadBuildSchema ('Postgres pgKind
 --   
 --   This function can fail if a constraint has a name that cannot be
 --   translated to a GraphQL name (see hasura/graphql-engine-mono#1748).
-conflictConstraint :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => NonEmpty (UniqueConstraint ('Postgres pgKind)) -> SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
+conflictConstraint :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => NonEmpty (UniqueConstraint ('Postgres pgKind)) -> SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 
 
 -- | MSSQL Schema IfMatched
@@ -25489,10 +25519,10 @@ module Hasura.Backends.MSSQL.Schema.IfMatched
 --   created if the active role has <i>both</i> select and update
 --   permissions to the table <tt>tablename</tt> defined <i>and</i> these
 --   grant non-empty column permissions.
-ifMatchedFieldParser :: forall r m n. (MonadBuildSchema 'MSSQL r m n, AggregationPredicatesSchema 'MSSQL) => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
+ifMatchedFieldParser :: forall r m n. (MonadBuildSchema 'MSSQL r m n, AggregationPredicatesSchema 'MSSQL) => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> SchemaT r m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
 
 -- | Parse a <tt>tablename_if_matched</tt> object.
-ifMatchedObjectParser :: forall r m n. (MonadBuildSchema 'MSSQL r m n, AggregationPredicatesSchema 'MSSQL) => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
+ifMatchedObjectParser :: forall r m n. (MonadBuildSchema 'MSSQL r m n, AggregationPredicatesSchema 'MSSQL) => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> SchemaT r m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
 
 -- | Table insert_match_columns enum
 --   
@@ -25502,7 +25532,7 @@ ifMatchedObjectParser :: forall r m n. (MonadBuildSchema 'MSSQL r m n, Aggregati
 --   
 --   Return Nothing if there's no column the current user has "select"
 --   permissions for.
-tableInsertMatchColumnsEnum :: forall r m n. MonadBuildSchemaBase r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> m (Maybe (Parser 'Both n (Column 'MSSQL)))
+tableInsertMatchColumnsEnum :: forall r m n. MonadBuildSourceSchema r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
 
 -- | Check whether a column can be used for match_columns.
 isMatchColumnValid :: ColumnInfo 'MSSQL -> Bool
@@ -25909,9 +25939,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_aywko. Lens' (QueryParametersInfo b_aywko) (Seq (ColumnValue b_aywko))
-qpiReusableVariableValues :: forall b_aywko. Lens' (QueryParametersInfo b_aywko) (HashMap Name (ColumnValue b_aywko))
-qpiReferencedSessionVariables :: forall b_aywko. Lens' (QueryParametersInfo b_aywko) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_aywLW. Lens' (QueryParametersInfo b_aywLW) (Seq (ColumnValue b_aywLW))
+qpiReusableVariableValues :: forall b_aywLW. Lens' (QueryParametersInfo b_aywLW) (HashMap Name (ColumnValue b_aywLW))
+qpiReferencedSessionVariables :: forall b_aywLW. Lens' (QueryParametersInfo b_aywLW) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -26048,16 +26078,16 @@ module Hasura.Backends.Postgres.Instances.Schema
 --   Note: Users shouldn't ever put this as a constraint. Use
 --   `BackendSchema ('Postgres pgKind)` instead.
 class PostgresSchema (pgKind :: PostgresKind)
-pgkBuildTableRelayQueryFields :: forall r m n. (PostgresSchema pgKind, MonadBuildSchema ('Postgres pgKind) r m n) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> NESeq (ColumnInfo ('Postgres pgKind)) -> m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-pgkBuildFunctionRelayQueryFields :: forall r m n. (PostgresSchema pgKind, MonadBuildSchema ('Postgres pgKind) r m n) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> NESeq (ColumnInfo ('Postgres pgKind)) -> m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+pgkBuildTableRelayQueryFields :: forall r m n. (PostgresSchema pgKind, MonadBuildSchema ('Postgres pgKind) r m n) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> NESeq (ColumnInfo ('Postgres pgKind)) -> SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+pgkBuildFunctionRelayQueryFields :: forall r m n. (PostgresSchema pgKind, MonadBuildSchema ('Postgres pgKind) r m n) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> NESeq (ColumnInfo ('Postgres pgKind)) -> SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 pgkRelayExtension :: PostgresSchema pgKind => Maybe (XRelay ('Postgres pgKind))
 
 -- | The aggregation functions that are supported by postgres variants.
 --   TODO: Add more.
 _aggregationFunctions :: [FunctionSignature ('Postgres pgKind)]
-backendInsertParser :: forall pgKind m r n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> m (InputFieldsParser n (BackendInsert pgKind (UnpreparedValue ('Postgres pgKind))))
-buildTableRelayQueryFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> NESeq (ColumnInfo ('Postgres pgKind)) -> m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-pgkBuildTableUpdateMutationFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> Scenario -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> m [FieldParser n (AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+backendInsertParser :: forall pgKind m r n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> SchemaT r m (InputFieldsParser n (BackendInsert pgKind (UnpreparedValue ('Postgres pgKind))))
+buildTableRelayQueryFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> NESeq (ColumnInfo ('Postgres pgKind)) -> SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+pgkBuildTableUpdateMutationFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> Scenario -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 
 -- | Create a parser for <tt>update_table_many</tt>. This function is very
 --   similar to both <a>buildTableUpdateMutationFields</a> and
@@ -26077,16 +26107,16 @@ pgkBuildTableUpdateMutationFields :: forall r m n pgKind. (MonadBuildSchema ('Po
 --   backends, please consider making this function similar to
 --   <i>updateTable</i> and moving it there. Note: this will likely require
 --   adding a type or a function to <a>BackendSchema</a>.
-updateTableMany :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> Scenario -> SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> m (Maybe (FieldParser n (AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))))
+updateTableMany :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> Scenario -> SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> SchemaT r m (Maybe (FieldParser n (AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))))
 
 -- | Create a parser for the updates section of the
 --   <tt>update_table_many</tt> update.
 --   
 --   It parses a list with two fields: 'where', and an update expression
 --   (set<i>inc</i>etc).
-mkMultiRowUpdateParser :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> UpdPermInfo ('Postgres pgKind) -> m (InputFieldsParser n (BackendUpdate pgKind (UnpreparedValue ('Postgres pgKind))))
-buildFunctionRelayQueryFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> NESeq (ColumnInfo ('Postgres pgKind)) -> m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-columnParser :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => ColumnType ('Postgres pgKind) -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue ('Postgres pgKind))))
+mkMultiRowUpdateParser :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> UpdPermInfo ('Postgres pgKind) -> SchemaT r m (InputFieldsParser n (BackendUpdate pgKind (UnpreparedValue ('Postgres pgKind))))
+buildFunctionRelayQueryFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> NESeq (ColumnInfo ('Postgres pgKind)) -> SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+columnParser :: MonadBuildSchema ('Postgres pgKind) r m n => ColumnType ('Postgres pgKind) -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue ('Postgres pgKind))))
 pgScalarSelectionArgumentsParser :: MonadParse n => ColumnType ('Postgres pgKind) -> InputFieldsParser n (Maybe (ScalarSelectionArguments ('Postgres pgKind)))
 orderByOperatorsHasuraCase :: (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
 orderByOperatorsGraphqlCase :: (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
@@ -26095,11 +26125,11 @@ orderByOperatorsGraphqlCase :: (Name, NonEmpty (Definition EnumValueInfo, (Basic
 --   <tt>orderByOperatorsHasuraCase</tt> or
 --   <tt>orderByOperatorsGraphqlCase</tt>
 orderByOperators :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
-comparisonExps :: forall pgKind m n r. (BackendSchema ('Postgres pgKind), MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has SchemaOptions r, Has MkTypename r, Has NamingCase r) => ColumnType ('Postgres pgKind) -> m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
-geographyWithinDistanceInput :: forall pgKind m n r. (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => m (Parser 'Input n (DWithinGeogOp (UnpreparedValue ('Postgres pgKind))))
-geometryWithinDistanceInput :: forall pgKind m n r. (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => m (Parser 'Input n (DWithinGeomOp (UnpreparedValue ('Postgres pgKind))))
-intersectsNbandGeomInput :: forall pgKind m n r. (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue ('Postgres pgKind))))
-intersectsGeomNbandInput :: forall pgKind m n r. (MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue ('Postgres pgKind))))
+comparisonExps :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => ColumnType ('Postgres pgKind) -> SchemaT r m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
+geographyWithinDistanceInput :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => SchemaT r m (Parser 'Input n (DWithinGeogOp (UnpreparedValue ('Postgres pgKind))))
+geometryWithinDistanceInput :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => SchemaT r m (Parser 'Input n (DWithinGeomOp (UnpreparedValue ('Postgres pgKind))))
+intersectsNbandGeomInput :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => SchemaT r m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue ('Postgres pgKind))))
+intersectsGeomNbandInput :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => SchemaT r m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue ('Postgres pgKind))))
 countTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column ('Postgres pgKind))) -> InputFieldsParser n (CountDistinct -> CountType ('Postgres pgKind))
 
 -- | Update operator that prepends a value to a column containing jsonb
@@ -26107,38 +26137,38 @@ countTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column ('Postgres pgKin
 --   
 --   Note: Currently this is Postgres specific because json columns have
 --   not been ported to other backends yet.
-prependOp :: forall pgKind m n r. (BackendSchema ('Postgres pgKind), MonadReader r m, MonadError QErr m, MonadParse n, Has MkTypename r, Has NamingCase r) => UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
+prependOp :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => UpdateOperator ('Postgres pgKind) r m n (UnpreparedValue ('Postgres pgKind))
 
 -- | Update operator that appends a value to a column containing jsonb
 --   arrays.
 --   
 --   Note: Currently this is Postgres specific because json columns have
 --   not been ported to other backends yet.
-appendOp :: forall pgKind m n r. (BackendSchema ('Postgres pgKind), MonadReader r m, MonadError QErr m, MonadParse n, Has MkTypename r, Has NamingCase r) => UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
+appendOp :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => UpdateOperator ('Postgres pgKind) r m n (UnpreparedValue ('Postgres pgKind))
 
 -- | Update operator that deletes a value at a specified key from a column
 --   containing jsonb objects.
 --   
 --   Note: Currently this is Postgres specific because json columns have
 --   not been ported to other backends yet.
-deleteKeyOp :: forall pgKind m n r. (BackendSchema ('Postgres pgKind), MonadReader r m, MonadError QErr m, MonadParse n, Has MkTypename r, Has NamingCase r) => UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
+deleteKeyOp :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => UpdateOperator ('Postgres pgKind) r m n (UnpreparedValue ('Postgres pgKind))
 
 -- | Update operator that deletes a value at a specific index from a column
 --   containing jsonb arrays.
 --   
 --   Note: Currently this is Postgres specific because json columns have
 --   not been ported to other backends yet.
-deleteElemOp :: forall pgKind m n r. (BackendSchema ('Postgres pgKind), MonadReader r m, MonadError QErr m, MonadParse n, Has MkTypename r, Has NamingCase r) => UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
+deleteElemOp :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => UpdateOperator ('Postgres pgKind) r m n (UnpreparedValue ('Postgres pgKind))
 
 -- | Update operator that deletes a field at a certan path from a column
 --   containing jsonb objects.
 --   
 --   Note: Currently this is Postgres specific because json columns have
 --   not been ported to other backends yet.
-deleteAtPathOp :: forall pgKind m n r. (BackendSchema ('Postgres pgKind), MonadReader r m, MonadError QErr m, MonadParse n, Has MkTypename r, Has NamingCase r) => UpdateOperator ('Postgres pgKind) m n [UnpreparedValue ('Postgres pgKind)]
+deleteAtPathOp :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => UpdateOperator ('Postgres pgKind) r m n [UnpreparedValue ('Postgres pgKind)]
 
 -- | The update operators that we support on Postgres.
-updateOperators :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => TableInfo ('Postgres pgKind) -> UpdPermInfo ('Postgres pgKind) -> m (InputFieldsParser n (HashMap (Column ('Postgres pgKind)) (UpdateOpExpression (UnpreparedValue ('Postgres pgKind)))))
+updateOperators :: forall pgKind m n r. MonadBuildSchema ('Postgres pgKind) r m n => TableInfo ('Postgres pgKind) -> UpdPermInfo ('Postgres pgKind) -> SchemaT r m (InputFieldsParser n (HashMap (Column ('Postgres pgKind)) (UpdateOpExpression (UnpreparedValue ('Postgres pgKind)))))
 instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Backend.Vanilla
 instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Backend.Citus
 instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Backend.Cockroach
@@ -26159,7 +26189,7 @@ module Hasura.GraphQL.Schema.Action
 --     col2: col2_type
 --   }
 --   </pre>
-actionExecute :: forall r m n. MonadBuildSchemaBase r m n => AnnotatedCustomTypes -> ActionInfo -> m (Maybe (FieldParser n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
+actionExecute :: forall r m n. MonadBuildSourceSchema r m n => AnnotatedCustomTypes -> ActionInfo -> SchemaT r m (Maybe (FieldParser n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
 
 -- | actionAsyncMutation is used to execute a asynchronous mutation action.
 --   An asynchronous action expects the field name and the input arguments
@@ -26169,7 +26199,7 @@ actionExecute :: forall r m n. MonadBuildSchemaBase r m n => AnnotatedCustomType
 --   <pre>
 --   action_name(action_input_arguments)
 --   </pre>
-actionAsyncMutation :: forall r m n. MonadBuildSchemaBase r m n => HashMap Name AnnotatedInputType -> ActionInfo -> m (Maybe (FieldParser n AnnActionMutationAsync))
+actionAsyncMutation :: forall r m n. MonadBuildSourceSchema r m n => HashMap Name AnnotatedInputType -> ActionInfo -> SchemaT r m (Maybe (FieldParser n AnnActionMutationAsync))
 
 -- | actionAsyncQuery is used to query/subscribe to the result of an
 --   asynchronous mutation action. The only input argument to an
@@ -26186,12 +26216,12 @@ actionAsyncMutation :: forall r m n. MonadBuildSchemaBase r m n => HashMap Name 
 --     output: user_defined_type!
 --   }
 --   </pre>
-actionAsyncQuery :: forall r m n. MonadBuildSchema ('Postgres 'Vanilla) r m n => HashMap Name AnnotatedObjectType -> ActionInfo -> m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
+actionAsyncQuery :: forall r m n. MonadBuildSchema ('Postgres 'Vanilla) r m n => HashMap Name AnnotatedObjectType -> ActionInfo -> SchemaT r m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
 
 -- | Async action's unique id
 actionIdParser :: MonadParse n => Parser 'Both n ActionId
-actionOutputFields :: forall r m n. MonadBuildSchemaBase r m n => GType -> AnnotatedObjectType -> HashMap Name AnnotatedObjectType -> m (Parser 'Output n AnnotatedActionFields)
-actionInputArguments :: forall r m n. MonadBuildSchemaBase r m n => HashMap Name AnnotatedInputType -> [ArgumentDefinition (GType, AnnotatedInputType)] -> m (InputFieldsParser n Value)
+actionOutputFields :: forall r m n. MonadBuildSourceSchema r m n => GType -> AnnotatedObjectType -> HashMap Name AnnotatedObjectType -> SchemaT r m (Parser 'Output n AnnotatedActionFields)
+actionInputArguments :: forall r m n. MonadBuildSourceSchema r m n => HashMap Name AnnotatedInputType -> [ArgumentDefinition (GType, AnnotatedInputType)] -> SchemaT r m (InputFieldsParser n Value)
 mkArgumentInputFieldParser :: forall m k. (MonadParse m, 'Input <: k) => Name -> Maybe Description -> GType -> Parser k m Value -> InputFieldsParser m (Maybe Value)
 customScalarParser :: MonadParse m => AnnotatedScalarType -> Parser 'Both m Value
 customEnumParser :: MonadParse m => EnumTypeDefinition -> Parser 'Both m Value
@@ -26201,9 +26231,9 @@ customEnumParser :: MonadParse m => EnumTypeDefinition -> Parser 'Both m Value
 --   corresponding instance of <tt>BackendSchema</tt>, when actions are
 --   generalized.
 module Hasura.GraphQL.Schema.Postgres
-buildActionQueryFields :: MonadBuildSchema ('Postgres 'Vanilla) r m n => AnnotatedCustomTypes -> ActionInfo -> m [FieldParser n (QueryRootField UnpreparedValue)]
-buildActionMutationFields :: MonadBuildSchema ('Postgres 'Vanilla) r m n => AnnotatedCustomTypes -> ActionInfo -> m [FieldParser n (MutationRootField UnpreparedValue)]
-buildActionSubscriptionFields :: MonadBuildSchema ('Postgres 'Vanilla) r m n => AnnotatedCustomTypes -> ActionInfo -> m [FieldParser n (QueryRootField UnpreparedValue)]
+buildActionQueryFields :: MonadBuildSchema ('Postgres 'Vanilla) r m n => AnnotatedCustomTypes -> ActionInfo -> SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
+buildActionMutationFields :: MonadBuildSchema ('Postgres 'Vanilla) r m n => AnnotatedCustomTypes -> ActionInfo -> SchemaT r m [FieldParser n (MutationRootField UnpreparedValue)]
+buildActionSubscriptionFields :: MonadBuildSchema ('Postgres 'Vanilla) r m n => AnnotatedCustomTypes -> ActionInfo -> SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
 applyActionOrigin :: ActionInfo -> Maybe (FieldParser n a) -> Maybe (FieldParser n a)
 
 
@@ -26294,13 +26324,13 @@ fetchFromColVals :: MonadError QErr m => ColumnValues ('Postgres pgKind) TxtEnco
 decodeEncJSON :: (FromJSON a, QErrM m) => EncJSON -> m a
 
 module Hasura.Backends.MySQL.Instances.Schema
-mysqlTableArgs :: forall r m n. MonadBuildSchema 'MySQL r m n => SourceInfo 'MySQL -> TableInfo 'MySQL -> m (InputFieldsParser n (SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
+mysqlTableArgs :: forall r m n. MonadBuildSchema 'MySQL r m n => SourceInfo 'MySQL -> TableInfo 'MySQL -> SchemaT r m (InputFieldsParser n (SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
 bsParser :: MonadParse m => Parser 'Both m ByteString
-columnParser' :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => ColumnType 'MySQL -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
+columnParser' :: MonadBuildSchema 'MySQL r m n => ColumnType 'MySQL -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
 orderByOperators' :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
-comparisonExps' :: forall m n r. (BackendSchema 'MySQL, MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => ColumnType 'MySQL -> m (Parser 'Input n [ComparisonExp 'MySQL])
+comparisonExps' :: forall m n r. MonadBuildSchema 'MySQL r m n => ColumnType 'MySQL -> SchemaT r m (Parser 'Input n [ComparisonExp 'MySQL])
 mysqlCountTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column 'MySQL)) -> InputFieldsParser n (CountDistinct -> CountType 'MySQL)
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.MySQL
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.MySQL
@@ -26310,12 +26340,12 @@ instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Back
 --   
 --   Defines a <a>BackendSchema</a> type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema
-backendInsertParser :: forall m r n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
-msBuildTableUpdateMutationFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> Scenario -> SourceInfo 'MSSQL -> TableName 'MSSQL -> TableInfo 'MSSQL -> GQLNameIdentifier -> m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msTableArgs :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> m (InputFieldsParser n (SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
-msColumnParser :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => ColumnType 'MSSQL -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
+backendInsertParser :: forall m r n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> SchemaT r m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
+msBuildTableUpdateMutationFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> Scenario -> SourceInfo 'MSSQL -> TableName 'MSSQL -> TableInfo 'MSSQL -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
+msTableArgs :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> SchemaT r m (InputFieldsParser n (SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
+msColumnParser :: MonadBuildSchema 'MSSQL r m n => ColumnType 'MSSQL -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
 msOrderByOperators :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)))
-msComparisonExps :: forall m n r. (BackendSchema 'MSSQL, MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has SchemaOptions r, Has MkTypename r, Has NamingCase r) => ColumnType 'MSSQL -> m (Parser 'Input n [ComparisonExp 'MSSQL])
+msComparisonExps :: forall m n r. MonadBuildSchema 'MSSQL r m n => ColumnType 'MSSQL -> SchemaT r m (Parser 'Input n [ComparisonExp 'MSSQL])
 msCountTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column 'MSSQL)) -> InputFieldsParser n (CountDistinct -> CountType 'MSSQL)
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.MSSQL
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.MSSQL
@@ -26367,11 +26397,11 @@ instance GHC.Base.Semigroup Hasura.Backends.DataConnector.Plan.FieldsAndAggregat
 instance GHC.Base.Monoid Hasura.Backends.DataConnector.Plan.FieldsAndAggregates
 
 module Hasura.Backends.DataConnector.Adapter.Schema
-experimentalBuildTableRelayQueryFields :: MonadBuildSchema 'DataConnector r m n => MkRootFieldName -> SourceInfo 'DataConnector -> TableName 'DataConnector -> TableInfo 'DataConnector -> GQLNameIdentifier -> NESeq (ColumnInfo 'DataConnector) -> m [FieldParser n a]
-columnParser' :: (MonadParse n, MonadError QErr m) => ColumnType 'DataConnector -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
+experimentalBuildTableRelayQueryFields :: MonadBuildSchema 'DataConnector r m n => MkRootFieldName -> SourceInfo 'DataConnector -> TableName 'DataConnector -> TableInfo 'DataConnector -> GQLNameIdentifier -> NESeq (ColumnInfo 'DataConnector) -> SchemaT r m [FieldParser n a]
+columnParser' :: (MonadParse n, MonadError QErr m) => ColumnType 'DataConnector -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
 orderByOperators' :: SourceInfo 'DataConnector -> NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'DataConnector, NullsOrderType 'DataConnector)))
-comparisonExps' :: forall m n r. (BackendSchema 'DataConnector, MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has SchemaOptions r, Has NamingCase r) => SourceInfo 'DataConnector -> ColumnType 'DataConnector -> m (Parser 'Input n [ComparisonExp 'DataConnector])
-tableArgs' :: forall r m n. MonadBuildSchema 'DataConnector r m n => SourceInfo 'DataConnector -> TableInfo 'DataConnector -> m (InputFieldsParser n (SelectArgsG 'DataConnector (UnpreparedValue 'DataConnector)))
+comparisonExps' :: forall m n r. MonadBuildSchema 'DataConnector r m n => SourceInfo 'DataConnector -> ColumnType 'DataConnector -> SchemaT r m (Parser 'Input n [ComparisonExp 'DataConnector])
+tableArgs' :: forall r m n. MonadBuildSchema 'DataConnector r m n => SourceInfo 'DataConnector -> TableInfo 'DataConnector -> SchemaT r m (InputFieldsParser n (SelectArgsG 'DataConnector (UnpreparedValue 'DataConnector)))
 countTypeInput' :: MonadParse n => Maybe (Parser 'Both n Name) -> InputFieldsParser n (CountDistinct -> CountAggregate)
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.DataConnector
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.DataConnector
@@ -26379,12 +26409,12 @@ instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Back
 module Hasura.Backends.BigQuery.Instances.Schema
 bqColumnParser :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => ColumnType 'BigQuery -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery)))
 bqOrderByOperators :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)))
-bqComparisonExps :: forall m n r. MonadBuildSchema 'BigQuery r m n => ColumnType 'BigQuery -> m (Parser 'Input n [ComparisonExp 'BigQuery])
+bqComparisonExps :: forall m n r. MonadBuildSchema 'BigQuery r m n => ColumnType 'BigQuery -> SchemaT r m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqCountTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column 'BigQuery)) -> InputFieldsParser n (CountDistinct -> CountType 'BigQuery)
-geographyWithinDistanceInput :: forall m n r. (MonadMemoize m, MonadBuildSchema 'BigQuery r m n) => m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'BigQuery)))
+geographyWithinDistanceInput :: forall m n r. MonadBuildSchema 'BigQuery r m n => SchemaT r m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'BigQuery)))
 
 -- | Computed field parser.
-bqComputedField :: forall r m n. MonadBuildSchema 'BigQuery r m n => SourceInfo 'BigQuery -> ComputedFieldInfo 'BigQuery -> TableName 'BigQuery -> TableInfo 'BigQuery -> m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
+bqComputedField :: forall r m n. MonadBuildSchema 'BigQuery r m n => SourceInfo 'BigQuery -> ComputedFieldInfo 'BigQuery -> TableName 'BigQuery -> TableInfo 'BigQuery -> SchemaT r m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.BigQuery
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.BigQuery
 
@@ -26393,19 +26423,19 @@ module Hasura.GraphQL.Schema.Instances
 module Hasura.GraphQL.Schema.RemoteRelationship
 
 -- | Remote relationship field parsers
-remoteRelationshipField :: SourceCache -> RemoteSchemaMap -> RemoteSchemaPermissions -> RemoteRelationshipParserBuilder
+remoteRelationshipField :: SchemaContext -> SchemaOptions -> SourceCache -> RemoteSchemaMap -> RemoteSchemaPermissions -> RemoteRelationshipParserBuilder
 
 -- | Parser(s) for remote relationship fields to a remote schema
-remoteRelationshipToSchemaField :: forall r m n lhsJoinField. MonadBuildSchemaBase r m n => RemoteSchemaMap -> RemoteSchemaPermissions -> HashMap FieldName lhsJoinField -> RemoteSchemaFieldInfo -> m (Maybe (FieldParser n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))))
-lookupNestedFieldType' :: (MonadMemoize m, MonadError QErr m) => Name -> RemoteSchemaIntrospection -> FieldCall -> m GType
-lookupNestedFieldType :: (MonadMemoize m, MonadError QErr m) => Name -> RemoteSchemaIntrospection -> NonEmpty FieldCall -> m GType
+remoteRelationshipToSchemaField :: forall r m n lhsJoinField. MonadBuildRemoteSchema r m n => RemoteSchemaMap -> RemoteSchemaPermissions -> HashMap FieldName lhsJoinField -> RemoteSchemaFieldInfo -> SchemaT r m (Maybe (FieldParser n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))))
+lookupNestedFieldType' :: (MonadMemoize m, MonadError QErr m) => Name -> RemoteSchemaIntrospection -> FieldCall -> SchemaT r m GType
+lookupNestedFieldType :: (MonadMemoize m, MonadError QErr m) => Name -> RemoteSchemaIntrospection -> NonEmpty FieldCall -> SchemaT r m GType
 
 -- | Parser(s) for remote relationship fields to a database table. Note
 --   that when the target is a database table, an array relationship
 --   declaration would have the <tt>_aggregate</tt> field in addition to
 --   the array relationship field, hence [FieldParser ...] instead of
 --   <a>FieldParser</a>
-remoteRelationshipToSourceField :: forall r m n tgt. (MonadBuildSchemaBase r m n, BackendSchema tgt, BackendTableSelectSchema tgt) => SourceCache -> RemoteSourceFieldInfo tgt -> m [FieldParser n (RemoteSourceSelect (RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
+remoteRelationshipToSourceField :: forall r m n tgt. (MonadBuildSourceSchema r m n, BackendSchema tgt, BackendTableSelectSchema tgt) => SourceCache -> RemoteSourceFieldInfo tgt -> SchemaT r m [FieldParser n (RemoteSourceSelect (RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
 
 
 -- | This module only exposes one function, <a>nodeField</a>, which is used
@@ -26429,7 +26459,7 @@ nodeInterface :: SourceCache -> NodeInterfaceParserBuilder
 --   in the <a>NodeMap</a> returned by <a>nodeInterface</a>, and, if
 --   successful, attempts to craft a corresponding <tt>QueryRootField</tt>
 --   that will extract the requested row.
-nodeField :: forall m n r. SourceCache -> MonadBuildSchemaBase r m n => m (FieldParser n (QueryRootField UnpreparedValue))
+nodeField :: forall m n r. SourceCache -> MonadBuildSourceSchema r m n => SchemaT r m (FieldParser n (QueryRootField UnpreparedValue))
 
 module Hasura.GraphQL.Schema
 
@@ -26469,8 +26499,8 @@ buildRelayRoleContext :: forall m. (MonadError QErr m, MonadIO m) => (SQLGenCtx,
 --   remote schema permissions are enabled; remote schemas will only be
 --   available to unauthenticated users if permissions aren't enabled.
 unauthenticatedContext :: forall m. (MonadError QErr m, MonadIO m) => HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) -> RemoteSchemaPermissions -> m (GQLContext, HashSet InconsistentMetadata)
-buildAndValidateRemoteSchemas :: forall m. (MonadError QErr m, MonadIO m) => HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) -> [FieldParser Parse (NamespacedField (QueryRootField UnpreparedValue))] -> [FieldParser Parse (NamespacedField (MutationRootField UnpreparedValue))] -> RoleName -> RemoteSchemaPermissions -> ReaderT (SchemaContext, SchemaOptions, MkTypename, CustomizeRemoteFieldName, NamingCase) (MemoizeT m) ([RemoteSchemaParser Parse], HashSet InconsistentMetadata)
-buildRemoteSchemaParser :: forall m. (MonadError QErr m, MonadIO m) => RemoteSchemaPermissions -> RoleName -> RemoteSchemaCtx -> ReaderT (SchemaContext, SchemaOptions, MkTypename, CustomizeRemoteFieldName, NamingCase) (MemoizeT m) (Maybe (RemoteSchemaParser Parse))
+buildAndValidateRemoteSchemas :: forall m. (MonadError QErr m, MonadIO m) => HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) -> [FieldParser Parse (NamespacedField (QueryRootField UnpreparedValue))] -> [FieldParser Parse (NamespacedField (MutationRootField UnpreparedValue))] -> RoleName -> RemoteSchemaPermissions -> SchemaT (SchemaContext, MkTypename, CustomizeRemoteFieldName) (MemoizeT m) ([RemoteSchemaParser Parse], HashSet InconsistentMetadata)
+buildRemoteSchemaParser :: forall m. (MonadError QErr m, MonadIO m) => RemoteSchemaPermissions -> RoleName -> RemoteSchemaCtx -> SchemaT (SchemaContext, MkTypename, CustomizeRemoteFieldName) (MemoizeT m) (Maybe (RemoteSchemaParser Parse))
 
 -- | <a>buildQueryAndSubscriptionFields</a> builds the query and the
 --   subscription fields of the tables tracked in the source. The query
@@ -26479,9 +26509,9 @@ buildRemoteSchemaParser :: forall m. (MonadError QErr m, MonadIO m) => RemoteSch
 --   in the <tt>subscription_root_field</tt>, so a tuple of array of field
 --   parsers corresponding to query field parsers and subscription field
 --   parsers.
-buildQueryAndSubscriptionFields :: forall b r m n. MonadBuildSchema b r m n => MkRootFieldName -> SourceInfo b -> TableCache b -> FunctionCache b -> m ([FieldParser n (QueryRootField UnpreparedValue)], [FieldParser n (SubscriptionRootField UnpreparedValue)], [(Name, Parser 'Output n (ApolloFederationParserFunction n))])
-buildRelayQueryAndSubscriptionFields :: forall b r m n. MonadBuildSchema b r m n => MkRootFieldName -> SourceInfo b -> TableCache b -> FunctionCache b -> m ([FieldParser n (QueryRootField UnpreparedValue)], [FieldParser n (SubscriptionRootField UnpreparedValue)])
-buildMutationFields :: forall b r m n. MonadBuildSchema b r m n => MkRootFieldName -> Scenario -> SourceInfo b -> TableCache b -> FunctionCache b -> m [FieldParser n (MutationRootField UnpreparedValue)]
+buildQueryAndSubscriptionFields :: forall b r m n. MonadBuildSchema b r m n => MkRootFieldName -> SourceInfo b -> TableCache b -> FunctionCache b -> SchemaT r m ([FieldParser n (QueryRootField UnpreparedValue)], [FieldParser n (SubscriptionRootField UnpreparedValue)], [(Name, Parser 'Output n (ApolloFederationParserFunction n))])
+buildRelayQueryAndSubscriptionFields :: forall b r m n. MonadBuildSchema b r m n => MkRootFieldName -> SourceInfo b -> TableCache b -> FunctionCache b -> SchemaT r m ([FieldParser n (QueryRootField UnpreparedValue)], [FieldParser n (SubscriptionRootField UnpreparedValue)])
+buildMutationFields :: forall b r m n. MonadBuildSchema b r m n => MkRootFieldName -> Scenario -> SourceInfo b -> TableCache b -> FunctionCache b -> SchemaT r m [FieldParser n (MutationRootField UnpreparedValue)]
 
 -- | Prepare the parser for query-type GraphQL requests, but with
 --   introspection for queries, mutations and subscriptions built in.
