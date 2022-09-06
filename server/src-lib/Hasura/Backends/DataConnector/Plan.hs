@@ -427,7 +427,7 @@ mkPlan session (SourceConfig {}) ir = do
     prepareLiterals (UVSessionVar _ v) =
       case getSessionVariableValue v session of
         Nothing -> throw400 NotSupported ("prepareLiterals: session var not found: " <>> v)
-        Just s -> pure (IR.S.ValueLiteral (IR.S.String s))
+        Just s -> pure (IR.S.ValueLiteral (J.String s))
 
     translateBoolExpToExpression ::
       [IR.R.RelationshipName] ->
@@ -558,7 +558,7 @@ mkPlan session (SourceConfig {}) ir = do
                 IR.S.ValueLiteral value -> [value]
            in IR.E.ApplyBinaryArrayComparisonOperator IR.E.In currentComparisonColumn values
 
-        mkApplyBinaryComparisonOperatorToScalar :: IR.E.BinaryComparisonOperator -> IR.S.Value -> IR.E.Expression
+        mkApplyBinaryComparisonOperatorToScalar :: IR.E.BinaryComparisonOperator -> J.Value -> IR.E.Expression
         mkApplyBinaryComparisonOperatorToScalar operator value =
           IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.ScalarValue value)
 
@@ -626,7 +626,7 @@ reshapeAggregateFields ::
   MonadError QErr m =>
   FieldPrefix ->
   AggregateFields 'DataConnector ->
-  KeyMap API.Value ->
+  KeyMap J.Value ->
   m J.Encoding
 reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
   reshapedFields <- forM aggregateFields $ \(fieldName@(FieldName fieldNameText), aggregateField) ->

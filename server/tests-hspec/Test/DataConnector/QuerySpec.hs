@@ -556,3 +556,24 @@ tests opts = describe "Queries" $ do
                   name: Aaron Goldberg
                 title: Worlds
         |]
+  describe "Custom scalar types and operators" $ do
+    it "works with custom scalar types and comparison operators" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query MyQuery {
+                employees(where: {birth_date: {in_year: 1965}}) {
+                  birth_date
+                  last_name
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            employees:
+            - birth_date: '1965-03-03T00:00:00-08:00'
+              last_name: Johnson
+        |]

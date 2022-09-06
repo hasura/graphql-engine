@@ -147,6 +147,16 @@ tables:
             column_mapping:
               TrackId: TrackId
   - table: Track
+  - table: Employee
+    configuration:
+      custom_root_fields:
+        select: employees
+        select_by_pk: employee_by_pk
+      column_config:
+        BirthDate:
+          custom_name: birth_date
+        LastName:
+          custom_name: last_name
 configuration: {}
 |]
 

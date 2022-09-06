@@ -85,10 +85,12 @@ genObject = genKeyMap genValue
 
 genValue :: MonadGen m => m Value
 genValue =
-  Gen.choice
+  Gen.recursive
+    Gen.choice
     [ Object <$> genObject,
-      Array . Vec.fromList <$> Gen.list (linear 0 5) genValue,
-      String <$> Gen.text (linear 0 5) Gen.unicode,
+      Array . Vec.fromList <$> Gen.list (linear 0 5) genValue
+    ]
+    [ String <$> Gen.text (linear 0 5) Gen.unicode,
       Number . realToFrac <$> Gen.realFrac_ @_ @Double (linearFrac 0 20),
       Bool <$> Gen.bool,
       pure Null

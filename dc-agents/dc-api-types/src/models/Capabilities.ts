@@ -3,20 +3,22 @@
 /* eslint-disable */
 
 import type { ExplainCapabilities } from './ExplainCapabilities';
-import type { FilteringCapabilities } from './FilteringCapabilities';
+import type { GraphQLTypeDefinitions } from './GraphQLTypeDefinitions';
 import type { MetricsCapabilities } from './MetricsCapabilities';
 import type { MutationCapabilities } from './MutationCapabilities';
 import type { QueryCapabilities } from './QueryCapabilities';
 import type { RelationshipCapabilities } from './RelationshipCapabilities';
+import type { ScalarTypesCapabilities } from './ScalarTypesCapabilities';
 import type { SubscriptionCapabilities } from './SubscriptionCapabilities';
 
 export type Capabilities = {
   explain?: ExplainCapabilities;
-  filtering?: FilteringCapabilities;
+  graphqlSchema?: GraphQLTypeDefinitions;
   metrics?: MetricsCapabilities;
   mutations?: MutationCapabilities;
   queries?: QueryCapabilities;
   relationships?: RelationshipCapabilities;
+  scalarTypes?: ScalarTypesCapabilities;
   subscriptions?: SubscriptionCapabilities;
 };
 

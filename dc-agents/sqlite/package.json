@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^8.1.0",
-    "@hasura/dc-api-types": "0.3.0",
+    "@hasura/dc-api-types": "0.4.0",
     "fastify-metrics": "^9.2.1",
     "fastify": "^4.4.0",
     "openapi3-ts": "^2.0.2",

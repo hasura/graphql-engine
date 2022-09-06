@@ -324,7 +324,7 @@ responseRows = fromMaybe [] . API._qrRows
 sortResponseRowsBy :: Key -> API.QueryResponse -> API.QueryResponse
 sortResponseRowsBy columnName response = response & API.qrRows %~ (fmap (sortBy columnName))
 
-responseAggregates :: API.QueryResponse -> KeyMap API.Value
+responseAggregates :: API.QueryResponse -> KeyMap J.Value
 responseAggregates = fromMaybe mempty . API._qrAggregates
 
 _ColumnFieldNumber :: Traversal' API.FieldValue Scientific

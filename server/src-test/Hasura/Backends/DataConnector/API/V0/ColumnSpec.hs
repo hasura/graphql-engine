@@ -6,11 +6,10 @@ module Hasura.Backends.DataConnector.API.V0.ColumnSpec (spec, genColumnName, gen
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec (genType)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
-import Hedgehog.Gen
 import Hedgehog.Gen qualified as Gen
-import Hedgehog.Range
 import Test.Aeson.Utils
 import Test.Hspec
 
@@ -42,7 +41,7 @@ spec = do
     jsonOpenApiProperties genColumnInfo
 
 genColumnName :: MonadGen m => m ColumnName
-genColumnName = ColumnName <$> text (linear 0 10) unicode
+genColumnName = ColumnName <$> genArbitraryAlphaNumText defaultRange
 
 genColumnInfo :: MonadGen m => m ColumnInfo
 genColumnInfo =
@@ -50,4 +49,4 @@ genColumnInfo =
     <$> genColumnName
     <*> genType
     <*> Gen.bool
-    <*> Gen.maybe (text (linear 0 20) unicode)
+    <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)

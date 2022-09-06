@@ -36,7 +36,8 @@ capabilities =
           { API.cQueries = Just API.QueryCapabilities {API.qcSupportsPrimaryKeys = True},
             API.cMutations = Nothing,
             API.cSubscriptions = Nothing,
-            API.cFiltering = Nothing,
+            API.cScalarTypes = Nothing,
+            API.cGraphQLTypeDefinitions = Nothing,
             API.cRelationships = Just API.RelationshipCapabilities {},
             API.cMetrics = Just API.MetricsCapabilities {},
             API.cExplain = Just API.ExplainCapabilities {}

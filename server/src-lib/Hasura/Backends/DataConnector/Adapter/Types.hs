@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.Adapter.Types
   ( ConnSourceConfig (..),
@@ -9,13 +10,23 @@ module Hasura.Backends.DataConnector.Adapter.Types
     CountType (..),
     SourceTimeout (),
     sourceTimeoutMicroseconds,
+    scCapabilities,
+    scConfig,
+    scDataConnectorName,
+    scEndpoint,
+    scManager,
+    scSchema,
+    scTemplate,
+    scTimeoutMicroseconds,
   )
 where
 
-import Autodocodec (HasCodec (codec), named)
+import Autodocodec
+import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
+import Data.Data (Typeable)
 import Data.Text.Extended (ToTxt)
 import Data.Text.NonEmpty (NonEmptyText)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -117,7 +128,7 @@ instance Cacheable SourceConfig where
   unchanged _ = (==)
 
 newtype DataConnectorName = DataConnectorName {unDataConnectorName :: NonEmptyText}
-  deriving stock (Eq, Ord, Show, Generic)
+  deriving stock (Eq, Ord, Show, Typeable, Generic)
   deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
   deriving anyclass (Cacheable, NFData)
 
@@ -158,3 +169,5 @@ data CountType
   | ColumnCount (NonEmpty IR.C.Name)
   | ColumnDistinctCount (NonEmpty IR.C.Name)
   deriving (Eq, Ord, Show, Generic, Data)
+
+$(makeLenses ''SourceConfig)

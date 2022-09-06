@@ -55,7 +55,7 @@ instance BackendSchema 'MySQL where
   columnParser = columnParser'
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = orderByOperators'
-  comparisonExps = comparisonExps'
+  comparisonExps = const comparisonExps'
   countTypeInput = mysqlCountTypeInput
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."

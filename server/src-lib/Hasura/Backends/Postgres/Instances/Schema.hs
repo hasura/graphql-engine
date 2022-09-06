@@ -239,7 +239,7 @@ instance
   orderByOperators _sourceInfo = \case
     HasuraCase -> orderByOperatorsHasuraCase
     GraphqlCase -> orderByOperatorsGraphqlCase
-  comparisonExps = comparisonExps
+  comparisonExps = const comparisonExps
   countTypeInput = countTypeInput
   aggregateOrderByCountType = PG.PGInteger
   computedField = computedFieldPG

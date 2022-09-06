@@ -12,12 +12,11 @@ import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
-import Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec qualified as Scalar
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
+import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Hedgehog.Range (linear)
 import Test.Aeson.Utils (genKeyMap, genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
@@ -160,8 +159,8 @@ genQuery =
   Query
     <$> Gen.maybe (genKeyMap genField)
     <*> Gen.maybe (genKeyMap genAggregate)
-    <*> Gen.maybe (Gen.int (linear 0 5))
-    <*> Gen.maybe (Gen.int (linear 0 5))
+    <*> Gen.maybe (Gen.int defaultRange)
+    <*> Gen.maybe (Gen.int defaultRange)
     <*> Gen.maybe genExpression
     <*> Gen.maybe genOrderBy
 
@@ -169,7 +168,7 @@ genQueryRequest :: MonadGen m => m QueryRequest
 genQueryRequest =
   QueryRequest
     <$> genTableName
-    <*> Gen.list (linear 0 5) genTableRelationships
+    <*> Gen.list defaultRange genTableRelationships
     <*> genQuery
 
 genFieldValue :: MonadGen m => m FieldValue
@@ -182,5 +181,5 @@ genFieldValue =
 genQueryResponse :: MonadGen m => m QueryResponse
 genQueryResponse =
   QueryResponse
-    <$> Gen.maybe (Gen.list (linear 0 5) (genKeyMap genFieldValue))
-    <*> Gen.maybe (genKeyMap Scalar.genValue)
+    <$> Gen.maybe (Gen.list defaultRange (genKeyMap genFieldValue))
+    <*> Gen.maybe (genKeyMap genValue)

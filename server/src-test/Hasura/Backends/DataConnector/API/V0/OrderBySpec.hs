@@ -15,10 +15,10 @@ import Hasura.Backends.DataConnector.API.V0.AggregateSpec (genSingleColumnAggreg
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
+import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Hedgehog.Range (linear)
 import Test.Aeson.Utils (jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
@@ -123,20 +123,20 @@ spec = do
 genOrderBy :: MonadGen m => m OrderBy
 genOrderBy =
   OrderBy
-    <$> (HashMap.fromList <$> Gen.list (linear 0 5) ((,) <$> genRelationshipName <*> genOrderByRelation))
-    <*> Gen.nonEmpty (linear 1 5) genOrderByElement
+    <$> (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genRelationshipName <*> genOrderByRelation))
+    <*> Gen.nonEmpty defaultRange genOrderByElement
 
 genOrderByRelation :: MonadGen m => m OrderByRelation
 genOrderByRelation =
   OrderByRelation
     <$> Gen.maybe genExpression
     -- Gen.small ensures the recursion will terminate as the size will shrink with each recursion
-    <*> Gen.small (HashMap.fromList <$> Gen.list (linear 0 5) ((,) <$> genRelationshipName <*> genOrderByRelation))
+    <*> Gen.small (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genRelationshipName <*> genOrderByRelation))
 
 genOrderByElement :: MonadGen m => m OrderByElement
 genOrderByElement =
   OrderByElement
-    <$> Gen.list (linear 0 5) genRelationshipName
+    <$> Gen.list defaultRange genRelationshipName
     <*> genOrderByTarget
     <*> genOrderDirection
 

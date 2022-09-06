@@ -228,8 +228,8 @@
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
           },
-          "filtering": {
-            "$ref": "#/components/schemas/FilteringCapabilities"
+          "graphqlSchema": {
+            "$ref": "#/components/schemas/GraphQLTypeDefinitions"
           },
           "metrics": {
             "$ref": "#/components/schemas/MetricsCapabilities"
@@ -242,6 +242,9 @@
           },
           "relationships": {
             "$ref": "#/components/schemas/RelationshipCapabilities"
+          },
+          "scalarTypes": {
+            "$ref": "#/components/schemas/ScalarTypesCapabilities"
           },
           "subscriptions": {
             "$ref": "#/components/schemas/SubscriptionCapabilities"
@@ -263,22 +266,29 @@
       },
       "MutationCapabilities": {},
       "SubscriptionCapabilities": {},
-      "BooleanOperators": {},
-      "ComparisonOperators": {},
-      "FilteringCapabilities": {
+      "GraphQLName": {
+        "description": "A valid GraphQL name",
+        "type": "string"
+      },
+      "ScalarTypeCapabilities": {
+        "description": "Capabilities of a scalar type.\ncomparisonType: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphqlSchema`.\n",
         "properties": {
-          "booleanOperators": {
-            "$ref": "#/components/schemas/BooleanOperators"
-          },
-          "comparisonOperators": {
-            "$ref": "#/components/schemas/ComparisonOperators"
+          "comparisonType": {
+            "$ref": "#/components/schemas/GraphQLName"
           }
         },
-        "required": [
-          "booleanOperators",
-          "comparisonOperators"
-        ],
         "type": "object"
+      },
+      "ScalarTypesCapabilities": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/ScalarTypeCapabilities"
+        },
+        "description": "A map from scalar type names to their capabilities.\nKeys must be valid GraphQL names and must be defined as scalar types in the `graphqlSchema`\n",
+        "type": "object"
+      },
+      "GraphQLTypeDefinitions": {
+        "description": "A valid GraphQL schema document containing type definitions",
+        "type": "string"
       },
       "RelationshipCapabilities": {},
       "MetricsCapabilities": {},
@@ -604,12 +614,20 @@
         "type": "array"
       },
       "ScalarType": {
-        "enum": [
-          "string",
-          "number",
-          "bool"
-        ],
-        "type": "string"
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "string",
+              "number",
+              "bool"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
       },
       "ColumnInfo": {
         "properties": {
@@ -700,7 +718,7 @@
         "properties": {
           "aggregates": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/ScalarValue"
+              "additionalProperties": true
             },
             "description": "The results of the aggregates returned by the query",
             "nullable": true,
@@ -736,22 +754,6 @@
       },
       "NullColumnFieldValue": {
         "type": "null"
-      },
-      "ScalarValue": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "number"
-          },
-          {
-            "type": "boolean"
-          },
-          {
-            "type": "null"
-          }
-        ]
       },
       "QueryRequest": {
         "properties": {
@@ -1069,7 +1071,7 @@
           },
           "values": {
             "items": {
-              "$ref": "#/components/schemas/ScalarValue"
+              "additionalProperties": true
             },
             "type": "array"
           }
@@ -1199,7 +1201,7 @@
             "type": "string"
           },
           "value": {
-            "$ref": "#/components/schemas/ScalarValue"
+            "additionalProperties": true
           }
         },
         "required": [

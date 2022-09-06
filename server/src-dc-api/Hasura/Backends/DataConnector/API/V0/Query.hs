@@ -33,7 +33,7 @@ import Autodocodec.OpenAPI ()
 import Control.Arrow (left)
 import Control.Lens (Lens', Prism', lens, prism')
 import Control.Lens.TH (makeLenses, makePrisms)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Data (Data)
@@ -48,7 +48,6 @@ import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.OrderBy qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
-import Hasura.Backends.DataConnector.API.V0.Scalar.Value qualified as API.V0.Scalar
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
 import Prelude
 
@@ -132,7 +131,7 @@ instance HasCodec Field where
 -- endpoint encoded as a list of JSON objects.
 data QueryResponse = QueryResponse
   { _qrRows :: Maybe [KM.KeyMap FieldValue],
-    _qrAggregates :: Maybe (KM.KeyMap API.V0.Scalar.Value)
+    _qrAggregates :: Maybe (KM.KeyMap Value)
   }
   deriving stock (Eq, Ord, Show)
   deriving (ToJSON, FromJSON, ToSchema) via Autodocodec QueryResponse

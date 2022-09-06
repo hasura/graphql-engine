@@ -92,7 +92,7 @@ instance BackendSchema 'MSSQL where
   columnParser = msColumnParser
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = msOrderByOperators
-  comparisonExps = msComparisonExps
+  comparisonExps = const msComparisonExps
   countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField _ _ _ _ = pure Nothing

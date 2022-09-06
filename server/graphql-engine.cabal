@@ -356,6 +356,7 @@ library dc-api
                      , bytestring
                      , deepseq
                      , extra
+                     , graphql-parser
                      , hashable
                      , insert-ordered-containers
                      , lens
@@ -386,7 +387,6 @@ library dc-api
                      , Hasura.Backends.DataConnector.API.V0.Explain
                      , Hasura.Backends.DataConnector.API.V0.Relationships
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Type
-                     , Hasura.Backends.DataConnector.API.V0.Scalar.Value
                      , Hasura.Backends.DataConnector.API.V0.Schema
                      , Hasura.Backends.DataConnector.API.V0.Table
 
@@ -1031,7 +1031,6 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.QuerySpec
     Hasura.Backends.DataConnector.API.V0.RelationshipsSpec
     Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec
-    Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
     Hasura.Backends.DataConnector.RQLGenerator
