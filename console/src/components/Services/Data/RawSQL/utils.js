@@ -1,6 +1,9 @@
 import { currentDriver } from '../../../../dataSources';
 import { services } from '../../../../dataSources/services';
 
+// NOTE: Raw SQL is disabled for Cockroach due to this https://github.com/hasura/graphql-engine/issues/8794
+export const unsupportedRawSQLDrivers = ['cockroach'];
+
 const getSQLValue = value => {
   const quotedStringRegex = /^".*"$/;
 

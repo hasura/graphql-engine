@@ -4,7 +4,7 @@ import { push } from 'react-router-redux';
 
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 
 // import TryItOut from '../../Common/Landing/TryItOut';
@@ -36,15 +36,15 @@ class Landing extends React.Component {
       };
 
       const addBtn = !readOnlyMode && (
-        <Button
-          data-test="data-create-actions"
-          color="yellow"
-          size="sm"
-          className="ml-5"
-          onClick={handleClick}
-        >
-          Create
-        </Button>
+        <div className="ml-md">
+          <Button
+            data-test="data-create-actions"
+            mode="primary"
+            onClick={handleClick}
+          >
+            Create
+          </Button>
+        </div>
       );
 
       return addBtn;

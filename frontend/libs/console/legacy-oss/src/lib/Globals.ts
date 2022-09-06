@@ -123,6 +123,7 @@ export type EnvVars = {
   consoleType?: ConsoleType;
   eeMode?: string;
   consoleId?: string;
+  userRole?: string;
 } & (
   | OSSServerEnv
   | CloudServerEnv
@@ -137,6 +138,9 @@ export type EnvVars = {
 declare global {
   interface Window {
     __env: EnvVars;
+    heap?: {
+      addUserProperties: (properties: Record<string, string>) => void;
+    };
   }
   const CONSOLE_ASSET_VERSION: string;
 }
@@ -173,7 +177,7 @@ const globals = {
   hasuraCloudProjectId: window.__env?.projectID,
   cloudDataApiUrl: `${window.location?.protocol}//data.${window.__env?.cloudRootDomain}`,
   luxDataHost: window.__env?.luxDataHost,
-  userRole: undefined, // userRole is not applicable for the OSS console
+  userRole: window.__env?.userRole || undefined,
   consoleType: window.__env?.consoleType || '',
   eeMode: window.__env?.eeMode === 'true',
 };

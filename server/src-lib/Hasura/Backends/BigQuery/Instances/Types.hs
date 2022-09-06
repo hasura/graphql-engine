@@ -17,6 +17,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'BigQuery where
   type BackendConfig 'BigQuery = ()
+  type BackendInfo 'BigQuery = ()
   type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   type TableName 'BigQuery = BigQuery.TableName
@@ -46,6 +47,9 @@ instance Backend 'BigQuery where
   type XStreamingSubscription 'BigQuery = XDisable
 
   type ExtraTableMetadata 'BigQuery = ()
+
+  type HealthCheckTest 'BigQuery = Void
+  defaultHealthCheckTest = error "defaultHealthCheckTest"
 
   isComparableType :: ScalarType 'BigQuery -> Bool
   isComparableType = BigQuery.isComparableType

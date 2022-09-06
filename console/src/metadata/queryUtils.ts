@@ -69,6 +69,7 @@ export const metadataQueryTypes = [
   'add_existing_table_or_view',
   'create_query_collection',
   'drop_query_collection',
+  'rename_query_collection',
   'add_query_to_collection',
   'drop_query_from_collection',
   'add_collection_to_allowlist',
@@ -97,6 +98,8 @@ export const metadataQueryTypes = [
   'drop_rest_endpoint',
   'add_host_to_tls_allowlist',
   'drop_host_from_tls_allowlist',
+  'dc_add_agent',
+  'dc_delete_agent',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -136,6 +139,9 @@ export const getMetadataQuery = (
       break;
     case 'citus':
       prefix = 'citus_';
+      break;
+    case 'cockroach':
+      prefix = 'cockroach_';
       break;
     case 'postgres':
     default:

@@ -8,7 +8,7 @@
 module Hasura.RQL.Types.Metadata.Common
   ( Actions,
     BackendConfigWrapper (..),
-    BackendSourceMetadata,
+    BackendSourceMetadata (..),
     CatalogState (..),
     CatalogStateType (..),
     ComputedFieldMetadata (..),
@@ -59,6 +59,7 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
+    smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
     tmComputedFields,
@@ -106,6 +107,7 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.QueryTags
@@ -400,6 +402,7 @@ type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
 
 type InheritedRoles = InsOrdHashMap RoleName InheritedRole
 
+-- | Source configuration for a source of backend type @b@ as stored in the Metadata DB.
 data SourceMetadata b = SourceMetadata
   { _smName :: SourceName,
     _smKind :: BackendSourceKind b,
@@ -407,7 +410,8 @@ data SourceMetadata b = SourceMetadata
     _smFunctions :: Functions b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
-    _smCustomization :: SourceCustomization
+    _smCustomization :: SourceCustomization,
+    _smHealthCheckConfig :: Maybe (HealthCheckConfig b)
   }
   deriving (Generic)
 
@@ -427,6 +431,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
+    _smHealthCheckConfig <- o .:? "health_check"
     pure SourceMetadata {..}
 
 backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
@@ -456,18 +461,18 @@ backendSourceMetadataCodec =
         else Nothing
 
     runBackendType :: BackendSourceMetadata -> BackendType
-    runBackendType input = AB.runBackend input \sourceMeta ->
+    runBackendType (BackendSourceMetadata input) = AB.runBackend input \sourceMeta ->
       backendTypeFromBackendSourceKind $ _smKind sourceMeta
 
 anySourceMetadataCodec :: (HasTag b) => JSONCodec (SourceMetadata b) -> JSONCodec BackendSourceMetadata
 anySourceMetadataCodec = dimapCodec dec enc
   where
     dec :: HasTag b => SourceMetadata b -> BackendSourceMetadata
-    dec = AB.mkAnyBackend
+    dec = BackendSourceMetadata . AB.mkAnyBackend
 
     -- This encoding function is partial, but that should be ok.
     enc :: HasTag b => BackendSourceMetadata -> SourceMetadata b
-    enc input = fromJust $ AB.unpackAnyBackend input
+    enc input = fromJust $ AB.unpackAnyBackend $ unBackendSourceMetadata input
 
 instance Backend b => HasCodec (SourceMetadata b) where
   codec =
@@ -480,6 +485,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
         <*> requiredField' "configuration" .== _smConfiguration
         <*> optionalFieldOrNullWith' "query_tags" placeholderCodecViaJSON .== _smQueryTags -- TODO: replace placeholder
         <*> optionalFieldOrNullWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
+        <*> optionalFieldOrNull' "health_check" .== _smHealthCheckConfig
     where
       (.==) = (AC..=)
 
@@ -490,26 +496,31 @@ mkSourceMetadata ::
   BackendSourceKind b ->
   SourceConnConfiguration b ->
   SourceCustomization ->
+  Maybe (HealthCheckConfig b) ->
   BackendSourceMetadata
-mkSourceMetadata name backendSourceKind config customization =
-  AB.mkAnyBackend $
-    SourceMetadata
-      @b
-      name
-      backendSourceKind
-      mempty
-      mempty
-      config
-      Nothing
-      customization
+mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
+  BackendSourceMetadata $
+    AB.mkAnyBackend $
+      SourceMetadata
+        @b
+        name
+        backendSourceKind
+        mempty
+        mempty
+        config
+        Nothing
+        customization
+        healthCheckConfig
 
-type BackendSourceMetadata = AB.AnyBackend SourceMetadata
+-- | Source configuration as stored in the Metadata DB for some existentialized backend.
+newtype BackendSourceMetadata = BackendSourceMetadata {unBackendSourceMetadata :: AB.AnyBackend SourceMetadata}
+  deriving newtype (Eq, Show)
 
 toSourceMetadata :: forall b. (Backend b) => Prism' BackendSourceMetadata (SourceMetadata b)
-toSourceMetadata = prism' AB.mkAnyBackend AB.unpackAnyBackend
+toSourceMetadata = prism' (BackendSourceMetadata . AB.mkAnyBackend) (AB.unpackAnyBackend . unBackendSourceMetadata)
 
 getSourceName :: BackendSourceMetadata -> SourceName
-getSourceName e = AB.dispatchAnyBackend @Backend e _smName
+getSourceName e = AB.dispatchAnyBackend @Backend (unBackendSourceMetadata e) _smName
 
 type Sources = InsOrdHashMap SourceName BackendSourceMetadata
 

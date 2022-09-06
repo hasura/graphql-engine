@@ -31,11 +31,27 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.NonEmpty (NonEmptyText)
 import Data.Text.NonEmpty qualified as NET
 import Data.Vector qualified as V
+import Database.PG.Query qualified as Q
 import Hasura.Prelude
 
 newtype EncJSON = EncJSON {unEncJSON :: BB.Builder}
 
--- No instances for `EncJSON`. In particular, because:
+-- | JSONB bytestrings start with a `SOH` header `/x1` and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+instance Q.FromCol EncJSON where
+  fromCol (Just bs) =
+    Right $
+      encJFromBS $ case B.uncons bs of
+        Just (bsHead, bsTail) ->
+          if bsHead == 1
+            then bsTail
+            else bs
+        Nothing -> bs
+  fromCol Nothing =
+    Right (encJFromJValue J.Null) -- null values return a JSON null value
+
+-- No other instances for `EncJSON`. In particular, because:
 --
 -- - Having a `Semigroup` or `Monoid` instance allows constructing semantically
 --   illegal values of type `EncJSON`. To drive this point home: the derived

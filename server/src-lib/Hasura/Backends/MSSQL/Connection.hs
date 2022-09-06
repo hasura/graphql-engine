@@ -9,12 +9,15 @@
 module Hasura.Backends.MSSQL.Connection
   ( MSSQLConnConfiguration (MSSQLConnConfiguration),
     MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx),
+    MSSQLConnectionInfo (..),
+    MSSQLPoolSettings (..),
     MSSQLExecCtx (..),
     MonadMSSQLTx (..),
     createMSSQLPool,
     getEnv,
     odbcValueToJValue,
     mkMSSQLExecCtx,
+    mkMSSQLAnyQueryTx,
     runMSSQLSourceReadTx,
     runMSSQLSourceWriteTx,
   )
@@ -209,6 +212,12 @@ mkMSSQLExecCtx pool =
       mssqlRunReadWrite = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler tx pool,
       mssqlDestroyConn = MSPool.drainMSSQLPool pool
     }
+
+-- | Run any query discarding its results
+mkMSSQLAnyQueryTx :: ODBC.Query -> MSTx.TxET QErr IO ()
+mkMSSQLAnyQueryTx q = do
+  _discard :: [[ODBC.Value]] <- MSTx.multiRowQueryE defaultMSSQLTxErrorHandler q
+  pure ()
 
 data MSSQLSourceConfig = MSSQLSourceConfig
   { _mscConnectionString :: MSPool.ConnectionString,

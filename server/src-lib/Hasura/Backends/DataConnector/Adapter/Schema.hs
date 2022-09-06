@@ -5,11 +5,15 @@ module Hasura.Backends.DataConnector.Adapter.Schema () where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens ((^.))
+import Data.Aeson qualified as J
 import Data.Has
 import Data.List.NonEmpty qualified as NE
-import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty qualified as NET
+import Hasura.Backends.DataConnector.API.V0.Capabilities (lookupComparisonInputObjectDefinition)
+import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -29,6 +33,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.Name qualified as Name
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
@@ -98,18 +103,24 @@ columnParser' ::
   m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
 columnParser' columnType (GQL.Nullability isNullable) = do
   parser <- case columnType of
-    RQL.ColumnScalar IR.S.T.String -> pure (IR.S.V.String <$> P.string)
-    RQL.ColumnScalar IR.S.T.Number -> pure (IR.S.V.Number <$> P.scientific)
-    RQL.ColumnScalar IR.S.T.Bool -> pure (IR.S.V.Boolean <$> P.boolean)
-    _ -> throw400 NotSupported "This column type is unsupported by the Data Connector backend"
+    RQL.ColumnScalar IR.S.T.String -> pure (J.String <$> P.string)
+    RQL.ColumnScalar IR.S.T.Number -> pure (J.Number <$> P.scientific)
+    RQL.ColumnScalar IR.S.T.Bool -> pure (J.Bool <$> P.boolean)
+    RQL.ColumnScalar (IR.S.T.Custom name) -> do
+      gqlName <-
+        GQL.mkName name
+          `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
+      pure $ P.jsonScalar gqlName (Just "A custom scalar type")
+    RQL.ColumnEnumReference {} ->
+      throw400 NotSupported "Enum column type is unsupported by the Data Connector backend"
   pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable $ parser
   where
     possiblyNullable ::
       MonadParse m =>
-      P.Parser 'P.Both m IR.S.V.Value ->
-      P.Parser 'P.Both m IR.S.V.Value
+      P.Parser 'P.Both m J.Value ->
+      P.Parser 'P.Both m J.Value
     possiblyNullable
-      | isNullable = fmap (fromMaybe IR.S.V.Null) . P.nullable
+      | isNullable = fmap (fromMaybe J.Null) . P.nullable
       | otherwise = id
 
 orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector)))
@@ -139,9 +150,10 @@ comparisonExps' ::
     Has SchemaOptions r,
     Has NamingCase r
   ) =>
+  RQL.SourceInfo 'DataConnector ->
   RQL.ColumnType 'DataConnector ->
   m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
-comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
+comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnectorName, columnType) $ do
   tCase <- asks getter
   collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
 
@@ -153,6 +165,7 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
+  customOperators <- (fmap . fmap . fmap) IR.ABackendSpecific <$> mkCustomOperators tCase collapseIfNull (P.getName typedParser)
   pure $
     P.object name (Just desc) $
       fmap catMaybes $
@@ -166,12 +179,45 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
               GS.BE.comparisonOperators
                 tCase
                 collapseIfNull
-                (IR.mkParameter <$> typedParser)
+                (IR.mkParameter <$> typedParser),
+              customOperators
             ]
   where
+    dataConnectorName = sourceInfo ^. RQL.siConfiguration . Adapter.scDataConnectorName
+
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
       IR.UVLiteral . IR.S.V.ArrayLiteral $ RQL.cvValue <$> columnValues
+
+    mkCustomOperators ::
+      NamingCase ->
+      Options.DangerouslyCollapseBooleans ->
+      GQL.Name ->
+      m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
+    mkCustomOperators tCase collapseIfNull typeName = do
+      let capabilities = sourceInfo ^. RQL.siConfiguration . Adapter.scCapabilities
+      case lookupComparisonInputObjectDefinition capabilities typeName of
+        Nothing -> pure []
+        Just GQL.InputObjectTypeDefinition {..} -> do
+          traverse (mkCustomOperator tCase collapseIfNull) _iotdValueDefinitions
+
+    mkCustomOperator ::
+      NamingCase ->
+      Options.DangerouslyCollapseBooleans ->
+      GQL.InputValueDefinition ->
+      m (P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector))))
+    mkCustomOperator tCase collapseIfNull GQL.InputValueDefinition {..} = do
+      argParser <- mkArgParser _ivdType
+      pure $
+        GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName _ivdName) _ivdDescription $
+          CustomBooleanOperator (GQL.unName _ivdName) . Just . Right <$> argParser
+
+    mkArgParser :: GQL.GType -> m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
+    mkArgParser argType =
+      fmap IR.mkParameter
+        <$> columnParser'
+          (RQL.ColumnScalar $ IR.S.T.fromGQLType $ GQL.getBaseType argType)
+          (GQL.Nullability $ GQL.isNotNull argType)
 
 tableArgs' ::
   forall r m n.

@@ -1,6 +1,6 @@
-﻿import { Config }  from "./config";
+import { Config }  from "./config";
 import { connect, SqlLogger } from "./db";
-import { coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable } from "./util";
+import { coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable, logDeep } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -18,7 +18,8 @@ import {
     TableName,
     OrderDirection,
     UnaryComparisonOperator,
-  } from "./types";
+    ExplainResponse,
+  } from "@hasura/dc-api-types";
 
 const SqlString = require('sqlstring-sqlite');
 
@@ -489,4 +490,44 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
   const [result, metadata] = await db.query(q);
 
   return output(result);
+}
+
+/**
+ * 
+ * Constructs a query as per the `POST /query` endpoint but prefixes it with `EXPLAIN QUERY PLAN` before execution.
+ * 
+ * Formatted result lines are included under the `lines` field. An initial blank line is included to work around a display bug.
+ * 
+ * NOTE: The Explain related items are included here since they are a small extension of Queries, and another module may be overkill.
+ * 
+ * @param config 
+ * @param sqlLogger 
+ * @param queryRequest 
+ * @returns 
+ */
+export async function explain(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<ExplainResponse> {
+  const db = connect(config, sqlLogger);
+  const q = query(queryRequest);
+  const [result, metadata] = await db.query(`EXPLAIN QUERY PLAN ${q}`);
+  return {
+    query: q,
+    lines: [ "", ...formatExplainLines(result as Array<AnalysisEntry>)]
+  }
+}
+
+function formatExplainLines(items: Array<AnalysisEntry>): Array<string> {
+  const lines = Object.fromEntries(items.map(x => [x.id, x]));
+  function depth(x: number): number {
+    if(x < 1) {
+      return 0;
+    }
+    return 2 + depth(lines[x].parent);
+  }
+  return items.map(x => `${' '.repeat(depth(x.parent))}${x.detail}`)
+}
+
+type AnalysisEntry = {
+  id: number,
+  parent: number,
+  detail: string
 }

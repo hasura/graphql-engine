@@ -79,8 +79,32 @@ module.exports = {
             scale: '1',
           },
         },
+        collapsibleContentOpen: {
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-collapsible-content-height)',
+          },
+        },
+        collapsibleContentClose: {
+          from: {
+            height: 'var(--radix-collapsible-content-height)',
+          },
+          to: {
+            height: '0',
+          },
+        },
+      },
+      animation: {
+        collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
+        collapsibleContentClose: 'collapsibleContentClose 300ms ease-out',
       },
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+    require('tailwindcss-radix')(),
+  ],
 };

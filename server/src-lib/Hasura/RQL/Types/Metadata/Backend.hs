@@ -3,11 +3,13 @@ module Hasura.RQL.Types.Metadata.Backend
   )
 where
 
+import Control.Arrow.Extended
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Environment qualified as Env
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -21,12 +23,14 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Client.Manager (HasHttpManagerM)
 
 class
   ( Backend b,
@@ -58,6 +62,24 @@ class
     [RawColumnInfo b] ->
     m (Either QErr EnumValues)
 
+  resolveBackendInfo ::
+    ( ArrowChoice arr,
+      Inc.ArrowCache m arr,
+      Inc.ArrowDistribute arr,
+      ArrowWriter (Seq CollectedInfo) arr,
+      MonadIO m,
+      HasHttpManagerM m
+    ) =>
+    Logger Hasura ->
+    BackendConfig b `arr` BackendInfo b
+  default resolveBackendInfo ::
+    ( Arrow arr,
+      BackendInfo b ~ ()
+    ) =>
+    Logger Hasura ->
+    BackendConfig b `arr` BackendInfo b
+  resolveBackendInfo = const $ arr $ const ()
+
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
@@ -66,7 +88,7 @@ class
     SourceName ->
     SourceConnConfiguration b ->
     BackendSourceKind b ->
-    BackendConfig b ->
+    BackendInfo b ->
     Env.Environment ->
     HTTP.Manager ->
     m (Either QErr (SourceConfig b))

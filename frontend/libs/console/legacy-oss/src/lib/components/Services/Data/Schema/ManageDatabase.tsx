@@ -3,7 +3,7 @@ import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import { FaExclamationTriangle, FaEye, FaTimes } from 'react-icons/fa';
 
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -98,10 +98,9 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   );
   return (
     <tr data-test={dataSource.name}>
-      <td className="px-sm py-xs max-w-xs align-top w-0 whitespace-nowrap">
+      <td className="px-sm py-xs align-top w-0 whitespace-nowrap">
         <Button
-          size="xs"
-          color="white"
+          size="sm"
           className="mr-xs"
           onClick={viewDB}
           disabled={isInconsistentDataSource}
@@ -109,9 +108,10 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           View Database
         </Button>
         <Button
-          size="xs"
-          color="white"
+          size="sm"
           className="mr-xs"
+          isLoading={reloading}
+          loadingText="Reloading..."
           onClick={() => {
             setReloading(true);
             onReload(dataSource.name, dataSource.driver, () =>
@@ -119,11 +119,10 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             );
           }}
         >
-          {reloading ? 'Reloading...' : 'Reload'}
+          Reload
         </Button>
         <Button
-          size="xs"
-          color="white"
+          size="sm"
           className="mr-xs"
           onClick={() => {
             onEdit(dataSource.name);
@@ -132,8 +131,9 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           Edit
         </Button>
         <Button
-          size="xs"
-          color="white"
+          size="sm"
+          isLoading={removing}
+          loadingText="Removing..."
           className="text-red-600"
           onClick={() => {
             setRemoving(true);
@@ -142,7 +142,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             );
           }}
         >
-          {removing ? 'Removing...' : 'Remove'}
+          Remove
         </Button>
       </td>
       <td className="px-sm py-xs max-w-xs align-top">
@@ -277,7 +277,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
               Data Manager
             </h2>
             <Button
-              color="yellow"
+              mode="primary"
               size="md"
               className={styles.add_mar_right}
               onClick={onClickConnectDB}

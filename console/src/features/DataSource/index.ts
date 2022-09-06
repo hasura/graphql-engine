@@ -1,22 +1,24 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
+import { DataNode } from 'antd/lib/tree';
+import { SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { postgres } from './postgres';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { mssql } from './mssql';
 import { gdc } from './gdc';
+import { cockroach } from './cockroach';
 import * as utils from './common/utils';
 import type {
   Property,
   IntrospectedTable,
-  Table,
-  SupportedDrivers,
   TableColumn,
   GetTrackableTablesProps,
   GetTableColumnsProps,
   TableFkRelationships,
   GetFKRelationshipProps,
   DriverInfoResponse,
+  GetTablesListAsTreeProps,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
@@ -31,7 +33,13 @@ export enum Feature {
   NotImplemented = 'Not Implemented',
 }
 
-export const nativeDrivers = ['postgres', 'bigquery', 'mssql', 'citus'];
+export const nativeDrivers = [
+  'postgres',
+  'bigquery',
+  'mssql',
+  'citus',
+  'cockroach',
+];
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
 
@@ -55,6 +63,9 @@ export type Database = {
     getFKRelationships: (
       props: GetFKRelationshipProps
     ) => Promise<TableFkRelationships[] | Feature.NotImplemented>;
+    getTablesListAsTree: (
+      props: GetTablesListAsTreeProps
+    ) => Promise<DataNode | Feature.NotImplemented>;
   };
   query?: {
     getTableData: () => void;
@@ -68,6 +79,7 @@ const drivers: Record<SupportedDrivers, Database> = {
   citus,
   mssql,
   gdc,
+  cockroach,
 };
 
 const getDatabaseMethods = async ({
@@ -86,7 +98,9 @@ const getDatabaseMethods = async ({
     );
   }
 
-  return drivers[dataSource.kind];
+  if (nativeDrivers.includes(dataSource.kind)) return drivers[dataSource.kind];
+
+  return drivers.gdc;
 };
 
 export const DataSource = (httpClient: AxiosInstance) => ({
@@ -253,6 +267,28 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (result === Feature.NotImplemented) return [];
 
     return result;
+  },
+  getTablesWithHierarchy: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) return null;
+
+    const introspection = database.introspection;
+
+    if (!introspection) return null;
+
+    const treeData = await introspection.getTablesListAsTree({
+      dataSourceName,
+      httpClient,
+    });
+
+    if (treeData === Feature.NotImplemented) return null;
+
+    return treeData;
   },
 });
 

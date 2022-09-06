@@ -1,0 +1,36 @@
+{
+  "name": "@hasura/dc-api-types",
+  "version": "0.4.0",
+  "description": "Hasura GraphQL Engine Data Connector Agent API types",
+  "author": "Hasura (https://github.com/hasura/graphql-engine)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hasura/graphql-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hasura/graphql-engine/issues"
+  },
+  "homepage": "https://github.com/hasura/graphql-engine#readme",
+  "keywords": [
+    "hasura",
+    "data-connectors"
+  ],
+  "types": "./src/index.ts",
+  "exports": "./src/index.ts",
+  "files": [
+    "./src",
+    "./README.md"
+  ],
+  "dependencies": {},
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/node": "^16.11.49",
+    "typescript": "^4.7.4"
+  }
+}

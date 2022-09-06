@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SampleDBButton } from './SampleDBButton';
+import { Button } from '@/new-components/Button';
 
 type Props = { onTrySampleDB: VoidFunction };
 
@@ -17,7 +17,7 @@ export const SampleDBSection: React.FC<Props> = ({ onTrySampleDB }) => {
         <p className="m-0 mr-sm">
           Don&apos;t have a database? Try a read-only sample database:
         </p>
-        <SampleDBButton onClick={onButtonClick} />
+        <Button onClick={onButtonClick}>Get credentials</Button>
       </div>
       {showSuccess && (
         <i className="mt-xs text-green-800 text-sm">

@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { z } from 'zod';
 import { Form, InputField, InputFieldProps } from '@/new-components/Form';
+import { Button } from '@/new-components/Button';
 
 const renderInputField = (
   props: Omit<InputFieldProps, 'name'>,
@@ -19,7 +20,7 @@ const renderInputField = (
       {() => (
         <>
           <InputField name="title" {...props} />
-          <button type="submit">Submit</button>
+          <Button type="submit">Submit</Button>
         </>
       )}
     </Form>

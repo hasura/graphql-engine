@@ -4,11 +4,12 @@
 module Hasura.Backends.DataConnector.API.V0.TableSpec (spec, genTableName, genTableInfo) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnInfo, genColumnName)
+import Hasura.Generator.Common
 import Hasura.Prelude
 import Hedgehog
-import Hedgehog.Gen
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range
 import Test.Aeson.Utils
@@ -44,16 +45,52 @@ spec = do
             "description": "my description"
           }
         |]
+    describe "foreign-key" $
+      testToFromJSONToSchema
+        ( TableInfo
+            (TableName ["my_table_name"])
+            [ColumnInfo (ColumnName "id") StringTy False Nothing]
+            (Just [ColumnName "id"])
+            (Just "my description")
+            (Just $ ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton "ArtistId" "ArtistId")))
+        )
+        [aesonQQ|
+          { "name": ["my_table_name"],
+            "columns": [{"name": "id", "type": "string", "nullable": false}],
+            "primary_key": ["id"],
+            "description": "my description",
+            "foreign_keys": {
+              "Artist": {
+                "foreign_table": ["artist_table"],
+                "column_mapping": {
+                  "ArtistId": "ArtistId"
+                }
+              }
+            }
+          }
+        |]
     jsonOpenApiProperties genTableInfo
 
 genTableName :: MonadGen m => m TableName
-genTableName = TableName <$> Gen.nonEmpty (linear 1 3) (text (linear 0 10) unicode)
+genTableName = TableName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
 
+genForeignKeys :: MonadGen m => m ForeignKeys
+genForeignKeys = ForeignKeys <$> genHashMap genConstraintName genConstraint defaultRange
+
+genConstraintName :: MonadGen m => m ConstraintName
+genConstraintName = ConstraintName <$> genArbitraryAlphaNumText defaultRange
+
+genConstraint :: MonadGen m => m Constraint
+genConstraint =
+  let mapping = genHashMap (genArbitraryAlphaNumText defaultRange) (genArbitraryAlphaNumText defaultRange) defaultRange
+   in Constraint <$> genTableName <*> mapping
+
+-- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.
 genTableInfo :: MonadGen m => m TableInfo
 genTableInfo =
   TableInfo
     <$> genTableName
-    <*> Gen.list (linear 0 5) genColumnInfo
-    <*> Gen.maybe (Gen.list (linear 0 5) genColumnName)
-    <*> Gen.maybe (text (linear 0 20) unicode)
-    <*> pure Nothing
+    <*> Gen.list defaultRange genColumnInfo
+    <*> Gen.maybe (Gen.list defaultRange genColumnName)
+    <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)
+    <*> Gen.maybe genForeignKeys

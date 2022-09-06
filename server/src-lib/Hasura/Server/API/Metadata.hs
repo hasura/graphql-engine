@@ -82,6 +82,10 @@ data RQLMetadataV1
   | RMDropSource DropSource
   | RMRenameSource !RenameSource
   | RMUpdateSource !(AnyBackend UpdateSource)
+  | RMListSourceKinds !ListSourceKinds
+  | RMGetSourceKindCapabilities !GetSourceKindCapabilities
+  | RMGetSourceTables !GetSourceTables
+  | RMGetTableInfo !GetTableInfo
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMUntrackTable !(AnyBackend UntrackTable)
@@ -166,7 +170,6 @@ data RQLMetadataV1
   | -- GraphQL Data Connectors
     RMDCAddAgent !DCAddAgent
   | RMDCDeleteAgent !DCDeleteAgent
-  | RMListSourceKinds !ListSourceKinds
   | -- Custom types
     RMSetCustomTypes !CustomTypes
   | -- Api limits
@@ -247,6 +250,9 @@ instance FromJSON RQLMetadataV1 where
       "dc_add_agent" -> RMDCAddAgent <$> args
       "dc_delete_agent" -> RMDCDeleteAgent <$> args
       "list_source_kinds" -> RMListSourceKinds <$> args
+      "get_source_kind_capabilities" -> RMGetSourceKindCapabilities <$> args
+      "get_source_tables" -> RMGetSourceTables <$> args
+      "get_table_info" -> RMGetTableInfo <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
       "set_api_limits" -> RMSetApiLimits <$> args
       "remove_api_limits" -> pure RMRemoveApiLimits
@@ -470,6 +476,10 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropSource q -> runDropSource q
   RMRenameSource q -> runRenameSource q
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
+  RMListSourceKinds q -> runListSourceKinds q
+  RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
+  RMGetSourceTables q -> runGetSourceTables q
+  RMGetTableInfo q -> runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
@@ -555,7 +565,6 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropRestEndpoint q -> runDropEndpoint q
   RMDCAddAgent q -> runAddDataConnectorAgent q
   RMDCDeleteAgent q -> runDeleteDataConnectorAgent q
-  RMListSourceKinds q -> runListSourceKinds q
   RMSetCustomTypes q -> runSetCustomTypes q
   RMSetApiLimits q -> runSetApiLimits q
   RMRemoveApiLimits -> runRemoveApiLimits

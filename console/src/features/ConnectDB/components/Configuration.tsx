@@ -2,8 +2,12 @@ import React from 'react';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { useFormContext } from 'react-hook-form';
-
-import { DataSource, SupportedDrivers, Feature } from '@/features/DataSource';
+import { SupportedDrivers } from '@/features/MetadataAPI';
+import {
+  DataSource,
+  Feature,
+  isFreeFormObjectField,
+} from '@/features/DataSource';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 
 import { Field } from './Fields';
@@ -47,7 +51,11 @@ export const Configuration = ({ name }: Props) => {
     return <IndicatorCard>Loading configuration info...</IndicatorCard>;
   }
 
-  if (!schema || schema.configSchema.type !== 'object')
+  if (
+    !schema ||
+    schema.configSchema.type !== 'object' ||
+    isFreeFormObjectField(schema.configSchema)
+  )
     return (
       <IndicatorCard status="negative">
         Unable to find a valid schema for the {driver}

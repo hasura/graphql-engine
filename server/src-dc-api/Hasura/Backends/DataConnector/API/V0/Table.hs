@@ -68,6 +68,7 @@ instance HasCodec TableInfo where
 newtype ForeignKeys = ForeignKeys {unConstraints :: HashMap ConstraintName Constraint}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON) via Autodocodec ForeignKeys
 
 instance HasCodec ForeignKeys where
   codec = dimapCodec ForeignKeys unConstraints $ codec @(HashMap ConstraintName Constraint)
@@ -78,11 +79,12 @@ newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving anyclass (NFData, Hashable)
 
 data Constraint = Constraint
-  { cForeignTable :: Text,
+  { cForeignTable :: TableName,
     cColumnMapping :: HashMap Text Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON) via Autodocodec Constraint
 
 instance HasCodec Constraint where
   codec =

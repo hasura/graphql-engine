@@ -356,6 +356,7 @@ library dc-api
                      , bytestring
                      , deepseq
                      , extra
+                     , graphql-parser
                      , hashable
                      , insert-ordered-containers
                      , lens
@@ -383,9 +384,9 @@ library dc-api
                      , Hasura.Backends.DataConnector.API.V0.Expression
                      , Hasura.Backends.DataConnector.API.V0.OrderBy
                      , Hasura.Backends.DataConnector.API.V0.Query
+                     , Hasura.Backends.DataConnector.API.V0.Explain
                      , Hasura.Backends.DataConnector.API.V0.Relationships
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Type
-                     , Hasura.Backends.DataConnector.API.V0.Scalar.Value
                      , Hasura.Backends.DataConnector.API.V0.Schema
                      , Hasura.Backends.DataConnector.API.V0.Table
 
@@ -679,6 +680,7 @@ library
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Eventing
                      , Hasura.RQL.Types.Eventing.Backend
+                     , Hasura.RQL.Types.HealthCheck
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Instances
@@ -1029,7 +1031,6 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.QuerySpec
     Hasura.Backends.DataConnector.API.V0.RelationshipsSpec
     Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec
-    Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
     Hasura.Backends.DataConnector.RQLGenerator
@@ -1053,6 +1054,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.Translate.DeleteSpec
     Hasura.Backends.Postgres.Translate.InsertSpec
     Hasura.Backends.Postgres.Translate.UpdateSpec
+    Hasura.EncJSONSpec
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
@@ -1107,6 +1109,7 @@ test-suite tests-hspec
     , Spock-core
     , aeson
     , aeson-casing
+    , aeson-pretty
     , aeson-qq
     , async
     , base
@@ -1249,6 +1252,7 @@ test-suite tests-hspec
     Test.BigQuery.Schema.RunSQLSpec
     Test.BigQuery.TypeInterpretationSpec
     Test.DataConnector.AggregateQuerySpec
+    Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
@@ -1287,6 +1291,7 @@ test-suite tests-hspec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Simple.NoQueriesAvailableSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
@@ -1298,6 +1303,7 @@ test-suite tests-hspec
     Test.Regression.InsertOnConflict8260Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
+    Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
@@ -1374,6 +1380,7 @@ test-suite tests-dc-api
     , Test.Expectations
     , Test.HealthSpec
     , Test.MetricsSpec
+    , Test.ExplainSpec
     , Test.QuerySpec
     , Test.QuerySpec.AggregatesSpec
     , Test.QuerySpec.BasicSpec

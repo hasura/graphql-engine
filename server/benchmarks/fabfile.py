@@ -391,6 +391,12 @@ def generate_regression_report():
             warn(f"No results for {benchmark_set_name} found for PR #{merge_base_pr}. Skipping")
             continue
 
+        # A benchmark set may contain no queries (e.g. formerly, If it was just
+        # using the ad hoc operation mode), in which case the results are an
+        # empty array.  Skip in those cases for now
+        if not (this_report and merge_base_report):
+            continue
+
         benchmark_set_results = []
 
         # So we can look up by benchmark name:
@@ -434,10 +440,18 @@ def generate_regression_report():
                 )
             except KeyError:
                 continue
+            # Response body size:
+            try:
+                merge_base_body_size = float(merge_base_bench['response']['totalBytes']) / float(merge_base_bench['requests']['count'])
+                this_body_size       = float(      this_bench['response']['totalBytes']) / float(      this_bench['requests']['count'])
+                response_body_change = pct_change(merge_base_body_size, this_body_size)
+                # filter response body size unless it changes significantly, since this is rare:
+                if abs(response_body_change) > 1:
+                    metrics['response_body_size'] = response_body_change
+            except KeyError:
+                pass
             # NOTE: we decided to omit higher-percentile latencies here since
             # they are noisy (which might lead to people ignoring benchmarks)
-            # and there are better ways to view these tail latencies in the works.
-          # for m in ['min', 'p50', 'p90', 'p97_5']:
             for m in ['min', 'p50']:
                 try:
                     this_hist = this_bench['histogram']['json']
@@ -522,6 +536,8 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
             out(    f"{col( )}                                       ")
             out(    f"{col( )}    ᐅ {bench_name.replace('-k6-custom','').replace('_',' ')}:")
             for metric_name, d in metrics.items():
+                # For now just report regressions in the stable bytes-allocated metric for adhoc
+                if bench_name.startswith("ADHOC-") and not metric_name is "bytes_alloc_per_req": continue
                 out(f"{col(d)}        {metric_name:<25}:  {d:>6.1f}")
         out(        f"{col( )}                                       ")
     out(            f"```                                            ")  # END DIFF SYNTAX

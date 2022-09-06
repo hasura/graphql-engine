@@ -1,10 +1,10 @@
-﻿import Fastify from 'fastify';
+import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
 import { getSchema } from './schema';
-import { queryData } from './query';
-import { getConfig } from './config';
+import { explain, queryData } from './query';
+import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse } from './types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse } from '@hasura/dc-api-types';
 import { connect } from './db';
 import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
@@ -80,7 +80,7 @@ const queryHistogram = new prometheus.Histogram({
   name: 'query_durations',
   help: 'Histogram of the duration of query response times.',
   buckets: prometheus.exponentialBuckets(0.0001, 10, 8),
-  labelNames: ['route'],
+  labelNames: ['route'] as const,
 });
 
 const sqlLogger = (sql: string): void => {
@@ -107,21 +107,25 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   return result;
 });
 
-server.get("/health", async (request, response) => {
+server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const config = getConfig(request);
+  return explain(config, sqlLogger, request.body);
+});
+
+server.get("/health", async (request, response) => {
+  const config = tryGetConfig(request);
   response.type('application/json');
 
-  if(config.db == null) {
+  if(config === null) {
     server.log.info({ headers: request.headers, query: request.body, }, "health.request");
-    // response.statusCode = 204;
-    return { "status": "ok" };
+    response.statusCode = 204;
   } else {
     server.log.info({ headers: request.headers, query: request.body, }, "health.db.request");
     const db = connect(config, sqlLogger);
     const [r, m] = await db.query('select 1 where 1 = 1');
     if(r && JSON.stringify(r) == '[{"1":1}]') {
       response.statusCode = 204;
-      return { "status": "ok" };
     } else {
       response.statusCode = 500;
       return { "error": "problem executing query", "query_result": r };

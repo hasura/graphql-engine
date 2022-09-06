@@ -28,7 +28,7 @@ import {
   exportDataQuery,
   setOffset,
 } from './FilterActions';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { getPersistedPageSize } from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
@@ -312,8 +312,7 @@ class FilterQuery extends Component {
           <div className="pr-sm clear-both mt-sm">
             <Button
               type="submit"
-              color="yellow"
-              size="sm"
+              mode="primary"
               data-test="run-query"
               className="mr-sm"
             >

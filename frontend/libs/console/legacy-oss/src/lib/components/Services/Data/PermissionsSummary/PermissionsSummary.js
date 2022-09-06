@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
+import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
-import Button from '../../../Common/Button/Button';
 
 import styles from './PermissionsSummary.module.scss';
 
@@ -891,14 +891,12 @@ class PermissionsSummary extends Component {
               onChange={setNewRole}
             />
             <Button
-              color="white"
-              size="xs"
-              onClick={addNewRole}
               title="Create new role"
+              size="sm"
+              icon={<FaPlus />}
+              onClick={addNewRole}
               className={styles.add_mar_left_mid}
-            >
-              <FaPlus aria-hidden="true" />
-            </Button>
+            />
           </div>
         );
       };

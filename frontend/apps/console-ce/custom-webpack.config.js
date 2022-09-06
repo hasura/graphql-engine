@@ -1,15 +1,27 @@
 const { merge } = require('webpack-merge');
 const util = require('util');
+const webpack = require('webpack');
 
 const log = (value) =>
   console.log(
     util.inspect(value, { showHidden: false, depth: null, colors: true })
   );
+
 module.exports = (config, context) => {
   const output = merge(config, {
     output: {
       publicPath: '',
     },
+    plugins: [
+      new webpack.DefinePlugin({
+        __CLIENT__: 'true',
+        __SERVER__: false,
+        __DEVELOPMENT__: true,
+        __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
+        CONSOLE_ASSET_VERSION: Date.now().toString(),
+        'process.hrtime': () => null,
+      }),
+    ],
     module: {
       rules: [
         /*

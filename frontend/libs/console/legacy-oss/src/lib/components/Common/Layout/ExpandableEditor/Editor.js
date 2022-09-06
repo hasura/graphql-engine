@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from '../../Button/Button';
+import { Button } from '@/new-components/Button';
 
 class Editor extends React.Component {
   static getDerivedStateFromProps(nextProps, state) {
@@ -49,8 +49,8 @@ class Editor extends React.Component {
 
     return (
       <Button
-        color="white"
-        size="xs"
+        mode="default"
+        size="sm"
         className="mr-sm"
         data-test={`${service}-${isEditing ? 'close' : 'edit'}-${property}`}
         onClick={this.toggleEditor}
@@ -62,18 +62,19 @@ class Editor extends React.Component {
   };
 
   saveButton = saveFunc => {
-    const { service, property, ongoingRequest, saveButtonColor } = this.props;
+    const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     const saveWithToggle = () => saveFunc(this.toggleEditor);
     return (
       <Button
         type="submit"
-        color={saveButtonColor || 'yellow'}
+        mode="primary"
+        isLoading={isProcessing}
+        loadingText="Saving..."
         size="sm"
         className="mr-sm"
         onClick={saveWithToggle}
         data-test={`${service}-${property}-save`}
-        disabled={isProcessing}
       >
         {this.props.saveButtonText || 'Save'}
       </Button>
@@ -81,17 +82,18 @@ class Editor extends React.Component {
   };
 
   removeButton = removeFunc => {
-    const { service, property, ongoingRequest, removeButtonColor } = this.props;
+    const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     const removeWithToggle = () => removeFunc(this.toggleEditor);
     return (
       <Button
         type="submit"
-        color={removeButtonColor || 'red'}
+        mode="destructive"
+        isLoading={isProcessing}
+        loadingText="Removing..."
         size="sm"
         onClick={removeWithToggle}
         data-test={`${service}-${property}-remove`}
-        disabled={isProcessing}
       >
         {this.props.removeButtonText || 'Remove'}
       </Button>

@@ -32,6 +32,7 @@ import { supportedFeatures as PGSupportedFeatures } from './services/postgresql'
 import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
 import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
 import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
+import { supportedFeatures as CockroachQuerySupportedFeatures } from './services/cockroach';
 
 export const drivers = [
   'postgres',
@@ -39,6 +40,7 @@ export const drivers = [
   'mssql',
   'bigquery',
   'citus',
+  'cockroach',
 ] as const;
 export type Driver = typeof drivers[number];
 
@@ -48,6 +50,7 @@ export const driverToLabel: Record<Driver, string> = {
   mssql: 'MS SQL Server',
   bigquery: 'BigQuery',
   citus: 'Citus',
+  cockroach: 'CockroachDB',
 };
 
 export const sourceNames = {
@@ -55,6 +58,7 @@ export const sourceNames = {
   mssql: MssqlSupportedFeatures?.driver?.name,
   bigquery: BigQuerySupportedFeatures?.driver?.name,
   citus: CitusQuerySupportedFeatures?.driver?.name,
+  cockroach: CockroachQuerySupportedFeatures?.driver?.name,
 };
 
 export type ColumnsInfoResult = {
@@ -451,6 +455,7 @@ export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>
     MssqlSupportedFeatures,
     BigQuerySupportedFeatures,
     CitusQuerySupportedFeatures,
+    CockroachQuerySupportedFeatures,
   ].reduce((driverList: Driver[], supportedFeaturesObj) => {
     if (get(supportedFeaturesObj, feature)) {
       return [...driverList, supportedFeaturesObj.driver.name];

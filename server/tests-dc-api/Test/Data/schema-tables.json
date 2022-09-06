@@ -21,6 +21,14 @@
   {
     "name": ["Album"],
     "primary_key": ["AlbumId"],
+    "foreign_keys": {
+      "Artist": {
+        "column_mapping": {
+            "ArtistId": "ArtistId"
+        },
+        "foreign_table": ["Artist"]
+      }
+    },
     "description": "Collection of music albums created by artists",
     "columns": [
       {
@@ -46,6 +54,14 @@
   {
     "name": ["Customer"],
     "primary_key": ["CustomerId"],
+    "foreign_keys": {
+      "CustomerSupportRep": {
+        "column_mapping": {
+          "SupportRepId": "EmployeeId"
+        },
+        "foreign_table": ["Employee"]
+      }
+    },
     "description": "Collection of customers who can buy tracks",
     "columns": [
       {
@@ -131,6 +147,14 @@
   {
     "name": ["Employee"],
     "primary_key": ["EmployeeId"],
+    "foreign_keys": {
+      "EmployeeReportsTo": {
+        "column_mapping": {
+          "ReportsTo": "EmployeeId"
+        },
+        "foreign_table": ["Employee"]
+      }
+    },
     "description": "Collection of employees who work for the business",
     "columns": [
       {
@@ -165,13 +189,13 @@
       },
       {
         "name": "BirthDate",
-        "type": "string",
+        "type": "DateTime",
         "nullable": true,
         "description": "The employee's birth date"
       },
       {
         "name": "HireDate",
-        "type": "string",
+        "type": "DateTime",
         "nullable": true,
         "description": "The employee's hire date"
       },
@@ -247,6 +271,14 @@
   {
     "name": ["Invoice"],
     "primary_key": ["InvoiceId"],
+    "foreign_keys": {
+      "InvoiceCustomer": {
+        "column_mapping": {
+          "CustomerId": "CustomerId"
+        },
+        "foreign_table": ["Customer"]
+      }
+    },
     "description": "Collection of invoices of music purchases by a customer",
     "columns": [
       {
@@ -263,7 +295,7 @@
       },
       {
         "name": "InvoiceDate",
-        "type": "string",
+        "type": "DateTime",
         "nullable": false,
         "description": "Date of the invoice"
       },
@@ -308,6 +340,20 @@
   {
     "name": ["InvoiceLine"],
     "primary_key": ["InvoiceLineId"],
+    "foreign_keys": {
+      "Invoice": {
+        "column_mapping": {
+          "InvoiceId": "InvoiceId"
+        },
+        "foreign_table": ["Invoice"]
+      },
+      "Track": {
+        "column_mapping": {
+          "TrackId": "TrackId"
+        },
+        "foreign_table": ["Track"]
+      }
+    },
     "description": "Collection of track purchasing line items of invoices",
     "columns": [
       {
@@ -383,6 +429,20 @@
   {
     "name": ["PlaylistTrack"],
     "primary_key": ["PlaylistId", "TrackId"],
+    "foreign_keys": {
+      "Playlist": {
+        "column_mapping": {
+          "PlaylistId": "PlaylistId"
+        },
+        "foreign_table": ["Playlist"]
+      },
+      "Track": {
+        "column_mapping": {
+          "TrackId": "TrackId"
+        },
+        "foreign_table": ["Track"]
+      }
+    },
     "description": "Associations between playlists and tracks",
     "columns": [
       {
@@ -402,6 +462,26 @@
   {
     "name": ["Track"],
     "primary_key": ["TrackId"],
+    "foreign_keys": {
+      "Album": {
+        "column_mapping": {
+          "AlbumId": "AlbumId"
+        },
+        "foreign_table": ["Album"]
+      },
+      "Genre": {
+        "column_mapping": {
+          "GenreId": "GenreId"
+        },
+        "foreign_table": ["Genre"]
+      },
+      "MediaType": {
+        "column_mapping": {
+          "MediaTypeId": "MediaTypeId"
+        },
+        "foreign_table": ["MediaType"]
+      }
+    },
     "description": "Collection of music tracks",
     "columns": [
       {

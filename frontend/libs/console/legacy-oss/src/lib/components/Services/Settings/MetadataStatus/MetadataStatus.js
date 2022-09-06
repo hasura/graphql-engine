@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
@@ -35,7 +35,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       s => s.name === source
     ).kind;
 
-    /* 
+    /*
       Load up the database details and schema details
     */
 
@@ -266,11 +266,12 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         </div>
         <div className={`flex mt-sm`}>
           <Button
-            color="red"
+            mode="destructive"
             size="sm"
             className="mr-md"
             onClick={verifyAndDropAll}
-            disabled={isLoading}
+            isLoading={isLoading}
+            loadingText={'Deleting...'}
           >
             Delete all
           </Button>

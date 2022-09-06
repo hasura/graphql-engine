@@ -8,11 +8,18 @@ module Harness.TestEnvironment
     getServer,
     serverUrl,
     stopServer,
+    testLog,
+    testLogShow,
+    testLogBytestring,
   )
 where
 
 import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
+import Data.ByteString.Lazy qualified as LBS
+import Data.String (fromString)
+import Data.Text qualified as T
+import Data.Text.Encoding
 import Data.UUID (UUID)
 import Data.Word
 import Harness.Test.BackendType
@@ -64,3 +71,18 @@ serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
 -- | Forcibly stop a given 'Server'.
 stopServer :: Server -> IO ()
 stopServer Server {thread} = Async.cancel thread
+
+-- | log a string out in tests
+testLog :: TestEnvironment -> String -> IO ()
+testLog testEnv =
+  logger testEnv . fromString . (<>) "\n"
+
+-- | log a Show-able value in tests
+testLogShow :: (Show a) => TestEnvironment -> a -> IO ()
+testLogShow testEnv =
+  testLog testEnv . show
+
+-- | log a UTF-8 Bytestring. Forgive me Padre for converting through String
+testLogBytestring :: TestEnvironment -> LBS.ByteString -> IO ()
+testLogBytestring testEnv =
+  testLog testEnv . T.unpack . decodeUtf8 . LBS.toStrict

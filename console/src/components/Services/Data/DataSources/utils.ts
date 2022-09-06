@@ -10,6 +10,9 @@ import {
 import { connectionTypes } from './state';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 
+export const isPostgresFlavour = (driver: Driver) =>
+  driver === 'postgres' || driver === 'citus' || driver === 'cockroach';
+
 export const getErrorMessageFromMissingFields = (
   host: string,
   port: string,

@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import React from 'react';
 
-import Button from '../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import close from '../images/x-circle.svg';
 import monitoring from '../images/monitoring.svg';
 import rate from '../images/rate.svg';
@@ -110,7 +110,7 @@ export const ProPopup: React.FC<ProPopupProps> = ({ toggleOpen }) => (
       >
         <Button
           data-test="data-get-started"
-          color="yellow"
+          mode="primary"
           className={styles.largeButton}
         >
           Get started

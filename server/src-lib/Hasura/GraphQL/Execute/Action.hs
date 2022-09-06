@@ -131,7 +131,7 @@ asSingleRowJsonResp ::
   [Q.PrepArg] ->
   Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =
-  encJFromBS . runIdentity . Q.getRow
+  runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler query args True
 
 -- | Synchronously execute webhook handler and resolve response to action "output"

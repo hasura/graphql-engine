@@ -4,10 +4,7 @@ This is the source code for a fully working group chat app that uses [streaming 
 
 Run this example with Docker: `docker compose up -d --build`
 
-[![Edit chat-app](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat?fontsize=14)
-
-- [Fully working app](https://realtime-chat.demo.hasura.io/)
-- [Backend](https://realtime-chat.demo.hasura.io/console)
+- [Fully working app](https://eclectic-dragon-25a38c.netlify.app)
 
 Adapted from the [original blogpost by Rishichandra Wawhal](https://hasura.io/blog/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f).
 
@@ -17,7 +14,7 @@ Adapted from the [original blogpost by Rishichandra Wawhal](https://hasura.io/bl
 
 - Hasura allows us to build a real-time GraphQL API without writing any backend code.
 
-- Using [streaming subscriptions](https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/streaming/index/) we fetch the last 100 messages then stream new messages.
+- Using [streaming subscriptions](https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/streaming/index/) we fetch the last ten messages then stream new messages.
 
 - Every two seconds our frontend runs a user_online mutation to populate an online users list.
 
@@ -25,7 +22,7 @@ Adapted from the [original blogpost by Rishichandra Wawhal](https://hasura.io/bl
 
 ## Introduction
 
-Hasura allows us to instantly create a real-time GraphQL API from our data. In this tutorial we walk through creating a group chat application, without needing to write any backend code, using React and Apollo. The focus is on data models that we store in Postgres rather than full chat functionality.
+Hasura allows us to instantly create a real-time GraphQL API from our data. In this tutorial we walk through creating a group chat application without needing to write any backend code, using React and Apollo. The focus is on data models we store in Postgres rather than full chat functionality.
 
 ## Data Modelling
 
@@ -44,7 +41,7 @@ user (
 
 ### Messages
 
-For our tutorial we will just be inserting messages, not editing or deleting, but if we wanted to in the future Hasura will autogenerate the mutations for us. We could also extend this by adding features such as multiple different chatrooms.
+For our tutorial we will just be inserting messages, not editing or deleting, but if we wanted to in the future, Hasura would autogenerate the mutations. We could also extend this by adding features such as multiple different chatrooms.
 
 ```sql
 message (
@@ -98,7 +95,7 @@ mutation ($username: String!) {
 }
 ```
 
-We take the returned id and username and store it in our app's state management.
+We take the returned id and username and store them in our app's state management.
 
 ### User online events
 
@@ -114,14 +111,14 @@ mutation ($userId: Int!) {
 
 ### Subscribing to new messages
 
-Using [streaming subscriptions](https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/streaming/index/) we fetch the last N messages (the example uses 100). Then new messages are streamed using graphql-ws.
+Using [streaming subscriptions](https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/streaming/index/) we fetch the last N messages (the example uses 10). Then new messages are streamed using graphql-ws.
 
 ```gql
 # We can pass in how far back we want to fetch messages
 subscription ($last_received_ts: timestamptz) {
   message_stream(
     cursor: { initial_value: { timestamp: $last_received_ts } }
-    batch_size: 100
+    batch_size: 10
   ) {
     id
     username

@@ -1,7 +1,11 @@
 import React, { FormEvent } from 'react';
 import { LabeledInput } from '@/components/Common/LabeledInput';
 import { Connect, useAvailableDrivers } from '@/features/ConnectDB';
-import { GDC_DB_CONNECTOR_DEV } from '@/utils/featureFlags';
+// import { GDC_DB_CONNECTOR_DEV } from '@/utils/featureFlags';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
 import { Button } from '@/new-components/Button';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
@@ -34,6 +38,10 @@ const driverToLabel: Record<
     label: 'Citus',
     defaultConnection: 'DATABASE_URL',
   },
+  cockroach: {
+    label: 'CockroachDB',
+    defaultConnection: 'DATABASE_URL',
+  },
 };
 
 // const supportedDrivers = getSupportedDrivers('connectDbForm.enabled');
@@ -53,6 +61,10 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
   } = props;
 
   const { isLoading, data: drivers } = useAvailableDrivers();
+
+  const { enabled: isGDCFeatureFlagEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
 
   const onSampleDBTry = () => {
     if (!sampleDBTrial || !sampleDBTrial.isActive()) return;
@@ -82,6 +94,13 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
       type: 'UPDATE_DB_DRIVER',
       data: value,
     });
+
+    /**
+     * Early return for gdc drivers when feature flag is enabled
+     */
+    const driver = drivers?.find(d => d.name === value);
+    if (isGDCFeatureFlagEnabled && !driver?.native) return;
+
     if (!isSupported && changeConnectionType) {
       changeConnectionType(driverToLabel[value].defaultConnection);
     }
@@ -97,7 +116,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
 
   return (
     <>
-      {GDC_DB_CONNECTOR_DEV === 'enabled' &&
+      {isGDCFeatureFlagEnabled &&
       !nativeDrivers.includes(connectionDBState.dbType) ? (
         <div className="max-w-xl">
           <Connect
@@ -154,12 +173,17 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
                   disabled={isEditState}
                   data-test="database-type"
                 >
-                  {(drivers ?? []).map(driver => (
-                    <option key={driver.name} value={driver.name}>
-                      {driver.displayName}{' '}
-                      {driver.release === 'GA' ? null : `(${driver.release})`}
-                    </option>
-                  ))}
+                  {(drivers ?? [])
+                    /**
+                     * Why this filter? if GDC feature flag is not enabled, then I want to see only native sources
+                     */
+                    .filter(driver => driver.native || isGDCFeatureFlagEnabled)
+                    .map(driver => (
+                      <option key={driver.name} value={driver.name}>
+                        {driver.displayName}{' '}
+                        {driver.release === 'GA' ? null : `(${driver.release})`}
+                      </option>
+                    ))}
                 </select>
               </>
             )}

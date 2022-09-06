@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactText } from 'react';
 import AceEditor from 'react-ace';
 import {
   removeAll as removeNotifications,
@@ -7,7 +7,7 @@ import {
 } from 'react-notification-system-redux';
 import { showModal } from '@/store/modal/modal.actions';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
-import Button from '../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import { Thunk } from '../../../types';
 import { Json } from '../../Common/utils/tsUtils';
 
@@ -15,6 +15,7 @@ import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 import styles from './Notification/Notification.module.scss';
+import { AlternateActionButton } from './AlternateActionButton';
 
 export interface Notification {
   title?: string | JSX.Element;
@@ -29,6 +30,11 @@ export interface Notification {
     label: string;
     callback?: () => void;
   };
+  alternateActionButtonProps?: {
+    label: ReactText;
+    onClick: () => void;
+    trackId?: string;
+  };
 }
 
 export const showNotification = (
@@ -41,15 +47,27 @@ export const showNotification = (
       dispatch(removeNotifications());
     }
 
+    const commonNotificationConfig = {
+      position: options.position || 'tr',
+      autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
+      dismissible: ['error', 'warning'].includes(level)
+        ? ('button' as any) // bug in @types/react-notification-system-redux types
+        : ('click' as any),
+      ...options,
+    };
+
+    if (!options.alternateActionButtonProps) {
+      dispatch(displayNotification(commonNotificationConfig, level));
+      return;
+    }
+
     dispatch(
       displayNotification(
         {
-          position: options.position || 'tr',
-          autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level)
-            ? ('button' as any) // bug in @types/react-notification-system-redux types
-            : ('click' as any),
-          ...options,
+          ...commonNotificationConfig,
+          children: (
+            <AlternateActionButton {...options.alternateActionButtonProps} />
+          ),
         },
         level
       )
@@ -211,9 +229,8 @@ const showErrorNotification = (
     if (error && 'action' in error) {
       return (
         <Button
+          mode="primary"
           className={styles.add_mar_top_small}
-          color="yellow"
-          size="sm"
           onClick={e => {
             e.preventDefault();
             window.location.reload();

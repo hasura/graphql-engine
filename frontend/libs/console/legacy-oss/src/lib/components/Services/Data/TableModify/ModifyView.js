@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -12,7 +13,6 @@ import {
 import TableCommentEditor from './TableCommentEditor';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
-import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -197,7 +197,6 @@ const ModifyView = props => {
     <Button
       type="submit"
       className="mr-sm"
-      color="white"
       size="sm"
       onClick={untrackOnclick}
       data-test="untrack-view"
@@ -216,7 +215,7 @@ const ModifyView = props => {
   const deleteBtn = (
     <Button
       type="submit"
-      color="red"
+      mode="destructive"
       size="sm"
       onClick={deleteOnClick}
       data-test="delete-view"

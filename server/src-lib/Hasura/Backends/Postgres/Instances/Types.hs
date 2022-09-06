@@ -28,6 +28,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.HealthCheck
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 
@@ -72,6 +73,7 @@ instance
   Backend ('Postgres pgKind)
   where
   type BackendConfig ('Postgres pgKind) = ()
+  type BackendInfo ('Postgres pgKind) = ()
   type SourceConfig ('Postgres pgKind) = PG.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
   type TableName ('Postgres pgKind) = PG.QualifiedTable
@@ -106,6 +108,9 @@ instance
   type XNodesAgg ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
+
+  type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
+  defaultHealthCheckTest = defaultHealthCheckTestSql
 
   isComparableType = PG.isComparableType
   isNumType = PG.isNumType

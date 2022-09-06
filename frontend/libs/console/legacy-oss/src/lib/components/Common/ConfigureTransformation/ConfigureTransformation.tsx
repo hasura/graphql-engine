@@ -3,6 +3,7 @@ import {
   RequestTransformMethod,
   RequestTransformContentType,
 } from '@/metadata/types';
+import { Button } from '@/new-components/Button';
 import {
   KeyValuePair,
   RequestTransformState,
@@ -12,7 +13,6 @@ import {
 import RequestOptionsTransforms from './RequestOptionsTransforms';
 import PayloadOptionsTransforms from './PayloadOptionsTransforms';
 import SampleContextTransforms from './SampleContextTransforms';
-import Button from '../Button';
 import AddIcon from '../Icons/Add';
 
 type ConfigureTransformationProps = {
@@ -124,15 +124,15 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
           Change the method and URL to adapt to your API&apos;s expected format.
         </p>
         <Button
-          color="white"
           size="sm"
+          icon={!isRequestUrlTransform ? <AddIcon /> : undefined}
+          iconPosition="start"
           data-test="toggle-request-transform"
           onClick={() => {
             requestUrlTransformOnChange(!isRequestUrlTransform);
             resetSampleInput();
           }}
         >
-          {!isRequestUrlTransform ? <AddIcon /> : null}
           {requestUrlTransformText}
         </Button>
 

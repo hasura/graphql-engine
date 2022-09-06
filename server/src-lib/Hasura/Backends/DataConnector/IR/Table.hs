@@ -45,9 +45,6 @@ instance Witch.From API.TableName Name where
 instance Witch.From Name API.TableName where
   from (Name n) = API.TableName n
 
-instance Witch.From Text Name where
-  from = Name . pure
-
 instance ToTxt Name where
   toTxt = Text.intercalate "." . NonEmpty.toList . unName
 

@@ -26,6 +26,11 @@ module Hasura.RQL.Types.Source
     SourceResolver,
     MonadResolveSource (..),
     MaintenanceModeVersion (..),
+
+    -- * Health check
+    SourceHealthCheckInfo (..),
+    BackendSourceHealthCheckInfo,
+    SourceHealthCheckCache,
   )
 where
 
@@ -38,6 +43,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.SourceCustomization
@@ -172,3 +178,16 @@ data MaintenanceModeVersion
   | -- | should correspond to the latest source catalog version
     CurrentMMVersion
   deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Source health check
+
+data SourceHealthCheckInfo b = SourceHealthCheckInfo
+  { _shciName :: SourceName,
+    _shciConnection :: SourceConnConfiguration b,
+    _shciHealthCheck :: HealthCheckConfig b
+  }
+
+type BackendSourceHealthCheckInfo = AB.AnyBackend SourceHealthCheckInfo
+
+type SourceHealthCheckCache = HashMap SourceName BackendSourceHealthCheckInfo

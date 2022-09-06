@@ -52,7 +52,7 @@ export const Textarea: React.FC<TextareaProps> = ({
               ? 'border-red-600 hover:border-red-700'
               : 'border-gray-300',
             disabled
-              ? 'cursor-not-allowed bg-gray-100 border-gray-100'
+              ? 'cursor-not-allowed bg-gray-200 border-gray-200'
               : 'hover:border-gray-400'
           )}
           placeholder={placeholder}

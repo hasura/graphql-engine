@@ -30,7 +30,7 @@ defaultSource = \case
   BigQuery -> "bigquery"
   Citus -> "citus"
   Cockroach -> "cockroach"
-  DataConnector -> "data-connector"
+  DataConnector -> "chinook"
 
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendTypeString :: BackendType -> String
@@ -41,7 +41,7 @@ defaultBackendTypeString = \case
   BigQuery -> "bigquery"
   Citus -> "citus"
   Cockroach -> "cockroach"
-  DataConnector -> "data-connector"
+  DataConnector -> "reference"
 
 schemaKeyword :: BackendType -> Key
 schemaKeyword = \case

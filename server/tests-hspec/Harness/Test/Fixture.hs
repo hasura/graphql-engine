@@ -13,6 +13,7 @@ module Harness.Test.Fixture
     defaultBackendTypeString,
     noLocalTestEnvironment,
     SetupAction (..),
+    emptySetupAction,
     Options (..),
     combineOptions,
     defaultOptions,
@@ -22,10 +23,11 @@ where
 
 import Data.UUID.V4 (nextRandom)
 import Harness.Exceptions
+import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.Hspec.Extended
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (TestEnvironment (..), testLog)
 import Hasura.Prelude
 import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (mapSpecItem)
@@ -93,6 +95,9 @@ runWithLocalTestEnvironment fixtures tests =
 fixtureBracket :: Fixture b -> ((TestEnvironment, b) -> IO a) -> TestEnvironment -> IO ()
 fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith globalTestEnvironment =
   mask \restore -> do
+    -- log DB of test
+    testLog globalTestEnvironment $ "Testing " <> show name <> "..."
+
     localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
 
     -- create a unique id to differentiate this set of tests
@@ -108,7 +113,7 @@ fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith 
 
     let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
 
-    cleanup <- runSetupActions (setupTeardown testEnvironment)
+    cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
 
     _ <-
       catchRethrow
@@ -127,7 +132,7 @@ fixtureRepl Fixture {mkLocalTestEnvironment, setupTeardown} globalTestEnvironmen
   localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
   let testEnvironment = (globalTestEnvironment, localTestEnvironment)
 
-  cleanup <- runSetupActions (setupTeardown testEnvironment)
+  cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
   return cleanup
 
 -- | Run a list of SetupActions.
@@ -135,8 +140,8 @@ fixtureRepl Fixture {mkLocalTestEnvironment, setupTeardown} globalTestEnvironmen
 -- * If all setup steps complete, return an IO action that runs the teardown actions in reverse order.
 -- * If a setup step fails, the steps that were executed are torn down in reverse order.
 -- * Teardown always collects all the exceptions that are thrown.
-runSetupActions :: [SetupAction] -> IO (IO ())
-runSetupActions acts = go acts []
+runSetupActions :: TestEnvironment -> [SetupAction] -> IO (IO ())
+runSetupActions testEnv acts = go acts []
   where
     go :: [SetupAction] -> [IO ()] -> IO (IO ())
     go actions cleanupAcc = case actions of
@@ -149,13 +154,24 @@ runSetupActions acts = go acts []
         -- commented out.
         case a of
           Left (exn :: SomeException) -> do
-            -- putStrLn $ "setup step " ++ show (length cleanupAcc)  ++ " failed."
-
-            rethrowAll (throwIO exn : ({-putStrLn ("teardown the failed step " ++ show (length cleanupAcc)) >>-} teardownAction Nothing) : cleanupAcc)
+            testLog testEnv $ "Setup failed for step " ++ show (length cleanupAcc) ++ "."
+            rethrowAll
+              ( throwIO exn :
+                ( testLog testEnv ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
+                    >> teardownAction Nothing
+                ) :
+                cleanupAcc
+              )
             return (return ())
           Right x -> do
-            -- putStrLn $ "setup step " ++ show (length cleanupAcc)  ++ " succeded."
-            go rest (({-putStrLn ("teardown the successfull step " ++ show (length cleanupAcc)) >>-} teardownAction (Just x)) : cleanupAcc)
+            testLog testEnv $ "Setup for step " ++ show (length cleanupAcc) ++ " succeeded."
+            go
+              rest
+              ( ( testLog testEnv ("Teardown for step " ++ show (length cleanupAcc) ++ " succeeded.")
+                    >> teardownAction (Just x)
+                ) :
+                cleanupAcc
+              )
 
 --------------------------------------------------------------------------------
 
@@ -212,6 +228,15 @@ data SetupAction = forall a.
   { setupAction :: IO a,
     teardownAction :: Maybe a -> IO ()
   }
+
+-- | Setup a test action without any initialization then reset the
+-- metadata in the teardown. This is useful for running tests on the Metadata API.
+emptySetupAction :: TestEnvironment -> SetupAction
+emptySetupAction testEnvironment =
+  SetupAction
+    { setupAction = pure (),
+      teardownAction = const $ GraphqlEngine.clearMetadata testEnvironment
+    }
 
 -- | A name describing the given context.
 data FixtureName

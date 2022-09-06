@@ -15,6 +15,7 @@ export interface ServerConfig {
   is_function_permissions_inferred: boolean;
   is_admin_secret_set: boolean;
   is_auth_hook_set: boolean;
+  is_allow_list_enabled: boolean;
   is_remote_schema_permissions_enabled: boolean;
   is_jwt_set: boolean;
   experimental_features: ExperimentalFeature[];

@@ -10,7 +10,7 @@ export default {
   component: PermissionsForm,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers,
+    msw: handlers(),
   },
 } as Meta;
 

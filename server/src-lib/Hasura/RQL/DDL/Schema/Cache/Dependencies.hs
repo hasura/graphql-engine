@@ -35,6 +35,8 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
@@ -238,6 +240,9 @@ deleteMetadataObject = \case
         _boAllowlist = removeFromAllowList lq _boAllowlist,
         _boQueryCollections = removeFromQueryCollections cName lq _boQueryCollections
       }
+  MODataConnectorAgent agentName ->
+    boBackendCache
+      %~ (BackendMap.modify @'DataConnector $ BackendInfoWrapper . M.delete agentName . unBackendInfoWrapper)
   where
     removeHostFromAllowList hst bo =
       bo

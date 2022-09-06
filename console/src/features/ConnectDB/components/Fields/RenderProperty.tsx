@@ -1,11 +1,13 @@
 import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
+// eslint-disable-next-line no-restricted-imports
+import { isFreeFormObjectField } from '@/features/DataSource/types';
 import { Property } from '@/features/DataSource';
-
 import { Switch } from '@/new-components/Switch';
-import { InputField, Select } from '@/new-components/Form';
-import { Collapse } from '@/new-components/Collapse';
+import { CodeEditorField, InputField, Select } from '@/new-components/Form';
+import { Collapse } from '@/new-components/deprecated';
 import { Field } from './Fields';
+import { ArrayInput } from './ArrayInputs';
 
 interface RenderPropertyProps {
   name: string;
@@ -64,6 +66,18 @@ export const RenderProperty = ({
         </div>
       );
     case 'object':
+      if (isFreeFormObjectField(property)) {
+        return (
+          <div className="max-w-xl flex justify-between my-4">
+            <CodeEditorField
+              name={name}
+              label={property.description ?? name}
+              tooltip="This is a free form object field"
+            />
+          </div>
+        );
+      }
+
       if (property.nullable) {
         // if any of the values are set when editing the form open the collapse
         const existingValues = watch(name);
@@ -110,6 +124,15 @@ export const RenderProperty = ({
           })}
         </div>
       );
+    case 'array':
+      return (
+        <ArrayInput
+          property={property}
+          otherSchemas={otherSchemas}
+          name={name}
+        />
+      );
+
     default:
       throw Error('Case not handled');
   }

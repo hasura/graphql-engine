@@ -27,6 +27,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     boActions,
     boCronTriggers,
     boCustomTypes,
+    boBackendCache,
     boEndpoints,
     boQueryCollections,
     boRemoteSchemas,
@@ -188,7 +189,8 @@ data BuildOutputs = BuildOutputs
     _boMetricsConfig :: MetricsConfig,
     _boRoles :: HashMap RoleName Role,
     _boTlsAllowlist :: [TlsAllow],
-    _boQueryCollections :: QueryCollections
+    _boQueryCollections :: QueryCollections,
+    _boBackendCache :: BackendCache
   }
 
 $(makeLenses ''BuildOutputs)

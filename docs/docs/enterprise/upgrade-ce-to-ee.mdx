@@ -1,0 +1,36 @@
+---
+sidebar_label: Upgrading from Hasura CE to Hasura Enterprise
+description: A guide to upgrading from Hasura CE to Hasura Enterprise
+title: 'Upgrading from Hasura CE to Hasura Enterprise'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 1
+---
+
+# Upgrading from Hasura CE to Hasura Enterprise
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Overview
+
+Starting from Hasura GraphQL Engine version `v2.12.0-beta.1`, we have included both open-source and commercial
+components in the `hasura/graphql-engine` container image.
+
+The `hasura/graphql-engine` image includes both open-source and proprietary components. The open-source portions are
+licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). The proprietary
+components include features for Hasura Enterprise and are enabled with a license key provided by Hasura. If you would
+like to use an image with only the open source components, please use Docker images on
+[this page](https://hub.docker.com/r/hasura/graphql-engine/tags?page=1&name=-ce) that end with `-ce`.
+(example: `hasura/graphql-engine:<VERSION>-ce`)
+
+If you are already running Hasura CE and would like to upgrade to Hasura Enterprise, please follow these instructions:
+
+1. [Please contact Hasura Sales](mailto:sales@hasura.io) to obtain a license key.
+2. Create an environment variable called `HASURA_GRAPHQL_EE_LICENSE_KEY` in your container platform environment and set
+   it to the license key from the previous step.
+
+   E.g. if the license key sent by Sales is `ABC1234`, you will set `HASURA_GRAPHQL_EE_LICENSE_KEY=”ABC1234”`.
+
+3. Restart Hasura.

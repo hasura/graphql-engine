@@ -83,11 +83,13 @@ class
     Representable (ComputedFieldDefinition b),
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
+    Representable (HealthCheckTest b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
     Data (TableName b),
     FromJSON (BackendConfig b),
+    FromJSON (BackendInfo b),
     FromJSON (Column b),
     FromJSON (ConstraintName b),
     FromJSON (FunctionName b),
@@ -97,10 +99,12 @@ class
     FromJSON (ExtraTableMetadata b),
     FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
+    FromJSON (HealthCheckTest b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (SourceConnConfiguration b),
     ToJSON (BackendConfig b),
+    ToJSON (BackendInfo b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
     ToJSON (FunctionArgument b),
@@ -114,6 +118,7 @@ class
     ToJSON (ComputedFieldDefinition b),
     ToJSON (ComputedFieldImplicitArguments b),
     ToJSON (ComputedFieldReturn b),
+    ToJSON (HealthCheckTest b),
     ToJSONKey (Column b),
     ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
@@ -130,6 +135,7 @@ class
     ToErrorValue (ConstraintName b),
     Cacheable (SourceConfig b),
     Cacheable (BackendConfig b),
+    Cacheable (BackendInfo b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
     Typeable b,
@@ -142,6 +148,9 @@ class
     Eq (BackendConfig b),
     Show (BackendConfig b),
     Monoid (BackendConfig b),
+    Eq (BackendInfo b),
+    Show (BackendInfo b),
+    Monoid (BackendInfo b),
     Eq (CountType b),
     Show (CountType b),
     Eq (ScalarValue b),
@@ -168,7 +177,12 @@ class
   Backend (b :: BackendType)
   where
   -- types
+
+  -- | Backend configuration stored in metadata
   type BackendConfig b :: Type
+
+  -- | Runtime backend info derived from (possibly enriched) BackendConfig and stored in SchemaCache
+  type BackendInfo b :: Type
 
   -- | User facing connection configuration for a database.
   type SourceConnConfiguration b :: Type
@@ -230,6 +244,12 @@ class
 
   -- | Computed field return information
   type ComputedFieldReturn b :: Type
+
+  -- | A config type for health check tests
+  type HealthCheckTest b :: Type
+
+  -- | Default health check test config
+  defaultHealthCheckTest :: HealthCheckTest b
 
   -- Backend-specific IR types
 

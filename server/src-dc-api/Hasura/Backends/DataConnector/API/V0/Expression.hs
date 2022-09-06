@@ -14,7 +14,7 @@ where
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Data (Data)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
@@ -24,7 +24,6 @@ import Data.Tuple.Extra
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
-import Hasura.Backends.DataConnector.API.V0.Scalar.Value qualified as API.V0.Scalar
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -54,7 +53,7 @@ instance HasCodec BinaryComparisonOperator where
             ]
         )
         (dimapCodec CustomBinaryComparisonOperator getCustomBinaryComparisonOperator textCodec)
-        $ \case
+        \case
           op@CustomBinaryComparisonOperator {} -> Right op
           op -> Left op
 
@@ -75,7 +74,7 @@ instance HasCodec BinaryArrayComparisonOperator where
             ]
         )
         (dimapCodec CustomBinaryArrayComparisonOperator getCustomBinaryArrayComparisonOperator textCodec)
-        $ \case
+        \case
           op@CustomBinaryArrayComparisonOperator {} -> Right op
           op -> Left op
 
@@ -96,7 +95,7 @@ instance HasCodec UnaryComparisonOperator where
             ]
         )
         (dimapCodec CustomUnaryComparisonOperator getCustomUnaryComparisonOperator textCodec)
-        $ \case
+        \case
           op@CustomUnaryComparisonOperator {} -> Right op
           op -> Left op
 
@@ -106,7 +105,7 @@ data Expression
   | Or [Expression]
   | Not Expression
   | ApplyBinaryComparisonOperator BinaryComparisonOperator ComparisonColumn ComparisonValue
-  | ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [API.V0.Scalar.Value]
+  | ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [Value]
   | ApplyUnaryComparisonOperator UnaryComparisonOperator ComparisonColumn
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
@@ -188,7 +187,7 @@ instance HasCodec ComparisonColumn where
 data ComparisonValue
   = -- | Allows a comparison to a column on the current table or another table
     AnotherColumn ComparisonColumn
-  | ScalarValue API.V0.Scalar.Value
+  | ScalarValue Value
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonValue
