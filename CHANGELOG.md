@@ -292,7 +292,6 @@ Further changes are forthcoming along similar lines.
 - build: Changes to the `hasura/graphql-engine` Docker image:
   - Default graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use an Ubuntu base instead of Debian.
   - Debian flavour of images (`hasura/graphql-engine:<VERSION>.debian`) are still published to Docker Hub.
-  - CentOS flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
 
 ## v2.10.0-beta.1
 
@@ -560,7 +559,8 @@ Please submit any feedback you may have for this feature at https://github.com/h
   - Default graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use an Ubuntu base instead of Debian.
   - Debian flavour of images (`hasura/graphql-engine:<VERSION>.debian`) are still published to Docker Hub.
   - CentOS flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
-
+- docs: Kriti templating documentation sections added
+  
 ## v2.9.0
 
 ### Event Triggers for MS SQL Server
