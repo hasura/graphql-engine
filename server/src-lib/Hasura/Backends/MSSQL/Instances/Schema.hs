@@ -27,19 +27,16 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
     Kind (..),
-    MonadMemoize,
     MonadParse,
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
-import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -112,7 +109,7 @@ backendInsertParser ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
+  SchemaT r m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
 backendInsertParser sourceName tableInfo = do
   ifMatched <- ifMatchedFieldParser sourceName tableInfo
   let _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
@@ -128,7 +125,7 @@ msBuildTableUpdateMutationFields ::
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   C.GQLNameIdentifier ->
-  m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
+  SchemaT r m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msBuildTableUpdateMutationFields mkRootFieldName scenario sourceName tableName tableInfo gqlName = do
   roleName <- retrieve scRole
   fieldParsers <- runMaybeT do
@@ -161,7 +158,7 @@ msTableArgs ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
+  SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
 msTableArgs sourceName tableInfo = do
   whereParser <- tableWhereArg sourceName tableInfo
   orderByParser <- tableOrderByArg sourceName tableInfo
@@ -185,10 +182,10 @@ msTableArgs sourceName tableInfo = do
 -- * Individual components
 
 msColumnParser ::
-  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  MonadBuildSchema 'MSSQL r m n =>
   ColumnType 'MSSQL ->
   G.Nullability ->
-  m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
+  SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
 msColumnParser columnType (G.Nullability isNullable) =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
@@ -301,17 +298,9 @@ msOrderByOperators _tCase =
 
 msComparisonExps ::
   forall m n r.
-  ( BackendSchema 'MSSQL,
-    MonadMemoize m,
-    MonadParse n,
-    MonadError QErr m,
-    MonadReader r m,
-    Has SchemaOptions r,
-    Has MkTypename r,
-    Has NamingCase r
-  ) =>
+  MonadBuildSchema 'MSSQL r m n =>
   ColumnType 'MSSQL ->
-  m (Parser 'Input n [ComparisonExp 'MSSQL])
+  SchemaT r m (Parser 'Input n [ComparisonExp 'MSSQL])
 msComparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   collapseIfNull <- retrieve Options.soDangerousBooleanCollapse

@@ -27,7 +27,6 @@ import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
@@ -92,7 +91,7 @@ experimentalBuildTableRelayQueryFields ::
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
   NESeq (RQL.ColumnInfo 'DataConnector) ->
-  m [P.FieldParser n a]
+  GS.C.SchemaT r m [P.FieldParser n a]
 experimentalBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
@@ -100,7 +99,7 @@ columnParser' ::
   (MonadParse n, MonadError QErr m) =>
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
-  m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
+  GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
 columnParser' columnType (GQL.Nullability isNullable) = do
   parser <- case columnType of
     RQL.ColumnScalar IR.S.T.String -> pure (J.String <$> P.string)
@@ -142,17 +141,10 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
 
 comparisonExps' ::
   forall m n r.
-  ( BackendSchema 'DataConnector,
-    P.MonadMemoize m,
-    MonadParse n,
-    MonadError QErr m,
-    MonadReader r m,
-    Has SchemaOptions r,
-    Has NamingCase r
-  ) =>
+  MonadBuildSchema 'DataConnector r m n =>
   RQL.SourceInfo 'DataConnector ->
   RQL.ColumnType 'DataConnector ->
-  m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
+  GS.C.SchemaT r m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
 comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnectorName, columnType) $ do
   tCase <- asks getter
   collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
@@ -193,7 +185,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
       NamingCase ->
       Options.DangerouslyCollapseBooleans ->
       GQL.Name ->
-      m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
+      GS.C.SchemaT r m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
     mkCustomOperators tCase collapseIfNull typeName = do
       let capabilities = sourceInfo ^. RQL.siConfiguration . Adapter.scCapabilities
       case lookupComparisonInputObjectDefinition capabilities typeName of
@@ -205,14 +197,14 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
       NamingCase ->
       Options.DangerouslyCollapseBooleans ->
       GQL.InputValueDefinition ->
-      m (P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector))))
+      GS.C.SchemaT r m (P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector))))
     mkCustomOperator tCase collapseIfNull GQL.InputValueDefinition {..} = do
       argParser <- mkArgParser _ivdType
       pure $
         GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName _ivdName) _ivdDescription $
           CustomBooleanOperator (GQL.unName _ivdName) . Just . Right <$> argParser
 
-    mkArgParser :: GQL.GType -> m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
+    mkArgParser :: GQL.GType -> GS.C.SchemaT r m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
     mkArgParser argType =
       fmap IR.mkParameter
         <$> columnParser'
@@ -224,7 +216,7 @@ tableArgs' ::
   MonadBuildSchema 'DataConnector r m n =>
   RQL.SourceInfo 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
-  m (P.InputFieldsParser n (IR.SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
+  GS.C.SchemaT r m (P.InputFieldsParser n (IR.SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
 tableArgs' sourceName tableInfo = do
   whereParser <- GS.S.tableWhereArg sourceName tableInfo
   orderByParser <- GS.S.tableOrderByArg sourceName tableInfo

@@ -59,10 +59,10 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- > }
 actionExecute ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildSourceSchema r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
-  m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
+  SchemaT r m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionExecute customTypes actionInfo = runMaybeT do
   roleName <- retrieve scRole
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
@@ -103,10 +103,10 @@ actionExecute customTypes actionInfo = runMaybeT do
 -- > action_name(action_input_arguments)
 actionAsyncMutation ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildSourceSchema r m n =>
   HashMap G.Name AnnotatedInputType ->
   ActionInfo ->
-  m (Maybe (FieldParser n IR.AnnActionMutationAsync))
+  SchemaT r m (Maybe (FieldParser n IR.AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- retrieve scRole
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -137,7 +137,7 @@ actionAsyncQuery ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   HashMap G.Name AnnotatedObjectType ->
   ActionInfo ->
-  m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
+  SchemaT r m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
   roleName <- retrieve scRole
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -213,7 +213,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
         pure $ IR.ASISource _atrSource _atrSourceConfig
       AOTScalar _ -> IR.ASINoSource
 
-    mkDefinitionList :: AnnotatedOutputType -> m [(PGCol, ScalarType ('Postgres 'Vanilla))]
+    mkDefinitionList :: AnnotatedOutputType -> SchemaT r m [(PGCol, ScalarType ('Postgres 'Vanilla))]
     mkDefinitionList = \case
       AOTScalar _ -> pure []
       AOTObject AnnotatedObjectType {..} -> do
@@ -226,7 +226,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
 
     -- warning: we don't support other backends than Postgres for async queries;
     -- here, we fail if we encounter a non-Postgres scalar type
-    fieldTypeToScalarType :: AnnotatedObjectFieldType -> m PGScalarType
+    fieldTypeToScalarType :: AnnotatedObjectFieldType -> SchemaT r m PGScalarType
     fieldTypeToScalarType = \case
       AOFTEnum _ -> pure PGText
       AOFTObject _ -> pure PGJSON
@@ -251,11 +251,11 @@ actionIdParser = ActionId <$> P.uuid
 
 actionOutputFields ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildSourceSchema r m n =>
   G.GType ->
   AnnotatedObjectType ->
   HashMap G.Name AnnotatedObjectType ->
-  m (Parser 'Output n (AnnotatedActionFields))
+  SchemaT r m (Parser 'Output n (AnnotatedActionFields))
 actionOutputFields outputType annotatedObject objectTypes = do
   scalarOrEnumOrObjectFields <- forM (toList $ _aotFields annotatedObject) outputFieldParser
   relationshipFields <- traverse relationshipFieldParser $ _aotRelationships annotatedObject
@@ -278,7 +278,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
 
     outputFieldParser ::
       ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType) ->
-      m (FieldParser n (AnnotatedActionField))
+      SchemaT r m (FieldParser n (AnnotatedActionField))
     outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) = P.memoizeOn 'actionOutputFields (_aotName annotatedObject, name) do
       case objectFieldType of
         AOFTScalar def ->
@@ -298,7 +298,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
 
     relationshipFieldParser ::
       AnnotatedTypeRelationship ->
-      m (Maybe [FieldParser n (AnnotatedActionField)])
+      SchemaT r m (Maybe [FieldParser n (AnnotatedActionField)])
     relationshipFieldParser (AnnotatedTypeRelationship {..}) = runMaybeT do
       relName <- hoistMaybe $ RelName <$> mkNonEmptyText (toTxt _atrName)
 
@@ -339,10 +339,10 @@ actionOutputFields outputType annotatedObject objectTypes = do
 
 actionInputArguments ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildSourceSchema r m n =>
   HashMap G.Name AnnotatedInputType ->
   [ArgumentDefinition (G.GType, AnnotatedInputType)] ->
-  m (InputFieldsParser n J.Value)
+  SchemaT r m (InputFieldsParser n J.Value)
 actionInputArguments nonObjectTypeMap arguments = do
   argumentParsers <- for arguments $ \argument -> do
     let ArgumentDefinition argumentName (gType, nonObjectType) argumentDescription = argument
@@ -362,7 +362,7 @@ actionInputArguments nonObjectTypeMap arguments = do
       Maybe G.Description ->
       G.GType ->
       AnnotatedInputType ->
-      m (InputFieldsParser n (Maybe J.Value))
+      SchemaT r m (InputFieldsParser n (Maybe J.Value))
     argumentParser name description gType nonObjectType = do
       let mkResult :: forall k. ('Input P.<: k) => Parser k n J.Value -> InputFieldsParser n (Maybe J.Value)
           mkResult = mkArgumentInputFieldParser name description gType

@@ -10,6 +10,7 @@ where
 
 import Hasura.GraphQL.Schema.Action
 import Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -22,7 +23,7 @@ buildActionQueryFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
+  SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionQueryFields customTypes actionInfo =
   maybeToList . applyActionOrigin actionInfo
     <$> case _adType (_aiDefinition actionInfo) of
@@ -36,7 +37,7 @@ buildActionMutationFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
+  SchemaT r m [FieldParser n (MutationRootField UnpreparedValue)]
 buildActionMutationFields customTypes actionInfo =
   maybeToList . applyActionOrigin actionInfo
     <$> case _adType (_aiDefinition actionInfo) of
@@ -50,7 +51,7 @@ buildActionSubscriptionFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
+  SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionSubscriptionFields customTypes actionInfo =
   maybeToList . applyActionOrigin actionInfo
     <$> case _adType (_aiDefinition actionInfo) of

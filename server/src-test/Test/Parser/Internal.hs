@@ -39,7 +39,7 @@ import Test.Parser.Monad
 
 type PG = 'Postgres 'Vanilla
 
-type Parser = FieldParser ParserTestM (AnnotatedUpdateG PG (RemoteRelationshipField UnpreparedValue) (UnpreparedValue PG))
+type Parser = FieldParser ParserTest (AnnotatedUpdateG PG (RemoteRelationshipField UnpreparedValue) (UnpreparedValue PG))
 
 -- | Create a table by its name, using the public schema.
 mkTable :: Text -> QualifiedTable
@@ -90,7 +90,7 @@ mkColumnInfo ColumnInfoBuilder {..} =
 -- No special permissions, required headers, filters, etc., are set.
 --
 -- This will not work for inserts and deletes (see @rolePermInfo@ below).
-mkParser :: TableInfoBuilder -> SchemaTestM [Parser]
+mkParser :: TableInfoBuilder -> SchemaTest [Parser]
 mkParser tib =
   buildTableUpdateMutationFields
     mempty

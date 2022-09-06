@@ -17,7 +17,7 @@ import Data.List.NonEmpty qualified as NE
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
-import Hasura.GraphQL.Schema.Common (MonadBuildSchemaBase, askTableInfo, textToName)
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -43,14 +43,13 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- 'Hasura.RQL.IR.BoolExp.AggregationPredicates.AggregationPredicates'.
 defaultAggregationPredicatesParser ::
   forall b r m n.
-  ( MonadBuildSchemaBase r m n,
-    BackendSchema b,
+  ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
   ) =>
   [FunctionSignature b] ->
   SourceInfo b ->
   TableInfo b ->
-  m (Maybe (InputFieldsParser n [AggregationPredicatesImplementation b (UnpreparedValue b)]))
+  SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicatesImplementation b (UnpreparedValue b)]))
 defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
   arrayRelationships <- fails $ return $ nonEmpty $ tableArrayRelationships ti
   aggregationFunctions <- fails $ return $ nonEmpty aggFns
@@ -117,7 +116,10 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
     aggPredicateField fnGQLName typeGqlName =
       P.fieldOptional fnGQLName Nothing . P.object (typeGqlName <> Name.__ <> fnGQLName) Nothing
 
-    buildAnyOptionalFields :: NonEmpty (MaybeT m (InputFieldsParser n (Maybe c))) -> MaybeT m (InputFieldsParser n [c])
+    buildAnyOptionalFields ::
+      Applicative f =>
+      NonEmpty (MaybeT f (InputFieldsParser n (Maybe c))) ->
+      MaybeT f (InputFieldsParser n [c])
     buildAnyOptionalFields = fmap collectOptionalFields . collectBranchesNE
       where
         -- Collect a non-empty list of optional input field parsers into one input field
@@ -125,7 +127,10 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
         collectOptionalFields :: NonEmpty (InputFieldsParser n (Maybe a)) -> InputFieldsParser n [a]
         collectOptionalFields = fmap (catMaybes . NE.toList) . sequenceA
 
-    buildAllFieldsNE :: MaybeT m (NonEmpty (InputFieldsParser n c)) -> MaybeT m (InputFieldsParser n (NonEmpty c))
+    buildAllFieldsNE ::
+      Functor f =>
+      MaybeT f (NonEmpty (InputFieldsParser n c)) ->
+      MaybeT f (InputFieldsParser n (NonEmpty c))
     buildAllFieldsNE = fmap sequenceA
 
     -- Collect all the non-failed branches, failing if all branches failed.
@@ -133,16 +138,16 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
     collectBranchesNE xs = MaybeT $ NE.nonEmpty . catMaybes . NE.toList <$> sequenceA (xs <&> runMaybeT)
 
     -- Mark a computation as potentially failing.
-    fails :: m (Maybe a) -> MaybeT m a
+    fails :: f (Maybe a) -> MaybeT f a
     fails = MaybeT
 
     -- Compose our monad with InputFieldsParser into one fused Applicative that
     -- acts on the parsed values directly.
-    fuse :: MaybeT m (InputFieldsParser n a) -> Compose (MaybeT m) (InputFieldsParser n) a
+    fuse :: MaybeT f (InputFieldsParser n a) -> Compose (MaybeT f) (InputFieldsParser n) a
     fuse = Compose
 
     -- The inverse of 'fuse'.
-    unfuse :: Compose (MaybeT m) (InputFieldsParser n) a -> MaybeT m (InputFieldsParser n a)
+    unfuse :: Compose (MaybeT f) (InputFieldsParser n) a -> MaybeT f (InputFieldsParser n a)
     unfuse = getCompose
 
     -- Optional input field with a default value when the field is elided or null.

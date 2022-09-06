@@ -106,8 +106,8 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
 nodeField ::
   forall m n r.
   SourceCache ->
-  MonadBuildSchemaBase r m n =>
-  m (P.FieldParser n (IR.QueryRootField IR.UnpreparedValue))
+  MonadBuildSourceSchema r m n =>
+  SchemaT r m (P.FieldParser n (IR.QueryRootField IR.UnpreparedValue))
 nodeField sourceCache = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field Name._id (Just idDescription) P.identifier

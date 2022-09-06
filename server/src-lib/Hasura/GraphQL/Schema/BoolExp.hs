@@ -16,7 +16,7 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common (MonadBuildSchemaBase, SchemaContext (..), askTableInfo, partialSQLExpToUnpreparedValue, retrieve)
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
@@ -57,7 +57,7 @@ class AggregationPredicatesSchema (b :: BackendType) where
     MonadBuildSchemaBase r m n =>
     SourceInfo b ->
     TableInfo b ->
-    m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+    SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
 
 -- Overlapping instance for backends that do not implement Aggregation Predicates.
 instance {-# OVERLAPPABLE #-} (AggregationPredicates b ~ Const Void) => AggregationPredicatesSchema (b :: BackendType) where
@@ -66,7 +66,7 @@ instance {-# OVERLAPPABLE #-} (AggregationPredicates b ~ Const Void) => Aggregat
     (MonadBuildSchemaBase r m n) =>
     SourceInfo b ->
     TableInfo b ->
-    m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+    SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
   aggregationPredicatesParser _ _ = return Nothing
 
 -- |
@@ -82,7 +82,7 @@ boolExp ::
   (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =>
   SourceInfo b ->
   TableInfo b ->
-  m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
+  SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
   tCase <- asks getter
   tableGQLName <- getTableIdentifierName tableInfo
@@ -116,7 +116,7 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
 
     mkField ::
       FieldInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
+      SchemaT r m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
       roleName <- retrieve scRole
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
