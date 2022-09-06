@@ -123,7 +123,7 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn columnInfo ->
-          lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (ciType columnInfo)
+          lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b sourceInfo (ciType columnInfo)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
@@ -144,7 +144,7 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
 
               fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName functionArgs)
                 <$> case computedFieldReturnType @b _cfiReturnType of
-                  ReturnsScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
+                  ReturnsScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b sourceInfo (ColumnScalar scalarType)
                   ReturnsTable table -> do
                     info <- askTableInfo sourceInfo table
                     lift $ fmap (CFBETable table) <$> boolExp sourceInfo info

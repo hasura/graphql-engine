@@ -50,7 +50,7 @@ instance Backend 'DataConnector where
   type NullsOrderType 'DataConnector = Unimplemented
   type CountType 'DataConnector = IR.A.CountAggregate
   type Column 'DataConnector = IR.C.Name
-  type ScalarValue 'DataConnector = IR.S.V.Value
+  type ScalarValue 'DataConnector = J.Value
   type ScalarType 'DataConnector = IR.S.T.Type
 
   -- This does not actually have to be the full IR Expression, in fact it is only
@@ -79,6 +79,7 @@ instance Backend 'DataConnector where
     IR.S.T.Number -> True
     IR.S.T.String -> True
     IR.S.T.Bool -> False
+    IR.S.T.Custom _ -> False -- TODO: extend Capabilities for custom types
 
   isNumType :: ScalarType 'DataConnector -> Bool
   isNumType IR.S.T.Number = True

@@ -2,6 +2,7 @@
 
 module Hasura.Backends.DataConnector.IR.Scalar.Type
   ( Type (..),
+    fromGQLType,
   )
 where
 
@@ -12,8 +13,10 @@ import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
+import Hasura.GraphQL.Parser.Name.TypeSystem
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax qualified as GQL
 import Witch qualified
 
 --------------------------------------------------------------------------------
@@ -31,6 +34,7 @@ data Type
   = String
   | Number
   | Bool
+  | Custom Text
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass
     ( Cacheable,
@@ -53,9 +57,20 @@ instance Witch.From API.Type Type where
     API.StringTy -> String
     API.NumberTy -> Number
     API.BoolTy -> Bool
+    API.CustomTy name -> Custom name
 
 instance Witch.From Type API.Type where
   from = \case
     String -> API.StringTy
     Number -> API.NumberTy
     Bool -> API.BoolTy
+    Custom name -> API.CustomTy name
+
+fromGQLType :: GQL.Name -> Type
+fromGQLType typeName =
+  if
+      | typeName == _String -> String
+      | typeName == _Int -> Number
+      | typeName == _Float -> Number
+      | typeName == _Boolean -> Bool
+      | otherwise -> Custom $ GQL.unName typeName

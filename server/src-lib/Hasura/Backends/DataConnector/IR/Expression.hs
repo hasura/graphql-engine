@@ -12,11 +12,11 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson (FromJSON, ToJSON)
+--------------------------------------------------------------------------------
+import Data.Aeson (FromJSON, ToJSON, Value)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Relationships qualified as IR.R
-import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Witch qualified
@@ -57,7 +57,7 @@ data Expression
     -- 'BinaryArrayComparisonOperator' against an array of 'ComparisonValue's.
     -- The result of this application will return "true" or "false" depending
     -- on the 'BinaryArrayComparisonOperator' that's being applied.
-    ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [IR.S.Value]
+    ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [Value]
   | -- | Apply a 'UnaryComparisonOperator' that evaluates a column with the
     -- 'UnaryComparisonOperator'; the result of this application will return "true" or
     -- "false" depending on the 'UnaryComparisonOperator' that's being applied.
@@ -177,14 +177,14 @@ instance Witch.From API.ComparisonColumn ComparisonColumn where
 
 data ComparisonValue
   = AnotherColumn ComparisonColumn
-  | ScalarValue IR.S.Value
+  | ScalarValue Value
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
 instance Witch.From ComparisonValue API.ComparisonValue where
   from (AnotherColumn column) = API.AnotherColumn $ Witch.from column
-  from (ScalarValue value) = API.ScalarValue $ Witch.from value
+  from (ScalarValue value) = API.ScalarValue value
 
 instance Witch.From API.ComparisonValue ComparisonValue where
   from (API.AnotherColumn column) = AnotherColumn (Witch.from column)
-  from (API.ScalarValue value) = ScalarValue $ Witch.from value
+  from (API.ScalarValue value) = ScalarValue value

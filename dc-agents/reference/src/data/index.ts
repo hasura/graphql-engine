@@ -251,13 +251,13 @@ const schema: SchemaResponse = {
         },
         {
           name: "BirthDate",
-          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          type: "DateTime",
           nullable: true,
           description: "The employee's birth date"
         },
         {
           name: "HireDate",
-          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          type: "DateTime",
           nullable: true,
           description: "The employee's hire date"
         },
@@ -357,7 +357,7 @@ const schema: SchemaResponse = {
         },
         {
           name: "InvoiceDate",
-          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          type: "DateTime",
           nullable: false,
           description: "Date of the invoice"
         },

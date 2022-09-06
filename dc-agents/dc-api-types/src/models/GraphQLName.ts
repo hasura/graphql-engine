@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ComparisonOperators = {
-};
-
+/**
+ * A valid GraphQL name
+ */
+export type GraphQLName = string;

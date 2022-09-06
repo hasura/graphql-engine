@@ -72,7 +72,7 @@ instance BackendSchema 'BigQuery where
   columnParser = bqColumnParser
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = bqOrderByOperators
-  comparisonExps = bqComparisonExps
+  comparisonExps = const bqComparisonExps
   countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField

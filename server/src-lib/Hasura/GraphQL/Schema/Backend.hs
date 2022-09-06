@@ -225,6 +225,7 @@ class
 
   comparisonExps ::
     MonadBuildSchema b r m n =>
+    SourceInfo b ->
     ColumnType b ->
     m (Parser 'Input n [ComparisonExp b])
 

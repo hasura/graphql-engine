@@ -2,6 +2,7 @@ module Test.QuerySpec.BasicSpec (spec) where
 
 import Control.Arrow ((>>>))
 import Control.Lens (ix, (%~), (&), (?~), (^?))
+import Data.Aeson (Value (..))
 import Data.Aeson.KeyMap qualified as KeyMap
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)

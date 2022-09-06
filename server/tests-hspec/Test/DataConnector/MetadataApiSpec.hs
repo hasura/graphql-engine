@@ -122,7 +122,16 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
           |]
         )
         [yaml|
+          graphqlSchema: |-
+            scalar DateTime
+
+            input DateTimeComparisons {in_year: Int
+              same_day_as: DateTime
+            }
           relationships: {}
+          scalarTypes:
+            DateTime:
+              comparisonType: DateTimeComparisons
         |]
 
 schemaCrudTests :: Fixture.Options -> SpecWith (TestEnvironment, a)

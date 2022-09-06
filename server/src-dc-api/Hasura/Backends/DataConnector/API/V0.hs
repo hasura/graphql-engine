@@ -9,7 +9,6 @@ module Hasura.Backends.DataConnector.API.V0
     module Explain,
     module Relationships,
     module Scalar.Type,
-    module Scalar.Value,
     module Schema,
     module Table,
   )
@@ -25,6 +24,5 @@ import Hasura.Backends.DataConnector.API.V0.OrderBy as OrderBy
 import Hasura.Backends.DataConnector.API.V0.Query as Query
 import Hasura.Backends.DataConnector.API.V0.Relationships as Relationships
 import Hasura.Backends.DataConnector.API.V0.Scalar.Type as Scalar.Type
-import Hasura.Backends.DataConnector.API.V0.Scalar.Value as Scalar.Value
 import Hasura.Backends.DataConnector.API.V0.Schema as Schema
 import Hasura.Backends.DataConnector.API.V0.Table as Table
