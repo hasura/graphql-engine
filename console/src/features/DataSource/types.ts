@@ -115,6 +115,10 @@ export type TableFkRelationships = {
   };
 };
 
+export type GetTablesListAsTreeProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
 type ReleaseType = 'GA' | 'Beta';
 
 export type DriverInfoResponse = {

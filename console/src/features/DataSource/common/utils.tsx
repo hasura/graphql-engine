@@ -1,4 +1,7 @@
 import get from 'lodash.get';
+import { FaFolder, FaTable } from 'react-icons/fa';
+import React from 'react';
+import { Table } from '@/features/MetadataAPI';
 import { IntrospectedTable, Property, Ref, TableColumn } from '../types';
 import { RunSQLResponse } from '../api';
 
@@ -62,4 +65,49 @@ export const adaptTableColumns = (
     name: row[0],
     dataType: row[1],
   }));
+};
+
+export const convertToTreeData = (
+  tables: Table[],
+  hierarchy: string[],
+  name: string
+): any => {
+  if (!hierarchy.length) return;
+
+  const key = hierarchy[0];
+
+  function onlyUnique(value: any, index: any, self: string | any[]) {
+    return self.indexOf(value) === index;
+  }
+
+  const levelValues: string[] = tables.map((t: any) => t[key]).filter(Boolean);
+
+  const uniqueLevelValues = levelValues.filter(onlyUnique);
+
+  return [
+    ...uniqueLevelValues.map(levelValue => {
+      // eslint-disable-next-line no-underscore-dangle
+      const _key = JSON.stringify({ ...JSON.parse(name), [key]: levelValue });
+      const children = convertToTreeData(
+        tables.filter((t: any) => t[key] === levelValue),
+        hierarchy.slice(1),
+        _key
+      );
+
+      if (!children)
+        return {
+          icon: <FaTable />,
+          title: levelValue,
+          key: _key,
+        };
+
+      return {
+        icon: <FaFolder />,
+        title: levelValue,
+        selectable: false,
+        children,
+        key: _key,
+      };
+    }),
+  ];
 };

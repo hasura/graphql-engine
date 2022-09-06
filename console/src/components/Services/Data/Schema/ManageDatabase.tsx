@@ -208,9 +208,17 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   inconsistentObjects,
   location,
   dataHeaders,
+  sourcesFromMetadata,
 }) => {
   useEffect(() => {
-    if (dataSources.length === 0 && !autoRedirectedToConnectPage) {
+    if (sourcesFromMetadata.length === 0 && !autoRedirectedToConnectPage) {
+      /**
+       * Because the getDataSources() doesn't list the GDC sources, the Data tab will redirect to the /connect page
+       * thinking that are no sources available in Hasura, even if there are GDC sources connected to it. Modifying getDataSources()
+       * to list gdc sources is a huge task that involves modifying redux state variables.
+       * So a quick workaround is to check from the actual metadata if any sources are present -
+       * Combined with checks between getDataSources() and metadata -> we know the remaining sources are GDC sources. In such a case redirect to the manage db route
+       */
       dispatch(_push('/data/manage/connect'));
       autoRedirectedToConnectPage = true;
     }
@@ -356,6 +364,7 @@ const mapStateToProps = (state: ReduxState) => {
     currentSchema: state.tables.currentSchema,
     inconsistentObjects: state.metadata.inconsistentObjects,
     location: state?.routing?.locationBeforeTransitions,
+    sourcesFromMetadata: state?.metadata?.metadataObject?.sources ?? [],
   };
 };
 

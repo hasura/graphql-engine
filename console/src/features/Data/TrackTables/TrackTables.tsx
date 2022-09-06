@@ -23,9 +23,9 @@ export const TrackTables = ({ dataSourceName }: Props) => {
     dataSourceName,
   });
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoading) return <div className="px-md">Loading...</div>;
 
-  if (!data) return <>Something went wrong</>;
+  if (!data) return <div className="px-md">Something went wrong</div>;
 
   const trackedTables = data.filter(({ is_tracked }) => is_tracked);
   const untrackedTables = data.filter(({ is_tracked }) => !is_tracked);

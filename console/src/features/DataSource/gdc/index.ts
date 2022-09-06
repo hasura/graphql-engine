@@ -1,4 +1,7 @@
 import { Database, Feature, Property } from '../index';
+import { getTablesListAsTree } from './introspection/getTablesListAsTree';
+
+export type GDCTable = string[];
 
 export const gdc: Database = {
   introspection: {
@@ -142,5 +145,6 @@ export const gdc: Database = {
       return Feature.NotImplemented;
     },
     getFKRelationships: async () => Feature.NotImplemented,
+    getTablesListAsTree,
   },
 };

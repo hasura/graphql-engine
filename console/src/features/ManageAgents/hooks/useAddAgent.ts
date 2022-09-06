@@ -49,11 +49,9 @@ export const useAddAgent = () => {
         {
           onSuccess: () => {
             if (onSuccess) onSuccess();
-            console.log('called inside hook');
           },
           onError: err => {
             if (onError) onError(err);
-            console.log('called inside hook', err);
           },
         }
       );

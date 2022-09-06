@@ -1,6 +1,6 @@
-import { RunSQLResponse } from '../../api';
-import { IntrospectedTable, TableColumn } from '../../types';
-import { adaptIntrospectedTables, adaptTableColumns } from '../utils';
+import { RunSQLResponse } from '../api';
+import { IntrospectedTable, TableColumn } from '../types';
+import { adaptIntrospectedTables, adaptTableColumns } from '../common/utils';
 
 describe('adaptIntrospectedTables', () => {
   it('adapts the sql response', () => {

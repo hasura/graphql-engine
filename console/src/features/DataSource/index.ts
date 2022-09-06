@@ -1,5 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
+import { DataNode } from 'antd/lib/tree';
 import { SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { postgres } from './postgres';
 import { bigquery } from './bigquery';
@@ -17,6 +18,7 @@ import type {
   TableFkRelationships,
   GetFKRelationshipProps,
   DriverInfoResponse,
+  GetTablesListAsTreeProps,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
@@ -61,6 +63,9 @@ export type Database = {
     getFKRelationships: (
       props: GetFKRelationshipProps
     ) => Promise<TableFkRelationships[] | Feature.NotImplemented>;
+    getTablesListAsTree: (
+      props: GetTablesListAsTreeProps
+    ) => Promise<DataNode | Feature.NotImplemented>;
   };
   query?: {
     getTableData: () => void;
@@ -93,7 +98,9 @@ const getDatabaseMethods = async ({
     );
   }
 
-  return drivers[dataSource.kind];
+  if (nativeDrivers.includes(dataSource.kind)) return drivers[dataSource.kind];
+
+  return drivers.gdc;
 };
 
 export const DataSource = (httpClient: AxiosInstance) => ({
@@ -260,6 +267,28 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (result === Feature.NotImplemented) return [];
 
     return result;
+  },
+  getTablesWithHierarchy: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) return null;
+
+    const introspection = database.introspection;
+
+    if (!introspection) return null;
+
+    const treeData = await introspection.getTablesListAsTree({
+      dataSourceName,
+      httpClient,
+    });
+
+    if (treeData === Feature.NotImplemented) return null;
+
+    return treeData;
   },
 });
 
