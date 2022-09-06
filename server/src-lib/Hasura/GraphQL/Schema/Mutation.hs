@@ -41,11 +41,13 @@ import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- insert
@@ -92,9 +94,12 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
           objects <- mkObjectsArg objectParser
           pure $ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms
     pure $
-      P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+        P.subselection fieldName description argsParser selectionParser
+          <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
   where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
     mkObjectsArg objectParser =
       P.field
         Name._objects
@@ -141,9 +146,12 @@ insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName d
           object <- mkObjectArg objectParser
           pure $ mkInsertObject [object] tableInfo backendInsert insertPerms updatePerms
     pure $
-      P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+        P.subselection fieldName description argsParser selectionParser
+          <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
   where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
     mkObjectArg objectParser =
       P.field
         Name._object
@@ -382,8 +390,12 @@ deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT 
     selection <- mutationSelectionSet sourceInfo tableInfo
     let columns = tableColumns tableInfo
     pure $
-      P.subselection fieldName description whereArg selection
-        <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutMultirowFields
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+        P.subselection fieldName description whereArg selection
+          <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutMultirowFields
+  where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
 
 -- | Construct a root field, normally called delete_tablename_by_pk, that can be used to delete an
 -- individual rows from a DB table, specified by primary key. Select permissions are required, as
@@ -415,8 +427,12 @@ deleteFromTableByPk scenario sourceInfo tableInfo fieldName description = runMay
   tCase <- asks getter
   let columns = tableColumns tableInfo
   pure $
-    P.subselection fieldName description pkArgs selection
-      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutSinglerowObject
+    P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+      P.subselection fieldName description pkArgs selection
+        <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutSinglerowObject
+  where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
 
 mkDeleteObject ::
   Backend b =>

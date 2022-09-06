@@ -625,8 +625,11 @@ buildRemoteSchemaParser ::
     (Maybe (RemoteSchemaParser P.Parse))
 buildRemoteSchemaParser remoteSchemaPermsCtx roleName context = do
   let maybeIntrospection = getIntrospectionResult remoteSchemaPermsCtx roleName context
-  for maybeIntrospection \introspection ->
-    buildRemoteParser introspection (_rscRemoteRelationships context) (_rscInfo context)
+  for maybeIntrospection \introspection -> do
+    RemoteSchemaParser {..} <- buildRemoteParser introspection (_rscRemoteRelationships context) (_rscInfo context)
+    pure $ RemoteSchemaParser (setOrigin piQuery) (setOrigin <$> piMutation) (setOrigin <$> piSubscription)
+  where
+    setOrigin = fmap (P.setFieldParserOrigin (MORemoteSchema (_rscName context)))
 
 -- | `buildQueryAndSubscriptionFields` builds the query and the subscription
 --   fields of the tables tracked in the source. The query root fields and

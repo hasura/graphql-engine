@@ -535,21 +535,21 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
         # NOTE: preserve ordering with ruamel
         conf = yml.load(c)
 
-    if isinstance(conf, list):
-        for ix, sconf in enumerate(conf):
-            actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
+        if isinstance(conf, list):
+            for ix, sconf in enumerate(conf):
+                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
+                if PytestConf.config.getoption("--accept") and not matched:
+                    conf[ix]['response'] = actual_resp
+                    should_write_back = True
+        else:
+            if conf['status'] != 200:
+                hge_ctx.may_skip_test_teardown = True
+            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
+            # If using `--accept` write the file back out with the new expected
+            # response set to the actual response we got:
             if PytestConf.config.getoption("--accept") and not matched:
-                conf[ix]['response'] = actual_resp
+                conf['response'] = actual_resp
                 should_write_back = True
-    else:
-        if conf['status'] != 200:
-            hge_ctx.may_skip_test_teardown = True
-        actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
-        # If using `--accept` write the file back out with the new expected
-        # response set to the actual response we got:
-        if PytestConf.config.getoption("--accept") and not matched:
-            conf['response'] = actual_resp
-            should_write_back = True
 
         if should_write_back:
             warnings.warn(

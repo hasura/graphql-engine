@@ -74,6 +74,7 @@ import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (executeJSONPath)
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -113,7 +114,7 @@ defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableArgsParser <- tableArguments sourceInfo tableInfo
     pure $
-      P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
         P.subselection fieldName description tableArgsParser selectionSetParser
           <&> \(args, fields) ->
             IR.AnnSelectG
@@ -125,6 +126,7 @@ defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
                 IR._asnNamingConvention = Just tCase
               }
   where
+    sourceName = _siName sourceInfo
     tableName = tableInfoName tableInfo
 
 -- | Simple table connection selection.
@@ -229,7 +231,7 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
           BoolField . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
             <$> P.field (ciName columnInfo) (ciDescription columnInfo) field
     pure $
-      P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
         P.subselection fieldName description argsParser selectionSetParser
           <&> \(boolExpr, fields) ->
             let defaultPerms = tablePermissionsInfo selectPermissions
@@ -245,6 +247,7 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
                     IR._asnNamingConvention = Just tCase
                   }
   where
+    sourceName = _siName sourceInfo
     tableName = tableInfoName tableInfo
 
 -- | Table aggregation selection
@@ -291,7 +294,7 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
                   IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
                 ]
     pure $
-      P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
         P.subselection fieldName description tableArgsParser aggregationParser
           <&> \(args, fields) ->
             IR.AnnSelectG
@@ -303,6 +306,7 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
                 IR._asnNamingConvention = Just tCase
               }
   where
+    sourceName = _siName sourceInfo
     tableName = tableInfoName tableInfo
 
 {- Note [Selectability of tables]
