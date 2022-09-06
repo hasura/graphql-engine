@@ -19,6 +19,7 @@ export const handlers = (delay = 0, url = 'http://localhost:8080') => {
     rest.post(`${url}/v1/metadata`, (req, res, ctx) => {
       const body = req.body as TMigration['query'];
 
+      console.log(body);
       switch (body?.type) {
         case 'export_metadata':
           return res(ctx.delay(delay), ctx.json(metadata));
@@ -60,6 +61,44 @@ export const handlers = (delay = 0, url = 'http://localhost:8080') => {
           metadata.metadata.query_collections = (
             metadata.metadata.query_collections || []
           ).filter(c => c.name !== collection);
+          return res(ctx.delay(delay), ctx.json(metadata));
+
+        case 'drop_collection_from_allowlist':
+          const dropCollection = body.args.collection;
+          if (
+            !(metadata.metadata.allowlist || []).find(
+              c => c.collection === dropCollection
+            )
+          ) {
+            return res(
+              ctx.delay(delay),
+              ctx.status(400),
+              ctx.json(notExistsResponse(dropCollection))
+            );
+          }
+          metadata.metadata.allowlist = (
+            metadata.metadata.allowlist || []
+          ).filter(c => c.collection !== dropCollection);
+          return res(ctx.delay(delay), ctx.json(metadata));
+
+        case 'add_collection_to_allowlist':
+          const addCollection = body.args.collection;
+          if (
+            (metadata.metadata.allowlist || []).find(
+              c => c.collection === addCollection
+            )
+          ) {
+            return res(
+              ctx.delay(delay),
+              ctx.status(400),
+              ctx.json(alreadyExistsResponse(addCollection))
+            );
+          }
+          metadata.metadata.allowlist = metadata.metadata.allowlist || [];
+          metadata.metadata.allowlist.push({
+            collection: addCollection,
+            scope: { global: true },
+          });
           return res(ctx.delay(delay), ctx.json(metadata));
 
         case 'rename_query_collection':

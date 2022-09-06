@@ -1,10 +1,15 @@
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
+import {
+  useAddToAllowList,
+  useRemoveFromAllowList,
+} from '@/features/AllowLists';
+import { useMetadata } from '@/features/MetadataAPI';
 import { QueryCollectionEntry } from '@/metadata/types';
 import { Button } from '@/new-components/Button';
 import { DropdownMenu } from '@/new-components/DropdownMenu';
 import React, { useState } from 'react';
 import { FaEllipsisH, FaPlusCircle } from 'react-icons/fa';
-import { useDeleteQueryCollections } from '../../../QueryCollections/hooks/useDeleteQueryCollections';
+import { useDeleteQueryCollections } from '../hooks/useDeleteQueryCollections';
 import { QueryCollectionRenameDialog } from './QueryCollectionRenameDialog';
 
 interface QueryCollectionHeaderProps {
@@ -15,7 +20,13 @@ export const QueryCollectionHeader: React.FC<QueryCollectionHeaderProps> =
     const { queryCollection } = props;
 
     const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-    const { deleteQueryCollection } = useDeleteQueryCollections();
+    const { deleteQueryCollection, isLoading: deleteLoading } =
+      useDeleteQueryCollections();
+    const { addToAllowList, isLoading: addLoading } = useAddToAllowList();
+    const { removeFromAllowList, isLoading: removeLoding } =
+      useRemoveFromAllowList();
+
+    const { data: metadata } = useMetadata();
     return (
       <>
         {isRenameModalOpen && (
@@ -49,6 +60,43 @@ export const QueryCollectionHeader: React.FC<QueryCollectionHeaderProps> =
                   >
                     Edit Collection Name
                   </div>,
+                  metadata?.metadata.allowlist?.find(
+                    entry => entry.collection === queryCollection.name
+                  ) ? (
+                    <div
+                      className="font-semibold"
+                      onClick={() => {
+                        removeFromAllowList(queryCollection.name, {
+                          onSuccess: () => {
+                            // fire notification
+                          },
+                          onError: () => {
+                            // fire notification
+                          },
+                        });
+                      }}
+                    >
+                      Remove from Allow List
+                    </div>
+                  ) : (
+                    <div
+                      className="font-semibold"
+                      onClick={() => {
+                        addToAllowList(queryCollection.name, {
+                          onSuccess: () => {
+                            // fire notification
+                          },
+                          onError: () => {
+                            // fire notification
+                          },
+                        });
+                      }}
+                    >
+                      Add to Allow List
+                    </div>
+                  ),
+                ],
+                [
                   <div
                     className="font-semibold text-red-600"
                     onClick={() => {
@@ -75,7 +123,7 @@ export const QueryCollectionHeader: React.FC<QueryCollectionHeaderProps> =
                 ],
               ]}
             >
-              <Button>
+              <Button isLoading={deleteLoading || addLoading || removeLoding}>
                 <FaEllipsisH />
               </Button>
             </DropdownMenu>
