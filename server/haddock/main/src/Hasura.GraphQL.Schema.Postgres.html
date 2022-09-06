@@ -10,27 +10,42 @@
 </span><span id="line-10"></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Action.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Action</span></a></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier">MonadBuildSchema</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier">FieldParser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.html"><span class="hs-identifier">Hasura.RQL.IR</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html"><span class="hs-identifier">Hasura.RQL.Types.Action</span></a></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html"><span class="hs-identifier">Hasura.RQL.Types.CustomTypes</span></a></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
-</span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span id="local-6989586621689747990"><span id="local-6989586621689747991"><span id="local-6989586621689747992"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionQueryFields"><span class="hs-identifier hs-type">buildActionQueryFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689747992"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747991"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747990"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-23"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-24"></span><span>  </span><span class="annot"><a href="#local-6989586621689747991"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747990"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
-</span><span id="line-25"></span><span id="buildActionQueryFields"><span class="annot"><span class="annottext">buildActionQueryFields :: AnnotatedCustomTypes
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Object</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span id="local-6989586621689750994"><span id="local-6989586621689750995"><span id="local-6989586621689750996"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionQueryFields"><span class="hs-identifier hs-type">buildActionQueryFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689750996"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750995"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750994"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><a href="#local-6989586621689750995"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750994"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-26"></span><span id="buildActionQueryFields"><span class="annot"><span class="annottext">buildActionQueryFields :: AnnotatedCustomTypes
 -&gt; ActionInfo -&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
-</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionQueryFields"><span class="hs-identifier hs-var hs-var">buildActionQueryFields</span></a></span></span><span> </span><span id="local-6989586621689747989"><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747989"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621689747988"><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747988"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-26"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionQueryFields"><span class="hs-identifier hs-var hs-var">buildActionQueryFields</span></a></span></span><span> </span><span id="local-6989586621689750993"><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621689750993"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621689750992"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750992"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 -&gt; [FieldParser n (QueryRootField UnpreparedValue)]
 forall a. Maybe a -&gt; [a]
 </span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (QueryRootField UnpreparedValue))
+ -&gt; [FieldParser n (QueryRootField UnpreparedValue)])
+-&gt; (Maybe (FieldParser n (QueryRootField UnpreparedValue))
+    -&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; [FieldParser n (QueryRootField UnpreparedValue)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall (n :: * -&gt; *) a.
+ActionInfo -&gt; Maybe (FieldParser n a) -&gt; Maybe (FieldParser n a)
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#applyActionOrigin"><span class="hs-identifier hs-var">applyActionOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750992"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (QueryRootField UnpreparedValue))
  -&gt; [FieldParser n (QueryRootField UnpreparedValue)])
 -&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
 -&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
@@ -43,10 +58,10 @@ forall arg webhook. ActionDefinition arg webhook -&gt; ActionType
 -&gt; ActionDefinition
      (GType, AnnotatedInputType) (EnvRecord ResolvedWebhook)
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747988"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">ActionType
+</span><a href="#local-6989586621689750992"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-29"></span><span>      </span><span class="annot"><span class="annottext">ActionType
 </span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-28"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+</span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">(FieldParser
    MetadataObjId
    n
    (AnnActionExecution (RemoteRelationshipField UnpreparedValue))
@@ -108,18 +123,18 @@ AnnotatedCustomTypes
         (FieldParser
            n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
 </span><a href="Hasura.GraphQL.Schema.Action.html#actionExecute"><span class="hs-identifier hs-var">actionExecute</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747989"><span class="hs-identifier hs-var">customTypes</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747988"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
-</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="#local-6989586621689750993"><span class="hs-identifier hs-var">customTypes</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750992"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-31"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
 </span><a href="Hasura.RQL.Types.Action.html#ActionSynchronous"><span class="hs-identifier hs-var">ActionSynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 -&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><span id="line-32"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
 </span><a href="Hasura.RQL.Types.Action.html#ActionAsynchronous"><span class="hs-identifier hs-var">ActionAsynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-31"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+</span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">(FieldParser
    MetadataObjId
    n
    (AnnActionAsyncQuery
@@ -195,24 +210,38 @@ HashMap Name AnnotatedObjectType
               ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
 </span><a href="Hasura.GraphQL.Schema.Action.html#actionAsyncQuery"><span class="hs-identifier hs-var">actionAsyncQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedCustomTypes -&gt; HashMap Name AnnotatedObjectType
 </span><a href="Hasura.RQL.Types.CustomTypes.html#_actObjectTypes"><span class="hs-identifier hs-var hs-var">_actObjectTypes</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747989"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747988"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
-</span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span id="local-6989586621689747970"><span id="local-6989586621689747971"><span id="local-6989586621689747972"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionMutationFields"><span class="hs-identifier hs-type">buildActionMutationFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689747972"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747971"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747970"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-37"></span><span>  </span><span class="annot"><a href="#local-6989586621689747971"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747970"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier hs-type">MutationRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
-</span><span id="line-38"></span><span id="buildActionMutationFields"><span class="annot"><span class="annottext">buildActionMutationFields :: AnnotatedCustomTypes
+</span><a href="#local-6989586621689750993"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750992"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span id="local-6989586621689750973"><span id="local-6989586621689750974"><span id="local-6989586621689750975"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionMutationFields"><span class="hs-identifier hs-type">buildActionMutationFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689750975"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750974"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750973"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><a href="#local-6989586621689750974"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750973"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier hs-type">MutationRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-40"></span><span id="buildActionMutationFields"><span class="annot"><span class="annottext">buildActionMutationFields :: AnnotatedCustomTypes
 -&gt; ActionInfo
 -&gt; m [FieldParser n (MutationRootField UnpreparedValue)]
-</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionMutationFields"><span class="hs-identifier hs-var hs-var">buildActionMutationFields</span></a></span></span><span> </span><span id="local-6989586621689747969"><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747969"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621689747968"><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747968"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (MutationRootField UnpreparedValue))
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionMutationFields"><span class="hs-identifier hs-var hs-var">buildActionMutationFields</span></a></span></span><span> </span><span id="local-6989586621689750972"><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621689750972"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621689750971"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750971"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (MutationRootField UnpreparedValue))
 -&gt; [FieldParser n (MutationRootField UnpreparedValue)]
 forall a. Maybe a -&gt; [a]
 </span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (MutationRootField UnpreparedValue))
+ -&gt; [FieldParser n (MutationRootField UnpreparedValue)])
+-&gt; (Maybe (FieldParser n (MutationRootField UnpreparedValue))
+    -&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue)))
+-&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue))
+-&gt; [FieldParser n (MutationRootField UnpreparedValue)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+-&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue))
+-&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue))
+forall (n :: * -&gt; *) a.
+ActionInfo -&gt; Maybe (FieldParser n a) -&gt; Maybe (FieldParser n a)
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#applyActionOrigin"><span class="hs-identifier hs-var">applyActionOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750971"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (MutationRootField UnpreparedValue))
  -&gt; [FieldParser n (MutationRootField UnpreparedValue)])
 -&gt; m (Maybe (FieldParser n (MutationRootField UnpreparedValue)))
 -&gt; m [FieldParser n (MutationRootField UnpreparedValue)]
@@ -225,17 +254,17 @@ forall arg webhook. ActionDefinition arg webhook -&gt; ActionType
 -&gt; ActionDefinition
      (GType, AnnotatedInputType) (EnvRecord ResolvedWebhook)
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747968"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">ActionType
+</span><a href="#local-6989586621689750971"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">ActionType
 </span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (MutationRootField UnpreparedValue))
 -&gt; m (Maybe (FieldParser n (MutationRootField UnpreparedValue)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (MutationRootField UnpreparedValue))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><span id="line-44"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
 </span><a href="Hasura.RQL.Types.Action.html#ActionSynchronous"><span class="hs-identifier hs-var">ActionSynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">(FieldParser
    MetadataObjId
    n
    (AnnActionExecution (RemoteRelationshipField UnpreparedValue))
@@ -297,11 +326,11 @@ AnnotatedCustomTypes
         (FieldParser
            n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
 </span><a href="Hasura.GraphQL.Schema.Action.html#actionExecute"><span class="hs-identifier hs-var">actionExecute</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747969"><span class="hs-identifier hs-var">customTypes</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747968"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
-</span><span id="line-43"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="#local-6989586621689750972"><span class="hs-identifier hs-var">customTypes</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750971"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
 </span><a href="Hasura.RQL.Types.Action.html#ActionAsynchronous"><span class="hs-identifier hs-var">ActionAsynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser MetadataObjId n AnnActionMutationAsync
+</span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">(FieldParser MetadataObjId n AnnActionMutationAsync
  -&gt; FieldParser n (MutationRootField UnpreparedValue))
 -&gt; Maybe (FieldParser MetadataObjId n AnnActionMutationAsync)
 -&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue))
@@ -338,23 +367,37 @@ HashMap Name AnnotatedInputType
 -&gt; ActionInfo -&gt; m (Maybe (FieldParser n AnnActionMutationAsync))
 </span><a href="Hasura.GraphQL.Schema.Action.html#actionAsyncMutation"><span class="hs-identifier hs-var">actionAsyncMutation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedCustomTypes -&gt; HashMap Name AnnotatedInputType
 </span><a href="Hasura.RQL.Types.CustomTypes.html#_actInputTypes"><span class="hs-identifier hs-var hs-var">_actInputTypes</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747969"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747968"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
-</span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span id="local-6989586621689747961"><span id="local-6989586621689747962"><span id="local-6989586621689747963"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionSubscriptionFields"><span class="hs-identifier hs-type">buildActionSubscriptionFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689747963"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747962"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747961"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-49"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-50"></span><span>  </span><span class="annot"><a href="#local-6989586621689747962"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747961"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
-</span><span id="line-51"></span><span id="buildActionSubscriptionFields"><span class="annot"><span class="annottext">buildActionSubscriptionFields :: AnnotatedCustomTypes
+</span><a href="#local-6989586621689750972"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750971"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span id="local-6989586621689750964"><span id="local-6989586621689750965"><span id="local-6989586621689750966"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionSubscriptionFields"><span class="hs-identifier hs-type">buildActionSubscriptionFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689750966"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750965"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750964"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="#local-6989586621689750965"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689750964"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-54"></span><span id="buildActionSubscriptionFields"><span class="annot"><span class="annottext">buildActionSubscriptionFields :: AnnotatedCustomTypes
 -&gt; ActionInfo -&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
-</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionSubscriptionFields"><span class="hs-identifier hs-var hs-var">buildActionSubscriptionFields</span></a></span></span><span> </span><span id="local-6989586621689747960"><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747960"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621689747959"><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747959"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionSubscriptionFields"><span class="hs-identifier hs-var hs-var">buildActionSubscriptionFields</span></a></span></span><span> </span><span id="local-6989586621689750963"><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621689750963"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621689750962"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750962"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 -&gt; [FieldParser n (QueryRootField UnpreparedValue)]
 forall a. Maybe a -&gt; [a]
 </span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (QueryRootField UnpreparedValue))
+ -&gt; [FieldParser n (QueryRootField UnpreparedValue)])
+-&gt; (Maybe (FieldParser n (QueryRootField UnpreparedValue))
+    -&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; [FieldParser n (QueryRootField UnpreparedValue)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall (n :: * -&gt; *) a.
+ActionInfo -&gt; Maybe (FieldParser n a) -&gt; Maybe (FieldParser n a)
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#applyActionOrigin"><span class="hs-identifier hs-var">applyActionOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750962"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (QueryRootField UnpreparedValue))
  -&gt; [FieldParser n (QueryRootField UnpreparedValue)])
 -&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
 -&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
@@ -367,24 +410,24 @@ forall arg webhook. ActionDefinition arg webhook -&gt; ActionType
 -&gt; ActionDefinition
      (GType, AnnotatedInputType) (EnvRecord ResolvedWebhook)
 </span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747959"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">ActionType
+</span><a href="#local-6989586621689750962"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">ActionType
 </span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 -&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-54"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><span id="line-58"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
 </span><a href="Hasura.RQL.Types.Action.html#ActionSynchronous"><span class="hs-identifier hs-var">ActionSynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 -&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><span id="line-59"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
 </span><a href="Hasura.RQL.Types.Action.html#ActionAsynchronous"><span class="hs-identifier hs-var">ActionAsynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+</span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">(FieldParser
    MetadataObjId
    n
    (AnnActionAsyncQuery
@@ -460,6 +503,23 @@ HashMap Name AnnotatedObjectType
               ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
 </span><a href="Hasura.GraphQL.Schema.Action.html#actionAsyncQuery"><span class="hs-identifier hs-var">actionAsyncQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedCustomTypes -&gt; HashMap Name AnnotatedObjectType
 </span><a href="Hasura.RQL.Types.CustomTypes.html#_actObjectTypes"><span class="hs-identifier hs-var hs-var">_actObjectTypes</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
-</span><a href="#local-6989586621689747960"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
-</span><a href="#local-6989586621689747959"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
-</span><span id="line-57"></span></pre></body></html>
+</span><a href="#local-6989586621689750963"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750962"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span id="local-6989586621689751061"><span id="local-6989586621689751062"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#applyActionOrigin"><span class="hs-identifier hs-type">applyActionOrigin</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689751062"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689751061"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689751062"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689751061"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-66"></span><span id="applyActionOrigin"><span class="annot"><span class="annottext">applyActionOrigin :: ActionInfo -&gt; Maybe (FieldParser n a) -&gt; Maybe (FieldParser n a)
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#applyActionOrigin"><span class="hs-identifier hs-var hs-var">applyActionOrigin</span></a></span></span><span> </span><span id="local-6989586621689750961"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750961"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(FieldParser n a -&gt; FieldParser n a)
+-&gt; Maybe (FieldParser n a) -&gt; Maybe (FieldParser n a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataObjId -&gt; FieldParser n a -&gt; FieldParser n a
+forall (m :: * -&gt; *) origin a.
+origin -&gt; FieldParser origin m a -&gt; FieldParser origin m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">setFieldParserOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionName -&gt; MetadataObjId
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#MOAction"><span class="hs-identifier hs-var">MOAction</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionInfo -&gt; ActionName
+</span><a href="Hasura.RQL.Types.Action.html#_aiName"><span class="hs-identifier hs-var hs-var">_aiName</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621689750961"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span></pre></body></html>
