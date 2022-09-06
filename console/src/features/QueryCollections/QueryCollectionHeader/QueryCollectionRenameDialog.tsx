@@ -2,7 +2,7 @@ import React from 'react';
 import z from 'zod';
 import { Dialog } from '@/new-components/Dialog';
 import { Form, InputField } from '@/new-components/Form';
-import { useRenameQueryCollection } from '../../../QueryCollections/hooks/useRenameQueryCollection';
+import { useRenameQueryCollection } from '../hooks/useRenameQueryCollection';
 
 interface QueryCollectionCreateDialogProps {
   onClose: () => void;

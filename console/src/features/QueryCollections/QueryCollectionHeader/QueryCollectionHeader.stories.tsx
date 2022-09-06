@@ -4,11 +4,11 @@ import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta } from '@storybook/react';
 
 import { QueryCollectionHeader } from './QueryCollectionHeader';
-import { handlers } from '../../../QueryCollections/hooks/useQueryCollections/mocks/handlers.mock';
-import { createMetadata } from '../../../QueryCollections/hooks/useQueryCollections/mocks/mockData';
+import { handlers } from '../hooks/useQueryCollections/mocks/handlers.mock';
+import { createMetadata } from '../hooks/useQueryCollections/mocks/mockData';
 
 export default {
-  title: 'Features/Allow List/Query Collection Header',
+  title: 'Features/Query Collections/Query Collection Header',
   component: QueryCollectionHeader,
   decorators: [
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
