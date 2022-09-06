@@ -531,10 +531,9 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         out(        f"{col( )}    └{'─'*(len(benchmark_set_name)+4)}┘")
         out(        f"{col( )}                                       ")
         out(        f"{col( )}    ᐉ  Memory Residency (RTS-reported):")
+        out(        f"{col(u0)}        {'mem_in_use':<25}:  {u0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
         out(        f"{col(l0)}        {'live_bytes':<25}:  {l0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
         out(        f"{col(l1)}        {'live_bytes':<25}:  {l1:>6.1f}   (AFTER benchmarks ran)")
-        out(        f"{col(u0)}        {'mem_in_use':<25}:  {u0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
-        out(        f"{col(u1)}        {'mem_in_use':<25}:  {u1:>6.1f}   (AFTER benchmarks ran)")
         for bench_name, metrics in benchmarks:
             out(    f"{col( )}                                       ")
             out(    f"{col( )}    ᐅ {bench_name.replace('-k6-custom','').replace('_',' ')}:")
