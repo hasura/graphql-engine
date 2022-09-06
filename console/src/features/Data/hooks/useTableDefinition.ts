@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 //  TYPES
 export type QueryStringParseResult =
   | {
@@ -30,7 +28,6 @@ const invalidDatabaseDefinitionResult: QueryStringParseResult = {
 //  FUNCTION
 const getTableDefinition = (location: Location): QueryStringParseResult => {
   if (!location.search) return invalidTableDefinitionResult;
-
   // if tableDefinition is present in query params;
   // Idea is to use query params for GDC tables
   const params = new URLSearchParams(location.search);
@@ -58,5 +55,5 @@ const getTableDefinition = (location: Location): QueryStringParseResult => {
 };
 
 export const useTableDefinition = (location = window.location) => {
-  return useMemo(() => getTableDefinition(location), [location]);
+  return getTableDefinition(location);
 };

@@ -49,7 +49,6 @@ type GetItemsArgs = {
 };
 
 export const getItems = ({ property, otherSchemas }: GetItemsArgs) => {
-  console.log('getItems', property, otherSchemas);
   return isRef(property.items)
     ? get(otherSchemas, property.items.$ref.split('/').slice(2).join('.'))
     : property.items;

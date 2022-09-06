@@ -4,6 +4,7 @@ import {
   getTrackableTables,
   getTableColumns,
   getFKRelationships,
+  getTablesListAsTree,
 } from './introspection';
 
 export type PostgresTable = { name: string; schema: string };
@@ -22,5 +23,6 @@ export const postgres: Database = {
     },
     getTableColumns,
     getFKRelationships,
+    getTablesListAsTree,
   },
 };

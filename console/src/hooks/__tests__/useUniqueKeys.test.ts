@@ -78,7 +78,6 @@ describe("useUniqueKeys hooks' mssql test", () => {
     await waitForValueToChange(() => result.current.isSuccess);
 
     const firstResult = result.current.data![0];
-    console.log({ firstResult });
 
     expect(firstResult.table_schema).toEqual('dbo');
     expect(firstResult.table_name).toEqual('citizens');

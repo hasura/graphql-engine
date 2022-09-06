@@ -51,8 +51,6 @@ describe('useListAvailableAgentsFromMetadata tests: ', () => {
 
     await waitFor(() => result.current.isSuccess);
 
-    console.log(result.current);
-
     expect(result.current.data).toEqual(expectedResult);
   });
 });

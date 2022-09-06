@@ -31,7 +31,7 @@ type Props = {
 /* 
   This component is still very much in development and will be changed once we have an API that tells us about the hierarchy of a GDC source
   Until then, this component is more or less a POC/experminatal in nature and tests for its accompaniying story have not been included for this reason.
-  If you wish to test out this component, head over to src/utils/featureFlags.ts and edit the GDC_TREE_VIEW_DEV to enabled to view it the console with mock data
+  If you wish to test out this component, go to the settings > feature flag and enable "Experimental features for GDC"
 */
 
 export const GDCTree = (props: Props) => {
@@ -39,7 +39,6 @@ export const GDCTree = (props: Props) => {
 
   const activeKey = isGDCRouteActive ? getCurrentActiveKeys() : [];
   const { data: gdcDatabases } = useTreeData();
-
   if (!gdcDatabases || gdcDatabases.length === 0) return null;
 
   return (
