@@ -40,9 +40,11 @@ import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier, applyTypeNameCaseIdentifier, mkTableOperatorInputTypeName, mkTablePkColumnsInputTypeName)
 import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..), Nullability (..), litName)
 
 -- | @UpdateOperator b m n op@ represents one single update operator for a
@@ -272,8 +274,7 @@ updateTable ::
   Maybe Description ->
   m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 updateTable backendUpdate scenario sourceInfo tableInfo fieldName description = runMaybeT do
-  let tableName = tableInfoName tableInfo
-      columns = tableColumns tableInfo
+  let columns = tableColumns tableInfo
       whereName = $$(litName "where")
       whereDesc = "filter the rows which have to be updated"
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
@@ -288,8 +289,12 @@ updateTable backendUpdate scenario sourceInfo tableInfo fieldName description = 
   tCase <- asks getter
   let argsParser = liftA2 (,) backendUpdate whereArg
   pure $
-    P.subselection fieldName description argsParser selection
-      <&> mkUpdateObject tableName columns updatePerms (Just tCase) . fmap MOutMultirowFields
+    P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+      P.subselection fieldName description argsParser selection
+        <&> mkUpdateObject tableName columns updatePerms (Just tCase) . fmap MOutMultirowFields
+  where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
 
 -- | Construct a root field, normally called 'update_tablename_by_pk', that can be used
 -- to update a single in a DB table, specified by primary key. Only returns a
@@ -313,7 +318,6 @@ updateTableByPk ::
   m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 updateTableByPk backendUpdate scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let columns = tableColumns tableInfo
-      tableName = tableInfoName tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
   roleName <- retrieve scRole
@@ -332,8 +336,12 @@ updateTableByPk backendUpdate scenario sourceInfo tableInfo fieldName descriptio
         pkParser = P.object pkObjectName (Just pkObjectDesc) pkArgs
         argsParser = (,) <$> backendUpdate <*> P.field pkFieldName Nothing pkParser
     pure $
-      P.subselection fieldName description argsParser selection
-        <&> mkUpdateObject tableName columns updatePerms (Just tCase) . fmap MOutSinglerowObject
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+        P.subselection fieldName description argsParser selection
+          <&> mkUpdateObject tableName columns updatePerms (Just tCase) . fmap MOutSinglerowObject
+  where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
 
 mkUpdateObject ::
   Backend b =>

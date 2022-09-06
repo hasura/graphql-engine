@@ -17,18 +17,21 @@
     type: set_custom_types
     args:
       objects:
-        - name: UserId
-          fields:
-            - name: id
-              type: Int!
+      - name: UserId
+        fields:
+        - name: id
+          type: Int!
 
-- description: Create an action with a same name with a mutation that's created by tracking "user" table
+- description: Create an action with a same name with a mutation that's created by
+    tracking "user" table
   url: /v1/query
   status: 500
   response:
-    path: "$.args"
     code: unexpected
-    error: "found duplicate fields in selection set for mutation root: ['insert_user']"
+    error: >-
+      found duplicate fields in selection set for mutation root: ['insert_user'
+      (generated for [action insert_user, table user in source default])]
+    path: $.args
   query:
     type: create_action
     args:
@@ -36,9 +39,9 @@
       definition:
         kind: synchronous
         arguments:
-          - name: email
-            type: Int!
-          - name: name
-            type: String!
+        - name: email
+          type: Int!
+        - name: name
+          type: String!
         output_type: UserId!
-        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
+        handler: '{{ACTION_WEBHOOK_HANDLER}}/create-user'
