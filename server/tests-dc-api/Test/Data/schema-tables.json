@@ -189,13 +189,13 @@
       },
       {
         "name": "BirthDate",
-        "type": "string",
+        "type": "DateTime",
         "nullable": true,
         "description": "The employee's birth date"
       },
       {
         "name": "HireDate",
-        "type": "string",
+        "type": "DateTime",
         "nullable": true,
         "description": "The employee's hire date"
       },
@@ -295,7 +295,7 @@
       },
       {
         "name": "InvoiceDate",
-        "type": "string",
+        "type": "DateTime",
         "nullable": false,
         "description": "Date of the invoice"
       },
