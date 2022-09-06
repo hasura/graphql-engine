@@ -448,7 +448,10 @@ def generate_regression_report():
                 # filter response body size unless it changes significantly, since this is rare:
                 if abs(response_body_change) > 1:
                     metrics['response_body_size'] = response_body_change
-            except KeyError:
+            # We need to catch division by zero here for adhoc mode queries
+            # (where we just set total_bytes to 0 for now), but probably want
+            # to keep this in even if that changes.
+            except (ZeroDivisionError, KeyError):
                 pass
             # NOTE: we decided to omit higher-percentile latencies here since
             # they are noisy (which might lead to people ignoring benchmarks)
