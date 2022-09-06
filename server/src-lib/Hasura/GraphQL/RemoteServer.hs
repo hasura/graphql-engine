@@ -24,9 +24,6 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Monad (Parse)
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.Typename
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -82,8 +79,8 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   -- properly for each role at schema generation time, but this allows us to
   -- quickly reject an invalid schema.
   void $
-    flip runReaderT minimumValidContext $
-      runMemoizeT $
+    runMemoizeT $
+      runRemoteSchema minimumValidContext $
         buildRemoteParser @_ @_ @Parse
           _rscIntroOriginal
           _rscRemoteRelationships
@@ -117,28 +114,10 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
     -- Minimum valid information required to run schema generation for
     -- the remote schema.
     minimumValidContext =
-      ( mempty :: CustomizeRemoteFieldName,
-        mempty :: MkTypename,
-        mempty :: MkRootFieldName,
-        HasuraCase,
-        SchemaOptions
-          { -- doesn't apply to remote schemas
-            soStringifyNumbers = Options.Don'tStringifyNumbers,
-            -- doesn't apply to remote schemas
-            soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans,
-            -- we don't support remote schemas in Relay, but the check is
-            -- performed ahead of time, meaning that the value here is
-            -- irrelevant
-            -- doesn't apply to remote schemas
-            soInferFunctionPermissions = Options.InferFunctionPermissions,
-            -- doesn't apply to remote schemas
-            soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters
-          },
-        SchemaContext
-          HasuraSchema
-          ignoreRemoteRelationship
-          adminRoleName
-      )
+      SchemaContext
+        HasuraSchema
+        ignoreRemoteRelationship
+        adminRoleName
 
 -- | Sends a GraphQL query to the given server.
 execRemoteGQ ::

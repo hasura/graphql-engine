@@ -25,7 +25,6 @@ import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
     Kind (..),
-    MonadMemoize,
     MonadParse,
     Parser,
   )
@@ -183,7 +182,7 @@ bqComparisonExps ::
   forall m n r.
   (MonadBuildSchema 'BigQuery r m n) =>
   ColumnType 'BigQuery ->
-  m (Parser 'Input n [ComparisonExp 'BigQuery])
+  SchemaT r m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
@@ -311,8 +310,8 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  (MonadMemoize m, MonadBuildSchema 'BigQuery r m n) =>
-  m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
+  MonadBuildSchema 'BigQuery r m n =>
+  SchemaT r m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
   -- practically BigQuery (as of 2021-11-19) doesn't support TRUE as use_spheroid parameter for ST_DWITHIN
@@ -332,7 +331,7 @@ bqComputedField ::
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
-  m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
+  SchemaT r m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
 bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   roleName <- retrieve scRole
@@ -391,7 +390,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
 
     selectArbitraryField ::
       (BigQuery.ColumnName, G.Name, BigQuery.ScalarType) ->
-      m (FieldParser n (AnnotatedField 'BigQuery))
+      SchemaT r m (FieldParser n (AnnotatedField 'BigQuery))
     selectArbitraryField (columnName, graphQLName, columnType) = do
       field <- columnParser @'BigQuery (ColumnScalar columnType) (G.Nullability True)
       pure $
@@ -400,7 +399,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
 
     computedFieldFunctionArgs ::
       ComputedFieldFunction 'BigQuery ->
-      m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
+      SchemaT r m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
     computedFieldFunctionArgs ComputedFieldFunction {..} = do
       let fieldName = Name._args
           fieldDesc =
@@ -425,7 +424,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
 
       pure $ P.field fieldName (Just fieldDesc) objectParser
 
-    parseArgument :: BigQuery.FunctionArgument -> m (InputFieldsParser n (Text, BigQuery.ArgumentExp (IR.UnpreparedValue 'BigQuery)))
+    parseArgument :: BigQuery.FunctionArgument -> SchemaT r m (InputFieldsParser n (Text, BigQuery.ArgumentExp (IR.UnpreparedValue 'BigQuery)))
     parseArgument arg = do
       typedParser <- columnParser (ColumnScalar $ BigQuery._faType arg) (G.Nullability False)
       let argumentName = getFuncArgNameTxt $ BigQuery._faName arg

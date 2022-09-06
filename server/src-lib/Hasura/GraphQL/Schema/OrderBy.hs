@@ -64,7 +64,7 @@ orderByExp ::
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableInfo b ->
-  m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
+  SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
 orderByExp sourceInfo tableInfo = P.memoizeOn 'orderByExp (_siName sourceInfo, tableInfoName tableInfo) $ do
   tCase <- asks getter
   tableGQLName <- getTableIdentifierName tableInfo
@@ -79,7 +79,7 @@ orderByExp sourceInfo tableInfo = P.memoizeOn 'orderByExp (_siName sourceInfo, t
     mkField ::
       NamingCase ->
       FieldInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])))
+      SchemaT r m (Maybe (InputFieldsParser n (Maybe [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])))
     mkField tCase fieldInfo = runMaybeT $ do
       roleName <- retrieve scRole
       case fieldInfo of
@@ -155,7 +155,7 @@ orderByAggregation ::
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableInfo b ->
-  m (Parser 'Input n [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
+  SchemaT r m (Parser 'Input n [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
 orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siName sourceInfo, tableName) do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields

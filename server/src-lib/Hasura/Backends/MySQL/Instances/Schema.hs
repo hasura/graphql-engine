@@ -5,7 +5,6 @@
 module Hasura.Backends.MySQL.Instances.Schema () where
 
 import Data.ByteString (ByteString)
-import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
@@ -21,13 +20,11 @@ import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
-    MonadMemoize,
     MonadParse,
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
-import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -71,7 +68,7 @@ mysqlTableArgs ::
   MonadBuildSchema 'MySQL r m n =>
   RQL.SourceInfo 'MySQL ->
   TableInfo 'MySQL ->
-  m (InputFieldsParser n (IR.SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
+  SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
 mysqlTableArgs sourceInfo tableInfo = do
   whereParser <- tableWhereArg sourceInfo tableInfo
   orderByParser <- tableOrderByArg sourceInfo tableInfo
@@ -93,10 +90,10 @@ bsParser :: MonadParse m => Parser 'Both m ByteString
 bsParser = encodeUtf8 <$> P.string
 
 columnParser' ::
-  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  MonadBuildSchema 'MySQL r m n =>
   ColumnType 'MySQL ->
   GQL.Nullability ->
-  m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
+  SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
 columnParser' columnType (GQL.Nullability isNullable) =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
@@ -174,9 +171,9 @@ orderByOperators' _tCase =
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
   forall m n r.
-  (BackendSchema 'MySQL, MonadMemoize m, MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  MonadBuildSchema 'MySQL r m n =>
   ColumnType 'MySQL ->
-  m (Parser 'Input n [ComparisonExp 'MySQL])
+  SchemaT r m (Parser 'Input n [ComparisonExp 'MySQL])
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (GQL.Nullability False)

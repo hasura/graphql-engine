@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.Common
     NodeInterfaceParserBuilder (..),
     MonadBuildSchemaBase,
     retrieve,
+    SchemaT (..),
     MonadBuildSourceSchema,
     MonadBuildRemoteSchema,
     runSourceSchema,
@@ -105,15 +106,9 @@ isHasuraSchema = \case
 -- | The set of common constraints required to build the schema.
 type MonadBuildSchemaBase r m n =
   ( MonadError QErr m,
-    MonadReader r m,
     P.MonadMemoize m,
     P.MonadParse n,
-    Has SchemaOptions r,
-    Has SchemaContext r,
-    -- TODO: make all `Has x r` explicit fields of 'SchemaContext'
-    Has MkTypename r,
-    Has CustomizeRemoteFieldName r,
-    Has NamingCase r
+    Has SchemaContext r
   )
 
 -- | How a remote relationship field should be processed when building a
@@ -130,7 +125,7 @@ newtype RemoteRelationshipParserBuilder
       ( forall lhsJoinField r n m.
         MonadBuildSchemaBase r m n =>
         RemoteFieldInfo lhsJoinField ->
-        m (Maybe [P.FieldParser n (IR.RemoteRelationshipField IR.UnpreparedValue)])
+        SchemaT r m (Maybe [P.FieldParser n (IR.RemoteRelationshipField IR.UnpreparedValue)])
       )
 
 -- | A 'RemoteRelationshipParserBuilder' that ignores the field altogether, that can
@@ -145,9 +140,9 @@ ignoreRemoteRelationship = RemoteRelationshipParserBuilder $ const $ pure Nothin
 -- the cross-sources cycles it creates otherwise.
 newtype NodeInterfaceParserBuilder = NodeInterfaceParserBuilder
   { runNodeBuilder ::
-      ( forall r n m.
-        MonadBuildSchemaBase r m n =>
-        m (P.Parser 'P.Output n NodeMap)
+      ( forall r m n.
+        MonadBuildSourceSchema r m n =>
+        SchemaT r m (P.Parser 'P.Output n NodeMap)
       )
   }
 
@@ -160,39 +155,103 @@ retrieve f = asks $ f . getter
 
 -------------------------------------------------------------------------------
 
-type MonadBuildSourceSchema r m n = MonadBuildSchemaBase r m n
+{- Note [SchemaT and stacking]
 
+The schema is explicitly built in `SchemaT`, rather than in an arbitrary monad
+`m` that happens to have the desired properties (`MonadReader`, `MonadMemoize`,
+`MonadError`, and so on). The main reason why we do this is that we want to
+avoid a specific performance issue that arises out of two specific constraints:
+
+  - we want to build each part of the schema (such as sources and remote
+    schemas) with its own dedicated minimal reader context (i.e. not using a
+    shared reader context that is the union of all the information required);
+  - we want to be able to process remote-relationships, which means "altering"
+    the reader context when jumping from one "part" of the schema to another.
+
+What that means, in practice, is that we have to call `runReaderT` (or an
+equivalent) every time we build a part of the schema (at the root level or as
+part of a remote relationship) so that the part we build has access to its
+context. When processing a remote relationship, the calling code is *already* in
+a monad stack that contains a `ReaderT`, since we were processing a given part
+of the schema. If we directly call `runReaderT` to process the RHS of the remote
+relationship, we implicitly make it so that the monad stack of the LHS is the
+base underneath the `ReaderT` of the RHS; in other terms, we stack another
+reader on top of the existing monad stack.
+
+As the schema is built in a "depth-first" way, in a complicated schema with a
+lot of remote relationships we would end up with several readers stacked upon
+one another. A manually run benchmark showed that this could significantly
+impact performance in complicated schemas. We do now have a benchmark set to
+replicate this specific case (see the "deep_schema" benchmark set for more
+information).
+
+To prevent this stacking, we need to be able to "bring back" the result of the
+`runReaderT` back into the calling monad, rather than defaulting to having the
+calling monad be the base of the reader. The simplest way of doing this is to
+enforce that we are always building the schema in a monad stack that has the
+reader on top of some arbitrary *shared* base. This gives us the guarantee that
+the LHS of any remote relationship, the calling context for `runReaderT`, is
+itself a `ReaderT` on top og that known shared base, meaning that after a call
+to `runReaderT` on another part of the schema, we can always go back to the
+calling monad with a simple `lift`, as demonstrated in
+'remoteRelationshipField'.
+-}
+
+-- | The monad in which the schema is built.
+--
+-- The implementation of 'SchemaT' is intended to be opaque: running a
+-- computation in 'SchemaT' is intended to be done via calls to
+-- 'runSourceSchema' and 'runRemoteSchema', which also enforce what the @r@
+-- parameter should be in each case.
+--
+-- The reason why we want to enforce that the schema is built in a reader on top
+-- of an arbitrary base monad is for performance: see Note [SchemaT and
+-- stacking] for more information.
+--
+-- In the future, we might monomorphize this further to make `MemoizeT` explicit.
+newtype SchemaT r m a = SchemaT {runSchemaT :: ReaderT r m a}
+  deriving newtype (Functor, Applicative, Monad, MonadReader r, P.MonadMemoize, MonadTrans, MonadError e)
+
+type MonadBuildSourceSchema r m n =
+  ( MonadBuildSchemaBase r m n,
+    Has SchemaOptions r,
+    Has MkTypename r,
+    Has NamingCase r
+  )
+
+-- | Runs a schema-building computation with all the context required to build a source.
 runSourceSchema ::
   SchemaContext ->
   SchemaOptions ->
-  ReaderT
+  SchemaT
     ( SchemaContext,
       SchemaOptions,
       MkTypename,
-      CustomizeRemoteFieldName,
       NamingCase
     )
     m
     a ->
   m a
-runSourceSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
+runSourceSchema context options (SchemaT action) = runReaderT action (context, options, mempty, HasuraCase)
 
-type MonadBuildRemoteSchema r m n = MonadBuildSchemaBase r m n
+type MonadBuildRemoteSchema r m n =
+  ( MonadBuildSchemaBase r m n,
+    Has CustomizeRemoteFieldName r,
+    Has MkTypename r
+  )
 
+-- | Runs a schema-building computation with all the context required to build a remote schema.
 runRemoteSchema ::
   SchemaContext ->
-  SchemaOptions ->
-  ReaderT
+  SchemaT
     ( SchemaContext,
-      SchemaOptions,
       MkTypename,
-      CustomizeRemoteFieldName,
-      NamingCase
+      CustomizeRemoteFieldName
     )
     m
     a ->
   m a
-runRemoteSchema context options = flip runReaderT (context, options, mempty, mempty, HasuraCase)
+runRemoteSchema context (SchemaT action) = runReaderT action (context, mempty, mempty)
 
 -------------------------------------------------------------------------------
 

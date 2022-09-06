@@ -14,7 +14,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (RemoteSchemaPermissions)
+import Hasura.GraphQL.Schema.Options
 import Hasura.GraphQL.Schema.Parser (FieldParser, MonadMemoize)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
@@ -40,36 +40,44 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Remote relationship field parsers
 remoteRelationshipField ::
+  SchemaContext ->
+  SchemaOptions ->
   SourceCache ->
   RemoteSchemaMap ->
   RemoteSchemaPermissions ->
   RemoteRelationshipParserBuilder
-remoteRelationshipField sourceCache remoteSchemaCache remoteSchemaPermissions = RemoteRelationshipParserBuilder
-  \RemoteFieldInfo {..} -> runMaybeT do
+remoteRelationshipField schemaContext schemaOptions sourceCache remoteSchemaCache remoteSchemaPermissions = RemoteRelationshipParserBuilder
+  \RemoteFieldInfo {..} -> do
     queryType <- retrieve scSchemaKind
-    -- https://github.com/hasura/graphql-engine/issues/5144
-    -- The above issue is easily fixable by removing the following guard
-    guard $ isHasuraSchema queryType
-    case _rfiRHS of
-      RFISource anyRemoteSourceFieldInfo ->
-        dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
-          anyRemoteSourceFieldInfo
-          \remoteSourceFieldInfo -> do
-            fields <- lift $ remoteRelationshipToSourceField sourceCache remoteSourceFieldInfo
-            pure $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
-      RFISchema remoteSchema -> do
-        fields <- MaybeT $ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions _rfiLHS remoteSchema
-        pure $ pure $ IR.RemoteSchemaField <$> fields
+    -- Remote relationships aren't currently supported in Relay, due to type conflicts, and
+    -- introspection issues such as https://github.com/hasura/graphql-engine/issues/5144.
+    if not $ isHasuraSchema queryType
+      then pure Nothing
+      else case _rfiRHS of
+        RFISource anyRemoteSourceFieldInfo ->
+          -- see Note [SchemaT and stacking]
+          lift $
+            runSourceSchema schemaContext schemaOptions $
+              dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
+                anyRemoteSourceFieldInfo
+                \remoteSourceFieldInfo -> do
+                  fields <- remoteRelationshipToSourceField sourceCache remoteSourceFieldInfo
+                  pure $ Just $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
+        RFISchema remoteSchema ->
+          -- see Note [SchemaT and stacking]
+          lift $ runRemoteSchema schemaContext do
+            fields <- remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions _rfiLHS remoteSchema
+            pure $ fmap (pure . fmap IR.RemoteSchemaField) fields
 
 -- | Parser(s) for remote relationship fields to a remote schema
 remoteRelationshipToSchemaField ::
   forall r m n lhsJoinField.
-  (MonadBuildSchemaBase r m n) =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaMap ->
   RemoteSchemaPermissions ->
   Map.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
-  m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
+  SchemaT r m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
 remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
   roleName <- retrieve scRole
   remoteSchemaContext <-
@@ -150,7 +158,7 @@ lookupNestedFieldType' ::
   G.Name ->
   RemoteSchemaIntrospection ->
   FieldCall ->
-  m G.GType
+  SchemaT r m G.GType
 lookupNestedFieldType' parentTypeName remoteSchemaIntrospection (FieldCall fcName _) =
   case lookupObject remoteSchemaIntrospection parentTypeName of
     Nothing -> throw400 RemoteSchemaError $ "object with name " <> parentTypeName <<> " not found"
@@ -164,7 +172,7 @@ lookupNestedFieldType ::
   G.Name ->
   RemoteSchemaIntrospection ->
   NonEmpty FieldCall ->
-  m G.GType
+  SchemaT r m G.GType
 lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| rest) = do
   fieldType <- lookupNestedFieldType' parentTypeName remoteSchemaIntrospection fieldCall
   case NE.nonEmpty rest of
@@ -178,13 +186,13 @@ lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| res
 -- relationship field, hence [FieldParser ...] instead of 'FieldParser'
 remoteRelationshipToSourceField ::
   forall r m n tgt.
-  ( MonadBuildSchemaBase r m n,
+  ( MonadBuildSourceSchema r m n,
     BackendSchema tgt,
     BackendTableSelectSchema tgt
   ) =>
   SourceCache ->
   RemoteSourceFieldInfo tgt ->
-  m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
+  SchemaT r m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
   withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
     tCase <- asks getter
