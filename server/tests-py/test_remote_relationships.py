@@ -9,7 +9,7 @@ from remote_server import NodeGraphQL
 
 @pytest.fixture(scope="module")
 def graphql_service():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"], port=4001)
     svc.start()
     yield svc
     svc.stop()

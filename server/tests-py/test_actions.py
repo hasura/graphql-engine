@@ -14,7 +14,7 @@ TODO:- Test Actions metadata
 
 @pytest.fixture(scope="module")
 def graphql_service():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/actions_remote_join_schema.js"])
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/actions_remote_join_schema.js"], port=4001)
     svc.start()
     yield svc
     svc.stop()

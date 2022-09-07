@@ -11,21 +11,21 @@ if not PytestConf.config.getoption('--enable-remote-schema-permissions'):
 
 @pytest.fixture(scope="module")
 def graphql_service_1():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"])
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"], port=4020)
     svc.start()
     yield svc
     svc.stop()
 
 @pytest.fixture(scope="module")
 def graphql_service_2():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms.js"])
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms.js"], port=4021)
     svc.start()
     yield svc
     svc.stop()
 
 @pytest.fixture(scope="module")
 def graphql_service_3():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms_error.js"])
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms_error.js"], port=4022)
     svc.start()
     yield svc
     svc.stop()
