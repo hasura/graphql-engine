@@ -58,7 +58,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
     arrayRelationships <&> \rel -> do
       relTable <- askTableInfo si (riRTable rel)
       relGqlName <- textToName $ relNameToTxt $ riName rel
-      typeGqlName <- (<> Name.__ <> relGqlName) <$> getTableGQLName relTable
+      typeGqlName <- (<> Name.__ <> relGqlName <> Name.__ <> Name._aggregate) <$> getTableGQLName ti
 
       -- We only make a field for aggregations over a relation if at least
       -- some aggregation predicates are callable.
@@ -102,7 +102,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
       G.Name ->
       (InputFieldsParser n [AggregationPredicate b (UnpreparedValue b)]) ->
       (InputFieldsParser n (Maybe (AggregationPredicatesImplementation b (UnpreparedValue b))))
-    relAggregateField rel typeGqlName relGqlName =
+    relAggregateField rel relGqlName typeGqlName =
       P.fieldOptional (relGqlName <> Name.__ <> Name._aggregate) Nothing
         . P.object typeGqlName Nothing
         . fmap (AggregationPredicatesImplementation rel)

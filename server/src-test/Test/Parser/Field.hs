@@ -1,5 +1,12 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
+
 -- | QuasiQuoter for parsing GraphQL fields in tests. See 'field' for details.
-module Test.Parser.Field (field) where
+module Test.Parser.Field
+  ( field,
+    inputfields,
+  )
+where
 
 import Control.Monad.Trans.Except
 import Data.Attoparsec.Text qualified as Parser
@@ -46,3 +53,30 @@ field =
     fixField f = do
       x <- except $ mapLeft (T.unpack . showQErr) $ runInlineM mempty . inlineField $ f
       traverse (throwE . ("Variables are not supported in tests yet: " ++) . show) x
+
+-- | Quasi-Quoter for GraphQL input fields.
+-- Example usage:
+-- > [GQL.inputfields|
+-- >   where: { name: { _eq: "old name"}},
+-- >   _set: { name: "new name" }
+-- > |],
+--
+-- Note that because the graphql parser library does not expose a parser for
+-- input fields directly we instead wrap the input text in dummy field syntax,
+-- delegate to the 'field' quasi-quoter, and extract the inputfields from there.
+inputfields :: QuasiQuoter
+inputfields =
+  QuasiQuoter
+    { quoteExp = inputfieldExp,
+      quotePat = \_ -> fail "invalid",
+      quoteType = \_ -> fail "invalid",
+      quoteDec = \_ -> fail "invalid"
+    }
+  where
+    inputfieldExp :: String -> ExpQ
+    inputfieldExp input = do
+      applied <- TH.AppE <$> [e|fmap GraphQLValue . GraphQL._fArguments|] <*> quoteExp field ("field(" ++ input ++ ")")
+      -- For some reason the type is 'InputValue v' for some rigid 'v' if we
+      -- don't add this type annotation.
+      annotated <- TH.SigE applied <$> [t|HashMap GraphQL.Name (InputValue Variable)|]
+      return annotated

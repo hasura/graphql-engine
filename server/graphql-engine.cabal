@@ -936,6 +936,8 @@ test-suite graphql-engine-tests
   type: exitcode-stdio-1.0
   build-depends:
       aeson
+    , aeson-pretty
+    , aeson-qq
     , async
     , attoparsec
     , base
@@ -1058,7 +1060,9 @@ test-suite graphql-engine-tests
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
+    Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec
     Hasura.GraphQL.Schema.Build.UpdateSpec
+    Hasura.GraphQL.Schema.Introspection
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.Metadata.DTO.MetadataDTOSpec
@@ -1086,11 +1090,13 @@ test-suite graphql-engine-tests
     Hasura.SQL.WKTSpec
     Hasura.StreamingSubscriptionSuite
     Network.HTTP.Client.TransformableSpec
+    Test.Aeson.Expectation
     Test.Aeson.Utils
     Test.Backend.Postgres.Delete
     Test.Backend.Postgres.Insert
     Test.Backend.Postgres.Misc
     Test.Backend.Postgres.Update
+    Test.Hspec.Extended
     Test.Parser.Delete
     Test.Parser.Expectation
     Test.Parser.Field
