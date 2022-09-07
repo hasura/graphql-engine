@@ -108,6 +108,9 @@ services:
       - "65007:8100"
     volumes:
       - "./dc-agents/sqlite/test/db.chinook.sqlite:/db.chinook.sqlite"
+    environment:
+      PRETTY_PRINT_LOGS: y
+      LOG_LEVEL: debug
 
 volumes:
   citus-data:

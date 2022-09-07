@@ -6,7 +6,6 @@ module Test.DataConnector.AggregateQuerySpec
 where
 
 import Data.Aeson qualified as Aeson
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -14,6 +13,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -21,26 +21,23 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ DataConnector.setupFixtureAction
-                    sourceMetadata
-                    DataConnector.defaultBackendConfig
-                    testEnv
-                ]
+    ( ( \(DataConnector.TestSourceConfig backendType backendConfig sourceConfig _md) ->
+          (Fixture.fixture $ Fixture.Backend backendType)
+            { Fixture.setupTeardown =
+                \(testEnv, _) -> [DataConnector.setupFixtureAction (sourceMetadata backendType sourceConfig) backendConfig testEnv]
             }
-        ]
+      )
+        <$> DataConnector.backendConfigs
     )
     tests
 
-sourceMetadata :: Aeson.Value
-sourceMetadata =
-  let source = defaultSource DataConnector
-      backendType = defaultBackendTypeString DataConnector
+sourceMetadata :: BackendType -> Aeson.Value -> Aeson.Value
+sourceMetadata backendType config =
+  let source = defaultSource backendType
+      backendTypeString = defaultBackendTypeString backendType
    in [yaml|
         name : *source
-        kind: *backendType
+        kind: *backendTypeString
         tables:
           - table: [Album]
             object_relationships:
@@ -74,7 +71,7 @@ sourceMetadata =
                     remote_table: [Invoice]
                     column_mapping:
                       InvoiceId: InvoiceId
-        configuration: {}
+        configuration: *config
       |]
 
 --------------------------------------------------------------------------------
@@ -137,14 +134,15 @@ tests opts = describe "Aggregate Query Tests" $ do
                 - Title: Balls to the Wall
         |]
 
-    it "works with object relations" $ \(testEnvironment, _) ->
+    it "works with object relations" $ \(testEnvironment, _) -> do
+      -- NOTE: Ordering is required due to datasets non-matching orders
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
               query getAlbum {
-                Album_aggregate(limit: 2) {
+                Album_aggregate(order_by: {AlbumId: asc}, limit: 2) {
                   nodes {
                     AlbumId
                     Artist {
@@ -230,48 +228,43 @@ tests opts = describe "Aggregate Query Tests" $ do
                 countColumnDistinct: 25
         |]
 
-    it "works with single column queries" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
+    it "works with single column queries" $ \(testEnvironment, _) -> do
+      -- NOTE: This test is specialized for the reference agent to support more statistical functions.
+      -- This should really be derived from the agent's capabilities.
+      let referenceQuery =
             [graphql|
-              query getInvoices {
-                Invoice_aggregate {
-                  aggregate {
-                    max {
-                      Total
-                    }
-                    min {
-                      Total
-                    }
-                    stddev {
-                      Total
-                    }
-                    stddev_pop {
-                      Total
-                    }
-                    stddev_samp {
-                      Total
-                    }
-                    sum {
-                      Total
-                    }
-                    var_pop {
-                      Total
-                    }
-                    var_samp {
-                      Total
-                    }
-                    variance {
-                      Total
-                    }
-                  }
-                }
+          query getInvoices {
+            Invoice_aggregate {
+              aggregate {
+                max { Total }
+                min { Total }
+                stddev { Total }
+                stddev_pop { Total }
+                stddev_samp { Total }
+                sum { Total }
+                var_pop { Total }
+                var_samp { Total }
+                variance { Total }
               }
-            |]
-        )
-        [yaml|
+            }
+          }
+        |]
+
+          generalQuery =
+            [graphql|
+          query getInvoices {
+            Invoice_aggregate {
+              aggregate {
+                max { Total }
+                min { Total }
+                sum { Total }
+              }
+            }
+          }
+        |]
+
+          referenceResults =
+            [yaml|
           data:
             Invoice_aggregate:
               aggregate:
@@ -294,6 +287,37 @@ tests opts = describe "Aggregate Query Tests" $ do
                 variance:
                   Total: 22.518058994165273
         |]
+
+          generalResults =
+            [yaml|
+          data:
+            Invoice_aggregate:
+              aggregate:
+                max:
+                  Total: 25.86
+                min:
+                  Total: 0.99
+                sum:
+                  Total: 2328.6
+        |]
+
+      if (TE.backendType testEnvironment == Just Fixture.DataConnectorReference)
+        then
+          shouldReturnYaml
+            opts
+            ( GraphqlEngine.postGraphql
+                testEnvironment
+                referenceQuery
+            )
+            referenceResults
+        else
+          shouldReturnYaml
+            opts
+            ( GraphqlEngine.postGraphql
+                testEnvironment
+                generalQuery
+            )
+            generalResults
 
     it "min and max works on string fields" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -325,14 +349,15 @@ tests opts = describe "Aggregate Query Tests" $ do
                   Name: A Cor Do Som
         |]
 
-    it "works across array relationships from regular queries" $ \(testEnvironment, _) ->
+    it "works across array relationships from regular queries" $ \(testEnvironment, _) -> do
+      -- NOTE: Ordering is added to allow SQLite chinook dataset to return ordered results
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
               query getInvoices {
-                Invoice(limit: 5) {
+                Invoice(limit: 5, order_by: {InvoiceId: asc}) {
                   InvoiceId
                   InvoiceLines_aggregate {
                     aggregate {
@@ -368,14 +393,15 @@ tests opts = describe "Aggregate Query Tests" $ do
                     count: 14
         |]
 
-    it "works across array relationships from aggregate queries via nodes" $ \(testEnvironment, _) ->
+    it "works across array relationships from aggregate queries via nodes" $ \(testEnvironment, _) -> do
+      -- NOTE: Ordering present so that out-of-order rows are sorted for SQLite
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
               query getInvoices {
-                Invoice_aggregate(limit: 5) {
+                Invoice_aggregate(limit: 5, order_by: {InvoiceId: asc}) {
                   nodes {
                     InvoiceId
                     InvoiceLines_aggregate {
