@@ -8,8 +8,6 @@ where
 
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)
-import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector (defaultBackendConfig)
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -17,9 +15,10 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -27,25 +26,26 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+    ( ( \(DataConnector.TestSourceConfig backendType backendConfig sourceConfig _md) ->
+          (Fixture.fixture $ Fixture.Backend backendType)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [DataConnector.setupFixtureAction sourceMetadata defaultBackendConfig testEnv]
+                [DataConnector.setupFixtureAction (sourceMetadata backendType sourceConfig) backendConfig testEnv]
             }
-        ]
+      )
+        <$> DataConnector.backendConfigs
     )
     tests
 
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Value
-sourceMetadata =
-  let source = defaultSource DataConnector
-      backendType = defaultBackendTypeString DataConnector
+sourceMetadata :: BackendType -> Value -> Value
+sourceMetadata backendType config =
+  let source = defaultSource backendType
+      backendTypeString = defaultBackendTypeString backendType
    in [yaml|
         name : *source
-        kind: *backendType
+        kind: *backendTypeString
         tables:
           - table: [Employee]
             array_relationships:
@@ -88,7 +88,7 @@ sourceMetadata =
                     SupportRep:
                       Country:
                         _ceq: [ "$", "Country" ]
-        configuration: {}
+        configuration: *config
 |]
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
@@ -265,7 +265,8 @@ tests opts = describe "SelectPermissionsSpec" $ do
                 LastName: Silk
       |]
 
-  it "Query that orders by a related table that has a permissions filter" $ \(testEnvironment, _) ->
+  it "Query that orders by a related table that has a permissions filter" $ \(testEnvironment, _) -> do
+    when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders

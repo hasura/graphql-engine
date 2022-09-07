@@ -28,7 +28,7 @@ spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
             { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
                 [ DataConnector.setupMockAction
@@ -43,8 +43,8 @@ spec =
 
 sourceMetadata :: Aeson.Value
 sourceMetadata =
-  let source = defaultSource DataConnector
-      backendType = defaultBackendTypeString DataConnector
+  let source = defaultSource DataConnectorMock
+      backendType = defaultBackendTypeString DataConnectorMock
    in [yaml|
         name : *source
         kind: *backendType

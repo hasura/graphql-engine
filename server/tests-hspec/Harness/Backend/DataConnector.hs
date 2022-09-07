@@ -5,8 +5,11 @@ module Harness.Backend.DataConnector
   ( -- * Reference Agent
     setupFixture,
     teardown,
-    defaultBackendConfig,
+    backendConfigs,
+    referenceBackendConfig,
+    sqliteBackendConfig,
     chinookStockMetadata,
+    TestSourceConfig (..),
 
     -- * Mock Agent
     MockConfig (..),
@@ -31,11 +34,12 @@ import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
 import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.MockAgent
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Fixture (BackendType (DataConnector), Options, SetupAction (..), defaultBackendTypeString, defaultSource)
+import Harness.Test.Fixture (BackendType (DataConnectorMock, DataConnectorReference, DataConnectorSqlite), Options, SetupAction (..), defaultBackendTypeString, defaultSource)
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -44,23 +48,54 @@ import Test.Hspec (shouldBe)
 
 --------------------------------------------------------------------------------
 
-defaultBackendConfig :: Aeson.Value
-defaultBackendConfig =
-  let backendType = defaultBackendTypeString $ DataConnector
+data TestSourceConfig = TestSourceConfig
+  { typeConfig :: BackendType,
+    backendConfig :: Aeson.Value,
+    sourceConfig :: Aeson.Value,
+    metadataConfig :: Aeson.Value
+  }
+  deriving (Show, Eq)
+
+backendConfigs :: NE.NonEmpty TestSourceConfig
+backendConfigs =
+  TestSourceConfig DataConnectorReference referenceBackendConfig emptyConfig chinookStockMetadata
+    NE.:| [TestSourceConfig DataConnectorSqlite sqliteBackendConfig sqliteConfig chinookSqliteMetadata]
+
+referenceBackendConfig :: Aeson.Value
+referenceBackendConfig =
+  let backendType = defaultBackendTypeString $ DataConnectorReference
    in [yaml|
 dataconnector:
   *backendType:
     uri: "http://127.0.0.1:65005/"
 |]
 
+sqliteBackendConfig :: Aeson.Value
+sqliteBackendConfig =
+  let backendType = defaultBackendTypeString DataConnectorSqlite
+   in [yaml|
+dataconnector:
+  *backendType:
+    uri: "http://127.0.0.1:65007/"
+|]
+
 mockBackendConfig :: Aeson.Value
 mockBackendConfig =
-  let backendType = defaultBackendTypeString $ DataConnector
+  let backendType = defaultBackendTypeString $ DataConnectorMock
       agentUri = "http://127.0.0.1:" <> show mockAgentPort <> "/"
    in [yaml|
 dataconnector:
   *backendType:
     uri: *agentUri
+|]
+
+emptyConfig :: Aeson.Value
+emptyConfig = [yaml| {} |]
+
+sqliteConfig :: Aeson.Value
+sqliteConfig =
+  [yaml|
+db: "/db.chinook.sqlite"
 |]
 
 --------------------------------------------------------------------------------
@@ -84,12 +119,18 @@ teardown (testEnvironment, _) = do
   GraphqlEngine.clearMetadata testEnvironment
 
 chinookStockMetadata :: Aeson.Value
-chinookStockMetadata =
-  let source = defaultSource DataConnector
-      backendType = defaultBackendTypeString DataConnector
+chinookStockMetadata = chinookMetadata DataConnectorReference emptyConfig
+
+chinookSqliteMetadata :: Aeson.Value
+chinookSqliteMetadata = chinookMetadata DataConnectorSqlite sqliteConfig
+
+chinookMetadata :: BackendType -> Aeson.Value -> Aeson.Value
+chinookMetadata backendType config =
+  let source = defaultSource backendType
+      backendTypeString = defaultBackendTypeString backendType
    in [yaml|
 name : *source
-kind: *backendType
+kind: *backendTypeString
 tables:
   - table: [Album]
     configuration:
@@ -157,7 +198,8 @@ tables:
           custom_name: birth_date
         LastName:
           custom_name: last_name
-configuration: {}
+configuration:
+  *config
 |]
 
 --------------------------------------------------------------------------------
