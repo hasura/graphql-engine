@@ -84,6 +84,11 @@ ghcid-test-mysql: start-postgres start-mysql remove-tix-file
 ghcid-test-citus: start-postgres start-citus remove-tix-file
 	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Citus)
 
+.PHONY: ghcid-test-cockroach
+## ghcid-test-cockroach: run tests for Cockroach backend in ghcid
+ghcid-test-cockroach: start-postgres start-cockroach remove-tix-file
+	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Cockroach)
+
 .PHONY: ghcid-test-data-connectors
 ## ghcid-test-data-connectors: run tests for DataConnectors in ghcid
 ghcid-test-data-connectors: start-postgres start-dc-reference-agent remove-tix-file
