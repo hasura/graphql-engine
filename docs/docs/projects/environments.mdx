@@ -26,12 +26,30 @@ This guide will show how to configure your Hasura project for easy switching bet
 
 ## Moving from Hasura Cloud to local development
 
+### Step 0: Use an environment variable to connect to your database
+
+As recommended in the [database connection guide](/databases/connect-db/index.mdx), use an environment
+variable to connect your data source. This environment variable will be referenced in your project
+metadata across environments to connect with different data sources, and will be used to connect to the
+local database that you'll create in the next step.
+
+Note: if you name the variable `PG_DATABASE_URL`, the value will be set correctly by default in your
+local development environment. Otherwise, manually setting the value is simple to do and covered in
+the next step.
+
 ### Step 1: Setup local development of Hasura with Docker
 
 Follow the guide [here](/getting-started/docker-simple.mdx) to get up and running with Hasura GraphQL engine and
-Postgres as Docker containers in your local system. Make sure that the ENV variable for database connection in your
-local setup is same as that in your Cloud project. Also add any other ENV variables that you might have set on the Cloud
-project.
+Postgres as Docker containers in your local system. You can skip the steps involving connecting a
+database, as you'll be applying metadata from your cloud database in a later step. You only
+need the containers running in Docker.
+
+If the environment variable used for your database connection is not `PG_DATABASE_URL`, make sure to
+set the variable value in your local project. You can do this by changing the `PG_DATABASE_URL`
+environment variable name in `docker-compose.yml` to the variable name used in your cloud project.
+
+Finally, make sure any other environment variables that are set in your cloud project are also set
+in your local project.
 
 ### Step 2: Install Hasura CLI
 
