@@ -12,6 +12,7 @@ module Test.Schema.TableRelationships.ObjectRelationshipsSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
@@ -55,6 +56,22 @@ spec = do
   --       }
   --   ]
   --   $ tests Citus
+
+  Fixture.run
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Cockroach.setupTablesAction schema testEnv],
+              Fixture.customOptions =
+                Just $
+                  Fixture.defaultOptions
+                    { Fixture.stringifyNumbers = True,
+                      Fixture.skipTests = Just "Cockroach disabled pending prepared args fix https://github.com/cockroachdb/cockroach/issues/86375"
+                    }
+            }
+        ]
+    )
+    $ tests Cockroach
 
   -- Fixture.run
   --   [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)

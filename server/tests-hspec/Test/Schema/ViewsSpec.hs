@@ -5,6 +5,7 @@ module Test.Schema.ViewsSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Database.PG.Query.Pool (sql)
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
@@ -35,6 +36,17 @@ spec =
                   setupPostgres,
                   setupMetadata Fixture.Postgres testEnvironment
                 ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
+                ],
+              Fixture.customOptions =
+                Just $
+                  Fixture.defaultOptions
+                    { Fixture.stringifyNumbers = True,
+                      Fixture.skipTests = Just "Cockroach disabled pending prepared args fix https://github.com/cockroachdb/cockroach/issues/86375"
+                    }
             }
         ]
     )
