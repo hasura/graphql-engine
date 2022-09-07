@@ -36,12 +36,13 @@ import Test.HUnit.Lang (assertFailure)
 -- | Placeholder value for test inputs that are not relevant yet.
 notImplementedYet :: HasCallStack => String -> a
 notImplementedYet thing =
-  error $
-    ( unlines
-        [ "\"" ++ thing ++ "\" is not yet defined, because it hasn't been touched by tests yet.",
-          "If you see this message you likely need to provide/mock a value here"
-        ]
-    )
+  withFrozenCallStack $
+    error $
+      ( unlines
+          [ "\"" ++ thing ++ "\" is not yet defined, because it hasn't been touched by tests yet.",
+            "If you see this message you likely need to provide/mock a value here"
+          ]
+      )
 
 -- | Monad builder environment.
 --
