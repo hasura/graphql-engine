@@ -97,10 +97,8 @@ post_ testEnvironment path v = void $ withFrozenCallStack $ postWithHeaders_ tes
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders ::
   HasCallStack => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeaders testEnv url headers json = do
-  testLog testEnv $ "Posting to " <> url
-  testLogBytestring testEnv (AP.encodePretty json)
-  withFrozenCallStack $ postWithHeadersStatus 200 testEnv url headers json
+postWithHeaders =
+  withFrozenCallStack $ postWithHeadersStatus 200
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -110,8 +108,12 @@ postWithHeaders testEnv url headers json = do
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeadersStatus ::
   HasCallStack => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeadersStatus statusCode (getServer -> Server {urlPrefix, port}) path headers v =
-  withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers v
+postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
+  testLog testEnv $ "Posting to " <> path
+  testLogBytestring testEnv $ "Request body: " <> AP.encodePretty requestBody
+  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers requestBody
+  testLogBytestring testEnv $ "Response body: " <> AP.encodePretty responseBody
+  pure responseBody
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
