@@ -13,9 +13,10 @@ def make_request(url, query):
     resp = requests.post(url, json=payload)
     return resp
 
+experimental_features = os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES')
+
 @pytest.mark.skipif(
-    os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES') is None or
-    not 'apollo_federation' in os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES'),
+    experimental_features is None or not 'apollo_federation' in experimental_features,
     reason="This test expects the (apollo_federation) experimental feature turned on")
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestApolloFederation:
@@ -29,8 +30,6 @@ class TestApolloFederation:
         fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_only.js"])
         fed_server.start()
 
-        url = 'http://localhost:4002'
-
         # run a GQL query
         gql_query = """
             query {
@@ -40,7 +39,7 @@ class TestApolloFederation:
                 }
             }
             """
-        resp = make_request(url, gql_query)
+        resp = make_request(fed_server.url, gql_query)
 
         # stop the node server
         fed_server.stop()
@@ -52,12 +51,13 @@ class TestApolloFederation:
     def test_apollo_federated_server_with_hge_and_apollo_graphql_server(self,hge_ctx):
         # start the node servers
         server_1 = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_server_1.js"])
-        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js"])
+        server_env = {
+            'OTHER_URL': server_1.url,
+        }
+        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js"], env=server_env)
 
         server_1.start()
         fed_server.start()
-
-        url = 'http://localhost:4004'
 
         # run a GQL query
         gql_query = """
@@ -70,7 +70,7 @@ class TestApolloFederation:
                 }
             }
             """
-        resp = make_request(url, gql_query)
+        resp = make_request(fed_server.url, gql_query)
 
         # stop the node servers
         fed_server.stop()
