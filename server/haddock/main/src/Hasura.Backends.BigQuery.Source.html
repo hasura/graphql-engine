@@ -34,13 +34,13 @@
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html"><span class="hs-identifier">Hasura.Metadata.DTO.Placeholder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#placeholderCodecViaJSON"><span class="hs-identifier">placeholderCodecViaJSON</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span id="local-6989586621689671069"><span id="local-6989586621689671070"></span></span><span class="hs-keyword">data</span><span> </span><span id="PKey"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PKey"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span></span><span>
+</span><span id="line-37"></span><span id="local-6989586621689672569"><span id="local-6989586621689672570"></span></span><span class="hs-keyword">data</span><span> </span><span id="PKey"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PKey"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unPKey"><span class="annot"><span class="annottext">PKey -&gt; PrivateKey
 </span><a href="Hasura.Backends.BigQuery.Source.html#unPKey"><span class="hs-identifier hs-var hs-var">unPKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PrivateKey</span></span><span class="hs-special">,</span><span>
 </span><span id="line-39"></span><span>    </span><span id="originalBS"><span class="annot"><span class="annottext">PKey -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Source.html#originalBS"><span class="hs-identifier hs-var hs-var">originalBS</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689671061"><span id="local-6989586621689671063"><span id="local-6989586621689671065"><span class="annot"><span class="annottext">Int -&gt; PKey -&gt; ShowS
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672561"><span id="local-6989586621689672563"><span id="local-6989586621689672565"><span class="annot"><span class="annottext">Int -&gt; PKey -&gt; ShowS
 [PKey] -&gt; ShowS
 PKey -&gt; String
 (Int -&gt; PKey -&gt; ShowS)
@@ -53,14 +53,14 @@ show :: PKey -&gt; String
 $cshow :: PKey -&gt; String
 showsPrec :: Int -&gt; PKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; PKey -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689671056"><span id="local-6989586621689671058"><span class="annot"><span class="annottext">PKey -&gt; PKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672556"><span id="local-6989586621689672558"><span class="annot"><span class="annottext">PKey -&gt; PKey -&gt; Bool
 (PKey -&gt; PKey -&gt; Bool) -&gt; (PKey -&gt; PKey -&gt; Bool) -&gt; Eq PKey
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: PKey -&gt; PKey -&gt; Bool
 $c/= :: PKey -&gt; PKey -&gt; Bool
 == :: PKey -&gt; PKey -&gt; Bool
 $c== :: PKey -&gt; PKey -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cPKey"><span id="%24tPKey"><span id="local-6989586621689671026"><span id="local-6989586621689671028"><span id="local-6989586621689671030"><span id="local-6989586621689671032"><span id="local-6989586621689671034"><span id="local-6989586621689671036"><span id="local-6989586621689671038"><span id="local-6989586621689671040"><span id="local-6989586621689671042"><span id="local-6989586621689671044"><span id="local-6989586621689671046"><span id="local-6989586621689671048"><span id="local-6989586621689671050"><span id="local-6989586621689671052"><span class="annot"><span class="annottext">Typeable PKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cPKey"><span id="%24tPKey"><span id="local-6989586621689672526"><span id="local-6989586621689672528"><span id="local-6989586621689672530"><span id="local-6989586621689672532"><span id="local-6989586621689672534"><span id="local-6989586621689672536"><span id="local-6989586621689672538"><span id="local-6989586621689672540"><span id="local-6989586621689672542"><span id="local-6989586621689672544"><span id="local-6989586621689672546"><span id="local-6989586621689672548"><span id="local-6989586621689672550"><span id="local-6989586621689672552"><span class="annot"><span class="annottext">Typeable PKey
 DataType
 Constr
 Typeable PKey
@@ -216,12 +216,12 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep PKey x -&gt; PKey
 $cfrom :: forall x. PKey -&gt; Rep PKey x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689671018"><span class="annot"><span class="annottext">PKey -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672518"><span class="annot"><span class="annottext">PKey -&gt; ()
 (PKey -&gt; ()) -&gt; NFData PKey
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: PKey -&gt; ()
 $crnf :: PKey -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689671013"><span id="local-6989586621689671015"><span class="annot"><span class="annottext">Int -&gt; PKey -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672513"><span id="local-6989586621689672515"><span class="annot"><span class="annottext">Int -&gt; PKey -&gt; Int
 PKey -&gt; Int
 (Int -&gt; PKey -&gt; Int) -&gt; (PKey -&gt; Int) -&gt; Hashable PKey
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -235,61 +235,61 @@ $chashWithSalt :: Int -&gt; PKey -&gt; Int
 </span><span id="line-44"></span><span>
 </span><span id="line-45"></span><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Generic</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PublicKey</span></span><span> </span><span class="hs-comment">-- orphan</span><span>
 </span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span id="local-6989586621689671000"><span id="local-6989586621689671002"><span id="local-6989586621689671004"><span id="local-6989586621689671006"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PrivateKey</span></span></span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-47"></span><span id="local-6989586621689672500"><span id="local-6989586621689672502"><span id="local-6989586621689672504"><span id="local-6989586621689672506"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PrivateKey</span></span></span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
 </span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span id="local-6989586621689670991"><span id="local-6989586621689670993"><span id="local-6989586621689670995"><span id="local-6989586621689670997"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PublicKey</span></span></span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-49"></span><span id="local-6989586621689672491"><span id="local-6989586621689672493"><span id="local-6989586621689672495"><span id="local-6989586621689672497"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PublicKey</span></span></span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span id="local-6989586621689670987"><span id="local-6989586621689670989"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PrivateKey</span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-51"></span><span id="local-6989586621689672487"><span id="local-6989586621689672489"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PrivateKey</span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span id="local-6989586621689670983"><span id="local-6989586621689670985"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PublicKey</span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-53"></span><span id="local-6989586621689672483"><span id="local-6989586621689672485"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.PublicKey</span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670980"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-56"></span><span>  </span><span id="local-6989586621689670978"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PKey
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672480"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621689672478"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PKey
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser PKey) -&gt; Value -&gt; Parser PKey
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;private_key&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser PKey) -&gt; Value -&gt; Parser PKey)
 -&gt; (Text -&gt; Parser PKey) -&gt; Value -&gt; Parser PKey
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689670975"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670975"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689672475"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672475"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; [PrivKey]
 </span><span class="hs-identifier hs-var">X509.readKeyFileFromMemory</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [PrivKey]) -&gt; ByteString -&gt; [PrivKey]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><span class="hs-identifier hs-var">TE.encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670975"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-58"></span><span>      </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">X509.PrivKeyRSA</span></span><span> </span><span id="local-6989586621689670971"><span class="annot"><span class="annottext">PrivateKey
-</span><a href="#local-6989586621689670971"><span class="hs-identifier hs-var">k'</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PKey -&gt; Parser PKey
+</span><a href="#local-6989586621689672475"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-58"></span><span>      </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">X509.PrivKeyRSA</span></span><span> </span><span id="local-6989586621689672471"><span class="annot"><span class="annottext">PrivateKey
+</span><a href="#local-6989586621689672471"><span class="hs-identifier hs-var">k'</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PKey -&gt; Parser PKey
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(PKey -&gt; Parser PKey) -&gt; PKey -&gt; Parser PKey
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PrivateKey -&gt; Text -&gt; PKey
 </span><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span><span> </span><span class="annot"><span class="annottext">PrivateKey
-</span><a href="#local-6989586621689670971"><span class="hs-identifier hs-var">k'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670975"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><a href="#local-6989586621689672471"><span class="hs-identifier hs-var">k'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672475"><span class="hs-identifier hs-var">k</span></a></span><span>
 </span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">[PrivKey]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser PKey
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;unable to parse private key&quot;</span></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670964"><span id="local-6989586621689670966"><span id="local-6989586621689670968"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621689670963"><span class="annot"><span class="annottext">toJSON :: PKey -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689670960"><span id="local-6989586621689670961"><span class="annot"><span class="annottext">Text
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672464"><span id="local-6989586621689672466"><span id="local-6989586621689672468"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621689672463"><span class="annot"><span class="annottext">toJSON :: PKey -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689672460"><span id="local-6989586621689672461"><span class="annot"><span class="annottext">Text
 PrivateKey
 originalBS :: Text
 unPKey :: PrivateKey
 originalBS :: PKey -&gt; Text
 unPKey :: PKey -&gt; PrivateKey
-</span><a href="#local-6989586621689670960"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621689672460"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670960"><span class="hs-identifier hs-var">originalBS</span></a></span><span>
+</span><a href="#local-6989586621689672460"><span class="hs-identifier hs-var">originalBS</span></a></span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span id="local-6989586621689670958"><span id="local-6989586621689670959"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="GoogleAccessToken"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier hs-var">GoogleAccessToken</span></a></span></span><span>
+</span><span id="line-64"></span><span id="local-6989586621689672458"><span id="local-6989586621689672459"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="GoogleAccessToken"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier hs-var">GoogleAccessToken</span></a></span></span><span>
 </span><span id="line-65"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GoogleAccessToken"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier hs-var">GoogleAccessToken</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670952"><span id="local-6989586621689670954"><span id="local-6989586621689670956"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessToken -&gt; ShowS
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672452"><span id="local-6989586621689672454"><span id="local-6989586621689672456"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessToken -&gt; ShowS
 [GoogleAccessToken] -&gt; ShowS
 GoogleAccessToken -&gt; String
 (Int -&gt; GoogleAccessToken -&gt; ShowS)
@@ -304,7 +304,7 @@ show :: GoogleAccessToken -&gt; String
 $cshow :: GoogleAccessToken -&gt; String
 showsPrec :: Int -&gt; GoogleAccessToken -&gt; ShowS
 $cshowsPrec :: Int -&gt; GoogleAccessToken -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670948"><span id="local-6989586621689670950"><span class="annot"><span class="annottext">GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672448"><span id="local-6989586621689672450"><span class="annot"><span class="annottext">GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
 (GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool)
 -&gt; (GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool)
 -&gt; Eq GoogleAccessToken
@@ -313,7 +313,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
 == :: GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
 $c== :: GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670944"><span id="local-6989586621689670946"><span class="annot"><span class="annottext">Value -&gt; Parser [GoogleAccessToken]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672444"><span id="local-6989586621689672446"><span class="annot"><span class="annottext">Value -&gt; Parser [GoogleAccessToken]
 Value -&gt; Parser GoogleAccessToken
 (Value -&gt; Parser GoogleAccessToken)
 -&gt; (Value -&gt; Parser [GoogleAccessToken])
@@ -324,7 +324,7 @@ parseJSONList :: Value -&gt; Parser [GoogleAccessToken]
 $cparseJSONList :: Value -&gt; Parser [GoogleAccessToken]
 parseJSON :: Value -&gt; Parser GoogleAccessToken
 $cparseJSON :: Value -&gt; Parser GoogleAccessToken
-</span><a href="#local-6989586621689670944"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670936"><span id="local-6989586621689670938"><span id="local-6989586621689670940"><span id="local-6989586621689670942"><span class="annot"><span class="annottext">[GoogleAccessToken] -&gt; Value
+</span><a href="#local-6989586621689672444"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672436"><span id="local-6989586621689672438"><span id="local-6989586621689672440"><span id="local-6989586621689672442"><span class="annot"><span class="annottext">[GoogleAccessToken] -&gt; Value
 [GoogleAccessToken] -&gt; Encoding
 GoogleAccessToken -&gt; Value
 GoogleAccessToken -&gt; Encoding
@@ -347,7 +347,7 @@ toEncoding :: GoogleAccessToken -&gt; Encoding
 $ctoEncoding :: GoogleAccessToken -&gt; Encoding
 toJSON :: GoogleAccessToken -&gt; Value
 $ctoJSON :: GoogleAccessToken -&gt; Value
-</span><a href="#local-6989586621689670936"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670932"><span id="local-6989586621689670934"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessToken -&gt; Int
+</span><a href="#local-6989586621689672436"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672432"><span id="local-6989586621689672434"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessToken -&gt; Int
 GoogleAccessToken -&gt; Int
 (Int -&gt; GoogleAccessToken -&gt; Int)
 -&gt; (GoogleAccessToken -&gt; Int) -&gt; Hashable GoogleAccessToken
@@ -356,7 +356,7 @@ hash :: GoogleAccessToken -&gt; Int
 $chash :: GoogleAccessToken -&gt; Int
 hashWithSalt :: Int -&gt; GoogleAccessToken -&gt; Int
 $chashWithSalt :: Int -&gt; GoogleAccessToken -&gt; Int
-</span><a href="#local-6989586621689670932"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. GoogleAccessToken -&gt; Rep GoogleAccessToken x)
+</span><a href="#local-6989586621689672432"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. GoogleAccessToken -&gt; Rep GoogleAccessToken x)
 -&gt; (forall x. Rep GoogleAccessToken x -&gt; GoogleAccessToken)
 -&gt; Generic GoogleAccessToken
 forall x. Rep GoogleAccessToken x -&gt; GoogleAccessToken
@@ -365,7 +365,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep GoogleAccessToken x -&gt; GoogleAccessToken
 $cfrom :: forall x. GoogleAccessToken -&gt; Rep GoogleAccessToken x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cGoogleAccessToken"><span id="%24tGoogleAccessToken"><span id="local-6989586621689670901"><span id="local-6989586621689670903"><span id="local-6989586621689670905"><span id="local-6989586621689670907"><span id="local-6989586621689670909"><span id="local-6989586621689670911"><span id="local-6989586621689670913"><span id="local-6989586621689670915"><span id="local-6989586621689670917"><span id="local-6989586621689670919"><span id="local-6989586621689670921"><span id="local-6989586621689670923"><span id="local-6989586621689670925"><span id="local-6989586621689670927"><span class="annot"><span class="annottext">Typeable GoogleAccessToken
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cGoogleAccessToken"><span id="%24tGoogleAccessToken"><span id="local-6989586621689672401"><span id="local-6989586621689672403"><span id="local-6989586621689672405"><span id="local-6989586621689672407"><span id="local-6989586621689672409"><span id="local-6989586621689672411"><span id="local-6989586621689672413"><span id="local-6989586621689672415"><span id="local-6989586621689672417"><span id="local-6989586621689672419"><span id="local-6989586621689672421"><span id="local-6989586621689672423"><span id="local-6989586621689672425"><span id="local-6989586621689672427"><span class="annot"><span class="annottext">Typeable GoogleAccessToken
 DataType
 Constr
 Typeable GoogleAccessToken
@@ -546,20 +546,20 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; GoogleAccessToken -&gt; c GoogleAccessToken
 $cp1Data :: Typeable GoogleAccessToken
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670897"><span class="annot"><span class="annottext">GoogleAccessToken -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672397"><span class="annot"><span class="annottext">GoogleAccessToken -&gt; ()
 (GoogleAccessToken -&gt; ()) -&gt; NFData GoogleAccessToken
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: GoogleAccessToken -&gt; ()
 $crnf :: GoogleAccessToken -&gt; ()
-</span><a href="#local-6989586621689670897"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672397"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span>
-</span><span id="line-68"></span><span id="local-6989586621689670895"><span id="local-6989586621689670896"></span></span><span class="hs-keyword">data</span><span> </span><span id="TokenResp"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TokenResp"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span></span><span>
+</span><span id="line-68"></span><span id="local-6989586621689672395"><span id="local-6989586621689672396"></span></span><span class="hs-keyword">data</span><span> </span><span id="TokenResp"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TokenResp"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_trAccessToken"><span class="annot"><span class="annottext">TokenResp -&gt; GoogleAccessToken
 </span><a href="Hasura.Backends.BigQuery.Source.html#_trAccessToken"><span class="hs-identifier hs-var hs-var">_trAccessToken</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier hs-type">GoogleAccessToken</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>    </span><span id="_trExpiresAt"><span class="annot"><span class="annottext">TokenResp -&gt; Integer
 </span><a href="Hasura.Backends.BigQuery.Source.html#_trExpiresAt"><span class="hs-identifier hs-var hs-var">_trExpiresAt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-comment">-- Number of seconds until expiry from `now`, but we add `now` seconds to this for easy tracking</span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670888"><span id="local-6989586621689670890"><span class="annot"><span class="annottext">TokenResp -&gt; TokenResp -&gt; Bool
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672388"><span id="local-6989586621689672390"><span class="annot"><span class="annottext">TokenResp -&gt; TokenResp -&gt; Bool
 (TokenResp -&gt; TokenResp -&gt; Bool)
 -&gt; (TokenResp -&gt; TokenResp -&gt; Bool) -&gt; Eq TokenResp
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -567,7 +567,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TokenResp -&gt; TokenResp -&gt; Bool
 == :: TokenResp -&gt; TokenResp -&gt; Bool
 $c== :: TokenResp -&gt; TokenResp -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670882"><span id="local-6989586621689670884"><span id="local-6989586621689670886"><span class="annot"><span class="annottext">Int -&gt; TokenResp -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672382"><span id="local-6989586621689672384"><span id="local-6989586621689672386"><span class="annot"><span class="annottext">Int -&gt; TokenResp -&gt; ShowS
 [TokenResp] -&gt; ShowS
 TokenResp -&gt; String
 (Int -&gt; TokenResp -&gt; ShowS)
@@ -582,7 +582,7 @@ show :: TokenResp -&gt; String
 $cshow :: TokenResp -&gt; String
 showsPrec :: Int -&gt; TokenResp -&gt; ShowS
 $cshowsPrec :: Int -&gt; TokenResp -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cTokenResp"><span id="%24tTokenResp"><span id="local-6989586621689670853"><span id="local-6989586621689670855"><span id="local-6989586621689670857"><span id="local-6989586621689670859"><span id="local-6989586621689670861"><span id="local-6989586621689670863"><span id="local-6989586621689670865"><span id="local-6989586621689670867"><span id="local-6989586621689670869"><span id="local-6989586621689670871"><span id="local-6989586621689670873"><span id="local-6989586621689670875"><span id="local-6989586621689670877"><span id="local-6989586621689670879"><span class="annot"><span class="annottext">Typeable TokenResp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cTokenResp"><span id="%24tTokenResp"><span id="local-6989586621689672353"><span id="local-6989586621689672355"><span id="local-6989586621689672357"><span id="local-6989586621689672359"><span id="local-6989586621689672361"><span id="local-6989586621689672363"><span id="local-6989586621689672365"><span id="local-6989586621689672367"><span id="local-6989586621689672369"><span id="local-6989586621689672371"><span id="local-6989586621689672373"><span id="local-6989586621689672375"><span id="local-6989586621689672377"><span id="local-6989586621689672379"><span class="annot"><span class="annottext">Typeable TokenResp
 DataType
 Constr
 Typeable TokenResp
@@ -739,12 +739,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; TokenResp -&gt; c TokenResp
 $cp1Data :: Typeable TokenResp
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670849"><span class="annot"><span class="annottext">TokenResp -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672349"><span class="annot"><span class="annottext">TokenResp -&gt; ()
 (TokenResp -&gt; ()) -&gt; NFData TokenResp
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: TokenResp -&gt; ()
 $crnf :: TokenResp -&gt; ()
-</span><a href="#local-6989586621689670849"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TokenResp -&gt; Rep TokenResp x)
+</span><a href="#local-6989586621689672349"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TokenResp -&gt; Rep TokenResp x)
 -&gt; (forall x. Rep TokenResp x -&gt; TokenResp) -&gt; Generic TokenResp
 forall x. Rep TokenResp x -&gt; TokenResp
 forall x. TokenResp -&gt; Rep TokenResp x
@@ -752,7 +752,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep TokenResp x -&gt; TokenResp
 $cfrom :: forall x. TokenResp -&gt; Rep TokenResp x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670843"><span id="local-6989586621689670845"><span class="annot"><span class="annottext">Int -&gt; TokenResp -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672343"><span id="local-6989586621689672345"><span class="annot"><span class="annottext">Int -&gt; TokenResp -&gt; Int
 TokenResp -&gt; Int
 (Int -&gt; TokenResp -&gt; Int)
 -&gt; (TokenResp -&gt; Int) -&gt; Hashable TokenResp
@@ -761,37 +761,37 @@ hash :: TokenResp -&gt; Int
 $chash :: TokenResp -&gt; Int
 hashWithSalt :: Int -&gt; TokenResp -&gt; Int
 $chashWithSalt :: Int -&gt; TokenResp -&gt; Int
-</span><a href="#local-6989586621689670843"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672343"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670840"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-75"></span><span>  </span><span id="local-6989586621689670839"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TokenResp
-</span><a href="#local-6989586621689670839"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser TokenResp) -&gt; Value -&gt; Parser TokenResp
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672340"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621689672339"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TokenResp
+</span><a href="#local-6989586621689672339"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser TokenResp) -&gt; Value -&gt; Parser TokenResp
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;TokenResp&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser TokenResp) -&gt; Value -&gt; Parser TokenResp)
 -&gt; (Object -&gt; Parser TokenResp) -&gt; Value -&gt; Parser TokenResp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689670837"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670837"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689672337"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689672337"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">GoogleAccessToken -&gt; Integer -&gt; TokenResp
 </span><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span><span>
 </span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">(GoogleAccessToken -&gt; Integer -&gt; TokenResp)
 -&gt; Parser GoogleAccessToken -&gt; Parser (Integer -&gt; TokenResp)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670837"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser GoogleAccessToken
+</span><a href="#local-6989586621689672337"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser GoogleAccessToken
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;access_token&quot;</span></span><span>
 </span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">Parser (Integer -&gt; TokenResp) -&gt; Parser Integer -&gt; Parser TokenResp
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670837"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Integer
+</span><a href="#local-6989586621689672337"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Integer
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;expires_in&quot;</span></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span id="local-6989586621689670833"><span id="local-6989586621689670834"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceAccount"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-var">ServiceAccount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceAccount"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-var">ServiceAccount</span></a></span></span><span>
+</span><span id="line-80"></span><span id="local-6989586621689672333"><span id="local-6989586621689672334"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceAccount"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-var">ServiceAccount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceAccount"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-var">ServiceAccount</span></a></span></span><span>
 </span><span id="line-81"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_saClientEmail"><span class="annot"><span class="annottext">ServiceAccount -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Source.html#_saClientEmail"><span class="hs-identifier hs-var hs-var">_saClientEmail</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-82"></span><span>    </span><span id="_saPrivateKey"><span class="annot"><span class="annottext">ServiceAccount -&gt; PKey
@@ -799,7 +799,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span id="line-83"></span><span>    </span><span id="_saProjectId"><span class="annot"><span class="annottext">ServiceAccount -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Source.html#_saProjectId"><span class="hs-identifier hs-var hs-var">_saProjectId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-84"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670825"><span id="local-6989586621689670827"><span class="annot"><span class="annottext">ServiceAccount -&gt; ServiceAccount -&gt; Bool
+</span><span id="line-85"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672325"><span id="local-6989586621689672327"><span class="annot"><span class="annottext">ServiceAccount -&gt; ServiceAccount -&gt; Bool
 (ServiceAccount -&gt; ServiceAccount -&gt; Bool)
 -&gt; (ServiceAccount -&gt; ServiceAccount -&gt; Bool) -&gt; Eq ServiceAccount
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -807,7 +807,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ServiceAccount -&gt; ServiceAccount -&gt; Bool
 == :: ServiceAccount -&gt; ServiceAccount -&gt; Bool
 $c== :: ServiceAccount -&gt; ServiceAccount -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670819"><span id="local-6989586621689670821"><span id="local-6989586621689670823"><span class="annot"><span class="annottext">Int -&gt; ServiceAccount -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672319"><span id="local-6989586621689672321"><span id="local-6989586621689672323"><span class="annot"><span class="annottext">Int -&gt; ServiceAccount -&gt; ShowS
 [ServiceAccount] -&gt; ShowS
 ServiceAccount -&gt; String
 (Int -&gt; ServiceAccount -&gt; ShowS)
@@ -822,7 +822,7 @@ show :: ServiceAccount -&gt; String
 $cshow :: ServiceAccount -&gt; String
 showsPrec :: Int -&gt; ServiceAccount -&gt; ShowS
 $cshowsPrec :: Int -&gt; ServiceAccount -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cServiceAccount"><span id="%24tServiceAccount"><span id="local-6989586621689670790"><span id="local-6989586621689670792"><span id="local-6989586621689670794"><span id="local-6989586621689670796"><span id="local-6989586621689670798"><span id="local-6989586621689670800"><span id="local-6989586621689670802"><span id="local-6989586621689670804"><span id="local-6989586621689670806"><span id="local-6989586621689670808"><span id="local-6989586621689670810"><span id="local-6989586621689670812"><span id="local-6989586621689670814"><span id="local-6989586621689670816"><span class="annot"><span class="annottext">Typeable ServiceAccount
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cServiceAccount"><span id="%24tServiceAccount"><span id="local-6989586621689672290"><span id="local-6989586621689672292"><span id="local-6989586621689672294"><span id="local-6989586621689672296"><span id="local-6989586621689672298"><span id="local-6989586621689672300"><span id="local-6989586621689672302"><span id="local-6989586621689672304"><span id="local-6989586621689672306"><span id="local-6989586621689672308"><span id="local-6989586621689672310"><span id="local-6989586621689672312"><span id="local-6989586621689672314"><span id="local-6989586621689672316"><span class="annot"><span class="annottext">Typeable ServiceAccount
 DataType
 Constr
 Typeable ServiceAccount
@@ -998,12 +998,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; ServiceAccount -&gt; c ServiceAccount
 $cp1Data :: Typeable ServiceAccount
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670786"><span class="annot"><span class="annottext">ServiceAccount -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672286"><span class="annot"><span class="annottext">ServiceAccount -&gt; ()
 (ServiceAccount -&gt; ()) -&gt; NFData ServiceAccount
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ServiceAccount -&gt; ()
 $crnf :: ServiceAccount -&gt; ()
-</span><a href="#local-6989586621689670786"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ServiceAccount -&gt; Rep ServiceAccount x)
+</span><a href="#local-6989586621689672286"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ServiceAccount -&gt; Rep ServiceAccount x)
 -&gt; (forall x. Rep ServiceAccount x -&gt; ServiceAccount)
 -&gt; Generic ServiceAccount
 forall x. Rep ServiceAccount x -&gt; ServiceAccount
@@ -1012,7 +1012,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ServiceAccount x -&gt; ServiceAccount
 $cfrom :: forall x. ServiceAccount -&gt; Rep ServiceAccount x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670780"><span id="local-6989586621689670782"><span class="annot"><span class="annottext">Int -&gt; ServiceAccount -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672280"><span id="local-6989586621689672282"><span class="annot"><span class="annottext">Int -&gt; ServiceAccount -&gt; Int
 ServiceAccount -&gt; Int
 (Int -&gt; ServiceAccount -&gt; Int)
 -&gt; (ServiceAccount -&gt; Int) -&gt; Hashable ServiceAccount
@@ -1021,14 +1021,14 @@ hash :: ServiceAccount -&gt; Int
 $chash :: ServiceAccount -&gt; Int
 hashWithSalt :: Int -&gt; ServiceAccount -&gt; Int
 $chashWithSalt :: Int -&gt; ServiceAccount -&gt; Int
-</span><a href="#local-6989586621689670780"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672280"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span class="hs-special">$(</span><span id="local-6989586621689670768"><span id="local-6989586621689670770"><span id="local-6989586621689670772"><span id="local-6989586621689670774"><span id="local-6989586621689670776"><span id="local-6989586621689670778"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">False</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ServiceAccount</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span class="hs-special">$(</span><span id="local-6989586621689672268"><span id="local-6989586621689672270"><span id="local-6989586621689672272"><span id="local-6989586621689672274"><span id="local-6989586621689672276"><span id="local-6989586621689672278"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">False</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ServiceAccount</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span id="local-6989586621689670765"><span id="local-6989586621689670766"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-var">ConfigurationJSON</span></a></span></span><span> </span><span id="local-6989586621689671119"><span class="annot"><a href="#local-6989586621689671119"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-89"></span><span id="local-6989586621689672265"><span id="local-6989586621689672266"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-var">ConfigurationJSON</span></a></span></span><span> </span><span id="local-6989586621689672619"><span class="annot"><a href="#local-6989586621689672619"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromEnvJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-var">FromEnvJSON</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromYamlJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-var">FromYamlJSON</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689671119"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-92"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670757"><span id="local-6989586621689670759"><span id="local-6989586621689670761"><span class="annot"><span class="annottext">Int -&gt; ConfigurationJSON a -&gt; ShowS
+</span><span id="line-91"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromYamlJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-var">FromYamlJSON</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689672619"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672257"><span id="local-6989586621689672259"><span id="local-6989586621689672261"><span class="annot"><span class="annottext">Int -&gt; ConfigurationJSON a -&gt; ShowS
 [ConfigurationJSON a] -&gt; ShowS
 ConfigurationJSON a -&gt; String
 (Int -&gt; ConfigurationJSON a -&gt; ShowS)
@@ -1046,7 +1046,7 @@ show :: ConfigurationJSON a -&gt; String
 $cshow :: forall a. Show a =&gt; ConfigurationJSON a -&gt; String
 showsPrec :: Int -&gt; ConfigurationJSON a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; ConfigurationJSON a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670753"><span id="local-6989586621689670755"><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672253"><span id="local-6989586621689672255"><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
 (ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool)
 -&gt; (ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool)
 -&gt; Eq (ConfigurationJSON a)
@@ -1074,13 +1074,13 @@ forall a x. ConfigurationJSON a -&gt; Rep (ConfigurationJSON a) x
 $cto :: forall a x. Rep (ConfigurationJSON a) x -&gt; ConfigurationJSON a
 $cfrom :: forall a x. ConfigurationJSON a -&gt; Rep (ConfigurationJSON a) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670749"><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; ()
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672249"><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; ()
 (ConfigurationJSON a -&gt; ()) -&gt; NFData (ConfigurationJSON a)
 forall a. NFData a =&gt; ConfigurationJSON a -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ConfigurationJSON a -&gt; ()
 $crnf :: forall a. NFData a =&gt; ConfigurationJSON a -&gt; ()
-</span><a href="#local-6989586621689670749"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670745"><span id="local-6989586621689670747"><span class="annot"><span class="annottext">Int -&gt; ConfigurationJSON a -&gt; Int
+</span><a href="#local-6989586621689672249"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672245"><span id="local-6989586621689672247"><span class="annot"><span class="annottext">Int -&gt; ConfigurationJSON a -&gt; Int
 ConfigurationJSON a -&gt; Int
 (Int -&gt; ConfigurationJSON a -&gt; Int)
 -&gt; (ConfigurationJSON a -&gt; Int) -&gt; Hashable (ConfigurationJSON a)
@@ -1091,25 +1091,25 @@ hash :: ConfigurationJSON a -&gt; Int
 $chash :: forall a. Hashable a =&gt; ConfigurationJSON a -&gt; Int
 hashWithSalt :: Int -&gt; ConfigurationJSON a -&gt; Int
 $chashWithSalt :: forall a. Hashable a =&gt; Int -&gt; ConfigurationJSON a -&gt; Int
-</span><a href="#local-6989586621689670745"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672245"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span id="local-6989586621689670744"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670741"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689670744"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689670744"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-96"></span><span>  </span><span id="local-6989586621689670740"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (ConfigurationJSON a)
-</span><a href="#local-6989586621689670740"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-97"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689670738"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670738"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689670736"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670736"><span class="hs-identifier hs-var">text</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
+</span><span id="line-95"></span><span id="local-6989586621689672244"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672241"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689672244"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672244"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-96"></span><span>  </span><span id="local-6989586621689672240"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (ConfigurationJSON a)
+</span><a href="#local-6989586621689672240"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689672238"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689672238"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689672236"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672236"><span class="hs-identifier hs-var">text</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
 forall v. Key -&gt; KeyMap v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">KM.lookup</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670738"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; Parser (ConfigurationJSON a)
+</span><a href="#local-6989586621689672238"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; Parser (ConfigurationJSON a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ConfigurationJSON a
 forall a. Text -&gt; ConfigurationJSON a
 </span><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-var">FromEnvJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670736"><span class="hs-identifier hs-var">text</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-98"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689670734"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670734"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String (ConfigurationJSON a)
+</span><a href="#local-6989586621689672236"><span class="hs-identifier hs-var">text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689672234"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672234"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String (ConfigurationJSON a)
 forall a. FromJSON a =&gt; ByteString -&gt; Either String a
 </span><span class="hs-identifier hs-var">J.eitherDecode</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Either String (ConfigurationJSON a))
 -&gt; (Text -&gt; ByteString)
@@ -1125,18 +1125,18 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; Text -&gt; Either String (ConfigurationJSON a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670734"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689672234"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-99"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (ConfigurationJSON a)
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;error parsing configuration json&quot;</span></span><span>
-</span><span id="line-100"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689670730"><span class="annot"><span class="annottext">ConfigurationJSON a
-</span><a href="#local-6989586621689670730"><span class="hs-identifier hs-var">sa</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; Parser (ConfigurationJSON a)
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689672230"><span class="annot"><span class="annottext">ConfigurationJSON a
+</span><a href="#local-6989586621689672230"><span class="hs-identifier hs-var">sa</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; Parser (ConfigurationJSON a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a
-</span><a href="#local-6989586621689670730"><span class="hs-identifier hs-var">sa</span></a></span><span>
-</span><span id="line-101"></span><span>    </span><span id="local-6989586621689670729"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689670729"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(a -&gt; ConfigurationJSON a)
+</span><a href="#local-6989586621689672230"><span class="hs-identifier hs-var">sa</span></a></span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621689672229"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689672229"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(a -&gt; ConfigurationJSON a)
 -&gt; Parser a -&gt; Parser (ConfigurationJSON a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ConfigurationJSON a
@@ -1144,30 +1144,30 @@ forall a. a -&gt; ConfigurationJSON a
 </span><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-var">FromYamlJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Parser a
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689670729"><span class="hs-identifier hs-var">j</span></a></span><span class="hs-special">)</span></span><span>
+</span><a href="#local-6989586621689672229"><span class="hs-identifier hs-var">j</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span id="local-6989586621689670728"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670721"><span id="local-6989586621689670723"><span id="local-6989586621689670725"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689670728"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689670728"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-104"></span><span>  </span><span id="local-6989586621689670720"><span class="annot"><span class="annottext">toJSON :: ConfigurationJSON a -&gt; Value
-</span><a href="#local-6989586621689670720"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-105"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-type">FromEnvJSON</span></a></span><span> </span><span id="local-6989586621689670719"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670719"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-103"></span><span id="local-6989586621689672228"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672221"><span id="local-6989586621689672223"><span id="local-6989586621689672225"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689672228"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672228"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621689672220"><span class="annot"><span class="annottext">toJSON :: ConfigurationJSON a -&gt; Value
+</span><a href="#local-6989586621689672220"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-type">FromEnvJSON</span></a></span><span> </span><span id="local-6989586621689672219"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672219"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670719"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-type">FromYamlJSON</span></a></span><span> </span><span id="local-6989586621689670716"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689670716"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+</span><a href="#local-6989586621689672219"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-type">FromYamlJSON</span></a></span><span> </span><span id="local-6989586621689672216"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689672216"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689670716"><span class="hs-identifier hs-var">j</span></a></span></span><span>
+</span><a href="#local-6989586621689672216"><span class="hs-identifier hs-var">j</span></a></span></span><span>
 </span><span id="line-107"></span><span>
 </span><span id="line-108"></span><span class="hs-comment">-- | Configuration inputs when they are a YAML array or an Env var whos value is</span><span>
 </span><span id="line-109"></span><span class="hs-comment">-- a comma-separated string</span><span>
-</span><span id="line-110"></span><span id="local-6989586621689670714"><span id="local-6989586621689670715"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationInputs"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-var">ConfigurationInputs</span></a></span></span><span>
+</span><span id="line-110"></span><span id="local-6989586621689672214"><span id="local-6989586621689672215"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationInputs"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-var">ConfigurationInputs</span></a></span></span><span>
 </span><span id="line-111"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromYamls"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-var">FromYamls</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
 </span><span id="line-112"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromEnvs"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-var">FromEnvs</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-113"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670706"><span id="local-6989586621689670708"><span id="local-6989586621689670710"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInputs -&gt; ShowS
+</span><span id="line-113"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672206"><span id="local-6989586621689672208"><span id="local-6989586621689672210"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInputs -&gt; ShowS
 [ConfigurationInputs] -&gt; ShowS
 ConfigurationInputs -&gt; String
 (Int -&gt; ConfigurationInputs -&gt; ShowS)
@@ -1182,7 +1182,7 @@ show :: ConfigurationInputs -&gt; String
 $cshow :: ConfigurationInputs -&gt; String
 showsPrec :: Int -&gt; ConfigurationInputs -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConfigurationInputs -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670702"><span id="local-6989586621689670704"><span class="annot"><span class="annottext">ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672202"><span id="local-6989586621689672204"><span class="annot"><span class="annottext">ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool
 (ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool)
 -&gt; (ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool)
 -&gt; Eq ConfigurationInputs
@@ -1201,12 +1201,12 @@ forall a.
 $cto :: forall x. Rep ConfigurationInputs x -&gt; ConfigurationInputs
 $cfrom :: forall x. ConfigurationInputs -&gt; Rep ConfigurationInputs x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670698"><span class="annot"><span class="annottext">ConfigurationInputs -&gt; ()
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672198"><span class="annot"><span class="annottext">ConfigurationInputs -&gt; ()
 (ConfigurationInputs -&gt; ()) -&gt; NFData ConfigurationInputs
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ConfigurationInputs -&gt; ()
 $crnf :: ConfigurationInputs -&gt; ()
-</span><a href="#local-6989586621689670698"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670694"><span id="local-6989586621689670696"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInputs -&gt; Int
+</span><a href="#local-6989586621689672198"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672194"><span id="local-6989586621689672196"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInputs -&gt; Int
 ConfigurationInputs -&gt; Int
 (Int -&gt; ConfigurationInputs -&gt; Int)
 -&gt; (ConfigurationInputs -&gt; Int) -&gt; Hashable ConfigurationInputs
@@ -1215,39 +1215,39 @@ hash :: ConfigurationInputs -&gt; Int
 $chash :: ConfigurationInputs -&gt; Int
 hashWithSalt :: Int -&gt; ConfigurationInputs -&gt; Int
 $chashWithSalt :: Int -&gt; ConfigurationInputs -&gt; Int
-</span><a href="#local-6989586621689670694"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672194"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-115"></span><span>
-</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670687"><span id="local-6989586621689670689"><span id="local-6989586621689670691"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-117"></span><span>  </span><span id="local-6989586621689670686"><span class="annot"><span class="annottext">toJSON :: ConfigurationInputs -&gt; Value
-</span><a href="#local-6989586621689670686"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-type">FromYamls</span></a></span><span> </span><span id="local-6989586621689670685"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689670685"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Value
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672187"><span id="local-6989586621689672189"><span id="local-6989586621689672191"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621689672186"><span class="annot"><span class="annottext">toJSON :: ConfigurationInputs -&gt; Value
+</span><a href="#local-6989586621689672186"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-type">FromYamls</span></a></span><span> </span><span id="local-6989586621689672185"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689672185"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689670685"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-119"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-type">FromEnvs</span></a></span><span> </span><span id="local-6989586621689670684"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670684"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="#local-6989586621689672185"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-type">FromEnvs</span></a></span><span> </span><span id="local-6989586621689672184"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672184"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670684"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689672184"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670681"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621689670680"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConfigurationInputs
-</span><a href="#local-6989586621689670680"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-123"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689670679"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670679"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInputs
+</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672181"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621689672180"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConfigurationInputs
+</span><a href="#local-6989586621689672180"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689672179"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689672179"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInputs
 </span><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-var">FromEnvs</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInputs)
 -&gt; Parser Text -&gt; Parser ConfigurationInputs
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670679"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
+</span><a href="#local-6989586621689672179"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span>
-</span><span id="line-124"></span><span>    </span><span id="local-6989586621689670678"><span class="annot"><span class="annottext">s :: Value
-</span><a href="#local-6989586621689670678"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span class="annot"><span class="annottext">Array
+</span><span id="line-124"></span><span>    </span><span id="local-6989586621689672178"><span class="annot"><span class="annottext">s :: Value
+</span><a href="#local-6989586621689672178"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span class="annot"><span class="annottext">Array
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; ConfigurationInputs
 </span><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-var">FromYamls</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; ConfigurationInputs)
 -&gt; Parser [Text] -&gt; Parser ConfigurationInputs
@@ -1255,7 +1255,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser [Text]
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689670678"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689672178"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-125"></span><span>    </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ConfigurationInputs
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -1264,10 +1264,10 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- | Configuration input when the YAML value as well as the Env var have</span><span>
 </span><span id="line-128"></span><span class="hs-comment">-- singlular values</span><span>
-</span><span id="line-129"></span><span id="local-6989586621689670675"><span id="local-6989586621689670676"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationInput"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-var">ConfigurationInput</span></a></span></span><span>
+</span><span id="line-129"></span><span id="local-6989586621689672175"><span id="local-6989586621689672176"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationInput"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-var">ConfigurationInput</span></a></span></span><span>
 </span><span id="line-130"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromYaml"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-var">FromYaml</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-131"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromEnv"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-var">FromEnv</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670667"><span id="local-6989586621689670669"><span id="local-6989586621689670671"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInput -&gt; ShowS
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672167"><span id="local-6989586621689672169"><span id="local-6989586621689672171"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInput -&gt; ShowS
 [ConfigurationInput] -&gt; ShowS
 ConfigurationInput -&gt; String
 (Int -&gt; ConfigurationInput -&gt; ShowS)
@@ -1282,7 +1282,7 @@ show :: ConfigurationInput -&gt; String
 $cshow :: ConfigurationInput -&gt; String
 showsPrec :: Int -&gt; ConfigurationInput -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConfigurationInput -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670663"><span id="local-6989586621689670665"><span class="annot"><span class="annottext">ConfigurationInput -&gt; ConfigurationInput -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672163"><span id="local-6989586621689672165"><span class="annot"><span class="annottext">ConfigurationInput -&gt; ConfigurationInput -&gt; Bool
 (ConfigurationInput -&gt; ConfigurationInput -&gt; Bool)
 -&gt; (ConfigurationInput -&gt; ConfigurationInput -&gt; Bool)
 -&gt; Eq ConfigurationInput
@@ -1301,12 +1301,12 @@ forall a.
 $cto :: forall x. Rep ConfigurationInput x -&gt; ConfigurationInput
 $cfrom :: forall x. ConfigurationInput -&gt; Rep ConfigurationInput x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670659"><span class="annot"><span class="annottext">ConfigurationInput -&gt; ()
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672159"><span class="annot"><span class="annottext">ConfigurationInput -&gt; ()
 (ConfigurationInput -&gt; ()) -&gt; NFData ConfigurationInput
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ConfigurationInput -&gt; ()
 $crnf :: ConfigurationInput -&gt; ()
-</span><a href="#local-6989586621689670659"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670655"><span id="local-6989586621689670657"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInput -&gt; Int
+</span><a href="#local-6989586621689672159"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672155"><span id="local-6989586621689672157"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInput -&gt; Int
 ConfigurationInput -&gt; Int
 (Int -&gt; ConfigurationInput -&gt; Int)
 -&gt; (ConfigurationInput -&gt; Int) -&gt; Hashable ConfigurationInput
@@ -1315,39 +1315,39 @@ hash :: ConfigurationInput -&gt; Int
 $chash :: ConfigurationInput -&gt; Int
 hashWithSalt :: Int -&gt; ConfigurationInput -&gt; Int
 $chashWithSalt :: Int -&gt; ConfigurationInput -&gt; Int
-</span><a href="#local-6989586621689670655"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672155"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670648"><span id="local-6989586621689670650"><span id="local-6989586621689670652"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-136"></span><span>  </span><span id="local-6989586621689670647"><span class="annot"><span class="annottext">toJSON :: ConfigurationInput -&gt; Value
-</span><a href="#local-6989586621689670647"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-137"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-type">FromYaml</span></a></span><span> </span><span id="local-6989586621689670646"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670646"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672148"><span id="local-6989586621689672150"><span id="local-6989586621689672152"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621689672147"><span class="annot"><span class="annottext">toJSON :: ConfigurationInput -&gt; Value
+</span><a href="#local-6989586621689672147"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-137"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-type">FromYaml</span></a></span><span> </span><span id="local-6989586621689672146"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672146"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670646"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-138"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-type">FromEnv</span></a></span><span> </span><span id="local-6989586621689670645"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670645"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="#local-6989586621689672146"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-138"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-type">FromEnv</span></a></span><span> </span><span id="local-6989586621689672145"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689672145"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689670645"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689672145"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-139"></span><span>
-</span><span id="line-140"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670642"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-141"></span><span>  </span><span id="local-6989586621689670641"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConfigurationInput
-</span><a href="#local-6989586621689670641"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-142"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689670640"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670640"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
+</span><span id="line-140"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672142"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-141"></span><span>  </span><span id="local-6989586621689672141"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConfigurationInput
+</span><a href="#local-6989586621689672141"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689672140"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689672140"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
 </span><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-var">FromEnv</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInput)
 -&gt; Parser Text -&gt; Parser ConfigurationInput
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689670640"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
+</span><a href="#local-6989586621689672140"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span>
-</span><span id="line-143"></span><span>    </span><span id="local-6989586621689670639"><span class="annot"><span class="annottext">s :: Value
-</span><a href="#local-6989586621689670639"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-143"></span><span>    </span><span id="local-6989586621689672139"><span class="annot"><span class="annottext">s :: Value
+</span><a href="#local-6989586621689672139"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
 </span><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-var">FromYaml</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInput)
 -&gt; Parser Text -&gt; Parser ConfigurationInput
@@ -1355,9 +1355,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689670639"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-144"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Number</span></span><span> </span><span id="local-6989586621689670637"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689670637"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
+</span><a href="#local-6989586621689672139"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-144"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Number</span></span><span> </span><span id="local-6989586621689672137"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689672137"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
 </span><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-var">FromYaml</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInput)
 -&gt; Parser Text -&gt; Parser ConfigurationInput
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1367,14 +1367,14 @@ forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689670637"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672137"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ConfigurationInput
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;one of string or number or object must be provided&quot;</span></span><span>
 </span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span id="local-6989586621689670634"><span id="local-6989586621689670635"></span></span><span class="hs-keyword">data</span><span> </span><span id="BigQueryConnSourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-var">BigQueryConnSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BigQueryConnSourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-var">BigQueryConnSourceConfig</span></a></span></span><span>
+</span><span id="line-147"></span><span id="local-6989586621689672134"><span id="local-6989586621689672135"></span></span><span class="hs-keyword">data</span><span> </span><span id="BigQueryConnSourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-var">BigQueryConnSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BigQueryConnSourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-var">BigQueryConnSourceConfig</span></a></span></span><span>
 </span><span id="line-148"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cscServiceAccount"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ConfigurationJSON ServiceAccount
 </span><a href="Hasura.Backends.BigQuery.Source.html#_cscServiceAccount"><span class="hs-identifier hs-var hs-var">_cscServiceAccount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-149"></span><span>    </span><span id="_cscDatasets"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ConfigurationInputs
@@ -1388,7 +1388,7 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span id="line-153"></span><span>    </span><span id="_cscRetryLimit"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; Maybe ConfigurationInput
 </span><a href="Hasura.Backends.BigQuery.Source.html#_cscRetryLimit"><span class="hs-identifier hs-var hs-var">_cscRetryLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span><span>
 </span><span id="line-154"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-155"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670623"><span id="local-6989586621689670625"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+</span><span id="line-155"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672123"><span id="local-6989586621689672125"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
 (BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool)
 -&gt; (BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool)
 -&gt; Eq BigQueryConnSourceConfig
@@ -1412,20 +1412,20 @@ $cto :: forall x.
 Rep BigQueryConnSourceConfig x -&gt; BigQueryConnSourceConfig
 $cfrom :: forall x.
 BigQueryConnSourceConfig -&gt; Rep BigQueryConnSourceConfig x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689670619"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672119"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ()
 (BigQueryConnSourceConfig -&gt; ()) -&gt; NFData BigQueryConnSourceConfig
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: BigQueryConnSourceConfig -&gt; ()
 $crnf :: BigQueryConnSourceConfig -&gt; ()
-</span><a href="#local-6989586621689670619"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689672119"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-156"></span><span>
-</span><span id="line-157"></span><span class="hs-special">$(</span><span id="local-6989586621689670607"><span id="local-6989586621689670609"><span id="local-6989586621689670611"><span id="local-6989586621689670613"><span id="local-6989586621689670615"><span id="local-6989586621689670617"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BigQueryConnSourceConfig</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-157"></span><span class="hs-special">$(</span><span id="local-6989586621689672107"><span id="local-6989586621689672109"><span id="local-6989586621689672111"><span id="local-6989586621689672113"><span id="local-6989586621689672115"><span id="local-6989586621689672117"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BigQueryConnSourceConfig</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-158"></span><span>
 </span><span id="line-159"></span><span class="hs-comment">-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON</span><span>
 </span><span id="line-160"></span><span class="hs-comment">-- instances.</span><span>
-</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670604"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-162"></span><span>  </span><span id="local-6989586621689670602"><span class="annot"><span class="annottext">codec :: JSONCodec BigQueryConnSourceConfig
-</span><a href="#local-6989586621689670602"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672104"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-162"></span><span>  </span><span id="local-6989586621689672102"><span class="annot"><span class="annottext">codec :: JSONCodec BigQueryConnSourceConfig
+</span><a href="#local-6989586621689672102"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; JSONCodec BigQueryConnSourceConfig
 -&gt; JSONCodec BigQueryConnSourceConfig
 forall input output.
@@ -1440,12 +1440,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. (FromJSON a, ToJSON a) =&gt; JSONCodec a
 </span><a href="Hasura.Metadata.DTO.Placeholder.html#placeholderCodecViaJSON"><span class="hs-identifier hs-var">placeholderCodecViaJSON</span></a></span><span>
 </span><span id="line-163"></span><span>
-</span><span id="line-164"></span><span id="local-6989586621689670596"><span id="local-6989586621689670598"><span id="local-6989586621689670600"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span></span></span><span>
+</span><span id="line-164"></span><span id="local-6989586621689672096"><span id="local-6989586621689672098"><span id="local-6989586621689672100"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span></span></span><span>
 </span><span id="line-165"></span><span>
-</span><span id="line-166"></span><span id="local-6989586621689670592"><span id="local-6989586621689670594"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span></span><span>
+</span><span id="line-166"></span><span id="local-6989586621689672092"><span id="local-6989586621689672094"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span></span><span>
 </span><span id="line-167"></span><span>
 </span><span id="line-168"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-169"></span><span>  </span><span id="local-6989586621689670588"><span class="annot"><span class="annottext">unchanged :: Accesses
+</span><span id="line-169"></span><span>  </span><span id="local-6989586621689672088"><span class="annot"><span class="annottext">unchanged :: Accesses
 -&gt; BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
 </span><a href="Hasura.Incremental.Internal.Dependency.html#unchanged"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
@@ -1458,7 +1458,7 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span id="line-173"></span><span>    </span><span id="_retryNumRetries"><span class="annot"><span class="annottext">RetryOptions -&gt; Int
 </span><a href="Hasura.Backends.BigQuery.Source.html#_retryNumRetries"><span class="hs-identifier hs-var hs-var">_retryNumRetries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-174"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670580"><span id="local-6989586621689670582"><span class="annot"><span class="annottext">RetryOptions -&gt; RetryOptions -&gt; Bool
+</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672080"><span id="local-6989586621689672082"><span class="annot"><span class="annottext">RetryOptions -&gt; RetryOptions -&gt; Bool
 (RetryOptions -&gt; RetryOptions -&gt; Bool)
 -&gt; (RetryOptions -&gt; RetryOptions -&gt; Bool) -&gt; Eq RetryOptions
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1478,7 +1478,7 @@ $c== :: RetryOptions -&gt; RetryOptions -&gt; Bool
 </span><span id="line-181"></span><span>    </span><span id="_bqAccessTokenMVar"><span class="annot"><span class="annottext">BigQueryConnection -&gt; MVar (Maybe TokenResp)
 </span><a href="Hasura.Backends.BigQuery.Source.html#_bqAccessTokenMVar"><span class="hs-identifier hs-var hs-var">_bqAccessTokenMVar</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-182"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-183"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670571"><span id="local-6989586621689670573"><span class="annot"><span class="annottext">BigQueryConnection -&gt; BigQueryConnection -&gt; Bool
+</span><span id="line-183"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672071"><span id="local-6989586621689672073"><span class="annot"><span class="annottext">BigQueryConnection -&gt; BigQueryConnection -&gt; Bool
 (BigQueryConnection -&gt; BigQueryConnection -&gt; Bool)
 -&gt; (BigQueryConnection -&gt; BigQueryConnection -&gt; Bool)
 -&gt; Eq BigQueryConnection
@@ -1497,7 +1497,7 @@ $c== :: BigQueryConnection -&gt; BigQueryConnection -&gt; Bool
 </span><span id="line-188"></span><span>    </span><span id="_scGlobalSelectLimit"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; Int64
 </span><a href="Hasura.Backends.BigQuery.Source.html#_scGlobalSelectLimit"><span class="hs-identifier hs-var hs-var">_scGlobalSelectLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int.Int64</span></span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-190"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689670563"><span id="local-6989586621689670565"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+</span><span id="line-190"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672063"><span id="local-6989586621689672065"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
 (BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool)
 -&gt; (BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool)
 -&gt; Eq BigQuerySourceConfig
@@ -1509,15 +1509,15 @@ $c== :: BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-191"></span><span>
 </span><span id="line-192"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-193"></span><span>  </span><span id="local-6989586621689670560"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
-</span><a href="#local-6989586621689670560"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><span id="line-193"></span><span>  </span><span id="local-6989586621689672060"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+</span><a href="#local-6989586621689672060"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">(==)</span></span><span>
 </span><span id="line-194"></span><span>
-</span><span id="line-195"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689670553"><span id="local-6989586621689670555"><span id="local-6989586621689670557"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-196"></span><span>  </span><span id="local-6989586621689670552"><span class="annot"><span class="annottext">toJSON :: BigQuerySourceConfig -&gt; Value
-</span><a href="#local-6989586621689670552"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689670549"><span id="local-6989586621689670550"><span id="local-6989586621689670551"><span class="annot"><span class="annottext">Int64
+</span><span id="line-195"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689672053"><span id="local-6989586621689672055"><span id="local-6989586621689672057"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-196"></span><span>  </span><span id="local-6989586621689672052"><span class="annot"><span class="annottext">toJSON :: BigQuerySourceConfig -&gt; Value
+</span><a href="#local-6989586621689672052"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689672049"><span id="local-6989586621689672050"><span id="local-6989586621689672051"><span class="annot"><span class="annottext">Int64
 [Text]
 BigQueryConnection
 _scGlobalSelectLimit :: Int64
@@ -1526,7 +1526,7 @@ _scConnection :: BigQueryConnection
 _scGlobalSelectLimit :: BigQuerySourceConfig -&gt; Int64
 _scDatasets :: BigQuerySourceConfig -&gt; [Text]
 _scConnection :: BigQuerySourceConfig -&gt; BigQueryConnection
-</span><a href="#local-6989586621689670549"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689672049"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-197"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1536,48 +1536,48 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">BigQueryConnection -&gt; ServiceAccount
 </span><a href="Hasura.Backends.BigQuery.Source.html#_bqServiceAccount"><span class="hs-identifier hs-var hs-var">_bqServiceAccount</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryConnection
-</span><a href="#local-6989586621689670551"><span class="hs-identifier hs-var">_scConnection</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689672051"><span class="hs-identifier hs-var">_scConnection</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-199"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;datasets&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [Text] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689670550"><span class="hs-identifier hs-var">_scDatasets</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689672050"><span class="hs-identifier hs-var">_scDatasets</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-200"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;project_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">BigQueryConnection -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Source.html#_bqProjectId"><span class="hs-identifier hs-var hs-var">_bqProjectId</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryConnection
-</span><a href="#local-6989586621689670551"><span class="hs-identifier hs-var">_scConnection</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689672051"><span class="hs-identifier hs-var">_scConnection</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-201"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;global_select_limit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int64 -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689670549"><span class="hs-identifier hs-var">_scGlobalSelectLimit</span></a></span><span>
+</span><a href="#local-6989586621689672049"><span class="hs-identifier hs-var">_scGlobalSelectLimit</span></a></span><span>
 </span><span id="line-202"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-203"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">BigQueryConnection -&gt; Maybe RetryOptions
 </span><a href="Hasura.Backends.BigQuery.Source.html#_bqRetryOptions"><span class="hs-identifier hs-var hs-var">_bqRetryOptions</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryConnection
-</span><a href="#local-6989586621689670551"><span class="hs-identifier hs-var">_scConnection</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-204"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689670547"><span id="local-6989586621689670548"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689672051"><span class="hs-identifier hs-var">_scConnection</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-204"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689672047"><span id="local-6989586621689672048"><span class="annot"><span class="annottext">Int
 Microseconds
 _retryNumRetries :: Int
 _retryBaseDelay :: Microseconds
 _retryNumRetries :: RetryOptions -&gt; Int
 _retryBaseDelay :: RetryOptions -&gt; Microseconds
-</span><a href="#local-6989586621689670547"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689672047"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-205"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;base_delay&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Integer -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Integer
 </span><a href="Data.Time.Clock.Units.html#diffTimeToMicroSeconds"><span class="hs-identifier hs-var">diffTimeToMicroSeconds</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Microseconds -&gt; DiffTime
 </span><a href="Data.Time.Clock.Units.html#microseconds"><span class="hs-identifier hs-var hs-var">microseconds</span></a></span><span> </span><span class="annot"><span class="annottext">Microseconds
-</span><a href="#local-6989586621689670548"><span class="hs-identifier hs-var">_retryBaseDelay</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689672048"><span class="hs-identifier hs-var">_retryBaseDelay</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-206"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;retry_limit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689670547"><span class="hs-identifier hs-var">_retryNumRetries</span></a></span><span>
+</span><a href="#local-6989586621689672047"><span class="hs-identifier hs-var">_retryNumRetries</span></a></span><span>
 </span><span id="line-207"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-208"></span><span>          </span><span class="annot"><span class="annottext">Maybe RetryOptions
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>

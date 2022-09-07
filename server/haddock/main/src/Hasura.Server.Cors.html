@@ -25,7 +25,7 @@
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier">fmapL</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span id="local-6989586621689625267"><span id="local-6989586621689625268"></span></span><span class="hs-keyword">data</span><span> </span><span id="DomainParts"><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-var">DomainParts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DomainParts"><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-var">DomainParts</span></a></span></span><span>
+</span><span id="line-28"></span><span id="local-6989586621689626740"><span id="local-6989586621689626741"></span></span><span class="hs-keyword">data</span><span> </span><span id="DomainParts"><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-var">DomainParts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DomainParts"><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-var">DomainParts</span></a></span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="wdScheme"><span class="annot"><span class="annottext">DomainParts -&gt; Text
 </span><a href="Hasura.Server.Cors.html#wdScheme"><span class="hs-identifier hs-var hs-var">wdScheme</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-30"></span><span>    </span><span id="wdHost"><span class="annot"><span class="annottext">DomainParts -&gt; Text
@@ -33,7 +33,7 @@
 </span><span id="line-31"></span><span>    </span><span id="wdPort"><span class="annot"><span class="annottext">DomainParts -&gt; Maybe Int
 </span><a href="Hasura.Server.Cors.html#wdPort"><span class="hs-identifier hs-var hs-var">wdPort</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689625257"><span id="local-6989586621689625259"><span id="local-6989586621689625261"><span class="annot"><span class="annottext">Int -&gt; DomainParts -&gt; ShowS
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689626730"><span id="local-6989586621689626732"><span id="local-6989586621689626734"><span class="annot"><span class="annottext">Int -&gt; DomainParts -&gt; ShowS
 [DomainParts] -&gt; ShowS
 DomainParts -&gt; String
 (Int -&gt; DomainParts -&gt; ShowS)
@@ -48,7 +48,7 @@ show :: DomainParts -&gt; String
 $cshow :: DomainParts -&gt; String
 showsPrec :: Int -&gt; DomainParts -&gt; ShowS
 $cshowsPrec :: Int -&gt; DomainParts -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689625252"><span id="local-6989586621689625254"><span class="annot"><span class="annottext">DomainParts -&gt; DomainParts -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689626725"><span id="local-6989586621689626727"><span class="annot"><span class="annottext">DomainParts -&gt; DomainParts -&gt; Bool
 (DomainParts -&gt; DomainParts -&gt; Bool)
 -&gt; (DomainParts -&gt; DomainParts -&gt; Bool) -&gt; Eq DomainParts
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -65,7 +65,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep DomainParts x -&gt; DomainParts
 $cfrom :: forall x. DomainParts -&gt; Rep DomainParts x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689625244"><span id="local-6989586621689625246"><span class="annot"><span class="annottext">Int -&gt; DomainParts -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689626717"><span id="local-6989586621689626719"><span class="annot"><span class="annottext">Int -&gt; DomainParts -&gt; Int
 DomainParts -&gt; Int
 (Int -&gt; DomainParts -&gt; Int)
 -&gt; (DomainParts -&gt; Int) -&gt; Hashable DomainParts
@@ -76,7 +76,7 @@ hashWithSalt :: Int -&gt; DomainParts -&gt; Int
 $chashWithSalt :: Int -&gt; DomainParts -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span class="hs-special">$(</span><span id="local-6989586621689625231"><span id="local-6989586621689625233"><span id="local-6989586621689625235"><span id="local-6989586621689625237"><span id="local-6989586621689625239"><span id="local-6989586621689625241"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DomainParts</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-special">$(</span><span id="local-6989586621689626704"><span id="local-6989586621689626706"><span id="local-6989586621689626708"><span id="local-6989586621689626710"><span id="local-6989586621689626712"><span id="local-6989586621689626714"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DomainParts</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">data</span><span> </span><span id="Domains"><span class="annot"><a href="Hasura.Server.Cors.html#Domains"><span class="hs-identifier hs-var">Domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Domains"><span class="annot"><a href="Hasura.Server.Cors.html#Domains"><span class="hs-identifier hs-var">Domains</span></a></span></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="dmFqdns"><span class="annot"><span class="annottext">Domains -&gt; HashSet Text
@@ -84,7 +84,7 @@ $chashWithSalt :: Int -&gt; DomainParts -&gt; Int
 </span><span id="line-39"></span><span>    </span><span id="dmWildcards"><span class="annot"><span class="annottext">Domains -&gt; HashSet DomainParts
 </span><a href="Hasura.Server.Cors.html#dmWildcards"><span class="hs-identifier hs-var hs-var">dmWildcards</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689625217"><span id="local-6989586621689625219"><span id="local-6989586621689625221"><span class="annot"><span class="annottext">Int -&gt; Domains -&gt; ShowS
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689626690"><span id="local-6989586621689626692"><span id="local-6989586621689626694"><span class="annot"><span class="annottext">Int -&gt; Domains -&gt; ShowS
 [Domains] -&gt; ShowS
 Domains -&gt; String
 (Int -&gt; Domains -&gt; ShowS)
@@ -97,7 +97,7 @@ show :: Domains -&gt; String
 $cshow :: Domains -&gt; String
 showsPrec :: Int -&gt; Domains -&gt; ShowS
 $cshowsPrec :: Int -&gt; Domains -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689625213"><span id="local-6989586621689625215"><span class="annot"><span class="annottext">Domains -&gt; Domains -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689626686"><span id="local-6989586621689626688"><span class="annot"><span class="annottext">Domains -&gt; Domains -&gt; Bool
 (Domains -&gt; Domains -&gt; Bool)
 -&gt; (Domains -&gt; Domains -&gt; Bool) -&gt; Eq Domains
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -107,13 +107,13 @@ $c/= :: Domains -&gt; Domains -&gt; Bool
 $c== :: Domains -&gt; Domains -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span class="hs-special">$(</span><span id="local-6989586621689625201"><span id="local-6989586621689625203"><span id="local-6989586621689625205"><span id="local-6989586621689625207"><span id="local-6989586621689625209"><span id="local-6989586621689625211"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Domains</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-special">$(</span><span id="local-6989586621689626674"><span id="local-6989586621689626676"><span id="local-6989586621689626678"><span id="local-6989586621689626680"><span id="local-6989586621689626682"><span id="local-6989586621689626684"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Domains</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
 </span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="CorsConfig"><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-var">CorsConfig</span></a></span></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CCAllowAll"><span class="annot"><a href="Hasura.Server.Cors.html#CCAllowAll"><span class="hs-identifier hs-var">CCAllowAll</span></a></span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CCAllowedOrigins"><span class="annot"><a href="Hasura.Server.Cors.html#CCAllowedOrigins"><span class="hs-identifier hs-var">CCAllowedOrigins</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#Domains"><span class="hs-identifier hs-type">Domains</span></a></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CCDisabled"><span class="annot"><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-var">CCDisabled</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-comment">-- should read cookie?</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689625192"><span id="local-6989586621689625194"><span id="local-6989586621689625196"><span class="annot"><span class="annottext">Int -&gt; CorsConfig -&gt; ShowS
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689626665"><span id="local-6989586621689626667"><span id="local-6989586621689626669"><span class="annot"><span class="annottext">Int -&gt; CorsConfig -&gt; ShowS
 [CorsConfig] -&gt; ShowS
 CorsConfig -&gt; String
 (Int -&gt; CorsConfig -&gt; ShowS)
@@ -128,7 +128,7 @@ show :: CorsConfig -&gt; String
 $cshow :: CorsConfig -&gt; String
 showsPrec :: Int -&gt; CorsConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; CorsConfig -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689625188"><span id="local-6989586621689625190"><span class="annot"><span class="annottext">CorsConfig -&gt; CorsConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689626661"><span id="local-6989586621689626663"><span class="annot"><span class="annottext">CorsConfig -&gt; CorsConfig -&gt; Bool
 (CorsConfig -&gt; CorsConfig -&gt; Bool)
 -&gt; (CorsConfig -&gt; CorsConfig -&gt; Bool) -&gt; Eq CorsConfig
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -138,83 +138,83 @@ $c/= :: CorsConfig -&gt; CorsConfig -&gt; Bool
 $c== :: CorsConfig -&gt; CorsConfig -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689625181"><span id="local-6989586621689625183"><span id="local-6989586621689625185"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">CorsConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-52"></span><span>  </span><span id="local-6989586621689625180"><span class="annot"><span class="annottext">toJSON :: CorsConfig -&gt; Value
-</span><a href="#local-6989586621689625180"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621689625179"><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621689625179"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621689625179"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-type">CCDisabled</span></a></span><span> </span><span id="local-6989586621689625178"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689625178"><span class="hs-identifier hs-var">wsrc</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value -&gt; Maybe Bool -&gt; Value
-</span><a href="#local-6989586621689625177"><span class="hs-identifier hs-var">toJ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689626654"><span id="local-6989586621689626656"><span id="local-6989586621689626658"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">CorsConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621689626653"><span class="annot"><span class="annottext">toJSON :: CorsConfig -&gt; Value
+</span><a href="#local-6989586621689626653"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621689626652"><span class="annot"><span class="annottext">CorsConfig
+</span><a href="#local-6989586621689626652"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CorsConfig
+</span><a href="#local-6989586621689626652"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-type">CCDisabled</span></a></span><span> </span><span id="local-6989586621689626651"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689626651"><span class="hs-identifier hs-var">wsrc</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value -&gt; Maybe Bool -&gt; Value
+</span><a href="#local-6989586621689626650"><span class="hs-identifier hs-var">toJ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689625178"><span class="hs-identifier hs-var">wsrc</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689626651"><span class="hs-identifier hs-var">wsrc</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCAllowAll"><span class="hs-identifier hs-var">CCAllowAll</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value -&gt; Maybe Bool -&gt; Value
-</span><a href="#local-6989586621689625177"><span class="hs-identifier hs-var">toJ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689626650"><span class="hs-identifier hs-var">toJ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;*&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Bool
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.Server.Cors.html#CCAllowedOrigins"><span class="hs-identifier hs-type">CCAllowedOrigins</span></a></span><span> </span><span id="local-6989586621689625174"><span class="annot"><span class="annottext">Domains
-</span><a href="#local-6989586621689625174"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value -&gt; Maybe Bool -&gt; Value
-</span><a href="#local-6989586621689625177"><span class="hs-identifier hs-var">toJ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.Server.Cors.html#CCAllowedOrigins"><span class="hs-identifier hs-type">CCAllowedOrigins</span></a></span><span> </span><span id="local-6989586621689626647"><span class="annot"><span class="annottext">Domains
+</span><a href="#local-6989586621689626647"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value -&gt; Maybe Bool -&gt; Value
+</span><a href="#local-6989586621689626650"><span class="hs-identifier hs-var">toJ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Domains -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Domains
-</span><a href="#local-6989586621689625174"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621689626647"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Bool
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-56"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>      </span><span class="annot"><a href="#local-6989586621689625177"><span class="hs-identifier hs-type">toJ</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
-</span><span id="line-58"></span><span>      </span><span id="local-6989586621689625177"><span class="annot"><span class="annottext">toJ :: Bool -&gt; Value -&gt; Maybe Bool -&gt; Value
-</span><a href="#local-6989586621689625177"><span class="hs-identifier hs-var hs-var">toJ</span></a></span></span><span> </span><span id="local-6989586621689625173"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689625173"><span class="hs-identifier hs-var">dis</span></a></span></span><span> </span><span id="local-6989586621689625172"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689625172"><span class="hs-identifier hs-var">origs</span></a></span></span><span> </span><span id="local-6989586621689625171"><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621689625171"><span class="hs-identifier hs-var">mWsRC</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><a href="#local-6989586621689626650"><span class="hs-identifier hs-type">toJ</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621689626650"><span class="annot"><span class="annottext">toJ :: Bool -&gt; Value -&gt; Maybe Bool -&gt; Value
+</span><a href="#local-6989586621689626650"><span class="hs-identifier hs-var hs-var">toJ</span></a></span></span><span> </span><span id="local-6989586621689626646"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689626646"><span class="hs-identifier hs-var">dis</span></a></span></span><span> </span><span id="local-6989586621689626645"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689626645"><span class="hs-identifier hs-var">origs</span></a></span></span><span> </span><span id="local-6989586621689626644"><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621689626644"><span class="hs-identifier hs-var">mWsRC</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-60"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Bool -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689625173"><span class="hs-identifier hs-var">dis</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689626646"><span class="hs-identifier hs-var">dis</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-61"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;ws_read_cookie&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Bool -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621689625171"><span class="hs-identifier hs-var">mWsRC</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689626644"><span class="hs-identifier hs-var">mWsRC</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-62"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;allowed_origins&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689625172"><span class="hs-identifier hs-var">origs</span></a></span><span>
+</span><a href="#local-6989586621689626645"><span class="hs-identifier hs-var">origs</span></a></span><span>
 </span><span id="line-63"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689625166"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">CorsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621689625165"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CorsConfig
-</span><a href="#local-6989586621689625165"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689626639"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">CorsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621689626638"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CorsConfig
+</span><a href="#local-6989586621689626638"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser CorsConfig) -&gt; Value -&gt; Parser CorsConfig
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;cors config&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689625163"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689625163"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-67"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689625162"><span class="annot"><span class="annottext">parseAllowAll :: a -&gt; f CorsConfig
-</span><a href="#local-6989586621689625162"><span class="hs-identifier hs-var hs-var">parseAllowAll</span></a></span></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;cors config&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689626636"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689626636"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689626635"><span class="annot"><span class="annottext">parseAllowAll :: a -&gt; f CorsConfig
+</span><a href="#local-6989586621689626635"><span class="hs-identifier hs-var hs-var">parseAllowAll</span></a></span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;*&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CorsConfig -&gt; f CorsConfig
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCAllowAll"><span class="hs-identifier hs-var">CCAllowAll</span></a></span><span>
-</span><span id="line-68"></span><span>        </span><span class="annot"><a href="#local-6989586621689625162"><span class="hs-identifier hs-var">parseAllowAll</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><span id="line-68"></span><span>        </span><span class="annot"><a href="#local-6989586621689626635"><span class="hs-identifier hs-var">parseAllowAll</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; f CorsConfig
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;unexpected string&quot;</span></span><span>
 </span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689625163"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Bool
+</span><a href="#local-6989586621689626636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Bool
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool -&gt; (Bool -&gt; Parser CorsConfig) -&gt; Parser CorsConfig
@@ -225,20 +225,20 @@ forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-var">CCDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; CorsConfig) -&gt; Parser Bool -&gt; Parser CorsConfig
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689625163"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Bool
+</span><a href="#local-6989586621689626636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Bool
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;ws_read_cookie&quot;</span></span><span>
 </span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689625163"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Value
+</span><a href="#local-6989586621689626636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Value
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;allowed_origins&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser Value -&gt; (Value -&gt; Parser CorsConfig) -&gt; Parser CorsConfig
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
-</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689625160"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689625160"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689626633"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689626633"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-73"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser CorsConfig) -&gt; Value -&gt; Parser CorsConfig
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -246,8 +246,8 @@ forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 forall a (f :: * -&gt; *).
 (Eq a, IsString a, MonadFail f) =&gt;
 a -&gt; f CorsConfig
-</span><a href="#local-6989586621689625162"><span class="hs-identifier hs-var">parseAllowAll</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689625160"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689626635"><span class="hs-identifier hs-var">parseAllowAll</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689626633"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-74"></span><span>            </span><span class="annot"><span class="annottext">Parser CorsConfig -&gt; Parser CorsConfig -&gt; Parser CorsConfig
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Domains -&gt; CorsConfig
@@ -256,7 +256,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Domains
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689625160"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689626633"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-75"></span><span>
 </span><span id="line-76"></span><span class="annot"><a href="Hasura.Server.Cors.html#isCorsDisabled"><span class="hs-identifier hs-type">isCorsDisabled</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">CorsConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-77"></span><span id="isCorsDisabled"><span class="annot"><span class="annottext">isCorsDisabled :: CorsConfig -&gt; Bool
@@ -270,10 +270,10 @@ forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span id="line-80"></span><span>
 </span><span id="line-81"></span><span class="annot"><a href="Hasura.Server.Cors.html#readCorsDomains"><span class="hs-identifier hs-type">readCorsDomains</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">CorsConfig</span></a></span><span>
 </span><span id="line-82"></span><span id="readCorsDomains"><span class="annot"><span class="annottext">readCorsDomains :: String -&gt; Either String CorsConfig
-</span><a href="Hasura.Server.Cors.html#readCorsDomains"><span class="hs-identifier hs-var hs-var">readCorsDomains</span></a></span></span><span> </span><span id="local-6989586621689625157"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689625157"><span class="hs-identifier hs-var">str</span></a></span></span><span>
+</span><a href="Hasura.Server.Cors.html#readCorsDomains"><span class="hs-identifier hs-var hs-var">readCorsDomains</span></a></span></span><span> </span><span id="local-6989586621689626630"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689626630"><span class="hs-identifier hs-var">str</span></a></span></span><span>
 </span><span id="line-83"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689625157"><span class="hs-identifier hs-var">str</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
+</span><a href="#local-6989586621689626630"><span class="hs-identifier hs-var">str</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;*&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CorsConfig -&gt; Either String CorsConfig
@@ -282,8 +282,8 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Hasura.Server.Cors.html#CCAllowAll"><span class="hs-identifier hs-var">CCAllowAll</span></a></span><span>
 </span><span id="line-84"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-85"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689625156"><span class="annot"><span class="annottext">domains :: [Text]
-</span><a href="#local-6989586621689625156"><span class="hs-identifier hs-var hs-var">domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
+</span><span id="line-85"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689626629"><span class="annot"><span class="annottext">domains :: [Text]
+</span><a href="#local-6989586621689626629"><span class="hs-identifier hs-var hs-var">domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.strip</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; [Text]) -&gt; [Text] -&gt; [Text]
@@ -292,25 +292,25 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">T.splitOn</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;,&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689625157"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-86"></span><span>    </span><span id="local-6989586621689625152"><span class="annot"><span class="annottext">[Either Text DomainParts]
-</span><a href="#local-6989586621689625152"><span class="hs-identifier hs-var">pDomains</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either String (Either Text DomainParts))
+</span><a href="#local-6989586621689626630"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621689626625"><span class="annot"><span class="annottext">[Either Text DomainParts]
+</span><a href="#local-6989586621689626625"><span class="hs-identifier hs-var">pDomains</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either String (Either Text DomainParts))
 -&gt; [Text] -&gt; Either String [Either Text DomainParts]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m (t b)
 </span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String (Either Text DomainParts)
 </span><a href="Hasura.Server.Cors.html#parseOptWildcardDomain"><span class="hs-identifier hs-var">parseOptWildcardDomain</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689625156"><span class="hs-identifier hs-var">domains</span></a></span><span>
-</span><span id="line-87"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689625149"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689625149"><span class="hs-identifier hs-var">fqdns</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689625148"><span class="annot"><span class="annottext">[DomainParts]
-</span><a href="#local-6989586621689625148"><span class="hs-identifier hs-var">wcs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Either Text DomainParts] -&gt; [Text]
+</span><a href="#local-6989586621689626629"><span class="hs-identifier hs-var">domains</span></a></span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689626622"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689626622"><span class="hs-identifier hs-var">fqdns</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689626621"><span class="annot"><span class="annottext">[DomainParts]
+</span><a href="#local-6989586621689626621"><span class="hs-identifier hs-var">wcs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Either Text DomainParts] -&gt; [Text]
 forall a b. [Either a b] -&gt; [a]
 </span><span class="hs-identifier hs-var">lefts</span></span><span> </span><span class="annot"><span class="annottext">[Either Text DomainParts]
-</span><a href="#local-6989586621689625152"><span class="hs-identifier hs-var">pDomains</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Either Text DomainParts] -&gt; [DomainParts]
+</span><a href="#local-6989586621689626625"><span class="hs-identifier hs-var">pDomains</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Either Text DomainParts] -&gt; [DomainParts]
 forall a b. [Either a b] -&gt; [b]
 </span><span class="hs-identifier hs-var">rights</span></span><span> </span><span class="annot"><span class="annottext">[Either Text DomainParts]
-</span><a href="#local-6989586621689625152"><span class="hs-identifier hs-var">pDomains</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689626625"><span class="hs-identifier hs-var">pDomains</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">CorsConfig -&gt; Either String CorsConfig
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(CorsConfig -&gt; Either String CorsConfig)
@@ -323,10 +323,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Server.Cors.html#Domains"><span class="hs-identifier hs-var">Domains</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Text] -&gt; HashSet Text
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689625149"><span class="hs-identifier hs-var">fqdns</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[DomainParts] -&gt; HashSet DomainParts
+</span><a href="#local-6989586621689626622"><span class="hs-identifier hs-var">fqdns</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[DomainParts] -&gt; HashSet DomainParts
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">[DomainParts]
-</span><a href="#local-6989586621689625148"><span class="hs-identifier hs-var">wcs</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689626621"><span class="hs-identifier hs-var">wcs</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>
 </span><span id="line-90"></span><span class="hs-keyword">data</span><span> </span><span id="CorsPolicy"><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-var">CorsPolicy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CorsPolicy"><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-var">CorsPolicy</span></a></span></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="cpConfig"><span class="annot"><span class="annottext">CorsPolicy -&gt; CorsConfig
@@ -336,7 +336,7 @@ forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span id="line-93"></span><span>    </span><span id="cpMaxAge"><span class="annot"><span class="annottext">CorsPolicy -&gt; Int
 </span><a href="Hasura.Server.Cors.html#cpMaxAge"><span class="hs-identifier hs-var hs-var">cpMaxAge</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-94"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-95"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689625135"><span id="local-6989586621689625137"><span id="local-6989586621689625139"><span class="annot"><span class="annottext">Int -&gt; CorsPolicy -&gt; ShowS
+</span><span id="line-95"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689626608"><span id="local-6989586621689626610"><span id="local-6989586621689626612"><span class="annot"><span class="annottext">Int -&gt; CorsPolicy -&gt; ShowS
 [CorsPolicy] -&gt; ShowS
 CorsPolicy -&gt; String
 (Int -&gt; CorsPolicy -&gt; ShowS)
@@ -351,7 +351,7 @@ show :: CorsPolicy -&gt; String
 $cshow :: CorsPolicy -&gt; String
 showsPrec :: Int -&gt; CorsPolicy -&gt; ShowS
 $cshowsPrec :: Int -&gt; CorsPolicy -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689625131"><span id="local-6989586621689625133"><span class="annot"><span class="annottext">CorsPolicy -&gt; CorsPolicy -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689626604"><span id="local-6989586621689626606"><span class="annot"><span class="annottext">CorsPolicy -&gt; CorsPolicy -&gt; Bool
 (CorsPolicy -&gt; CorsPolicy -&gt; Bool)
 -&gt; (CorsPolicy -&gt; CorsPolicy -&gt; Bool) -&gt; Eq CorsPolicy
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -363,13 +363,13 @@ $c== :: CorsPolicy -&gt; CorsPolicy -&gt; Bool
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span class="annot"><a href="Hasura.Server.Cors.html#mkDefaultCorsPolicy"><span class="hs-identifier hs-type">mkDefaultCorsPolicy</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">CorsConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-type">CorsPolicy</span></a></span><span>
 </span><span id="line-98"></span><span id="mkDefaultCorsPolicy"><span class="annot"><span class="annottext">mkDefaultCorsPolicy :: CorsConfig -&gt; CorsPolicy
-</span><a href="Hasura.Server.Cors.html#mkDefaultCorsPolicy"><span class="hs-identifier hs-var hs-var">mkDefaultCorsPolicy</span></a></span></span><span> </span><span id="local-6989586621689625130"><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621689625130"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Cors.html#mkDefaultCorsPolicy"><span class="hs-identifier hs-var hs-var">mkDefaultCorsPolicy</span></a></span></span><span> </span><span id="local-6989586621689626603"><span class="annot"><span class="annottext">CorsConfig
+</span><a href="#local-6989586621689626603"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">CorsPolicy :: CorsConfig -&gt; [Text] -&gt; Int -&gt; CorsPolicy
 </span><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-type">CorsPolicy</span></a></span><span>
 </span><span id="line-100"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">cpConfig :: CorsConfig
 </span><a href="Hasura.Server.Cors.html#cpConfig"><span class="hs-identifier hs-var">cpConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621689625130"><span class="hs-identifier hs-var">cfg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689626603"><span class="hs-identifier hs-var">cfg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">cpMethods :: [Text]
 </span><a href="Hasura.Server.Cors.html#cpMethods"><span class="hs-identifier hs-var">cpMethods</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;GET&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
@@ -386,9 +386,9 @@ $c== :: CorsPolicy -&gt; CorsPolicy -&gt; Bool
 </span><span id="line-105"></span><span class="annot"><a href="Hasura.Server.Cors.html#inWildcardList"><span class="hs-identifier hs-type">inWildcardList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#Domains"><span class="hs-identifier hs-type">Domains</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-106"></span><span id="inWildcardList"><span class="annot"><span class="annottext">inWildcardList :: Domains -&gt; Text -&gt; Bool
 </span><a href="Hasura.Server.Cors.html#inWildcardList"><span class="hs-identifier hs-var hs-var">inWildcardList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Cors.html#Domains"><span class="hs-identifier hs-type">Domains</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Text
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689625129"><span class="annot"><span class="annottext">HashSet DomainParts
-</span><a href="#local-6989586621689625129"><span class="hs-identifier hs-var">wildcards</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689625128"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625128"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689626602"><span class="annot"><span class="annottext">HashSet DomainParts
+</span><a href="#local-6989586621689626602"><span class="hs-identifier hs-var">wildcards</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689626601"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626601"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">(String -&gt; Bool)
 -&gt; (DomainParts -&gt; Bool) -&gt; Either String DomainParts -&gt; Bool
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
@@ -398,15 +398,15 @@ forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DomainParts -&gt; HashSet DomainParts -&gt; Bool
 forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">HashSet DomainParts
-</span><a href="#local-6989586621689625129"><span class="hs-identifier hs-var">wildcards</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String DomainParts -&gt; Bool)
+</span><a href="#local-6989586621689626602"><span class="hs-identifier hs-var">wildcards</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String DomainParts -&gt; Bool)
 -&gt; Either String DomainParts -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String DomainParts
 </span><a href="Hasura.Server.Cors.html#parseOrigin"><span class="hs-identifier hs-var">parseOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625128"><span class="hs-identifier hs-var">origin</span></a></span><span>
+</span><a href="#local-6989586621689626601"><span class="hs-identifier hs-var">origin</span></a></span><span>
 </span><span id="line-108"></span><span>
 </span><span id="line-109"></span><span class="hs-comment">-- | Parsers for wildcard domains</span><span>
-</span><span id="line-110"></span><span id="local-6989586621689625124"><span class="annot"><a href="Hasura.Server.Cors.html#runParser"><span class="hs-identifier hs-type">runParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621689625124"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621689625124"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-110"></span><span id="local-6989586621689626597"><span class="annot"><a href="Hasura.Server.Cors.html#runParser"><span class="hs-identifier hs-type">runParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621689626597"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621689626597"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-111"></span><span id="runParser"><span class="annot"><span class="annottext">runParser :: Parser a -&gt; Text -&gt; Either String a
 </span><a href="Hasura.Server.Cors.html#runParser"><span class="hs-identifier hs-var hs-var">runParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser a -&gt; Text -&gt; Either String a
 forall a. Parser a -&gt; Text -&gt; Either String a
@@ -426,12 +426,12 @@ forall a. Parser a -&gt; Text -&gt; Either String a
 </span><a href="Hasura.Server.Cors.html#domainParser"><span class="hs-identifier hs-var">domainParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Text -&gt; Maybe (Parser Text)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Parser Text
-</span><a href="#local-6989586621689625119"><span class="hs-identifier hs-var">ignoreSubdomain</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689626592"><span class="hs-identifier hs-var">ignoreSubdomain</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-120"></span><span>    </span><span id="local-6989586621689625119"><span class="annot"><span class="annottext">ignoreSubdomain :: Parser Text
-</span><a href="#local-6989586621689625119"><span class="hs-identifier hs-var hs-var">ignoreSubdomain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-121"></span><span>      </span><span id="local-6989586621689625118"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625118"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser Text
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621689626592"><span class="annot"><span class="annottext">ignoreSubdomain :: Parser Text
+</span><a href="#local-6989586621689626592"><span class="hs-identifier hs-var hs-var">ignoreSubdomain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-121"></span><span>      </span><span id="local-6989586621689626591"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626591"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser Text
 </span><span class="hs-identifier hs-var">AT.takeTill</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Char -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Char
@@ -447,12 +447,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Parser Text
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625118"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689626591"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-124"></span><span>
 </span><span id="line-125"></span><span class="annot"><a href="Hasura.Server.Cors.html#parseOptWildcardDomain"><span class="hs-identifier hs-type">parseOptWildcardDomain</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span id="parseOptWildcardDomain"><span class="annot"><span class="annottext">parseOptWildcardDomain :: Text -&gt; Either String (Either Text DomainParts)
-</span><a href="Hasura.Server.Cors.html#parseOptWildcardDomain"><span class="hs-identifier hs-var hs-var">parseOptWildcardDomain</span></a></span></span><span> </span><span id="local-6989586621689625114"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625114"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Cors.html#parseOptWildcardDomain"><span class="hs-identifier hs-var hs-var">parseOptWildcardDomain</span></a></span></span><span> </span><span id="local-6989586621689626587"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626587"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-127"></span><span>  </span><span class="annot"><span class="annottext">ShowS
 -&gt; Either String (Either Text DomainParts)
 -&gt; Either String (Either Text DomainParts)
@@ -460,7 +460,7 @@ forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689625113"><span class="hs-identifier hs-var">errMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String (Either Text DomainParts)
+</span><a href="#local-6989586621689626586"><span class="hs-identifier hs-var">errMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String (Either Text DomainParts)
  -&gt; Either String (Either Text DomainParts))
 -&gt; Either String (Either Text DomainParts)
 -&gt; Either String (Either Text DomainParts)
@@ -469,19 +469,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Text -&gt; Either String (Either Text DomainParts)
 forall a. Parser a -&gt; Text -&gt; Either String a
 </span><a href="Hasura.Server.Cors.html#runParser"><span class="hs-identifier hs-var">runParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Either Text DomainParts)
-</span><a href="#local-6989586621689625112"><span class="hs-identifier hs-var">optWildcardDomainParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625114"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621689626585"><span class="hs-identifier hs-var">optWildcardDomainParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626587"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-128"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-129"></span><span>    </span><span class="annot"><a href="#local-6989586621689625112"><span class="hs-identifier hs-type">optWildcardDomainParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-130"></span><span>    </span><span id="local-6989586621689625112"><span class="annot"><span class="annottext">optWildcardDomainParser :: Parser (Either Text DomainParts)
-</span><a href="#local-6989586621689625112"><span class="hs-identifier hs-var hs-var">optWildcardDomainParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><a href="#local-6989586621689626585"><span class="hs-identifier hs-type">optWildcardDomainParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621689626585"><span class="annot"><span class="annottext">optWildcardDomainParser :: Parser (Either Text DomainParts)
+</span><a href="#local-6989586621689626585"><span class="hs-identifier hs-var hs-var">optWildcardDomainParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-131"></span><span>      </span><span class="annot"><span class="annottext">DomainParts -&gt; Either Text DomainParts
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(DomainParts -&gt; Either Text DomainParts)
 -&gt; Parser DomainParts -&gt; Parser (Either Text DomainParts)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DomainParts
-</span><a href="#local-6989586621689625111"><span class="hs-identifier hs-var">wildcardDomainParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Either Text DomainParts)
+</span><a href="#local-6989586621689626584"><span class="hs-identifier hs-var">wildcardDomainParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Either Text DomainParts)
 -&gt; Parser (Either Text DomainParts)
 -&gt; Parser (Either Text DomainParts)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
@@ -491,23 +491,23 @@ forall a b. a -&gt; Either a b
 -&gt; Parser Text -&gt; Parser (Either Text DomainParts)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text
-</span><a href="#local-6989586621689625110"><span class="hs-identifier hs-var">fqdnParser</span></a></span><span>
+</span><a href="#local-6989586621689626583"><span class="hs-identifier hs-var">fqdnParser</span></a></span><span>
 </span><span id="line-132"></span><span>
-</span><span id="line-133"></span><span>    </span><span id="local-6989586621689625113"><span class="annot"><span class="annottext">errMsg :: String
-</span><a href="#local-6989586621689625113"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-133"></span><span>    </span><span id="local-6989586621689626586"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621689626586"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;invalid domain: '&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625114"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621689626587"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;'. &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689625108"><span class="hs-identifier hs-var">helpMsg</span></a></span><span>
-</span><span id="line-134"></span><span>    </span><span id="local-6989586621689625108"><span class="annot"><span class="annottext">helpMsg :: String
-</span><a href="#local-6989586621689625108"><span class="hs-identifier hs-var hs-var">helpMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689626581"><span class="hs-identifier hs-var">helpMsg</span></a></span><span>
+</span><span id="line-134"></span><span>    </span><span id="local-6989586621689626581"><span class="annot"><span class="annottext">helpMsg :: String
+</span><a href="#local-6989586621689626581"><span class="hs-identifier hs-var hs-var">helpMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-135"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;All domains should have scheme + (optional wildcard) host + &quot;</span></span><span>
 </span><span id="line-136"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; ShowS
@@ -515,9 +515,9 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;(optional port)&quot;</span></span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span>    </span><span class="annot"><a href="#local-6989586621689625111"><span class="hs-identifier hs-type">wildcardDomainParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span>
-</span><span id="line-139"></span><span>    </span><span id="local-6989586621689625111"><span class="annot"><span class="annottext">wildcardDomainParser :: Parser DomainParts
-</span><a href="#local-6989586621689625111"><span class="hs-identifier hs-var hs-var">wildcardDomainParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Parser Text) -&gt; Parser DomainParts
+</span><span id="line-138"></span><span>    </span><span class="annot"><a href="#local-6989586621689626584"><span class="hs-identifier hs-type">wildcardDomainParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span>
+</span><span id="line-139"></span><span>    </span><span id="local-6989586621689626584"><span class="annot"><span class="annottext">wildcardDomainParser :: Parser DomainParts
+</span><a href="#local-6989586621689626584"><span class="hs-identifier hs-var hs-var">wildcardDomainParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Parser Text) -&gt; Parser DomainParts
 </span><a href="Hasura.Server.Cors.html#domainParser"><span class="hs-identifier hs-var">domainParser</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (Parser Text) -&gt; Parser DomainParts)
 -&gt; Maybe (Parser Text) -&gt; Parser DomainParts
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -531,66 +531,66 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-identifier hs-var">AT.string</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-140"></span><span>
-</span><span id="line-141"></span><span>    </span><span class="annot"><a href="#local-6989586621689625110"><span class="hs-identifier hs-type">fqdnParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-142"></span><span>    </span><span id="local-6989586621689625110"><span class="annot"><span class="annottext">fqdnParser :: Parser Text
-</span><a href="#local-6989586621689625110"><span class="hs-identifier hs-var hs-var">fqdnParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-143"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span> </span><span id="local-6989586621689625106"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625106"><span class="hs-identifier hs-var">scheme</span></a></span></span><span> </span><span id="local-6989586621689625105"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625105"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621689625104"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689625104"><span class="hs-identifier hs-var">port</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (Parser Text) -&gt; Parser DomainParts
+</span><span id="line-141"></span><span>    </span><span class="annot"><a href="#local-6989586621689626583"><span class="hs-identifier hs-type">fqdnParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621689626583"><span class="annot"><span class="annottext">fqdnParser :: Parser Text
+</span><a href="#local-6989586621689626583"><span class="hs-identifier hs-var hs-var">fqdnParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-143"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span> </span><span id="local-6989586621689626579"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626579"><span class="hs-identifier hs-var">scheme</span></a></span></span><span> </span><span id="local-6989586621689626578"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626578"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621689626577"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689626577"><span class="hs-identifier hs-var">port</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (Parser Text) -&gt; Parser DomainParts
 </span><a href="Hasura.Server.Cors.html#domainParser"><span class="hs-identifier hs-var">domainParser</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Parser Text)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-144"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689625103"><span class="annot"><span class="annottext">sPort :: Text
-</span><a href="#local-6989586621689625103"><span class="hs-identifier hs-var hs-var">sPort</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; (Int -&gt; Text) -&gt; Maybe Int -&gt; Text
+</span><span id="line-144"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689626576"><span class="annot"><span class="annottext">sPort :: Text
+</span><a href="#local-6989586621689626576"><span class="hs-identifier hs-var hs-var">sPort</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; (Int -&gt; Text) -&gt; Maybe Int -&gt; Text
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689625101"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689625101"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689626574"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689626574"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;:&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689625101"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689625104"><span class="hs-identifier hs-var">port</span></a></span><span>
+</span><a href="#local-6989586621689626574"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689626577"><span class="hs-identifier hs-var">port</span></a></span><span>
 </span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Parser Text
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parser Text) -&gt; Text -&gt; Parser Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625106"><span class="hs-identifier hs-var">scheme</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689626579"><span class="hs-identifier hs-var">scheme</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625105"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689626578"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625103"><span class="hs-identifier hs-var">sPort</span></a></span><span>
+</span><a href="#local-6989586621689626576"><span class="hs-identifier hs-var">sPort</span></a></span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span class="annot"><a href="Hasura.Server.Cors.html#domainParser"><span class="hs-identifier hs-type">domainParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-type">DomainParts</span></a></span><span>
 </span><span id="line-148"></span><span id="domainParser"><span class="annot"><span class="annottext">domainParser :: Maybe (Parser Text) -&gt; Parser DomainParts
-</span><a href="Hasura.Server.Cors.html#domainParser"><span class="hs-identifier hs-var hs-var">domainParser</span></a></span></span><span> </span><span id="local-6989586621689625099"><span class="annot"><span class="annottext">Maybe (Parser Text)
-</span><a href="#local-6989586621689625099"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-149"></span><span>  </span><span id="local-6989586621689625098"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625098"><span class="hs-identifier hs-var">scheme</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text
-</span><a href="#local-6989586621689625097"><span class="hs-identifier hs-var">schemeParser</span></a></span><span>
+</span><a href="Hasura.Server.Cors.html#domainParser"><span class="hs-identifier hs-var hs-var">domainParser</span></a></span></span><span> </span><span id="local-6989586621689626572"><span class="annot"><span class="annottext">Maybe (Parser Text)
+</span><a href="#local-6989586621689626572"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-149"></span><span>  </span><span id="local-6989586621689626571"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626571"><span class="hs-identifier hs-var">scheme</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text
+</span><a href="#local-6989586621689626570"><span class="hs-identifier hs-var">schemeParser</span></a></span><span>
 </span><span id="line-150"></span><span>  </span><span class="annot"><span class="annottext">Maybe (Parser Text)
 -&gt; (Parser Text -&gt; Parser Text ()) -&gt; Parser Text ()
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><span class="hs-identifier hs-var">forM_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Parser Text)
-</span><a href="#local-6989586621689625099"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; Parser Text ()
+</span><a href="#local-6989586621689626572"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; Parser Text ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><span class="hs-identifier hs-var">void</span></span><span>
-</span><span id="line-151"></span><span>  </span><span id="local-6989586621689625095"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625095"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text
-</span><a href="#local-6989586621689625094"><span class="hs-identifier hs-var">hostPortParser</span></a></span><span>
-</span><span id="line-152"></span><span>  </span><span id="local-6989586621689625093"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689625093"><span class="hs-identifier hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Int -&gt; Parser Text (Maybe Int)
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621689626568"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626568"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text
+</span><a href="#local-6989586621689626567"><span class="hs-identifier hs-var">hostPortParser</span></a></span><span>
+</span><span id="line-152"></span><span>  </span><span id="local-6989586621689626566"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689626566"><span class="hs-identifier hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Int -&gt; Parser Text (Maybe Int)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">optional</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Int
-</span><a href="#local-6989586621689625092"><span class="hs-identifier hs-var">portParser</span></a></span><span>
+</span><a href="#local-6989586621689626565"><span class="hs-identifier hs-var">portParser</span></a></span><span>
 </span><span id="line-153"></span><span>  </span><span class="annot"><span class="annottext">DomainParts -&gt; Parser DomainParts
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(DomainParts -&gt; Parser DomainParts)
@@ -598,29 +598,29 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Maybe Int -&gt; DomainParts
 </span><a href="Hasura.Server.Cors.html#DomainParts"><span class="hs-identifier hs-var">DomainParts</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625098"><span class="hs-identifier hs-var">scheme</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625095"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689625093"><span class="hs-identifier hs-var">port</span></a></span><span>
+</span><a href="#local-6989586621689626571"><span class="hs-identifier hs-var">scheme</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626568"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689626566"><span class="hs-identifier hs-var">port</span></a></span><span>
 </span><span id="line-154"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-155"></span><span>    </span><span class="annot"><a href="#local-6989586621689625097"><span class="hs-identifier hs-type">schemeParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-156"></span><span>    </span><span id="local-6989586621689625097"><span class="annot"><span class="annottext">schemeParser :: Parser Text
-</span><a href="#local-6989586621689625097"><span class="hs-identifier hs-var hs-var">schemeParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><a href="#local-6989586621689626570"><span class="hs-identifier hs-type">schemeParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-156"></span><span>    </span><span id="local-6989586621689626570"><span class="annot"><span class="annottext">schemeParser :: Parser Text
+</span><a href="#local-6989586621689626570"><span class="hs-identifier hs-var hs-var">schemeParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-157"></span><span>      </span><span class="hs-comment">-- supports a custom URI scheme, rather than just http:// or https:// (see OSS #5818)</span><span>
-</span><span id="line-158"></span><span>      </span><span id="local-6989586621689625091"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625091"><span class="hs-identifier hs-var">scheme</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser Text
-</span><span class="hs-identifier hs-var">AT.takeWhile1</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689625089"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689625089"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
+</span><span id="line-158"></span><span>      </span><span id="local-6989586621689626564"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626564"><span class="hs-identifier hs-var">scheme</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser Text
+</span><span class="hs-identifier hs-var">AT.takeWhile1</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689626562"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621689626562"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">C.isAlphaNum</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689625089"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689626562"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; String -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">elem</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689625089"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621689626562"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'+'</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'.'</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'-'</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-159"></span><span>      </span><span id="local-6989586621689625085"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625085"><span class="hs-identifier hs-var">sep</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser Text
+</span><span id="line-159"></span><span>      </span><span id="local-6989586621689626558"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626558"><span class="hs-identifier hs-var">sep</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser Text
 </span><span class="hs-identifier hs-var">AT.string</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;://&quot;</span></span><span>
 </span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Parser Text
@@ -628,24 +628,24 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parser Text) -&gt; Text -&gt; Parser Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625091"><span class="hs-identifier hs-var">scheme</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689626564"><span class="hs-identifier hs-var">scheme</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625085"><span class="hs-identifier hs-var">sep</span></a></span><span>
+</span><a href="#local-6989586621689626558"><span class="hs-identifier hs-var">sep</span></a></span><span>
 </span><span id="line-161"></span><span>
-</span><span id="line-162"></span><span>    </span><span class="annot"><a href="#local-6989586621689625094"><span class="hs-identifier hs-type">hostPortParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-163"></span><span>    </span><span id="local-6989586621689625094"><span class="annot"><span class="annottext">hostPortParser :: Parser Text
-</span><a href="#local-6989586621689625094"><span class="hs-identifier hs-var hs-var">hostPortParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text
-</span><a href="#local-6989586621689625084"><span class="hs-identifier hs-var">hostWithPortParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; Parser Text -&gt; Parser Text
+</span><span id="line-162"></span><span>    </span><span class="annot"><a href="#local-6989586621689626567"><span class="hs-identifier hs-type">hostPortParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621689626567"><span class="annot"><span class="annottext">hostPortParser :: Parser Text
+</span><a href="#local-6989586621689626567"><span class="hs-identifier hs-var hs-var">hostPortParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text
+</span><a href="#local-6989586621689626557"><span class="hs-identifier hs-var">hostWithPortParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; Parser Text -&gt; Parser Text
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text
 </span><span class="hs-identifier hs-var">AT.takeText</span></span><span>
 </span><span id="line-164"></span><span>
-</span><span id="line-165"></span><span>    </span><span class="annot"><a href="#local-6989586621689625084"><span class="hs-identifier hs-type">hostWithPortParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-166"></span><span>    </span><span id="local-6989586621689625084"><span class="annot"><span class="annottext">hostWithPortParser :: Parser Text
-</span><a href="#local-6989586621689625084"><span class="hs-identifier hs-var hs-var">hostWithPortParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-167"></span><span>      </span><span id="local-6989586621689625082"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625082"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser Text
+</span><span id="line-165"></span><span>    </span><span class="annot"><a href="#local-6989586621689626557"><span class="hs-identifier hs-type">hostWithPortParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-166"></span><span>    </span><span id="local-6989586621689626557"><span class="annot"><span class="annottext">hostWithPortParser :: Parser Text
+</span><a href="#local-6989586621689626557"><span class="hs-identifier hs-var hs-var">hostWithPortParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-167"></span><span>      </span><span id="local-6989586621689626555"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689626555"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser Text
 </span><span class="hs-identifier hs-var">AT.takeWhile1</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Char -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Char
@@ -661,11 +661,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-169"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Parser Text
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689625082"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><a href="#local-6989586621689626555"><span class="hs-identifier hs-var">h</span></a></span><span>
 </span><span id="line-170"></span><span>
-</span><span id="line-171"></span><span>    </span><span class="annot"><a href="#local-6989586621689625092"><span class="hs-identifier hs-type">portParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
-</span><span id="line-172"></span><span>    </span><span id="local-6989586621689625092"><span class="annot"><span class="annottext">portParser :: Parser Text Int
-</span><a href="#local-6989586621689625092"><span class="hs-identifier hs-var hs-var">portParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text Int
+</span><span id="line-171"></span><span>    </span><span class="annot"><a href="#local-6989586621689626565"><span class="hs-identifier hs-type">portParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-172"></span><span>    </span><span id="local-6989586621689626565"><span class="annot"><span class="annottext">portParser :: Parser Text Int
+</span><a href="#local-6989586621689626565"><span class="hs-identifier hs-var hs-var">portParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text Int
 forall a. Integral a =&gt; Parser a
 </span><span class="hs-identifier hs-var">AT.decimal</span></span><span>
 </span><span id="line-173"></span></pre></body></html>
