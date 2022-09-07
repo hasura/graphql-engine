@@ -172,16 +172,8 @@ done
 echo -e "\nINFO: GraphQL Executable : $GRAPHQL_ENGINE"
 echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
 
-# This seems to flake out relatively often; try a mirror if so.
-# Might also need to disable ipv6 or use a longer --timeout
-
-# cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
-export CRYPTOGRAPHY_DONT_BUILD_RUST=1
-
-pip3 install -r requirements.txt ||
-	pip3 install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com -r requirements.txt
-
-npm_config_loglevel=error npm ci
+# Copy the node_modules directory installed in the Docker image here.
+cp -R /deps/node_modules .
 
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
