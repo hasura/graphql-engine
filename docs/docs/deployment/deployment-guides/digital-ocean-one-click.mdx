@@ -195,7 +195,7 @@ vim Caddyfile
 
 ...
 
- https://you.domain.example.com {
+https://your.domain.example.com {
   reverse_proxy * graphql-engine:8080 {
       header_up Host {http.request.host}
       header_up X-Real-IP {http.request.remote}
@@ -209,7 +209,35 @@ vim Caddyfile
 # type ESC followed by :wq to save and quit
 ```
 
-### Step 5: Restart the container
+
+### Step 5: Persist the Caddy certs volume
+
+This step is important to avoid caddy getting rate-limited if it has to refetch your certs too often due to docker restarts.
+
+Create the volume
+
+```bash
+cd /etc/hasura
+
+docker volume create --name=caddy_certs
+```
+
+configure the volume as external in `docker-compose.yml`
+
+```bash
+vim docker-compose.yml
+
+...
+
+volumes:
+  db_data:
+  caddy_certs:
+    external: true # add this line
+
+# type ESC followed by :wq to save and quit
+```
+
+### Step 6: Restart the container
 
 ```bash
 docker-compose restart caddy
