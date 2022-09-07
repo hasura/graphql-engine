@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span class="hs-comment">--</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- ...so we hack together our own using GHC.Stats, which should have</span><span>
 </span><span id="line-26"></span><span class="hs-comment">-- insignificant runtime overhead.</span><span>
-</span><span id="line-27"></span><span id="local-6989586621689620409"><span class="annot"><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-type">ourIdleGC</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-27"></span><span id="local-6989586621689620216"><span class="annot"><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-type">ourIdleGC</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-28"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-comment">-- | Run a major GC when we've been &quot;idle&quot; for idleInterval</span><span>
 </span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -32,15 +32,15 @@
 </span><span id="line-32"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-comment">-- | Additionally, if it has been &gt; maxNoGCInterval time, force a GC regardless.</span><span>
 </span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-35"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689620409"><span class="hs-identifier hs-type">void</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689620216"><span class="hs-identifier hs-type">void</span></a></span></span><span>
 </span><span id="line-36"></span><span id="ourIdleGC"><span class="annot"><span class="annottext">ourIdleGC :: Logger Hasura -&gt; DiffTime -&gt; DiffTime -&gt; DiffTime -&gt; IO void
-</span><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-var hs-var">ourIdleGC</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689620407"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-var hs-var">ourIdleGC</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689620214"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689620407"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689620406"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620406"><span class="hs-identifier hs-var">idleInterval</span></a></span></span><span> </span><span id="local-6989586621689620405"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620405"><span class="hs-identifier hs-var">minGCInterval</span></a></span></span><span> </span><span id="local-6989586621689620404"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620404"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689620214"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689620213"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689620213"><span class="hs-identifier hs-var">idleInterval</span></a></span></span><span> </span><span id="local-6989586621689620212"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689620212"><span class="hs-identifier hs-var">minGCInterval</span></a></span></span><span> </span><span id="local-6989586621689620211"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689620211"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-37"></span><span>  </span><span class="annot"><span class="annottext">IO (IO DiffTime)
 forall (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadIO m, MonadIO n) =&gt;
@@ -48,39 +48,39 @@ m (n DiffTime)
 </span><a href="Hasura.Prelude.html#startTimer"><span class="hs-identifier hs-var">startTimer</span></a></span><span> </span><span class="annot"><span class="annottext">IO (IO DiffTime) -&gt; (IO DiffTime -&gt; IO void) -&gt; IO void
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621689620402"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620209"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621689620402"><span class="annot"><span class="annottext">go :: Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621689620402"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689620401"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620401"><span class="hs-identifier hs-var">gcs_prev</span></a></span></span><span> </span><span id="local-6989586621689620400"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620400"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span></span><span> </span><span id="local-6989586621689620399"><span class="annot"><span class="annottext">IO DiffTime
-</span><a href="#local-6989586621689620399"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621689620398"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620398"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO DiffTime
-</span><a href="#local-6989586621689620399"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621689620209"><span class="annot"><span class="annottext">go :: Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
+</span><a href="#local-6989586621689620209"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689620208"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620208"><span class="hs-identifier hs-var">gcs_prev</span></a></span></span><span> </span><span id="local-6989586621689620207"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620207"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span></span><span> </span><span id="local-6989586621689620206"><span class="annot"><span class="annottext">IO DiffTime
+</span><a href="#local-6989586621689620206"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621689620205"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689620205"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO DiffTime
+</span><a href="#local-6989586621689620206"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620398"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; Bool
+</span><a href="#local-6989586621689620205"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620405"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><a href="#local-6989586621689620212"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-42"></span><span>        </span><span class="hs-comment">-- no need to check idle until we've passed the minGCInterval:</span><span>
 </span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">C.sleep</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620405"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; DiffTime
+</span><a href="#local-6989586621689620212"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; DiffTime
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620398"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689620205"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">RTSStats</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689620393"><span class="annot"><span class="annottext">Word32
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">RTSStats</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689620200"><span class="annot"><span class="annottext">Word32
 gcs :: RTSStats -&gt; Word32
 gcs :: Word32
-</span><span class="hs-identifier hs-var hs-var">gcs</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689620391"><span class="annot"><span class="annottext">Word32
+</span><span class="hs-identifier hs-var hs-var">gcs</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689620198"><span class="annot"><span class="annottext">Word32
 major_gcs :: RTSStats -&gt; Word32
 major_gcs :: Word32
 </span><span class="hs-identifier hs-var hs-var">major_gcs</span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO RTSStats
@@ -88,26 +88,26 @@ major_gcs :: Word32
 </span><span id="line-46"></span><span>      </span><span class="hs-comment">-- We use minor GCs as a proxy for &quot;activity&quot;, which seems to work</span><span>
 </span><span id="line-47"></span><span>      </span><span class="hs-comment">-- well-enough (in tests it stays stable for a few seconds when we're</span><span>
 </span><span id="line-48"></span><span>      </span><span class="hs-comment">-- logically &quot;idle&quot; and otherwise increments quickly)</span><span>
-</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689620388"><span class="annot"><span class="annottext">areIdle :: Bool
-</span><a href="#local-6989586621689620388"><span class="hs-identifier hs-var hs-var">areIdle</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620393"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Bool
+</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689620195"><span class="annot"><span class="annottext">areIdle :: Bool
+</span><a href="#local-6989586621689620195"><span class="hs-identifier hs-var hs-var">areIdle</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620200"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620401"><span class="hs-identifier hs-var">gcs_prev</span></a></span><span>
-</span><span id="line-50"></span><span>          </span><span id="local-6989586621689620387"><span class="annot"><span class="annottext">areOverdue :: Bool
-</span><a href="#local-6989586621689620387"><span class="hs-identifier hs-var hs-var">areOverdue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620398"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; Bool
+</span><a href="#local-6989586621689620208"><span class="hs-identifier hs-var">gcs_prev</span></a></span><span>
+</span><span id="line-50"></span><span>          </span><span id="local-6989586621689620194"><span class="annot"><span class="annottext">areOverdue :: Bool
+</span><a href="#local-6989586621689620194"><span class="hs-identifier hs-var hs-var">areOverdue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621689620205"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; DiffTime -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620404"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span><span>
+</span><a href="#local-6989586621689620211"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span>      </span><span class="hs-comment">-- a major GC was run since last iteration (cool!), reset timer:</span><span>
 </span><span id="line-53"></span><span>      </span><span class="hs-keyword">if</span><span>
 </span><span id="line-54"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620391"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Bool
+</span><a href="#local-6989586621689620198"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620400"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689620207"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-55"></span><span>            </span><span class="annot"><span class="annottext">IO (IO DiffTime)
 forall (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadIO m, MonadIO n) =&gt;
@@ -115,29 +115,29 @@ m (n DiffTime)
 </span><a href="Hasura.Prelude.html#startTimer"><span class="hs-identifier hs-var">startTimer</span></a></span><span> </span><span class="annot"><span class="annottext">IO (IO DiffTime) -&gt; (IO DiffTime -&gt; IO void) -&gt; IO void
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621689620402"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620393"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620391"><span class="hs-identifier hs-var">major_gcs</span></a></span><span>
+</span><a href="#local-6989586621689620209"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620200"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620198"><span class="hs-identifier hs-var">major_gcs</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span>          </span><span class="hs-comment">-- we are idle and its a good time to do a GC, or we're overdue and must run a GC:</span><span>
 </span><span id="line-58"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689620388"><span class="hs-identifier hs-var">areIdle</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689620195"><span class="hs-identifier hs-var">areIdle</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689620387"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689620194"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-59"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689620387"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689620194"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689620388"><span class="hs-identifier hs-var">areIdle</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><a href="#local-6989586621689620195"><span class="hs-identifier hs-var">areIdle</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-60"></span><span>              </span><span class="annot"><span class="annottext">UnstructuredLog -&gt; IO ()
 forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621689620407"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(UnstructuredLog -&gt; IO ()) -&gt; UnstructuredLog -&gt; IO ()
+</span><a href="#local-6989586621689620214"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(UnstructuredLog -&gt; IO ()) -&gt; UnstructuredLog -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-61"></span><span>                </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
@@ -157,12 +157,12 @@ m (n DiffTime)
 </span><a href="Hasura.Prelude.html#startTimer"><span class="hs-identifier hs-var">startTimer</span></a></span><span> </span><span class="annot"><span class="annottext">IO (IO DiffTime) -&gt; (IO DiffTime -&gt; IO void) -&gt; IO void
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621689620402"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620393"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+</span><a href="#local-6989586621689620209"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620200"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620391"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+</span><a href="#local-6989586621689620198"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
@@ -172,10 +172,10 @@ forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-68"></span><span>            </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">C.sleep</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621689620406"><span class="hs-identifier hs-var">idleInterval</span></a></span><span>
+</span><a href="#local-6989586621689620213"><span class="hs-identifier hs-var">idleInterval</span></a></span><span>
 </span><span id="line-69"></span><span>            </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621689620402"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620393"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689620391"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">IO DiffTime
-</span><a href="#local-6989586621689620399"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
+</span><a href="#local-6989586621689620209"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620200"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689620198"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">IO DiffTime
+</span><a href="#local-6989586621689620206"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
 </span><span id="line-70"></span></pre></body></html>
