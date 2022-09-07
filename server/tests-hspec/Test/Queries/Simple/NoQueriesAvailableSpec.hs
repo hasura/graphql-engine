@@ -54,8 +54,8 @@ spec = do
                       ],
                     Fixture.customOptions =
                       Just $
-                        Fixture.Options
-                          { stringifyNumbers = True
+                        Fixture.defaultOptions
+                          { Fixture.stringifyNumbers = True
                           }
                   }
               ]

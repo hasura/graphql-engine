@@ -14,7 +14,12 @@ data Options = Options
   { -- | Whether a given testing fixture should treat numeric values as strings.
     --
     -- This is primarily a workaround for tests which run BigQuery.
-    stringifyNumbers :: Bool
+    stringifyNumbers :: Bool,
+    -- | Whether to skip this Fixture
+    --
+    -- Useful for implementing tests that we don't want to depend on in CI yet
+    -- Text is reason for skipping
+    skipTests :: Maybe Text
   }
 
 -- | This function can be used to combine two sets of 'Option's when creating
@@ -29,16 +34,21 @@ combineOptions (Just lhs) (Just rhs) =
         if lhsStringify == rhsStringify
           then lhsStringify
           else reportInconsistency "stringifyNumbers" lhsStringify rhsStringify
+      skipTests =
+        if lhsSkip == lhsSkip
+          then lhsSkip
+          else reportInconsistency "skipTests" lhsSkip rhsSkip
    in Just Options {..}
   where
     reportInconsistency fieldName lhsValue rhsValue =
       error $ "Could not reconcile '" <> fieldName <> "'\n  lhs value: " <> show lhsValue <> "\n  rhs value: " <> show rhsValue
-    Options {stringifyNumbers = lhsStringify} = lhs
-    Options {stringifyNumbers = rhsStringify} = rhs
+    Options {stringifyNumbers = lhsStringify, skipTests = lhsSkip} = lhs
+    Options {stringifyNumbers = rhsStringify, skipTests = rhsSkip} = rhs
 combineOptions mLhs mRhs = mLhs <|> mRhs
 
 defaultOptions :: Options
 defaultOptions =
   Options
-    { stringifyNumbers = False
+    { stringifyNumbers = False,
+      skipTests = Nothing
     }
