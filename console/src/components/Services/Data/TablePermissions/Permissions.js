@@ -33,6 +33,7 @@ import {
   X_HASURA_CONST,
   PERM_UPDATE_QUERY_ROOT_FIELDS,
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
+  permToggleSelectField,
 } from './Actions';
 import {
   RootFieldPermissions,
@@ -960,6 +961,9 @@ class Permissions extends Component {
       const onColumnClick = fieldType => e => {
         const columnName = e.target.value;
         const isChecked = e.target.checked;
+        if (this.props.permissionsState.query !== 'select') {
+          return dispatch(permToggleField(fieldType, columnName));
+        }
 
         const allPrimaryKeysSelected = hasSelectedTablePrimaryKeyFromMetadata(
           this.props
@@ -987,7 +991,7 @@ class Permissions extends Component {
           });
           return;
         }
-        dispatch(permToggleField(fieldType, columnName));
+        dispatch(permToggleSelectField(fieldType, columnName));
       };
 
       const getAllFields = () => {
