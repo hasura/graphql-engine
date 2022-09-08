@@ -40,9 +40,9 @@ installation manifests required to deploy Hasura anywhere. Get the docker compos
 
 ```bash
 # in a new directory run
-wget https://raw.githubusercontent.com/hasura/graphql-engine/beta/install-manifests/enterprise/docker-compose/docker-compose.yaml
+wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/docker-compose/docker-compose.yaml
 # or run
-curl https://raw.githubusercontent.com/hasura/graphql-engine/beta/install-manifests/enterprise/docker-compose/docker-compose.yaml -o docker-compose.yml
+curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/docker-compose/docker-compose.yaml -o docker-compose.yml
 ```
 
 ### Step 2: Set the Hasura EE license key and the admin secret
@@ -56,7 +56,7 @@ admin secret key.
 
 ```yaml {4-5}
 graphql-engine:
-  image: hasura/graphql-engine:v2.12.0-beta.1
+  image: hasura/graphql-engine:v2.12.0
   environment:
     HASURA_GRAPHQL_EE_LICENSE_KEY: ""
     HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
@@ -100,7 +100,7 @@ To switch to using your PostgreSQL or Redis instances, set the following environ
 
 ```yaml {4-6}
 graphql-engine:
-  image: hasura/graphql-engine:v2.12.0-beta.1
+  image: hasura/graphql-engine:v2.12.0
   environment:
     HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
     HASURA_GRAPHQL_REDIS_URL: "redis://redis:6379"
