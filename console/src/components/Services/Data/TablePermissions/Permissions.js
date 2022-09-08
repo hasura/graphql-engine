@@ -268,7 +268,7 @@ class Permissions extends Component {
 
     const addTooltip = (text, tooltip) => {
       return (
-        <span>
+        <span className="flex">
           <span className={styles.add_mar_right_small}>{text}</span>
           {tooltip}
         </span>
@@ -613,7 +613,7 @@ class Permissions extends Component {
         }
 
         return (
-          <div>
+          <div className="flex">
             {addTooltip(title, toolTip)} {knowMoreHtml} {sectionStatusHtml}
           </div>
         );
@@ -802,7 +802,7 @@ class Permissions extends Component {
               permissionsState.custom_checked[filterType] || isUniqueFilter;
 
             const customChecklabel = (
-              <span data-test="custom-check">
+              <span data-test="custom-check" className="flex">
                 <span>With custom check:</span>
                 <IconTooltip message="Create custom check using permissions builder" />
               </span>
