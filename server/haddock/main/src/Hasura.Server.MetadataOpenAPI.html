@@ -279,26 +279,26 @@ forall k (t :: k). Proxy t
 </span><span id="line-116"></span><span class="hs-comment">-- then use autodocodec's 'named' combinator to apply a name to your codec.</span><span>
 </span><span id="line-117"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#applySchemaName"><span class="hs-identifier hs-type">applySchemaName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.Schema</span></span><span class="hs-special">)</span><span>
 </span><span id="line-118"></span><span id="applySchemaName"><span class="annot"><span class="annottext">applySchemaName :: NamedSchema -&gt; (Text, Schema)
-</span><a href="Hasura.Server.MetadataOpenAPI.html#applySchemaName"><span class="hs-identifier hs-var hs-var">applySchemaName</span></a></span></span><span> </span><span id="local-6989586621689707686"><span class="annot"><span class="annottext">NamedSchema
-</span><a href="#local-6989586621689707686"><span class="hs-identifier hs-var">givenSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689707685"><span class="hs-identifier hs-var">schemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NamedSchema
-</span><a href="#local-6989586621689707686"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema -&gt; Getting Schema NamedSchema Schema -&gt; Schema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#applySchemaName"><span class="hs-identifier hs-var hs-var">applySchemaName</span></a></span></span><span> </span><span id="local-6989586621689708323"><span class="annot"><span class="annottext">NamedSchema
+</span><a href="#local-6989586621689708323"><span class="hs-identifier hs-var">givenSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689708322"><span class="hs-identifier hs-var">schemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NamedSchema
+</span><a href="#local-6989586621689708323"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema -&gt; Getting Schema NamedSchema Schema -&gt; Schema
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Schema NamedSchema Schema
 forall s a. HasSchema s a =&gt; Lens' s a
 </span><span class="hs-identifier hs-var">schema</span></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-120"></span><span>    </span><span id="local-6989586621689707685"><span class="annot"><span class="annottext">schemaName :: Text
-</span><a href="#local-6989586621689707685"><span class="hs-identifier hs-var hs-var">schemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NamedSchema
-</span><a href="#local-6989586621689707686"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621689708322"><span class="annot"><span class="annottext">schemaName :: Text
+</span><a href="#local-6989586621689708322"><span class="hs-identifier hs-var hs-var">schemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NamedSchema
+</span><a href="#local-6989586621689708323"><span class="hs-identifier hs-var">givenSchema</span></a></span><span> </span><span class="annot"><span class="annottext">NamedSchema
 -&gt; Getting (Maybe Text) NamedSchema (Maybe Text) -&gt; Maybe Text
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting (Maybe Text) NamedSchema (Maybe Text)
 forall s a. HasName s a =&gt; Lens' s a
 </span><span class="hs-identifier hs-var">name</span></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-121"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689707684"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689707684"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689707684"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-121"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689708321"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689708321"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689708321"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-122"></span><span>      </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-123"></span><span>        </span><span class="annot"><span class="annottext">[Char] -&gt; Text
@@ -317,10 +317,10 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;to any codec in that list that does not already have one&quot;</span></span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span id="local-6989586621689707758"><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-type">toNamedSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689707758"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621689707758"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span></span><span>
+</span><span id="line-128"></span><span id="local-6989586621689708395"><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-type">toNamedSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689708395"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621689708395"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span></span><span>
 </span><span id="line-129"></span><span id="toNamedSchema"><span class="annot"><span class="annottext">toNamedSchema :: Proxy a -&gt; NamedSchema
-</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var hs-var">toNamedSchema</span></a></span></span><span> </span><span id="local-6989586621689707682"><span class="annot"><span class="annottext">Proxy a
-</span><a href="#local-6989586621689707682"><span class="hs-identifier hs-var">proxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchema"><span class="hs-identifier hs-var hs-var">toNamedSchema</span></a></span></span><span> </span><span id="local-6989586621689708319"><span class="annot"><span class="annottext">Proxy a
+</span><a href="#local-6989586621689708319"><span class="hs-identifier hs-var">proxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
 forall d a. Monoid d =&gt; Declare d a -&gt; a
 </span><span class="hs-identifier hs-var">undeclare</span></span><span> </span><span class="annot"><span class="annottext">(Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema)
 -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
@@ -330,13 +330,13 @@ forall value.
 HasCodec value =&gt;
 Proxy value -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema
 </span><span class="hs-identifier hs-var">declareNamedSchemaViaCodec</span></span><span> </span><span class="annot"><span class="annottext">Proxy a
-</span><a href="#local-6989586621689707682"><span class="hs-identifier hs-var">proxy</span></a></span><span>
+</span><a href="#local-6989586621689708319"><span class="hs-identifier hs-var">proxy</span></a></span><span>
 </span><span id="line-130"></span><span>
-</span><span id="line-131"></span><span id="local-6989586621689707749"><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchemaVia"><span class="hs-identifier hs-type">toNamedSchemaVia</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689707749"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621689707749"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span></span><span>
+</span><span id="line-131"></span><span id="local-6989586621689708386"><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchemaVia"><span class="hs-identifier hs-type">toNamedSchemaVia</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689708386"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621689708386"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi.NamedSchema</span></span></span><span>
 </span><span id="line-132"></span><span id="toNamedSchemaVia"><span class="annot"><span class="annottext">toNamedSchemaVia :: JSONCodec a -&gt; Proxy a -&gt; NamedSchema
-</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchemaVia"><span class="hs-identifier hs-var hs-var">toNamedSchemaVia</span></a></span></span><span> </span><span id="local-6989586621689707681"><span class="annot"><span class="annottext">JSONCodec a
-</span><a href="#local-6989586621689707681"><span class="hs-identifier hs-var">codec</span></a></span></span><span> </span><span id="local-6989586621689707680"><span class="annot"><span class="annottext">Proxy a
-</span><a href="#local-6989586621689707680"><span class="hs-identifier hs-var">proxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
+</span><a href="Hasura.Server.MetadataOpenAPI.html#toNamedSchemaVia"><span class="hs-identifier hs-var hs-var">toNamedSchemaVia</span></a></span></span><span> </span><span id="local-6989586621689708318"><span class="annot"><span class="annottext">JSONCodec a
+</span><a href="#local-6989586621689708318"><span class="hs-identifier hs-var">codec</span></a></span></span><span> </span><span id="local-6989586621689708317"><span class="annot"><span class="annottext">Proxy a
+</span><a href="#local-6989586621689708317"><span class="hs-identifier hs-var">proxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
 forall d a. Monoid d =&gt; Declare d a -&gt; a
 </span><span class="hs-identifier hs-var">undeclare</span></span><span> </span><span class="annot"><span class="annottext">(Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema)
 -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema -&gt; NamedSchema
@@ -347,6 +347,6 @@ forall value.
 JSONCodec value
 -&gt; Proxy value -&gt; Declare (InsOrdHashMap Text Schema) NamedSchema
 </span><span class="hs-identifier hs-var">declareNamedSchemaVia</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec a
-</span><a href="#local-6989586621689707681"><span class="hs-identifier hs-var">codec</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy a
-</span><a href="#local-6989586621689707680"><span class="hs-identifier hs-var">proxy</span></a></span><span>
+</span><a href="#local-6989586621689708318"><span class="hs-identifier hs-var">codec</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy a
+</span><a href="#local-6989586621689708317"><span class="hs-identifier hs-var">proxy</span></a></span><span>
 </span><span id="line-133"></span></pre></body></html>

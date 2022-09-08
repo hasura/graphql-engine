@@ -1,7 +1,7 @@
-This note is in [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L23).
+This note is in [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L25).
 It is referenced at:
-  - line 89 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L89)
-  - line 189 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L189)
+  - line 91 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L91)
+  - line 197 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L197)
 
 # Tying the knot
 

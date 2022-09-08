@@ -1,6 +1,6 @@
-This note is in [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L185).
+This note is in [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L193).
 It is referenced at:
-  - line 135 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L135)
+  - line 143 of [Control.Monad.Memoize](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Monad/Memoize.hs#L143)
 
 # MemoizeT requires MonadIO
 
