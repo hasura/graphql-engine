@@ -22,96 +22,96 @@
 </span><span id="line-22"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- MonadFix</span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span id="local-6989586621689623141"><span id="local-6989586621689623142"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621689623142"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFix</span></span><span> </span><span class="annot"><a href="#local-6989586621689623141"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFix</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DeclareT</span></span><span> </span><span class="annot"><a href="#local-6989586621689623142"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689623141"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-26"></span><span>  </span><span id="local-6989586621689623137"><span class="annot"><span class="annottext">mfix :: (a -&gt; DeclareT d m a) -&gt; DeclareT d m a
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mfix</span></span></span><span> </span><span id="local-6989586621689623136"><span class="annot"><span class="annottext">a -&gt; DeclareT d m a
-</span><a href="#local-6989586621689623136"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(d -&gt; m (d, a)) -&gt; DeclareT d m a
+</span><span id="line-25"></span><span id="local-6989586621689622646"><span id="local-6989586621689622647"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621689622647"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFix</span></span><span> </span><span class="annot"><a href="#local-6989586621689622646"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFix</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DeclareT</span></span><span> </span><span class="annot"><a href="#local-6989586621689622647"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689622646"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621689622642"><span class="annot"><span class="annottext">mfix :: (a -&gt; DeclareT d m a) -&gt; DeclareT d m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mfix</span></span></span><span> </span><span id="local-6989586621689622641"><span class="annot"><span class="annottext">a -&gt; DeclareT d m a
+</span><a href="#local-6989586621689622641"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(d -&gt; m (d, a)) -&gt; DeclareT d m a
 forall d (m :: * -&gt; *) a. (d -&gt; m (d, a)) -&gt; DeclareT d m a
 </span><span class="hs-identifier hs-var">DeclareT</span></span><span> </span><span class="annot"><span class="annottext">((d -&gt; m (d, a)) -&gt; DeclareT d m a)
 -&gt; (d -&gt; m (d, a)) -&gt; DeclareT d m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689623134"><span class="annot"><span class="annottext">d
-</span><a href="#local-6989586621689623134"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">((d, a) -&gt; m (d, a)) -&gt; m (d, a)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689622639"><span class="annot"><span class="annottext">d
+</span><a href="#local-6989586621689622639"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">((d, a) -&gt; m (d, a)) -&gt; m (d, a)
 forall (m :: * -&gt; *) a. MonadFix m =&gt; (a -&gt; m a) -&gt; m a
 </span><span class="hs-identifier hs-var">mfix</span></span><span> </span><span class="annot"><span class="annottext">(((d, a) -&gt; m (d, a)) -&gt; m (d, a))
 -&gt; ((d, a) -&gt; m (d, a)) -&gt; m (d, a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">~</span><span class="hs-special">(</span><span class="annot"><span class="annottext">d
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689623133"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689623133"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeclareT d m a -&gt; d -&gt; m (d, a)
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689622638"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689622638"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeclareT d m a -&gt; d -&gt; m (d, a)
 forall d (m :: * -&gt; *) a. DeclareT d m a -&gt; d -&gt; m (d, a)
 </span><span class="hs-identifier hs-var hs-var">runDeclareT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; DeclareT d m a
-</span><a href="#local-6989586621689623136"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689623133"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">d
-</span><a href="#local-6989586621689623134"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689622641"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689622638"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">d
+</span><a href="#local-6989586621689622639"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">mfix</span></span><span> </span><span class="hs-pragma">#-}</span></span></span><span>
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-30"></span><span class="hs-comment">-- Deepseq</span><span>
 </span><span id="line-31"></span><span>
-</span><span id="line-32"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623130"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">UT.Variable</span></a></span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622635"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">UT.Variable</span></a></span></span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623127"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">UT.TemplateItem</span></a></span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622632"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">UT.TemplateItem</span></a></span></span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623125"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">UT.URLTemplate</span></a></span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622630"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">UT.URLTemplate</span></a></span></span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623123"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.StepField</span></span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622628"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.StepField</span></span></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623121"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.RangeField</span></span></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622626"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.RangeField</span></span></span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623119"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.SpecificField</span></span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622624"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.SpecificField</span></span></span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623117"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.BaseField</span></span></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622622"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.BaseField</span></span></span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623115"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronField</span></span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622620"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronField</span></span></span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623113"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.MonthSpec</span></span></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622618"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.MonthSpec</span></span></span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623111"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.DayOfMonthSpec</span></span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622616"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.DayOfMonthSpec</span></span></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623109"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.DayOfWeekSpec</span></span></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622614"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.DayOfWeekSpec</span></span></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623107"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.HourSpec</span></span></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622612"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.HourSpec</span></span></span><span>
 </span><span id="line-55"></span><span>
-</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623105"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.MinuteSpec</span></span></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622610"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.MinuteSpec</span></span></span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623103"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622608"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span></span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- Template Haskell</span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span id="local-6989586621689623099"><span id="local-6989586621689623101"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.CompOption</span></span></span></span><span>
+</span><span id="line-63"></span><span id="local-6989586621689622604"><span id="local-6989586621689622606"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.CompOption</span></span></span></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span id="local-6989586621689623094"><span id="local-6989586621689623096"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.DoPa</span></span></span></span><span>
+</span><span id="line-65"></span><span id="local-6989586621689622599"><span id="local-6989586621689622601"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.DoPa</span></span></span></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span id="local-6989586621689623090"><span id="local-6989586621689623092"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.ExecOption</span></span></span></span><span>
+</span><span id="line-67"></span><span id="local-6989586621689622595"><span id="local-6989586621689622597"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.ExecOption</span></span></span></span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span id="local-6989586621689623086"><span id="local-6989586621689623088"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.Pattern</span></span></span></span><span>
+</span><span id="line-69"></span><span id="local-6989586621689622591"><span id="local-6989586621689622593"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.Pattern</span></span></span></span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span id="local-6989586621689623082"><span id="local-6989586621689623084"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSet</span></span></span></span><span>
+</span><span id="line-71"></span><span id="local-6989586621689622587"><span id="local-6989586621689622589"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSet</span></span></span></span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span id="local-6989586621689623078"><span id="local-6989586621689623080"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSetCharacterClass</span></span></span></span><span>
+</span><span id="line-73"></span><span id="local-6989586621689622583"><span id="local-6989586621689622585"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSetCharacterClass</span></span></span></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span id="local-6989586621689623074"><span id="local-6989586621689623076"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSetCollatingElement</span></span></span></span><span>
+</span><span id="line-75"></span><span id="local-6989586621689622579"><span id="local-6989586621689622581"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSetCollatingElement</span></span></span></span><span>
 </span><span id="line-76"></span><span>
-</span><span id="line-77"></span><span id="local-6989586621689623070"><span id="local-6989586621689623072"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSetEquivalenceClass</span></span></span></span><span>
+</span><span id="line-77"></span><span id="local-6989586621689622575"><span id="local-6989586621689622577"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Lift</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.PatternSetEquivalenceClass</span></span></span></span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-80"></span><span class="hs-comment">-- GADT</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span id="local-6989586621689623068"><span id="local-6989586621689623069"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">GCompare</span></span><span> </span><span class="annot"><a href="#local-6989586621689623069"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GCompare</span></span><span> </span><span class="annot"><a href="#local-6989586621689623068"><span class="hs-identifier hs-type">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GCompare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Product</span></span><span> </span><span class="annot"><a href="#local-6989586621689623069"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689623068"><span class="hs-identifier hs-type">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Pair</span></span><span> </span><span id="local-6989586621689623064"><span class="annot"><span class="annottext">f a
-</span><a href="#local-6989586621689623064"><span class="hs-identifier hs-var">a1</span></a></span></span><span> </span><span id="local-6989586621689623063"><span class="annot"><span class="annottext">g a
-</span><a href="#local-6989586621689623063"><span class="hs-identifier hs-var">a2</span></a></span></span><span> </span><span id="local-6989586621689623062"><span class="annot"><span class="annottext">gcompare :: Product f g a -&gt; Product f g b -&gt; GOrdering a b
-</span><a href="#local-6989586621689623062"><span class="hs-operator hs-var hs-var hs-var hs-var">`gcompare`</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Pair</span></span><span> </span><span id="local-6989586621689623061"><span class="annot"><span class="annottext">f b
-</span><a href="#local-6989586621689623061"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621689623060"><span class="annot"><span class="annottext">g b
-</span><a href="#local-6989586621689623060"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">f a -&gt; f b -&gt; GOrdering a b
+</span><span id="line-82"></span><span id="local-6989586621689622573"><span id="local-6989586621689622574"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">GCompare</span></span><span> </span><span class="annot"><a href="#local-6989586621689622574"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GCompare</span></span><span> </span><span class="annot"><a href="#local-6989586621689622573"><span class="hs-identifier hs-type">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GCompare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Product</span></span><span> </span><span class="annot"><a href="#local-6989586621689622574"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689622573"><span class="hs-identifier hs-type">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Pair</span></span><span> </span><span id="local-6989586621689622569"><span class="annot"><span class="annottext">f a
+</span><a href="#local-6989586621689622569"><span class="hs-identifier hs-var">a1</span></a></span></span><span> </span><span id="local-6989586621689622568"><span class="annot"><span class="annottext">g a
+</span><a href="#local-6989586621689622568"><span class="hs-identifier hs-var">a2</span></a></span></span><span> </span><span id="local-6989586621689622567"><span class="annot"><span class="annottext">gcompare :: Product f g a -&gt; Product f g b -&gt; GOrdering a b
+</span><a href="#local-6989586621689622567"><span class="hs-operator hs-var hs-var hs-var hs-var">`gcompare`</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Pair</span></span><span> </span><span id="local-6989586621689622566"><span class="annot"><span class="annottext">f b
+</span><a href="#local-6989586621689622566"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621689622565"><span class="annot"><span class="annottext">g b
+</span><a href="#local-6989586621689622565"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">f a -&gt; f b -&gt; GOrdering a b
 forall k (f :: k -&gt; *) (a :: k) (b :: k).
 GCompare f =&gt;
 f a -&gt; f b -&gt; GOrdering a b
 </span><span class="hs-identifier hs-var">gcompare</span></span><span> </span><span class="annot"><span class="annottext">f a
-</span><a href="#local-6989586621689623064"><span class="hs-identifier hs-var">a1</span></a></span><span> </span><span class="annot"><span class="annottext">f b
-</span><a href="#local-6989586621689623061"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689622569"><span class="hs-identifier hs-var">a1</span></a></span><span> </span><span class="annot"><span class="annottext">f b
+</span><a href="#local-6989586621689622566"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">GOrdering a b
 </span><span class="hs-identifier hs-var">GLT</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GOrdering a b
 forall k (a :: k) (b :: k). GOrdering a b
@@ -122,8 +122,8 @@ forall k (f :: k -&gt; *) (a :: k) (b :: k).
 GCompare f =&gt;
 f a -&gt; f b -&gt; GOrdering a b
 </span><span class="hs-identifier hs-var">gcompare</span></span><span> </span><span class="annot"><span class="annottext">g a
-</span><a href="#local-6989586621689623063"><span class="hs-identifier hs-var">a2</span></a></span><span> </span><span class="annot"><span class="annottext">g b
-</span><a href="#local-6989586621689623060"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689622568"><span class="hs-identifier hs-var">a2</span></a></span><span> </span><span class="annot"><span class="annottext">g b
+</span><a href="#local-6989586621689622565"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">GOrdering a b
 </span><span class="hs-identifier hs-var">GLT</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GOrdering a b
 forall k (a :: k) (b :: k). GOrdering a b
@@ -144,8 +144,8 @@ forall k (a :: k) (b :: k). GOrdering a b
 </span><span id="line-91"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-92"></span><span class="hs-comment">-- JSON</span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623057"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-95"></span><span>  </span><span id="local-6989586621689623055"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CronSchedule
+</span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622562"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621689622560"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CronSchedule
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser CronSchedule) -&gt; Value -&gt; Parser CronSchedule
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
@@ -153,8 +153,8 @@ forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-string">&quot;CronSchedule&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser CronSchedule) -&gt; Value -&gt; Parser CronSchedule)
 -&gt; (Text -&gt; Parser CronSchedule) -&gt; Value -&gt; Parser CronSchedule
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689623052"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689623052"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689622557"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689622557"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">Either String CronSchedule
 -&gt; (String -&gt; Parser CronSchedule) -&gt; Parser CronSchedule
 forall (m :: * -&gt; *) e a.
@@ -162,25 +162,25 @@ Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Either String CronSchedule
 </span><span class="hs-identifier hs-var">C.parseCronSchedule</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689623052"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser CronSchedule
+</span><a href="#local-6989586621689622557"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser CronSchedule
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623043"><span id="local-6989586621689623045"><span id="local-6989586621689623047"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-99"></span><span>  </span><span id="local-6989586621689623041"><span class="annot"><span class="annottext">toJSON :: CronSchedule -&gt; Value
+</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622548"><span id="local-6989586621689622550"><span id="local-6989586621689622552"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621689622546"><span class="annot"><span class="annottext">toJSON :: CronSchedule -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (CronSchedule -&gt; Text) -&gt; CronSchedule -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">CronSchedule -&gt; Text
 </span><span class="hs-identifier hs-var">C.serializeCronSchedule</span></span><span>
 </span><span id="line-100"></span><span>
-</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689623033"><span id="local-6989586621689623035"><span class="annot"><span class="hs-identifier hs-type">J.ToJSONKey</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span></span><span>
+</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689622538"><span id="local-6989586621689622540"><span class="annot"><span class="hs-identifier hs-type">J.ToJSONKey</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span></span><span>
 </span><span id="line-102"></span><span>
 </span><span id="line-103"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-104"></span><span class="hs-comment">-- Postgres</span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.ToPrepArg</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-107"></span><span>  </span><span id="local-6989586621689623029"><span class="annot"><span class="annottext">toPrepVal :: CronSchedule -&gt; PrepArg
+</span><span id="line-107"></span><span>  </span><span id="local-6989586621689622534"><span class="annot"><span class="annottext">toPrepVal :: CronSchedule -&gt; PrepArg
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toPrepVal</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; PrepArg
 forall a. ToPrepArg a =&gt; a -&gt; PrepArg
 </span><span class="hs-identifier hs-var">Q.toPrepVal</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; PrepArg)
@@ -190,25 +190,25 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">C.serializeCronSchedule</span></span><span>
 </span><span id="line-108"></span><span>
 </span><span id="line-109"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.FromCol</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.CronSchedule</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-110"></span><span>  </span><span id="local-6989586621689623025"><span class="annot"><span class="annottext">fromCol :: Maybe ByteString -&gt; Either Text CronSchedule
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCol</span></span></span><span> </span><span id="local-6989586621689623023"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621689623023"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621689622530"><span class="annot"><span class="annottext">fromCol :: Maybe ByteString -&gt; Either Text CronSchedule
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCol</span></span></span><span> </span><span id="local-6989586621689622528"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621689622528"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-111"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text Text
 forall a. FromCol a =&gt; Maybe ByteString -&gt; Either Text a
 </span><span class="hs-identifier hs-var">Q.fromCol</span></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621689623023"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-112"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689623022"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689623022"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text CronSchedule
+</span><a href="#local-6989586621689622528"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-112"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689622527"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689622527"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text CronSchedule
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689623022"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-113"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689623021"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689623021"><span class="hs-identifier hs-var">dbCron</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689622527"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-113"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689622526"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689622526"><span class="hs-identifier hs-var">dbCron</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-114"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String CronSchedule
 </span><span class="hs-identifier hs-var">C.parseCronSchedule</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689623021"><span class="hs-identifier hs-var">dbCron</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-115"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689623020"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689623020"><span class="hs-identifier hs-var">err'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text CronSchedule
+</span><a href="#local-6989586621689622526"><span class="hs-identifier hs-var">dbCron</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-115"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689622525"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689622525"><span class="hs-identifier hs-var">err'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text CronSchedule
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either Text CronSchedule)
 -&gt; Text -&gt; Either Text CronSchedule
@@ -218,10 +218,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689623020"><span class="hs-identifier hs-var">err'</span></a></span><span>
-</span><span id="line-116"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689623018"><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689623018"><span class="hs-identifier hs-var">cron</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CronSchedule -&gt; Either Text CronSchedule
+</span><a href="#local-6989586621689622525"><span class="hs-identifier hs-var">err'</span></a></span><span>
+</span><span id="line-116"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689622523"><span class="annot"><span class="annottext">CronSchedule
+</span><a href="#local-6989586621689622523"><span class="hs-identifier hs-var">cron</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CronSchedule -&gt; Either Text CronSchedule
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621689623018"><span class="hs-identifier hs-var">cron</span></a></span><span>
+</span><a href="#local-6989586621689622523"><span class="hs-identifier hs-var">cron</span></a></span><span>
 </span><span id="line-117"></span></pre></body></html>
