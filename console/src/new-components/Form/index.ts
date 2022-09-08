@@ -5,3 +5,4 @@ export * from './InputField';
 export * from './Radio';
 export * from './Select';
 export * from './Textarea';
+export * from './FieldWrapper';
