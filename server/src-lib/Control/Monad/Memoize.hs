@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Control.Monad.Memoize
   ( MonadMemoize (..),
     memoize,
@@ -127,7 +129,13 @@ memoize name f a = memoizeOn name a (f a)
 newtype MemoizeT m a = MemoizeT
   { unMemoizeT :: StateT (DMap MemoizationKey Identity) m a
   }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r)
+  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadTrans)
+
+-- | Allow code in 'MemoizeT' to have access to any underlying state capabilities,
+-- hiding the fact that 'MemoizeT' itself is a state monad.
+instance MonadState s m => MonadState s (MemoizeT m) where
+  get = lift get
+  put = lift . put
 
 runMemoizeT :: forall m a. Monad m => MemoizeT m a -> m a
 runMemoizeT = flip evalStateT mempty . unMemoizeT

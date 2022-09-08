@@ -1011,6 +1011,9 @@ test-suite graphql-engine-tests
   other-modules:
     Control.Concurrent.ExtendedSpec
     Control.Monad.CircularSpec
+    Control.Monad.MemoizationSpecDefinition
+    Control.Monad.MemoizeSpec
+    Control.Monad.TimeLimit
     Data.HashMap.Strict.ExtendedSpec
     Data.NumericSpec
     Data.Parser.CacheControlSpec
