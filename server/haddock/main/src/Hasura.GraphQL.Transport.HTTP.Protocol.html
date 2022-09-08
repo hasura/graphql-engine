@@ -47,7 +47,7 @@
 </span><span id="line-47"></span><span class="hs-comment">-- TODO: why not just `G.ExecutableDocument G.Name`?</span><span>
 </span><span id="line-48"></span><span class="hs-keyword">newtype</span><span> </span><span id="GQLExecDoc"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-var">GQLExecDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLExecDoc"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-var">GQLExecDoc</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unGQLExecDoc"><span class="annot"><span class="annottext">GQLExecDoc -&gt; [ExecutableDefinition Name]
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#unGQLExecDoc"><span class="hs-identifier hs-var hs-var">unGQLExecDoc</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.ExecutableDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627647"><span id="local-6989586621689627649"><span id="local-6989586621689627651"><span id="local-6989586621689627653"><span id="local-6989586621689627655"><span id="local-6989586621689627657"><span id="local-6989586621689627659"><span class="annot"><span class="annottext">Eq GQLExecDoc
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627762"><span id="local-6989586621689627764"><span id="local-6989586621689627766"><span id="local-6989586621689627768"><span id="local-6989586621689627770"><span id="local-6989586621689627772"><span id="local-6989586621689627774"><span class="annot"><span class="annottext">Eq GQLExecDoc
 Eq GQLExecDoc
 -&gt; (GQLExecDoc -&gt; GQLExecDoc -&gt; Ordering)
 -&gt; (GQLExecDoc -&gt; GQLExecDoc -&gt; Bool)
@@ -85,7 +85,7 @@ $c&lt; :: GQLExecDoc -&gt; GQLExecDoc -&gt; Bool
 compare :: GQLExecDoc -&gt; GQLExecDoc -&gt; Ordering
 $ccompare :: GQLExecDoc -&gt; GQLExecDoc -&gt; Ordering
 $cp1Ord :: Eq GQLExecDoc
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627640"><span id="local-6989586621689627642"><span id="local-6989586621689627644"><span class="annot"><span class="annottext">Int -&gt; GQLExecDoc -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627755"><span id="local-6989586621689627757"><span id="local-6989586621689627759"><span class="annot"><span class="annottext">Int -&gt; GQLExecDoc -&gt; ShowS
 [GQLExecDoc] -&gt; ShowS
 GQLExecDoc -&gt; String
 (Int -&gt; GQLExecDoc -&gt; ShowS)
@@ -100,7 +100,7 @@ show :: GQLExecDoc -&gt; String
 $cshow :: GQLExecDoc -&gt; String
 showsPrec :: Int -&gt; GQLExecDoc -&gt; ShowS
 $cshowsPrec :: Int -&gt; GQLExecDoc -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627635"><span id="local-6989586621689627637"><span class="annot"><span class="annottext">GQLExecDoc -&gt; GQLExecDoc -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627750"><span id="local-6989586621689627752"><span class="annot"><span class="annottext">GQLExecDoc -&gt; GQLExecDoc -&gt; Bool
 (GQLExecDoc -&gt; GQLExecDoc -&gt; Bool)
 -&gt; (GQLExecDoc -&gt; GQLExecDoc -&gt; Bool) -&gt; Eq GQLExecDoc
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -108,7 +108,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: GQLExecDoc -&gt; GQLExecDoc -&gt; Bool
 == :: GQLExecDoc -&gt; GQLExecDoc -&gt; Bool
 $c== :: GQLExecDoc -&gt; GQLExecDoc -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627630"><span id="local-6989586621689627632"><span class="annot"><span class="annottext">Int -&gt; GQLExecDoc -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627745"><span id="local-6989586621689627747"><span class="annot"><span class="annottext">Int -&gt; GQLExecDoc -&gt; Int
 GQLExecDoc -&gt; Int
 (Int -&gt; GQLExecDoc -&gt; Int)
 -&gt; (GQLExecDoc -&gt; Int) -&gt; Hashable GQLExecDoc
@@ -117,7 +117,7 @@ hash :: GQLExecDoc -&gt; Int
 $chash :: GQLExecDoc -&gt; Int
 hashWithSalt :: Int -&gt; GQLExecDoc -&gt; Int
 $chashWithSalt :: Int -&gt; GQLExecDoc -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627625"><span id="local-6989586621689627627"><span class="annot"><span class="annottext">GQLExecDoc -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627740"><span id="local-6989586621689627742"><span class="annot"><span class="annottext">GQLExecDoc -&gt; Q Exp
 GQLExecDoc -&gt; Q (TExp GQLExecDoc)
 (GQLExecDoc -&gt; Q Exp)
 -&gt; (GQLExecDoc -&gt; Q (TExp GQLExecDoc)) -&gt; Lift GQLExecDoc
@@ -128,10 +128,10 @@ lift :: GQLExecDoc -&gt; Q Exp
 $clift :: GQLExecDoc -&gt; Q Exp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627621"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-type">GQLExecDoc</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-52"></span><span>  </span><span id="local-6989586621689627619"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GQLExecDoc
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621689627617"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627617"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ExecutableDefinition Name] -&gt; GQLExecDoc
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627736"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-type">GQLExecDoc</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621689627734"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GQLExecDoc
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621689627732"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689627732"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ExecutableDefinition Name] -&gt; GQLExecDoc
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-var">GQLExecDoc</span></a></span><span> </span><span class="annot"><span class="annottext">([ExecutableDefinition Name] -&gt; GQLExecDoc)
 -&gt; (ExecutableDocument Name -&gt; [ExecutableDefinition Name])
 -&gt; ExecutableDocument Name
@@ -145,10 +145,10 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (ExecutableDocument Name)
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627617"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689627732"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627607"><span id="local-6989586621689627609"><span id="local-6989586621689627611"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-type">GQLExecDoc</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621689627605"><span class="annot"><span class="annottext">toJSON :: GQLExecDoc -&gt; Value
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627722"><span id="local-6989586621689627724"><span id="local-6989586621689627726"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-type">GQLExecDoc</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621689627720"><span class="annot"><span class="annottext">toJSON :: GQLExecDoc -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExecutableDocument Name -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(ExecutableDocument Name -&gt; Value)
@@ -166,7 +166,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="hs-keyword">newtype</span><span> </span><span id="OperationName"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-var">OperationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OperationName"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-var">OperationName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unOperationName"><span class="annot"><span class="annottext">OperationName -&gt; Name
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_unOperationName"><span class="hs-identifier hs-var hs-var">_unOperationName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">}</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627586"><span id="local-6989586621689627588"><span id="local-6989586621689627590"><span id="local-6989586621689627592"><span id="local-6989586621689627594"><span id="local-6989586621689627596"><span id="local-6989586621689627598"><span class="annot"><span class="annottext">Eq OperationName
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627701"><span id="local-6989586621689627703"><span id="local-6989586621689627705"><span id="local-6989586621689627707"><span id="local-6989586621689627709"><span id="local-6989586621689627711"><span id="local-6989586621689627713"><span class="annot"><span class="annottext">Eq OperationName
 Eq OperationName
 -&gt; (OperationName -&gt; OperationName -&gt; Ordering)
 -&gt; (OperationName -&gt; OperationName -&gt; Bool)
@@ -204,7 +204,7 @@ $c&lt; :: OperationName -&gt; OperationName -&gt; Bool
 compare :: OperationName -&gt; OperationName -&gt; Ordering
 $ccompare :: OperationName -&gt; OperationName -&gt; Ordering
 $cp1Ord :: Eq OperationName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627580"><span id="local-6989586621689627582"><span id="local-6989586621689627584"><span class="annot"><span class="annottext">Int -&gt; OperationName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627695"><span id="local-6989586621689627697"><span id="local-6989586621689627699"><span class="annot"><span class="annottext">Int -&gt; OperationName -&gt; ShowS
 [OperationName] -&gt; ShowS
 OperationName -&gt; String
 (Int -&gt; OperationName -&gt; ShowS)
@@ -219,7 +219,7 @@ show :: OperationName -&gt; String
 $cshow :: OperationName -&gt; String
 showsPrec :: Int -&gt; OperationName -&gt; ShowS
 $cshowsPrec :: Int -&gt; OperationName -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627576"><span id="local-6989586621689627578"><span class="annot"><span class="annottext">OperationName -&gt; OperationName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627691"><span id="local-6989586621689627693"><span class="annot"><span class="annottext">OperationName -&gt; OperationName -&gt; Bool
 (OperationName -&gt; OperationName -&gt; Bool)
 -&gt; (OperationName -&gt; OperationName -&gt; Bool) -&gt; Eq OperationName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -227,7 +227,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: OperationName -&gt; OperationName -&gt; Bool
 == :: OperationName -&gt; OperationName -&gt; Bool
 $c== :: OperationName -&gt; OperationName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627572"><span id="local-6989586621689627574"><span class="annot"><span class="annottext">Int -&gt; OperationName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627687"><span id="local-6989586621689627689"><span class="annot"><span class="annottext">Int -&gt; OperationName -&gt; Int
 OperationName -&gt; Int
 (Int -&gt; OperationName -&gt; Int)
 -&gt; (OperationName -&gt; Int) -&gt; Hashable OperationName
@@ -236,7 +236,7 @@ hash :: OperationName -&gt; Int
 $chash :: OperationName -&gt; Int
 hashWithSalt :: Int -&gt; OperationName -&gt; Int
 $chashWithSalt :: Int -&gt; OperationName -&gt; Int
-</span><a href="#local-6989586621689627572"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627564"><span id="local-6989586621689627566"><span id="local-6989586621689627568"><span id="local-6989586621689627570"><span class="annot"><span class="annottext">[OperationName] -&gt; Value
+</span><a href="#local-6989586621689627687"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627679"><span id="local-6989586621689627681"><span id="local-6989586621689627683"><span id="local-6989586621689627685"><span class="annot"><span class="annottext">[OperationName] -&gt; Value
 [OperationName] -&gt; Encoding
 OperationName -&gt; Value
 OperationName -&gt; Encoding
@@ -259,7 +259,7 @@ toEncoding :: OperationName -&gt; Encoding
 $ctoEncoding :: OperationName -&gt; Encoding
 toJSON :: OperationName -&gt; Value
 $ctoJSON :: OperationName -&gt; Value
-</span><a href="#local-6989586621689627564"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627560"><span id="local-6989586621689627562"><span class="annot"><span class="annottext">OperationName -&gt; Q Exp
+</span><a href="#local-6989586621689627679"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627675"><span id="local-6989586621689627677"><span class="annot"><span class="annottext">OperationName -&gt; Q Exp
 OperationName -&gt; Q (TExp OperationName)
 (OperationName -&gt; Q Exp)
 -&gt; (OperationName -&gt; Q (TExp OperationName)) -&gt; Lift OperationName
@@ -270,31 +270,31 @@ lift :: OperationName -&gt; Q Exp
 $clift :: OperationName -&gt; Q Exp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627557"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-type">OperationName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-61"></span><span>  </span><span id="local-6989586621689627556"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OperationName
-</span><a href="#local-6989586621689627556"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689627555"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627555"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; OperationName
+</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627672"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-type">OperationName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621689627671"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OperationName
+</span><a href="#local-6989586621689627671"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689627670"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689627670"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; OperationName
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-var">OperationName</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; OperationName) -&gt; Parser Name -&gt; Parser OperationName
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Name
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627555"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689627670"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="hs-keyword">type</span><span> </span><span id="VariableValues"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#VariableValues"><span class="hs-identifier hs-var">VariableValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-64"></span><span>
 </span><span id="line-65"></span><span class="hs-comment">-- | https://graphql.org/learn/serving-over-http/#post-request</span><span>
 </span><span id="line-66"></span><span class="hs-comment">--</span><span>
 </span><span id="line-67"></span><span class="hs-comment">-- See 'GQLReqParsed' for invariants.</span><span>
-</span><span id="line-68"></span><span id="local-6989586621689627552"><span id="local-6989586621689627553"></span></span><span class="hs-keyword">data</span><span> </span><span id="GQLReq"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-var">GQLReq</span></a></span></span><span> </span><span id="local-6989586621689627698"><span class="annot"><a href="#local-6989586621689627698"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLReq"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-var">GQLReq</span></a></span></span><span>
+</span><span id="line-68"></span><span id="local-6989586621689627667"><span id="local-6989586621689627668"></span></span><span class="hs-keyword">data</span><span> </span><span id="GQLReq"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-var">GQLReq</span></a></span></span><span> </span><span id="local-6989586621689627813"><span class="annot"><a href="#local-6989586621689627813"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLReq"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-var">GQLReq</span></a></span></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_grOperationName"><span class="annot"><span class="annottext">GQLReq a -&gt; Maybe OperationName
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grOperationName"><span class="hs-identifier hs-var hs-var">_grOperationName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-type">OperationName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>    </span><span id="_grQuery"><span class="annot"><span class="annottext">GQLReq a -&gt; a
-</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grQuery"><span class="hs-identifier hs-var hs-var">_grQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689627698"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grQuery"><span class="hs-identifier hs-var hs-var">_grQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689627813"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-71"></span><span>    </span><span id="_grVariables"><span class="annot"><span class="annottext">GQLReq a -&gt; Maybe VariableValues
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grVariables"><span class="hs-identifier hs-var hs-var">_grVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#VariableValues"><span class="hs-identifier hs-type">VariableValues</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627542"><span id="local-6989586621689627544"><span id="local-6989586621689627546"><span class="annot"><span class="annottext">Int -&gt; GQLReq a -&gt; ShowS
+</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627657"><span id="local-6989586621689627659"><span id="local-6989586621689627661"><span class="annot"><span class="annottext">Int -&gt; GQLReq a -&gt; ShowS
 [GQLReq a] -&gt; ShowS
 GQLReq a -&gt; String
 (Int -&gt; GQLReq a -&gt; ShowS)
@@ -310,7 +310,7 @@ show :: GQLReq a -&gt; String
 $cshow :: forall a. Show a =&gt; GQLReq a -&gt; String
 showsPrec :: Int -&gt; GQLReq a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; GQLReq a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627538"><span id="local-6989586621689627540"><span class="annot"><span class="annottext">GQLReq a -&gt; GQLReq a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627653"><span id="local-6989586621689627655"><span class="annot"><span class="annottext">GQLReq a -&gt; GQLReq a -&gt; Bool
 (GQLReq a -&gt; GQLReq a -&gt; Bool)
 -&gt; (GQLReq a -&gt; GQLReq a -&gt; Bool) -&gt; Eq (GQLReq a)
 forall a. Eq a =&gt; GQLReq a -&gt; GQLReq a -&gt; Bool
@@ -329,7 +329,7 @@ forall a x. Rep (GQLReq a) x -&gt; GQLReq a
 forall a x. GQLReq a -&gt; Rep (GQLReq a) x
 $cto :: forall a x. Rep (GQLReq a) x -&gt; GQLReq a
 $cfrom :: forall a x. GQLReq a -&gt; Rep (GQLReq a) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627531"><span id="local-6989586621689627533"><span class="annot"><span class="annottext">a -&gt; GQLReq b -&gt; GQLReq a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627646"><span id="local-6989586621689627648"><span class="annot"><span class="annottext">a -&gt; GQLReq b -&gt; GQLReq a
 (a -&gt; b) -&gt; GQLReq a -&gt; GQLReq b
 (forall a b. (a -&gt; b) -&gt; GQLReq a -&gt; GQLReq b)
 -&gt; (forall a b. a -&gt; GQLReq b -&gt; GQLReq a) -&gt; Functor GQLReq
@@ -342,7 +342,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; GQLReq b -&gt; GQLReq a
 fmap :: (a -&gt; b) -&gt; GQLReq a -&gt; GQLReq b
 $cfmap :: forall a b. (a -&gt; b) -&gt; GQLReq a -&gt; GQLReq b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627526"><span id="local-6989586621689627528"><span class="annot"><span class="annottext">GQLReq a -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627641"><span id="local-6989586621689627643"><span class="annot"><span class="annottext">GQLReq a -&gt; Q Exp
 GQLReq a -&gt; Q (TExp (GQLReq a))
 (GQLReq a -&gt; Q Exp)
 -&gt; (GQLReq a -&gt; Q (TExp (GQLReq a))) -&gt; Lift (GQLReq a)
@@ -355,19 +355,19 @@ lift :: GQLReq a -&gt; Q Exp
 $clift :: forall a. Lift a =&gt; GQLReq a -&gt; Q Exp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span class="hs-special">$(</span><span id="local-6989586621689627514"><span id="local-6989586621689627516"><span id="local-6989586621689627518"><span id="local-6989586621689627520"><span id="local-6989586621689627522"><span id="local-6989586621689627524"><span id="local-6989586621689627698"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GQLReq</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span class="hs-special">$(</span><span id="local-6989586621689627629"><span id="local-6989586621689627631"><span id="local-6989586621689627633"><span id="local-6989586621689627635"><span id="local-6989586621689627637"><span id="local-6989586621689627639"><span id="local-6989586621689627813"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GQLReq</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>
-</span><span id="line-77"></span><span id="local-6989586621689627512"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627508"><span id="local-6989586621689627510"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689627512"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-type">GQLReq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627512"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-77"></span><span id="local-6989586621689627627"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627623"><span id="local-6989586621689627625"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689627627"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-type">GQLReq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627627"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span class="hs-comment">-- | Batched queries are sent as a JSON array of</span><span>
 </span><span id="line-80"></span><span class="hs-comment">-- 'GQLReq' records. This newtype exists to support</span><span>
 </span><span id="line-81"></span><span class="hs-comment">-- the unusual JSON encoding.</span><span>
 </span><span id="line-82"></span><span class="hs-comment">--</span><span>
 </span><span id="line-83"></span><span class="hs-comment">-- See &lt;https://github.com/hasura/graphql-engine/issues/1812&gt;.</span><span>
-</span><span id="line-84"></span><span id="local-6989586621689627506"><span id="local-6989586621689627507"></span></span><span class="hs-keyword">data</span><span> </span><span id="GQLBatchedReqs"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-var">GQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621689627764"><span class="annot"><a href="#local-6989586621689627764"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GQLSingleRequest"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLSingleRequest"><span class="hs-identifier hs-var">GQLSingleRequest</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689627764"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-86"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GQLBatchedReqs"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-var">GQLBatchedReqs</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689627764"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627498"><span id="local-6989586621689627500"><span id="local-6989586621689627502"><span class="annot"><span class="annottext">Int -&gt; GQLBatchedReqs a -&gt; ShowS
+</span><span id="line-84"></span><span id="local-6989586621689627621"><span id="local-6989586621689627622"></span></span><span class="hs-keyword">data</span><span> </span><span id="GQLBatchedReqs"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-var">GQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621689627879"><span class="annot"><a href="#local-6989586621689627879"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GQLSingleRequest"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLSingleRequest"><span class="hs-identifier hs-var">GQLSingleRequest</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689627879"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GQLBatchedReqs"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-var">GQLBatchedReqs</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689627879"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627613"><span id="local-6989586621689627615"><span id="local-6989586621689627617"><span class="annot"><span class="annottext">Int -&gt; GQLBatchedReqs a -&gt; ShowS
 [GQLBatchedReqs a] -&gt; ShowS
 GQLBatchedReqs a -&gt; String
 (Int -&gt; GQLBatchedReqs a -&gt; ShowS)
@@ -385,7 +385,7 @@ show :: GQLBatchedReqs a -&gt; String
 $cshow :: forall a. Show a =&gt; GQLBatchedReqs a -&gt; String
 showsPrec :: Int -&gt; GQLBatchedReqs a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; GQLBatchedReqs a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627494"><span id="local-6989586621689627496"><span class="annot"><span class="annottext">GQLBatchedReqs a -&gt; GQLBatchedReqs a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627609"><span id="local-6989586621689627611"><span class="annot"><span class="annottext">GQLBatchedReqs a -&gt; GQLBatchedReqs a -&gt; Bool
 (GQLBatchedReqs a -&gt; GQLBatchedReqs a -&gt; Bool)
 -&gt; (GQLBatchedReqs a -&gt; GQLBatchedReqs a -&gt; Bool)
 -&gt; Eq (GQLBatchedReqs a)
@@ -406,7 +406,7 @@ forall a x. Rep (GQLBatchedReqs a) x -&gt; GQLBatchedReqs a
 forall a x. GQLBatchedReqs a -&gt; Rep (GQLBatchedReqs a) x
 $cto :: forall a x. Rep (GQLBatchedReqs a) x -&gt; GQLBatchedReqs a
 $cfrom :: forall a x. GQLBatchedReqs a -&gt; Rep (GQLBatchedReqs a) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627488"><span id="local-6989586621689627490"><span class="annot"><span class="annottext">a -&gt; GQLBatchedReqs b -&gt; GQLBatchedReqs a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627603"><span id="local-6989586621689627605"><span class="annot"><span class="annottext">a -&gt; GQLBatchedReqs b -&gt; GQLBatchedReqs a
 (a -&gt; b) -&gt; GQLBatchedReqs a -&gt; GQLBatchedReqs b
 (forall a b. (a -&gt; b) -&gt; GQLBatchedReqs a -&gt; GQLBatchedReqs b)
 -&gt; (forall a b. a -&gt; GQLBatchedReqs b -&gt; GQLBatchedReqs a)
@@ -422,23 +422,23 @@ fmap :: (a -&gt; b) -&gt; GQLBatchedReqs a -&gt; GQLBatchedReqs b
 $cfmap :: forall a b. (a -&gt; b) -&gt; GQLBatchedReqs a -&gt; GQLBatchedReqs b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span id="local-6989586621689627487"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627480"><span id="local-6989586621689627482"><span id="local-6989586621689627484"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689627487"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-type">GQLBatchedReqs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627487"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621689627479"><span class="annot"><span class="annottext">toJSON :: GQLBatchedReqs a -&gt; Value
-</span><a href="#local-6989586621689627479"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLSingleRequest"><span class="hs-identifier hs-type">GQLSingleRequest</span></a></span><span> </span><span id="local-6989586621689627478"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689627478"><span class="hs-identifier hs-var">q</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+</span><span id="line-89"></span><span id="local-6989586621689627602"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627595"><span id="local-6989586621689627597"><span id="local-6989586621689627599"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689627602"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-type">GQLBatchedReqs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627602"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621689627594"><span class="annot"><span class="annottext">toJSON :: GQLBatchedReqs a -&gt; Value
+</span><a href="#local-6989586621689627594"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLSingleRequest"><span class="hs-identifier hs-type">GQLSingleRequest</span></a></span><span> </span><span id="local-6989586621689627593"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689627593"><span class="hs-identifier hs-var">q</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689627478"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-91"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-type">GQLBatchedReqs</span></a></span><span> </span><span id="local-6989586621689627477"><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689627477"><span class="hs-identifier hs-var">qs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; Value
+</span><a href="#local-6989586621689627593"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-type">GQLBatchedReqs</span></a></span><span> </span><span id="local-6989586621689627592"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689627592"><span class="hs-identifier hs-var">qs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689627477"><span class="hs-identifier hs-var">qs</span></a></span></span><span>
+</span><a href="#local-6989586621689627592"><span class="hs-identifier hs-var">qs</span></a></span></span><span>
 </span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span id="local-6989586621689627476"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627473"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689627476"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-type">GQLBatchedReqs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627476"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>  </span><span id="local-6989586621689627472"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (GQLBatchedReqs a)
-</span><a href="#local-6989586621689627472"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689627471"><span class="annot"><span class="annottext">arr :: Value
-</span><a href="#local-6989586621689627471"><span class="hs-identifier hs-var">arr</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; GQLBatchedReqs a
+</span><span id="line-93"></span><span id="local-6989586621689627591"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689627588"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689627591"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-type">GQLBatchedReqs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627591"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621689627587"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (GQLBatchedReqs a)
+</span><a href="#local-6989586621689627587"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689627586"><span class="annot"><span class="annottext">arr :: Value
+</span><a href="#local-6989586621689627586"><span class="hs-identifier hs-var">arr</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; GQLBatchedReqs a
 forall a. [a] -&gt; GQLBatchedReqs a
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLBatchedReqs"><span class="hs-identifier hs-var">GQLBatchedReqs</span></a></span><span> </span><span class="annot"><span class="annottext">([a] -&gt; GQLBatchedReqs a)
 -&gt; Parser [a] -&gt; Parser (GQLBatchedReqs a)
@@ -446,22 +446,22 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser [a]
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627471"><span class="hs-identifier hs-var">arr</span></a></span><span>
-</span><span id="line-95"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621689627469"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627469"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; GQLBatchedReqs a
+</span><a href="#local-6989586621689627586"><span class="hs-identifier hs-var">arr</span></a></span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621689627584"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689627584"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; GQLBatchedReqs a
 forall a. a -&gt; GQLBatchedReqs a
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLSingleRequest"><span class="hs-identifier hs-var">GQLSingleRequest</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; GQLBatchedReqs a) -&gt; Parser a -&gt; Parser (GQLBatchedReqs a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser a
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627469"><span class="hs-identifier hs-var">other</span></a></span></span><span>
+</span><a href="#local-6989586621689627584"><span class="hs-identifier hs-var">other</span></a></span></span><span>
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span class="hs-keyword">newtype</span><span> </span><span id="GQLQueryText"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLQueryText"><span class="hs-identifier hs-var">GQLQueryText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLQueryText"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLQueryText"><span class="hs-identifier hs-var">GQLQueryText</span></a></span></span><span>
 </span><span id="line-98"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_unGQLQueryText"><span class="annot"><span class="annottext">GQLQueryText -&gt; Text
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_unGQLQueryText"><span class="hs-identifier hs-var hs-var">_unGQLQueryText</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627461"><span id="local-6989586621689627463"><span id="local-6989586621689627465"><span class="annot"><span class="annottext">Int -&gt; GQLQueryText -&gt; ShowS
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627576"><span id="local-6989586621689627578"><span id="local-6989586621689627580"><span class="annot"><span class="annottext">Int -&gt; GQLQueryText -&gt; ShowS
 [GQLQueryText] -&gt; ShowS
 GQLQueryText -&gt; String
 (Int -&gt; GQLQueryText -&gt; ShowS)
@@ -476,7 +476,7 @@ show :: GQLQueryText -&gt; String
 $cshow :: GQLQueryText -&gt; String
 showsPrec :: Int -&gt; GQLQueryText -&gt; ShowS
 $cshowsPrec :: Int -&gt; GQLQueryText -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627457"><span id="local-6989586621689627459"><span class="annot"><span class="annottext">GQLQueryText -&gt; GQLQueryText -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627572"><span id="local-6989586621689627574"><span class="annot"><span class="annottext">GQLQueryText -&gt; GQLQueryText -&gt; Bool
 (GQLQueryText -&gt; GQLQueryText -&gt; Bool)
 -&gt; (GQLQueryText -&gt; GQLQueryText -&gt; Bool) -&gt; Eq GQLQueryText
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -484,7 +484,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: GQLQueryText -&gt; GQLQueryText -&gt; Bool
 == :: GQLQueryText -&gt; GQLQueryText -&gt; Bool
 $c== :: GQLQueryText -&gt; GQLQueryText -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627442"><span id="local-6989586621689627444"><span id="local-6989586621689627446"><span id="local-6989586621689627448"><span id="local-6989586621689627450"><span id="local-6989586621689627452"><span id="local-6989586621689627454"><span class="annot"><span class="annottext">Eq GQLQueryText
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627557"><span id="local-6989586621689627559"><span id="local-6989586621689627561"><span id="local-6989586621689627563"><span id="local-6989586621689627565"><span id="local-6989586621689627567"><span id="local-6989586621689627569"><span class="annot"><span class="annottext">Eq GQLQueryText
 Eq GQLQueryText
 -&gt; (GQLQueryText -&gt; GQLQueryText -&gt; Ordering)
 -&gt; (GQLQueryText -&gt; GQLQueryText -&gt; Bool)
@@ -522,7 +522,7 @@ $c&lt; :: GQLQueryText -&gt; GQLQueryText -&gt; Bool
 compare :: GQLQueryText -&gt; GQLQueryText -&gt; Ordering
 $ccompare :: GQLQueryText -&gt; GQLQueryText -&gt; Ordering
 $cp1Ord :: Eq GQLQueryText
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627438"><span id="local-6989586621689627440"><span class="annot"><span class="annottext">Int -&gt; GQLQueryText -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627553"><span id="local-6989586621689627555"><span class="annot"><span class="annottext">Int -&gt; GQLQueryText -&gt; Int
 GQLQueryText -&gt; Int
 (Int -&gt; GQLQueryText -&gt; Int)
 -&gt; (GQLQueryText -&gt; Int) -&gt; Hashable GQLQueryText
@@ -531,13 +531,13 @@ hash :: GQLQueryText -&gt; Int
 $chash :: GQLQueryText -&gt; Int
 hashWithSalt :: Int -&gt; GQLQueryText -&gt; Int
 $chashWithSalt :: Int -&gt; GQLQueryText -&gt; Int
-</span><a href="#local-6989586621689627438"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627436"><span class="annot"><span class="annottext">String -&gt; GQLQueryText
+</span><a href="#local-6989586621689627553"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627551"><span class="annot"><span class="annottext">String -&gt; GQLQueryText
 (String -&gt; GQLQueryText) -&gt; IsString GQLQueryText
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; GQLQueryText
 $cfromString :: String -&gt; GQLQueryText
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627431"><span id="local-6989586621689627433"><span class="annot"><span class="annottext">Value -&gt; Parser [GQLQueryText]
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627546"><span id="local-6989586621689627548"><span class="annot"><span class="annottext">Value -&gt; Parser [GQLQueryText]
 Value -&gt; Parser GQLQueryText
 (Value -&gt; Parser GQLQueryText)
 -&gt; (Value -&gt; Parser [GQLQueryText]) -&gt; FromJSON GQLQueryText
@@ -547,7 +547,7 @@ parseJSONList :: Value -&gt; Parser [GQLQueryText]
 $cparseJSONList :: Value -&gt; Parser [GQLQueryText]
 parseJSON :: Value -&gt; Parser GQLQueryText
 $cparseJSON :: Value -&gt; Parser GQLQueryText
-</span><a href="#local-6989586621689627431"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627423"><span id="local-6989586621689627425"><span id="local-6989586621689627427"><span id="local-6989586621689627429"><span class="annot"><span class="annottext">[GQLQueryText] -&gt; Value
+</span><a href="#local-6989586621689627546"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627538"><span id="local-6989586621689627540"><span id="local-6989586621689627542"><span id="local-6989586621689627544"><span class="annot"><span class="annottext">[GQLQueryText] -&gt; Value
 [GQLQueryText] -&gt; Encoding
 GQLQueryText -&gt; Value
 GQLQueryText -&gt; Encoding
@@ -570,7 +570,7 @@ toEncoding :: GQLQueryText -&gt; Encoding
 $ctoEncoding :: GQLQueryText -&gt; Encoding
 toJSON :: GQLQueryText -&gt; Value
 $ctoJSON :: GQLQueryText -&gt; Value
-</span><a href="#local-6989586621689627423"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689627538"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span>
 </span><span id="line-103"></span><span class="hs-comment">-- | We've not yet parsed the graphql query string parameter of the POST.</span><span>
 </span><span id="line-104"></span><span class="hs-keyword">type</span><span> </span><span id="GQLReqUnparsed"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-var">GQLReqUnparsed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-type">GQLReq</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLQueryText"><span class="hs-identifier hs-type">GQLQueryText</span></a></span><span>
@@ -627,7 +627,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall var.
 TypedOperationDefinition FragmentSpread var
 -&gt; ExecutableDocument var
-</span><a href="#local-6989586621689627421"><span class="hs-identifier hs-var">toExecDoc</span></a></span><span> </span><span class="annot"><span class="annottext">(TypedOperationDefinition FragmentSpread Name
+</span><a href="#local-6989586621689627536"><span class="hs-identifier hs-var">toExecDoc</span></a></span><span> </span><span class="annot"><span class="annottext">(TypedOperationDefinition FragmentSpread Name
  -&gt; ExecutableDocument Name)
 -&gt; (TypedOperationDefinition NoFragments Name
     -&gt; TypedOperationDefinition FragmentSpread Name)
@@ -639,18 +639,18 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall var.
 TypedOperationDefinition NoFragments var
 -&gt; TypedOperationDefinition FragmentSpread var
-</span><a href="#local-6989586621689627420"><span class="hs-identifier hs-var">inlineFrags</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689627535"><span class="hs-identifier hs-var">inlineFrags</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-138"></span><span>    </span><span class="hs-comment">-- This is essentially a 'coerce' (TODO unsafeCoerce optimization possible)?</span><span>
-</span><span id="line-139"></span><span>    </span><span id="local-6989586621689627754"><span class="annot"><a href="#local-6989586621689627420"><span class="hs-identifier hs-type">inlineFrags</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-140"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621689627754"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-141"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FragmentSpread</span></span><span> </span><span class="annot"><a href="#local-6989586621689627754"><span class="hs-identifier hs-type">var</span></a></span></span><span>
-</span><span id="line-142"></span><span>    </span><span id="local-6989586621689627420"><span class="annot"><span class="annottext">inlineFrags :: TypedOperationDefinition NoFragments var
+</span><span id="line-139"></span><span>    </span><span id="local-6989586621689627869"><span class="annot"><a href="#local-6989586621689627535"><span class="hs-identifier hs-type">inlineFrags</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-140"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621689627869"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-141"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FragmentSpread</span></span><span> </span><span class="annot"><a href="#local-6989586621689627869"><span class="hs-identifier hs-type">var</span></a></span></span><span>
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621689627535"><span class="annot"><span class="annottext">inlineFrags :: TypedOperationDefinition NoFragments var
 -&gt; TypedOperationDefinition FragmentSpread var
-</span><a href="#local-6989586621689627420"><span class="hs-identifier hs-var hs-var">inlineFrags</span></a></span></span><span> </span><span id="local-6989586621689627419"><span class="annot"><span class="annottext">TypedOperationDefinition NoFragments var
-</span><a href="#local-6989586621689627419"><span class="hs-identifier hs-var">opDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689627535"><span class="hs-identifier hs-var hs-var">inlineFrags</span></a></span></span><span> </span><span id="local-6989586621689627534"><span class="annot"><span class="annottext">TypedOperationDefinition NoFragments var
+</span><a href="#local-6989586621689627534"><span class="hs-identifier hs-var">opDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-143"></span><span>      </span><span class="annot"><span class="annottext">TypedOperationDefinition NoFragments var
-</span><a href="#local-6989586621689627419"><span class="hs-identifier hs-var">opDef</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_todSelectionSet :: SelectionSet FragmentSpread var
+</span><a href="#local-6989586621689627534"><span class="hs-identifier hs-var">opDef</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_todSelectionSet :: SelectionSet FragmentSpread var
 </span><span class="hs-identifier hs-var">G._todSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(NoFragments var -&gt; FragmentSpread var)
 -&gt; SelectionSet NoFragments var -&gt; SelectionSet FragmentSpread var
 forall (frag :: * -&gt; *) var (frag' :: * -&gt; *).
@@ -666,10 +666,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (frag :: * -&gt; *) var.
 TypedOperationDefinition frag var -&gt; SelectionSet frag var
 </span><span class="hs-identifier hs-var hs-var">G._todSelectionSet</span></span><span> </span><span class="annot"><span class="annottext">TypedOperationDefinition NoFragments var
-</span><a href="#local-6989586621689627419"><span class="hs-identifier hs-var">opDef</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-144"></span><span>    </span><span id="local-6989586621689627421"><span class="annot"><span class="annottext">toExecDoc :: TypedOperationDefinition FragmentSpread var
+</span><a href="#local-6989586621689627534"><span class="hs-identifier hs-var">opDef</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621689627536"><span class="annot"><span class="annottext">toExecDoc :: TypedOperationDefinition FragmentSpread var
 -&gt; ExecutableDocument var
-</span><a href="#local-6989586621689627421"><span class="hs-identifier hs-var hs-var">toExecDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689627536"><span class="hs-identifier hs-var hs-var">toExecDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">[ExecutableDefinition var] -&gt; ExecutableDocument var
 forall var. [ExecutableDefinition var] -&gt; ExecutableDocument var
 </span><span class="hs-identifier hs-var">G.ExecutableDocument</span></span><span> </span><span class="annot"><span class="annottext">([ExecutableDefinition var] -&gt; ExecutableDocument var)
@@ -710,19 +710,19 @@ TypedOperationDefinition frag var -&gt; OperationDefinition frag var
 </span><span id="line-152"></span><span class="hs-comment">--     https://spec.graphql.org/June2018/#sec-Executable-Definitions  and...</span><span>
 </span><span id="line-153"></span><span class="hs-comment">--     https://graphql.org/learn/serving-over-http/</span><span>
 </span><span id="line-154"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#getSingleOperation"><span class="hs-pragma hs-type">getSingleOperation</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
-</span><span id="line-155"></span><span id="local-6989586621689627413"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#getSingleOperation"><span class="hs-identifier hs-type">getSingleOperation</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-156"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627413"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-155"></span><span id="local-6989586621689627528"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#getSingleOperation"><span class="hs-identifier hs-type">getSingleOperation</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-156"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627528"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqParsed"><span class="hs-identifier hs-type">GQLReqParsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621689627413"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#SingleOperation"><span class="hs-identifier hs-type">SingleOperation</span></a></span></span><span>
+</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621689627528"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#SingleOperation"><span class="hs-identifier hs-type">SingleOperation</span></a></span></span><span>
 </span><span id="line-159"></span><span id="getSingleOperation"><span class="annot"><span class="annottext">getSingleOperation :: GQLReqParsed -&gt; m (TypedOperationDefinition NoFragments Name)
-</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#getSingleOperation"><span class="hs-identifier hs-var hs-var">getSingleOperation</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-type">GQLReq</span></a></span><span> </span><span id="local-6989586621689627412"><span class="annot"><span class="annottext">Maybe OperationName
-</span><a href="#local-6989586621689627412"><span class="hs-identifier hs-var">opNameM</span></a></span></span><span> </span><span id="local-6989586621689627411"><span class="annot"><span class="annottext">GQLExecDoc
-</span><a href="#local-6989586621689627411"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span id="local-6989586621689627410"><span class="annot"><span class="annottext">Maybe VariableValues
-</span><a href="#local-6989586621689627410"><span class="hs-identifier hs-var">_varValsM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-160"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627409"><span class="annot"><span class="annottext">[SelectionSet FragmentSpread Name]
-</span><a href="#local-6989586621689627409"><span class="hs-identifier hs-var">selSets</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627408"><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
-</span><a href="#local-6989586621689627408"><span class="hs-identifier hs-var">opDefs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627407"><span class="annot"><span class="annottext">[FragmentDefinition]
-</span><a href="#local-6989586621689627407"><span class="hs-identifier hs-var">fragments</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ExecutableDefinition Name]
+</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#getSingleOperation"><span class="hs-identifier hs-var hs-var">getSingleOperation</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-type">GQLReq</span></a></span><span> </span><span id="local-6989586621689627527"><span class="annot"><span class="annottext">Maybe OperationName
+</span><a href="#local-6989586621689627527"><span class="hs-identifier hs-var">opNameM</span></a></span></span><span> </span><span id="local-6989586621689627526"><span class="annot"><span class="annottext">GQLExecDoc
+</span><a href="#local-6989586621689627526"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span id="local-6989586621689627525"><span class="annot"><span class="annottext">Maybe VariableValues
+</span><a href="#local-6989586621689627525"><span class="hs-identifier hs-var">_varValsM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627524"><span class="annot"><span class="annottext">[SelectionSet FragmentSpread Name]
+</span><a href="#local-6989586621689627524"><span class="hs-identifier hs-var">selSets</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627523"><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
+</span><a href="#local-6989586621689627523"><span class="hs-identifier hs-var">opDefs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627522"><span class="annot"><span class="annottext">[FragmentDefinition]
+</span><a href="#local-6989586621689627522"><span class="hs-identifier hs-var">fragments</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ExecutableDefinition Name]
 -&gt; ([SelectionSet FragmentSpread Name],
     [TypedOperationDefinition FragmentSpread Name],
     [FragmentDefinition])
@@ -742,8 +742,8 @@ forall var.
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLExecDoc -&gt; [ExecutableDefinition Name]
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#unGQLExecDoc"><span class="hs-identifier hs-var hs-var">unGQLExecDoc</span></a></span><span> </span><span class="annot"><span class="annottext">GQLExecDoc
-</span><a href="#local-6989586621689627411"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-161"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689627400"><span id="local-6989586621689627401"><span id="local-6989586621689627402"><span id="local-6989586621689627403"><span id="local-6989586621689627404"><span class="annot"><span class="annottext">[Directive Name]
+</span><a href="#local-6989586621689627526"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689627515"><span id="local-6989586621689627516"><span id="local-6989586621689627517"><span id="local-6989586621689627518"><span id="local-6989586621689627519"><span class="annot"><span class="annottext">[Directive Name]
 SelectionSet FragmentSpread Name
 [VariableDefinition]
 Maybe Name
@@ -765,39 +765,39 @@ _todSelectionSet :: forall (frag :: * -&gt; *) var.
 TypedOperationDefinition frag var -&gt; SelectionSet frag var
 </span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-162"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OperationName
-</span><a href="#local-6989586621689627412"><span class="hs-identifier hs-var">opNameM</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[SelectionSet FragmentSpread Name]
-</span><a href="#local-6989586621689627409"><span class="hs-identifier hs-var">selSets</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
-</span><a href="#local-6989586621689627408"><span class="hs-identifier hs-var">opDefs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-163"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689627395"><span class="annot"><span class="annottext">OperationName
-</span><a href="#local-6989586621689627395"><span class="hs-identifier hs-var">opName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
+</span><a href="#local-6989586621689627527"><span class="hs-identifier hs-var">opNameM</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[SelectionSet FragmentSpread Name]
+</span><a href="#local-6989586621689627524"><span class="hs-identifier hs-var">selSets</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
+</span><a href="#local-6989586621689627523"><span class="hs-identifier hs-var">opDefs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-163"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689627510"><span class="annot"><span class="annottext">OperationName
+</span><a href="#local-6989586621689627510"><span class="hs-identifier hs-var">opName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-164"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689627394"><span class="annot"><span class="annottext">n :: Name
-</span><a href="#local-6989586621689627394"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OperationName -&gt; Name
+</span><span id="line-164"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689627509"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621689627509"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OperationName -&gt; Name
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_unOperationName"><span class="hs-identifier hs-var hs-var">_unOperationName</span></a></span><span> </span><span class="annot"><span class="annottext">OperationName
-</span><a href="#local-6989586621689627395"><span class="hs-identifier hs-var">opName</span></a></span><span>
-</span><span id="line-165"></span><span>            </span><span id="local-6989586621689627393"><span class="annot"><span class="annottext">opDefM :: Maybe (TypedOperationDefinition FragmentSpread Name)
-</span><a href="#local-6989586621689627393"><span class="hs-identifier hs-var hs-var">opDefM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TypedOperationDefinition FragmentSpread Name -&gt; Bool)
+</span><a href="#local-6989586621689627510"><span class="hs-identifier hs-var">opName</span></a></span><span>
+</span><span id="line-165"></span><span>            </span><span id="local-6989586621689627508"><span class="annot"><span class="annottext">opDefM :: Maybe (TypedOperationDefinition FragmentSpread Name)
+</span><a href="#local-6989586621689627508"><span class="hs-identifier hs-var hs-var">opDefM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TypedOperationDefinition FragmentSpread Name -&gt; Bool)
 -&gt; [TypedOperationDefinition FragmentSpread Name]
 -&gt; Maybe (TypedOperationDefinition FragmentSpread Name)
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">find</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689627391"><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
-</span><a href="#local-6989586621689627391"><span class="hs-identifier hs-var">opDef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name -&gt; Maybe Name
+</span><span class="hs-identifier hs-var">find</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689627506"><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
+</span><a href="#local-6989586621689627506"><span class="hs-identifier hs-var">opDef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name -&gt; Maybe Name
 forall (frag :: * -&gt; *) var.
 TypedOperationDefinition frag var -&gt; Maybe Name
 </span><span class="hs-identifier hs-var hs-var">G._todName</span></span><span> </span><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
-</span><a href="#local-6989586621689627391"><span class="hs-identifier hs-var">opDef</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; Bool
+</span><a href="#local-6989586621689627506"><span class="hs-identifier hs-var">opDef</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689627394"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
-</span><a href="#local-6989586621689627408"><span class="hs-identifier hs-var">opDefs</span></a></span><span>
+</span><a href="#local-6989586621689627509"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
+</span><a href="#local-6989586621689627523"><span class="hs-identifier hs-var">opDefs</span></a></span><span>
 </span><span id="line-166"></span><span>        </span><span class="annot"><span class="annottext">Maybe (TypedOperationDefinition FragmentSpread Name)
 -&gt; m (TypedOperationDefinition FragmentSpread Name)
 -&gt; m (TypedOperationDefinition FragmentSpread Name)
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (TypedOperationDefinition FragmentSpread Name)
-</span><a href="#local-6989586621689627393"><span class="hs-identifier hs-var">opDefM</span></a></span><span> </span><span class="annot"><span class="annottext">(m (TypedOperationDefinition FragmentSpread Name)
+</span><a href="#local-6989586621689627508"><span class="hs-identifier hs-var">opDefM</span></a></span><span> </span><span class="annot"><span class="annottext">(m (TypedOperationDefinition FragmentSpread Name)
  -&gt; m (TypedOperationDefinition FragmentSpread Name))
 -&gt; m (TypedOperationDefinition FragmentSpread Name)
 -&gt; m (TypedOperationDefinition FragmentSpread Name)
@@ -816,7 +816,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689627394"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689627509"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-169"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">OperationName
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[SelectionSet FragmentSpread Name]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
@@ -835,8 +835,8 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;an anonymous operation exists in the document&quot;</span></span><span>
 </span><span id="line-173"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OperationName
-</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span id="local-6989586621689627387"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621689627387"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span id="local-6989586621689627502"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621689627502"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-174"></span><span>        </span><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
 -&gt; m (TypedOperationDefinition FragmentSpread Name)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -862,15 +862,15 @@ OperationType
 </span><span class="hs-identifier hs-var">G.OperationTypeQuery</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621689627387"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><a href="#local-6989586621689627502"><span class="hs-identifier hs-var">selSet</span></a></span><span>
 </span><span id="line-175"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OperationName
-</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span id="local-6989586621689627385"><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
-</span><a href="#local-6989586621689627385"><span class="hs-identifier hs-var">opDef</span></a></span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span id="local-6989586621689627500"><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
+</span><a href="#local-6989586621689627500"><span class="hs-identifier hs-var">opDef</span></a></span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-176"></span><span>        </span><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
 -&gt; m (TypedOperationDefinition FragmentSpread Name)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">TypedOperationDefinition FragmentSpread Name
-</span><a href="#local-6989586621689627385"><span class="hs-identifier hs-var">opDef</span></a></span><span>
+</span><a href="#local-6989586621689627500"><span class="hs-identifier hs-var">opDef</span></a></span><span>
 </span><span id="line-177"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OperationName
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[SelectionSet FragmentSpread Name]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[TypedOperationDefinition FragmentSpread Name]
@@ -889,8 +889,8 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;in the document when operationName is not specified&quot;</span></span><span>
 </span><span id="line-181"></span><span>
-</span><span id="line-182"></span><span>  </span><span id="local-6989586621689627384"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621689627384"><span class="hs-identifier hs-var">inlinedSelSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[FragmentDefinition]
+</span><span id="line-182"></span><span>  </span><span id="local-6989586621689627499"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
+</span><a href="#local-6989586621689627499"><span class="hs-identifier hs-var">inlinedSelSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[FragmentDefinition]
 -&gt; SelectionSet FragmentSpread Name
 -&gt; m (SelectionSet NoFragments Name)
 forall (m :: * -&gt; *) (t :: * -&gt; *).
@@ -899,8 +899,8 @@ t FragmentDefinition
 -&gt; SelectionSet FragmentSpread Name
 -&gt; m (SelectionSet NoFragments Name)
 </span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelectionSet"><span class="hs-identifier hs-var">EI.inlineSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">[FragmentDefinition]
-</span><a href="#local-6989586621689627407"><span class="hs-identifier hs-var">fragments</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621689627400"><span class="hs-identifier hs-var">_todSelectionSet</span></a></span><span>
+</span><a href="#local-6989586621689627522"><span class="hs-identifier hs-var">fragments</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621689627515"><span class="hs-identifier hs-var">_todSelectionSet</span></a></span><span>
 </span><span id="line-183"></span><span>  </span><span class="annot"><span class="annottext">TypedOperationDefinition NoFragments Name
 -&gt; m (TypedOperationDefinition NoFragments Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -918,7 +918,7 @@ OperationType
 -&gt; TypedOperationDefinition frag var
 </span><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_todSelectionSet :: SelectionSet NoFragments Name
 </span><span class="hs-identifier hs-var">_todSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621689627384"><span class="hs-identifier hs-var">inlinedSelSet</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Directive Name]
+</span><a href="#local-6989586621689627499"><span class="hs-identifier hs-var">inlinedSelSet</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Directive Name]
 [VariableDefinition]
 Maybe Name
 OperationType
@@ -932,12 +932,12 @@ _todName :: Maybe Name
 _todType :: OperationType
 </span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span><span class="hs-special">}</span><span>
 </span><span id="line-184"></span><span>
-</span><span id="line-185"></span><span id="local-6989586621689627382"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#toParsed"><span class="hs-identifier hs-type">toParsed</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627382"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689627382"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqParsed"><span class="hs-identifier hs-type">GQLReqParsed</span></a></span></span><span>
+</span><span id="line-185"></span><span id="local-6989586621689627497"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#toParsed"><span class="hs-identifier hs-type">toParsed</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627497"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689627497"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqParsed"><span class="hs-identifier hs-type">GQLReqParsed</span></a></span></span><span>
 </span><span id="line-186"></span><span id="toParsed"><span class="annot"><span class="annottext">toParsed :: GQLReqUnparsed -&gt; m GQLReqParsed
-</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#toParsed"><span class="hs-identifier hs-var hs-var">toParsed</span></a></span></span><span> </span><span id="local-6989586621689627381"><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621689627381"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (ExecutableDocument Name)
+</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#toParsed"><span class="hs-identifier hs-var hs-var">toParsed</span></a></span></span><span> </span><span id="local-6989586621689627496"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621689627496"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (ExecutableDocument Name)
 </span><span class="hs-identifier hs-var">G.parseExecutableDoc</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689627379"><span class="hs-identifier hs-var">gqlText</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689627494"><span class="hs-identifier hs-var">gqlText</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-187"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m GQLReqParsed -&gt; m GQLReqParsed
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
@@ -950,13 +950,13 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;not a valid graphql query&quot;</span></span><span>
-</span><span id="line-188"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689627377"><span class="annot"><span class="annottext">ExecutableDocument Name
-</span><a href="#local-6989586621689627377"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GQLReqParsed -&gt; m GQLReqParsed
+</span><span id="line-188"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689627492"><span class="annot"><span class="annottext">ExecutableDocument Name
+</span><a href="#local-6989586621689627492"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GQLReqParsed -&gt; m GQLReqParsed
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(GQLReqParsed -&gt; m GQLReqParsed) -&gt; GQLReqParsed -&gt; m GQLReqParsed
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621689627381"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_grQuery :: GQLExecDoc
+</span><a href="#local-6989586621689627496"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_grQuery :: GQLExecDoc
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grQuery"><span class="hs-identifier hs-var">_grQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ExecutableDefinition Name] -&gt; GQLExecDoc
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLExecDoc"><span class="hs-identifier hs-var">GQLExecDoc</span></a></span><span> </span><span class="annot"><span class="annottext">([ExecutableDefinition Name] -&gt; GQLExecDoc)
 -&gt; [ExecutableDefinition Name] -&gt; GQLExecDoc
@@ -964,35 +964,35 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ExecutableDocument Name -&gt; [ExecutableDefinition Name]
 forall var. ExecutableDocument var -&gt; [ExecutableDefinition var]
 </span><span class="hs-identifier hs-var hs-var">G.getExecutableDefinitions</span></span><span> </span><span class="annot"><span class="annottext">ExecutableDocument Name
-</span><a href="#local-6989586621689627377"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689627492"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-190"></span><span>    </span><span id="local-6989586621689627379"><span class="annot"><span class="annottext">gqlText :: Text
-</span><a href="#local-6989586621689627379"><span class="hs-identifier hs-var hs-var">gqlText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GQLQueryText -&gt; Text
+</span><span id="line-190"></span><span>    </span><span id="local-6989586621689627494"><span class="annot"><span class="annottext">gqlText :: Text
+</span><a href="#local-6989586621689627494"><span class="hs-identifier hs-var hs-var">gqlText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GQLQueryText -&gt; Text
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_unGQLQueryText"><span class="hs-identifier hs-var hs-var">_unGQLQueryText</span></a></span><span> </span><span class="annot"><span class="annottext">(GQLQueryText -&gt; Text) -&gt; GQLQueryText -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed -&gt; GQLQueryText
 forall a. GQLReq a -&gt; a
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grQuery"><span class="hs-identifier hs-var hs-var">_grQuery</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621689627381"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621689627496"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-191"></span><span>
 </span><span id="line-192"></span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQErr"><span class="hs-identifier hs-type">encodeGQErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-193"></span><span id="encodeGQErr"><span class="annot"><span class="annottext">encodeGQErr :: Bool -&gt; QErr -&gt; Value
-</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQErr"><span class="hs-identifier hs-var hs-var">encodeGQErr</span></a></span></span><span> </span><span id="local-6989586621689627376"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689627376"><span class="hs-identifier hs-var">includeInternal</span></a></span></span><span> </span><span id="local-6989586621689627375"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621689627375"><span class="hs-identifier hs-var">qErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQErr"><span class="hs-identifier hs-var hs-var">encodeGQErr</span></a></span></span><span> </span><span id="local-6989586621689627491"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689627491"><span class="hs-identifier hs-var">includeInternal</span></a></span></span><span> </span><span id="local-6989586621689627490"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621689627490"><span class="hs-identifier hs-var">qErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-194"></span><span>  </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;errors&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [Value] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Bool -&gt; QErr -&gt; Value
 </span><a href="Hasura.Base.Error.html#encodeGQLErr"><span class="hs-identifier hs-var">encodeGQLErr</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689627376"><span class="hs-identifier hs-var">includeInternal</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621689627375"><span class="hs-identifier hs-var">qErr</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689627491"><span class="hs-identifier hs-var">includeInternal</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621689627490"><span class="hs-identifier hs-var">qErr</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
 </span><span id="line-195"></span><span>
-</span><span id="line-196"></span><span class="hs-keyword">type</span><span> </span><span id="GQResult"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResult"><span class="hs-identifier hs-var">GQResult</span></a></span></span><span> </span><span id="local-6989586621689627371"><span class="annot"><a href="#local-6989586621689627371"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQExecError"><span class="hs-identifier hs-type">GQExecError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627371"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-196"></span><span class="hs-keyword">type</span><span> </span><span id="GQResult"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResult"><span class="hs-identifier hs-var">GQResult</span></a></span></span><span> </span><span id="local-6989586621689627486"><span class="annot"><a href="#local-6989586621689627486"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQExecError"><span class="hs-identifier hs-type">GQExecError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627486"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-197"></span><span>
 </span><span id="line-198"></span><span class="hs-keyword">newtype</span><span> </span><span id="GQExecError"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQExecError"><span class="hs-identifier hs-var">GQExecError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQExecError"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQExecError"><span class="hs-identifier hs-var">GQExecError</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">]</span><span>
-</span><span id="line-199"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627364"><span id="local-6989586621689627366"><span id="local-6989586621689627368"><span class="annot"><span class="annottext">Int -&gt; GQExecError -&gt; ShowS
+</span><span id="line-199"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689627479"><span id="local-6989586621689627481"><span id="local-6989586621689627483"><span class="annot"><span class="annottext">Int -&gt; GQExecError -&gt; ShowS
 [GQExecError] -&gt; ShowS
 GQExecError -&gt; String
 (Int -&gt; GQExecError -&gt; ShowS)
@@ -1007,7 +1007,7 @@ show :: GQExecError -&gt; String
 $cshow :: GQExecError -&gt; String
 showsPrec :: Int -&gt; GQExecError -&gt; ShowS
 $cshowsPrec :: Int -&gt; GQExecError -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627360"><span id="local-6989586621689627362"><span class="annot"><span class="annottext">GQExecError -&gt; GQExecError -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627475"><span id="local-6989586621689627477"><span class="annot"><span class="annottext">GQExecError -&gt; GQExecError -&gt; Bool
 (GQExecError -&gt; GQExecError -&gt; Bool)
 -&gt; (GQExecError -&gt; GQExecError -&gt; Bool) -&gt; Eq GQExecError
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1015,7 +1015,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: GQExecError -&gt; GQExecError -&gt; Bool
 == :: GQExecError -&gt; GQExecError -&gt; Bool
 $c== :: GQExecError -&gt; GQExecError -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627352"><span id="local-6989586621689627354"><span id="local-6989586621689627356"><span id="local-6989586621689627358"><span class="annot"><span class="annottext">[GQExecError] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689627467"><span id="local-6989586621689627469"><span id="local-6989586621689627471"><span id="local-6989586621689627473"><span class="annot"><span class="annottext">[GQExecError] -&gt; Value
 [GQExecError] -&gt; Encoding
 GQExecError -&gt; Value
 GQExecError -&gt; Encoding
@@ -1038,11 +1038,11 @@ toEncoding :: GQExecError -&gt; Encoding
 $ctoEncoding :: GQExecError -&gt; Encoding
 toJSON :: GQExecError -&gt; Value
 $ctoJSON :: GQExecError -&gt; Value
-</span><a href="#local-6989586621689627352"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689627467"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-200"></span><span>
 </span><span id="line-201"></span><span class="hs-keyword">type</span><span> </span><span id="GQResponse"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResponse"><span class="hs-identifier hs-var">GQResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResult"><span class="hs-identifier hs-type">GQResult</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span>
 </span><span id="line-202"></span><span>
-</span><span id="line-203"></span><span id="local-6989586621689627351"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#isExecError"><span class="hs-identifier hs-type">isExecError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResult"><span class="hs-identifier hs-type">GQResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627351"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-203"></span><span id="local-6989586621689627466"><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#isExecError"><span class="hs-identifier hs-type">isExecError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResult"><span class="hs-identifier hs-type">GQResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689627466"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
 </span><span id="line-204"></span><span id="isExecError"><span class="annot"><span class="annottext">isExecError :: GQResult a -&gt; Bool
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#isExecError"><span class="hs-identifier hs-var hs-var">isExecError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GQResult a -&gt; Bool
 forall a b. Either a b -&gt; Bool
@@ -1050,50 +1050,50 @@ forall a b. Either a b -&gt; Bool
 </span><span id="line-205"></span><span>
 </span><span id="line-206"></span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQResp"><span class="hs-identifier hs-type">encodeGQResp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResponse"><span class="hs-identifier hs-type">GQResponse</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-207"></span><span id="encodeGQResp"><span class="annot"><span class="annottext">encodeGQResp :: GQResponse -&gt; EncJSON
-</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQResp"><span class="hs-identifier hs-var hs-var">encodeGQResp</span></a></span></span><span> </span><span id="local-6989586621689627350"><span class="annot"><span class="annottext">GQResponse
-</span><a href="#local-6989586621689627350"><span class="hs-identifier hs-var">gqResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQResp"><span class="hs-identifier hs-var hs-var">encodeGQResp</span></a></span></span><span> </span><span id="local-6989586621689627465"><span class="annot"><span class="annottext">GQResponse
+</span><a href="#local-6989586621689627465"><span class="hs-identifier hs-var">gqResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-208"></span><span>  </span><span class="annot"><span class="annottext">[(Text, EncJSON)] -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromAssocList"><span class="hs-identifier hs-var">encJFromAssocList</span></a></span><span> </span><span class="annot"><span class="annottext">([(Text, EncJSON)] -&gt; EncJSON) -&gt; [(Text, EncJSON)] -&gt; EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">GQResponse
-</span><a href="#local-6989586621689627350"><span class="hs-identifier hs-var">gqResp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-209"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689627348"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689627348"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689627465"><span class="hs-identifier hs-var">gqResp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-209"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689627463"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689627463"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;data&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromLBS"><span class="hs-identifier hs-var">encJFromLBS</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689627348"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-210"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689627346"><span class="annot"><span class="annottext">GQExecError
-</span><a href="#local-6989586621689627346"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689627463"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-210"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689627461"><span class="annot"><span class="annottext">GQExecError
+</span><a href="#local-6989586621689627461"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;data&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromBuilder"><span class="hs-identifier hs-var">encJFromBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Builder
 </span><span class="hs-string">&quot;null&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;errors&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQExecError -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">GQExecError
-</span><a href="#local-6989586621689627346"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689627461"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-211"></span><span>
 </span><span id="line-212"></span><span class="hs-comment">-- We don't want to force the `Maybe GQResponse` unless absolutely necessary</span><span>
 </span><span id="line-213"></span><span class="hs-comment">-- Decode EncJSON from Cache for HTTP endpoints</span><span>
 </span><span id="line-214"></span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#decodeGQResp"><span class="hs-identifier hs-type">decodeGQResp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResponse"><span class="hs-identifier hs-type">GQResponse</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-215"></span><span id="decodeGQResp"><span class="annot"><span class="annottext">decodeGQResp :: EncJSON -&gt; (Maybe GQResponse, EncJSON)
-</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#decodeGQResp"><span class="hs-identifier hs-var hs-var">decodeGQResp</span></a></span></span><span> </span><span id="local-6989586621689627343"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689627343"><span class="hs-identifier hs-var">encJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-216"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689627342"><span class="annot"><span class="annottext">gqResp :: Maybe GQResponse
-</span><a href="#local-6989586621689627342"><span class="hs-identifier hs-var hs-var">gqResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#decodeGQResp"><span class="hs-identifier hs-var hs-var">decodeGQResp</span></a></span></span><span> </span><span id="local-6989586621689627458"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621689627458"><span class="hs-identifier hs-var">encJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-216"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689627457"><span class="annot"><span class="annottext">gqResp :: Maybe GQResponse
+</span><a href="#local-6989586621689627457"><span class="hs-identifier hs-var hs-var">gqResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-217"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe Value
 forall a. FromJSON a =&gt; ByteString -&gt; Maybe a
 </span><span class="hs-identifier hs-var">J.decode</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EncJSON -&gt; ByteString
 </span><a href="Hasura.EncJSON.html#encJToLBS"><span class="hs-identifier hs-var">encJToLBS</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689627343"><span class="hs-identifier hs-var">encJson</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-218"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689627338"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689627338"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689627458"><span class="hs-identifier hs-var">encJson</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-218"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689627453"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689627453"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-219"></span><span>            </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
 forall v. Key -&gt; KeyMap v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">KM.lookup</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689627338"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-220"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689627336"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627336"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GQResponse -&gt; Maybe GQResponse
+</span><a href="#local-6989586621689627453"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-220"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689627451"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689627451"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GQResponse -&gt; Maybe GQResponse
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; GQResponse
 forall a b. b -&gt; Either a b
@@ -1102,7 +1102,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; ByteString
 forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689627336"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689627451"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-221"></span><span>              </span><span class="annot"><span class="annottext">Maybe Value
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; GQResponse
 forall a b. b -&gt; Either a b
@@ -1117,26 +1117,26 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall v. Key -&gt; KeyMap v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">KM.lookup</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689627338"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689627453"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-222"></span><span>          </span><span class="annot"><span class="annottext">Maybe Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe GQResponse
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-223"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe GQResponse
-</span><a href="#local-6989586621689627342"><span class="hs-identifier hs-var">gqResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621689627343"><span class="hs-identifier hs-var">encJson</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689627457"><span class="hs-identifier hs-var">gqResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621689627458"><span class="hs-identifier hs-var">encJson</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-224"></span><span>
 </span><span id="line-225"></span><span class="hs-comment">-- Encode for HTTP Response without `data` envelope</span><span>
 </span><span id="line-226"></span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeHTTPResp"><span class="hs-identifier hs-type">encodeHTTPResp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQResponse"><span class="hs-identifier hs-type">GQResponse</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-227"></span><span id="encodeHTTPResp"><span class="annot"><span class="annottext">encodeHTTPResp :: GQResponse -&gt; EncJSON
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeHTTPResp"><span class="hs-identifier hs-var hs-var">encodeHTTPResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-228"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689627334"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689627334"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; EncJSON
+</span><span id="line-228"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689627449"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689627449"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromLBS"><span class="hs-identifier hs-var">encJFromLBS</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689627334"><span class="hs-identifier hs-var">r</span></a></span><span>
-</span><span id="line-229"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689627333"><span class="annot"><span class="annottext">GQExecError
-</span><a href="#local-6989586621689627333"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GQExecError -&gt; EncJSON
+</span><a href="#local-6989586621689627449"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-229"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689627448"><span class="annot"><span class="annottext">GQExecError
+</span><a href="#local-6989586621689627448"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GQExecError -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">GQExecError
-</span><a href="#local-6989586621689627333"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689627448"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-230"></span></pre></body></html>
