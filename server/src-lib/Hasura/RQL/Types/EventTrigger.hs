@@ -25,6 +25,9 @@ module Hasura.RQL.Types.EventTrigger
     EventTriggerInfoMap,
     EventTriggerInfo (..),
     FetchBatchSize (..),
+    AutoTriggerLogCleanupConfig (..),
+    TriggerLogCleanupConfig (..),
+    DeletedEventLogStats (..),
   )
 where
 
@@ -40,9 +43,10 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName)
+import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..))
 import Hasura.RQL.Types.Eventing
 import Hasura.SQL.Backend
+import System.Cron (CronSchedule)
 
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName {unTriggerName :: NonEmptyText}
@@ -195,6 +199,76 @@ instance Backend b => FromJSON (TriggerOpsDef b) where
 instance Backend b => ToJSON (TriggerOpsDef b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
+-- | Automatic event trigger log cleanup configuration
+data AutoTriggerLogCleanupConfig = AutoTriggerLogCleanupConfig
+  { -- | cron schedule for the automatic cleanup
+    _atlccSchedule :: CronSchedule,
+    -- | maximum number of events to be deleted in a single cleanup action
+    _atlccBatchSize :: Int,
+    -- | retention period (in hours) for the event trigger logs
+    _atlccRetentionPeriod :: Int,
+    -- | SQL query timeout (in seconds)
+    _atlccQueryTimeout :: Int,
+    -- | should we clean the invocation logs as well
+    _atlccCleanInvocationLogs :: Bool,
+    -- | is the cleanup action paused
+    _atlccPaused :: Bool
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData AutoTriggerLogCleanupConfig
+
+instance Cacheable AutoTriggerLogCleanupConfig
+
+instance FromJSON AutoTriggerLogCleanupConfig where
+  parseJSON =
+    withObject "AutoTriggerLogCleanupConfig" $ \o -> do
+      _atlccSchedule <- o .: "schedule"
+      _atlccBatchSize <- o .:? "batch_size" .!= 10000
+      _atlccRetentionPeriod <- o .:? "retention_period" .!= 168 -- 7 Days = 168 hours
+      _atlccQueryTimeout <- o .:? "timeout" .!= 60
+      _atlccCleanInvocationLogs <- o .:? "clean_invocation_logs" .!= False
+      _atlccPaused <- o .:? "paused" .!= False
+      pure AutoTriggerLogCleanupConfig {..}
+
+instance ToJSON AutoTriggerLogCleanupConfig where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+
+-- | Manual event trigger log cleanup configuration
+data TriggerLogCleanupConfig = TriggerLogCleanupConfig
+  { -- | name of the event trigger
+    tlccEventTriggerName :: TriggerName,
+    -- | source of the event trigger
+    tlccSourceName :: SourceName,
+    -- | batch size of for the cleanup action
+    tlccBatchSize :: Int,
+    -- | retention period (in hours) for the event trigger logs
+    tlccRetentionPeriod :: Int,
+    -- | SQL query timeout (in seconds)
+    tlccQueryTimeout :: Int,
+    -- | should we clean the invocation logs as well
+    tlccCleanInvocationLogs :: Bool
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData TriggerLogCleanupConfig
+
+instance Cacheable TriggerLogCleanupConfig
+
+instance FromJSON TriggerLogCleanupConfig where
+  parseJSON =
+    withObject "TriggerLogCleanupConfig" $ \o -> do
+      tlccEventTriggerName <- o .: "event_trigger_name"
+      tlccSourceName <- o .:? "source" .!= SNDefault
+      tlccBatchSize <- o .:? "batch_size" .!= 10000
+      tlccRetentionPeriod <- o .:? "retention_period" .!= 168 -- 7 Days = 168 hours
+      tlccQueryTimeout <- o .:? "timeout" .!= 60
+      tlccCleanInvocationLogs <- o .:? "clean_invocation_logs" .!= False
+      pure TriggerLogCleanupConfig {..}
+
+instance ToJSON TriggerLogCleanupConfig where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+
 data EventTriggerConf (b :: BackendType) = EventTriggerConf
   { etcName :: TriggerName,
     etcDefinition :: TriggerOpsDef b,
@@ -203,7 +277,8 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
     etcRetryConf :: RetryConf,
     etcHeaders :: Maybe [HeaderConf],
     etcRequestTransform :: Maybe RequestTransform,
-    etcResponseTransform :: Maybe MetadataResponseTransform
+    etcResponseTransform :: Maybe MetadataResponseTransform,
+    etcCleanupConfig :: Maybe AutoTriggerLogCleanupConfig
   }
   deriving (Show, Eq, Generic)
 
@@ -282,7 +357,8 @@ data EventTriggerInfo (b :: BackendType) = EventTriggerInfo
     -- headers added.
     etiHeaders :: [EventHeaderInfo],
     etiRequestTransform :: Maybe RequestTransform,
-    etiResponseTransform :: Maybe MetadataResponseTransform
+    etiResponseTransform :: Maybe MetadataResponseTransform,
+    etiCleanupConfig :: Maybe AutoTriggerLogCleanupConfig
   }
   deriving (Generic, Eq)
 
@@ -295,3 +371,9 @@ type EventTriggerInfoMap b = M.HashMap TriggerName (EventTriggerInfo b)
 
 newtype FetchBatchSize = FetchBatchSize {_unFetchBatchSize :: Int}
   deriving (Show, Eq)
+
+-- | Statistics of deleted event logs and invocation logs
+data DeletedEventLogStats = DeletedEventLogStats
+  { deletedEventLogs :: Int,
+    deletedInvocationLogs :: Int
+  }

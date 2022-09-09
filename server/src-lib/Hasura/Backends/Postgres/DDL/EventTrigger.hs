@@ -24,6 +24,7 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     unlockEventsInSource,
     updateColumnInEventTrigger,
     checkIfTriggerExists,
+    deleteEventTriggerLogs,
   )
 where
 
@@ -811,3 +812,99 @@ mkAllTriggersQ triggerName table allCols fullspec = do
   onJust (tdInsert fullspec) (mkTrigger triggerName table allCols INSERT)
   onJust (tdUpdate fullspec) (mkTrigger triggerName table allCols UPDATE)
   onJust (tdDelete fullspec) (mkTrigger triggerName table allCols DELETE)
+
+deleteEventTriggerLogsTx :: TriggerLogCleanupConfig -> Q.TxE QErr DeletedEventLogStats
+deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
+  -- Setting the timeout
+  Q.unitQE defaultTxErrorHandler (Q.fromText $ "SET statement_timeout = " <> (tshow qTimeout)) () True
+  -- Select all the dead events based on criteria set in the cleanup config.
+  deadEventIDs <-
+    map runIdentity
+      <$> Q.listQE
+        defaultTxErrorHandler
+        [Q.sql|
+          SELECT id FROM hdb_catalog.event_log
+          WHERE ((delivered = true OR error = true) AND trigger_name = $1)
+          AND created_at < now() - interval '$2'
+          AND locked IS NULL
+          LIMIT $3
+        |]
+        (qTriggerName, qRetentionPeriod, qBatchSize)
+        True
+  --  Lock the events in the database so that other HGE instances don't pick them up for deletion.
+  Q.unitQE
+    defaultTxErrorHandler
+    [Q.sql|
+      UPDATE hdb_catalog.event_log
+      SET locked = now()
+      WHERE id = ANY($1::text[]);
+    |]
+    (Identity $ PGTextArray $ map unEventId deadEventIDs)
+    True
+  --   Based on the config either delete the corresponding invocation logs or set event_id = NULL
+  --   (We set event_id to null as we cannot delete the event logs with corresponding invocation logs
+  --   due to the foreign key constraint)
+  deletedInvocationLogs <-
+    if tlccCleanInvocationLogs
+      then
+        runIdentity . Q.getRow
+          <$> Q.withQE
+            defaultTxErrorHandler
+            [Q.sql|
+              WITH deletedInvocations AS (
+                DELETE FROM hdb_catalog.event_invocation_logs
+                WHERE event_id = ANY($1::text[])
+                RETURNING 1
+              )
+              SELECT count(*) FROM deletedInvocations;
+            |]
+            (Identity $ PGTextArray $ map unEventId deadEventIDs)
+            True
+      else do
+        Q.unitQE
+          defaultTxErrorHandler
+          [Q.sql|
+            UPDATE hdb_catalog.event_invocation_logs
+            SET event_id = NULL
+            WHERE event_id = ANY($1::text[])
+          |]
+          (Identity $ PGTextArray $ map unEventId deadEventIDs)
+          True
+        pure 0
+  --  Finally delete the event logs.
+  deletedEventLogs <-
+    runIdentity . Q.getRow
+      <$> Q.withQE
+        defaultTxErrorHandler
+        [Q.sql|
+          WITH deletedEvents AS (
+            DELETE FROM hdb_catalog.event_log
+            WHERE id = ANY($1::text[])
+            RETURNING 1
+          )
+          SELECT count(*) FROM deletedEvents;
+        |]
+        (Identity $ PGTextArray $ map unEventId deadEventIDs)
+        True
+  -- Resetting the timeout to default value (0)
+  Q.unitQE
+    defaultTxErrorHandler
+    [Q.sql|
+      SET statement_timeout = 0;
+    |]
+    ()
+    False
+  pure DeletedEventLogStats {..}
+  where
+    qTimeout = (fromIntegral $ tlccQueryTimeout * 1000) :: Int64
+    qTriggerName = triggerNameToTxt tlccEventTriggerName
+    qRetentionPeriod = tshow tlccRetentionPeriod <> " hours"
+    qBatchSize = (fromIntegral tlccBatchSize) :: Int64
+
+deleteEventTriggerLogs ::
+  (MonadIO m) =>
+  PGSourceConfig ->
+  TriggerLogCleanupConfig ->
+  m (Either QErr DeletedEventLogStats)
+deleteEventTriggerLogs sourceConfig cleanupConfig =
+  liftIO $ runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig

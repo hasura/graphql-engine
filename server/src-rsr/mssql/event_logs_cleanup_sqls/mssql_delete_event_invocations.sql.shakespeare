@@ -1,0 +1,4 @@
+DELETE FROM hdb_catalog.event_invocation_logs
+OUTPUT 1
+WHERE event_id = 
+    ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id))

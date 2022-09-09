@@ -17,6 +17,7 @@ module Hasura.RQL.DDL.EventTrigger
     getTriggerNames,
     getTriggersMap,
     getTableNameFromTrigger,
+    getTabInfoFromSchemaCache,
     cetqSource,
     cetqName,
     cetqTable,
@@ -31,6 +32,9 @@ module Hasura.RQL.DDL.EventTrigger
     cetqReplace,
     cetqRequestTransform,
     cetqResponseTrasnform,
+    cteqCleanupConfig,
+    runCleanupEventTriggerLog,
+    MonadEventLogCleanup (..),
   )
 where
 
@@ -46,6 +50,7 @@ import Data.Text.Extended
 import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Metadata.Class (MetadataStorageT)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -65,6 +70,7 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
+import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
 import Text.Regex.TDFA qualified as TDFA
 
@@ -82,7 +88,8 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
     _cetqHeaders :: Maybe [HeaderConf],
     _cetqReplace :: Bool,
     _cetqRequestTransform :: Maybe RequestTransform,
-    _cetqResponseTrasnform :: Maybe MetadataResponseTransform
+    _cetqResponseTrasnform :: Maybe MetadataResponseTransform,
+    _cteqCleanupConfig :: Maybe AutoTriggerLogCleanupConfig
   }
 
 $(makeLenses ''CreateEventTriggerQuery)
@@ -103,6 +110,7 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
     replace <- o .:? "replace" .!= False
     requestTransform <- o .:? "request_transform"
     responseTransform <- o .:? "response_transform"
+    cleanupConfig <- o .:? "cleanup_config"
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
@@ -118,7 +126,7 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
       (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
       _ -> fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform
+    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform cleanupConfig
     where
       checkEmptyCols spec =
         case spec of
@@ -161,12 +169,29 @@ instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
       <*> o .:? "source" .!= defaultSource
       <*> o .: "payload"
 
+-- | This typeclass have the implementation logic for the event trigger log cleanup
+class Monad m => MonadEventLogCleanup m where
+  runLogCleaner ::
+    TriggerLogCleanupConfig -> m (Either QErr EncJSON)
+
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (ReaderT r m) where
+  runLogCleaner conf = lift $ runLogCleaner conf
+
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataT m) where
+  runLogCleaner conf = lift $ runLogCleaner conf
+
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataStorageT m) where
+  runLogCleaner conf = lift $ runLogCleaner conf
+
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (TraceT m) where
+  runLogCleaner conf = lift $ runLogCleaner conf
+
 resolveEventTriggerQuery ::
   forall b m.
   (Backend b, UserInfoM m, QErrM m, CacheRM m) =>
   CreateEventTriggerQuery b ->
   m (Bool, EventTriggerConf b)
-resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace reqTransform respTransform) = do
+resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace reqTransform respTransform cleanupConfig) = do
   ti <- askTableCoreInfo source qt
   -- can only replace for same table
   when replace $ do
@@ -178,7 +203,7 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform)
+  return (replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig)
   where
     assertCols :: TableCoreInfo b -> Maybe (SubscribeOpSpec b) -> m ()
     assertCols ti opSpec = onJust opSpec \sos -> case sosColumns sos of
@@ -380,7 +405,7 @@ buildEventTriggerInfo ::
   TableName b ->
   EventTriggerConf b ->
   m (EventTriggerInfo b, [SchemaDependency])
-buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook webhookFromEnv rconf mheaders reqTransform respTransform) = do
+buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing) -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
@@ -388,7 +413,7 @@ buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook we
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf env webhookConf
   headerInfos <- getHeaderInfosFromConf env headerConfs
-  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos reqTransform respTransform
+  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos reqTransform respTransform cleanupConfig
       tabDep =
         SchemaDependency
           ( SOSourceObj source $
@@ -450,3 +475,9 @@ getTableNameFromTrigger ::
   m (TableName b)
 getTableNameFromTrigger schemaCache sourceName triggerName =
   (_tciName . _tiCoreInfo) <$> getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+
+runCleanupEventTriggerLog ::
+  (MonadEventLogCleanup m, MonadError QErr m) =>
+  TriggerLogCleanupConfig ->
+  m EncJSON
+runCleanupEventTriggerLog conf = runLogCleaner conf >>= (flip onLeft) throwError

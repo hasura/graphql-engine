@@ -52,6 +52,7 @@ import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
@@ -128,6 +129,7 @@ data RQLMetadataV1
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
+  | RMCleanupEventTriggerLog !TriggerLogCleanupConfig
   | -- Remote schemas
     RMAddRemoteSchema !AddRemoteSchemaQuery
   | RMUpdateRemoteSchema !AddRemoteSchemaQuery
@@ -225,6 +227,7 @@ instance FromJSON RQLMetadataV1 where
       "create_remote_schema_remote_relationship" -> RMCreateRemoteSchemaRemoteRelationship <$> args
       "update_remote_schema_remote_relationship" -> RMUpdateRemoteSchemaRemoteRelationship <$> args
       "delete_remote_schema_remote_relationship" -> RMDeleteRemoteSchemaRemoteRelationship <$> args
+      "cleanup_event_trigger_logs" -> RMCleanupEventTriggerLog <$> args
       "create_cron_trigger" -> RMCreateCronTrigger <$> args
       "delete_cron_trigger" -> RMDeleteCronTrigger <$> args
       "create_scheduled_event" -> RMCreateScheduledEvent <$> args
@@ -350,7 +353,8 @@ runMetadataQuery ::
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -436,7 +440,8 @@ runMetadataQueryM ::
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -465,7 +470,8 @@ runMetadataQueryV1M ::
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -519,6 +525,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDeleteEventTrigger q -> dispatchMetadataAndEventTrigger runDeleteEventTriggerQuery q
   RMRedeliverEvent q -> dispatchEventTrigger runRedeliverEvent q
   RMInvokeEventTrigger q -> dispatchEventTrigger runInvokeEventTrigger q
+  RMCleanupEventTriggerLog q -> runCleanupEventTriggerLog q
   RMAddRemoteSchema q -> runAddRemoteSchema env q
   RMUpdateRemoteSchema q -> runUpdateRemoteSchema env q
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q

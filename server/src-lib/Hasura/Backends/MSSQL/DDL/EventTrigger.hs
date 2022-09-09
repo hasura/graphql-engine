@@ -18,6 +18,7 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     qualifyTableName,
     createMissingSQLTriggers,
     checkIfTriggerExists,
+    deleteEventTriggerLogs,
   )
 where
 
@@ -846,3 +847,67 @@ mkUpdateTriggerQuery
         listenColumnExp = unSQLFragment $ mkListenColumnsExp "INSERTED" "DELETED" listenColumns
         isPrimaryKeyInListenColumnsExp = unSQLFragment $ isPrimaryKeyInListenColumns listenColumns primaryKey
      in $(makeRelativeToProject "src-rsr/mssql/mssql_update_trigger.sql.shakespeare" >>= ST.stextFile)
+
+deleteEventTriggerLogsTx :: TriggerLogCleanupConfig -> TxE QErr DeletedEventLogStats
+deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
+  -- Setting the timeout
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    [ODBC.sql|
+          SET LOCK_TIMEOUT $qTimeout;
+        |]
+  --  Select all the dead events based on criteria set in the cleanup config.
+  deadEventIDs :: [EventId] <-
+    map EventId
+      <$> multiRowQueryE
+        HGE.defaultMSSQLTxErrorHandler
+        [ODBC.sql|
+          SELECT TOP ($qBatchSize) CAST(id AS nvarchar(36)) FROM hdb_catalog.event_log WITH (UPDLOCK, READPAST)
+          WHERE ((delivered = 1 OR error = 1) AND trigger_name = $qTriggerName  )
+          AND created_at < DATEADD(HOUR, - $qRetentionPeriod, CURRENT_TIMESTAMP)
+          AND locked IS NULL
+        |]
+  let generateValuesFromEvents :: [EventId] -> Text --
+  -- creates a list of event id's  (('123-abc'), ('456-vgh'), ('234-asd'))
+      generateValuesFromEvents events = commaSeparated values
+        where
+          values = map (\e -> "('" <> toTxt e <> "')") events
+      eventIdsValues = generateValuesFromEvents deadEventIDs
+  --  Lock the events in the database so that other HGE instances don't pick them up for deletion.
+  unitQueryE HGE.defaultMSSQLTxErrorHandler $
+    rawUnescapedText . LT.toStrict $
+      $(makeRelativeToProject "src-rsr/mssql/event_logs_cleanup_sqls/mssql_lock_events.sql.shakespeare" >>= ST.stextFile)
+  --  Based on the config either delete the corresponding invocation logs or set event_id = NULL
+  --  (We set event_id to null as we cannot delete the event logs with corresponding invocation logs
+  --  due to the foreign key constraint)
+  deletedInvocationLogs :: [Int] <- -- This will be an array of 1 and is only used to count the number of deleted rows.
+    multiRowQueryE HGE.defaultMSSQLTxErrorHandler $
+      rawUnescapedText . LT.toStrict $
+        if tlccCleanInvocationLogs
+          then $(makeRelativeToProject "src-rsr/mssql/event_logs_cleanup_sqls/mssql_delete_event_invocations.sql.shakespeare" >>= ST.stextFile)
+          else $(makeRelativeToProject "src-rsr/mssql/event_logs_cleanup_sqls/mssql_null_event_invocations.sql.shakespeare" >>= ST.stextFile)
+  --  Finally delete the event logs.
+  deletedEventLogs :: [Int] <- -- This will be an array of 1 and is only used to count the number of deleted rows.
+    multiRowQueryE HGE.defaultMSSQLTxErrorHandler $
+      rawUnescapedText . LT.toStrict $
+        $(makeRelativeToProject "src-rsr/mssql/event_logs_cleanup_sqls/mssql_delete_event.sql.shakespeare" >>= ST.stextFile)
+  -- Removing the timeout (-1 is the default timeout)
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    [ODBC.sql|
+          SET LOCK_TIMEOUT -1;
+        |]
+  pure $ DeletedEventLogStats (length deletedEventLogs) (length deletedInvocationLogs)
+  where
+    qTimeout = tlccQueryTimeout * 1000
+    qTriggerName = triggerNameToTxt tlccEventTriggerName
+    qRetentionPeriod = tlccRetentionPeriod
+    qBatchSize = tlccBatchSize
+
+deleteEventTriggerLogs ::
+  (MonadIO m) =>
+  MSSQLSourceConfig ->
+  TriggerLogCleanupConfig ->
+  m (Either QErr DeletedEventLogStats)
+deleteEventTriggerLogs sourceConfig cleanupConfig =
+  liftIO $ runMSSQLSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
