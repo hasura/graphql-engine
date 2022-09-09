@@ -11,6 +11,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Hasura.Base.Error
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (runLogCleaner))
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
 import Hasura.Session
@@ -51,6 +52,9 @@ instance (Monad m) => HasServerConfigCtx (RunT m) where
 instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
   getPGSourceResolver = RunT . lift . lift $ getPGSourceResolver
   getMSSQLSourceResolver = RunT . lift . lift $ getMSSQLSourceResolver
+
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (RunT m) where
+  runLogCleaner conf = RunT . lift . lift $ runLogCleaner conf
 
 peelRun ::
   RunCtx ->

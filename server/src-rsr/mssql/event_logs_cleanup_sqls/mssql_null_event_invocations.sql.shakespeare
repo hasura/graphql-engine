@@ -1,0 +1,4 @@
+UPDATE hdb_catalog.event_invocation_logs
+SET event_id = NULL
+WHERE event_id = 
+    ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id))

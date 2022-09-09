@@ -219,6 +219,12 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     HashSet Ops ->
     m Bool
 
+  deleteEventTriggerLogs ::
+    (MonadIO m, MonadError QErr m) =>
+    SourceConfig b ->
+    TriggerLogCleanupConfig ->
+    m (Either QErr DeletedEventLogStats)
+
 --------------------------------------------------------------------------------
 -- TODO: move those instances to 'Backend/*/Instances/Eventing' and create a
 -- corresponding 'Instances.hs' file in this directory to import them, similarly
@@ -241,6 +247,7 @@ instance BackendEventTrigger ('Postgres 'Vanilla) where
   createTableEventTrigger = PG.createTableEventTrigger
   createMissingSQLTriggers = PG.createMissingSQLTriggers
   checkIfTriggerExists = PG.checkIfTriggerExists
+  deleteEventTriggerLogs = PG.deleteEventTriggerLogs
 
 instance BackendEventTrigger ('Postgres 'Citus) where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
@@ -257,6 +264,7 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  deleteEventTriggerLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
 
 instance BackendEventTrigger ('Postgres 'Cockroach) where
   insertManualEvent = PG.insertManualEvent
@@ -273,6 +281,7 @@ instance BackendEventTrigger ('Postgres 'Cockroach) where
   createTableEventTrigger = PG.createTableEventTrigger
   createMissingSQLTriggers = PG.createMissingSQLTriggers
   checkIfTriggerExists = PG.checkIfTriggerExists
+  deleteEventTriggerLogs = PG.deleteEventTriggerLogs
 
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent = MSSQL.insertManualEvent
@@ -289,6 +298,7 @@ instance BackendEventTrigger 'MSSQL where
   createTableEventTrigger = MSSQL.createTableEventTrigger
   createMissingSQLTriggers = MSSQL.createMissingSQLTriggers
   checkIfTriggerExists = MSSQL.checkIfTriggerExists
+  deleteEventTriggerLogs = MSSQL.deleteEventTriggerLogs
 
 instance BackendEventTrigger 'BigQuery where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
@@ -305,6 +315,7 @@ instance BackendEventTrigger 'BigQuery where
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
+  deleteEventTriggerLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
 
 instance BackendEventTrigger 'MySQL where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
@@ -321,6 +332,7 @@ instance BackendEventTrigger 'MySQL where
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
+  deleteEventTriggerLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
 
 --------------------------------------------------------------------------------
 
@@ -355,3 +367,4 @@ instance BackendEventTrigger 'DataConnector where
     runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
+  deleteEventTriggerLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"

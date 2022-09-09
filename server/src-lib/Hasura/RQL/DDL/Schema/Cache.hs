@@ -45,7 +45,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.CustomTypes
-import Hasura.RQL.DDL.EventTrigger (buildEventTriggerInfo)
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (runLogCleaner), buildEventTriggerInfo)
 import Hasura.RQL.DDL.InheritedRoles (resolveInheritedRole)
 import Hasura.RQL.DDL.RemoteRelationship (CreateRemoteSchemaRemoteRelationship (..), PartiallyResolvedSource (..), buildRemoteFieldInfo, getRemoteSchemaEntityJoinColumns)
 import Hasura.RQL.DDL.RemoteSchema
@@ -176,6 +176,9 @@ newtype CacheRWT m a
       MonadBase b,
       MonadBaseControl b
     )
+
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
+  runLogCleaner conf = lift $ runLogCleaner conf
 
 runCacheRWT ::
   Functor m =>

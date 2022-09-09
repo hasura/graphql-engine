@@ -99,6 +99,7 @@ import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (runLogCleaner))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Catalog
@@ -557,7 +558,8 @@ runHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -644,7 +646,8 @@ mkHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -1086,6 +1089,11 @@ instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
 
 instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
+
+instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
+  runLogCleaner _ = pure err
+    where
+      err = throw400 NotSupported "Event log cleanup feature is enterprise edition only"
 
 runInSeparateTx ::
   (MonadIO m) =>
