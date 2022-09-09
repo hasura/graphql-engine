@@ -159,6 +159,7 @@ common lib-depends
                      , free
                      , hashable
                      , hasura-error-message
+                     , hasura-prelude
                      , hasura-schema-parsers
                      , http-client-tls
                      , http-conduit
@@ -420,7 +421,6 @@ library
                      , Data.Text.Casing
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
-                     , Data.Time.Clock.Units
                      , Data.Trie
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
@@ -634,7 +634,6 @@ library
                      , Hasura.Server.Types
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
-                     , Hasura.Prelude
 
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query
@@ -905,6 +904,7 @@ executable graphql-engine
                    , bytestring
                    , ekg-core
                    , ekg-prometheus
+                   , hasura-prelude
                    , kan-extensions
                    , pg-client
                    , text
@@ -1136,6 +1136,7 @@ test-suite tests-hspec
     , graphql-engine
     , graphql-parser
     , haskell-src-meta
+    , hasura-prelude
     , hedgehog
     , hspec
     , hspec >=2.8.3 && <3

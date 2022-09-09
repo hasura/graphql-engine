@@ -1,4 +1,13 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
+{-# LANGUAGE ImportQualifiedPost #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE NumDecimals #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
 
 -- | Types for time intervals of various units. Each newtype wraps 'DiffTime',
 -- but they have different 'Num' instances. The intent is to use the record
