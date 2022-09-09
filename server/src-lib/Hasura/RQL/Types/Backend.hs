@@ -23,6 +23,7 @@ import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
@@ -248,8 +249,11 @@ class
   -- | A config type for health check tests
   type HealthCheckTest b :: Type
 
-  -- | Default health check test config
-  defaultHealthCheckTest :: HealthCheckTest b
+  -- | A backend type can opt into supporting health checks by providing an
+  -- implementation that includes a default health check test, and a health
+  -- check test codec.
+  healthCheckImplementation :: Maybe (HealthCheckImplementation (HealthCheckTest b))
+  healthCheckImplementation = Nothing
 
   -- Backend-specific IR types
 

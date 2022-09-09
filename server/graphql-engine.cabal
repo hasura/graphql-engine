@@ -681,6 +681,7 @@ library
                      , Hasura.RQL.Types.Eventing
                      , Hasura.RQL.Types.Eventing.Backend
                      , Hasura.RQL.Types.HealthCheck
+                     , Hasura.RQL.Types.HealthCheckImplementation
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Instances

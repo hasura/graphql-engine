@@ -485,8 +485,15 @@ instance Backend b => HasCodec (SourceMetadata b) where
         <*> requiredField' "configuration" .== _smConfiguration
         <*> optionalFieldOrNullWith' "query_tags" placeholderCodecViaJSON .== _smQueryTags -- TODO: replace placeholder
         <*> optionalFieldOrNullWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
-        <*> optionalFieldOrNull' "health_check" .== _smHealthCheckConfig
+        <*> healthCheckField
     where
+      healthCheckField = case healthCheckImplementation @b of
+        Just hci -> optionalFieldOrNullWith' "health_check" (healthCheckConfigCodec hci) .== _smHealthCheckConfig
+        Nothing ->
+          -- If this backend does not support health check tests then this field
+          -- should be excluded from the serialization format.
+          pure Nothing
+
       (.==) = (AC..=)
 
 mkSourceMetadata ::

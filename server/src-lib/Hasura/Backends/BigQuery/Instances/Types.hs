@@ -49,7 +49,6 @@ instance Backend 'BigQuery where
   type ExtraTableMetadata 'BigQuery = ()
 
   type HealthCheckTest 'BigQuery = Void
-  defaultHealthCheckTest = error "defaultHealthCheckTest"
 
   isComparableType :: ScalarType 'BigQuery -> Bool
   isComparableType = BigQuery.isComparableType
