@@ -23,6 +23,7 @@
 - server: accept a default extensions schema (`HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA`) for the metadata database where graphql-engine will install database extensions
 - server: add warning log for missing admin secret
 - server: fix querying relationships defined using multiple columns on BigQuery
+- server: fix 'nulls: first' and 'nulls: last' parsing for Postgres
 - console: add custom names for streaming subscriptions
 - console: add support for table query and subscription root fields visibility permissions
 - console: fix the BigQuery row-level restrictions on boolean columns
