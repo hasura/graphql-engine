@@ -264,7 +264,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
     else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
-    rawAliasIdentifier = qualifiedObjectToText qt <> "__mutation_result"
+    rawAliasIdentifier = "mutres__" <> qualifiedObjectToText qt
     aliasIdentifier = Identifier rawAliasIdentifier
     tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing

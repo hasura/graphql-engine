@@ -114,7 +114,7 @@ toFIIdentifier = coerce . getIdenTxt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An example output expression for INSERT mutation:
 
-WITH "<table-name>__mutation_result_alias" AS (
+WITH "mra__<table-name>" AS (
   INSERT INTO <table-name> (<insert-column>[..])
   VALUES
     (<insert-value-row>[..])
@@ -122,15 +122,15 @@ WITH "<table-name>__mutation_result_alias" AS (
     -- An extra column expression which performs the 'CHECK' validation
     (<CHECK Condition>) AS "check__constraint"
 ),
-"<table-name>__all_columns_alias" AS (
+"aca__<table-name>" AS (
   -- Only extract columns from mutated rows. Columns sorted by ordinal position so that
   -- resulted rows can be casted to table type.
   SELECT (<table-column>[..])
   FROM
-    "<table-name>__mutation_result_alias"
+    "mra__<table-name>"
 )
-<SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM
- and bool_and("check__constraint") from "<table-name>__mutation_result_alias">
+<SELECT statement to generate mutation response using 'aca__<table-name>' as FROM
+ and bool_and("check__constraint") from "mra__<table-name>">
 -}
 
 -- | Generate mutation output expression with given mutation CTE statement.
@@ -154,8 +154,8 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
     ]
     sel
   where
-    mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
-    allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
+    mutationResultAlias = Identifier $ "mra__" <> snakeCaseQualifiedObject qt
+    allColumnsAlias = Identifier $ "aca__" <> snakeCaseQualifiedObject qt
     allColumnsSelect =
       S.CTESelect $
         S.mkSelect

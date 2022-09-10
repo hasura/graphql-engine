@@ -1271,6 +1271,7 @@ test-suite tests-hspec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
+    Test.Regression.NullsOrderParsing8780Spec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
