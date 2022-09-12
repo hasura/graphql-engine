@@ -1293,6 +1293,7 @@ test-suite tests-hspec
     Test.Postgres.DefaultValuesSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
+    Test.Postgres.JsonbSpec
     Test.Queries.Directives.IncludeAndSkipSpec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
