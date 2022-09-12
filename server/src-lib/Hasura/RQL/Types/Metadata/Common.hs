@@ -95,6 +95,7 @@ import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -120,7 +121,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.SQL.Tag (BackendTag, HasTag (backendTag), reify)
+import Hasura.SQL.Tag (BackendTag, HasTag (backendTag))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -274,12 +275,50 @@ instance (Backend b) => Cacheable (TableMetadata b)
 instance (Backend b) => ToJSON (TableMetadata b) where
   toJSON = genericToJSON hasuraJSON
 
--- TODO: Write a proper codec for 'TableMetadata'
+-- TODO: Replace uses of placeholderCodecViaJSON with proper codecs
 instance (Backend b) => HasCodec (TableMetadata b) where
-  codec = named (codecNamePrefix @b <> "TableMetadata") placeholderCodecViaJSON
+  codec =
+    CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
+      AC.object (codecNamePrefix @b <> "TableMetadata") $
+        TableMetadata
+          <$> requiredFieldWith' "table" placeholderCodecViaJSON .== _tmTable
+          <*> optionalFieldWithOmittedDefault' "is_enum" False .== _tmIsEnum
+          <*> optionalFieldWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyTableConfig configDoc .== _tmConfiguration
+          <*> optSortedListViaJSON "object_relationships" _rdName .== _tmObjectRelationships
+          <*> optSortedListViaJSON "array_relationships" _rdName .== _tmArrayRelationships
+          <*> optSortedListViaJSON "computed_fields" _cfmName .== _tmComputedFields
+          <*> optSortedListViaJSON "remote_relationships" _rrName .== _tmRemoteRelationships
+          <*> optSortedList "insert_permissions" _pdRole .== _tmInsertPermissions
+          <*> optSortedList "select_permissions" _pdRole .== _tmSelectPermissions
+          <*> optSortedList "update_permissions" _pdRole .== _tmUpdatePermissions
+          <*> optSortedList "delete_permissions" _pdRole .== _tmDeletePermissions
+          <*> optSortedListViaJSON "event_triggers" etcName .== _tmEventTriggers
+          <*> optionalFieldOrNullWith' "apollo_federation_config" placeholderCodecViaJSON .== _tmApolloFederationConfig
+    where
+      optSortedListViaJSON ::
+        (Eq a, FromJSON a, ToJSON a, Hashable k, Ord k, T.ToTxt k) =>
+        Text ->
+        (a -> k) ->
+        ObjectCodec (InsOrdHashMap k a) (InsOrdHashMap k a)
+      optSortedListViaJSON name keyForElem =
+        AC.optionalFieldWithOmittedDefaultWith' name (sortedElemsCodecWith placeholderCodecViaJSON keyForElem) mempty
 
-codecNamePrefix :: forall b. (HasTag b) => Text
-codecNamePrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b
+      optSortedList ::
+        (HasCodec a, Eq a, Hashable k, Ord k, T.ToTxt k) =>
+        Text ->
+        (a -> k) ->
+        ObjectCodec (InsOrdHashMap k a) (InsOrdHashMap k a)
+      optSortedList name keyForElem =
+        AC.optionalFieldWithOmittedDefaultWith' name (sortedElemsCodec keyForElem) mempty
+
+      configDoc =
+        T.unlines
+          [ "Configuration for the table/view",
+            "",
+            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config"
+          ]
+
+      (.==) = (AC..=)
 
 $(makeLenses ''TableMetadata)
 
@@ -384,9 +423,27 @@ instance (Backend b) => FromJSON (FunctionMetadata b) where
       <*> o .:? "permissions" .!= []
       <*> o .:? "comment"
 
--- TODO: Write a proper codec for 'FunctionMetadata'
+-- TODO: Replace uses of placeholderCodecViaJSON with proper codecs
 instance (Backend b) => HasCodec (FunctionMetadata b) where
-  codec = named (codecNamePrefix @b <> "FunctionMetadata") $ placeholderCodecViaJSON
+  codec =
+    CommentCodec
+      ( T.unlines
+          [ "A custom SQL function to add to the GraphQL schema with configuration.",
+            "",
+            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
+          ]
+      )
+      $ AC.object (codecNamePrefix @b <> "FunctionMetadata") $
+        FunctionMetadata
+          <$> requiredFieldWith "function" placeholderCodecViaJSON nameDoc .== _fmFunction
+          <*> optionalFieldOrNullWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyFunctionConfig configDoc .== _fmConfiguration
+          <*> optionalFieldOrNullWithOmittedDefaultWith' "permissions" (listCodec placeholderCodecViaJSON) [] .== _fmPermissions
+          <*> optionalFieldOrNull' "comment" .== _fmComment
+    where
+      nameDoc = "Name of the SQL function"
+      configDoc = "Configuration for the SQL function"
+
+      (.==) = (AC..=)
 
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
@@ -481,7 +538,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
         <$> requiredField' "name" .== _smName
         <*> requiredField' "kind" .== _smKind
         <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable) .== _smTables
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) (OM.fromList []) .== _smFunctions
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty .== _smFunctions
         <*> requiredField' "configuration" .== _smConfiguration
         <*> optionalFieldOrNullWith' "query_tags" placeholderCodecViaJSON .== _smQueryTags -- TODO: replace placeholder
         <*> optionalFieldOrNullWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization

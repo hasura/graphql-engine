@@ -28,6 +28,7 @@ module Hasura.Session
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson
 import Data.Aeson.Types (Parser, toJSONKeyText)
 import Data.CaseInsensitive qualified as CI
@@ -61,6 +62,9 @@ newtype RoleName = RoleName {getRoleTxt :: NonEmptyText}
       NFData,
       Cacheable
     )
+
+instance HasCodec RoleName where
+  codec = dimapCodec RoleName getRoleTxt nonEmptyTextCodec
 
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt
