@@ -4,6 +4,8 @@ sidebar_position: 2
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Contributing to Docs
 
@@ -13,7 +15,7 @@ Docs contributions take many forms. However, they all follow the same workflow. 
 your local development environment set up and - before you know it - you'll be helping make our product clearer for
 users.
 
-### Mise-en-place
+## Mise-en-place
 
 Like
 [Uncle Tony](https://i0.wp.com/jamesabrock.com/wp-content/uploads/2018/06/IMG_0013-1024x682.jpg?fit=676%2C450&ssl=1)
@@ -34,14 +36,15 @@ available to employees at Hasura. We utilize these two repos so we can maintain 
 provide an undisturbed repository to which the community has access. As changes are merged into our private repository,
 they're reflected in the OSS version as well.
 
-**This guide is written referencing the `graphql-engine-mono` repo available only to Hasurians.** If you're a community
-member, you can follow the same instructions by replacing the references to `graphql-engine-mono` with `graphql-engine`.
+Anywhere where there are differences in procedure between community contributions and those of Hasurians, tabs can be found.
+If you're a member of the community looking to contribute to docs, follow the **Community Member** instructions inside
+each step. Alternatively, Hasurians should follow the instructions which fall under their tab.
 
 :::info Note
 
-Like to automate things? So do we. This snippet runs through the prerequisites and fires up the docs development server.
-Simply navigate to the directory you want the `hasura-graphql-engine-mono` repo to live, open your terminal, copy /
-paste, hit enter, and save literally seconds:
+Like to automate things? So do we. This snippet runs through the prerequisites for Hasurians and fires up the docs
+development server. Simply navigate to the directory you want the `hasura-graphql-engine-mono` repo to live, open your
+terminal, copy / paste, hit enter, and save literally seconds:
 
 ```bash
 git clone https://github.com/hasura/graphql-engine-mono.git
@@ -54,17 +57,49 @@ yarn start
 
 Alternatively, take it step-by-step:
 
-#### Clone the repository
+### Step 1: Clone the repository
+
+<Tabs>
+<TabItem value='hasurians' label='Hasurians'>
 
 ```bash
 git clone https://github.com/hasura/graphql-engine-mono.git
 ```
 
-#### Install docs dependencies
+</TabItem>
+<TabItem value='community' label='Community Members'>
+
+If you're a community member, you'll first need to fork the `hasura/graphql-engine` repository. If logged into GitHub,
+you can do that by [simply pressing](https://github.com/hasura/graphql-engine/fork) here.
+
+Once you have your own forked copy of the `graphql-engine` repo, you can clone **this** to your machine. Simply replace
+`<your-github-username>` with your information:
+
+```bash
+git clone https://github.com/<your-github-username>/graphql-engine.git
+```
+
+</TabItem>
+</Tabs>
+
+### Step 2: Install docs dependencies
+
+<Tabs>
+<TabItem value='hasurians' label='Hasurians'>
 
 ```bash
 cd graphql-engine-mono/docs && yarn install
 ```
+
+</TabItem>
+<TabItem value='community' label='Community Members'>
+
+```bash
+cd graphql-engine/docs && yarn install
+```
+
+</TabItem>
+</Tabs>
 
 We also highly recommend testing locally at this point. Start the development server by running the following command:
 
@@ -85,9 +120,10 @@ Otherwise, congrats! You're ready to start slinging docs 🤙
 
 ### Step 1: Create a new branch
 
-If it's been a while since you've pulled from `main`, make sure it's up-to-date before creating a new branch for this
-contribution. You can simply run `git pull` while on `main` to update your local repository to the current state of the
-remote on GitHub. Then, utilize the command below the next paragraph to create your branch.
+If it's been a while since you've pulled from `main` (`master` for the OSS repo), make sure it's up-to-date before
+creating a new branch for this contribution. You can simply run `git pull` while on the trunk to update your local
+repository to the current state of the remote on GitHub. Then, utilize the command below the next paragraph to create
+your branch.
 
 If this is a fresh clone, there shouldn't be any need to `pull` changes down from GitHub. You can create a new branch
 and simultaneously switch to it using the command below. We follow a convention that includes your name + `docs` + a
@@ -197,12 +233,28 @@ git push origin <name-of-your-branch>
 
 ### Step 8: Compare and pull request
 
-Head to the `hasura-graphql-engine-mono` repo and you should see a `Compare & pull request` button - click it to create
+<Tabs>
+<TabItem value='hasurians' label='Hasurians'>
+
+Head to the `hasura/graphql-engine-mono` repo and you should see a `Compare & pull request` button - click it to create
 you PR 🤙
 
 Follow the instructions in the PR template and don't forget to add the `c/docs` label.
 
 Finally, ping us on [#team-docs](https://hasurahq.slack.com/archives/C015EA71MU0) for speedy review 🚀
+
+</TabItem>
+<TabItem value='community' label='Community Members'>
+
+Head to your forked copy of the `hasura/graphql-engine` repo and you should see a `Compare & pull request` button -
+click it to create you PR 🤙
+
+Follow the instructions in the PR template and don't forget to add the `c/docs` label.
+
+We'll get a ping from hasura-bot and review your great work ASAP 🔥
+
+</TabItem>
+</Tabs>
 
 :::info Note
 
