@@ -20,6 +20,7 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
     defaultAggregationPredicatesParser,
   )
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
+import Hasura.GraphQL.Schema.NamingCase (NamingCase (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
@@ -28,7 +29,7 @@ import Hasura.RQL.Types.Column (ColumnType (ColumnScalar), ColumnValue (..))
 import Hasura.RQL.Types.Common (InsertOrder (..), RelName (..), RelType (..), SourceName (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
 import Hasura.RQL.Types.Source (SourceInfo (..))
-import Hasura.RQL.Types.SourceCustomization (SourceCustomization (SourceCustomization))
+import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
 import Hasura.RQL.Types.Table
   ( TableCoreInfoG (_tciName),
     TableInfo (_tiCoreInfo),
@@ -299,7 +300,7 @@ spec = do
           _siFunctions = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
-          _siCustomization = SourceCustomization Nothing Nothing Nothing
+          _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing
         }
 
     makeTableCache :: [TableInfo ('Postgres 'Vanilla)] -> HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))

@@ -18,7 +18,6 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.SourceCustomization
 
 --------------------------------------------------------------------------------
 -- metadata
@@ -61,8 +60,8 @@ instance ToJSON ToSourceRelationshipDef where
 instance FromJSON ToSourceRelationshipDef where
   parseJSON = genericParseJSON hasuraJSON
 
--- schema cache representation
---
+--------------------------------------------------------------------------------
+-- schema cache
 
 -- | Schema cache information for a table field targeting a remote source.
 data RemoteSourceFieldInfo tgt = RemoteSourceFieldInfo
@@ -70,7 +69,6 @@ data RemoteSourceFieldInfo tgt = RemoteSourceFieldInfo
     _rsfiType :: RelType,
     _rsfiSource :: SourceName,
     _rsfiSourceConfig :: SourceConfig tgt,
-    _rsfiSourceCustomization :: SourceTypeCustomization,
     -- | this is parsed from `Value`
     _rsfiTable :: TableName tgt,
     -- | LHS field name -> RHS Column, RHS Column type

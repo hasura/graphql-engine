@@ -122,7 +122,6 @@ buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customT
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
       allRoles = nonTableRoles <> allTableRoles
-      defaultNC = bool Nothing _sccDefaultNamingConvention $ EFNamingConventions `elem` _sccExperimentalFeatures
 
   contexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
@@ -142,7 +141,6 @@ buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customT
                 role
                 _sccRemoteSchemaPermsCtx
                 _sccExperimentalFeatures
-                defaultNC
             )
             ( buildRelayRoleContext
                 (_sccSQLGenCtx, _sccFunctionPermsCtx)
@@ -150,8 +148,6 @@ buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customT
                 allActionInfos
                 customTypes
                 role
-                _sccExperimentalFeatures
-                defaultNC
             )
   let hasuraContexts = fst <$> contexts
       relayContexts = snd <$> contexts
@@ -187,13 +183,12 @@ buildRoleContext ::
   RoleName ->
   Options.RemoteSchemaPermissions ->
   Set.HashSet ExperimentalFeature ->
-  Maybe NamingCase ->
   m
     ( RoleContext GQLContext,
       HashSet InconsistentMetadata,
       G.SchemaIntrospection
     )
-buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures globalDefaultNC = do
+buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         functionPermsCtx
         ) = options
@@ -316,11 +311,11 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
           [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))]
         )
-    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
-      withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
-        mkRootFieldName <- getRootFieldsCustomizer sourceCustomization (namingConventionSupport @b) globalDefaultNC
+    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization) =
+      withSourceCustomization sourceCustomization do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
+            mkRootFieldName = _rscRootFields sourceCustomization
         makeTypename <- asks getter
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
           buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
@@ -341,11 +336,6 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
-      where
-        sourceCustomization =
-          if EFNamingConventions `elem` expFeatures
-            then sourceCustomization'
-            else sourceCustomization' {_scNamingConvention = Nothing}
 
 buildRelayRoleContext ::
   forall m.
@@ -355,10 +345,8 @@ buildRelayRoleContext ::
   [ActionInfo] ->
   AnnotatedCustomTypes ->
   RoleName ->
-  Set.HashSet ExperimentalFeature ->
-  Maybe NamingCase ->
   m (RoleContext GQLContext)
-buildRelayRoleContext options sources actions customTypes role expFeatures globalDefaultNC = do
+buildRelayRoleContext options sources actions customTypes role = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         functionPermsCtx
         ) = options
@@ -459,12 +447,11 @@ buildRelayRoleContext options sources actions customTypes role expFeatures globa
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') = do
-      mkRootFieldName <- getRootFieldsCustomizer sourceCustomization (namingConventionSupport @b) globalDefaultNC
-      withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
+    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization) = do
+      withSourceCustomization sourceCustomization do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
-
+            mkRootFieldName = _rscRootFields sourceCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
           buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
         makeTypename <- asks getter
@@ -485,11 +472,6 @@ buildRelayRoleContext options sources actions customTypes role expFeatures globa
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
-      where
-        sourceCustomization =
-          if EFNamingConventions `elem` expFeatures
-            then sourceCustomization'
-            else sourceCustomization' {_scNamingConvention = Nothing}
 
 -- | Builds the schema context for unauthenticated users.
 --
@@ -902,12 +884,12 @@ safeSelectionSet name description fields =
 customizeFields ::
   forall f n db remote action.
   (Functor f, MonadParse n) =>
-  SourceCustomization ->
+  ResolvedSourceCustomization ->
   MkTypename ->
   f [FieldParser n (RootField db remote action JO.Value)] ->
   f [FieldParser n (NamespacedField (RootField db remote action JO.Value))]
-customizeFields SourceCustomization {..} =
-  fmap . customizeNamespace (_rootfcNamespace =<< _scRootFields) (const typenameToRawRF)
+customizeFields ResolvedSourceCustomization {..} =
+  fmap . customizeNamespace _rscRootNamespace (const typenameToRawRF)
 
 -- | All the 'BackendSchema' methods produce something of the form @m
 -- [FieldParser n a]@, where @a@ is something specific to what is being parsed
