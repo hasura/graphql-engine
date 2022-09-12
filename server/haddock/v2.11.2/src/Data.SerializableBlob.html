@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.SerializableBlob</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier">SerializableBlob</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Data.SerializableBlob.html#fromText"><span class="hs-identifier">fromText</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Data.SerializableBlob.html#fromBS"><span class="hs-identifier">fromBS</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Data.SerializableBlob.html#fromLBS"><span class="hs-identifier">fromLBS</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Data.SerializableBlob.html#toLBS"><span class="hs-identifier">toLBS</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Base64</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B64</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TE</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- | A JSON-serializable type for either text or raw binary data, encoded with base-64.</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">data</span><span> </span><span id="SerializableBlob"><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-var">SerializableBlob</span></a></span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SerializableText"><span class="annot"><a href="Data.SerializableBlob.html#SerializableText"><span class="hs-identifier hs-var">SerializableText</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SerializableBytes"><span class="annot"><a href="Data.SerializableBlob.html#SerializableBytes"><span class="hs-identifier hs-var">SerializableBytes</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689255630"><span id="local-6989586621689255632"><span id="local-6989586621689255634"><span class="annot"><span class="annottext">Int -&gt; SerializableBlob -&gt; ShowS
+[SerializableBlob] -&gt; ShowS
+SerializableBlob -&gt; String
+(Int -&gt; SerializableBlob -&gt; ShowS)
+-&gt; (SerializableBlob -&gt; String)
+-&gt; ([SerializableBlob] -&gt; ShowS)
+-&gt; Show SerializableBlob
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SerializableBlob] -&gt; ShowS
+$cshowList :: [SerializableBlob] -&gt; ShowS
+show :: SerializableBlob -&gt; String
+$cshow :: SerializableBlob -&gt; String
+showsPrec :: Int -&gt; SerializableBlob -&gt; ShowS
+$cshowsPrec :: Int -&gt; SerializableBlob -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689255622"><span id="local-6989586621689255624"><span id="local-6989586621689255626"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SerializableBlob</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621689255620"><span class="annot"><span class="annottext">toJSON :: SerializableBlob -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SerializableBlob.html#SerializableText"><span class="hs-identifier hs-type">SerializableText</span></a></span><span> </span><span id="local-6989586621689255618"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689255618"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689255618"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBytes"><span class="hs-identifier hs-type">SerializableBytes</span></a></span><span> </span><span id="local-6989586621689255617"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689255617"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-comment">-- try and turn into utf-8</span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either UnicodeException Text
+</span><span class="hs-identifier hs-var">TE.decodeUtf8'</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689255617"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-31"></span><span>      </span><span class="hs-comment">-- if it's valid utf-8, treat it like the Text case</span><span>
+</span><span id="line-32"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689255615"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689255615"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689255615"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-comment">-- otherwise base-64 encode it instead</span><span>
+</span><span id="line-34"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">UnicodeException
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Base64&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><span class="hs-identifier hs-var">TE.decodeUtf8</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">B64.encode</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689255617"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SerializableBlob</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621689255610"><span class="annot"><span class="annottext">fromString :: String -&gt; SerializableBlob
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SerializableBlob
+</span><a href="Data.SerializableBlob.html#fromText"><span class="hs-identifier hs-var">fromText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SerializableBlob)
+-&gt; (String -&gt; Text) -&gt; String -&gt; SerializableBlob
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="annot"><a href="Data.SerializableBlob.html#fromText"><span class="hs-identifier hs-type">fromText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SerializableBlob</span></a></span><span>
+</span><span id="line-40"></span><span id="fromText"><span class="annot"><span class="annottext">fromText :: Text -&gt; SerializableBlob
+</span><a href="Data.SerializableBlob.html#fromText"><span class="hs-identifier hs-var hs-var">fromText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SerializableBlob
+</span><a href="Data.SerializableBlob.html#SerializableText"><span class="hs-identifier hs-var">SerializableText</span></a></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="annot"><a href="Data.SerializableBlob.html#fromBS"><span class="hs-identifier hs-type">fromBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SerializableBlob</span></a></span><span>
+</span><span id="line-43"></span><span id="fromBS"><span class="annot"><span class="annottext">fromBS :: ByteString -&gt; SerializableBlob
+</span><a href="Data.SerializableBlob.html#fromBS"><span class="hs-identifier hs-var hs-var">fromBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; SerializableBlob
+</span><a href="Data.SerializableBlob.html#SerializableBytes"><span class="hs-identifier hs-var">SerializableBytes</span></a></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="annot"><a href="Data.SerializableBlob.html#fromLBS"><span class="hs-identifier hs-type">fromLBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SerializableBlob</span></a></span><span>
+</span><span id="line-46"></span><span id="fromLBS"><span class="annot"><span class="annottext">fromLBS :: ByteString -&gt; SerializableBlob
+</span><a href="Data.SerializableBlob.html#fromLBS"><span class="hs-identifier hs-var hs-var">fromLBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><span class="annottext">ByteString -&gt; SerializableBlob
+</span><a href="Data.SerializableBlob.html#fromBS"><span class="hs-identifier hs-var">fromBS</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; SerializableBlob)
+-&gt; (ByteString -&gt; ByteString) -&gt; ByteString -&gt; SerializableBlob
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">BL.toStrict</span></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Data.SerializableBlob.html#toBS"><span class="hs-identifier hs-type">toBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SerializableBlob</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span>
+</span><span id="line-50"></span><span id="toBS"><span class="annot"><span class="annottext">toBS :: SerializableBlob -&gt; ByteString
+</span><a href="Data.SerializableBlob.html#toBS"><span class="hs-identifier hs-var hs-var">toBS</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBytes"><span class="hs-identifier hs-type">SerializableBytes</span></a></span><span> </span><span id="local-6989586621689255605"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689255605"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689255605"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-51"></span><span class="annot"><a href="Data.SerializableBlob.html#toBS"><span class="hs-identifier hs-var">toBS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SerializableBlob.html#SerializableText"><span class="hs-identifier hs-type">SerializableText</span></a></span><span> </span><span id="local-6989586621689255604"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689255604"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">TE.encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689255604"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="annot"><a href="Data.SerializableBlob.html#toLBS"><span class="hs-identifier hs-type">toLBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SerializableBlob</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span>
+</span><span id="line-54"></span><span id="toLBS"><span class="annot"><span class="annottext">toLBS :: SerializableBlob -&gt; ByteString
+</span><a href="Data.SerializableBlob.html#toLBS"><span class="hs-identifier hs-var hs-var">toLBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">BL.fromStrict</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString)
+-&gt; (SerializableBlob -&gt; ByteString)
+-&gt; SerializableBlob
+-&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SerializableBlob -&gt; ByteString
+</span><a href="Data.SerializableBlob.html#toBS"><span class="hs-identifier hs-var">toBS</span></a></span><span>
+</span><span id="line-55"></span></pre></body></html>
