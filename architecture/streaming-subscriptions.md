@@ -1,16 +1,16 @@
-# Instant streaming APIs with built-in authorization for new or existing Postgres
+# Instant streaming APIs (GraphQL) with built-in authorization for Postgres
 
-This post discusses a recent capability added to Hasura GraphQL Engine: Streaming over GraphQL subscriptions for Postgres.
+This post discusses a recent capability added to Hasura GraphQL Engine: Streaming data over GraphQL subscriptions for Postgres.
 
 ## TL;DR 
 
 If you have a large amount of data, or "fast moving" data in Postgres, Hasura now allows you to instantly create an API for clients to fetch that data as a continuous stream. This API can be safely exposed to internal or external HTTP clients.
 
 - Uses GraphQL subscriptions, and works with any GraphQL client that supports subscriptions over websockets
-- Each client can maintain an independent stream cursor (aka offset) and prevent any dropped or missing events - aka not fire-and-forget
+- Each client can maintain an independent stream cursor (aka offset) and prevent any dropped or missing events - not just fire-and-forget
 - Each client can only read relevant events in a stream: Create fine-grained authorization rules at a "row" (or event) and "column" (or field) level, that integrates with any authentication provider
 - Use relationships to enrich event payload data with data in other models at query time
-- Scale to a massive number of concurrent clients. This post discusses a benchmark of over 1M clients concurrently streaming data with **independent stream offsets** and **independent authz rules** 
+- Scale to a massive number of concurrent clients. This post discusses a [benchmark of streaming to 1M clients concurrently](#performance-benchmarks) streaming data with **independent stream offsets** and **independent authz rules** 
 - Works with new or existing data in any Postgres database and with read-replicas
 - No special configuration around sticky sessions, back-pressure, dropped connections, roll-outs, scaling out etc required
 
@@ -18,7 +18,7 @@ If you have a large amount of data, or "fast moving" data in Postgres, Hasura no
 
 ## Motivation
 
-Today we have a variety of solution to ingest and store a large amount of data or a stream of data. 
+Today we have a variety of solutions to ingest and store a large amount of data or a stream of data. 
 However, once this data has been captured, securely exposing this data as a continuous stream to a large number of HTTP clients concurrently is a challenge. 
 
 These are the challenges that Hasura aims to address:
@@ -28,21 +28,23 @@ These are the challenges that Hasura aims to address:
 
 Hasura's new streaming API on Postgres addresses these challenges so that teams focus on how their streams are modelled and secured instead of building and scaling the API.
 
-![Without Hasura](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/motivation-before-hasura.png)
-![With Hasura](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/motivation-after-hasura.png)
+![Before / after Hasura](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/motivation-before-after-hasura.png)
 
 ## Table of contents
 
-In this post, we will look at the architecture of streaming subscriptions, how our batching and multiplexing works with declarative authorization. We will take a look at initial performance benchmarks that test for high-concurrency and volumes of data. And finally, we’ll highlight a few common use-cases and modeling patterns. 
+In this post, we will look at the architecture of streaming subscriptions, how our batching and multiplexing implementation works with declarative authorization. We will take a look at initial performance benchmarks that test for high concurrency and large volumes of data. And finally, we’ll highlight a few common use-cases and modeling patterns. 
 
-- [Try it out](#try-it-out)
-- [Common use-cases](#common-use-cases-and-modelling-guides)
-- [Architecture](#architecture)
-    - [How does streaming subscriptions work?](#how-does-streaming-subscriptions-work)
-    - [How does streaming subscription work for a single subscriber?](#how-does-streaming-subscription-work-for-a-single-subscriber)
-    - [Batching and Multiplexing](#batching-multiple-streaming-subscriptions-into-one-sql-query)
-- [Handling Authorization with large data](#handling-authorization-with-large-data)
-- [Backpressure and Scaling](#handling-backpressure-and-scaling)
+- [Try it out](#try-it-out-in-60-seconds)
+- [Common use-cases](#use-cases)
+  - [Stream log-like data](#stream-log-like-data)
+  - [Create messaging channels](#create-messaging-channels)
+  - [Capture and stream data changes on an existing table](#capture-and-stream-data-changes-on-an-existing-table)
+  - [Create a fire-and-forget channel for ephemeral data ](#create-a-fire-and-forget-channel-for-ephemeral-data )
+- [Architecture](#notes-on-architecture)
+    - [Making GraphQL calls efficieint](#making-graphql-calls-efficient)
+    - [Batching](#batching-multiple-streaming-consumers-into-one-sql-query)
+    - [Handling Authorization with predicate pushdown](#handling-authorization-with-predicate-push-down)
+    - [Backpressure and Scaling](#handling-backpressure)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Next steps](#next-steps)
 
@@ -74,9 +76,9 @@ message_stream {
 
 ## Use-cases
 
-### Stream log-like data
+### Stream events or log-like data
 
-Let's say you have log-like data that is being continuously generated and needs to be streamed to web clients. 
+Let's say you have events or log-like data that is being continuously generated and needs to be streamed to web clients. 
 
 What you need to do:
 1. Process and ingest data into a Postgres cluster
@@ -89,19 +91,19 @@ What you need to do:
 Architecture examples:
 - Ingest data into a Kafka-like queue, which is processed and written to a global "edge" AWS Aurora Postgres cluster
 
-![AWS Aurora Postgres](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/logs-use-case-I.png)
+<img src="https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/logs-use-case-I.png" width="80%" alt="Distribute logs via a global edge" />
 
 - Ingest data into TimescaleDB, setup a continuous materialized view and stream realtime aggregations
 
-![TimescaleDB realtime aggreations](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/logs-use-case-II.png)
+<img alt="TimescaleDB realtime aggreations" src="https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/logs-use-case-II.png" width="80%" />
 
 ### Create messaging channels
 
-Many use-cases that involve web/mobile clients require an ability to setup a persistent and secure channel that allows clients to publish and subscribe to messages
+Many web/mobile applications require an ability to setup a persistent and secure channel that allows clients to publish and subscribe to messages
 
 What you need to do:
-1. Create a messages model that has references to channel or groups that determine authorization rules
-2. When messages are sent (or published), messages can be ingested directly based on authz rules via Hasura GraphQL mutations, or can be handled by custom logic that processes them and inserts them into the messages channel
+1. Create a messages model that has references to channel or groups that describe authorization rules
+2. Messages can be sent (aka published) directly via Hasura GraphQL mutations (with authz rules) , or can be handled by custom logic that processes them and inserts them into the messages channel
 
 - Architecture example:
 
@@ -109,10 +111,11 @@ What you need to do:
 
 Note: Messaging channels are a great candidate for sharding by channel_id or other channel metadata. Hasura supports YugaByte, Citus with support for Cockroach coming soon.
 
+
 ### Capture and stream data changes on an existing table
 
 What you need to do:
-1. Create an audit trigger that captures data from the table, and inserts the change event into a changes table
+1. Create an audit trigger that captures data from the table, and inserts the change event into a "changes" table
 2. Setup authorization rules on the changes table so that only changes to the authorized rows and the right subset of columns are streamed
 
 - Architecture:
@@ -128,7 +131,7 @@ Note on capturing data from the WAL:
 
 ### Create a fire-and-forget channel for ephemeral data
 
-Typing indicators, live locations sharing multiplayer mouse-pointer like information are ideal candidates for fire-and-forget type channels. These types of applications usually require lower e2e latency as well.
+Typing indicators, live locations sharing, multiplayer mouse-pointer like information are ideal candidates for fire-and-forget type channels. These types of applications usually require lower e2e latency as well.
 
 Architecture:
 - Create (or alter) an UNLOGGED table in Postgres
@@ -205,7 +208,7 @@ and each row corresponding to an output to a distinct value of `id`.
 By "multiplexing" subscribers, the number of DB connections will be lesser than the number 
 of subscriptions.
 
-## Handling authorization with a predicate push-down
+### Handling authorization with predicate push-down
 
 We have seen how Hasura makes performant queries. But what about Authorization?
 
@@ -215,7 +218,7 @@ It is impossible to load large streams of data in memory and apply authorization
 
 We just saw above how the transpiler in Hasura with batching helps in making performant queries. But this in itself isn't enough as resolvers also enforce authorization rules by only fetching the data that is allowed. We will therefore need to embed these authorization rules into the generated SQL.
 
-### Make Authorization declarative
+### Making authorization declarative
 
 Authorization when it comes to accessing data is essentially a constraint that depends on the values of data (or rows) being fetched combined with application-user specific “session variables” that are provided dynamically. For example, in the most trivial case, a row might container a user_id that denotes the data ownership. Or documents that are viewable by a user might be represented in a related table, document_viewers. In other scenarios the session variable itself might contain the data ownership information pertinent to a row, for eg, an account manager has access to any account [1,2,3…] where that information is not present in the current database but present in the session variable (probably provided by some other data system).
 
@@ -225,15 +228,15 @@ The resultant query processing pipeline is now: GraphQL query → GraphQL AST �
 
 ![GraphQL query AST with AuthZ](https://graphql-engine-cdn.hasura.io/assets/github/graphql-query-ast-authz.png)
 
-### Backpressure
+### Managing backpressure
 
-Backpressure is the mechanism that “pushes back” on the producer to not be overwhelmed by data.
-
-While streaming, it can happen that the server keeps on sending new events to a client while the client already has a huge backlog of events to process. In such a case, when the client is overwhelmed with a large amount of events and is not able to cope up with the events sent by the server, then the client should manually disconnect the subscription noting down the last cursor value. Once the client is ready to accept new events it can start a new streaming subscription from the last cursor value it processed.
+Backpressure is the mechanism that “pushes back” on the producer to not be overwhelmed by data. While streaming, it is plausible that the server keeps on sending new events to a client while the client already has a huge backlog of events to process. Because Hasura is able to handle disconnects elegantly, clients can disconnect from the stream at any point of time (say when an internal counter indicating a backlog of unprocessed events), and reconnect when they're ready. Once the client is ready to accept new events it can start a new streaming subscription from the last cursor value it processed.
 
 ### Scaling 
 
-Hasura’s subscriptions can easily be scaled horizontally by adding more Hasura instances and can also be scaled at the DB layer by adding read-replicas to the primary database. 
+Hasura’s subscriptions can easily be scaled horizontally by adding more Hasura instances. The underlying Postgres database can be scaled vertically and with read-replicas or with sharding (with some [supported Postgres flavours](https://hasura.io/docs/latest/databases/postgres/index/#postgres-flavours)). 
+
+Hasura also supports working with multiple Postgres databases as sources (each with their own schema), it becomes possible to separate out specific workloads into tuned Postgres instances.
 
 ## Performance Benchmarks
 
@@ -253,7 +256,8 @@ Our aim in this benchmark is to verify that Hasura can handle a large number of 
 
 Here is how the load scales:
 
-![DB Connections Load](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/performance-db-conn-load.png)
+<img src="https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/performance-db-conn-load.png" alt="Postgres connection load" width="500px" />
+
 
 - DB CPU percentage at peak usage was 15%
 - Peak Hasura CPU usage was 20%
