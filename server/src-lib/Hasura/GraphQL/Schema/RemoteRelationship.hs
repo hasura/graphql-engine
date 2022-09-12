@@ -13,14 +13,12 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options
 import Hasura.GraphQL.Schema.Parser (FieldParser, MonadMemoize)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
-import Hasura.GraphQL.Schema.Typename (withTypenameCustomization)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
@@ -193,13 +191,13 @@ remoteRelationshipToSourceField ::
   SourceCache ->
   RemoteSourceFieldInfo tgt ->
   SchemaT r m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
-remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
-  withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
+remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} = do
+  roleName <- retrieve scRole
+  sourceInfo <-
+    onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
+      throw500 $ "source not found " <> dquote _rsfiSource
+  withSourceCustomization (_siCustomization sourceInfo) do
     tCase <- asks getter
-    roleName <- retrieve scRole
-    sourceInfo <-
-      onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
-        throw500 $ "source not found " <> dquote _rsfiSource
     tableInfo <- askTableInfo sourceInfo _rsfiTable
     fieldName <- textToName $ relNameToTxt _rsfiName
     case tableSelectPermissions @tgt roleName tableInfo of

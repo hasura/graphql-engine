@@ -579,8 +579,17 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             )
           |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
 
+      -- not forcing the evaluation here results in a measurable negative impact
+      -- on memory residency as measured by our benchmark
       !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
       !isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
+      !namingConv <-
+        bindA
+          -<
+            if isNamingConventionEnabled
+              then getNamingCase sourceCustomization (namingConventionSupport @b) defaultNC
+              else pure HasuraCase
+      let resolvedCustomization = mkResolvedSourceCustomization sourceCustomization namingConv
 
       -- sql functions
       functionCache <-
@@ -611,7 +620,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                     rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
                                     let metadataPermissions = mapFromL _fpmRole functionPermissions
                                         permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                                    let !namingConv = if isNamingConventionEnabled then getNamingConvention sourceCustomization defaultNC else HasuraCase
                                     (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
                                     recordDependencies -< (metadataObject, schemaObject, [dep])
                                     returnA -< functionInfo
@@ -623,7 +631,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               |)
           >-> (\infos -> catMaybes infos >- returnA)
 
-      returnA -< AB.mkAnyBackend $ SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig sourceCustomization
+      returnA -< AB.mkAnyBackend $ SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig resolvedCustomization
 
     buildAndCollectInfo ::
       forall arr m.

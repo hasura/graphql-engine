@@ -30,7 +30,6 @@ import Hasura.GraphQL.Schema.Parser (Kind (..), Parser, memoizeOn)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
-import Hasura.GraphQL.Schema.Typename (withTypenameCustomization)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -57,29 +56,25 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
   let idDescription = G.Description "A globally unique identifier"
       idField = P.selection_ Name._id (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
-  tCase <- asks getter
   roleName <- retrieve scRole
   tables :: [Parser 'Output n (SourceName, AB.AnyBackend TableMap)] <-
     catMaybes . concat <$> for (Map.toList sourceCache) \(sourceName, anySourceInfo) ->
       AB.dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
         anySourceInfo
         \(sourceInfo :: SourceInfo b) ->
-          for (Map.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
-            tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
-            selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
-            annotatedFieldsParser <-
-              MaybeT $
-                withTypenameCustomization
-                  (mkCustomizedTypename (_scTypeNames $ _siCustomization sourceInfo) tCase)
-                  (tableSelectionSet sourceInfo tableInfo)
-            pure $
-              annotatedFieldsParser <&> \fields ->
-                ( sourceName,
-                  AB.mkAnyBackend $
-                    TableMap $
-                      Map.singleton tableName $
-                        NodeInfo (_siConfiguration sourceInfo) selectPermissions tablePkeyColumns fields
-                )
+          withSourceCustomization (_siCustomization sourceInfo) do
+            for (Map.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
+              tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
+              selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
+              annotatedFieldsParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
+              pure $
+                annotatedFieldsParser <&> \fields ->
+                  ( sourceName,
+                    AB.mkAnyBackend $
+                      TableMap $
+                        Map.singleton tableName $
+                          NodeInfo (_siConfiguration sourceInfo) selectPermissions tablePkeyColumns fields
+                  )
   pure $
     Map.fromListWith fuseAnyMaps
       <$> P.selectionSetInterface

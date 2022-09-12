@@ -27,7 +27,6 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -313,7 +312,6 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
             _trdType
             _siName
             _siConfiguration
-            (getSourceTypeCustomization _siCustomization)
             remoteTableInfo
             annotatedFieldMapping
 

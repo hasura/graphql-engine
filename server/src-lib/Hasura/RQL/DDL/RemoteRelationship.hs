@@ -348,9 +348,8 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
             ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
           pure (srcFieldName, (srcColumn, tgtScalar, ciColumn tgtColumn))
         let sourceConfig = _rsConfig targetSourceInfo
-            sourceCustomization = _rsCustomization targetSourceInfo
             rsri =
-              RemoteSourceFieldInfo _rrName _tsrdRelationshipType _tsrdSource sourceConfig sourceCustomization targetTable $
+              RemoteSourceFieldInfo _rrName _tsrdRelationshipType _tsrdSource sourceConfig targetTable $
                 fmap (\(_, tgtType, tgtColumn) -> (tgtType, tgtColumn)) $ Map.fromList columnMapping
             rhsDependencies =
               SchemaDependency (SOSourceObj _tsrdSource $ AB.mkAnyBackend $ SOITable @b' targetTable) DRTable :
