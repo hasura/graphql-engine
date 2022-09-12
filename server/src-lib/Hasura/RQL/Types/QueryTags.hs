@@ -7,9 +7,12 @@ module Hasura.RQL.Types.QueryTags
   )
 where
 
+import Autodocodec (HasCodec (codec), named, optionalFieldWithDefault', stringConstCodec)
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
@@ -38,6 +41,18 @@ instance FromJSON QueryTagsFormat where
       _ -> fail errMsg
     where
       errMsg = "Not a valid query tags format value. Use either standard or sqlcommenter"
+
+-- TODO: Replace JSON instances with versions derived from this codec. We'll
+-- need to support case-insenitivity on input to make that change without
+-- affecting the API.
+instance HasCodec QueryTagsFormat where
+  codec =
+    named "QueryTagsFormat" $
+      stringConstCodec $
+        NonEmpty.fromList $
+          [ (Standard, "standard"),
+            (SQLCommenter, "sqlcommenter")
+          ]
 
 -- | QueryTagsConfig is the configuration created by the users to control query tags
 --
@@ -81,6 +96,15 @@ instance FromJSON QueryTagsConfig where
     QueryTagsConfig
       <$> o .:? "disabled" .!= False
       <*> o .:? "format" .!= Standard
+
+instance HasCodec QueryTagsConfig where
+  codec =
+    AC.object "QueryTagsConfig" $
+      QueryTagsConfig
+        <$> optionalFieldWithDefault' "disabled" False .== _qtcDisabled
+        <*> optionalFieldWithDefault' "format" Standard .== _qtcFormat
+    where
+      (.==) = (AC..=)
 
 defaultQueryTagsConfig :: QueryTagsConfig
 defaultQueryTagsConfig = QueryTagsConfig False Standard
