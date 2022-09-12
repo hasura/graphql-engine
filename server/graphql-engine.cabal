@@ -394,7 +394,8 @@ library dc-api
 library
   import: common-all, lib-depends
   hs-source-dirs:      src-lib
-  exposed-modules:     Control.Arrow.Extended
+  exposed-modules:     Autodocodec.Extended
+                     , Control.Arrow.Extended
                      , Control.Arrow.Interpret
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
