@@ -13,7 +13,7 @@
 set -eo pipefail
 
 # get the repo root
-ROOT="$(readlink -f "${BASH_SOURCE[0]%/*}/../")"
+ROOT="$(readlink -f "${BASH_SOURCE[0]%/*}/../" || greadlink -f "${BASH_SOURCE[0]%/*}/../")"
 
 # assign arguments to variables
 OSS_TAG="$1"
