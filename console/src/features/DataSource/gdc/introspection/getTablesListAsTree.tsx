@@ -35,6 +35,6 @@ export const getTablesListAsTree = async ({
     ),
     key: JSON.stringify({ database: source.name }),
     icon: <FaDatabase />,
-    children: convertToTreeData(tables, [], source.name),
+    children: tables.length ? convertToTreeData(tables, [], source.name) : [],
   };
 };
