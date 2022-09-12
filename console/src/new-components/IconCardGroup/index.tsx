@@ -1,0 +1,1 @@
+export { IconCardGroup } from './IconCardGroup';
