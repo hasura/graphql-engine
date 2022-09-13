@@ -40,7 +40,6 @@ import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text.Extended
 import Data.Text.Extended qualified as Text.E
 import Hasura.Backends.DataConnector.API qualified as API
@@ -368,8 +367,7 @@ runGetSourceTables GetSourceTables {..} = do
             $ (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) apiConfig
 
         let fullyQualifiedTableNames = fmap API.dtiName $ API.srTables schemaResponse
-            tableNames = fmap (fold . NonEmpty.intersperse "." . API.unTableName) fullyQualifiedTableNames
-        pure $ EncJSON.encJFromJValue tableNames
+        pure $ EncJSON.encJFromJValue fullyQualifiedTableNames
       backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
 
 --------------------------------------------------------------------------------

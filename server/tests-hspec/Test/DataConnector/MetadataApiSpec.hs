@@ -79,17 +79,17 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               |]
             )
             [yaml|
-              - Artist
-              - Album
-              - Customer
-              - Employee
-              - Genre
-              - Invoice
-              - InvoiceLine
-              - MediaType
-              - Playlist
-              - PlaylistTrack
-              - Track
+              - - Artist
+              - - Album
+              - - Customer
+              - - Employee
+              - - Genre
+              - - Invoice
+              - - InvoiceLine
+              - - MediaType
+              - - Playlist
+              - - PlaylistTrack
+              - - Track
             |]
 
   describe "get_table_info" $ do
