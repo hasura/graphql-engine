@@ -85,6 +85,8 @@ data RQLMetadataV1
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
   | RMCleanupEventTriggerLog !TriggerLogCleanupConfig
+  | RMStartEventTriggerCleanup !TriggerLogCleanupToggleConfig
+  | RMPauseEventTriggerCleanup !TriggerLogCleanupToggleConfig
   | -- Remote schemas
     RMAddRemoteSchema !AddRemoteSchemaQuery
   | RMUpdateRemoteSchema !AddRemoteSchemaQuery

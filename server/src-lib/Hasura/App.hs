@@ -1091,9 +1091,7 @@ instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
 
 instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
-  runLogCleaner _ = pure err
-    where
-      err = throw400 NotSupported "Event log cleanup feature is enterprise edition only"
+  runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
 
 runInSeparateTx ::
   (MonadIO m) =>

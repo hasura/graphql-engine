@@ -14,6 +14,7 @@ module Hasura.Backends.MSSQL.Types.Instances () where
 import Data.Aeson.Extended
 import Data.Aeson.Types
 import Data.Text.Extended (ToTxt (..))
+import Data.Time as Time
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
@@ -121,6 +122,9 @@ deriving instance Lift Order
 
 --------------------------------------------------------------------------------
 -- Third-party types
+
+deriving instance Generic (Time.TimeZone)
+instance Cacheable Time.TimeZone
 
 instance Cacheable ODBC.Value
 

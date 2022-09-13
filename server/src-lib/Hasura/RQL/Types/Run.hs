@@ -11,7 +11,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Hasura.Base.Error
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (runLogCleaner))
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
 import Hasura.Session

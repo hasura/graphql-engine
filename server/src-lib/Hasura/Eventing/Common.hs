@@ -2,17 +2,22 @@ module Hasura.Eventing.Common
   ( LockedEventsCtx (..),
     saveLockedEvents,
     removeEventFromLockedEvents,
+    generateScheduleTimes,
   )
 where
 
+import Control.Arrow.Extended
 import Control.Concurrent.STM.TVar
 import Control.Monad.STM
+import Data.List (unfoldr)
 import Data.Set qualified as Set
+import Data.Time
 import Hasura.Prelude
 import Hasura.RQL.Types.Action (LockedActionEventId)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Eventing (EventId)
 import Hasura.RQL.Types.ScheduledTrigger (CronEventId, OneOffScheduledEventId)
+import System.Cron
 
 data LockedEventsCtx = LockedEventsCtx
   { leCronEvents :: TVar (Set.Set CronEventId),
@@ -41,3 +46,9 @@ removeEventFromLockedEvents eventId lockedEvents =
     atomically $ do
       lockedEventsVals <- readTVar lockedEvents
       writeTVar lockedEvents $! Set.delete eventId lockedEventsVals
+
+-- | Generates next @n events starting @from according to 'CronSchedule'
+generateScheduleTimes :: UTCTime -> Int -> CronSchedule -> [UTCTime]
+generateScheduleTimes from n cron = take n $ go from
+  where
+    go = unfoldr (fmap dup . nextMatch cron)
