@@ -61,6 +61,7 @@ import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
 import Control.Retry qualified as Retry
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
+import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
@@ -1028,10 +1029,10 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
       mkHttpLog $
         mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
+  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
     unLogger logger $
       mkHttpLog $
-        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody compressedResponse qTime cType headers rb batchQueryOpLogs
+        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
