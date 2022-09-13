@@ -55,13 +55,13 @@
 </span><span id="line-55"></span><span class="hs-comment">-- CONFLICT DO NOTHING&quot; case. We do this by adding a placeholder value to the</span><span>
 </span><span id="line-56"></span><span class="hs-comment">-- enum. See &lt;https://github.com/hasura/graphql-engine/issues/6804&gt;.</span><span>
 </span><span id="line-57"></span><span class="annot"><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#onConflictFieldParser"><span class="hs-identifier hs-type">onConflictFieldParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689781412"><span class="annot"><a href="#local-6989586621689781412"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689781411"><span class="annot"><a href="#local-6989586621689781411"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689781410"><span class="annot"><a href="#local-6989586621689781410"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689781409"><span class="annot"><a href="#local-6989586621689781409"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781412"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689781411"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781410"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781409"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-60"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781412"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689781155"><span class="annot"><a href="#local-6989586621689781155"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689781154"><span class="annot"><a href="#local-6989586621689781154"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689781153"><span class="annot"><a href="#local-6989586621689781153"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689781152"><span class="annot"><a href="#local-6989586621689781152"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781155"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689781154"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781153"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781152"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781155"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781412"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781412"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781411"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781410"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781409"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClause"><span class="hs-identifier hs-type">IR.OnConflictClause</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781412"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781412"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781155"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781155"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781154"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781153"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781152"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClause"><span class="hs-identifier hs-type">IR.OnConflictClause</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781155"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781155"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span id="onConflictFieldParser"><span class="annot"><span class="annottext">onConflictFieldParser :: SourceInfo ('Postgres pgKind)
 -&gt; TableInfo ('Postgres pgKind)
 -&gt; SchemaT
@@ -72,32 +72,32 @@
         (Maybe
            (OnConflictClause
               ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
-</span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#onConflictFieldParser"><span class="hs-identifier hs-var hs-var">onConflictFieldParser</span></a></span></span><span> </span><span id="local-6989586621689781408"><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781408"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689781407"><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781407"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621689781406"><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689781406"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; SchemaT r m NamingCase
+</span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#onConflictFieldParser"><span class="hs-identifier hs-var hs-var">onConflictFieldParser</span></a></span></span><span> </span><span id="local-6989586621689781151"><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781151"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689781150"><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781150"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621689781149"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689781149"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; SchemaT r m NamingCase
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
 forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621689781404"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689781404"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaContext -&gt; RoleName) -&gt; SchemaT r m RoleName
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621689781147"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689781147"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaContext -&gt; RoleName) -&gt; SchemaT r m RoleName
 forall r (m :: * -&gt; *) a b.
 (MonadReader r m, Has a r) =&gt;
 (a -&gt; b) -&gt; m b
 </span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaContext -&gt; RoleName
 </span><a href="Hasura.GraphQL.Schema.Common.html#scRole"><span class="hs-identifier hs-var hs-var">scRole</span></a></span><span>
-</span><span id="line-68"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781401"><span class="annot"><span class="annottext">permissions :: RolePermInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781401"><span class="hs-identifier hs-var hs-var">permissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781144"><span class="annot"><span class="annottext">permissions :: RolePermInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781144"><span class="hs-identifier hs-var hs-var">permissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName
 -&gt; TableInfo ('Postgres pgKind) -&gt; RolePermInfo ('Postgres pgKind)
 forall (b :: BackendType).
 RoleName -&gt; TableInfo b -&gt; RolePermInfo b
 </span><a href="Hasura.RQL.Types.Table.html#getRolePermInfo"><span class="hs-identifier hs-var">getRolePermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689781404"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781407"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-69"></span><span>      </span><span id="local-6989586621689781399"><span class="annot"><span class="annottext">maybeConstraints :: Maybe (NonEmpty (UniqueConstraint ('Postgres pgKind)))
-</span><a href="#local-6989586621689781399"><span class="hs-identifier hs-var hs-var">maybeConstraints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfoG
+</span><a href="#local-6989586621689781147"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781150"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span id="local-6989586621689781142"><span class="annot"><span class="annottext">maybeConstraints :: Maybe (NonEmpty (UniqueConstraint ('Postgres pgKind)))
+</span><a href="#local-6989586621689781142"><span class="hs-identifier hs-var hs-var">maybeConstraints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfoG
   ('Postgres pgKind)
   (FieldInfo ('Postgres pgKind))
   (ColumnInfo ('Postgres pgKind))
@@ -131,8 +131,8 @@ forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 -&gt; Maybe (NonEmpty (UniqueConstraint ('Postgres pgKind)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781407"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-70"></span><span>      </span><span id="local-6989586621689781395"><span class="annot"><span class="annottext">maybeConflictObject :: Maybe
+</span><a href="#local-6989586621689781150"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-70"></span><span>      </span><span id="local-6989586621689781138"><span class="annot"><span class="annottext">maybeConflictObject :: Maybe
   (SchemaT
      r
      m
@@ -141,7 +141,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
         n
         (OnConflictClause
            ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
-</span><a href="#local-6989586621689781395"><span class="hs-identifier hs-var hs-var">maybeConflictObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781138"><span class="hs-identifier hs-var hs-var">maybeConflictObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
 -&gt; TableInfo ('Postgres pgKind)
 -&gt; Maybe (UpdPermInfo ('Postgres pgKind))
 -&gt; NonEmpty (UniqueConstraint ('Postgres pgKind))
@@ -169,12 +169,12 @@ SourceInfo ('Postgres pgKind)
         (OnConflictClause
            ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
 </span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictObjectParser"><span class="hs-identifier hs-var">conflictObjectParser</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781408"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781407"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RolePermInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781151"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781150"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RolePermInfo ('Postgres pgKind)
 -&gt; Maybe (UpdPermInfo ('Postgres pgKind))
 forall (b :: BackendType). RolePermInfo b -&gt; Maybe (UpdPermInfo b)
 </span><a href="Hasura.RQL.Types.Table.html#_permUpd"><span class="hs-identifier hs-var hs-var">_permUpd</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781401"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NonEmpty (UniqueConstraint ('Postgres pgKind))
+</span><a href="#local-6989586621689781144"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NonEmpty (UniqueConstraint ('Postgres pgKind))
  -&gt; SchemaT
       r
       m
@@ -195,7 +195,7 @@ forall (b :: BackendType). RolePermInfo b -&gt; Maybe (UpdPermInfo b)
               ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty (UniqueConstraint ('Postgres pgKind)))
-</span><a href="#local-6989586621689781399"><span class="hs-identifier hs-var">maybeConstraints</span></a></span><span>
+</span><a href="#local-6989586621689781142"><span class="hs-identifier hs-var">maybeConstraints</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe
   (SchemaT
      r
@@ -205,8 +205,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
         n
         (OnConflictClause
            ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
-</span><a href="#local-6989586621689781395"><span class="hs-identifier hs-var">maybeConflictObject</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-72"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689781391"><span class="annot"><span class="annottext">SchemaT
+</span><a href="#local-6989586621689781138"><span class="hs-identifier hs-var">maybeConflictObject</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689781134"><span class="annot"><span class="annottext">SchemaT
   r
   m
   (Parser
@@ -214,7 +214,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
      n
      (OnConflictClause
         ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-</span><a href="#local-6989586621689781391"><span class="hs-identifier hs-var">conflictObject</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SchemaT
+</span><a href="#local-6989586621689781134"><span class="hs-identifier hs-var">conflictObject</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SchemaT
   r
   m
   (Parser
@@ -222,7 +222,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
      n
      (OnConflictClause
         ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-</span><a href="#local-6989586621689781391"><span class="hs-identifier hs-var">conflictObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaT
+</span><a href="#local-6989586621689781134"><span class="hs-identifier hs-var">conflictObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaT
   r
   m
   (Parser
@@ -269,7 +269,7 @@ Name
 -&gt; InputFieldsParser origin m (Maybe a)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#applyFieldNameCaseCust"><span class="hs-identifier hs-var">applyFieldNameCaseCust</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689781406"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689781149"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_on_conflict"><span class="hs-identifier hs-var">Name._on_conflict</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
@@ -341,15 +341,15 @@ forall a. Maybe a
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- | Create a parser for the @_on_conflict@ object of the given table.</span><span>
 </span><span id="line-76"></span><span class="annot"><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictObjectParser"><span class="hs-identifier hs-type">conflictObjectParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689781573"><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689781572"><span class="annot"><a href="#local-6989586621689781572"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689781571"><span class="annot"><a href="#local-6989586621689781571"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689781570"><span class="annot"><a href="#local-6989586621689781570"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689781572"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781571"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781570"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-79"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689781316"><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689781315"><span class="annot"><a href="#local-6989586621689781315"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689781314"><span class="annot"><a href="#local-6989586621689781314"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689781313"><span class="annot"><a href="#local-6989586621689781313"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689781315"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781314"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781313"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-84"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-85"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781572"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781571"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781570"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClause"><span class="hs-identifier hs-type">IR.OnConflictClause</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781573"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781315"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781314"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781313"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClause"><span class="hs-identifier hs-type">IR.OnConflictClause</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781316"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-86"></span><span id="conflictObjectParser"><span class="annot"><span class="annottext">conflictObjectParser :: SourceInfo ('Postgres pgKind)
 -&gt; TableInfo ('Postgres pgKind)
 -&gt; Maybe (UpdPermInfo ('Postgres pgKind))
@@ -362,28 +362,28 @@ forall a. Maybe a
         n
         (OnConflictClause
            ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-</span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictObjectParser"><span class="hs-identifier hs-var hs-var">conflictObjectParser</span></a></span></span><span> </span><span id="local-6989586621689781386"><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781386"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689781385"><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781385"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span id="local-6989586621689781384"><span class="annot"><span class="annottext">Maybe (UpdPermInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689781384"><span class="hs-identifier hs-var">maybeUpdatePerms</span></a></span></span><span> </span><span id="local-6989586621689781383"><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781383"><span class="hs-identifier hs-var">constraints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621689781382"><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689781382"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; SchemaT r m NamingCase
+</span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictObjectParser"><span class="hs-identifier hs-var hs-var">conflictObjectParser</span></a></span></span><span> </span><span id="local-6989586621689781129"><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781129"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689781128"><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781128"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span id="local-6989586621689781127"><span class="annot"><span class="annottext">Maybe (UpdPermInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689781127"><span class="hs-identifier hs-var">maybeUpdatePerms</span></a></span></span><span> </span><span id="local-6989586621689781126"><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
+</span><a href="#local-6989586621689781126"><span class="hs-identifier hs-var">constraints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621689781125"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689781125"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; SchemaT r m NamingCase
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
 forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-88"></span><span>  </span><span id="local-6989586621689781381"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Maybe PGCol)
-</span><a href="#local-6989586621689781381"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621689781124"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Maybe PGCol)
+</span><a href="#local-6989586621689781124"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
 -&gt; SchemaT r m (Parser 'Both n (Maybe (Column ('Postgres pgKind))))
 forall (backend :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema backend r m n =&gt;
 TableInfo backend
 -&gt; SchemaT r m (Parser 'Both n (Maybe (Column backend)))
 </span><a href="Hasura.GraphQL.Schema.Table.html#updateColumnsPlaceholderParser"><span class="hs-identifier hs-var">updateColumnsPlaceholderParser</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781385"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-89"></span><span>  </span><span id="local-6989586621689781379"><span class="annot"><span class="annottext">Parser 'Both n (UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781379"><span class="hs-identifier hs-var">constraintParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
+</span><a href="#local-6989586621689781128"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621689781122"><span class="annot"><span class="annottext">Parser 'Both n (UniqueConstraint ('Postgres pgKind))
+</span><a href="#local-6989586621689781122"><span class="hs-identifier hs-var">constraintParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
 -&gt; SourceInfo ('Postgres pgKind)
 -&gt; TableInfo ('Postgres pgKind)
 -&gt; SchemaT
@@ -396,15 +396,15 @@ NonEmpty (UniqueConstraint ('Postgres pgKind))
 -&gt; SchemaT
      r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 </span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictConstraint"><span class="hs-identifier hs-var">conflictConstraint</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781383"><span class="hs-identifier hs-var">constraints</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781386"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781385"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621689781377"><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621689781126"><span class="hs-identifier hs-var">constraints</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781129"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781128"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621689781120"><span class="annot"><span class="annottext">Parser
   'Input
   n
   (AnnBoolExp
      ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
-</span><a href="#local-6989586621689781377"><span class="hs-identifier hs-var">whereExpParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781120"><span class="hs-identifier hs-var">whereExpParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
 -&gt; TableInfo ('Postgres pgKind)
 -&gt; SchemaT
      r
@@ -420,17 +420,17 @@ SourceInfo b
 -&gt; TableInfo b
 -&gt; SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 </span><a href="Hasura.GraphQL.Schema.BoolExp.html#boolExp"><span class="hs-identifier hs-var">boolExp</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781386"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781385"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-91"></span><span>  </span><span id="local-6989586621689781375"><span class="annot"><span class="annottext">GQLNameIdentifier
-</span><a href="#local-6989586621689781375"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; SchemaT r m GQLNameIdentifier
+</span><a href="#local-6989586621689781129"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781128"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621689781118"><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="#local-6989586621689781118"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; SchemaT r m GQLNameIdentifier
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m GQLNameIdentifier
 </span><a href="Hasura.GraphQL.Schema.Table.html#getTableIdentifierName"><span class="hs-identifier hs-var">getTableIdentifierName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781385"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-92"></span><span>  </span><span id="local-6989586621689781373"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689781373"><span class="hs-identifier hs-var">objectName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
+</span><a href="#local-6989586621689781128"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621689781116"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689781116"><span class="hs-identifier hs-var">objectName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
 forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
@@ -438,13 +438,13 @@ Name -&gt; m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; GQLNameIdentifier -&gt; Name
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#applyTypeNameCaseIdentifier"><span class="hs-identifier hs-var">applyTypeNameCaseIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689781382"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">(GQLNameIdentifier -&gt; Name) -&gt; GQLNameIdentifier -&gt; Name
+</span><a href="#local-6989586621689781125"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">(GQLNameIdentifier -&gt; Name) -&gt; GQLNameIdentifier -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; GQLNameIdentifier
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#mkOnConflictTypeName"><span class="hs-identifier hs-var">mkOnConflictTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
-</span><a href="#local-6989586621689781375"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781370"><span class="annot"><span class="annottext">objectDesc :: Description
-</span><a href="#local-6989586621689781370"><span class="hs-identifier hs-var hs-var">objectDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><a href="#local-6989586621689781118"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781113"><span class="annot"><span class="annottext">objectDesc :: Description
+</span><a href="#local-6989586621689781113"><span class="hs-identifier hs-var hs-var">objectDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -452,10 +452,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
 QualifiedTable
-</span><a href="#local-6989586621689781367"><span class="hs-identifier hs-var">tableName</span></a></span><span>
-</span><span id="line-94"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689781366"><span class="annot"><span class="annottext">HashMap PGCol (UnpreparedValue ('Postgres pgKind))
-</span><a href="#local-6989586621689781366"><span class="hs-identifier hs-var">presetColumns</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689781365"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
-</span><a href="#local-6989586621689781365"><span class="hs-identifier hs-var">updateFilter</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol (UnpreparedValue ('Postgres pgKind)),
+</span><a href="#local-6989586621689781110"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689781109"><span class="annot"><span class="annottext">HashMap PGCol (UnpreparedValue ('Postgres pgKind))
+</span><a href="#local-6989586621689781109"><span class="hs-identifier hs-var">presetColumns</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689781108"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+</span><a href="#local-6989586621689781108"><span class="hs-identifier hs-var">updateFilter</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol (UnpreparedValue ('Postgres pgKind)),
  AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
 -&gt; Maybe
      (HashMap PGCol (UnpreparedValue ('Postgres pgKind)),
@@ -480,7 +480,7 @@ forall (backend :: BackendType) field. GBoolExp backend field
     AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-95"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689781354"><span id="local-6989586621689781355"><span id="local-6989586621689781356"><span id="local-6989586621689781357"><span id="local-6989586621689781358"><span id="local-6989586621689781359"><span id="local-6989586621689781360"><span class="annot"><span class="annottext">Bool
+</span><span id="line-95"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689781097"><span id="local-6989586621689781098"><span id="local-6989586621689781099"><span id="local-6989586621689781100"><span id="local-6989586621689781101"><span id="local-6989586621689781102"><span id="local-6989586621689781103"><span class="annot"><span class="annottext">Bool
 Maybe (AnnBoolExpPartialSQL ('Postgres pgKind))
 HashSet Text
 HashSet (Column ('Postgres pgKind))
@@ -503,7 +503,7 @@ upiFilter :: AnnBoolExpPartialSQL ('Postgres pgKind)
 upiTable :: TableName ('Postgres pgKind)
 upiCols :: HashSet (Column ('Postgres pgKind))
 </span><a href="Hasura.RQL.Types.Table.html#upiRequiredHeaders"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689781384"><span class="hs-identifier hs-var">maybeUpdatePerms</span></a></span><span>
+</span><a href="#local-6989586621689781127"><span class="hs-identifier hs-var">maybeUpdatePerms</span></a></span><span>
 </span><span id="line-96"></span><span>        </span><span class="annot"><span class="annottext">(HashMap PGCol (UnpreparedValue ('Postgres pgKind)),
  AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
 -&gt; Maybe
@@ -521,7 +521,7 @@ forall (b :: BackendType). PartialSQLExp b -&gt; UnpreparedValue b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">PreSetColsPartial ('Postgres pgKind)
 HashMap PGCol (PartialSQLExp ('Postgres pgKind))
-</span><a href="#local-6989586621689781356"><span class="hs-identifier hs-var">upiSet</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689781099"><span class="hs-identifier hs-var">upiSet</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-98"></span><span>            </span><span class="annot"><span class="annottext">(PartialSQLExp ('Postgres pgKind)
  -&gt; UnpreparedValue ('Postgres pgKind))
 -&gt; AnnBoolExpFld
@@ -541,7 +541,7 @@ forall (b :: BackendType). PartialSQLExp b -&gt; UnpreparedValue b
      ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExpPartialSQL ('Postgres pgKind)
-</span><a href="#local-6989586621689781358"><span class="hs-identifier hs-var">upiFilter</span></a></span><span>
+</span><a href="#local-6989586621689781101"><span class="hs-identifier hs-var">upiFilter</span></a></span><span>
 </span><span id="line-99"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span>  </span><span class="annot"><span class="annottext">Parser
@@ -605,10 +605,10 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Input m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.object</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689781373"><span class="hs-identifier hs-var">objectName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689781116"><span class="hs-identifier hs-var">objectName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621689781370"><span class="hs-identifier hs-var">objectDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputFieldsParser
+</span><a href="#local-6989586621689781113"><span class="hs-identifier hs-var">objectDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputFieldsParser
    MetadataObjId
    n
    (OnConflictClause
@@ -630,8 +630,8 @@ forall a. a -&gt; Maybe a
         ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-103"></span><span>      </span><span id="local-6989586621689781344"><span class="annot"><span class="annottext">UniqueConstraint ('Postgres pgKind)
-</span><a href="#local-6989586621689781344"><span class="hs-identifier hs-var">constraintField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-103"></span><span>      </span><span id="local-6989586621689781087"><span class="annot"><span class="annottext">UniqueConstraint ('Postgres pgKind)
+</span><a href="#local-6989586621689781087"><span class="hs-identifier hs-var">constraintField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Parser 'Both n (UniqueConstraint ('Postgres pgKind))
 -&gt; InputFieldsParser
@@ -646,9 +646,9 @@ Name
 </span><a href="Hasura.Name.html#_constraint"><span class="hs-identifier hs-var">Name._constraint</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781379"><span class="hs-identifier hs-var">constraintParser</span></a></span><span>
-</span><span id="line-104"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781341"><span class="annot"><span class="annottext">updateColumnsField :: InputFieldsParser MetadataObjId n [Maybe PGCol]
-</span><a href="#local-6989586621689781341"><span class="hs-identifier hs-var hs-var">updateColumnsField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689781122"><span class="hs-identifier hs-var">constraintParser</span></a></span><span>
+</span><span id="line-104"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781084"><span class="annot"><span class="annottext">updateColumnsField :: InputFieldsParser MetadataObjId n [Maybe PGCol]
+</span><a href="#local-6989586621689781084"><span class="hs-identifier hs-var hs-var">updateColumnsField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Value Void
 -&gt; Parser MetadataObjId 'Both n [Maybe PGCol]
@@ -671,12 +671,12 @@ forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m [a]
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Maybe PGCol)
-</span><a href="#local-6989586621689781381"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689781124"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span>      </span><span id="local-6989586621689781336"><span class="annot"><span class="annottext">Maybe
+</span><span id="line-106"></span><span>      </span><span id="local-6989586621689781079"><span class="annot"><span class="annottext">Maybe
   (AnnBoolExp
      ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
-</span><a href="#local-6989586621689781336"><span class="hs-identifier hs-var">whereExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689781079"><span class="hs-identifier hs-var">whereExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Parser
      'Input
@@ -703,20 +703,20 @@ forall a. Maybe a
   n
   (AnnBoolExp
      ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
-</span><a href="#local-6989586621689781377"><span class="hs-identifier hs-var">whereExpParser</span></a></span><span>
+</span><a href="#local-6989586621689781120"><span class="hs-identifier hs-var">whereExpParser</span></a></span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span>      </span><span id="local-6989586621689781334"><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689781334"><span class="hs-identifier hs-var">updateColumns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-108"></span><span>      </span><span id="local-6989586621689781077"><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621689781077"><span class="hs-identifier hs-var">updateColumns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId n [Maybe PGCol]
-</span><a href="#local-6989586621689781341"><span class="hs-identifier hs-var">updateColumnsField</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId n [Maybe PGCol]
+</span><a href="#local-6989586621689781084"><span class="hs-identifier hs-var">updateColumnsField</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId n [Maybe PGCol]
 -&gt; ([Maybe PGCol] -&gt; n [PGCol])
 -&gt; InputFieldsParser MetadataObjId n [PGCol]
 forall (m :: * -&gt; *) origin a b.
 Monad m =&gt;
 InputFieldsParser origin m a
 -&gt; (a -&gt; m b) -&gt; InputFieldsParser origin m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689781332"><span class="annot"><span class="annottext">[Maybe PGCol]
-</span><a href="#local-6989586621689781332"><span class="hs-identifier hs-var">updateColumnsMaybe</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689781075"><span class="annot"><span class="annottext">[Maybe PGCol]
+</span><a href="#local-6989586621689781075"><span class="hs-identifier hs-var">updateColumnsMaybe</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-110"></span><span>          </span><span class="annot"><span class="annottext">Maybe [PGCol] -&gt; n [PGCol] -&gt; n [PGCol]
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span>
@@ -725,7 +725,7 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a.
 (Traversable t, Applicative f) =&gt;
 t (f a) -&gt; f (t a)
 </span><span class="hs-identifier hs-var">sequenceA</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="annottext">[Maybe PGCol]
-</span><a href="#local-6989586621689781332"><span class="hs-identifier hs-var">updateColumnsMaybe</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689781075"><span class="hs-identifier hs-var">updateColumnsMaybe</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>            </span><span class="hs-comment">-- this can only happen if the placeholder was used</span><span>
 </span><span id="line-113"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorMessage -&gt; n [PGCol]
 forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
@@ -733,20 +733,20 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 </span><span class="hs-string">&quot;erroneous column name&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
-</span><span id="line-116"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#Constraint"><span class="hs-identifier hs-type">Constraint</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689781326"><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
+</span><span id="line-116"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#Constraint"><span class="hs-identifier hs-type">Constraint</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689781069"><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
 _cName :: forall (b :: BackendType). Constraint b -&gt; ConstraintName b
 _cName :: ConstraintName ('Postgres pgKind)
 </span><a href="Hasura.RQL.Types.Table.html#_cName"><span class="hs-identifier hs-var hs-var">_cName</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet (Column ('Postgres pgKind))
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UniqueConstraint ('Postgres pgKind)
-</span><a href="#local-6989586621689781344"><span class="hs-identifier hs-var">constraintField</span></a></span><span>
-</span><span id="line-117"></span><span>            </span><span id="local-6989586621689781324"><span class="annot"><span class="annottext">constraintTarget :: ConflictTarget ('Postgres pgKind)
-</span><a href="#local-6989586621689781324"><span class="hs-identifier hs-var hs-var">constraintTarget</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
+</span><a href="#local-6989586621689781087"><span class="hs-identifier hs-var">constraintField</span></a></span><span>
+</span><span id="line-117"></span><span>            </span><span id="local-6989586621689781067"><span class="annot"><span class="annottext">constraintTarget :: ConflictTarget ('Postgres pgKind)
+</span><a href="#local-6989586621689781067"><span class="hs-identifier hs-var hs-var">constraintTarget</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
 -&gt; ConflictTarget ('Postgres pgKind)
 forall (b :: BackendType). ConstraintName b -&gt; ConflictTarget b
 </span><a href="Hasura.RQL.IR.Conflict.html#CTConstraint"><span class="hs-identifier hs-var">IR.CTConstraint</span></a></span><span> </span><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
-</span><a href="#local-6989586621689781326"><span class="hs-identifier hs-var">_cName</span></a></span><span>
+</span><a href="#local-6989586621689781069"><span class="hs-identifier hs-var">_cName</span></a></span><span>
 </span><span id="line-118"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689781334"><span class="hs-identifier hs-var">updateColumns</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689781077"><span class="hs-identifier hs-var">updateColumns</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-119"></span><span>              </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (ConflictTarget ('Postgres pgKind))
 -&gt; OnConflictClause
      ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
@@ -763,7 +763,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe (ConflictTarget ('Postgres pgKind))
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ConflictTarget ('Postgres pgKind)
-</span><a href="#local-6989586621689781324"><span class="hs-identifier hs-var">constraintTarget</span></a></span><span>
+</span><a href="#local-6989586621689781067"><span class="hs-identifier hs-var">constraintTarget</span></a></span><span>
 </span><span id="line-120"></span><span>              </span><span class="annot"><span class="annottext">[PGCol]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-121"></span><span>                </span><span class="annot"><span class="annottext">OnConflictClauseData
@@ -797,11 +797,11 @@ ConflictTarget b
 -&gt; AnnBoolExp b v
 -&gt; OnConflictClauseData b v
 </span><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier hs-var">IR.OnConflictClauseData</span></a></span><span> </span><span class="annot"><span class="annottext">ConflictTarget ('Postgres pgKind)
-</span><a href="#local-6989586621689781324"><span class="hs-identifier hs-var">constraintTarget</span></a></span><span> </span><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
+</span><a href="#local-6989586621689781067"><span class="hs-identifier hs-var">constraintTarget</span></a></span><span> </span><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
 [PGCol]
-</span><a href="#local-6989586621689781334"><span class="hs-identifier hs-var">updateColumns</span></a></span><span> </span><span class="annot"><span class="annottext">PreSetColsG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+</span><a href="#local-6989586621689781077"><span class="hs-identifier hs-var">updateColumns</span></a></span><span> </span><span class="annot"><span class="annottext">PreSetColsG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 HashMap PGCol (UnpreparedValue ('Postgres pgKind))
-</span><a href="#local-6989586621689781366"><span class="hs-identifier hs-var">presetColumns</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+</span><a href="#local-6989586621689781109"><span class="hs-identifier hs-var">presetColumns</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
  -&gt; OnConflictClauseData
       ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
 -&gt; AnnBoolExp
@@ -826,7 +826,7 @@ forall (backend :: BackendType) field.
      ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
-</span><a href="#local-6989586621689781365"><span class="hs-identifier hs-var">updateFilter</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+</span><a href="#local-6989586621689781108"><span class="hs-identifier hs-var">updateFilter</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 -&gt; [AnnBoolExp
       ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))]
 -&gt; [AnnBoolExp
@@ -841,13 +841,13 @@ forall a. Maybe a -&gt; [a]
 </span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">Maybe
   (AnnBoolExp
      ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
-</span><a href="#local-6989586621689781336"><span class="hs-identifier hs-var">whereExp</span></a></span><span>
+</span><a href="#local-6989586621689781079"><span class="hs-identifier hs-var">whereExp</span></a></span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-125"></span><span>    </span><span id="local-6989586621689781367"><span class="annot"><span class="annottext">tableName :: TableName ('Postgres pgKind)
-</span><a href="#local-6989586621689781367"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; TableName ('Postgres pgKind)
+</span><span id="line-125"></span><span>    </span><span id="local-6989586621689781110"><span class="annot"><span class="annottext">tableName :: TableName ('Postgres pgKind)
+</span><a href="#local-6989586621689781110"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; TableName ('Postgres pgKind)
 forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781385"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689781128"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- | Constructs a Parser for the name of the constraints on a given table.</span><span>
 </span><span id="line-128"></span><span class="hs-comment">--</span><span>
@@ -859,21 +859,21 @@ forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><span id="line-134"></span><span class="hs-comment">-- This function can fail if a constraint has a name that cannot be translated</span><span>
 </span><span id="line-135"></span><span class="hs-comment">-- to a GraphQL name (see hasura/graphql-engine-mono#1748).</span><span>
 </span><span id="line-136"></span><span class="annot"><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictConstraint"><span class="hs-identifier hs-type">conflictConstraint</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-137"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689781533"><span class="annot"><a href="#local-6989586621689781533"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689781532"><span class="annot"><a href="#local-6989586621689781532"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689781531"><span class="annot"><a href="#local-6989586621689781531"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689781530"><span class="annot"><a href="#local-6989586621689781530"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781533"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689781532"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781531"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781530"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-139"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781533"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781533"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781533"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-142"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781532"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781531"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781530"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781533"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689781276"><span class="annot"><a href="#local-6989586621689781276"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689781275"><span class="annot"><a href="#local-6989586621689781275"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689781274"><span class="annot"><a href="#local-6989586621689781274"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689781273"><span class="annot"><a href="#local-6989586621689781273"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781276"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689781275"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781274"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781273"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781276"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781276"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781276"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-142"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781275"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781274"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781273"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689781276"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-143"></span><span id="conflictConstraint"><span class="annot"><span class="annottext">conflictConstraint :: NonEmpty (UniqueConstraint ('Postgres pgKind))
 -&gt; SourceInfo ('Postgres pgKind)
 -&gt; TableInfo ('Postgres pgKind)
 -&gt; SchemaT
      r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
-</span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictConstraint"><span class="hs-identifier hs-var hs-var">conflictConstraint</span></a></span></span><span> </span><span id="local-6989586621689781316"><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781316"><span class="hs-identifier hs-var">constraints</span></a></span></span><span> </span><span id="local-6989586621689781315"><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781315"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689781314"><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781314"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Schema.OnConflict.html#conflictConstraint"><span class="hs-identifier hs-var hs-var">conflictConstraint</span></a></span></span><span> </span><span id="local-6989586621689781059"><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
+</span><a href="#local-6989586621689781059"><span class="hs-identifier hs-var">constraints</span></a></span></span><span> </span><span id="local-6989586621689781058"><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781058"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689781057"><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689781057"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-144"></span><span>  </span><span class="annot"><span class="annottext">Name
 -&gt; (SourceName, QualifiedTable)
 -&gt; SchemaT
@@ -887,9 +887,9 @@ Name -&gt; a -&gt; m (p n b) -&gt; m (p n b)
 </span><a href="Hasura.GraphQL.Schema.Parser.html#memoizeOn"><span class="hs-identifier hs-var">P.memoizeOn</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">conflictConstraint</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind) -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
 </span><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier hs-var hs-var">_siName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781315"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
+</span><a href="#local-6989586621689781058"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
 QualifiedTable
-</span><a href="#local-6989586621689781311"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
+</span><a href="#local-6989586621689781054"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
  -&gt; SchemaT
       r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind))))
 -&gt; SchemaT
@@ -898,23 +898,23 @@ QualifiedTable
      r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-145"></span><span>    </span><span id="local-6989586621689781310"><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689781310"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; SchemaT r m NamingCase
+</span><span id="line-145"></span><span>    </span><span id="local-6989586621689781053"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689781053"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; SchemaT r m NamingCase
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
 forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-146"></span><span>    </span><span id="local-6989586621689781309"><span class="annot"><span class="annottext">GQLNameIdentifier
-</span><a href="#local-6989586621689781309"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; SchemaT r m GQLNameIdentifier
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621689781052"><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="#local-6989586621689781052"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; SchemaT r m GQLNameIdentifier
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m GQLNameIdentifier
 </span><a href="Hasura.GraphQL.Schema.Table.html#getTableIdentifierName"><span class="hs-identifier hs-var">getTableIdentifierName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781314"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-147"></span><span>    </span><span id="local-6989586621689781308"><span class="annot"><span class="annottext">NonEmpty
+</span><a href="#local-6989586621689781057"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-147"></span><span>    </span><span id="local-6989586621689781051"><span class="annot"><span class="annottext">NonEmpty
   (Definition MetadataObjId EnumValueInfo,
    UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781308"><span class="hs-identifier hs-var">constraintEnumValues</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
+</span><a href="#local-6989586621689781051"><span class="hs-identifier hs-var">constraintEnumValues</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
 -&gt; (UniqueConstraint ('Postgres pgKind)
     -&gt; SchemaT
          r
@@ -932,15 +932,15 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span>
 </span><span id="line-148"></span><span>      </span><span class="annot"><span class="annottext">NonEmpty (UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781316"><span class="hs-identifier hs-var">constraints</span></a></span><span>
-</span><span id="line-149"></span><span>      </span><span class="hs-glyph">\</span><span id="local-6989586621689781306"><span class="annot"><span class="annottext">c :: UniqueConstraint ('Postgres pgKind)
-</span><a href="#local-6989586621689781306"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#Constraint"><span class="hs-identifier hs-type">Constraint</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689781305"><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
+</span><a href="#local-6989586621689781059"><span class="hs-identifier hs-var">constraints</span></a></span><span>
+</span><span id="line-149"></span><span>      </span><span class="hs-glyph">\</span><span id="local-6989586621689781049"><span class="annot"><span class="annottext">c :: UniqueConstraint ('Postgres pgKind)
+</span><a href="#local-6989586621689781049"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#Constraint"><span class="hs-identifier hs-type">Constraint</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689781048"><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
 _cName :: ConstraintName ('Postgres pgKind)
 _cName :: forall (b :: BackendType). Constraint b -&gt; ConstraintName b
-</span><a href="#local-6989586621689781305"><span class="hs-identifier hs-var hs-var">_cName</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span id="local-6989586621689781304"><span class="annot"><span class="annottext">HashSet (Column ('Postgres pgKind))
-</span><a href="#local-6989586621689781304"><span class="hs-identifier hs-var">cCols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-150"></span><span>        </span><span id="local-6989586621689781303"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689781303"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SchemaT r m Name
+</span><a href="#local-6989586621689781048"><span class="hs-identifier hs-var hs-var">_cName</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span id="local-6989586621689781047"><span class="annot"><span class="annottext">HashSet (Column ('Postgres pgKind))
+</span><a href="#local-6989586621689781047"><span class="hs-identifier hs-var">cCols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-150"></span><span>        </span><span id="local-6989586621689781046"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689781046"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SchemaT r m Name
 forall (m :: * -&gt; *). MonadError QErr m =&gt; Text -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#textToName"><span class="hs-identifier hs-var">textToName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SchemaT r m Name) -&gt; Text -&gt; SchemaT r m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -950,7 +950,7 @@ forall a. ToTxt a =&gt; a -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ConstraintName ('Postgres pgKind)
 ConstraintName
-</span><a href="#local-6989586621689781305"><span class="hs-identifier hs-var">_cName</span></a></span><span>
+</span><a href="#local-6989586621689781048"><span class="hs-identifier hs-var">_cName</span></a></span><span>
 </span><span id="line-151"></span><span>        </span><span class="hs-identifier">pure</span><span>
 </span><span id="line-152"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
@@ -967,7 +967,7 @@ Name
 -&gt; Definition origin a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.Definition</span></a></span><span>
 </span><span id="line-153"></span><span>              </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689781303"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689781046"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-154"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
@@ -983,7 +983,7 @@ forall (t :: * -&gt; *). (Foldable t, Functor t) =&gt; t PGCol -&gt; Text
 forall a. HashSet a -&gt; [a]
 </span><span class="hs-identifier hs-var">HS.toList</span></span><span> </span><span class="annot"><span class="annottext">HashSet (Column ('Postgres pgKind))
 HashSet PGCol
-</span><a href="#local-6989586621689781304"><span class="hs-identifier hs-var">cCols</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689781047"><span class="hs-identifier hs-var">cCols</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-155"></span><span>              </span><span class="annot"><span class="annottext">Maybe MetadataObjId
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
@@ -991,10 +991,10 @@ forall a. Maybe a
 </span><span id="line-157"></span><span>              </span><span class="annot"><span class="annottext">EnumValueInfo
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.EnumValueInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-158"></span><span>            </span><span class="annot"><span class="annottext">UniqueConstraint ('Postgres pgKind)
-</span><a href="#local-6989586621689781306"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><a href="#local-6989586621689781049"><span class="hs-identifier hs-var">c</span></a></span><span>
 </span><span id="line-159"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-160"></span><span>    </span><span id="local-6989586621689781297"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689781297"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
+</span><span id="line-160"></span><span>    </span><span id="local-6989586621689781040"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689781040"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
 forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
@@ -1002,13 +1002,13 @@ Name -&gt; m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; GQLNameIdentifier -&gt; Name
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#applyTypeNameCaseIdentifier"><span class="hs-identifier hs-var">applyTypeNameCaseIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621689781310"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">(GQLNameIdentifier -&gt; Name) -&gt; GQLNameIdentifier -&gt; Name
+</span><a href="#local-6989586621689781053"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">(GQLNameIdentifier -&gt; Name) -&gt; GQLNameIdentifier -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; GQLNameIdentifier
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#mkTableConstraintTypeName"><span class="hs-identifier hs-var">mkTableConstraintTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
-</span><a href="#local-6989586621689781309"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span>
-</span><span id="line-161"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781295"><span class="annot"><span class="annottext">enumDesc :: Description
-</span><a href="#local-6989586621689781295"><span class="hs-identifier hs-var hs-var">enumDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><a href="#local-6989586621689781052"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span>
+</span><span id="line-161"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689781038"><span class="annot"><span class="annottext">enumDesc :: Description
+</span><a href="#local-6989586621689781038"><span class="hs-identifier hs-var hs-var">enumDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1016,7 +1016,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
 QualifiedTable
-</span><a href="#local-6989586621689781311"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="#local-6989586621689781054"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">Parser 'Both n (UniqueConstraint ('Postgres pgKind))
 -&gt; SchemaT
      r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
@@ -1041,17 +1041,17 @@ Name
 -&gt; NonEmpty (Definition origin EnumValueInfo, a)
 -&gt; Parser origin 'Both m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689781297"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689781040"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621689781295"><span class="hs-identifier hs-var">enumDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NonEmpty
+</span><a href="#local-6989586621689781038"><span class="hs-identifier hs-var">enumDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NonEmpty
   (Definition MetadataObjId EnumValueInfo,
    UniqueConstraint ('Postgres pgKind))
-</span><a href="#local-6989586621689781308"><span class="hs-identifier hs-var">constraintEnumValues</span></a></span><span>
+</span><a href="#local-6989586621689781051"><span class="hs-identifier hs-var">constraintEnumValues</span></a></span><span>
 </span><span id="line-163"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-164"></span><span>    </span><span id="local-6989586621689781311"><span class="annot"><span class="annottext">tableName :: TableName ('Postgres pgKind)
-</span><a href="#local-6989586621689781311"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; TableName ('Postgres pgKind)
+</span><span id="line-164"></span><span>    </span><span id="local-6989586621689781054"><span class="annot"><span class="annottext">tableName :: TableName ('Postgres pgKind)
+</span><a href="#local-6989586621689781054"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind) -&gt; TableName ('Postgres pgKind)
 forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689781314"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689781057"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-165"></span></pre></body></html>
