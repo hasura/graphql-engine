@@ -26,11 +26,10 @@ export const UntrackedTables = (props: TrackTableProps) => {
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { trackSelectedTables } = useTrackSelectedTables();
+  const { trackSelectedTables } = useTrackSelectedTables(props.dataSourceName);
 
   const onClick = () => {
     trackSelectedTables(
-      props.dataSourceName,
       props.tables.filter(({ name }) => checkedIds.includes(name))
     );
     reset();

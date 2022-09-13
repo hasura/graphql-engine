@@ -7,6 +7,8 @@ export function convertToTreeData(
   key: string[],
   dataSourceName: string
 ): DataNode[] {
+  if (tables.length === 0) return [];
+
   if (tables[0].length === 1) {
     const leafNodes: DataNode[] = tables.map(table => {
       return {

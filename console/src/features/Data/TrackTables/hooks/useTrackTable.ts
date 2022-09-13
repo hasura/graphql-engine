@@ -3,26 +3,28 @@ import { useQueryClient } from 'react-query';
 
 import {
   allowedMetadataTypes,
-  useMetadata,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
+
 import { useFireNotification } from '@/new-components/Notifications';
 import produce from 'immer';
 
 import type { TrackableTable } from '../types';
+import { useMetadataSource } from './useMetadataSource';
 
-export const useTrackTable = () => {
+export const useTrackTable = (dataSourceName: string) => {
   const mutation = useMetadataMigration();
 
   const { fireNotification } = useFireNotification();
-  const { data: metadata } = useMetadata();
+
   const queryClient = useQueryClient();
+  const { data } = useMetadataSource(dataSourceName);
 
   const trackTable = useCallback(
-    (dataSourceName: string, table: TrackableTable) => {
-      if (!metadata) throw Error('useTrackTable: cannot export metadata');
+    async (table: TrackableTable) => {
+      if (!data?.metadata) throw Error('useTrackTable: cannot export metadata');
 
-      const driver = metadata.metadata.sources.find(
+      const driver = data.metadata.metadata.sources.find(
         source => source.name === dataSourceName
       )?.kind;
 
@@ -34,9 +36,9 @@ export const useTrackTable = () => {
             type: `${driver}_track_table` as allowedMetadataTypes,
             args: {
               source: dataSourceName,
-              table: table.table,
+              table: table.name,
             },
-            resource_version: metadata.resource_version,
+            resource_version: data.metadata.resource_version,
           },
         },
         {
@@ -68,10 +70,15 @@ export const useTrackTable = () => {
               type: 'error',
             });
           },
+          onSettled() {
+            queryClient.invalidateQueries([dataSourceName, 'tables']);
+            queryClient.invalidateQueries('treeview');
+            queryClient.invalidateQueries(['trackTables', 'metadataSource']);
+          },
         }
       );
     },
-    [metadata, mutation, queryClient, fireNotification]
+    [mutation, queryClient, fireNotification, data, dataSourceName]
   );
 
   return { trackTable };

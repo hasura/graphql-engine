@@ -9,6 +9,7 @@ import {
   SameTableObjectRelationship,
   Table,
   SupportedDrivers,
+  Source,
 } from '@/features/MetadataAPI';
 
 import { NetworkArgs } from './api';
@@ -97,6 +98,7 @@ export type GetTrackableTablesProps = {
 } & NetworkArgs;
 export type GetTableColumnsProps = {
   dataSourceName: string;
+  configuration?: Source['configuration'];
   table: Table;
 } & NetworkArgs;
 export type GetFKRelationshipProps = {

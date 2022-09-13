@@ -1,53 +1,46 @@
 import React from 'react';
 import { useQueryClient } from 'react-query';
-import {
-  allowedMetadataTypes,
-  useMetadata,
-  useMetadataMigration,
-} from '@/features/MetadataAPI';
+import { useMetadataMigration } from '@/features/MetadataAPI';
+
 import { useFireNotification } from '@/new-components/Notifications';
 
 import type { TrackableTable } from '../types';
+import { useMetadataSource } from './useMetadataSource';
 
-export const useTrackSelectedTables = () => {
+export const useTrackSelectedTables = (dataSourceName: string) => {
   const mutation = useMetadataMigration();
 
   const { fireNotification } = useFireNotification();
-  const { data: metadata } = useMetadata();
 
+  const { data } = useMetadataSource(dataSourceName);
   const queryClient = useQueryClient();
 
   const trackOrUntrackSelectedTables = React.useCallback(
-    (
-      track: 'track' | 'untrack',
-      dataSourceName: string,
-      tables: TrackableTable[]
-    ) => {
-      if (!metadata) throw Error('useTrackAllTables: cannot export metadata');
+    async (track: 'track' | 'untrack', tables: TrackableTable[]) => {
+      if (!data?.metadata)
+        throw Error('useTrackAllTables: cannot export metadata');
 
-      const driver = metadata.metadata.sources.find(
+      const driver = data.metadata.metadata.sources.find(
         source => source.name === dataSourceName
       )?.kind;
 
       const type =
-        track === 'track'
-          ? (`${driver}_track_table` as allowedMetadataTypes)
-          : (`${driver}_untrack_table` as allowedMetadataTypes);
+        track === 'track' ? `${driver}_track_table` : `${driver}_untrack_table`;
 
-      const args = tables.map((table: TrackableTable) => {
+      const args = tables.map((trackableTable: TrackableTable) => {
         return {
           type,
           args: {
             source: dataSourceName,
-            table: table.table,
+            table: trackableTable.table,
           },
         };
       });
 
       const query = {
-        type: 'bulk' as allowedMetadataTypes,
+        type: 'bulk' as const,
         source: 'default',
-        resource_version: metadata.resource_version,
+        resource_version: data.metadata.resource_version,
         args,
       };
 
@@ -58,6 +51,8 @@ export const useTrackSelectedTables = () => {
         {
           onSuccess: () => {
             queryClient.invalidateQueries([dataSourceName, 'tables']);
+            queryClient.invalidateQueries('treeview');
+            queryClient.invalidateQueries(['trackTables', 'metadataSource']);
 
             fireNotification({
               title: 'Success',
@@ -75,29 +70,23 @@ export const useTrackSelectedTables = () => {
         }
       );
     },
-    [metadata, mutation, queryClient, fireNotification]
+    [mutation, queryClient, fireNotification, data, dataSourceName]
   );
 
-  const trackSelectedTables = (
-    dataSourceName: string,
-    tables: TrackableTable[]
-  ) => {
+  const trackSelectedTables = (tables: TrackableTable[]) => {
     const filteredTables = tables.filter(
       ({ is_tracked }) => is_tracked === false
     );
 
-    trackOrUntrackSelectedTables('track', dataSourceName, filteredTables);
+    trackOrUntrackSelectedTables('track', filteredTables);
   };
 
-  const unTrackSelectedTables = (
-    dataSourceName: string,
-    tables: TrackableTable[]
-  ) => {
+  const unTrackSelectedTables = (tables: TrackableTable[]) => {
     const filteredTables = tables.filter(
       ({ is_tracked }) => is_tracked === true
     );
 
-    trackOrUntrackSelectedTables('untrack', dataSourceName, filteredTables);
+    trackOrUntrackSelectedTables('untrack', filteredTables);
   };
 
   return { trackSelectedTables, unTrackSelectedTables };

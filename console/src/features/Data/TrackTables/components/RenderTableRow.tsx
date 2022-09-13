@@ -24,16 +24,16 @@ export const RenderTableRow = React.memo(
     reset,
     onChange,
   }: RenderTableRowProps) => {
-    const { trackTable } = useTrackTable();
-    const { untrackTable } = useUntrackTable();
+    const { trackTable } = useTrackTable(dataSourceName);
+    const { untrackTable } = useUntrackTable(dataSourceName);
 
     const track = () => {
-      trackTable(dataSourceName, table);
+      trackTable(table);
       reset();
     };
 
     const untrack = () => {
-      untrackTable(dataSourceName, table);
+      untrackTable(table);
       reset();
     };
 
