@@ -152,6 +152,7 @@ runReplaceMetadata ::
   ( CacheRWM m,
     MetadataM m,
     MonadIO m,
+    MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
@@ -167,6 +168,7 @@ runReplaceMetadataV1 ::
     CacheRWM m,
     MetadataM m,
     MonadIO m,
+    MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
@@ -182,6 +184,7 @@ runReplaceMetadataV2 ::
     CacheRWM m,
     MetadataM m,
     MonadIO m,
+    MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
@@ -233,9 +236,20 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           mempty
   putMetadata metadata
 
-  -- Check for duplicate trigger names in the new source metadata
   let oldSources = (_metaSources oldMetadata)
   let newSources = (_metaSources metadata)
+
+  -- Clean up the sources that are not present in the new metadata
+  for_ (OMap.toList oldSources) $ \(oldSource, oldSourceBackendMetadata) -> do
+    -- If the source present in old metadata is not present in the new metadata,
+    -- clean that source.
+    onNothing (OMap.lookup oldSource newSources) $ do
+      AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata oldSourceBackendMetadata) \(_oldSourceMetadata :: SourceMetadata b) -> do
+        sourceInfo <- askSourceInfo @b oldSource
+        runPostDropSourceHook oldSource sourceInfo
+        pure (BackendSourceMetadata (AB.mkAnyBackend _oldSourceMetadata))
+
+  -- Check for duplicate trigger names in the new source metadata
   for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
     onJust (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
       dispatch newBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
