@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span class="hs-comment">--</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- NOTE(jkachmar): This type shouldn't _need_ ser/de instances, but they're</span><span>
 </span><span id="line-26"></span><span class="hs-comment">-- imposed by the 'Backend' class.</span><span>
-</span><span id="line-27"></span><span id="local-6989586621689725154"><span id="local-6989586621689725155"></span></span><span class="hs-keyword">data</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span>
+</span><span id="line-27"></span><span id="local-6989586621689737633"><span id="local-6989586621689737634"></span></span><span class="hs-keyword">data</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="name"><span class="annot"><span class="annottext">Table -&gt; Name
 </span><a href="Hasura.Backends.DataConnector.Schema.Table.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Table.html#Name"><span class="hs-identifier hs-type">Table.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="columns"><span class="annot"><span class="annottext">Table -&gt; [Column]
@@ -35,7 +35,7 @@
 </span><span id="line-32"></span><span>    </span><span id="description"><span class="annot"><span class="annottext">Table -&gt; Maybe Text
 </span><a href="Hasura.Backends.DataConnector.Schema.Table.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cTable"><span id="%24tTable"><span id="local-6989586621689725120"><span id="local-6989586621689725122"><span id="local-6989586621689725124"><span id="local-6989586621689725126"><span id="local-6989586621689725128"><span id="local-6989586621689725130"><span id="local-6989586621689725132"><span id="local-6989586621689725134"><span id="local-6989586621689725136"><span id="local-6989586621689725138"><span id="local-6989586621689725140"><span id="local-6989586621689725142"><span id="local-6989586621689725144"><span id="local-6989586621689725146"><span class="annot"><span class="annottext">Typeable Table
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cTable"><span id="%24tTable"><span id="local-6989586621689737599"><span id="local-6989586621689737601"><span id="local-6989586621689737603"><span id="local-6989586621689737605"><span id="local-6989586621689737607"><span id="local-6989586621689737609"><span id="local-6989586621689737611"><span id="local-6989586621689737613"><span id="local-6989586621689737615"><span id="local-6989586621689737617"><span id="local-6989586621689737619"><span id="local-6989586621689737621"><span id="local-6989586621689737623"><span id="local-6989586621689737625"><span class="annot"><span class="annottext">Typeable Table
 DataType
 Constr
 Typeable Table
@@ -183,7 +183,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Table -&gt; c Table
 $cp1Data :: Typeable Table
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689725113"><span id="local-6989586621689725115"><span class="annot"><span class="annottext">Table -&gt; Table -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689737592"><span id="local-6989586621689737594"><span class="annot"><span class="annottext">Table -&gt; Table -&gt; Bool
 (Table -&gt; Table -&gt; Bool) -&gt; (Table -&gt; Table -&gt; Bool) -&gt; Eq Table
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Table -&gt; Table -&gt; Bool
@@ -198,7 +198,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Table x -&gt; Table
 $cfrom :: forall x. Table -&gt; Rep Table x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689725094"><span id="local-6989586621689725096"><span id="local-6989586621689725098"><span id="local-6989586621689725100"><span id="local-6989586621689725102"><span id="local-6989586621689725104"><span id="local-6989586621689725106"><span class="annot"><span class="annottext">Eq Table
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689737573"><span id="local-6989586621689737575"><span id="local-6989586621689737577"><span id="local-6989586621689737579"><span id="local-6989586621689737581"><span id="local-6989586621689737583"><span id="local-6989586621689737585"><span class="annot"><span class="annottext">Eq Table
 Eq Table
 -&gt; (Table -&gt; Table -&gt; Ordering)
 -&gt; (Table -&gt; Table -&gt; Bool)
@@ -236,7 +236,7 @@ $c&lt; :: Table -&gt; Table -&gt; Bool
 compare :: Table -&gt; Table -&gt; Ordering
 $ccompare :: Table -&gt; Table -&gt; Ordering
 $cp1Ord :: Eq Table
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689725087"><span id="local-6989586621689725089"><span id="local-6989586621689725091"><span class="annot"><span class="annottext">Int -&gt; Table -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689737566"><span id="local-6989586621689737568"><span id="local-6989586621689737570"><span class="annot"><span class="annottext">Int -&gt; Table -&gt; ShowS
 [Table] -&gt; ShowS
 Table -&gt; String
 (Int -&gt; Table -&gt; ShowS)

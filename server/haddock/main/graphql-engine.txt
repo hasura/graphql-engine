@@ -22514,7 +22514,7 @@ requiredFieldParser :: (Functor n, Functor m) => (a -> b) -> m (FieldParser n a)
 optionalFieldParser :: (Functor n, Functor m) => (a -> b) -> m (Maybe (FieldParser n a)) -> m (Maybe (FieldParser n b))
 
 -- | Builds the type name for referenced enum tables.
-mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m, Has NamingCase r) => EnumReference b -> m Name
+mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m, Has NamingCase r) => TableName b -> Maybe Name -> m Name
 addEnumSuffix :: (MonadReader r m, Has MkTypename r) => GQLNameIdentifier -> Maybe Name -> NamingCase -> m Name
 peelWithOrigin :: MonadParse m => Parser 'Both m a -> Parser 'Both m (ValueWithOrigin a)
 instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.GraphQL.Schema.Common.SchemaT r m)
@@ -24856,6 +24856,8 @@ relayExtension :: BackendSchema b => Maybe (XRelay b)
 nodesAggExtension :: BackendSchema b => Maybe (XNodesAgg b)
 streamSubscriptionExtension :: BackendSchema b => Maybe (XStreamingSubscription b)
 columnParser :: (BackendSchema b, MonadBuildSchema b r m n) => ColumnType b -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+enumParser :: (BackendSchema b, MonadBuildSchema b r m n) => TableName b -> NonEmpty (EnumValue, EnumValueInfo) -> Maybe Name -> Nullability -> SchemaT r m (Parser 'Both n (ScalarValue b))
+possiblyNullable :: (BackendSchema b, MonadParse m) => ScalarType b -> Nullability -> Parser 'Both m (ScalarValue b) -> Parser 'Both m (ScalarValue b)
 
 -- | Parser for arguments on scalar fields in a selection set
 scalarSelectionArgumentsParser :: (BackendSchema b, MonadParse n) => ColumnType b -> InputFieldsParser n (Maybe (ScalarSelectionArguments b))
@@ -26062,9 +26064,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_ayQT5. Lens' (QueryParametersInfo b_ayQT5) (Seq (ColumnValue b_ayQT5))
-qpiReusableVariableValues :: forall b_ayQT5. Lens' (QueryParametersInfo b_ayQT5) (HashMap Name (ColumnValue b_ayQT5))
-qpiReferencedSessionVariables :: forall b_ayQT5. Lens' (QueryParametersInfo b_ayQT5) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ayRri. Lens' (QueryParametersInfo b_ayRri) (Seq (ColumnValue b_ayRri))
+qpiReusableVariableValues :: forall b_ayRri. Lens' (QueryParametersInfo b_ayRri) (HashMap Name (ColumnValue b_ayRri))
+qpiReferencedSessionVariables :: forall b_ayRri. Lens' (QueryParametersInfo b_ayRri) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -26239,7 +26241,9 @@ updateTableMany :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m
 --   (set<i>inc</i>etc).
 mkMultiRowUpdateParser :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> UpdPermInfo ('Postgres pgKind) -> SchemaT r m (InputFieldsParser n (BackendUpdate pgKind (UnpreparedValue ('Postgres pgKind))))
 buildFunctionRelayQueryFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> NESeq (ColumnInfo ('Postgres pgKind)) -> SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-columnParser :: MonadBuildSchema ('Postgres pgKind) r m n => ColumnType ('Postgres pgKind) -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue ('Postgres pgKind))))
+columnParser :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => ColumnType ('Postgres pgKind) -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue ('Postgres pgKind))))
+enumParser :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => TableName ('Postgres pgKind) -> NonEmpty (EnumValue, EnumValueInfo) -> Maybe Name -> Nullability -> SchemaT r m (Parser 'Both n (ScalarValue ('Postgres pgKind)))
+possiblyNullable :: (MonadParse m, 'Input <: k) => ScalarType ('Postgres pgKind) -> Nullability -> Parser k m (ScalarValue ('Postgres pgKind)) -> Parser k m (ScalarValue ('Postgres pgKind))
 pgScalarSelectionArgumentsParser :: MonadParse n => ColumnType ('Postgres pgKind) -> InputFieldsParser n (Maybe (ScalarSelectionArguments ('Postgres pgKind)))
 orderByOperatorsHasuraCase :: (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
 orderByOperatorsGraphqlCase :: (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
@@ -26450,6 +26454,8 @@ module Hasura.Backends.MySQL.Instances.Schema
 mysqlTableArgs :: forall r m n. MonadBuildSchema 'MySQL r m n => SourceInfo 'MySQL -> TableInfo 'MySQL -> SchemaT r m (InputFieldsParser n (SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
 bsParser :: MonadParse m => Parser 'Both m ByteString
 columnParser' :: MonadBuildSchema 'MySQL r m n => ColumnType 'MySQL -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
+enumParser' :: MonadBuildSchema 'MySQL r m n => TableName 'MySQL -> NonEmpty (EnumValue, EnumValueInfo) -> Maybe Name -> Nullability -> SchemaT r m (Parser 'Both n (ScalarValue 'MySQL))
+possiblyNullable' :: MonadParse m => ScalarType 'MySQL -> Nullability -> Parser 'Both m (ScalarValue 'MySQL) -> Parser 'Both m (ScalarValue 'MySQL)
 orderByOperators' :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
@@ -26467,6 +26473,8 @@ backendInsertParser :: forall m r n. MonadBuildSchema 'MSSQL r m n => SourceInfo
 msBuildTableUpdateMutationFields :: MonadBuildSchema 'MSSQL r m n => MkRootFieldName -> Scenario -> SourceInfo 'MSSQL -> TableName 'MSSQL -> TableInfo 'MSSQL -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msTableArgs :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceInfo 'MSSQL -> TableInfo 'MSSQL -> SchemaT r m (InputFieldsParser n (SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
 msColumnParser :: MonadBuildSchema 'MSSQL r m n => ColumnType 'MSSQL -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
+msEnumParser :: MonadBuildSchema 'MSSQL r m n => TableName 'MSSQL -> NonEmpty (EnumValue, EnumValueInfo) -> Maybe Name -> Nullability -> SchemaT r m (Parser 'Both n (ScalarValue 'MSSQL))
+msPossiblyNullable :: MonadParse m => ScalarType 'MSSQL -> Nullability -> Parser 'Both m (ScalarValue 'MSSQL) -> Parser 'Both m (ScalarValue 'MSSQL)
 msOrderByOperators :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)))
 msComparisonExps :: forall m n r. MonadBuildSchema 'MSSQL r m n => ColumnType 'MSSQL -> SchemaT r m (Parser 'Input n [ComparisonExp 'MSSQL])
 msCountTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column 'MSSQL)) -> InputFieldsParser n (CountDistinct -> CountType 'MSSQL)
@@ -26522,6 +26530,8 @@ instance GHC.Base.Monoid Hasura.Backends.DataConnector.Plan.FieldsAndAggregates
 module Hasura.Backends.DataConnector.Adapter.Schema
 experimentalBuildTableRelayQueryFields :: MonadBuildSchema 'DataConnector r m n => MkRootFieldName -> SourceInfo 'DataConnector -> TableName 'DataConnector -> TableInfo 'DataConnector -> GQLNameIdentifier -> NESeq (ColumnInfo 'DataConnector) -> SchemaT r m [FieldParser n a]
 columnParser' :: (MonadParse n, MonadError QErr m) => ColumnType 'DataConnector -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
+enumParser' :: MonadError QErr m => TableName 'DataConnector -> NonEmpty (EnumValue, EnumValueInfo) -> Maybe Name -> Nullability -> SchemaT r m (Parser 'Both n (ScalarValue 'DataConnector))
+possiblyNullable' :: MonadParse m => ScalarType 'DataConnector -> Nullability -> Parser 'Both m Value -> Parser 'Both m Value
 orderByOperators' :: SourceInfo 'DataConnector -> NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'DataConnector, NullsOrderType 'DataConnector)))
 comparisonExps' :: forall m n r. MonadBuildSchema 'DataConnector r m n => SourceInfo 'DataConnector -> ColumnType 'DataConnector -> SchemaT r m (Parser 'Input n [ComparisonExp 'DataConnector])
 tableArgs' :: forall r m n. MonadBuildSchema 'DataConnector r m n => SourceInfo 'DataConnector -> TableInfo 'DataConnector -> SchemaT r m (InputFieldsParser n (SelectArgsG 'DataConnector (UnpreparedValue 'DataConnector)))
@@ -26530,7 +26540,9 @@ instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.DataCon
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.DataConnector
 
 module Hasura.Backends.BigQuery.Instances.Schema
-bqColumnParser :: (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) => ColumnType 'BigQuery -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery)))
+bqColumnParser :: MonadBuildSchema 'BigQuery r m n => ColumnType 'BigQuery -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery)))
+bqEnumParser :: MonadBuildSchema 'BigQuery r m n => TableName 'BigQuery -> NonEmpty (EnumValue, EnumValueInfo) -> Maybe Name -> Nullability -> SchemaT r m (Parser 'Both n (ScalarValue 'BigQuery))
+bqPossiblyNullable :: MonadParse m => ScalarType 'BigQuery -> Nullability -> Parser 'Both m (ScalarValue 'BigQuery) -> Parser 'Both m (ScalarValue 'BigQuery)
 bqOrderByOperators :: NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)))
 bqComparisonExps :: forall m n r. MonadBuildSchema 'BigQuery r m n => ColumnType 'BigQuery -> SchemaT r m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqCountTypeInput :: MonadParse n => Maybe (Parser 'Both n (Column 'BigQuery)) -> InputFieldsParser n (CountDistinct -> CountType 'BigQuery)
