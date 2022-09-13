@@ -157,11 +157,11 @@ echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 # something you normally use under nix.
 if command -v pyenv >/dev/null; then
   # Use the latest version of Python installed with `pyenv`.
-  # Ensure that it is at least v3.6, so that format strings are supported.
-  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 { print $1 }' | tail -n1)"
+  # Ensure that it is at least v3.9, so that generic types are fully supported.
+  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.9 { print $1 }' | tail -n1)"
   if [[ -z "$v" ]]; then
     # shellcheck disable=SC2016
-    echo_error 'Please `pyenv install` a version of python >= 3.6 so we can use it'
+    echo_error 'Please `pyenv install` a version of python >= 3.9 so we can use it'
     exit 2
   fi
   echo_pretty "Pyenv found. Using Python version: $v"
