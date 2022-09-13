@@ -68,6 +68,7 @@ const LeftSidebar: React.FC<Props> = props => {
       heading={`${heading} (${count})`}
       addLink={addLink}
       addLabel="Create"
+      addTrackId={`events-tab-button-add-${service}-event-sidebar`}
       addTestString={`${service}-sidebar-add`}
       childListTestString={`${service}-links`}
     >

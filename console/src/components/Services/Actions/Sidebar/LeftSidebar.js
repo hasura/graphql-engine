@@ -95,6 +95,7 @@ const LeftSidebar = ({
       heading={`Actions (${actionsList.length})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Create'}
+      addTrackId="action-tab-button-add-actions-sidebar"
       addTestString={'actions-sidebar-add-table'}
       childListTestString={'actions-table-links'}
     >
