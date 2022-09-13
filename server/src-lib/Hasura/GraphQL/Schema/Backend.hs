@@ -47,6 +47,7 @@ import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column hiding (EnumValueInfo)
+import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
@@ -210,6 +211,19 @@ class
     ColumnType b ->
     G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
     SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+  enumParser ::
+    MonadBuildSchema b r m n =>
+    TableName b ->
+    NonEmpty (EnumValue, Column.EnumValueInfo) ->
+    Maybe G.Name ->
+    G.Nullability ->
+    SchemaT r m (Parser 'Both n (ScalarValue b))
+  possiblyNullable ::
+    MonadParse m =>
+    ScalarType b ->
+    G.Nullability ->
+    Parser 'Both m (ScalarValue b) ->
+    Parser 'Both m (ScalarValue b)
 
   -- | Parser for arguments on scalar fields in a selection set
   scalarSelectionArgumentsParser ::

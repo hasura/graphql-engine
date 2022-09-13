@@ -8,6 +8,7 @@ module Hasura.Backends.DataConnector.Adapter.Schema () where
 import Control.Lens ((^.))
 import Data.Aeson qualified as J
 import Data.Has
+import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
@@ -66,6 +67,8 @@ instance BackendSchema 'DataConnector where
 
   -- individual components
   columnParser = columnParser'
+  enumParser = enumParser'
+  possiblyNullable = possiblyNullable'
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
@@ -100,27 +103,41 @@ columnParser' ::
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
   GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
-columnParser' columnType (GQL.Nullability isNullable) = do
+columnParser' columnType nullability = do
   parser <- case columnType of
-    RQL.ColumnScalar IR.S.T.String -> pure (J.String <$> P.string)
-    RQL.ColumnScalar IR.S.T.Number -> pure (J.Number <$> P.scientific)
-    RQL.ColumnScalar IR.S.T.Bool -> pure (J.Bool <$> P.boolean)
-    RQL.ColumnScalar (IR.S.T.Custom name) -> do
+    RQL.ColumnScalar scalarType@IR.S.T.String -> pure . possiblyNullable' scalarType nullability $ J.String <$> P.string
+    RQL.ColumnScalar scalarType@IR.S.T.Number -> pure . possiblyNullable' scalarType nullability $ J.Number <$> P.scientific
+    RQL.ColumnScalar scalarType@IR.S.T.Bool -> pure . possiblyNullable' scalarType nullability $ J.Bool <$> P.boolean
+    RQL.ColumnScalar scalarType@(IR.S.T.Custom name) -> do
       gqlName <-
         GQL.mkName name
           `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
-      pure $ P.jsonScalar gqlName (Just "A custom scalar type")
-    RQL.ColumnEnumReference {} ->
-      throw400 NotSupported "Enum column type is unsupported by the Data Connector backend"
-  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable $ parser
-  where
-    possiblyNullable ::
-      MonadParse m =>
-      P.Parser 'P.Both m J.Value ->
-      P.Parser 'P.Both m J.Value
-    possiblyNullable
-      | isNullable = fmap (fromMaybe J.Null) . P.nullable
-      | otherwise = id
+      pure . possiblyNullable' scalarType nullability $ P.jsonScalar gqlName (Just "A custom scalar type")
+    RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
+      case nonEmpty (Map.toList enumValues) of
+        Just enumValuesList -> enumParser' tableName enumValuesList customTableName nullability
+        Nothing -> throw400 ValidationFailed "empty enum values"
+  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) $ parser
+
+enumParser' ::
+  MonadError QErr m =>
+  RQL.TableName 'DataConnector ->
+  NonEmpty (RQL.EnumValue, RQL.EnumValueInfo) ->
+  Maybe GQL.Name ->
+  GQL.Nullability ->
+  GS.C.SchemaT r m (P.Parser 'P.Both n (RQL.ScalarValue 'DataConnector))
+enumParser' _tableName _enumValues _customTableName _nullability =
+  throw400 NotSupported "This column type is unsupported by the Data Connector backend"
+
+possiblyNullable' ::
+  MonadParse m =>
+  RQL.ScalarType 'DataConnector ->
+  GQL.Nullability ->
+  P.Parser 'P.Both m J.Value ->
+  P.Parser 'P.Both m J.Value
+possiblyNullable' _scalarType (GQL.Nullability isNullable)
+  | isNullable = fmap (fromMaybe J.Null) . P.nullable
+  | otherwise = id
 
 orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector)))
 orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
