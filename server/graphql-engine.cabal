@@ -1283,6 +1283,7 @@ test-suite tests-hspec
     Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
     Test.EventTrigger.PG.EventTriggersUniqueNameSpec
     Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
     Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec

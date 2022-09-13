@@ -617,6 +617,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
 runMetadataQueryV2M ::
   ( MonadIO m,
     CacheRWM m,
+    MonadBaseControl IO m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
