@@ -1,5 +1,0 @@
-UPDATE hdb_catalog.event_log
-SET locked = CURRENT_TIMESTAMP
-WHERE id = 
-    ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id)) 
-    AND locked IS NULL

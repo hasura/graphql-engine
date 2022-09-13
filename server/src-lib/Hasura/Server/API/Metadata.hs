@@ -130,6 +130,8 @@ data RQLMetadataV1
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
   | RMCleanupEventTriggerLog !TriggerLogCleanupConfig
+  | RMStartEventTriggerCleanup !TriggerLogCleanupToggleConfig
+  | RMPauseEventTriggerCleanup !TriggerLogCleanupToggleConfig
   | -- Remote schemas
     RMAddRemoteSchema !AddRemoteSchemaQuery
   | RMUpdateRemoteSchema !AddRemoteSchemaQuery
@@ -228,6 +230,8 @@ instance FromJSON RQLMetadataV1 where
       "update_remote_schema_remote_relationship" -> RMUpdateRemoteSchemaRemoteRelationship <$> args
       "delete_remote_schema_remote_relationship" -> RMDeleteRemoteSchemaRemoteRelationship <$> args
       "cleanup_event_trigger_logs" -> RMCleanupEventTriggerLog <$> args
+      "start_event_trigger_cleanups" -> RMStartEventTriggerCleanup <$> args
+      "pause_event_trigger_cleanups" -> RMPauseEventTriggerCleanup <$> args
       "create_cron_trigger" -> RMCreateCronTrigger <$> args
       "delete_cron_trigger" -> RMDeleteCronTrigger <$> args
       "create_scheduled_event" -> RMCreateScheduledEvent <$> args
@@ -526,6 +530,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRedeliverEvent q -> dispatchEventTrigger runRedeliverEvent q
   RMInvokeEventTrigger q -> dispatchEventTrigger runInvokeEventTrigger q
   RMCleanupEventTriggerLog q -> runCleanupEventTriggerLog q
+  RMStartEventTriggerCleanup q -> runEventTriggerStartCleanup q
+  RMPauseEventTriggerCleanup q -> runEventTriggerPauseCleanup q
   RMAddRemoteSchema q -> runAddRemoteSchema env q
   RMUpdateRemoteSchema q -> runUpdateRemoteSchema env q
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q

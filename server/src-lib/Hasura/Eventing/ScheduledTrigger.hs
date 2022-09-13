@@ -112,7 +112,6 @@ module Hasura.Eventing.ScheduledTrigger
   )
 where
 
-import Control.Arrow.Extended (dup)
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
 import Control.Lens (view)
@@ -121,7 +120,6 @@ import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.Int (Int64)
-import Data.List (unfoldr)
 import Data.List.NonEmpty qualified as NE
 import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
@@ -151,7 +149,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
-import System.Cron
 import Text.Builder qualified as TB
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
@@ -214,12 +211,6 @@ generateCronEventsFrom startTime CronTriggerInfo {..} =
   map (CronEventSeed ctiName) $
     -- generate next 100 events; see getDeprivedCronTriggerStatsTx:
     generateScheduleTimes startTime 100 ctiSchedule
-
--- | Generates next @n events starting @from according to 'CronSchedule'
-generateScheduleTimes :: UTCTime -> Int -> CronSchedule -> [UTCTime]
-generateScheduleTimes from n cron = take n $ go from
-  where
-    go = unfoldr (fmap dup . nextMatch cron)
 
 processCronEvents ::
   ( MonadIO m,
