@@ -30082,9 +30082,9 @@ runClearMetadata :: forall m r. (QErrM m, MonadIO m, CacheRWM m, MetadataM m, Mo
 
 -- | Replace the 'current metadata' with the 'new metadata' The 'new
 --   metadata' might come via the 'Import Metadata' in console
-runReplaceMetadata :: (CacheRWM m, MetadataM m, MonadIO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => ReplaceMetadata -> m EncJSON
-runReplaceMetadataV1 :: (QErrM m, CacheRWM m, MetadataM m, MonadIO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => ReplaceMetadataV1 -> m EncJSON
-runReplaceMetadataV2 :: forall m r. (QErrM m, CacheRWM m, MetadataM m, MonadIO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => ReplaceMetadataV2 -> m EncJSON
+runReplaceMetadata :: (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => ReplaceMetadata -> m EncJSON
+runReplaceMetadataV1 :: (QErrM m, CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => ReplaceMetadataV1 -> m EncJSON
+runReplaceMetadataV2 :: forall m r. (QErrM m, CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => ReplaceMetadataV2 -> m EncJSON
 
 -- | Only includes the cron triggers with <tt>included_in_metadata</tt> set
 --   to <a>True</a>
@@ -30412,7 +30412,7 @@ runMetadataQuery :: (MonadIO m, MonadBaseControl IO m, MonadTrace m, MonadMetada
 queryModifiesMetadata :: RQLMetadataRequest -> Bool
 runMetadataQueryM :: (MonadIO m, MonadBaseControl IO m, CacheRWM m, MonadTrace m, UserInfoM m, HasHttpManagerM m, MetadataM m, MonadMetadataStorageQueryAPI m, HasServerConfigCtx m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => Environment -> MetadataResourceVersion -> RQLMetadataRequest -> m EncJSON
 runMetadataQueryV1M :: forall m r. (MonadIO m, MonadBaseControl IO m, CacheRWM m, MonadTrace m, UserInfoM m, HasHttpManagerM m, MetadataM m, MonadMetadataStorageQueryAPI m, HasServerConfigCtx m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => Environment -> MetadataResourceVersion -> RQLMetadataV1 -> m EncJSON
-runMetadataQueryV2M :: (MonadIO m, CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => MetadataResourceVersion -> RQLMetadataV2 -> m EncJSON
+runMetadataQueryV2M :: (MonadIO m, CacheRWM m, MonadBaseControl IO m, MetadataM m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r) => MetadataResourceVersion -> RQLMetadataV2 -> m EncJSON
 instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV2
 instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV1
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadata
