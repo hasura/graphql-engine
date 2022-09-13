@@ -2,7 +2,7 @@ This note is in [Hasura.Server.Logging](https://github.com/hasura/graphql-engine
 It is referenced at:
   - line 793 of [Hasura.GraphQL.Transport.WebSocket](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Transport/WebSocket.hs#L793)
   - line 244 of [Hasura.Server.Logging](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Logging.hs#L244)
-  - line 443 of [Hasura.Server.Logging](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Logging.hs#L443)
+  - line 445 of [Hasura.Server.Logging](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Logging.hs#L445)
 
 # Disable query printing when query-log is disabled
 

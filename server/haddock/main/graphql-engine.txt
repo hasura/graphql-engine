@@ -29286,10 +29286,13 @@ HttpInfoLog :: !Status -> !Text -> !IpAddress -> !Text -> !HttpVersion -> !Maybe
 
 -- | Information about a GraphQL/Hasura metadata operation over HTTP
 data OperationLog
-OperationLog :: !RequestId -> !Maybe SessionVariables -> !Maybe Int64 -> !Maybe Seconds -> !Maybe Seconds -> !Maybe Value -> !Maybe Text -> !Maybe QErr -> !RequestMode -> OperationLog
+OperationLog :: !RequestId -> !Maybe SessionVariables -> !Maybe Int64 -> !Int64 -> !Maybe Seconds -> !Maybe Seconds -> !Maybe Value -> !Maybe Text -> !Maybe QErr -> !RequestMode -> OperationLog
 [olRequestId] :: OperationLog -> !RequestId
 [olUserVars] :: OperationLog -> !Maybe SessionVariables
 [olResponseSize] :: OperationLog -> !Maybe Int64
+
+-- | Response size before compression
+[olUncompressedResponseSize] :: OperationLog -> !Int64
 
 -- | Request IO wait time, i.e. time spent reading the full request from
 --   the socket.
@@ -29330,7 +29333,7 @@ HttpLogContext :: !HttpInfoLog -> !OperationLog -> !RequestId -> !Maybe (NonEmpt
 
 -- | Check if the <tt>query</tt> field should be included in the http-log
 isQueryIncludedInLogs :: Text -> LoggingSettings -> Bool
-mkHttpAccessLogContext :: Maybe UserInfo -> LoggingSettings -> RequestId -> Request -> (ByteString, Maybe Value) -> ByteString -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> RequestMode -> Maybe (GQLBatchedReqs GQLBatchQueryOperationLog) -> HttpLogContext
+mkHttpAccessLogContext :: Maybe UserInfo -> LoggingSettings -> RequestId -> Request -> (ByteString, Maybe Value) -> Int64 -> ByteString -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> RequestMode -> Maybe (GQLBatchedReqs GQLBatchQueryOperationLog) -> HttpLogContext
 mkHttpErrorLogContext :: Maybe UserInfo -> LoggingSettings -> RequestId -> Request -> (ByteString, Maybe Value) -> QErr -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> HttpLogContext
 data HttpLogLine
 HttpLogLine :: !LogLevel -> !HttpLogContext -> HttpLogLine
