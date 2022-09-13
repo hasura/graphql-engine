@@ -1,7 +1,7 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
 import { DataNode } from 'antd/lib/tree';
-import { SupportedDrivers, Table } from '@/features/MetadataAPI';
+import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { postgres } from './postgres';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
@@ -42,6 +42,14 @@ export const nativeDrivers = [
 ];
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
+
+export const getDriver = (dataSource: Source) => {
+  if (nativeDrivers.includes(dataSource.kind)) {
+    return dataSource.kind;
+  }
+
+  return 'gdc';
+};
 
 export type Database = {
   introspection?: {
@@ -181,12 +189,12 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       );
     }
 
+    const kind = getDriver(dataSource);
     /* 
       NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
-    const getTrackableTables =
-      drivers[dataSource.kind].introspection?.getTrackableTables;
+    const getTrackableTables = drivers[kind].introspection?.getTrackableTables;
     if (getTrackableTables)
       return getTrackableTables({
         dataSourceName: dataSource.name,
@@ -226,7 +234,9 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   getTableColumns: async ({
     dataSourceName,
     table,
+    configuration,
   }: {
+    configuration?: any;
     dataSourceName: string;
     table: Table;
   }) => {
@@ -238,6 +248,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     const result = await introspection.getTableColumns({
       dataSourceName,
+      configuration,
       table,
       httpClient,
     });

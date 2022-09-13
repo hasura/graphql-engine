@@ -1,3 +1,4 @@
+import { useQueryClient } from 'react-query';
 import { push } from 'react-router-redux';
 import {
   allowedMetadataTypes,
@@ -33,6 +34,7 @@ export const useSubmit = () => {
   const drivers = useAvailableDrivers();
   const { fireNotification } = useFireNotification();
   const redirect = useRedirect();
+  const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({
     onError: (error: APIError) => {
@@ -43,6 +45,8 @@ export const useSubmit = () => {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries('treeview');
+
       fireNotification({
         type: 'success',
         title: 'Success',

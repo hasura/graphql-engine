@@ -17,6 +17,13 @@ export const exportMetadata = async ({
   ).data;
 };
 
+export const runMetadataQuery = async <ResponseType>({
+  httpClient,
+  body,
+}: { body: Record<string, any> } & NetworkArgs): Promise<ResponseType> => {
+  return (await httpClient.post('/v1/metadata', body)).data;
+};
+
 type RunSqlArgs = {
   source: Pick<Source, 'kind' | 'name'>;
   sql: string;

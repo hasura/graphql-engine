@@ -10,8 +10,8 @@ export type UseTablesProps = {
   dataSourceName: string;
 };
 
-const getTableName = (table: Table, databaseHierarcy: string[]): string => {
-  if (databaseHierarcy.length === 0) {
+const getTableName = (table: Table, databaseHierarchy: string[]): string => {
+  if (databaseHierarchy.length === 0) {
     if (!Array.isArray(table)) return '';
 
     const result = table.reduce<string[]>((acc, item) => {
@@ -32,7 +32,7 @@ const getTableName = (table: Table, databaseHierarcy: string[]): string => {
       return acc;
     }, {});
 
-    const tableName = databaseHierarcy
+    const tableName = databaseHierarchy
       .map(key => {
         return flatJsonTableDefinition[key];
       })
@@ -46,12 +46,12 @@ const getTableName = (table: Table, databaseHierarcy: string[]): string => {
 const getTrackableTables = (
   trackedTables: MetadataTable[],
   introspectedTables: IntrospectedTable[],
-  databaseHierarcy: string[]
+  databaseHierarchy: string[]
 ) =>
   introspectedTables.map(introspectedTable => {
     const trackedTable = trackedTables.find(
       _trackedTable =>
-        getTableName(_trackedTable.table, databaseHierarcy) ===
+        getTableName(_trackedTable.table, databaseHierarchy) ===
         introspectedTable.name
     );
 
@@ -102,14 +102,14 @@ export const useTables = ({ dataSourceName }: UseTablesProps) => {
         );
 
       const trackedTables = currentMetadataSource.tables;
-      const databaseHierarcy = await DataSource(
+      const databaseHierarchy = await DataSource(
         httpClient
       ).getDatabaseHierarchy({ dataSourceName });
 
       const trackableTables = getTrackableTables(
         trackedTables,
         introspectedTables,
-        databaseHierarcy
+        databaseHierarchy
       );
       return trackableTables;
     },
