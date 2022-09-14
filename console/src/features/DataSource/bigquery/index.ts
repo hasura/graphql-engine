@@ -12,7 +12,7 @@ export const bigquery: Database = {
     getDriverInfo: async () => ({
       name: 'bigquery',
       displayName: 'Big Query',
-      release: 'Beta',
+      release: 'GA',
     }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
