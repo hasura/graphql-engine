@@ -37,9 +37,12 @@ class
     Eq (AggregationPredicates b (PartialSQLExp b)),
     Eq (BooleanOperators b (PartialSQLExp b)),
     Eq (FunctionArgumentExp b (PartialSQLExp b)),
+    Ord (BackendInvalidationKeys b),
+    Inc.Cacheable (BackendInvalidationKeys b),
     Hashable (AggregationPredicates b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
-    Hashable (FunctionArgumentExp b (PartialSQLExp b))
+    Hashable (FunctionArgumentExp b (PartialSQLExp b)),
+    Monoid (BackendInvalidationKeys b)
   ) =>
   BackendMetadata (b :: BackendType)
   where
@@ -62,6 +65,9 @@ class
     [RawColumnInfo b] ->
     m (Either QErr EnumValues)
 
+  type BackendInvalidationKeys b
+  type BackendInvalidationKeys b = ()
+
   resolveBackendInfo ::
     ( ArrowChoice arr,
       Inc.ArrowCache m arr,
@@ -71,13 +77,13 @@ class
       HasHttpManagerM m
     ) =>
     Logger Hasura ->
-    BackendConfig b `arr` BackendInfo b
+    (Inc.Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
   default resolveBackendInfo ::
     ( Arrow arr,
       BackendInfo b ~ ()
     ) =>
     Logger Hasura ->
-    BackendConfig b `arr` BackendInfo b
+    (Inc.Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
   resolveBackendInfo = const $ arr $ const ()
 
   -- | Function that resolves the connection related source configuration, and

@@ -424,10 +424,13 @@ runExportMetadataV2 currentResourceVersion ExportMetadata {} = do
         ]
 
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecreateEventTriggers) = do
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecreateEventTriggers reloadDataConnectors) = do
   metadata <- getMetadata
   let allSources = HS.fromList $ OMap.keys $ _metaSources metadata
       allRemoteSchemas = HS.fromList $ OMap.keys $ _metaRemoteSchemas metadata
+      allDataConnectors =
+        maybe mempty (HS.fromList . OMap.keys . unBackendConfigWrapper) $
+          BackendMap.lookup @'DataConnector $ _metaBackendConfigs metadata
       checkRemoteSchema name =
         unless (HS.member name allRemoteSchemas) $
           throw400 NotExists $
@@ -436,6 +439,10 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
         unless (HS.member name allSources) $
           throw400 NotExists $
             "Source with name " <> name <<> " not found in metadata"
+      checkDataConnector name =
+        unless (HS.member name allDataConnectors) $
+          throw400 NotExists $
+            "Data connector with name " <> name <<> " not found in metadata"
 
   remoteSchemaInvalidations <- case reloadRemoteSchemas of
     RSReloadAll -> pure allRemoteSchemas
@@ -446,12 +453,16 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
   recreateEventTriggersSources <- case reloadRecreateEventTriggers of
     RSReloadAll -> pure allSources
     RSReloadList l -> mapM_ checkSource l *> pure l
+  dataConnectorInvalidations <- case reloadDataConnectors of
+    RSReloadAll -> pure allDataConnectors
+    RSReloadList l -> mapM_ checkDataConnector l *> pure l
 
   let cacheInvalidations =
         CacheInvalidations
           { ciMetadata = True,
             ciRemoteSchemas = remoteSchemaInvalidations,
-            ciSources = pgSourcesInvalidations
+            ciSources = pgSourcesInvalidations,
+            ciDataConnectors = dataConnectorInvalidations
           }
 
   buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata

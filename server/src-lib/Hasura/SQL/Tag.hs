@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.SQL.Tag
   ( BackendTag (..),
     HasTag (..),
@@ -5,6 +7,7 @@ module Hasura.SQL.Tag
   )
 where
 
+import Data.GADT.Compare.TH
 import Hasura.SQL.Backend
 
 -- | A singleton-like GADT that associates a tag to each backend.
@@ -16,6 +19,11 @@ data BackendTag (b :: BackendType) where
   BigQueryTag :: BackendTag 'BigQuery
   MySQLTag :: BackendTag 'MySQL
   DataConnectorTag :: BackendTag 'DataConnector
+
+-- Derive GEq and GCompare instances for BackendTag.
+-- These are used to write a Select instance for BackendMap.
+$(deriveGEq ''BackendTag)
+$(deriveGCompare ''BackendTag)
 
 -- | This class describes how to get a tag for a given type.
 -- We use it in AnyBackend: `case backendTag @b of`...

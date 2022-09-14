@@ -152,6 +152,7 @@ common lib-depends
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
+                     , dependent-sum-template
                      , either
                      , exceptions
                      , fast-logger

@@ -11,6 +11,7 @@ module Hasura.Incremental.Internal.Dependency
     recordAccess,
     selectD,
     selectKeyD,
+    selectMaybeD,
   )
 where
 
@@ -77,6 +78,9 @@ selectD k (Dependency dk a) = Dependency (DependencyChild k dk) (select k a)
 -- | Selects a single key from a dependency containing a map-like data structure.
 selectKeyD :: (Select a, Selector a ~ ConstS k v) => k -> Dependency a -> Dependency v
 selectKeyD = selectD . ConstS
+
+selectMaybeD :: Monoid a => (Dependency (Maybe a)) -> Dependency a
+selectMaybeD = selectKeyD ()
 
 -- | Tracks whether a 'Dependency' is a “root” dependency created by 'newDependency' or a “child”
 -- dependency created from an existing dependency using 'selectD'.
