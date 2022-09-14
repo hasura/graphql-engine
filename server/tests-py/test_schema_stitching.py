@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 
-from ruamel.yaml import YAML
 import graphql
+import json
 import requests
+from ruamel.yaml import YAML
+import pytest
 import time
 
-import pytest
-
-yaml=YAML(typ='safe', pure=True)
-
+import graphql_server
 from validate import check_query_f, check_query
+
+pytestmark = [
+    pytest.mark.usefixtures('gql_server')
+]
+
+yaml = YAML(typ='safe', pure=True)
 
 def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, customization=None):
     return {
@@ -374,6 +379,8 @@ class TestAddRemoteSchemaTbls:
         tests if the remote schema returns success or not. checking of header
         duplicate logic is in the remote schema server
         """
+        graphql_server.set_hge_urls([])
+
         conf_hdrs = [{'name': 'x-hasura-test', 'value': 'abcd'}]
         add_remote = mk_add_remote_q('header-graphql',
                                      'http://localhost:5000/header-graphql',
@@ -395,8 +402,8 @@ class TestAddRemoteSchemaTbls:
         print(resp.status_code, resp.json())
         assert resp.status_code == 200
         res = resp.json()
-        assert 'data' in res
-        assert res['data']['wassup'] == 'Hello world'
+        assert 'data' in res and res['data'], f'Response: {json.dumps(res)}'
+        assert res['data']['wassup'] == 'Hello world', f'Response: {json.dumps(res)}'
 
         hge_ctx.v1q({'type': 'remove_remote_schema', 'args': {'name': 'header-graphql'}})
 
@@ -665,7 +672,7 @@ class TestRemoteSchemaReload:
 
     def test_inconsistent_remote_schema_reload_metadata(self, gql_server, hge_ctx):
         # Add remote schema
-        hge_ctx.v1q(mk_add_remote_q('simple 1', 'http://127.0.0.1:5991/hello-graphql'))
+        hge_ctx.v1q(mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql'))
         # stop remote graphql server
         gql_server.stop_server()
         # Reload metadata with remote schemas
@@ -804,7 +811,7 @@ class TestValidateRemoteSchemaNamespaceQuery:
 
     def test_remote_schema_namespace_validation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/namespace_validation.yaml')
-    
+
     def test_multiple_remote_schema_with_namespace(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/multiple_remote_schema_with_namespace.yaml')
 

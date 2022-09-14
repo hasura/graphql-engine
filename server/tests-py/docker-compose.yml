@@ -30,6 +30,9 @@ services:
         condition: service_completed_successfully
 
   tests-py-on-postgres:
+    build:
+      context: ../..
+      dockerfile: ./.buildkite/dockerfiles/server-pytest-runner/Dockerfile
     image: hasura/graphql-engine-server-pytest-runner:${HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA}
     command:
       - ./oss-.circleci/test-server.sh
