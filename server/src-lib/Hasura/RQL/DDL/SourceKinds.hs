@@ -125,8 +125,7 @@ runGetSourceKindCapabilities GetSourceKindCapabilities {..} = do
       let dataConnectorName = DC.Types.DataConnectorName _gskcKind
 
       capabilities <-
-        fmap DC.Types._dciCapabilities $
-          HashMap.lookup dataConnectorName capabilitiesMap
-            `onNothing` Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt dataConnectorName <> " was not found.")
+        HashMap.lookup dataConnectorName capabilitiesMap
+          `onNothing` Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt dataConnectorName <> " was not found.")
 
       pure $ EncJSON.encJFromJValue capabilities
