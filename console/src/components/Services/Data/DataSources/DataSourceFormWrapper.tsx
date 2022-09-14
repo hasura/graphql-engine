@@ -7,10 +7,11 @@ import {
   useIsFeatureFlagEnabled,
 } from '@/features/FeatureFlags';
 import { Button } from '@/new-components/Button';
+import { NativeDrivers } from '@/features/MetadataAPI';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
 import { SampleDBSection } from './SampleDatabase';
-import { Driver } from '../../../../dataSources';
+import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { isDBSupported } from './utils';
 
 interface DataSourceFormWrapperProps extends ConnectDatabaseFormProps {
@@ -44,7 +45,7 @@ const driverToLabel: Record<
   },
 };
 
-// const supportedDrivers = getSupportedDrivers('connectDbForm.enabled');
+const supportedDrivers = getSupportedDrivers('connectDbForm.enabled');
 
 const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
   const {
@@ -60,7 +61,11 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
     connectionTypeState,
   } = props;
 
-  const { isLoading, data: drivers } = useAvailableDrivers();
+  const { isLoading, data: availableDrivers } = useAvailableDrivers();
+  const drivers = availableDrivers?.filter(
+    availableDriver =>
+      supportedDrivers.includes(availableDriver?.name as NativeDrivers) // NOTE: with GDC this type casting needs to change
+  );
 
   const { enabled: isGDCFeatureFlagEnabled } = useIsFeatureFlagEnabled(
     availableFeatureFlagIds.gdcId
