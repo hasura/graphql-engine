@@ -21,7 +21,7 @@
 </span><span id="line-21"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="tlsServiceDefinitionError"><span class="annot"><span class="annottext">TlsServiceDefinitionError -&gt; String
 </span><a href="Network.HTTP.Client.DynamicTlsPermissions.html#tlsServiceDefinitionError"><span class="hs-identifier hs-var hs-var">tlsServiceDefinitionError</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
 </span><span id="line-22"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689719910"><span id="local-6989586621689719912"><span id="local-6989586621689719914"><span class="annot"><span class="annottext">Int -&gt; TlsServiceDefinitionError -&gt; ShowS
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689736684"><span id="local-6989586621689736686"><span id="local-6989586621689736688"><span class="annot"><span class="annottext">Int -&gt; TlsServiceDefinitionError -&gt; ShowS
 [TlsServiceDefinitionError] -&gt; ShowS
 TlsServiceDefinitionError -&gt; String
 (Int -&gt; TlsServiceDefinitionError -&gt; ShowS)
@@ -38,18 +38,18 @@ showsPrec :: Int -&gt; TlsServiceDefinitionError -&gt; ShowS
 $cshowsPrec :: Int -&gt; TlsServiceDefinitionError -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689719903"><span id="local-6989586621689719905"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.DynamicTlsPermissions.html#TlsServiceDefinitionError"><span class="hs-identifier hs-type">TlsServiceDefinitionError</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-26"></span><span>  </span><span id="local-6989586621689719900"><span class="annot"><span class="annottext">displayException :: TlsServiceDefinitionError -&gt; String
-</span><a href="#local-6989586621689719900"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.HTTP.Client.DynamicTlsPermissions.html#TlsServiceDefinitionError"><span class="hs-identifier hs-type">TlsServiceDefinitionError</span></a></span><span> </span><span id="local-6989586621689719899"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689719899"><span class="hs-identifier hs-var">msg</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689736677"><span id="local-6989586621689736679"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.DynamicTlsPermissions.html#TlsServiceDefinitionError"><span class="hs-identifier hs-type">TlsServiceDefinitionError</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621689736674"><span class="annot"><span class="annottext">displayException :: TlsServiceDefinitionError -&gt; String
+</span><a href="#local-6989586621689736674"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.HTTP.Client.DynamicTlsPermissions.html#TlsServiceDefinitionError"><span class="hs-identifier hs-type">TlsServiceDefinitionError</span></a></span><span> </span><span id="local-6989586621689736673"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689736673"><span class="hs-identifier hs-var">msg</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;TlsServiceDefinitionError: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ShowS
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689719899"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><a href="#local-6989586621689736673"><span class="hs-identifier hs-var">msg</span></a></span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span id="local-6989586621689719931"><span class="annot"><a href="Network.HTTP.Client.DynamicTlsPermissions.html#errorE"><span class="hs-identifier hs-type">errorE</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689719931"><span class="hs-identifier hs-type">c</span></a></span></span><span>
+</span><span id="line-28"></span><span id="local-6989586621689736705"><span class="annot"><a href="Network.HTTP.Client.DynamicTlsPermissions.html#errorE"><span class="hs-identifier hs-type">errorE</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689736705"><span class="hs-identifier hs-type">c</span></a></span></span><span>
 </span><span id="line-29"></span><span id="errorE"><span class="annot"><span class="annottext">errorE :: String -&gt; c
 </span><a href="Network.HTTP.Client.DynamicTlsPermissions.html#errorE"><span class="hs-identifier hs-var hs-var">errorE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TlsServiceDefinitionError -&gt; c
 forall e a. Exception e =&gt; e -&gt; a
@@ -61,35 +61,35 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="annot"><a href="Network.HTTP.Client.DynamicTlsPermissions.html#dynamicTlsSettings"><span class="hs-identifier hs-type">dynamicTlsSettings</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.TLSSettings</span></span><span>
 </span><span id="line-32"></span><span id="dynamicTlsSettings"><span class="annot"><span class="annottext">dynamicTlsSettings :: IO [TlsAllow] -&gt; IO TLSSettings
-</span><a href="Network.HTTP.Client.DynamicTlsPermissions.html#dynamicTlsSettings"><span class="hs-identifier hs-var hs-var">dynamicTlsSettings</span></a></span></span><span> </span><span id="local-6989586621689719895"><span class="annot"><span class="annottext">IO [TlsAllow]
-</span><a href="#local-6989586621689719895"><span class="hs-identifier hs-var">currentAllow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621689719894"><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719894"><span class="hs-identifier hs-var">systemStore</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO CertificateStore
+</span><a href="Network.HTTP.Client.DynamicTlsPermissions.html#dynamicTlsSettings"><span class="hs-identifier hs-var hs-var">dynamicTlsSettings</span></a></span></span><span> </span><span id="local-6989586621689736669"><span class="annot"><span class="annottext">IO [TlsAllow]
+</span><a href="#local-6989586621689736669"><span class="hs-identifier hs-var">currentAllow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621689736668"><span class="annot"><span class="annottext">CertificateStore
+</span><a href="#local-6989586621689736668"><span class="hs-identifier hs-var">systemStore</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO CertificateStore
 </span><span class="hs-identifier hs-var">HTTP.getSystemCertificateStore</span></span><span>
 </span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">TLSSettings -&gt; IO TLSSettings
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CertificateStore -&gt; TLSSettings
-</span><a href="#local-6989586621689719892"><span class="hs-identifier hs-var">tlsSettingsComplex</span></a></span><span> </span><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719894"><span class="hs-identifier hs-var">systemStore</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689736666"><span class="hs-identifier hs-var">tlsSettingsComplex</span></a></span><span> </span><span class="annot"><span class="annottext">CertificateStore
+</span><a href="#local-6989586621689736668"><span class="hs-identifier hs-var">systemStore</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-36"></span><span>    </span><span class="annot"><a href="#local-6989586621689719892"><span class="hs-identifier hs-type">tlsSettingsComplex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateStore</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.TLSSettings</span></span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621689719892"><span class="annot"><span class="annottext">tlsSettingsComplex :: CertificateStore -&gt; TLSSettings
-</span><a href="#local-6989586621689719892"><span class="hs-identifier hs-var hs-var">tlsSettingsComplex</span></a></span></span><span> </span><span id="local-6989586621689719891"><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719891"><span class="hs-identifier hs-var">systemStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ClientParams -&gt; TLSSettings
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="#local-6989586621689736666"><span class="hs-identifier hs-type">tlsSettingsComplex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateStore</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.TLSSettings</span></span><span>
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621689736666"><span class="annot"><span class="annottext">tlsSettingsComplex :: CertificateStore -&gt; TLSSettings
+</span><a href="#local-6989586621689736666"><span class="hs-identifier hs-var hs-var">tlsSettingsComplex</span></a></span></span><span> </span><span id="local-6989586621689736665"><span class="annot"><span class="annottext">CertificateStore
+</span><a href="#local-6989586621689736665"><span class="hs-identifier hs-var">systemStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ClientParams -&gt; TLSSettings
 </span><span class="hs-identifier hs-var">HTTP.TLSSettings</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CertificateStore -&gt; ClientParams
-</span><a href="#local-6989586621689719889"><span class="hs-identifier hs-var">clientParams</span></a></span><span> </span><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719891"><span class="hs-identifier hs-var">systemStore</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689736663"><span class="hs-identifier hs-var">clientParams</span></a></span><span> </span><span class="annot"><span class="annottext">CertificateStore
+</span><a href="#local-6989586621689736665"><span class="hs-identifier hs-var">systemStore</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>
-</span><span id="line-39"></span><span>    </span><span class="annot"><a href="#local-6989586621689719889"><span class="hs-identifier hs-type">clientParams</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateStore</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ClientParams</span></span><span>
-</span><span id="line-40"></span><span>    </span><span id="local-6989586621689719889"><span class="annot"><span class="annottext">clientParams :: CertificateStore -&gt; ClientParams
-</span><a href="#local-6989586621689719889"><span class="hs-identifier hs-var hs-var">clientParams</span></a></span></span><span> </span><span id="local-6989586621689719888"><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719888"><span class="hs-identifier hs-var">systemStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="#local-6989586621689736663"><span class="hs-identifier hs-type">clientParams</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateStore</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ClientParams</span></span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621689736663"><span class="annot"><span class="annottext">clientParams :: CertificateStore -&gt; ClientParams
+</span><a href="#local-6989586621689736663"><span class="hs-identifier hs-var hs-var">clientParams</span></a></span></span><span> </span><span id="local-6989586621689736662"><span class="annot"><span class="annottext">CertificateStore
+</span><a href="#local-6989586621689736662"><span class="hs-identifier hs-var">systemStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-41"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ByteString -&gt; ClientParams
 </span><span class="hs-identifier hs-var">HTTP.defaultParamsClient</span></span><span> </span><span class="annot"><span class="annottext">String
 forall c. c
-</span><a href="#local-6989586621689719886"><span class="hs-identifier hs-var">hostName</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689736660"><span class="hs-identifier hs-var">hostName</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 forall c. c
-</span><a href="#local-6989586621689719885"><span class="hs-identifier hs-var">serviceIdBlob</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689736659"><span class="hs-identifier hs-var">serviceIdBlob</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">clientSupported :: Supported
 </span><span class="hs-identifier hs-var">HTTP.clientSupported</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Supported
 forall a. Default a =&gt; a
@@ -101,7 +101,7 @@ forall a. Default a =&gt; a
 forall a. Default a =&gt; a
 </span><span class="hs-identifier hs-var">HTTP.def</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">sharedCAStore :: CertificateStore
 </span><span class="hs-identifier hs-var">HTTP.sharedCAStore</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719888"><span class="hs-identifier hs-var">systemStore</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689736662"><span class="hs-identifier hs-var">systemStore</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
 </span><span id="line-44"></span><span>          </span><span class="annot"><span class="annottext">clientHooks :: ClientHooks
 </span><span class="hs-identifier hs-var">HTTP.clientHooks</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-45"></span><span>            </span><span class="annot"><span class="annottext">ClientHooks
@@ -109,133 +109,133 @@ forall a. Default a =&gt; a
 </span><span class="hs-identifier hs-var">HTTP.def</span></span><span>
 </span><span id="line-46"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">onServerCertificate :: OnServerCertificate
 </span><span class="hs-identifier hs-var">HTTP.onServerCertificate</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OnServerCertificate
-</span><a href="#local-6989586621689719876"><span class="hs-identifier hs-var">certValidation</span></a></span><span>
+</span><a href="#local-6989586621689736650"><span class="hs-identifier hs-var">certValidation</span></a></span><span>
 </span><span id="line-47"></span><span>              </span><span class="hs-special">}</span><span>
 </span><span id="line-48"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span>    </span><span class="annot"><a href="#local-6989586621689719876"><span class="hs-identifier hs-type">certValidation</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateStore</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ValidationCache</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ServiceID</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateChain</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.FailedReason</span></span><span class="hs-special">]</span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621689719876"><span class="annot"><span class="annottext">certValidation :: OnServerCertificate
-</span><a href="#local-6989586621689719876"><span class="hs-identifier hs-var hs-var">certValidation</span></a></span></span><span> </span><span id="local-6989586621689719875"><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719875"><span class="hs-identifier hs-var">certStore</span></a></span></span><span> </span><span id="local-6989586621689719874"><span class="annot"><span class="annottext">ValidationCache
-</span><a href="#local-6989586621689719874"><span class="hs-identifier hs-var">validationCache</span></a></span></span><span> </span><span id="local-6989586621689719873"><span class="annot"><span class="annottext">ServiceID
-</span><a href="#local-6989586621689719873"><span class="hs-identifier hs-var">sid</span></a></span></span><span> </span><span id="local-6989586621689719872"><span class="annot"><span class="annottext">CertificateChain
-</span><a href="#local-6989586621689719872"><span class="hs-identifier hs-var">chain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-52"></span><span>      </span><span id="local-6989586621689719871"><span class="annot"><span class="annottext">[FailedReason]
-</span><a href="#local-6989586621689719871"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ClientHooks -&gt; OnServerCertificate
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="#local-6989586621689736650"><span class="hs-identifier hs-type">certValidation</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateStore</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ValidationCache</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ServiceID</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.CertificateChain</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.FailedReason</span></span><span class="hs-special">]</span><span>
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621689736650"><span class="annot"><span class="annottext">certValidation :: OnServerCertificate
+</span><a href="#local-6989586621689736650"><span class="hs-identifier hs-var hs-var">certValidation</span></a></span></span><span> </span><span id="local-6989586621689736649"><span class="annot"><span class="annottext">CertificateStore
+</span><a href="#local-6989586621689736649"><span class="hs-identifier hs-var">certStore</span></a></span></span><span> </span><span id="local-6989586621689736648"><span class="annot"><span class="annottext">ValidationCache
+</span><a href="#local-6989586621689736648"><span class="hs-identifier hs-var">validationCache</span></a></span></span><span> </span><span id="local-6989586621689736647"><span class="annot"><span class="annottext">ServiceID
+</span><a href="#local-6989586621689736647"><span class="hs-identifier hs-var">sid</span></a></span></span><span> </span><span id="local-6989586621689736646"><span class="annot"><span class="annottext">CertificateChain
+</span><a href="#local-6989586621689736646"><span class="hs-identifier hs-var">chain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>      </span><span id="local-6989586621689736645"><span class="annot"><span class="annottext">[FailedReason]
+</span><a href="#local-6989586621689736645"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ClientHooks -&gt; OnServerCertificate
 </span><span class="hs-identifier hs-var hs-var">HTTP.onServerCertificate</span></span><span> </span><span class="annot"><span class="annottext">ClientHooks
 forall a. Default a =&gt; a
 </span><span class="hs-identifier hs-var">HTTP.def</span></span><span> </span><span class="annot"><span class="annottext">CertificateStore
-</span><a href="#local-6989586621689719875"><span class="hs-identifier hs-var">certStore</span></a></span><span> </span><span class="annot"><span class="annottext">ValidationCache
-</span><a href="#local-6989586621689719874"><span class="hs-identifier hs-var">validationCache</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceID
-</span><a href="#local-6989586621689719873"><span class="hs-identifier hs-var">sid</span></a></span><span> </span><span class="annot"><span class="annottext">CertificateChain
-</span><a href="#local-6989586621689719872"><span class="hs-identifier hs-var">chain</span></a></span><span>
-</span><span id="line-53"></span><span>      </span><span id="local-6989586621689719870"><span class="annot"><span class="annottext">[TlsAllow]
-</span><a href="#local-6989586621689719870"><span class="hs-identifier hs-var">allowList</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [TlsAllow]
-</span><a href="#local-6989586621689719895"><span class="hs-identifier hs-var">currentAllow</span></a></span><span>
+</span><a href="#local-6989586621689736649"><span class="hs-identifier hs-var">certStore</span></a></span><span> </span><span class="annot"><span class="annottext">ValidationCache
+</span><a href="#local-6989586621689736648"><span class="hs-identifier hs-var">validationCache</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceID
+</span><a href="#local-6989586621689736647"><span class="hs-identifier hs-var">sid</span></a></span><span> </span><span class="annot"><span class="annottext">CertificateChain
+</span><a href="#local-6989586621689736646"><span class="hs-identifier hs-var">chain</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621689736644"><span class="annot"><span class="annottext">[TlsAllow]
+</span><a href="#local-6989586621689736644"><span class="hs-identifier hs-var">allowList</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [TlsAllow]
+</span><a href="#local-6989586621689736669"><span class="hs-identifier hs-var">currentAllow</span></a></span><span>
 </span><span id="line-54"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">(TlsAllow -&gt; Bool) -&gt; [TlsAllow] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ServiceID -&gt; [FailedReason] -&gt; TlsAllow -&gt; Bool
-</span><a href="#local-6989586621689719868"><span class="hs-identifier hs-var">allowed</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceID
-</span><a href="#local-6989586621689719873"><span class="hs-identifier hs-var">sid</span></a></span><span> </span><span class="annot"><span class="annottext">[FailedReason]
-</span><a href="#local-6989586621689719871"><span class="hs-identifier hs-var">res</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TlsAllow]
-</span><a href="#local-6989586621689719870"><span class="hs-identifier hs-var">allowList</span></a></span><span>
+</span><a href="#local-6989586621689736642"><span class="hs-identifier hs-var">allowed</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceID
+</span><a href="#local-6989586621689736647"><span class="hs-identifier hs-var">sid</span></a></span><span> </span><span class="annot"><span class="annottext">[FailedReason]
+</span><a href="#local-6989586621689736645"><span class="hs-identifier hs-var">res</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TlsAllow]
+</span><a href="#local-6989586621689736644"><span class="hs-identifier hs-var">allowList</span></a></span><span>
 </span><span id="line-55"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">[FailedReason] -&gt; IO [FailedReason]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-56"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[FailedReason] -&gt; IO [FailedReason]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">[FailedReason]
-</span><a href="#local-6989586621689719871"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><a href="#local-6989586621689736645"><span class="hs-identifier hs-var">res</span></a></span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span>    </span><span class="hs-comment">-- These always seem to be overwritten when a connection is established</span><span>
 </span><span id="line-59"></span><span>    </span><span class="hs-comment">-- Should leave as errors in this case in order to validate this assumption.</span><span>
 </span><span id="line-60"></span><span>    </span><span class="hs-comment">-- TODO: Is there any way to define this in terms of a pure exception?</span><span>
-</span><span id="line-61"></span><span>    </span><span id="local-6989586621689719886"><span class="annot"><span class="annottext">hostName :: c
-</span><a href="#local-6989586621689719886"><span class="hs-identifier hs-var hs-var">hostName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; c
+</span><span id="line-61"></span><span>    </span><span id="local-6989586621689736660"><span class="annot"><span class="annottext">hostName :: c
+</span><a href="#local-6989586621689736660"><span class="hs-identifier hs-var hs-var">hostName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; c
 forall c. String -&gt; c
 </span><a href="Network.HTTP.Client.DynamicTlsPermissions.html#errorE"><span class="hs-identifier hs-var">errorE</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;hostname in HTTP client defaultParamsClient accessed - this should never happen&quot;</span></span><span>
-</span><span id="line-62"></span><span>    </span><span id="local-6989586621689719885"><span class="annot"><span class="annottext">serviceIdBlob :: c
-</span><a href="#local-6989586621689719885"><span class="hs-identifier hs-var hs-var">serviceIdBlob</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; c
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621689736659"><span class="annot"><span class="annottext">serviceIdBlob :: c
+</span><a href="#local-6989586621689736659"><span class="hs-identifier hs-var hs-var">serviceIdBlob</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; c
 forall c. String -&gt; c
 </span><a href="Network.HTTP.Client.DynamicTlsPermissions.html#errorE"><span class="hs-identifier hs-var">errorE</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;serviceIdBlob in HTTP client defaultParamsClient accessed - this should never happen&quot;</span></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span>    </span><span class="hs-comment">-- Checks that:</span><span>
 </span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621689719868"><span class="hs-identifier hs-type">allowed</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BC.ByteString</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.FailedReason</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621689719868"><span class="annot"><span class="annottext">allowed :: ServiceID -&gt; [FailedReason] -&gt; TlsAllow -&gt; Bool
-</span><a href="#local-6989586621689719868"><span class="hs-identifier hs-var hs-var">allowed</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689719867"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689719867"><span class="hs-identifier hs-var">sHost</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689719866"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689719866"><span class="hs-identifier hs-var">sPort</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689719865"><span class="annot"><span class="annottext">[FailedReason]
-</span><a href="#local-6989586621689719865"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span id="local-6989586621689719864"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689719864"><span class="hs-identifier hs-var">aHost</span></a></span></span><span> </span><span id="local-6989586621689719863"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689719863"><span class="hs-identifier hs-var">aPort</span></a></span></span><span> </span><span id="local-6989586621689719862"><span class="annot"><span class="annottext">Maybe [TlsPermission]
-</span><a href="#local-6989586621689719862"><span class="hs-identifier hs-var">aPermit</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621689736642"><span class="hs-identifier hs-type">allowed</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BC.ByteString</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.FailedReason</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621689736642"><span class="annot"><span class="annottext">allowed :: ServiceID -&gt; [FailedReason] -&gt; TlsAllow -&gt; Bool
+</span><a href="#local-6989586621689736642"><span class="hs-identifier hs-var hs-var">allowed</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689736641"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689736641"><span class="hs-identifier hs-var">sHost</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689736640"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689736640"><span class="hs-identifier hs-var">sPort</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689736639"><span class="annot"><span class="annottext">[FailedReason]
+</span><a href="#local-6989586621689736639"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span id="local-6989586621689736638"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689736638"><span class="hs-identifier hs-var">aHost</span></a></span></span><span> </span><span id="local-6989586621689736637"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689736637"><span class="hs-identifier hs-var">aPort</span></a></span></span><span> </span><span id="local-6989586621689736636"><span class="annot"><span class="annottext">Maybe [TlsPermission]
+</span><a href="#local-6989586621689736636"><span class="hs-identifier hs-var">aPermit</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-68"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689719867"><span class="hs-identifier hs-var">sHost</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
+</span><a href="#local-6989586621689736641"><span class="hs-identifier hs-var">sHost</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689719864"><span class="hs-identifier hs-var">aHost</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689736638"><span class="hs-identifier hs-var">aHost</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">BC.unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689719866"><span class="hs-identifier hs-var">sPort</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; Bool
+</span><a href="#local-6989586621689736640"><span class="hs-identifier hs-var">sPort</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; Bool
 forall a. Eq a =&gt; a -&gt; Maybe a -&gt; Bool
-</span><a href="#local-6989586621689719859"><span class="hs-operator hs-var">==?</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689719863"><span class="hs-identifier hs-var">aPort</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689736633"><span class="hs-operator hs-var">==?</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689736637"><span class="hs-identifier hs-var">aPort</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">(FailedReason -&gt; Bool) -&gt; [FailedReason] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
-</span><span class="hs-identifier hs-var">all</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689719857"><span class="annot"><span class="annottext">FailedReason
-</span><a href="#local-6989586621689719857"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(TlsPermission -&gt; Bool) -&gt; [TlsPermission] -&gt; Bool
+</span><span class="hs-identifier hs-var">all</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689736631"><span class="annot"><span class="annottext">FailedReason
+</span><a href="#local-6989586621689736631"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(TlsPermission -&gt; Bool) -&gt; [TlsPermission] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">(FailedReason -&gt; Bool) -&gt; FailedReason -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FailedReason
-</span><a href="#local-6989586621689719857"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((FailedReason -&gt; Bool) -&gt; Bool)
+</span><a href="#local-6989586621689736631"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((FailedReason -&gt; Bool) -&gt; Bool)
 -&gt; (TlsPermission -&gt; FailedReason -&gt; Bool) -&gt; TlsPermission -&gt; Bool
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TlsPermission -&gt; FailedReason -&gt; Bool
-</span><a href="#local-6989586621689719856"><span class="hs-identifier hs-var">permitted</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TlsPermission] -&gt; Maybe [TlsPermission] -&gt; [TlsPermission]
+</span><a href="#local-6989586621689736630"><span class="hs-identifier hs-var">permitted</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TlsPermission] -&gt; Maybe [TlsPermission] -&gt; [TlsPermission]
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">TlsPermission
 </span><a href="Hasura.RQL.Types.Network.html#SelfSigned"><span class="hs-identifier hs-var">SelfSigned</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe [TlsPermission]
-</span><a href="#local-6989586621689719862"><span class="hs-identifier hs-var">aPermit</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FailedReason]
-</span><a href="#local-6989586621689719865"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><a href="#local-6989586621689736636"><span class="hs-identifier hs-var">aPermit</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FailedReason]
+</span><a href="#local-6989586621689736639"><span class="hs-identifier hs-var">res</span></a></span><span>
 </span><span id="line-71"></span><span>    </span><span class="hs-comment">-- TODO: Could clean up this check some more.</span><span>
 </span><span id="line-72"></span><span>
 </span><span id="line-73"></span><span>    </span><span class="hs-comment">-- Comments on failure reasons taken from https://hackage.haskell.org/package/x509-validation-1.4.7/docs/src/Data-X509-Validation.html</span><span>
 </span><span id="line-74"></span><span>    </span><span class="hs-comment">-- The permitted function takes high-level concerns and translates then into certain permitted errors</span><span>
 </span><span id="line-75"></span><span>
-</span><span id="line-76"></span><span>    </span><span id="local-6989586621689719856"><span class="annot"><span class="annottext">permitted :: TlsPermission -&gt; FailedReason -&gt; Bool
-</span><a href="#local-6989586621689719856"><span class="hs-identifier hs-var hs-var">permitted</span></a></span></span><span> </span><span class="annot"><span class="annottext">TlsPermission
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621689736630"><span class="annot"><span class="annottext">permitted :: TlsPermission -&gt; FailedReason -&gt; Bool
+</span><a href="#local-6989586621689736630"><span class="hs-identifier hs-var hs-var">permitted</span></a></span></span><span> </span><span class="annot"><span class="annottext">TlsPermission
 </span><a href="Hasura.RQL.Types.Network.html#SelfSigned"><span class="hs-identifier hs-var">SelfSigned</span></a></span><span> </span><span class="annot"><span class="annottext">FailedReason
 </span><span class="hs-identifier hs-var">HTTP.SelfSigned</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-comment">-- Certificate is self signed</span><span>
-</span><span id="line-77"></span><span>    </span><span class="annot"><a href="#local-6989586621689719856"><span class="hs-identifier hs-var">permitted</span></a></span><span> </span><span class="annot"><span class="annottext">TlsPermission
+</span><span id="line-77"></span><span>    </span><span class="annot"><a href="#local-6989586621689736630"><span class="hs-identifier hs-var">permitted</span></a></span><span> </span><span class="annot"><span class="annottext">TlsPermission
 </span><a href="Hasura.RQL.Types.Network.html#SelfSigned"><span class="hs-identifier hs-var">SelfSigned</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.NameMismatch</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-comment">-- Connection name and certificate do not match</span><span>
-</span><span id="line-78"></span><span>    </span><span class="annot"><a href="#local-6989586621689719856"><span class="hs-identifier hs-var">permitted</span></a></span><span> </span><span class="annot"><span class="annottext">TlsPermission
+</span><span id="line-78"></span><span>    </span><span class="annot"><a href="#local-6989586621689736630"><span class="hs-identifier hs-var">permitted</span></a></span><span> </span><span class="annot"><span class="annottext">TlsPermission
 </span><a href="Hasura.RQL.Types.Network.html#SelfSigned"><span class="hs-identifier hs-var">SelfSigned</span></a></span><span> </span><span class="annot"><span class="annottext">FailedReason
 </span><span class="hs-identifier hs-var">HTTP.LeafNotV3</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-comment">-- Only authorized an X509.V3 certificate as leaf certificate.</span><span>
-</span><span id="line-79"></span><span>    </span><span class="annot"><a href="#local-6989586621689719856"><span class="hs-identifier hs-var">permitted</span></a></span><span> </span><span class="annot"><span class="annottext">TlsPermission
+</span><span id="line-79"></span><span>    </span><span class="annot"><a href="#local-6989586621689736630"><span class="hs-identifier hs-var">permitted</span></a></span><span> </span><span class="annot"><span class="annottext">TlsPermission
 </span><a href="Hasura.RQL.Types.Network.html#SelfSigned"><span class="hs-identifier hs-var">SelfSigned</span></a></span><span> </span><span class="annot"><span class="annottext">FailedReason
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-80"></span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">a
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689719859"><span class="annot"><span class="annottext">==? :: a -&gt; Maybe a -&gt; Bool
-</span><a href="#local-6989586621689719859"><span class="hs-operator hs-var hs-var">==?</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689736633"><span class="annot"><span class="annottext">==? :: a -&gt; Maybe a -&gt; Bool
+</span><a href="#local-6989586621689736633"><span class="hs-operator hs-var hs-var">==?</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
-</span><span id="line-82"></span><span>    </span><span id="local-6989586621689719851"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689719851"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689719859"><span class="hs-operator hs-var">==?</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689719850"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689719850"><span class="hs-identifier hs-var">a'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689719851"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621689736625"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689736625"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689736633"><span class="hs-operator hs-var">==?</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689736624"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689736624"><span class="hs-identifier hs-var">a'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689736625"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689719850"><span class="hs-identifier hs-var">a'</span></a></span><span>
+</span><a href="#local-6989586621689736624"><span class="hs-identifier hs-var">a'</span></a></span><span>
 </span><span id="line-83"></span></pre></body></html>

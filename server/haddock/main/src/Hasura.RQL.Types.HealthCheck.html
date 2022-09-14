@@ -22,11 +22,11 @@
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html"><span class="hs-identifier">Hasura.RQL.Types.HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier">HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier">HealthCheckImplementation</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#_hciDefaultTest"><span class="hs-identifier">_hciDefaultTest</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#_hciTestCodec"><span class="hs-identifier">_hciTestCodec</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Tag.html"><span class="hs-identifier">Hasura.SQL.Tag</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier">HasTag</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier">backendTag</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.SQL.Tag.html#reify"><span class="hs-identifier">reify</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span id="local-6989586621689743168"><span id="local-6989586621689743169"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckTestSql"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-var">HealthCheckTestSql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckTestSql"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-var">HealthCheckTestSql</span></a></span></span><span>
+</span><span id="line-25"></span><span id="local-6989586621689759987"><span id="local-6989586621689759988"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckTestSql"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-var">HealthCheckTestSql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckTestSql"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-var">HealthCheckTestSql</span></a></span></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_hctSql"><span class="annot"><span class="annottext">HealthCheckTestSql -&gt; Text
 </span><a href="Hasura.RQL.Types.HealthCheck.html#_hctSql"><span class="hs-identifier hs-var hs-var">_hctSql</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689743162"><span id="local-6989586621689743164"><span class="annot"><span class="annottext">HealthCheckTestSql -&gt; HealthCheckTestSql -&gt; Bool
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689759981"><span id="local-6989586621689759983"><span class="annot"><span class="annottext">HealthCheckTestSql -&gt; HealthCheckTestSql -&gt; Bool
 (HealthCheckTestSql -&gt; HealthCheckTestSql -&gt; Bool)
 -&gt; (HealthCheckTestSql -&gt; HealthCheckTestSql -&gt; Bool)
 -&gt; Eq HealthCheckTestSql
@@ -44,7 +44,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep HealthCheckTestSql x -&gt; HealthCheckTestSql
 $cfrom :: forall x. HealthCheckTestSql -&gt; Rep HealthCheckTestSql x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743152"><span id="local-6989586621689743154"><span id="local-6989586621689743156"><span class="annot"><span class="annottext">Int -&gt; HealthCheckTestSql -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759971"><span id="local-6989586621689759973"><span id="local-6989586621689759975"><span class="annot"><span class="annottext">Int -&gt; HealthCheckTestSql -&gt; ShowS
 [HealthCheckTestSql] -&gt; ShowS
 HealthCheckTestSql -&gt; String
 (Int -&gt; HealthCheckTestSql -&gt; ShowS)
@@ -59,7 +59,7 @@ show :: HealthCheckTestSql -&gt; String
 $cshow :: HealthCheckTestSql -&gt; String
 showsPrec :: Int -&gt; HealthCheckTestSql -&gt; ShowS
 $cshowsPrec :: Int -&gt; HealthCheckTestSql -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743148"><span class="annot"><span class="annottext">Eq HealthCheckTestSql
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759967"><span class="annot"><span class="annottext">Eq HealthCheckTestSql
 Eq HealthCheckTestSql
 -&gt; (Accesses -&gt; HealthCheckTestSql -&gt; HealthCheckTestSql -&gt; Bool)
 -&gt; Cacheable HealthCheckTestSql
@@ -68,7 +68,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; HealthCheckTestSql -&gt; HealthCheckTestSql -&gt; Bool
 $cunchanged :: Accesses -&gt; HealthCheckTestSql -&gt; HealthCheckTestSql -&gt; Bool
 $cp1Cacheable :: Eq HealthCheckTestSql
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743143"><span id="local-6989586621689743145"><span class="annot"><span class="annottext">Int -&gt; HealthCheckTestSql -&gt; Int
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759962"><span id="local-6989586621689759964"><span class="annot"><span class="annottext">Int -&gt; HealthCheckTestSql -&gt; Int
 HealthCheckTestSql -&gt; Int
 (Int -&gt; HealthCheckTestSql -&gt; Int)
 -&gt; (HealthCheckTestSql -&gt; Int) -&gt; Hashable HealthCheckTestSql
@@ -77,26 +77,26 @@ hash :: HealthCheckTestSql -&gt; Int
 $chash :: HealthCheckTestSql -&gt; Int
 hashWithSalt :: Int -&gt; HealthCheckTestSql -&gt; Int
 $chashWithSalt :: Int -&gt; HealthCheckTestSql -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743140"><span class="annot"><span class="annottext">HealthCheckTestSql -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759959"><span class="annot"><span class="annottext">HealthCheckTestSql -&gt; ()
 (HealthCheckTestSql -&gt; ()) -&gt; NFData HealthCheckTestSql
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: HealthCheckTestSql -&gt; ()
 $crnf :: HealthCheckTestSql -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689743132"><span id="local-6989586621689743134"><span id="local-6989586621689743136"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-type">HealthCheckTestSql</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621689743130"><span class="annot"><span class="annottext">toJSON :: HealthCheckTestSql -&gt; Value
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759951"><span id="local-6989586621689759953"><span id="local-6989586621689759955"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-type">HealthCheckTestSql</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621689759949"><span class="annot"><span class="annottext">toJSON :: HealthCheckTestSql -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; HealthCheckTestSql -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621689743126"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689759945"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689743123"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-type">HealthCheckTestSql</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-34"></span><span>  </span><span id="local-6989586621689743121"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser HealthCheckTestSql
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759942"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-type">HealthCheckTestSql</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621689759940"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser HealthCheckTestSql
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser HealthCheckTestSql)
 -&gt; Value
@@ -109,14 +109,14 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser HealthCheckTestSql
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689743118"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689743118"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689759937"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689759937"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; HealthCheckTestSql
 </span><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTestSql"><span class="hs-identifier hs-var">HealthCheckTestSql</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; HealthCheckTestSql)
 -&gt; Parser Text -&gt; Parser HealthCheckTestSql
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689743118"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Text)
+</span><a href="#local-6989586621689759937"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Text)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;sql&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Text) -&gt; Text -&gt; Parser Text
@@ -135,9 +135,9 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="Hasura.RQL.Types.HealthCheck.html#defaultTestSql"><span class="hs-identifier hs-var hs-var">defaultTestSql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;SELECT 1&quot;</span></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span id="local-6989586621689743112"><span id="local-6989586621689743113"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckInterval"><span class="hs-identifier hs-var">HealthCheckInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckInterval"><span class="hs-identifier hs-var">HealthCheckInterval</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckInterval"><span class="annot"><span class="annottext">HealthCheckInterval -&gt; Seconds
+</span><span id="line-43"></span><span id="local-6989586621689759931"><span id="local-6989586621689759932"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckInterval"><span class="hs-identifier hs-var">HealthCheckInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckInterval"><span class="hs-identifier hs-var">HealthCheckInterval</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckInterval"><span class="annot"><span class="annottext">HealthCheckInterval -&gt; Seconds
 </span><a href="Hasura.RQL.Types.HealthCheck.html#unHealthCheckInterval"><span class="hs-identifier hs-var hs-var">unHealthCheckInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689743106"><span id="local-6989586621689743108"><span class="annot"><span class="annottext">HealthCheckInterval -&gt; HealthCheckInterval -&gt; Bool
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689759925"><span id="local-6989586621689759927"><span class="annot"><span class="annottext">HealthCheckInterval -&gt; HealthCheckInterval -&gt; Bool
 (HealthCheckInterval -&gt; HealthCheckInterval -&gt; Bool)
 -&gt; (HealthCheckInterval -&gt; HealthCheckInterval -&gt; Bool)
 -&gt; Eq HealthCheckInterval
@@ -155,7 +155,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep HealthCheckInterval x -&gt; HealthCheckInterval
 $cfrom :: forall x. HealthCheckInterval -&gt; Rep HealthCheckInterval x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743098"><span id="local-6989586621689743100"><span id="local-6989586621689743102"><span class="annot"><span class="annottext">Int -&gt; HealthCheckInterval -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759917"><span id="local-6989586621689759919"><span id="local-6989586621689759921"><span class="annot"><span class="annottext">Int -&gt; HealthCheckInterval -&gt; ShowS
 [HealthCheckInterval] -&gt; ShowS
 HealthCheckInterval -&gt; String
 (Int -&gt; HealthCheckInterval -&gt; ShowS)
@@ -170,7 +170,7 @@ show :: HealthCheckInterval -&gt; String
 $cshow :: HealthCheckInterval -&gt; String
 showsPrec :: Int -&gt; HealthCheckInterval -&gt; ShowS
 $cshowsPrec :: Int -&gt; HealthCheckInterval -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743095"><span class="annot"><span class="annottext">Eq HealthCheckInterval
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759914"><span class="annot"><span class="annottext">Eq HealthCheckInterval
 Eq HealthCheckInterval
 -&gt; (Accesses -&gt; HealthCheckInterval -&gt; HealthCheckInterval -&gt; Bool)
 -&gt; Cacheable HealthCheckInterval
@@ -179,7 +179,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; HealthCheckInterval -&gt; HealthCheckInterval -&gt; Bool
 $cunchanged :: Accesses -&gt; HealthCheckInterval -&gt; HealthCheckInterval -&gt; Bool
 $cp1Cacheable :: Eq HealthCheckInterval
-</span><a href="#local-6989586621689743095"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743087"><span id="local-6989586621689743089"><span id="local-6989586621689743091"><span id="local-6989586621689743093"><span class="annot"><span class="annottext">[HealthCheckInterval] -&gt; Value
+</span><a href="#local-6989586621689759914"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759906"><span id="local-6989586621689759908"><span id="local-6989586621689759910"><span id="local-6989586621689759912"><span class="annot"><span class="annottext">[HealthCheckInterval] -&gt; Value
 [HealthCheckInterval] -&gt; Encoding
 HealthCheckInterval -&gt; Value
 HealthCheckInterval -&gt; Encoding
@@ -202,7 +202,7 @@ toEncoding :: HealthCheckInterval -&gt; Encoding
 $ctoEncoding :: HealthCheckInterval -&gt; Encoding
 toJSON :: HealthCheckInterval -&gt; Value
 $ctoJSON :: HealthCheckInterval -&gt; Value
-</span><a href="#local-6989586621689743087"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743083"><span id="local-6989586621689743085"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckInterval]
+</span><a href="#local-6989586621689759906"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759902"><span id="local-6989586621689759904"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckInterval]
 Value -&gt; Parser HealthCheckInterval
 (Value -&gt; Parser HealthCheckInterval)
 -&gt; (Value -&gt; Parser [HealthCheckInterval])
@@ -213,18 +213,18 @@ parseJSONList :: Value -&gt; Parser [HealthCheckInterval]
 $cparseJSONList :: Value -&gt; Parser [HealthCheckInterval]
 parseJSON :: Value -&gt; Parser HealthCheckInterval
 $cparseJSON :: Value -&gt; Parser HealthCheckInterval
-</span><a href="#local-6989586621689743083"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689759902"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689743080"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckInterval"><span class="hs-identifier hs-type">HealthCheckInterval</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621689743078"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckInterval
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759899"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckInterval"><span class="hs-identifier hs-type">HealthCheckInterval</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621689759897"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckInterval
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec HealthCheckInterval
 forall a. (FromJSON a, ToJSON a) =&gt; Text -&gt; JSONCodec a
 </span><span class="hs-identifier hs-var">AC.codecViaAeson</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HealthCheckInterval&quot;</span></span><span>
 </span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span id="local-6989586621689743074"><span id="local-6989586621689743075"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckRetries"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetries"><span class="hs-identifier hs-var">HealthCheckRetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckRetries"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetries"><span class="hs-identifier hs-var">HealthCheckRetries</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckRetries"><span class="annot"><span class="annottext">HealthCheckRetries -&gt; Int
+</span><span id="line-49"></span><span id="local-6989586621689759893"><span id="local-6989586621689759894"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckRetries"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetries"><span class="hs-identifier hs-var">HealthCheckRetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckRetries"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetries"><span class="hs-identifier hs-var">HealthCheckRetries</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckRetries"><span class="annot"><span class="annottext">HealthCheckRetries -&gt; Int
 </span><a href="Hasura.RQL.Types.HealthCheck.html#unHealthCheckRetries"><span class="hs-identifier hs-var hs-var">unHealthCheckRetries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689743068"><span id="local-6989586621689743070"><span class="annot"><span class="annottext">HealthCheckRetries -&gt; HealthCheckRetries -&gt; Bool
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689759887"><span id="local-6989586621689759889"><span class="annot"><span class="annottext">HealthCheckRetries -&gt; HealthCheckRetries -&gt; Bool
 (HealthCheckRetries -&gt; HealthCheckRetries -&gt; Bool)
 -&gt; (HealthCheckRetries -&gt; HealthCheckRetries -&gt; Bool)
 -&gt; Eq HealthCheckRetries
@@ -242,7 +242,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep HealthCheckRetries x -&gt; HealthCheckRetries
 $cfrom :: forall x. HealthCheckRetries -&gt; Rep HealthCheckRetries x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743060"><span id="local-6989586621689743062"><span id="local-6989586621689743064"><span class="annot"><span class="annottext">Int -&gt; HealthCheckRetries -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759879"><span id="local-6989586621689759881"><span id="local-6989586621689759883"><span class="annot"><span class="annottext">Int -&gt; HealthCheckRetries -&gt; ShowS
 [HealthCheckRetries] -&gt; ShowS
 HealthCheckRetries -&gt; String
 (Int -&gt; HealthCheckRetries -&gt; ShowS)
@@ -257,7 +257,7 @@ show :: HealthCheckRetries -&gt; String
 $cshow :: HealthCheckRetries -&gt; String
 showsPrec :: Int -&gt; HealthCheckRetries -&gt; ShowS
 $cshowsPrec :: Int -&gt; HealthCheckRetries -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743057"><span class="annot"><span class="annottext">Eq HealthCheckRetries
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759876"><span class="annot"><span class="annottext">Eq HealthCheckRetries
 Eq HealthCheckRetries
 -&gt; (Accesses -&gt; HealthCheckRetries -&gt; HealthCheckRetries -&gt; Bool)
 -&gt; Cacheable HealthCheckRetries
@@ -266,7 +266,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; HealthCheckRetries -&gt; HealthCheckRetries -&gt; Bool
 $cunchanged :: Accesses -&gt; HealthCheckRetries -&gt; HealthCheckRetries -&gt; Bool
 $cp1Cacheable :: Eq HealthCheckRetries
-</span><a href="#local-6989586621689743057"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743053"><span id="local-6989586621689743055"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckRetries]
+</span><a href="#local-6989586621689759876"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759872"><span id="local-6989586621689759874"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckRetries]
 Value -&gt; Parser HealthCheckRetries
 (Value -&gt; Parser HealthCheckRetries)
 -&gt; (Value -&gt; Parser [HealthCheckRetries])
@@ -277,7 +277,7 @@ parseJSONList :: Value -&gt; Parser [HealthCheckRetries]
 $cparseJSONList :: Value -&gt; Parser [HealthCheckRetries]
 parseJSON :: Value -&gt; Parser HealthCheckRetries
 $cparseJSON :: Value -&gt; Parser HealthCheckRetries
-</span><a href="#local-6989586621689743053"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743045"><span id="local-6989586621689743047"><span id="local-6989586621689743049"><span id="local-6989586621689743051"><span class="annot"><span class="annottext">[HealthCheckRetries] -&gt; Value
+</span><a href="#local-6989586621689759872"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759864"><span id="local-6989586621689759866"><span id="local-6989586621689759868"><span id="local-6989586621689759870"><span class="annot"><span class="annottext">[HealthCheckRetries] -&gt; Value
 [HealthCheckRetries] -&gt; Encoding
 HealthCheckRetries -&gt; Value
 HealthCheckRetries -&gt; Encoding
@@ -300,11 +300,11 @@ toEncoding :: HealthCheckRetries -&gt; Encoding
 $ctoEncoding :: HealthCheckRetries -&gt; Encoding
 toJSON :: HealthCheckRetries -&gt; Value
 $ctoJSON :: HealthCheckRetries -&gt; Value
-</span><a href="#local-6989586621689743045"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689759864"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689743042"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetries"><span class="hs-identifier hs-type">HealthCheckRetries</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621689743041"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckRetries
-</span><a href="#local-6989586621689743041"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; HealthCheckRetries)
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759861"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetries"><span class="hs-identifier hs-type">HealthCheckRetries</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621689759860"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckRetries
+</span><a href="#local-6989586621689759860"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; HealthCheckRetries)
 -&gt; (HealthCheckRetries -&gt; Int)
 -&gt; Codec Value Int Int
 -&gt; JSONCodec HealthCheckRetries
@@ -319,9 +319,9 @@ forall oldOutput newOutput newInput oldInput context.
 forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span id="local-6989586621689743038"><span id="local-6989586621689743039"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckRetryInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetryInterval"><span class="hs-identifier hs-var">HealthCheckRetryInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckRetryInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetryInterval"><span class="hs-identifier hs-var">HealthCheckRetryInterval</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckRetryInterval"><span class="annot"><span class="annottext">HealthCheckRetryInterval -&gt; Seconds
+</span><span id="line-55"></span><span id="local-6989586621689759857"><span id="local-6989586621689759858"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckRetryInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetryInterval"><span class="hs-identifier hs-var">HealthCheckRetryInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckRetryInterval"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetryInterval"><span class="hs-identifier hs-var">HealthCheckRetryInterval</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckRetryInterval"><span class="annot"><span class="annottext">HealthCheckRetryInterval -&gt; Seconds
 </span><a href="Hasura.RQL.Types.HealthCheck.html#unHealthCheckRetryInterval"><span class="hs-identifier hs-var hs-var">unHealthCheckRetryInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689743032"><span id="local-6989586621689743034"><span class="annot"><span class="annottext">HealthCheckRetryInterval -&gt; HealthCheckRetryInterval -&gt; Bool
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689759851"><span id="local-6989586621689759853"><span class="annot"><span class="annottext">HealthCheckRetryInterval -&gt; HealthCheckRetryInterval -&gt; Bool
 (HealthCheckRetryInterval -&gt; HealthCheckRetryInterval -&gt; Bool)
 -&gt; (HealthCheckRetryInterval -&gt; HealthCheckRetryInterval -&gt; Bool)
 -&gt; Eq HealthCheckRetryInterval
@@ -345,7 +345,7 @@ $cto :: forall x.
 Rep HealthCheckRetryInterval x -&gt; HealthCheckRetryInterval
 $cfrom :: forall x.
 HealthCheckRetryInterval -&gt; Rep HealthCheckRetryInterval x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743024"><span id="local-6989586621689743026"><span id="local-6989586621689743028"><span class="annot"><span class="annottext">Int -&gt; HealthCheckRetryInterval -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759843"><span id="local-6989586621689759845"><span id="local-6989586621689759847"><span class="annot"><span class="annottext">Int -&gt; HealthCheckRetryInterval -&gt; ShowS
 [HealthCheckRetryInterval] -&gt; ShowS
 HealthCheckRetryInterval -&gt; String
 (Int -&gt; HealthCheckRetryInterval -&gt; ShowS)
@@ -360,7 +360,7 @@ show :: HealthCheckRetryInterval -&gt; String
 $cshow :: HealthCheckRetryInterval -&gt; String
 showsPrec :: Int -&gt; HealthCheckRetryInterval -&gt; ShowS
 $cshowsPrec :: Int -&gt; HealthCheckRetryInterval -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743021"><span class="annot"><span class="annottext">Eq HealthCheckRetryInterval
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759840"><span class="annot"><span class="annottext">Eq HealthCheckRetryInterval
 Eq HealthCheckRetryInterval
 -&gt; (Accesses
     -&gt; HealthCheckRetryInterval -&gt; HealthCheckRetryInterval -&gt; Bool)
@@ -373,7 +373,7 @@ unchanged :: Accesses
 $cunchanged :: Accesses
 -&gt; HealthCheckRetryInterval -&gt; HealthCheckRetryInterval -&gt; Bool
 $cp1Cacheable :: Eq HealthCheckRetryInterval
-</span><a href="#local-6989586621689743021"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743013"><span id="local-6989586621689743015"><span id="local-6989586621689743017"><span id="local-6989586621689743019"><span class="annot"><span class="annottext">[HealthCheckRetryInterval] -&gt; Value
+</span><a href="#local-6989586621689759840"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759832"><span id="local-6989586621689759834"><span id="local-6989586621689759836"><span id="local-6989586621689759838"><span class="annot"><span class="annottext">[HealthCheckRetryInterval] -&gt; Value
 [HealthCheckRetryInterval] -&gt; Encoding
 HealthCheckRetryInterval -&gt; Value
 HealthCheckRetryInterval -&gt; Encoding
@@ -396,7 +396,7 @@ toEncoding :: HealthCheckRetryInterval -&gt; Encoding
 $ctoEncoding :: HealthCheckRetryInterval -&gt; Encoding
 toJSON :: HealthCheckRetryInterval -&gt; Value
 $ctoJSON :: HealthCheckRetryInterval -&gt; Value
-</span><a href="#local-6989586621689743013"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689743009"><span id="local-6989586621689743011"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckRetryInterval]
+</span><a href="#local-6989586621689759832"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759828"><span id="local-6989586621689759830"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckRetryInterval]
 Value -&gt; Parser HealthCheckRetryInterval
 (Value -&gt; Parser HealthCheckRetryInterval)
 -&gt; (Value -&gt; Parser [HealthCheckRetryInterval])
@@ -407,18 +407,18 @@ parseJSONList :: Value -&gt; Parser [HealthCheckRetryInterval]
 $cparseJSONList :: Value -&gt; Parser [HealthCheckRetryInterval]
 parseJSON :: Value -&gt; Parser HealthCheckRetryInterval
 $cparseJSON :: Value -&gt; Parser HealthCheckRetryInterval
-</span><a href="#local-6989586621689743009"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689759828"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689743006"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetryInterval"><span class="hs-identifier hs-type">HealthCheckRetryInterval</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621689743005"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckRetryInterval
-</span><a href="#local-6989586621689743005"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec HealthCheckRetryInterval
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759825"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckRetryInterval"><span class="hs-identifier hs-type">HealthCheckRetryInterval</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621689759824"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckRetryInterval
+</span><a href="#local-6989586621689759824"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec HealthCheckRetryInterval
 forall a. (FromJSON a, ToJSON a) =&gt; Text -&gt; JSONCodec a
 </span><span class="hs-identifier hs-var">AC.codecViaAeson</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HealthCheckRetryInterval&quot;</span></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span id="local-6989586621689743003"><span id="local-6989586621689743004"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckTimeout"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTimeout"><span class="hs-identifier hs-var">HealthCheckTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckTimeout"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTimeout"><span class="hs-identifier hs-var">HealthCheckTimeout</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckTimeout"><span class="annot"><span class="annottext">HealthCheckTimeout -&gt; Seconds
+</span><span id="line-61"></span><span id="local-6989586621689759822"><span id="local-6989586621689759823"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HealthCheckTimeout"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTimeout"><span class="hs-identifier hs-var">HealthCheckTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckTimeout"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTimeout"><span class="hs-identifier hs-var">HealthCheckTimeout</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHealthCheckTimeout"><span class="annot"><span class="annottext">HealthCheckTimeout -&gt; Seconds
 </span><a href="Hasura.RQL.Types.HealthCheck.html#unHealthCheckTimeout"><span class="hs-identifier hs-var hs-var">unHealthCheckTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689742997"><span id="local-6989586621689742999"><span class="annot"><span class="annottext">HealthCheckTimeout -&gt; HealthCheckTimeout -&gt; Bool
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689759816"><span id="local-6989586621689759818"><span class="annot"><span class="annottext">HealthCheckTimeout -&gt; HealthCheckTimeout -&gt; Bool
 (HealthCheckTimeout -&gt; HealthCheckTimeout -&gt; Bool)
 -&gt; (HealthCheckTimeout -&gt; HealthCheckTimeout -&gt; Bool)
 -&gt; Eq HealthCheckTimeout
@@ -436,7 +436,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep HealthCheckTimeout x -&gt; HealthCheckTimeout
 $cfrom :: forall x. HealthCheckTimeout -&gt; Rep HealthCheckTimeout x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689742989"><span id="local-6989586621689742991"><span id="local-6989586621689742993"><span class="annot"><span class="annottext">Int -&gt; HealthCheckTimeout -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759808"><span id="local-6989586621689759810"><span id="local-6989586621689759812"><span class="annot"><span class="annottext">Int -&gt; HealthCheckTimeout -&gt; ShowS
 [HealthCheckTimeout] -&gt; ShowS
 HealthCheckTimeout -&gt; String
 (Int -&gt; HealthCheckTimeout -&gt; ShowS)
@@ -451,7 +451,7 @@ show :: HealthCheckTimeout -&gt; String
 $cshow :: HealthCheckTimeout -&gt; String
 showsPrec :: Int -&gt; HealthCheckTimeout -&gt; ShowS
 $cshowsPrec :: Int -&gt; HealthCheckTimeout -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689742986"><span class="annot"><span class="annottext">Eq HealthCheckTimeout
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759805"><span class="annot"><span class="annottext">Eq HealthCheckTimeout
 Eq HealthCheckTimeout
 -&gt; (Accesses -&gt; HealthCheckTimeout -&gt; HealthCheckTimeout -&gt; Bool)
 -&gt; Cacheable HealthCheckTimeout
@@ -460,7 +460,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; HealthCheckTimeout -&gt; HealthCheckTimeout -&gt; Bool
 $cunchanged :: Accesses -&gt; HealthCheckTimeout -&gt; HealthCheckTimeout -&gt; Bool
 $cp1Cacheable :: Eq HealthCheckTimeout
-</span><a href="#local-6989586621689742986"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689742982"><span id="local-6989586621689742984"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckTimeout]
+</span><a href="#local-6989586621689759805"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759801"><span id="local-6989586621689759803"><span class="annot"><span class="annottext">Value -&gt; Parser [HealthCheckTimeout]
 Value -&gt; Parser HealthCheckTimeout
 (Value -&gt; Parser HealthCheckTimeout)
 -&gt; (Value -&gt; Parser [HealthCheckTimeout])
@@ -471,7 +471,7 @@ parseJSONList :: Value -&gt; Parser [HealthCheckTimeout]
 $cparseJSONList :: Value -&gt; Parser [HealthCheckTimeout]
 parseJSON :: Value -&gt; Parser HealthCheckTimeout
 $cparseJSON :: Value -&gt; Parser HealthCheckTimeout
-</span><a href="#local-6989586621689742982"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689742974"><span id="local-6989586621689742976"><span id="local-6989586621689742978"><span id="local-6989586621689742980"><span class="annot"><span class="annottext">[HealthCheckTimeout] -&gt; Value
+</span><a href="#local-6989586621689759801"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689759793"><span id="local-6989586621689759795"><span id="local-6989586621689759797"><span id="local-6989586621689759799"><span class="annot"><span class="annottext">[HealthCheckTimeout] -&gt; Value
 [HealthCheckTimeout] -&gt; Encoding
 HealthCheckTimeout -&gt; Value
 HealthCheckTimeout -&gt; Encoding
@@ -494,18 +494,18 @@ toEncoding :: HealthCheckTimeout -&gt; Encoding
 $ctoEncoding :: HealthCheckTimeout -&gt; Encoding
 toJSON :: HealthCheckTimeout -&gt; Value
 $ctoJSON :: HealthCheckTimeout -&gt; Value
-</span><a href="#local-6989586621689742974"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689759793"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689742971"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTimeout"><span class="hs-identifier hs-type">HealthCheckTimeout</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621689742970"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckTimeout
-</span><a href="#local-6989586621689742970"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec HealthCheckTimeout
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759790"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTimeout"><span class="hs-identifier hs-type">HealthCheckTimeout</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621689759789"><span class="annot"><span class="annottext">codec :: JSONCodec HealthCheckTimeout
+</span><a href="#local-6989586621689759789"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec HealthCheckTimeout
 forall a. (FromJSON a, ToJSON a) =&gt; Text -&gt; JSONCodec a
 </span><span class="hs-identifier hs-var">AC.codecViaAeson</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HealthCheckTimeout&quot;</span></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span id="local-6989586621689742968"><span id="local-6989586621689742969"></span></span><span class="hs-keyword">data</span><span> </span><span id="HealthCheckConfig"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-var">HealthCheckConfig</span></a></span></span><span> </span><span id="local-6989586621689743205"><span class="annot"><a href="#local-6989586621689743205"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckConfig"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-var">HealthCheckConfig</span></a></span></span><span>
+</span><span id="line-67"></span><span id="local-6989586621689759787"><span id="local-6989586621689759788"></span></span><span class="hs-keyword">data</span><span> </span><span id="HealthCheckConfig"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-var">HealthCheckConfig</span></a></span></span><span> </span><span id="local-6989586621689760024"><span class="annot"><a href="#local-6989586621689760024"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HealthCheckConfig"><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-var">HealthCheckConfig</span></a></span></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_hccTest"><span class="annot"><span class="annottext">HealthCheckConfig b -&gt; HealthCheckTest b
-</span><a href="Hasura.RQL.Types.HealthCheck.html#_hccTest"><span class="hs-identifier hs-var hs-var">_hccTest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#HealthCheckTest"><span class="hs-identifier hs-type">HealthCheckTest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689743205"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.HealthCheck.html#_hccTest"><span class="hs-identifier hs-var hs-var">_hccTest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#HealthCheckTest"><span class="hs-identifier hs-type">HealthCheckTest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689760024"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-69"></span><span>    </span><span id="_hccInterval"><span class="annot"><span class="annottext">HealthCheckConfig b -&gt; HealthCheckInterval
 </span><a href="Hasura.RQL.Types.HealthCheck.html#_hccInterval"><span class="hs-identifier hs-var hs-var">_hccInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckInterval"><span class="hs-identifier hs-type">HealthCheckInterval</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>    </span><span id="_hccRetries"><span class="annot"><span class="annottext">HealthCheckConfig b -&gt; HealthCheckRetries
@@ -532,31 +532,31 @@ $cfrom :: forall (b :: BackendType) x.
 HealthCheckConfig b -&gt; Rep (HealthCheckConfig b) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>
-</span><span id="line-76"></span><span id="local-6989586621689742955"><span id="local-6989586621689742957"><span id="local-6989586621689742959"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742959"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742959"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-76"></span><span id="local-6989586621689759774"><span id="local-6989586621689759776"><span id="local-6989586621689759778"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759778"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759778"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span id="local-6989586621689742948"><span id="local-6989586621689742950"><span id="local-6989586621689742952"><span id="local-6989586621689742954"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742954"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742954"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-78"></span><span id="local-6989586621689759767"><span id="local-6989586621689759769"><span id="local-6989586621689759771"><span id="local-6989586621689759773"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759773"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759773"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span id="local-6989586621689742947"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689742944"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742947"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742947"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-80"></span><span id="local-6989586621689759766"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759763"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759766"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759766"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span id="local-6989586621689742943"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689742936"><span id="local-6989586621689742938"><span id="local-6989586621689742940"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742943"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742943"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621689742935"><span class="annot"><span class="annottext">toJSON :: HealthCheckConfig b -&gt; Value
-</span><a href="#local-6989586621689742935"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; HealthCheckConfig b -&gt; Value
+</span><span id="line-82"></span><span id="local-6989586621689759762"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759755"><span id="local-6989586621689759757"><span id="local-6989586621689759759"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759762"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759762"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621689759754"><span class="annot"><span class="annottext">toJSON :: HealthCheckConfig b -&gt; Value
+</span><a href="#local-6989586621689759754"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; HealthCheckConfig b -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621689743126"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689759945"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span></span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span id="local-6989586621689742934"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689742931"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742934"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742934"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621689742930"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (HealthCheckConfig b)
-</span><a href="#local-6989586621689742930"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Backend b =&gt; Maybe (HealthCheckImplementation (HealthCheckTest b))
+</span><span id="line-85"></span><span id="local-6989586621689759753"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689759750"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759753"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759753"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621689759749"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (HealthCheckConfig b)
+</span><a href="#local-6989586621689759749"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Backend b =&gt; Maybe (HealthCheckImplementation (HealthCheckTest b))
 forall (b :: BackendType).
 Backend b =&gt;
 Maybe (HealthCheckImplementation (HealthCheckTest b))
-</span><a href="Hasura.RQL.Types.Backend.html#healthCheckImplementation"><span class="hs-identifier hs-var">healthCheckImplementation</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689742934"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-87"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier hs-type">HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689742927"><span id="local-6989586621689742928"><span class="annot"><span class="annottext">JSONCodec (HealthCheckTest b)
+</span><a href="Hasura.RQL.Types.Backend.html#healthCheckImplementation"><span class="hs-identifier hs-var">healthCheckImplementation</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689759753"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier hs-type">HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689759746"><span id="local-6989586621689759747"><span class="annot"><span class="annottext">JSONCodec (HealthCheckTest b)
 HealthCheckTest b
 _hciTestCodec :: JSONCodec (HealthCheckTest b)
 _hciDefaultTest :: HealthCheckTest b
@@ -565,7 +565,7 @@ HealthCheckImplementation healthCheckTest
 -&gt; JSONCodec healthCheckTest
 _hciDefaultTest :: forall healthCheckTest.
 HealthCheckImplementation healthCheckTest -&gt; healthCheckTest
-</span><a href="#local-6989586621689742927"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689759746"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (HealthCheckConfig b))
 -&gt; Value
@@ -578,8 +578,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser (HealthCheckConfig b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689742926"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689742926"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689759745"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689759745"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">HealthCheckTest b
 -&gt; HealthCheckInterval
 -&gt; HealthCheckRetries
@@ -609,14 +609,14 @@ HealthCheckTest b
       -&gt; HealthCheckConfig b)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689742926"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (HealthCheckTest b))
+</span><a href="#local-6989586621689759745"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (HealthCheckTest b))
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;test&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (HealthCheckTest b))
 -&gt; HealthCheckTest b -&gt; Parser (HealthCheckTest b)
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">HealthCheckTest b
-</span><a href="#local-6989586621689742928"><span class="hs-identifier hs-var">_hciDefaultTest</span></a></span><span>
+</span><a href="#local-6989586621689759747"><span class="hs-identifier hs-var">_hciDefaultTest</span></a></span><span>
 </span><span id="line-91"></span><span>          </span><span class="annot"><span class="annottext">Parser
   (HealthCheckInterval
    -&gt; HealthCheckRetries
@@ -631,7 +631,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
       -&gt; HealthCheckConfig b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689742926"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser HealthCheckInterval
+</span><a href="#local-6989586621689759745"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser HealthCheckInterval
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;interval&quot;</span></span><span>
@@ -646,7 +646,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
       -&gt; HealthCheckTimeout -&gt; HealthCheckConfig b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689742926"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HealthCheckRetries)
+</span><a href="#local-6989586621689759745"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HealthCheckRetries)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;retries&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe HealthCheckRetries)
@@ -661,7 +661,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser (HealthCheckTimeout -&gt; HealthCheckConfig b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689742926"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HealthCheckRetryInterval)
+</span><a href="#local-6989586621689759745"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HealthCheckRetryInterval)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;retry_interval&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe HealthCheckRetryInterval)
@@ -673,7 +673,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser HealthCheckTimeout -&gt; Parser (HealthCheckConfig b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689742926"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HealthCheckTimeout)
+</span><a href="#local-6989586621689759745"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HealthCheckTimeout)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;timeout&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe HealthCheckTimeout)
@@ -691,13 +691,13 @@ forall a. String -&gt; Parser a
 </span><span class="hs-string">&quot;cannot deserialize health check config because backend does not implement health checks&quot;</span></span></span><span>
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#healthCheckConfigCodec"><span class="hs-identifier hs-type">healthCheckConfigCodec</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-100"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689742921"><span class="annot"><a href="#local-6989586621689742921"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-101"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742921"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-102"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier hs-type">HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#HealthCheckTest"><span class="hs-identifier hs-type">HealthCheckTest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742921"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-103"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689742921"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689759740"><span class="annot"><a href="#local-6989586621689759740"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759740"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier hs-type">HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#HealthCheckTest"><span class="hs-identifier hs-type">HealthCheckTest</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759740"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckConfig"><span class="hs-identifier hs-type">HealthCheckConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689759740"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-104"></span><span id="healthCheckConfigCodec"><span class="annot"><span class="annottext">healthCheckConfigCodec :: HealthCheckImplementation (HealthCheckTest b)
 -&gt; JSONCodec (HealthCheckConfig b)
-</span><a href="Hasura.RQL.Types.HealthCheck.html#healthCheckConfigCodec"><span class="hs-identifier hs-var hs-var">healthCheckConfigCodec</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier hs-type">HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689742919"><span id="local-6989586621689742920"><span class="annot"><span class="annottext">JSONCodec (HealthCheckTest b)
+</span><a href="Hasura.RQL.Types.HealthCheck.html#healthCheckConfigCodec"><span class="hs-identifier hs-var hs-var">healthCheckConfigCodec</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.HealthCheckImplementation.html#HealthCheckImplementation"><span class="hs-identifier hs-type">HealthCheckImplementation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689759738"><span id="local-6989586621689759739"><span class="annot"><span class="annottext">JSONCodec (HealthCheckTest b)
 HealthCheckTest b
 _hciTestCodec :: JSONCodec (HealthCheckTest b)
 _hciDefaultTest :: HealthCheckTest b
@@ -706,7 +706,7 @@ HealthCheckImplementation healthCheckTest
 -&gt; JSONCodec healthCheckTest
 _hciDefaultTest :: forall healthCheckTest.
 HealthCheckImplementation healthCheckTest -&gt; healthCheckTest
-</span><a href="#local-6989586621689742919"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689759738"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-105"></span><span>  </span><span class="annot"><span class="annottext">Text
 -&gt; ObjectCodec (HealthCheckConfig b) (HealthCheckConfig b)
 -&gt; JSONCodec (HealthCheckConfig b)
@@ -714,7 +714,7 @@ forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HasTag b =&gt; Text
 forall (b :: BackendType). HasTag b =&gt; Text
-</span><a href="Hasura.RQL.Types.HealthCheck.html#codecNamePrefix"><span class="hs-identifier hs-var">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689742921"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="Hasura.RQL.Types.HealthCheck.html#codecNamePrefix"><span class="hs-identifier hs-var">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689759740"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HealthCheckConfig&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ObjectCodec (HealthCheckConfig b) (HealthCheckConfig b)
@@ -762,8 +762,8 @@ Eq output =&gt;
 Text -&gt; JSONCodec output -&gt; output -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;test&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec (HealthCheckTest b)
-</span><a href="#local-6989586621689742919"><span class="hs-identifier hs-var">_hciTestCodec</span></a></span><span> </span><span class="annot"><span class="annottext">HealthCheckTest b
-</span><a href="#local-6989586621689742920"><span class="hs-identifier hs-var">_hciDefaultTest</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (HealthCheckTest b) (HealthCheckTest b)
+</span><a href="#local-6989586621689759738"><span class="hs-identifier hs-var">_hciTestCodec</span></a></span><span> </span><span class="annot"><span class="annottext">HealthCheckTest b
+</span><a href="#local-6989586621689759739"><span class="hs-identifier hs-var">_hciDefaultTest</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (HealthCheckTest b) (HealthCheckTest b)
 -&gt; (HealthCheckConfig b -&gt; HealthCheckTest b)
 -&gt; Codec Object (HealthCheckConfig b) (HealthCheckTest b)
 forall oldInput output newInput.
@@ -907,7 +907,7 @@ HealthCheckConfig b -&gt; HealthCheckTimeout
 </span><a href="Hasura.RQL.Types.HealthCheck.html#HealthCheckTimeout"><span class="hs-identifier hs-var">HealthCheckTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
 </span><span class="hs-number">10</span></span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#codecNamePrefix"><span class="hs-identifier hs-type">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689743193"><span class="annot"><a href="#local-6989586621689743193"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689743193"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-122"></span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html#codecNamePrefix"><span class="hs-identifier hs-type">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689760012"><span class="annot"><a href="#local-6989586621689760012"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689760012"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-123"></span><span id="codecNamePrefix"><span class="annot"><span class="annottext">codecNamePrefix :: Text
 </span><a href="Hasura.RQL.Types.HealthCheck.html#codecNamePrefix"><span class="hs-identifier hs-var hs-var">codecNamePrefix</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toTitle</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
@@ -922,5 +922,5 @@ forall (b :: BackendType). BackendTag b -&gt; BackendType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HasTag b =&gt; BackendTag b
 forall (b :: BackendType). HasTag b =&gt; BackendTag b
-</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689743193"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689760012"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-124"></span></pre></body></html>

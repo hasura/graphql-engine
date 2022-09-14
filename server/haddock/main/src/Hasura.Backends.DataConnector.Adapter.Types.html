@@ -38,7 +38,7 @@
 </span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Servant.Client</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">BaseUrl</span></span><span class="hs-special">)</span><span>
 </span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Witch</span></span><span> </span><span class="hs-keyword">qualified</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621689741173"><span id="local-6989586621689741174"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span>
+</span><span id="line-41"></span><span id="local-6989586621689757968"><span id="local-6989586621689757969"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | An arbitrary JSON payload to be passed to the agent in a</span><span>
 </span><span id="line-43"></span><span>    </span><span class="hs-comment">-- header. HGE validates this against the OpenAPI Spec provided by</span><span>
 </span><span id="line-44"></span><span>    </span><span class="hs-comment">-- the agent.</span><span>
@@ -51,7 +51,7 @@
 </span><span id="line-49"></span><span>    </span><span id="timeout"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; Maybe SourceTimeout
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#timeout"><span class="hs-identifier hs-var hs-var">timeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-type">SourceTimeout</span></a></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689741165"><span id="local-6989586621689741167"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757960"><span id="local-6989586621689757962"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 (ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool)
 -&gt; (ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool)
 -&gt; Eq ConnSourceConfig
@@ -60,7 +60,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 == :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 $c== :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741149"><span id="local-6989586621689741151"><span id="local-6989586621689741153"><span id="local-6989586621689741155"><span id="local-6989586621689741157"><span id="local-6989586621689741159"><span id="local-6989586621689741161"><span class="annot"><span class="annottext">Eq ConnSourceConfig
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757944"><span id="local-6989586621689757946"><span id="local-6989586621689757948"><span id="local-6989586621689757950"><span id="local-6989586621689757952"><span id="local-6989586621689757954"><span id="local-6989586621689757956"><span class="annot"><span class="annottext">Eq ConnSourceConfig
 Eq ConnSourceConfig
 -&gt; (ConnSourceConfig -&gt; ConnSourceConfig -&gt; Ordering)
 -&gt; (ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool)
@@ -98,7 +98,7 @@ $c&lt; :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 compare :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Ordering
 $ccompare :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Ordering
 $cp1Ord :: Eq ConnSourceConfig
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741142"><span id="local-6989586621689741144"><span id="local-6989586621689741146"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757937"><span id="local-6989586621689757939"><span id="local-6989586621689757941"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; ShowS
 [ConnSourceConfig] -&gt; ShowS
 ConnSourceConfig -&gt; String
 (Int -&gt; ConnSourceConfig -&gt; ShowS)
@@ -123,7 +123,7 @@ forall a.
 $cto :: forall x. Rep ConnSourceConfig x -&gt; ConnSourceConfig
 $cfrom :: forall x. ConnSourceConfig -&gt; Rep ConnSourceConfig x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-52"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689741134"><span id="local-6989586621689741136"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; Int
+</span><span id="line-52"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757929"><span id="local-6989586621689757931"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; Int
 ConnSourceConfig -&gt; Int
 (Int -&gt; ConnSourceConfig -&gt; Int)
 -&gt; (ConnSourceConfig -&gt; Int) -&gt; Hashable ConnSourceConfig
@@ -132,12 +132,12 @@ hash :: ConnSourceConfig -&gt; Int
 $chash :: ConnSourceConfig -&gt; Int
 hashWithSalt :: Int -&gt; ConnSourceConfig -&gt; Int
 $chashWithSalt :: Int -&gt; ConnSourceConfig -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741131"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757926"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ()
 (ConnSourceConfig -&gt; ()) -&gt; NFData ConnSourceConfig
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ConnSourceConfig -&gt; ()
 $crnf :: ConnSourceConfig -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741122"><span id="local-6989586621689741124"><span id="local-6989586621689741126"><span id="local-6989586621689741128"><span class="annot"><span class="annottext">[ConnSourceConfig] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757917"><span id="local-6989586621689757919"><span id="local-6989586621689757921"><span id="local-6989586621689757923"><span class="annot"><span class="annottext">[ConnSourceConfig] -&gt; Value
 [ConnSourceConfig] -&gt; Encoding
 ConnSourceConfig -&gt; Value
 ConnSourceConfig -&gt; Encoding
@@ -165,21 +165,21 @@ $ctoJSON :: ConnSourceConfig -&gt; Value
 </span><span id="line-54"></span><span class="hs-comment">-- Default to the old style of ConnSourceConfig if a &quot;value&quot; field isn't present.</span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- This will prevent existing configurations from breaking.</span><span>
 </span><span id="line-56"></span><span class="hs-comment">-- NOTE: This is planned to be deprecated in future once tooling is migrated.</span><span>
-</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689741118"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621689741116"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConnSourceConfig
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757913"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621689757911"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConnSourceConfig
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser ConnSourceConfig)
 -&gt; Value
 -&gt; Parser ConnSourceConfig
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;ConnSourceConfig&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689741113"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741113"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;ConnSourceConfig&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689757908"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689757908"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-59"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Object -&gt; Maybe Value
 forall v. Key -&gt; KeyMap v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">J.lookup</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741113"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689757908"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-60"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Config -&gt; Maybe Text -&gt; Maybe SourceTimeout -&gt; ConnSourceConfig
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(Config -&gt; Maybe Text -&gt; Maybe SourceTimeout -&gt; ConnSourceConfig)
@@ -187,7 +187,7 @@ forall v. Key -&gt; KeyMap v -&gt; Maybe v
 -&gt; Parser (Maybe Text -&gt; Maybe SourceTimeout -&gt; ConnSourceConfig)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741113"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Config
+</span><a href="#local-6989586621689757908"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Config
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Text -&gt; Maybe SourceTimeout -&gt; ConnSourceConfig)
@@ -195,14 +195,14 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 -&gt; Parser (Maybe SourceTimeout -&gt; ConnSourceConfig)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741113"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Text)
+</span><a href="#local-6989586621689757908"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Text)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;template&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe SourceTimeout -&gt; ConnSourceConfig)
 -&gt; Parser (Maybe SourceTimeout) -&gt; Parser ConnSourceConfig
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741113"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SourceTimeout)
+</span><a href="#local-6989586621689757908"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SourceTimeout)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;timeout&quot;</span></span><span class="hs-special">)</span><span>
@@ -210,21 +210,21 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Config -&gt; Maybe Text -&gt; Maybe SourceTimeout -&gt; ConnSourceConfig
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; Config
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Config</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741113"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689757908"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(Maybe SourceTimeout -&gt; ConnSourceConfig)
 -&gt; Parser (Maybe SourceTimeout) -&gt; Parser ConnSourceConfig
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741113"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SourceTimeout)
+</span><a href="#local-6989586621689757908"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SourceTimeout)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;timeout&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="hs-comment">-- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON</span><span>
 </span><span id="line-64"></span><span class="hs-comment">-- instances.</span><span>
-</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689741105"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621689741103"><span class="annot"><span class="annottext">codec :: JSONCodec ConnSourceConfig
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757900"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621689757898"><span class="annot"><span class="annottext">codec :: JSONCodec ConnSourceConfig
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec ConnSourceConfig -&gt; JSONCodec ConnSourceConfig
 forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
@@ -237,18 +237,18 @@ forall a. (FromJSON a, ToJSON a) =&gt; JSONCodec a
 </span><a href="Hasura.Metadata.DTO.Placeholder.html#placeholderCodecViaJSON"><span class="hs-identifier hs-var">placeholderCodecViaJSON</span></a></span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-69"></span><span>  </span><span id="local-6989586621689741097"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621689757892"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 </span><a href="Hasura.Incremental.Internal.Dependency.html#unchanged"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">(==)</span></span><span>
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- NOTE: There may be a time type with units datatype already available somewhere</span><span>
-</span><span id="line-72"></span><span id="local-6989586621689741094"><span id="local-6989586621689741095"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceTimeout"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-var">SourceTimeout</span></a></span></span><span>
+</span><span id="line-72"></span><span id="local-6989586621689757889"><span id="local-6989586621689757890"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceTimeout"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-var">SourceTimeout</span></a></span></span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SourceTimeoutSeconds"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutSeconds"><span class="hs-identifier hs-var">SourceTimeoutSeconds</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-74"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SourceTimeoutMilliseconds"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMilliseconds"><span class="hs-identifier hs-var">SourceTimeoutMilliseconds</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SourceTimeoutMicroseconds"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMicroseconds"><span class="hs-identifier hs-var">SourceTimeoutMicroseconds</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689741087"><span id="local-6989586621689741089"><span class="annot"><span class="annottext">SourceTimeout -&gt; SourceTimeout -&gt; Bool
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757882"><span id="local-6989586621689757884"><span class="annot"><span class="annottext">SourceTimeout -&gt; SourceTimeout -&gt; Bool
 (SourceTimeout -&gt; SourceTimeout -&gt; Bool)
 -&gt; (SourceTimeout -&gt; SourceTimeout -&gt; Bool) -&gt; Eq SourceTimeout
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -256,7 +256,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: SourceTimeout -&gt; SourceTimeout -&gt; Bool
 == :: SourceTimeout -&gt; SourceTimeout -&gt; Bool
 $c== :: SourceTimeout -&gt; SourceTimeout -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741072"><span id="local-6989586621689741074"><span id="local-6989586621689741076"><span id="local-6989586621689741078"><span id="local-6989586621689741080"><span id="local-6989586621689741082"><span id="local-6989586621689741084"><span class="annot"><span class="annottext">Eq SourceTimeout
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757867"><span id="local-6989586621689757869"><span id="local-6989586621689757871"><span id="local-6989586621689757873"><span id="local-6989586621689757875"><span id="local-6989586621689757877"><span id="local-6989586621689757879"><span class="annot"><span class="annottext">Eq SourceTimeout
 Eq SourceTimeout
 -&gt; (SourceTimeout -&gt; SourceTimeout -&gt; Ordering)
 -&gt; (SourceTimeout -&gt; SourceTimeout -&gt; Bool)
@@ -294,7 +294,7 @@ $c&lt; :: SourceTimeout -&gt; SourceTimeout -&gt; Bool
 compare :: SourceTimeout -&gt; SourceTimeout -&gt; Ordering
 $ccompare :: SourceTimeout -&gt; SourceTimeout -&gt; Ordering
 $cp1Ord :: Eq SourceTimeout
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741066"><span id="local-6989586621689741068"><span id="local-6989586621689741070"><span class="annot"><span class="annottext">Int -&gt; SourceTimeout -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757861"><span id="local-6989586621689757863"><span id="local-6989586621689757865"><span class="annot"><span class="annottext">Int -&gt; SourceTimeout -&gt; ShowS
 [SourceTimeout] -&gt; ShowS
 SourceTimeout -&gt; String
 (Int -&gt; SourceTimeout -&gt; ShowS)
@@ -319,7 +319,7 @@ forall a.
 $cto :: forall x. Rep SourceTimeout x -&gt; SourceTimeout
 $cfrom :: forall x. SourceTimeout -&gt; Rep SourceTimeout x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689741060"><span id="local-6989586621689741062"><span class="annot"><span class="annottext">Int -&gt; SourceTimeout -&gt; Int
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757855"><span id="local-6989586621689757857"><span class="annot"><span class="annottext">Int -&gt; SourceTimeout -&gt; Int
 SourceTimeout -&gt; Int
 (Int -&gt; SourceTimeout -&gt; Int)
 -&gt; (SourceTimeout -&gt; Int) -&gt; Hashable SourceTimeout
@@ -328,68 +328,68 @@ hash :: SourceTimeout -&gt; Int
 $chash :: SourceTimeout -&gt; Int
 hashWithSalt :: Int -&gt; SourceTimeout -&gt; Int
 $chashWithSalt :: Int -&gt; SourceTimeout -&gt; Int
-</span><a href="#local-6989586621689741060"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741058"><span class="annot"><span class="annottext">SourceTimeout -&gt; ()
+</span><a href="#local-6989586621689757855"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757853"><span class="annot"><span class="annottext">SourceTimeout -&gt; ()
 (SourceTimeout -&gt; ()) -&gt; NFData SourceTimeout
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: SourceTimeout -&gt; ()
 $crnf :: SourceTimeout -&gt; ()
-</span><a href="#local-6989586621689741058"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689757853"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#sourceTimeoutMicroseconds"><span class="hs-identifier hs-type">sourceTimeoutMicroseconds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-type">SourceTimeout</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-80"></span><span id="sourceTimeoutMicroseconds"><span class="annot"><span class="annottext">sourceTimeoutMicroseconds :: SourceTimeout -&gt; Int
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#sourceTimeoutMicroseconds"><span class="hs-identifier hs-var hs-var">sourceTimeoutMicroseconds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutSeconds"><span class="hs-identifier hs-type">SourceTimeoutSeconds</span></a></span><span> </span><span id="local-6989586621689741057"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741057"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741057"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutSeconds"><span class="hs-identifier hs-type">SourceTimeoutSeconds</span></a></span><span> </span><span id="local-6989586621689757852"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757852"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757852"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1000000</span></span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMilliseconds"><span class="hs-identifier hs-type">SourceTimeoutMilliseconds</span></a></span><span> </span><span id="local-6989586621689741055"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741055"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741055"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMilliseconds"><span class="hs-identifier hs-type">SourceTimeoutMilliseconds</span></a></span><span> </span><span id="local-6989586621689757850"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757850"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757850"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1000</span></span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMicroseconds"><span class="hs-identifier hs-type">SourceTimeoutMicroseconds</span></a></span><span> </span><span id="local-6989586621689741054"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741054"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741054"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMicroseconds"><span class="hs-identifier hs-type">SourceTimeoutMicroseconds</span></a></span><span> </span><span id="local-6989586621689757849"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757849"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757849"><span class="hs-identifier hs-var">u</span></a></span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689741051"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-type">SourceTimeout</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621689741050"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceTimeout
-</span><a href="#local-6989586621689741050"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757846"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-type">SourceTimeout</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621689757845"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceTimeout
+</span><a href="#local-6989586621689757845"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser SourceTimeout)
 -&gt; Value
 -&gt; Parser SourceTimeout
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;SourceTimeout&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689741049"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741049"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;SourceTimeout&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689757844"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689757844"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-87"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><span class="hs-identifier hs-var">J.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689741049"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689757844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-88"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;seconds&quot;</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741047"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741047"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; String -&gt; (Int -&gt; SourceTimeout) -&gt; Parser SourceTimeout
+</span><span class="hs-string">&quot;seconds&quot;</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757842"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757842"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; String -&gt; (Int -&gt; SourceTimeout) -&gt; Parser SourceTimeout
 forall t a. Integral t =&gt; Value -&gt; String -&gt; (t -&gt; a) -&gt; Parser a
-</span><a href="#local-6989586621689741046"><span class="hs-identifier hs-var">convertTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741047"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689757841"><span class="hs-identifier hs-var">convertTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757842"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;seconds&quot;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; SourceTimeout
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutSeconds"><span class="hs-identifier hs-var">SourceTimeoutSeconds</span></a></span><span>
 </span><span id="line-89"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;milliseconds&quot;</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741045"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741045"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; String -&gt; (Int -&gt; SourceTimeout) -&gt; Parser SourceTimeout
+</span><span class="hs-string">&quot;milliseconds&quot;</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757840"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757840"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; String -&gt; (Int -&gt; SourceTimeout) -&gt; Parser SourceTimeout
 forall t a. Integral t =&gt; Value -&gt; String -&gt; (t -&gt; a) -&gt; Parser a
-</span><a href="#local-6989586621689741046"><span class="hs-identifier hs-var">convertTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741045"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689757841"><span class="hs-identifier hs-var">convertTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757840"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;milliseconds&quot;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; SourceTimeout
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMilliseconds"><span class="hs-identifier hs-var">SourceTimeoutMilliseconds</span></a></span><span>
 </span><span id="line-90"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;microseconds&quot;</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689741044"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741044"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; String -&gt; (Int -&gt; SourceTimeout) -&gt; Parser SourceTimeout
+</span><span class="hs-string">&quot;microseconds&quot;</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757839"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757839"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; String -&gt; (Int -&gt; SourceTimeout) -&gt; Parser SourceTimeout
 forall t a. Integral t =&gt; Value -&gt; String -&gt; (t -&gt; a) -&gt; Parser a
-</span><a href="#local-6989586621689741046"><span class="hs-identifier hs-var">convertTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741044"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689757841"><span class="hs-identifier hs-var">convertTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757839"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;microseconds&quot;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; SourceTimeout
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMicroseconds"><span class="hs-identifier hs-var">SourceTimeoutMicroseconds</span></a></span><span>
 </span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">[(Key, Value)]
@@ -398,48 +398,48 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Invalid SourceTimeout. Formats include: {seconds: Int}, {milliseconds: Int}, {microseconds: Int}&quot;</span></span><span>
 </span><span id="line-92"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-93"></span><span>      </span><span id="local-6989586621689741046"><span class="annot"><span class="annottext">convertTimeout :: Value -&gt; String -&gt; (t -&gt; a) -&gt; Parser a
-</span><a href="#local-6989586621689741046"><span class="hs-identifier hs-var hs-var">convertTimeout</span></a></span></span><span> </span><span id="local-6989586621689741043"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741043"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621689741042"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689741042"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621689741041"><span class="annot"><span class="annottext">t -&gt; a
-</span><a href="#local-6989586621689741041"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-93"></span><span>      </span><span id="local-6989586621689757841"><span class="annot"><span class="annottext">convertTimeout :: Value -&gt; String -&gt; (t -&gt; a) -&gt; Parser a
+</span><a href="#local-6989586621689757841"><span class="hs-identifier hs-var hs-var">convertTimeout</span></a></span></span><span> </span><span id="local-6989586621689757838"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757838"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621689757837"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689757837"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621689757836"><span class="annot"><span class="annottext">t -&gt; a
+</span><a href="#local-6989586621689757836"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
 forall a. String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withScientific</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689741042"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689741039"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689741039"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Parser a
+</span><a href="#local-6989586621689757837"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689757834"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689757834"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Parser a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Parser a) -&gt; a -&gt; Parser a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; a
-</span><a href="#local-6989586621689741041"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific -&gt; t
+</span><a href="#local-6989586621689757836"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific -&gt; t
 forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689741039"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689741043"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689757834"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689757838"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689741031"><span id="local-6989586621689741033"><span id="local-6989586621689741035"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-type">SourceTimeout</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-96"></span><span>  </span><span id="local-6989586621689741030"><span class="annot"><span class="annottext">toJSON :: SourceTimeout -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutSeconds"><span class="hs-identifier hs-type">SourceTimeoutSeconds</span></a></span><span> </span><span id="local-6989586621689741028"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741028"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
+</span><span id="line-95"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757826"><span id="local-6989586621689757828"><span id="local-6989586621689757830"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeout"><span class="hs-identifier hs-type">SourceTimeout</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-96"></span><span>  </span><span id="local-6989586621689757825"><span class="annot"><span class="annottext">toJSON :: SourceTimeout -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutSeconds"><span class="hs-identifier hs-type">SourceTimeoutSeconds</span></a></span><span> </span><span id="local-6989586621689757823"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757823"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;seconds&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741028"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-97"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMilliseconds"><span class="hs-identifier hs-type">SourceTimeoutMilliseconds</span></a></span><span> </span><span id="local-6989586621689741025"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741025"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
+</span><a href="#local-6989586621689757823"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMilliseconds"><span class="hs-identifier hs-type">SourceTimeoutMilliseconds</span></a></span><span> </span><span id="local-6989586621689757820"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757820"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;milliseconds&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741025"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-98"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMicroseconds"><span class="hs-identifier hs-type">SourceTimeoutMicroseconds</span></a></span><span> </span><span id="local-6989586621689741024"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741024"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
+</span><a href="#local-6989586621689757820"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-98"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceTimeoutMicroseconds"><span class="hs-identifier hs-type">SourceTimeoutMicroseconds</span></a></span><span> </span><span id="local-6989586621689757819"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689757819"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;microseconds&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689741024"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689757819"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-99"></span><span>
 </span><span id="line-100"></span><span class="hs-keyword">data</span><span> </span><span id="SourceConfig"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-var">SourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceConfig"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-var">SourceConfig</span></a></span></span><span>
 </span><span id="line-101"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_scEndpoint"><span class="annot"><span class="annottext">SourceConfig -&gt; BaseUrl
@@ -460,90 +460,90 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_scDataConnectorName"><span class="hs-identifier hs-var hs-var">_scDataConnectorName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-110"></span><span>
-</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689741012"><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-112"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span id="local-6989586621689741011"><span class="annot"><span class="annottext">BaseUrl
-</span><a href="#local-6989586621689741011"><span class="hs-identifier hs-var">ep1</span></a></span></span><span> </span><span id="local-6989586621689741010"><span class="annot"><span class="annottext">Config
-</span><a href="#local-6989586621689741010"><span class="hs-identifier hs-var">capabilities1</span></a></span></span><span> </span><span id="local-6989586621689741009"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689741009"><span class="hs-identifier hs-var">config1</span></a></span></span><span> </span><span id="local-6989586621689741008"><span class="annot"><span class="annottext">Capabilities
-</span><a href="#local-6989586621689741008"><span class="hs-identifier hs-var">template1</span></a></span></span><span> </span><span id="local-6989586621689741007"><span class="annot"><span class="annottext">SchemaResponse
-</span><a href="#local-6989586621689741007"><span class="hs-identifier hs-var">schema1</span></a></span></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689741006"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689741006"><span class="hs-identifier hs-var">timeout1</span></a></span></span><span> </span><span id="local-6989586621689741005"><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689741005"><span class="hs-identifier hs-var">dcName1</span></a></span></span><span> </span><span id="local-6989586621689741004"><span class="annot"><span class="annottext">== :: SourceConfig -&gt; SourceConfig -&gt; Bool
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">==</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span id="local-6989586621689741003"><span class="annot"><span class="annottext">BaseUrl
-</span><a href="#local-6989586621689741003"><span class="hs-identifier hs-var">ep2</span></a></span></span><span> </span><span id="local-6989586621689741002"><span class="annot"><span class="annottext">Config
-</span><a href="#local-6989586621689741002"><span class="hs-identifier hs-var">capabilities2</span></a></span></span><span> </span><span id="local-6989586621689741001"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689741001"><span class="hs-identifier hs-var">config2</span></a></span></span><span> </span><span id="local-6989586621689741000"><span class="annot"><span class="annottext">Capabilities
-</span><a href="#local-6989586621689741000"><span class="hs-identifier hs-var">template2</span></a></span></span><span> </span><span id="local-6989586621689740999"><span class="annot"><span class="annottext">SchemaResponse
-</span><a href="#local-6989586621689740999"><span class="hs-identifier hs-var">schema2</span></a></span></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689740998"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689740998"><span class="hs-identifier hs-var">timeout2</span></a></span></span><span> </span><span id="local-6989586621689740997"><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689740997"><span class="hs-identifier hs-var">dcName2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757807"><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span id="local-6989586621689757806"><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621689757806"><span class="hs-identifier hs-var">ep1</span></a></span></span><span> </span><span id="local-6989586621689757805"><span class="annot"><span class="annottext">Config
+</span><a href="#local-6989586621689757805"><span class="hs-identifier hs-var">capabilities1</span></a></span></span><span> </span><span id="local-6989586621689757804"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689757804"><span class="hs-identifier hs-var">config1</span></a></span></span><span> </span><span id="local-6989586621689757803"><span class="annot"><span class="annottext">Capabilities
+</span><a href="#local-6989586621689757803"><span class="hs-identifier hs-var">template1</span></a></span></span><span> </span><span id="local-6989586621689757802"><span class="annot"><span class="annottext">SchemaResponse
+</span><a href="#local-6989586621689757802"><span class="hs-identifier hs-var">schema1</span></a></span></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689757801"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689757801"><span class="hs-identifier hs-var">timeout1</span></a></span></span><span> </span><span id="local-6989586621689757800"><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621689757800"><span class="hs-identifier hs-var">dcName1</span></a></span></span><span> </span><span id="local-6989586621689757799"><span class="annot"><span class="annottext">== :: SourceConfig -&gt; SourceConfig -&gt; Bool
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">==</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span id="local-6989586621689757798"><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621689757798"><span class="hs-identifier hs-var">ep2</span></a></span></span><span> </span><span id="local-6989586621689757797"><span class="annot"><span class="annottext">Config
+</span><a href="#local-6989586621689757797"><span class="hs-identifier hs-var">capabilities2</span></a></span></span><span> </span><span id="local-6989586621689757796"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689757796"><span class="hs-identifier hs-var">config2</span></a></span></span><span> </span><span id="local-6989586621689757795"><span class="annot"><span class="annottext">Capabilities
+</span><a href="#local-6989586621689757795"><span class="hs-identifier hs-var">template2</span></a></span></span><span> </span><span id="local-6989586621689757794"><span class="annot"><span class="annottext">SchemaResponse
+</span><a href="#local-6989586621689757794"><span class="hs-identifier hs-var">schema2</span></a></span></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689757793"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689757793"><span class="hs-identifier hs-var">timeout2</span></a></span></span><span> </span><span id="local-6989586621689757792"><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621689757792"><span class="hs-identifier hs-var">dcName2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-113"></span><span>    </span><span class="annot"><span class="annottext">BaseUrl
-</span><a href="#local-6989586621689741011"><span class="hs-identifier hs-var">ep1</span></a></span><span> </span><span class="annot"><span class="annottext">BaseUrl -&gt; BaseUrl -&gt; Bool
+</span><a href="#local-6989586621689757806"><span class="hs-identifier hs-var">ep1</span></a></span><span> </span><span class="annot"><span class="annottext">BaseUrl -&gt; BaseUrl -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">BaseUrl
-</span><a href="#local-6989586621689741003"><span class="hs-identifier hs-var">ep2</span></a></span><span>
+</span><a href="#local-6989586621689757798"><span class="hs-identifier hs-var">ep2</span></a></span><span>
 </span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Config
-</span><a href="#local-6989586621689741010"><span class="hs-identifier hs-var">capabilities1</span></a></span><span> </span><span class="annot"><span class="annottext">Config -&gt; Config -&gt; Bool
+</span><a href="#local-6989586621689757805"><span class="hs-identifier hs-var">capabilities1</span></a></span><span> </span><span class="annot"><span class="annottext">Config -&gt; Config -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Config
-</span><a href="#local-6989586621689741002"><span class="hs-identifier hs-var">capabilities2</span></a></span><span>
+</span><a href="#local-6989586621689757797"><span class="hs-identifier hs-var">capabilities2</span></a></span><span>
 </span><span id="line-115"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689741009"><span class="hs-identifier hs-var">config1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe Text -&gt; Bool
+</span><a href="#local-6989586621689757804"><span class="hs-identifier hs-var">config1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689741001"><span class="hs-identifier hs-var">config2</span></a></span><span>
+</span><a href="#local-6989586621689757796"><span class="hs-identifier hs-var">config2</span></a></span><span>
 </span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Capabilities
-</span><a href="#local-6989586621689741008"><span class="hs-identifier hs-var">template1</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities -&gt; Capabilities -&gt; Bool
+</span><a href="#local-6989586621689757803"><span class="hs-identifier hs-var">template1</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities -&gt; Capabilities -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Capabilities
-</span><a href="#local-6989586621689741000"><span class="hs-identifier hs-var">template2</span></a></span><span>
+</span><a href="#local-6989586621689757795"><span class="hs-identifier hs-var">template2</span></a></span><span>
 </span><span id="line-117"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">SchemaResponse
-</span><a href="#local-6989586621689741007"><span class="hs-identifier hs-var">schema1</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaResponse -&gt; SchemaResponse -&gt; Bool
+</span><a href="#local-6989586621689757802"><span class="hs-identifier hs-var">schema1</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaResponse -&gt; SchemaResponse -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">SchemaResponse
-</span><a href="#local-6989586621689740999"><span class="hs-identifier hs-var">schema2</span></a></span><span>
+</span><a href="#local-6989586621689757794"><span class="hs-identifier hs-var">schema2</span></a></span><span>
 </span><span id="line-118"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689741006"><span class="hs-identifier hs-var">timeout1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; Maybe Int -&gt; Bool
+</span><a href="#local-6989586621689757801"><span class="hs-identifier hs-var">timeout1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; Maybe Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689740998"><span class="hs-identifier hs-var">timeout2</span></a></span><span>
+</span><a href="#local-6989586621689757793"><span class="hs-identifier hs-var">timeout2</span></a></span><span>
 </span><span id="line-119"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689741005"><span class="hs-identifier hs-var">dcName1</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
+</span><a href="#local-6989586621689757800"><span class="hs-identifier hs-var">dcName1</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689740997"><span class="hs-identifier hs-var">dcName2</span></a></span><span>
+</span><a href="#local-6989586621689757792"><span class="hs-identifier hs-var">dcName2</span></a></span><span>
 </span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689740991"><span id="local-6989586621689740994"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621689740990"><span class="annot"><span class="annottext">show :: SourceConfig -&gt; String
+</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757786"><span id="local-6989586621689757789"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621689757785"><span class="annot"><span class="annottext">show :: SourceConfig -&gt; String
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;SourceConfig&quot;</span></span><span>
 </span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689740982"><span id="local-6989586621689740984"><span id="local-6989586621689740986"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-125"></span><span>  </span><span id="local-6989586621689740981"><span class="annot"><span class="annottext">toJSON :: SourceConfig -&gt; Value
-</span><a href="#local-6989586621689740981"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig
+</span><span id="line-124"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757777"><span id="local-6989586621689757779"><span id="local-6989586621689757781"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621689757776"><span class="annot"><span class="annottext">toJSON :: SourceConfig -&gt; Value
+</span><a href="#local-6989586621689757776"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;SourceConfig&quot;</span></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621689740977"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; SourceConfig -&gt; SourceConfig -&gt; Bool
-</span><a href="#local-6989586621689740977"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621689757772"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; SourceConfig -&gt; SourceConfig -&gt; Bool
+</span><a href="#local-6989586621689757772"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig -&gt; SourceConfig -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">(==)</span></span><span>
 </span><span id="line-129"></span><span>
-</span><span id="line-130"></span><span id="local-6989586621689740975"><span id="local-6989586621689740976"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unDataConnectorName"><span class="annot"><span class="annottext">DataConnectorName -&gt; NonEmptyText
+</span><span id="line-130"></span><span id="local-6989586621689757770"><span id="local-6989586621689757771"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unDataConnectorName"><span class="annot"><span class="annottext">DataConnectorName -&gt; NonEmptyText
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#unDataConnectorName"><span class="hs-identifier hs-var hs-var">unDataConnectorName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-131"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689740969"><span id="local-6989586621689740971"><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
+</span><span id="line-131"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757764"><span id="local-6989586621689757766"><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
 (DataConnectorName -&gt; DataConnectorName -&gt; Bool)
 -&gt; (DataConnectorName -&gt; DataConnectorName -&gt; Bool)
 -&gt; Eq DataConnectorName
@@ -552,7 +552,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 == :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 $c== :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740954"><span id="local-6989586621689740956"><span id="local-6989586621689740958"><span id="local-6989586621689740960"><span id="local-6989586621689740962"><span id="local-6989586621689740964"><span id="local-6989586621689740966"><span class="annot"><span class="annottext">Eq DataConnectorName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757749"><span id="local-6989586621689757751"><span id="local-6989586621689757753"><span id="local-6989586621689757755"><span id="local-6989586621689757757"><span id="local-6989586621689757759"><span id="local-6989586621689757761"><span class="annot"><span class="annottext">Eq DataConnectorName
 Eq DataConnectorName
 -&gt; (DataConnectorName -&gt; DataConnectorName -&gt; Ordering)
 -&gt; (DataConnectorName -&gt; DataConnectorName -&gt; Bool)
@@ -590,7 +590,7 @@ $c&lt; :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 compare :: DataConnectorName -&gt; DataConnectorName -&gt; Ordering
 $ccompare :: DataConnectorName -&gt; DataConnectorName -&gt; Ordering
 $cp1Ord :: Eq DataConnectorName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740948"><span id="local-6989586621689740950"><span id="local-6989586621689740952"><span class="annot"><span class="annottext">Int -&gt; DataConnectorName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757743"><span id="local-6989586621689757745"><span id="local-6989586621689757747"><span class="annot"><span class="annottext">Int -&gt; DataConnectorName -&gt; ShowS
 [DataConnectorName] -&gt; ShowS
 DataConnectorName -&gt; String
 (Int -&gt; DataConnectorName -&gt; ShowS)
@@ -615,7 +615,7 @@ forall a.
 $cto :: forall x. Rep DataConnectorName x -&gt; DataConnectorName
 $cfrom :: forall x. DataConnectorName -&gt; Rep DataConnectorName x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689740942"><span id="local-6989586621689740944"><span class="annot"><span class="annottext">Value -&gt; Parser [DataConnectorName]
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757737"><span id="local-6989586621689757739"><span class="annot"><span class="annottext">Value -&gt; Parser [DataConnectorName]
 Value -&gt; Parser DataConnectorName
 (Value -&gt; Parser DataConnectorName)
 -&gt; (Value -&gt; Parser [DataConnectorName])
@@ -626,7 +626,7 @@ parseJSONList :: Value -&gt; Parser [DataConnectorName]
 $cparseJSONList :: Value -&gt; Parser [DataConnectorName]
 parseJSON :: Value -&gt; Parser DataConnectorName
 $cparseJSON :: Value -&gt; Parser DataConnectorName
-</span><a href="#local-6989586621689740942"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740934"><span id="local-6989586621689740936"><span id="local-6989586621689740938"><span id="local-6989586621689740940"><span class="annot"><span class="annottext">[DataConnectorName] -&gt; Value
+</span><a href="#local-6989586621689757737"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757729"><span id="local-6989586621689757731"><span id="local-6989586621689757733"><span id="local-6989586621689757735"><span class="annot"><span class="annottext">[DataConnectorName] -&gt; Value
 [DataConnectorName] -&gt; Encoding
 DataConnectorName -&gt; Value
 DataConnectorName -&gt; Encoding
@@ -649,7 +649,7 @@ toEncoding :: DataConnectorName -&gt; Encoding
 $ctoEncoding :: DataConnectorName -&gt; Encoding
 toJSON :: DataConnectorName -&gt; Value
 $ctoJSON :: DataConnectorName -&gt; Value
-</span><a href="#local-6989586621689740934"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740930"><span id="local-6989586621689740932"><span class="annot"><span class="annottext">FromJSONKeyFunction [DataConnectorName]
+</span><a href="#local-6989586621689757729"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757725"><span id="local-6989586621689757727"><span class="annot"><span class="annottext">FromJSONKeyFunction [DataConnectorName]
 FromJSONKeyFunction DataConnectorName
 FromJSONKeyFunction DataConnectorName
 -&gt; FromJSONKeyFunction [DataConnectorName]
@@ -660,7 +660,7 @@ fromJSONKeyList :: FromJSONKeyFunction [DataConnectorName]
 $cfromJSONKeyList :: FromJSONKeyFunction [DataConnectorName]
 fromJSONKey :: FromJSONKeyFunction DataConnectorName
 $cfromJSONKey :: FromJSONKeyFunction DataConnectorName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740925"><span id="local-6989586621689740927"><span class="annot"><span class="annottext">ToJSONKeyFunction [DataConnectorName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757720"><span id="local-6989586621689757722"><span class="annot"><span class="annottext">ToJSONKeyFunction [DataConnectorName]
 ToJSONKeyFunction DataConnectorName
 ToJSONKeyFunction DataConnectorName
 -&gt; ToJSONKeyFunction [DataConnectorName]
@@ -671,7 +671,7 @@ toJSONKeyList :: ToJSONKeyFunction [DataConnectorName]
 $ctoJSONKeyList :: ToJSONKeyFunction [DataConnectorName]
 toJSONKey :: ToJSONKeyFunction DataConnectorName
 $ctoJSONKey :: ToJSONKeyFunction DataConnectorName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740920"><span id="local-6989586621689740922"><span class="annot"><span class="annottext">Int -&gt; DataConnectorName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757715"><span id="local-6989586621689757717"><span class="annot"><span class="annottext">Int -&gt; DataConnectorName -&gt; Int
 DataConnectorName -&gt; Int
 (Int -&gt; DataConnectorName -&gt; Int)
 -&gt; (DataConnectorName -&gt; Int) -&gt; Hashable DataConnectorName
@@ -680,13 +680,13 @@ hash :: DataConnectorName -&gt; Int
 $chash :: DataConnectorName -&gt; Int
 hashWithSalt :: Int -&gt; DataConnectorName -&gt; Int
 $chashWithSalt :: Int -&gt; DataConnectorName -&gt; Int
-</span><a href="#local-6989586621689740920"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740918"><span class="annot"><span class="annottext">DataConnectorName -&gt; Text
+</span><a href="#local-6989586621689757715"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757713"><span class="annot"><span class="annottext">DataConnectorName -&gt; Text
 (DataConnectorName -&gt; Text) -&gt; ToTxt DataConnectorName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: DataConnectorName -&gt; Text
 $ctoTxt :: DataConnectorName -&gt; Text
 </span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689740914"><span class="annot"><span class="annottext">Eq DataConnectorName
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757709"><span class="annot"><span class="annottext">Eq DataConnectorName
 Eq DataConnectorName
 -&gt; (Accesses -&gt; DataConnectorName -&gt; DataConnectorName -&gt; Bool)
 -&gt; Cacheable DataConnectorName
@@ -695,19 +695,19 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; DataConnectorName -&gt; DataConnectorName -&gt; Bool
 $cunchanged :: Accesses -&gt; DataConnectorName -&gt; DataConnectorName -&gt; Bool
 $cp1Cacheable :: Eq DataConnectorName
-</span><a href="#local-6989586621689740914"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740912"><span class="annot"><span class="annottext">DataConnectorName -&gt; ()
+</span><a href="#local-6989586621689757709"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757707"><span class="annot"><span class="annottext">DataConnectorName -&gt; ()
 (DataConnectorName -&gt; ()) -&gt; NFData DataConnectorName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: DataConnectorName -&gt; ()
 $crnf :: DataConnectorName -&gt; ()
-</span><a href="#local-6989586621689740912"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689757707"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689740910"><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span>
+</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757705"><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span>
 </span><span id="line-136"></span><span>
-</span><span id="line-137"></span><span id="local-6989586621689740907"><span id="local-6989586621689740908"></span></span><span class="hs-keyword">data</span><span> </span><span id="DataConnectorOptions"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-var">DataConnectorOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorOptions"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-var">DataConnectorOptions</span></a></span></span><span>
+</span><span id="line-137"></span><span id="local-6989586621689757702"><span id="local-6989586621689757703"></span></span><span class="hs-keyword">data</span><span> </span><span id="DataConnectorOptions"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-var">DataConnectorOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorOptions"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-var">DataConnectorOptions</span></a></span></span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-special">{</span><span id="_dcoUri"><span class="annot"><span class="annottext">DataConnectorOptions -&gt; BaseUrl
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dcoUri"><span class="hs-identifier hs-var hs-var">_dcoUri</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BaseUrl</span></span><span class="hs-special">}</span><span>
-</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689740901"><span id="local-6989586621689740903"><span class="annot"><span class="annottext">DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757696"><span id="local-6989586621689757698"><span class="annot"><span class="annottext">DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
 (DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool)
 -&gt; (DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool)
 -&gt; Eq DataConnectorOptions
@@ -716,7 +716,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
 == :: DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
 $c== :: DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740886"><span id="local-6989586621689740888"><span id="local-6989586621689740890"><span id="local-6989586621689740892"><span id="local-6989586621689740894"><span id="local-6989586621689740896"><span id="local-6989586621689740898"><span class="annot"><span class="annottext">Eq DataConnectorOptions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757681"><span id="local-6989586621689757683"><span id="local-6989586621689757685"><span id="local-6989586621689757687"><span id="local-6989586621689757689"><span id="local-6989586621689757691"><span id="local-6989586621689757693"><span class="annot"><span class="annottext">Eq DataConnectorOptions
 Eq DataConnectorOptions
 -&gt; (DataConnectorOptions -&gt; DataConnectorOptions -&gt; Ordering)
 -&gt; (DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool)
@@ -761,7 +761,7 @@ $c&lt; :: DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
 compare :: DataConnectorOptions -&gt; DataConnectorOptions -&gt; Ordering
 $ccompare :: DataConnectorOptions -&gt; DataConnectorOptions -&gt; Ordering
 $cp1Ord :: Eq DataConnectorOptions
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740880"><span id="local-6989586621689740882"><span id="local-6989586621689740884"><span class="annot"><span class="annottext">Int -&gt; DataConnectorOptions -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757675"><span id="local-6989586621689757677"><span id="local-6989586621689757679"><span class="annot"><span class="annottext">Int -&gt; DataConnectorOptions -&gt; ShowS
 [DataConnectorOptions] -&gt; ShowS
 DataConnectorOptions -&gt; String
 (Int -&gt; DataConnectorOptions -&gt; ShowS)
@@ -786,7 +786,7 @@ forall a.
 $cto :: forall x. Rep DataConnectorOptions x -&gt; DataConnectorOptions
 $cfrom :: forall x. DataConnectorOptions -&gt; Rep DataConnectorOptions x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-140"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689740875"><span class="annot"><span class="annottext">Eq DataConnectorOptions
+</span><span id="line-140"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757670"><span class="annot"><span class="annottext">Eq DataConnectorOptions
 Eq DataConnectorOptions
 -&gt; (Accesses
     -&gt; DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool)
@@ -796,27 +796,27 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
 $cunchanged :: Accesses -&gt; DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
 $cp1Cacheable :: Eq DataConnectorOptions
-</span><a href="#local-6989586621689740875"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689757670"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-141"></span><span>
-</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689740872"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DataConnectorOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-143"></span><span>  </span><span id="local-6989586621689740871"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorOptions
-</span><a href="#local-6989586621689740871"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser DataConnectorOptions
+</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757667"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DataConnectorOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-143"></span><span>  </span><span id="local-6989586621689757666"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorOptions
+</span><a href="#local-6989586621689757666"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser DataConnectorOptions
 forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
 Options -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-144"></span><span>
-</span><span id="line-145"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689740863"><span id="local-6989586621689740865"><span id="local-6989586621689740867"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DataConnectorOptions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-146"></span><span>  </span><span id="local-6989586621689740862"><span class="annot"><span class="annottext">toJSON :: DataConnectorOptions -&gt; Value
-</span><a href="#local-6989586621689740862"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; DataConnectorOptions -&gt; Value
+</span><span id="line-145"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757658"><span id="local-6989586621689757660"><span id="local-6989586621689757662"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DataConnectorOptions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-146"></span><span>  </span><span id="local-6989586621689757657"><span class="annot"><span class="annottext">toJSON :: DataConnectorOptions -&gt; Value
+</span><a href="#local-6989586621689757657"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; DataConnectorOptions -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-147"></span><span>
-</span><span id="line-148"></span><span id="local-6989586621689740860"><span id="local-6989586621689740861"></span></span><span class="hs-keyword">data</span><span> </span><span id="DataConnectorInfo"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-var">DataConnectorInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorInfo"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-var">DataConnectorInfo</span></a></span></span><span>
+</span><span id="line-148"></span><span id="local-6989586621689757655"><span id="local-6989586621689757656"></span></span><span class="hs-keyword">data</span><span> </span><span id="DataConnectorInfo"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-var">DataConnectorInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorInfo"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-var">DataConnectorInfo</span></a></span></span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_dciOptions"><span class="annot"><span class="annottext">DataConnectorInfo -&gt; DataConnectorOptions
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciOptions"><span class="hs-identifier hs-var hs-var">_dciOptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DataConnectorOptions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-150"></span><span>    </span><span id="_dciCapabilities"><span class="annot"><span class="annottext">DataConnectorInfo -&gt; Capabilities
@@ -824,7 +824,7 @@ Options -&gt; a -&gt; Value
 </span><span id="line-151"></span><span>    </span><span id="_dciConfigSchemaResponse"><span class="annot"><span class="annottext">DataConnectorInfo -&gt; ConfigSchemaResponse
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciConfigSchemaResponse"><span class="hs-identifier hs-var hs-var">_dciConfigSchemaResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ConfigSchemaResponse</span></a></span><span>
 </span><span id="line-152"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-153"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689740852"><span id="local-6989586621689740854"><span class="annot"><span class="annottext">DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool
+</span><span id="line-153"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757647"><span id="local-6989586621689757649"><span class="annot"><span class="annottext">DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool
 (DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool)
 -&gt; (DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool)
 -&gt; Eq DataConnectorInfo
@@ -833,7 +833,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool
 == :: DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool
 $c== :: DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740846"><span id="local-6989586621689740848"><span id="local-6989586621689740850"><span class="annot"><span class="annottext">Int -&gt; DataConnectorInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757641"><span id="local-6989586621689757643"><span id="local-6989586621689757645"><span class="annot"><span class="annottext">Int -&gt; DataConnectorInfo -&gt; ShowS
 [DataConnectorInfo] -&gt; ShowS
 DataConnectorInfo -&gt; String
 (Int -&gt; DataConnectorInfo -&gt; ShowS)
@@ -859,18 +859,18 @@ $cto :: forall x. Rep DataConnectorInfo x -&gt; DataConnectorInfo
 $cfrom :: forall x. DataConnectorInfo -&gt; Rep DataConnectorInfo x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-154"></span><span>
-</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689740841"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DataConnectorInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-156"></span><span>  </span><span id="local-6989586621689740840"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorInfo
-</span><a href="#local-6989586621689740840"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser DataConnectorInfo
+</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757636"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DataConnectorInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-156"></span><span>  </span><span id="local-6989586621689757635"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorInfo
+</span><a href="#local-6989586621689757635"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser DataConnectorInfo
 forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
 Options -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-157"></span><span>
-</span><span id="line-158"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689740833"><span id="local-6989586621689740835"><span id="local-6989586621689740837"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DataConnectorInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-159"></span><span>  </span><span id="local-6989586621689740832"><span class="annot"><span class="annottext">toJSON :: DataConnectorInfo -&gt; Value
-</span><a href="#local-6989586621689740832"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; DataConnectorInfo -&gt; Value
+</span><span id="line-158"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689757628"><span id="local-6989586621689757630"><span id="local-6989586621689757632"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DataConnectorInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-159"></span><span>  </span><span id="local-6989586621689757627"><span class="annot"><span class="annottext">toJSON :: DataConnectorInfo -&gt; Value
+</span><a href="#local-6989586621689757627"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; DataConnectorInfo -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -878,41 +878,41 @@ Options -&gt; a -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-160"></span><span>
 </span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DataConnectorInfo</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-162"></span><span>  </span><span id="local-6989586621689740829"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool
-</span><a href="#local-6989586621689740829"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span id="local-6989586621689740828"><span class="annot"><span class="annottext">Accesses
-</span><a href="#local-6989586621689740828"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689740827"><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740827"><span class="hs-identifier hs-var">dci0</span></a></span></span><span> </span><span id="local-6989586621689740826"><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740826"><span class="hs-identifier hs-var">dci1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-162"></span><span>  </span><span id="local-6989586621689757624"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; DataConnectorInfo -&gt; DataConnectorInfo -&gt; Bool
+</span><a href="#local-6989586621689757624"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span id="local-6989586621689757623"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621689757623"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689757622"><span class="annot"><span class="annottext">DataConnectorInfo
+</span><a href="#local-6989586621689757622"><span class="hs-identifier hs-var">dci0</span></a></span></span><span> </span><span id="local-6989586621689757621"><span class="annot"><span class="annottext">DataConnectorInfo
+</span><a href="#local-6989586621689757621"><span class="hs-identifier hs-var">dci1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-163"></span><span>    </span><span class="annot"><span class="annottext">Accesses -&gt; DataConnectorOptions -&gt; DataConnectorOptions -&gt; Bool
 forall a. Cacheable a =&gt; Accesses -&gt; a -&gt; a -&gt; Bool
 </span><a href="Hasura.Incremental.Internal.Dependency.html#unchanged"><span class="hs-identifier hs-var">unchanged</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
-</span><a href="#local-6989586621689740828"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; DataConnectorOptions
+</span><a href="#local-6989586621689757623"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; DataConnectorOptions
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciOptions"><span class="hs-identifier hs-var hs-var">_dciOptions</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740827"><span class="hs-identifier hs-var">dci0</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; DataConnectorOptions
+</span><a href="#local-6989586621689757622"><span class="hs-identifier hs-var">dci0</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; DataConnectorOptions
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciOptions"><span class="hs-identifier hs-var hs-var">_dciOptions</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740826"><span class="hs-identifier hs-var">dci1</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689757621"><span class="hs-identifier hs-var">dci1</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; Capabilities
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciCapabilities"><span class="hs-identifier hs-var hs-var">_dciCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740827"><span class="hs-identifier hs-var">dci0</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities -&gt; Capabilities -&gt; Bool
+</span><a href="#local-6989586621689757622"><span class="hs-identifier hs-var">dci0</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities -&gt; Capabilities -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; Capabilities
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciCapabilities"><span class="hs-identifier hs-var hs-var">_dciCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740826"><span class="hs-identifier hs-var">dci1</span></a></span><span>
+</span><a href="#local-6989586621689757621"><span class="hs-identifier hs-var">dci1</span></a></span><span>
 </span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; ConfigSchemaResponse
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciConfigSchemaResponse"><span class="hs-identifier hs-var hs-var">_dciConfigSchemaResponse</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740827"><span class="hs-identifier hs-var">dci0</span></a></span><span> </span><span class="annot"><span class="annottext">ConfigSchemaResponse -&gt; ConfigSchemaResponse -&gt; Bool
+</span><a href="#local-6989586621689757622"><span class="hs-identifier hs-var">dci0</span></a></span><span> </span><span class="annot"><span class="annottext">ConfigSchemaResponse -&gt; ConfigSchemaResponse -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; ConfigSchemaResponse
 </span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciConfigSchemaResponse"><span class="hs-identifier hs-var hs-var">_dciConfigSchemaResponse</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo
-</span><a href="#local-6989586621689740826"><span class="hs-identifier hs-var">dci1</span></a></span><span>
+</span><a href="#local-6989586621689757621"><span class="hs-identifier hs-var">dci1</span></a></span><span>
 </span><span id="line-166"></span><span>
-</span><span id="line-167"></span><span id="local-6989586621689740824"><span id="local-6989586621689740825"></span></span><span class="hs-keyword">data</span><span> </span><span id="CountType"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#CountType"><span class="hs-identifier hs-var">CountType</span></a></span></span><span>
+</span><span id="line-167"></span><span id="local-6989586621689757619"><span id="local-6989586621689757620"></span></span><span class="hs-keyword">data</span><span> </span><span id="CountType"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#CountType"><span class="hs-identifier hs-var">CountType</span></a></span></span><span>
 </span><span id="line-168"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StarCount"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#StarCount"><span class="hs-identifier hs-var">StarCount</span></a></span></span><span>
 </span><span id="line-169"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ColumnCount"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ColumnCount"><span class="hs-identifier hs-var">ColumnCount</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-170"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ColumnDistinctCount"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ColumnDistinctCount"><span class="hs-identifier hs-var">ColumnDistinctCount</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-171"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689740815"><span id="local-6989586621689740817"><span class="annot"><span class="annottext">CountType -&gt; CountType -&gt; Bool
+</span><span id="line-171"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689757610"><span id="local-6989586621689757612"><span class="annot"><span class="annottext">CountType -&gt; CountType -&gt; Bool
 (CountType -&gt; CountType -&gt; Bool)
 -&gt; (CountType -&gt; CountType -&gt; Bool) -&gt; Eq CountType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -920,7 +920,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: CountType -&gt; CountType -&gt; Bool
 == :: CountType -&gt; CountType -&gt; Bool
 $c== :: CountType -&gt; CountType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740800"><span id="local-6989586621689740802"><span id="local-6989586621689740804"><span id="local-6989586621689740806"><span id="local-6989586621689740808"><span id="local-6989586621689740810"><span id="local-6989586621689740812"><span class="annot"><span class="annottext">Eq CountType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757595"><span id="local-6989586621689757597"><span id="local-6989586621689757599"><span id="local-6989586621689757601"><span id="local-6989586621689757603"><span id="local-6989586621689757605"><span id="local-6989586621689757607"><span class="annot"><span class="annottext">Eq CountType
 Eq CountType
 -&gt; (CountType -&gt; CountType -&gt; Ordering)
 -&gt; (CountType -&gt; CountType -&gt; Bool)
@@ -958,7 +958,7 @@ $c&lt; :: CountType -&gt; CountType -&gt; Bool
 compare :: CountType -&gt; CountType -&gt; Ordering
 $ccompare :: CountType -&gt; CountType -&gt; Ordering
 $cp1Ord :: Eq CountType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689740794"><span id="local-6989586621689740796"><span id="local-6989586621689740798"><span class="annot"><span class="annottext">Int -&gt; CountType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689757589"><span id="local-6989586621689757591"><span id="local-6989586621689757593"><span class="annot"><span class="annottext">Int -&gt; CountType -&gt; ShowS
 [CountType] -&gt; ShowS
 CountType -&gt; String
 (Int -&gt; CountType -&gt; ShowS)
@@ -981,7 +981,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep CountType x -&gt; CountType
 $cfrom :: forall x. CountType -&gt; Rep CountType x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnDistinctCount"><span id="%24cColumnCount"><span id="%24cStarCount"><span id="%24tCountType"><span id="local-6989586621689740763"><span id="local-6989586621689740765"><span id="local-6989586621689740767"><span id="local-6989586621689740769"><span id="local-6989586621689740771"><span id="local-6989586621689740773"><span id="local-6989586621689740775"><span id="local-6989586621689740777"><span id="local-6989586621689740779"><span id="local-6989586621689740781"><span id="local-6989586621689740783"><span id="local-6989586621689740785"><span id="local-6989586621689740787"><span id="local-6989586621689740789"><span class="annot"><span class="annottext">Typeable CountType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnDistinctCount"><span id="%24cColumnCount"><span id="%24cStarCount"><span id="%24tCountType"><span id="local-6989586621689757558"><span id="local-6989586621689757560"><span id="local-6989586621689757562"><span id="local-6989586621689757564"><span id="local-6989586621689757566"><span id="local-6989586621689757568"><span id="local-6989586621689757570"><span id="local-6989586621689757572"><span id="local-6989586621689757574"><span id="local-6989586621689757576"><span id="local-6989586621689757578"><span id="local-6989586621689757580"><span id="local-6989586621689757582"><span id="local-6989586621689757584"><span class="annot"><span class="annottext">Typeable CountType
 DataType
 Constr
 Typeable CountType
