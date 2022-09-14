@@ -69,5 +69,6 @@ applyTestConfig config TestOptions {..} =
   config
     { configConcurrentJobs = _toParallelDegree,
       configFilterPredicate = filterPredicate <$> _toMatch,
-      configSkipPredicate = filterPredicate <$> _toSkip
+      configSkipPredicate = filterPredicate <$> _toSkip,
+      configDryRun = _toDryRun
     }
