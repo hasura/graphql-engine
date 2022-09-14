@@ -1,0 +1,8 @@
+with-compiler: ghc-9.2.2
+
+-- TODO: Remove this once ekg-core has been updated with relaxed upper bounds
+-- for 'base' and 'ghc-prim'.
+allow-newer: ekg-core-0.1.1.7:base, ekg-core-0.1.1.7:ghc-prim
+
+package pg-client
+  ghc-options: -Werror
