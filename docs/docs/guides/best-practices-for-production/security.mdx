@@ -1,0 +1,94 @@
+---
+description: Security best practices for a production environment
+keywords:
+  - hasura
+  - docs
+  - best practices
+  - production
+sidebar_label: Security
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Security Best Practices
+
+## Introduction
+This guide reviews security best practices that should be implemented for a production environment. Applying API security beyond RBAC permissions is mandatory for any API moving towards a production deployment. We recommend that all HTTP layer security work be done at the API gateway level and GraphQL-specific policies be applied at the Hasura level.  
+
+<Thumbnail
+  src='/img/guides/best-practices-security-apihasura-diagram.png'
+  alt='Hasura/API security architecture'
+  width='900px'
+  className='no-shadow'
+/>
+
+Specifics about each security best practice can be found below.
+
+## Hasura GraphQL Engine
+
+#### Restrict Access:
+Restrict knowledge of admin secrets to the minimally required team members as an admin secret provides unrestricted access to the Hasura GraphQL Engine.  SSO collaboration should be used to grant project access without sharing an admin key.  Subsequently, implement a plan to rotate admin secrets to limit the exposure of an admin secret being shared too broadly.
+
+[Multiple admin secrets](https://hasura.io/docs/latest/security/multiple-admin-secrets/) should be used in situations where admin secrets have different rotation timelines or when granting temporary access is needed.
+
+Leverage [allowed operations lists](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) whenever possible to restrict unbounded or unexpected operations from being executed against the GraphQL endpoint.  Allow lists [must be enabled](https://hasura.io/docs/latest/security/allow-list/#enable-allow-list) via environment variable.  These lists can be configured globally or at the role level which allows for each role to have a differently defined set of permissible operations. The allow list should include the complete set of expected operations for a given role to restrict the ability for a user to execute non-permissible operations. Consider using the [Hasura Allow List](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) codegen plugin to automatically generate allow list metadata from your application code.
+
+:::info Note
+
+The admin role will bypass the allowed operations list.
+
+:::
+
+#### Limit the API:
+
+The allowed operations lists workflow is ideal for private/internal APIs or APIs with well-understood and clearly defined operations.  Public APIs or APIs with less defined expected operations should additionally configure [depth limits](https://hasura.io/docs/latest/security/api-limits/#depth-limits) and [node limits](https://hasura.io/docs/latest/security/api-limits/#node-limits).
+
+- Configure both [rate limits](https://hasura.io/docs/latest/security/api-limits/#rate-limits) and [time limits](https://hasura.io/docs/latest/security/api-limits/#time-limits) to restrict frequency and duration of operations.
+
+- [Limit rows](https://hasura.io/docs/latest/auth/authorization/permission-rules/#limit-rows-permissions) returned by a select operation.
+
+#### Permissions:
+
+The row-based access control configuration dictates permissions for the GraphQL API.  It is critical that these permissions be configured correctly in order to prevent unauthorized or unintended access to the GraphQL API.
+
+- Review the [permissions summary](https://hasura.io/docs/latest/deployment/production-checklist/#review-the-summary) for each schema to verify permissions are constructed appropriately for your expected data access.
+
+- Configure an [anonymous default role](https://hasura.io/docs/latest/auth/authorization/common-roles-auth-examples/#anonymous-users-example) in order to apply global security permissions.  This default role should be configured similarly to any other role.  This includes [RBAC permissions](https://hasura.io/docs/latest/auth/authorization/basics/), [API limits](https://hasura.io/docs/latest/security/api-limits/), [allowed operations lists](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) and [disabling schema introspection](https://hasura.io/docs/latest/security/disable-graphql-introspection/).
+
+#### Disable development components:
+
+There are several components of Hasura GraphQL Engine that are crucial for development efforts but should be disabled for a production environment.  However, it should be expected that some of these components may need to be temporarily re-enabled if a situation arises where a production environment specific issue requires troubleshooting.
+
+- [Disable APIs](https://hasura.io/docs/latest/deployment/production-checklist/#disable-apis).
+
+- [Disable the console](https://hasura.io/docs/latest/deployment/production-checklist/#disable-console).
+
+- [Disable dev mode](https://hasura.io/docs/latest/deployment/production-checklist/#disable-dev-mode).
+
+- [Disable schema introspection](https://hasura.io/docs/latest/security/disable-graphql-introspection/).
+
+#### Additional environment variables:
+
+There are specific environment variables that should be configured to ensure appropriate communication to the Hasura GraphQL Engine server.
+
+- [Allowed CORS requests](https://hasura.io/docs/latest/deployment/graphql-engine-flags/config-examples/#configure-cors).
+
+## Database connections
+
+Hasura GraphQL Engine communicates with your data sources(s) via ODBC connection strings.  This means Hasura has the same permissions as the provided credentials in the connection string.
+
+- Review the database permissions allocated via the provided credentials to ensure the level of access granted to Hasura is appropriate.
+
+- Use database connections strings with the least privileges required for API operations.
+
+- Configure [read replicas](https://hasura.io/docs/latest/databases/connect-db/read-replicas/) to route read-only operations (queries) to one (or many) read replicas.
+
+## Networking/API gateway
+
+We recommend the following HTTP layer security policies to be configured at the API gateway:
+- [Configure HTTPS](https://hasura.io/docs/latest/deployment/enable-https/) on your reverse proxy to ensure encrypted communication between your client and Hasura.
+- Implement request and response size restrictions.
+- Restricted allowed connection time to prevent incidents such as slowloris attacks.
+- Apply both IP filtering and IP rate limiting.
+
+Consider using a a [web application firewall](https://www.cloudflare.com/learning/ddos/glossary/web-application-firewall-waf/) (WAF) as the first line of defense. A firewall can provide extra protection against common attack types such as cross-site request forgery (CSRF) by filtering and monitoring HTTP traffic between the application and the internet based on a rule set configured by your team.  Common WAF solutions include Cloudflare, Akamai and Imperva.
