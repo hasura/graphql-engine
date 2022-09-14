@@ -27,6 +27,7 @@ class TestMetadata:
     def test_clear_metadata_as_user(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/metadata_as_user_err.yaml')
 
+    @pytest.mark.usefixtures('gql_server')
     def test_replace_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
@@ -39,6 +40,7 @@ class TestMetadata:
     def test_replace_metadata_v2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_v2.yaml')
 
+    @pytest.mark.usefixtures('gql_server')
     def test_replace_metadata_allow_inconsistent(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() +
                       '/replace_metadata_allow_inconsistent_inconsistent.yaml')

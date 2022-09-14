@@ -7,7 +7,9 @@ import sys
 import threading
 import time
 
-from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf, GraphQLWSClient
+from context import HGECtx, HGECtxError, HGECtxGQLServer, ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, PytestConf, GraphQLWSClient
+import graphql_server
+import ports
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -248,7 +250,6 @@ def pytest_configure(config):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list = config.getoption('--pg-urls')
-        config.hge_ctx_gql_server = HGECtxGQLServer(config.hge_url_list)
         if config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')
             assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
@@ -297,11 +298,6 @@ def pytest_configure_node(node):
     # Pytest has removed the global pytest.config
     node.workerinput["hge-url"] = node.config.hge_url_list.pop()
     node.workerinput["pg-url"] = node.config.pg_url_list.pop()
-
-def pytest_unconfigure(config):
-    if is_help_option_present(config):
-        return
-    config.hge_ctx_gql_server.teardown()
 
 def run_on_current_backend(request: pytest.FixtureRequest):
     current_backend = request.config.getoption('--backend')
@@ -430,11 +426,16 @@ def scheduled_triggers_evts_webhook(request):
     web_server.join()
 
 @pytest.fixture(scope='class')
-def gql_server(request, hge_ctx):
-    server = HGECtxGQLServer(request.config.getoption('--pg-urls'), 5991)
+@pytest.mark.early
+def gql_server(request):
+    port = 5000
+    hge_urls: list[str] = request.config.getoption('--hge-urls')
+    graphql_server.set_hge_urls(hge_urls)
+    server = HGECtxGQLServer(port=port)
+    server.start_server()
+    ports.wait_for_port(port)
     yield server
-    server.teardown()
-
+    server.stop_server()
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):

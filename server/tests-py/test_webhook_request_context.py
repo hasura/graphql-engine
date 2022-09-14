@@ -1,31 +1,29 @@
-import pytest
-import time
-import json
 import http
+import http.server
+import json
+import pytest
 import queue
-import socket
-from context import (
-    HGECtx,
-    HGECtxError,
-    ActionsWebhookServer,
-    EvtsWebhookServer,
-    HGECtxGQLServer,
-    GQLWsClient,
-    PytestConf,
-)
 import threading
-import random
-from datetime import datetime
-import sys
-import os
-from collections import OrderedDict
-from validate import check_query
+
+from context import PytestConf
 
 if not PytestConf.config.getoption("--test-webhook-request-context"):
     pytest.skip("--test-webhook-https-request-context flag is missing, skipping tests", allow_module_level=True)
 
 
+class QueryEchoWebhookServer(http.server.HTTPServer):
+    def __init__(self, server_address):
+        # TODO why maxsize=1
+        self.resp_queue = queue.Queue(maxsize=1)
+        super().__init__(server_address, QueryEchoWebhookHandler)
+
+    def get_event(self, timeout):
+        return self.resp_queue.get(timeout=timeout)
+
+
 class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
+    server: QueryEchoWebhookServer
+
     def do_GET(self):
         self.log_message("get")
         self.send_response(http.HTTPStatus.OK)
@@ -52,31 +50,10 @@ class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(user_vars).encode('utf-8'))
 
 
-class QueryEchoWebhookServer(http.server.HTTPServer):
-    def __init__(self, server_address):
-        # TODO why maxsize=1
-        self.resp_queue = queue.Queue(maxsize=1)
-        super().__init__(server_address, QueryEchoWebhookHandler)
-
-    def server_bind(self):
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
-
-    def get_event(self, timeout):
-        return self.resp_queue.get(timeout=timeout)
-
-    def teardown(self):
-        self.evt_trggr_httpd.shutdown()
-        self.evt_trggr_httpd.server_close()
-        graphql_server.stop_server(self.graphql_server)
-        self.gql_srvr_thread.join()
-        self.evt_trggr_web_server.join()
-
-
 @pytest.fixture(scope="class")
-def query_echo_webhook(request):
+def query_echo_webhook():
     # TODO(swann): is this the right port?
-    webhook_httpd = QueryEchoWebhookServer(server_address=("127.0.0.1", 5594))
+    webhook_httpd = QueryEchoWebhookServer(server_address=("localhost", 5594))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
     web_server.start()
     yield webhook_httpd
