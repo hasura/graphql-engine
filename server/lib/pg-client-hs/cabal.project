@@ -1,0 +1,9 @@
+packages: .
+
+package *
+  ghc-options: -fwrite-ide-info
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/pool.git
+  tag: c5faf9a358e83eaf15fef0c1e890f463d0022565

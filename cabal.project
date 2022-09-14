@@ -48,11 +48,6 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/hasura/pg-client-hs.git
-  tag: b8b1db9a7f52e6a13996a2fa685ce3743b649817
-
-source-repository-package
-  type: git
   location: https://github.com/hasura/graphql-parser-hs.git
   tag: b65932b2dc40b90820c7be6a2aa2f6646a13b023
 
