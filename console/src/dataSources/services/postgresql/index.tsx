@@ -317,10 +317,13 @@ const getAdditionalColumnsInfoQuerySql = (
 ) => `SELECT column_name, table_name, is_generated, is_identity, identity_generation
   FROM information_schema.columns where table_schema = '${schemaName}';`;
 
+type PostgresIsGenerated = 'ALWAYS' | 'NEVER';
+type CockroachDBIsGenerated = 'YES' | 'NO';
+
 type ColumnsInfoPayload = {
   column_name: string;
   table_name: string;
-  is_generated: 'ALWAYS' | 'YES' | 'NO' | 'NEVER';
+  is_generated: PostgresIsGenerated | CockroachDBIsGenerated;
   is_identity: 'YES' | 'NO';
   identity_generation: 'ALWAYS' | 'BY DEFAULT' | null;
 };
