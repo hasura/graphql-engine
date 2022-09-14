@@ -44,6 +44,7 @@ import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
 import Data.Trie qualified as Trie
 import Database.PG.Query qualified as Q
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.GraphQL.Analyse
@@ -210,17 +211,19 @@ data CacheInvalidations = CacheInvalidations
     ciRemoteSchemas :: HashSet RemoteSchemaName,
     -- | Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
     -- by the @pg_reload_source@ API.
-    ciSources :: HashSet SourceName
+    ciSources :: HashSet SourceName,
+    -- | Force re-fetching of `DataConnectorInfo` from the named data connectors.
+    ciDataConnectors :: HashSet DataConnectorName
   }
 
 $(deriveJSON hasuraJSON ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
-  CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =
-    CacheInvalidations (a1 || a2) (b1 <> b2) (c1 <> c2)
+  CacheInvalidations a1 b1 c1 d1 <> CacheInvalidations a2 b2 c2 d2 =
+    CacheInvalidations (a1 || a2) (b1 <> b2) (c1 <> c2) (d1 <> d2)
 
 instance Monoid CacheInvalidations where
-  mempty = CacheInvalidations False mempty mempty
+  mempty = CacheInvalidations False mempty mempty mempty
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c

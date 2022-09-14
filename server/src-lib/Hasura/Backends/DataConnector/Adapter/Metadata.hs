@@ -20,7 +20,6 @@ import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
-import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (ConnSourceConfig))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -60,6 +59,7 @@ import Witch qualified
 
 instance BackendMetadata 'DataConnector where
   prepareCatalog _ = pure RETDoNothing
+  type BackendInvalidationKeys 'DataConnector = HashMap DC.DataConnectorName Inc.InvalidationKey
   resolveBackendInfo = resolveBackendInfo'
   resolveSourceConfig = resolveSourceConfig'
   resolveDatabaseMetadata = resolveDatabaseMetadata'
@@ -82,13 +82,13 @@ resolveBackendInfo' ::
     HasHttpManagerM m
   ) =>
   Logger Hasura ->
-  InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
-resolveBackendInfo' logger = proc (optionsMap) -> do
+  (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
+resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
       Inc.keyed
         ( \dataConnectorName dataConnectorOptions -> do
-            getDataConnectorCapabilitiesIfNeeded -< (dataConnectorName, dataConnectorOptions)
+            getDataConnectorCapabilitiesIfNeeded -< (invalidationKeys, dataConnectorName, dataConnectorOptions)
         )
       |) (OMap.toHashMap optionsMap)
   returnA -< HashMap.catMaybes maybeDataConnectorCapabilities
@@ -101,10 +101,11 @@ resolveBackendInfo' logger = proc (optionsMap) -> do
         MonadIO m,
         HasHttpManagerM m
       ) =>
-      (DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
-    getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (dataConnectorName, dataConnectorOptions) -> do
+      (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
+    getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (invalidationKeys, dataConnectorName, dataConnectorOptions) -> do
       let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
       httpMgr <- bindA -< askHttpManager
+      Inc.dependOn -< Inc.selectKeyD dataConnectorName invalidationKeys
       (|
         withRecordInconsistency
           ( liftEitherA <<< bindA -< getDataConnectorCapabilities dataConnectorOptions httpMgr
@@ -136,7 +137,7 @@ resolveSourceConfig' ::
 resolveSourceConfig'
   logger
   sourceName
-  csc@ConnSourceConfig {template, timeout, value = originalConfig}
+  csc@DC.ConnSourceConfig {template, timeout, value = originalConfig}
   (DataConnectorKind dataConnectorName)
   backendInfo
   env

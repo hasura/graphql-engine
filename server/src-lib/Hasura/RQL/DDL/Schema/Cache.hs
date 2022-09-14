@@ -368,7 +368,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         }
   where
     resolveBackendInfo' ::
-      forall arr m b x.
+      forall arr m b.
       ( BackendMetadata b,
         ArrowChoice arr,
         Inc.ArrowCache m arr,
@@ -377,9 +377,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadIO m,
         HasHttpManagerM m
       ) =>
-      (BackendConfigWrapper b, x) `arr` BackendCache
-    resolveBackendInfo' = proc (backendConfigWrapper, _) -> do
-      backendInfo <- resolveBackendInfo @b logger -< unBackendConfigWrapper backendConfigWrapper
+      (BackendConfigWrapper b, Inc.Dependency (BackendMap BackendInvalidationKeysWrapper)) `arr` BackendCache
+    resolveBackendInfo' = proc (backendConfigWrapper, backendInvalidationMap) -> do
+      let backendInvalidationKeys =
+            Inc.selectD #unBackendInvalidationKeysWrapper $
+              Inc.selectMaybeD $
+                BackendMap.lookupD @b backendInvalidationMap
+      backendInfo <- resolveBackendInfo @b logger -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
       returnA -< BackendMap.singleton (BackendInfoWrapper @b backendInfo)
 
     resolveBackendCache ::
@@ -391,14 +395,14 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadIO m,
         HasHttpManagerM m
       ) =>
-      [AB.AnyBackend BackendConfigWrapper] `arr` BackendCache
-    resolveBackendCache = proc (backendConfigs) -> do
+      (Inc.Dependency (BackendMap BackendInvalidationKeysWrapper), [AB.AnyBackend BackendConfigWrapper]) `arr` BackendCache
+    resolveBackendCache = proc (backendInvalidationMap, backendConfigs) -> do
       case backendConfigs of
         [] -> returnA -< mempty
         (anyBackendConfig : backendConfigs') -> do
           backendInfo <-
-            AB.dispatchAnyBackendArrow @BackendMetadata @HasTag resolveBackendInfo' -< (anyBackendConfig, ())
-          backendInfos <- resolveBackendCache -< backendConfigs'
+            AB.dispatchAnyBackendArrow @BackendMetadata @HasTag resolveBackendInfo' -< (anyBackendConfig, backendInvalidationMap)
+          backendInfos <- resolveBackendCache -< (backendInvalidationMap, backendConfigs')
           returnA -< backendInfo <> backendInfos
 
     getSourceConfigIfNeeded ::
@@ -706,7 +710,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
       !isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
 
-      backendCache <- resolveBackendCache -< BackendMap.elems backendConfigs
+      let backendInvalidationKeys = Inc.selectD #_ikBackends invalidationKeys
+      backendCache <- resolveBackendCache -< (backendInvalidationKeys, BackendMap.elems backendConfigs)
 
       let backendInfoAndSourceMetadata = joinBackendInfosToSources backendCache sources
 
