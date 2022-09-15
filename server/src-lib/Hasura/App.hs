@@ -1207,7 +1207,8 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
         "enableTelemetry" A..= boolToText enableTelemetry,
         "cdnAssets" A..= boolToText (isNothing consoleAssetsDir),
         "assetsVersion" A..= consoleAssetsVersion,
-        "serverVersion" A..= currentVersion
+        "serverVersion" A..= currentVersion,
+        "consoleSentryDsn" A..= ("" :: Text)
       ]
   where
     consolePath = case path of

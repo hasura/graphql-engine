@@ -16,6 +16,7 @@ const serverEnvVars = `
   projectID: '${process.env.HASURA_CLOUD_PROJECT_ID || ''}',
   cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}',
   consoleType: '${process.env.HASURA_CONSOLE_TYPE}',
+  consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}'
 `;
 
 const cliEnvVars = `
@@ -33,7 +34,8 @@ const cliEnvVars = `
   herokuOAuthClientId: '${process.env.HEROKU_OAUTH_CLIENT_ID || ''}',
   tenantID: '${process.env.HASURA_CLOUD_TENANT_ID || ''}',
   projectID: '${process.env.HASURA_CLOUD_PROJECT_ID || ''}',
-  cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}'
+  cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}',
+  consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}'
 `;
 
 const envVars = process.env.CONSOLE_MODE === 'cli' ? cliEnvVars : serverEnvVars;

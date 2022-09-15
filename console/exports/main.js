@@ -11,7 +11,7 @@ export {
 export { fetchConsoleNotifications } from '../src/components/Main/Actions';
 export { default as NotificationSection } from '../src/components/Main/NotificationSection';
 export { default as Onboarding } from '../src/components/Common/Onboarding';
-export { analyticsToolsUtils } from '../src/features/AnalyticsToolsUtils';
+export { tracingTools } from '../src/features/TracingTools';
 export { OnboardingWizard } from '../src/features/OnboardingWizard';
 export { makeGrowthExperimentsClient } from '../src/features/GrowthExperiments';
 export { default as PageNotFound } from '../src/components/Error/PageNotFound';
