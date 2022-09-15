@@ -58,7 +58,7 @@ services:
 
   postgres:
     image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
-    expose:
+    ports:
       - 5432
     environment:
       POSTGRES_PASSWORD: "hasura"
