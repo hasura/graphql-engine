@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span class="hs-comment">-- | Codec for ordered hash maps where the key for each element can be inferred</span><span>
 </span><span id="line-15"></span><span class="hs-comment">-- from the element value. This codec serializes the hash map as an array sorted</span><span>
 </span><span id="line-16"></span><span class="hs-comment">-- by key.</span><span>
-</span><span id="line-17"></span><span id="local-6989586621689725692"><span id="local-6989586621689725693"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodec"><span class="hs-identifier hs-type">sortedElemsCodec</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689725693"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689725692"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689725692"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">T.ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689725692"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689725693"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689725692"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621689725692"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689725693"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-17"></span><span id="local-6989586621689735065"><span id="local-6989586621689735066"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodec"><span class="hs-identifier hs-type">sortedElemsCodec</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689735066"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689735065"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689735065"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">T.ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689735065"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689735066"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689735065"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621689735065"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689735066"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-18"></span><span id="sortedElemsCodec"><span class="annot"><span class="annottext">sortedElemsCodec :: (a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
 </span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodec"><span class="hs-identifier hs-var hs-var">sortedElemsCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONCodec a -&gt; (a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
 forall k a.
@@ -30,11 +30,11 @@ forall value. HasCodec value =&gt; JSONCodec value
 </span><span id="line-23"></span><span class="hs-comment">--</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- This version is useful if there is no 'HasCodec' instance for the type of the</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- hash map values. You supply a codec as an argument instead.</span><span>
-</span><span id="line-26"></span><span id="local-6989586621689725753"><span id="local-6989586621689725756"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodecWith"><span class="hs-identifier hs-type">sortedElemsCodecWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689725756"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689725756"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">T.ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689725756"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689725753"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689725753"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689725756"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621689725756"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689725753"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-26"></span><span id="local-6989586621689735126"><span id="local-6989586621689735129"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodecWith"><span class="hs-identifier hs-type">sortedElemsCodecWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689735129"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689735129"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">T.ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689735129"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689735126"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689735126"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689735129"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621689735129"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689735126"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-27"></span><span id="sortedElemsCodecWith"><span class="annot"><span class="annottext">sortedElemsCodecWith :: JSONCodec a -&gt; (a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
-</span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodecWith"><span class="hs-identifier hs-var hs-var">sortedElemsCodecWith</span></a></span></span><span> </span><span id="local-6989586621689725691"><span class="annot"><span class="annottext">JSONCodec a
-</span><a href="#local-6989586621689725691"><span class="hs-identifier hs-var">valueCodec</span></a></span></span><span> </span><span id="local-6989586621689725690"><span class="annot"><span class="annottext">a -&gt; k
-</span><a href="#local-6989586621689725690"><span class="hs-identifier hs-var">keyForElem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([a] -&gt; Either String (InsOrdHashMap k a))
+</span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodecWith"><span class="hs-identifier hs-var hs-var">sortedElemsCodecWith</span></a></span></span><span> </span><span id="local-6989586621689735064"><span class="annot"><span class="annottext">JSONCodec a
+</span><a href="#local-6989586621689735064"><span class="hs-identifier hs-var">valueCodec</span></a></span></span><span> </span><span id="local-6989586621689735063"><span class="annot"><span class="annottext">a -&gt; k
+</span><a href="#local-6989586621689735063"><span class="hs-identifier hs-var">keyForElem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([a] -&gt; Either String (InsOrdHashMap k a))
 -&gt; (InsOrdHashMap k a -&gt; [a])
 -&gt; Codec Value [a] [a]
 -&gt; JSONCodec (InsOrdHashMap k a)
@@ -44,33 +44,33 @@ forall oldOutput newOutput newInput oldInput context.
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">bimapCodec</span></span><span> </span><span class="annot"><span class="annottext">[a] -&gt; Either String (InsOrdHashMap k a)
-</span><a href="#local-6989586621689725689"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k a -&gt; [a]
-</span><a href="#local-6989586621689725688"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">(Codec Value [a] [a] -&gt; JSONCodec (InsOrdHashMap k a))
+</span><a href="#local-6989586621689735062"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k a -&gt; [a]
+</span><a href="#local-6989586621689735061"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">(Codec Value [a] [a] -&gt; JSONCodec (InsOrdHashMap k a))
 -&gt; Codec Value [a] [a] -&gt; JSONCodec (InsOrdHashMap k a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec a -&gt; Codec Value [a] [a]
 forall input output.
 ValueCodec input output -&gt; ValueCodec [input] [output]
 </span><span class="hs-identifier hs-var">listCodec</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec a
-</span><a href="#local-6989586621689725691"><span class="hs-identifier hs-var">valueCodec</span></a></span><span>
+</span><a href="#local-6989586621689735064"><span class="hs-identifier hs-var">valueCodec</span></a></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-29"></span><span>    </span><span id="local-6989586621689725689"><span class="annot"><span class="annottext">dec :: [a] -&gt; Either String (InsOrdHashMap k a)
-</span><a href="#local-6989586621689725689"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span id="local-6989586621689725687"><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689725687"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-30"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689725686"><span class="annot"><span class="annottext">dupKeys :: HashSet k
-</span><a href="#local-6989586621689725686"><span class="hs-identifier hs-var hs-var">dupKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[k] -&gt; HashSet k
+</span><span id="line-29"></span><span>    </span><span id="local-6989586621689735062"><span class="annot"><span class="annottext">dec :: [a] -&gt; Either String (InsOrdHashMap k a)
+</span><a href="#local-6989586621689735062"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span id="local-6989586621689735060"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689735060"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-30"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689735059"><span class="annot"><span class="annottext">dupKeys :: HashSet k
+</span><a href="#local-6989586621689735059"><span class="hs-identifier hs-var hs-var">dupKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[k] -&gt; HashSet k
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><a href="Data.List.Extended.html#duplicates"><span class="hs-identifier hs-var">duplicates</span></a></span><span> </span><span class="annot"><span class="annottext">([k] -&gt; HashSet k) -&gt; [k] -&gt; HashSet k
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; k) -&gt; [a] -&gt; [k]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; k
-</span><a href="#local-6989586621689725690"><span class="hs-identifier hs-var">keyForElem</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689725687"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621689735063"><span class="hs-identifier hs-var">keyForElem</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689735060"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-31"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">HashSet k -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">HashSet k
-</span><a href="#local-6989586621689725686"><span class="hs-identifier hs-var">dupKeys</span></a></span><span>
+</span><a href="#local-6989586621689735059"><span class="hs-identifier hs-var">dupKeys</span></a></span><span>
 </span><span id="line-32"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k a -&gt; Either String (InsOrdHashMap k a)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap k a -&gt; Either String (InsOrdHashMap k a))
@@ -81,8 +81,8 @@ forall k a.
 (Eq k, Hashable k) =&gt;
 (a -&gt; k) -&gt; [a] -&gt; InsOrdHashMap k a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">oMapFromL</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; k
-</span><a href="#local-6989586621689725690"><span class="hs-identifier hs-var">keyForElem</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689725687"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621689735063"><span class="hs-identifier hs-var">keyForElem</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689735060"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-33"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String (InsOrdHashMap k a)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either String (InsOrdHashMap k a))
@@ -92,35 +92,35 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689725682"><span class="hs-identifier hs-var">errMsg</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689735055"><span class="hs-identifier hs-var">errMsg</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashSet k -&gt; Text
 forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">T.commaSeparated</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet k
-</span><a href="#local-6989586621689725686"><span class="hs-identifier hs-var">dupKeys</span></a></span><span>
+</span><a href="#local-6989586621689735059"><span class="hs-identifier hs-var">dupKeys</span></a></span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span>    </span><span id="local-6989586621689725688"><span class="annot"><span class="annottext">enc :: InsOrdHashMap k a -&gt; [a]
-</span><a href="#local-6989586621689725688"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; k) -&gt; [a] -&gt; [a]
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621689735061"><span class="annot"><span class="annottext">enc :: InsOrdHashMap k a -&gt; [a]
+</span><a href="#local-6989586621689735061"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; k) -&gt; [a] -&gt; [a]
 forall b a. Ord b =&gt; (a -&gt; b) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">sortOn</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; k
-</span><a href="#local-6989586621689725690"><span class="hs-identifier hs-var">keyForElem</span></a></span><span> </span><span class="annot"><span class="annottext">([a] -&gt; [a])
+</span><a href="#local-6989586621689735063"><span class="hs-identifier hs-var">keyForElem</span></a></span><span> </span><span class="annot"><span class="annottext">([a] -&gt; [a])
 -&gt; (InsOrdHashMap k a -&gt; [a]) -&gt; InsOrdHashMap k a -&gt; [a]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k a -&gt; [a]
 forall k v. InsOrdHashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">elems</span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621689725682"><span class="annot"><span class="annottext">errMsg :: Text
-</span><a href="#local-6989586621689725682"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JSONCodec a -&gt; Maybe Text
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621689735055"><span class="annot"><span class="annottext">errMsg :: Text
+</span><a href="#local-6989586621689735055"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JSONCodec a -&gt; Maybe Text
 forall input output. ValueCodec input output -&gt; Maybe Text
 </span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#codecName"><span class="hs-identifier hs-var">codecName</span></a></span><span> </span><span class="annot"><span class="annottext">JSONCodec a
-</span><a href="#local-6989586621689725691"><span class="hs-identifier hs-var">valueCodec</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-38"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689725677"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689725677"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689735064"><span class="hs-identifier hs-var">valueCodec</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-38"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689735050"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689735050"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;multiple &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689725677"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689735050"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; declarations exist: &quot;</span></span><span>
@@ -128,27 +128,27 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;multiple declarations exist: &quot;</span></span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621689725712"><span id="local-6989586621689725713"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#codecName"><span class="hs-identifier hs-type">codecName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValueCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689725713"><span class="hs-identifier hs-type">input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689725712"><span class="hs-identifier hs-type">output</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span></span><span>
+</span><span id="line-41"></span><span id="local-6989586621689735085"><span id="local-6989586621689735086"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#codecName"><span class="hs-identifier hs-type">codecName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValueCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689735086"><span class="hs-identifier hs-type">input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689735085"><span class="hs-identifier hs-type">output</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span></span><span>
 </span><span id="line-42"></span><span id="codecName"><span class="annot"><span class="annottext">codecName :: ValueCodec input output -&gt; Maybe Text
 </span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#codecName"><span class="hs-identifier hs-var hs-var">codecName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">ValueCodec input output
 </span><span class="hs-identifier hs-var">NullCodec</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">BoolCodec</span></span><span> </span><span id="local-6989586621689725674"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725674"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725674"><span class="hs-identifier hs-var">mname</span></a></span><span>
-</span><span id="line-45"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StringCodec</span></span><span> </span><span id="local-6989586621689725672"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725672"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725672"><span class="hs-identifier hs-var">mname</span></a></span><span>
-</span><span id="line-46"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NumberCodec</span></span><span> </span><span id="local-6989586621689725670"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725670"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe NumberBounds
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">BoolCodec</span></span><span> </span><span id="local-6989586621689735047"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689735047"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689735047"><span class="hs-identifier hs-var">mname</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StringCodec</span></span><span> </span><span id="local-6989586621689735045"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689735045"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689735045"><span class="hs-identifier hs-var">mname</span></a></span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NumberCodec</span></span><span> </span><span id="local-6989586621689735043"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689735043"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe NumberBounds
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725670"><span class="hs-identifier hs-var">mname</span></a></span><span>
-</span><span id="line-47"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ArrayOfCodec</span></span><span> </span><span id="local-6989586621689725668"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725668"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="annot"><span class="annottext">ValueCodec input1 output1
+</span><a href="#local-6989586621689735043"><span class="hs-identifier hs-var">mname</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ArrayOfCodec</span></span><span> </span><span id="local-6989586621689735041"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689735041"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="annot"><span class="annottext">ValueCodec input1 output1
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725668"><span class="hs-identifier hs-var">mname</span></a></span><span>
+</span><a href="#local-6989586621689735041"><span class="hs-identifier hs-var">mname</span></a></span><span>
 </span><span id="line-48"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMapCodec</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec v
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
@@ -168,28 +168,28 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">BimapCodec</span></span><span> </span><span class="annot"><span class="annottext">oldOutput -&gt; Either String output
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">input -&gt; oldInput
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689725662"><span class="annot"><span class="annottext">Codec Value oldInput oldOutput
-</span><a href="#local-6989586621689725662"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Codec Value oldInput oldOutput -&gt; Maybe Text
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689735035"><span class="annot"><span class="annottext">Codec Value oldInput oldOutput
+</span><a href="#local-6989586621689735035"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Codec Value oldInput oldOutput -&gt; Maybe Text
 forall input output. ValueCodec input output -&gt; Maybe Text
 </span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#codecName"><span class="hs-identifier hs-var">codecName</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value oldInput oldOutput
-</span><a href="#local-6989586621689725662"><span class="hs-identifier hs-var">c</span></a></span><span>
-</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ObjectOfCodec</span></span><span> </span><span id="local-6989586621689725660"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725660"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec input output
+</span><a href="#local-6989586621689735035"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ObjectOfCodec</span></span><span> </span><span id="local-6989586621689735033"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689735033"><span class="hs-identifier hs-var">mname</span></a></span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec input output
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689725660"><span class="hs-identifier hs-var">mname</span></a></span><span>
+</span><a href="#local-6989586621689735033"><span class="hs-identifier hs-var">mname</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">EitherCodec</span></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">CommentCodec</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689725657"><span class="annot"><span class="annottext">ValueCodec input output
-</span><a href="#local-6989586621689725657"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueCodec input output -&gt; Maybe Text
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689735030"><span class="annot"><span class="annottext">ValueCodec input output
+</span><a href="#local-6989586621689735030"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueCodec input output -&gt; Maybe Text
 forall input output. ValueCodec input output -&gt; Maybe Text
 </span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#codecName"><span class="hs-identifier hs-var">codecName</span></a></span><span> </span><span class="annot"><span class="annottext">ValueCodec input output
-</span><a href="#local-6989586621689725657"><span class="hs-identifier hs-var">c</span></a></span><span>
-</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ReferenceCodec</span></span><span> </span><span id="local-6989586621689725655"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689725655"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="annot"><span class="annottext">ValueCodec input output
+</span><a href="#local-6989586621689735030"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ReferenceCodec</span></span><span> </span><span id="local-6989586621689735028"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689735028"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="annot"><span class="annottext">ValueCodec input output
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689725655"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689735028"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-57"></span></pre></body></html>
