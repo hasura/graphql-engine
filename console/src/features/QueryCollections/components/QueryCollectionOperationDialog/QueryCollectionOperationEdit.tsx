@@ -1,5 +1,7 @@
-import { QueryCollection } from '@/metadata/types';
 import React from 'react';
+import { QueryCollection } from '@/metadata/types';
+import { useFireNotification } from '@/new-components/Notifications';
+
 import { useEditOperationInQueryCollection } from '../../hooks/useEditOperationInQueryCollection';
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';
 
@@ -14,6 +16,7 @@ export const QueryCollectionOperationEdit = (
   const { onClose, operation, queryCollectionName } = props;
   const { isLoading, editOperationInQueryCollection } =
     useEditOperationInQueryCollection();
+  const { fireNotification } = useFireNotification();
   return (
     <QueryCollectionOperationDialog
       title="Edit Operation"
@@ -29,11 +32,20 @@ export const QueryCollectionOperationEdit = (
               query: values.query,
             },
             {
-              onError: () => {
-                // TODO: show global error notification
+              onError: e => {
+                fireNotification({
+                  type: 'error',
+                  title: 'Error',
+                  message: `Failed to edit operation in query collection: ${e.message}`,
+                });
               },
               onSuccess: () => {
-                // TODO: show global success notification
+                fireNotification({
+                  type: 'success',
+                  title: 'Success',
+                  message: `Successfully edited operation in query collection`,
+                });
+                onClose();
               },
             }
           );

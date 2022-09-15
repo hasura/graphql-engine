@@ -2,26 +2,30 @@ import React from 'react';
 import z from 'zod';
 import { Dialog } from '@/new-components/Dialog';
 import { Form, InputField } from '@/new-components/Form';
-import { useCreateQueryCollection } from '../../../QueryCollections/hooks/useCreateQueryCollection';
+import { useFireNotification } from '@/new-components/Notifications';
+import { useRenameQueryCollection } from '../../../QueryCollections/hooks/useRenameQueryCollection';
 
 interface QueryCollectionCreateDialogProps {
   onClose: () => void;
+  currentName: string;
+  onRename: (currentName: string, newName: string) => void;
 }
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
 });
-export const QueryCollectionCreateDialog: React.FC<QueryCollectionCreateDialogProps> =
+export const QueryCollectionRenameDialog: React.FC<QueryCollectionCreateDialogProps> =
   props => {
-    const { onClose } = props;
-    const { createQueryCollection, isLoading } = useCreateQueryCollection();
+    const { onClose, currentName, onRename } = props;
+    const { renameQueryCollection, isLoading } = useRenameQueryCollection();
+    const { fireNotification } = useFireNotification();
 
     return (
       <Form schema={schema} onSubmit={() => {}}>
         {({ watch, setError, trigger }) => {
           const name = watch('name');
           return (
-            <Dialog hasBackdrop title="Create Collection" onClose={onClose}>
+            <Dialog hasBackdrop title="Rename Collection" onClose={onClose}>
               <>
                 <div className="p-4">
                   <InputField
@@ -33,19 +37,29 @@ export const QueryCollectionCreateDialog: React.FC<QueryCollectionCreateDialogPr
                 </div>
                 <Dialog.Footer
                   callToDeny="Cancel"
-                  callToAction="Create Collection"
+                  callToAction="Rename Collection"
                   onClose={onClose}
                   onSubmit={async () => {
                     if (await trigger()) {
                       // TODO: remove as when proper form types will be available
-                      createQueryCollection(name as string, {
-                        addToAllowList: true,
+                      renameQueryCollection(currentName, name as string, {
                         onSuccess: () => {
                           onClose();
+                          onRename(currentName, name as string);
+                          fireNotification({
+                            type: 'success',
+                            title: 'Collection renamed',
+                            message: `Collection ${currentName} was renamed to ${name}`,
+                          });
                         },
                         onError: error => {
                           setError('name', {
                             type: 'manual',
+                            message: (error as Error).message,
+                          });
+                          fireNotification({
+                            type: 'error',
+                            title: 'Error renaming collection',
                             message: (error as Error).message,
                           });
                         },

@@ -1,6 +1,7 @@
 .notifications-wrapper .notification {
   height: auto !important;
   width: auto !important;
+  pointer-events: auto;
 }
 
 .notifications-wrapper .notifications-tr,

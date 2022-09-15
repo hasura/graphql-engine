@@ -1,4 +1,8 @@
-import { useMetadata, useMetadataMigration } from '@/features/MetadataAPI';
+import {
+  MetadataResponse,
+  useMetadata,
+  useMetadataMigration,
+} from '@/features/MetadataAPI';
 
 export const useCreateQueryCollection = () => {
   const { mutate, isSuccess, isLoading, error } = useMetadataMigration();
@@ -42,4 +46,32 @@ export const useCreateQueryCollection = () => {
   };
 
   return { createQueryCollection, isSuccess, isLoading, error };
+};
+
+export const createAllowedQueriesIfNeeded = (
+  queryCollection: string,
+  metadata: MetadataResponse | undefined
+) => {
+  return queryCollection === 'allowed-queries' &&
+    !metadata?.metadata?.query_collections?.find(
+      q => q.name === queryCollection
+    )
+    ? [
+        {
+          type: 'create_query_collection',
+          args: {
+            name: queryCollection,
+            definition: {
+              queries: [],
+            },
+          },
+        },
+        {
+          type: 'add_collection_to_allowlist',
+          args: {
+            collection: queryCollection,
+          },
+        },
+      ]
+    : [];
 };

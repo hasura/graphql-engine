@@ -1,5 +1,12 @@
 import React from 'react';
 
+import { browserHistory } from 'react-router';
+import {
+  availableFeatureFlagIds,
+  FeatureFlagToast,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
+
 import AllowedQueriesNotes from './AllowedQueriesNotes';
 import AddAllowedQuery from './AddAllowedQuery';
 import AllowedQueriesList from './AllowedQueriesList';
@@ -16,6 +23,14 @@ interface Props {
 
 const AllowedQueries: React.FC<Props> = props => {
   const { dispatch, allowedQueries } = props;
+
+  const { enabled: featureFlagEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.allowListId
+  );
+
+  if (featureFlagEnabled) {
+    browserHistory.push('/api/allow-list');
+  }
 
   return (
     <div className="clear-both pl-md pt-md mb-md">
@@ -35,6 +50,7 @@ const AllowedQueries: React.FC<Props> = props => {
           />
         </div>
       </div>
+      <FeatureFlagToast flagId={availableFeatureFlagIds.allowListId} />
     </div>
   );
 };

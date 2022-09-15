@@ -3,6 +3,8 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta } from '@storybook/react';
 
+import { action } from '@storybook/addon-actions';
+
 import { AllowListSidebar } from './AllowListSidebar';
 import { handlers } from '../../../QueryCollections/hooks/useQueryCollections/mocks/handlers.mock';
 
@@ -19,5 +21,10 @@ export default {
 } as ComponentMeta<typeof AllowListSidebar>;
 
 export const Primary = () => (
-  <AllowListSidebar selectedCollectionQuery="allowed_queries" />
+  <AllowListSidebar
+    buildQueryCollectionHref={() => '#'}
+    onQueryCollectionClick={action('onQueryCollectionClick')}
+    onQueryCollectionCreate={action('onQueryCollectionCreate')}
+    selectedCollectionQuery="allowed-queries"
+  />
 );

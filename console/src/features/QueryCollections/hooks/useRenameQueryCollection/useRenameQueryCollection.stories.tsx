@@ -57,7 +57,7 @@ export default {
   },
   argTypes: {
     name: {
-      defaultValue: 'allowed_queries',
+      defaultValue: 'allowed-queries',
       description: 'The name of the query collection to rename',
       control: {
         type: 'text',

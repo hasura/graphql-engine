@@ -20,7 +20,7 @@ describe('useRemoveFromAllowList', () => {
       { wrapper }
     );
 
-    await result.current.removeFromAllowList('allowed_queries');
+    await result.current.removeFromAllowList('allowed-queries');
 
     await waitForValueToChange(() => result.current.isSuccess);
     expect(result.current.isSuccess).toBe(true);

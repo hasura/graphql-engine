@@ -26,5 +26,5 @@ export const AllowListStatus = () => {
     return <Badge color="green">Enabled</Badge>;
   }
 
-  return <Badge color="red">disabled</Badge>;
+  return <Badge color="indigo">Disabled</Badge>;
 };
