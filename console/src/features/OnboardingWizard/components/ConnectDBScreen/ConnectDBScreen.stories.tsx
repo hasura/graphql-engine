@@ -18,7 +18,7 @@ Base.play = async ({ canvasElement }) => {
 
   // Expect element renders successfully
   expect(
-    await canvas.findByText('Welcome to your new Hasura project')
+    await canvas.findByText('Welcome to your new Hasura project!')
   ).toBeVisible();
   expect(
     await canvas.findByText(

@@ -1,4 +1,3 @@
-export { cloudDataServiceApiClient } from './cloudDataServiceApiClient';
 export {
   makeGrowthExperimentsClient,
   GrowthExperimentsClient,
