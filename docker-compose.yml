@@ -45,6 +45,9 @@ services:
 
   postgres:
     image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
     ports:
       - "65002:5432"
     environment:
@@ -52,8 +55,8 @@ services:
       POSTGRES_PASSWORD: "hasura"
       POSTGRES_DB: "hasura"
     volumes:
-        - postgres-data:/var/lib/postgresql/data
-        - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   sqlserver:
     build: ./docker-compose/sqlserver/
@@ -90,8 +93,8 @@ services:
       COCKROACH_USER: "root"
       COCKROACH_DATABASE: "hasura"
     volumes:
-        - cockroach-data:/cockroach/cockroach-data
-        - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+      - cockroach-data:/cockroach/cockroach-data
+      - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   dc-reference-agent:
     build:
