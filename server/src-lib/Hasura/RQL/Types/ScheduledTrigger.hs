@@ -22,9 +22,10 @@ module Hasura.RQL.Types.ScheduledTrigger
     ScheduledEventInvocation (..),
     OneOffScheduledEvent (..),
     CronEvent (..),
+    RowsCountOption (..),
     ScheduledEventPagination (..),
     GetScheduledEvents (..),
-    WithTotalCount (..),
+    WithOptionalTotalCount (..),
     DeleteScheduledEvent (..),
     GetInvocationsBy (..),
     GetEventInvocations (..),
@@ -371,11 +372,21 @@ scheduledEventPaginationToPairs :: ScheduledEventPagination -> [Pair]
 scheduledEventPaginationToPairs ScheduledEventPagination {..} =
   ["limit" .= _sepLimit, "offset" .= _sepOffset]
 
+data RowsCountOption = IncludeRowsCount | DontIncludeRowsCount
+  deriving (Show, Eq)
+
+instance FromJSON RowsCountOption where
+  parseJSON = withBool "RowsCountOption" $ pure . bool DontIncludeRowsCount IncludeRowsCount
+
+instance ToJSON RowsCountOption where
+  toJSON = Bool . (== IncludeRowsCount)
+
 -- | Query type to fetch all one-off/cron scheduled events
 data GetScheduledEvents = GetScheduledEvents
   { _gseScheduledEvent :: ScheduledEvent,
     _gsePagination :: ScheduledEventPagination,
-    _gseStatus :: [ScheduledEventStatus]
+    _gseStatus :: [ScheduledEventStatus],
+    _gseGetRowsCount :: RowsCountOption
   }
   deriving (Show, Eq)
 
@@ -384,17 +395,20 @@ instance ToJSON GetScheduledEvents where
     object $
       scheduledEventToPairs _gseScheduledEvent
         <> scheduledEventPaginationToPairs _gsePagination
-        <> ["status" .= _gseStatus]
+        <> [ "status" .= _gseStatus,
+             "get_rows_count" .= _gseGetRowsCount
+           ]
 
 instance FromJSON GetScheduledEvents where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "GetScheduledEvents" $ \o ->
     GetScheduledEvents
       <$> parseScheduledEvent o
       <*> parseScheduledEventPagination o
       <*> o .:? "status" .!= []
+      <*> o .:? "get_rows_count" .!= DontIncludeRowsCount
 
-data WithTotalCount a = WithTotalCount
-  { _wtcCount :: Int,
+data WithOptionalTotalCount a = WithOptionalTotalCount
+  { _wtcCount :: Maybe Int,
     _wtcData :: a
   }
   deriving (Show, Eq)
@@ -415,15 +429,19 @@ data GetInvocationsBy
 
 data GetEventInvocations = GetEventInvocations
   { _geiInvocationsBy :: GetInvocationsBy,
-    _geiPagination :: ScheduledEventPagination
+    _geiPagination :: ScheduledEventPagination,
+    -- | Option to include the total rows corresponding in
+    --   response.
+    _geiGetRowsCount :: RowsCountOption
   }
   deriving (Eq, Show)
 
 instance FromJSON GetEventInvocations where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "GetEventInvocations" $ \o ->
     GetEventInvocations
       <$> (parseEventId o <|> (GIBEvent <$> parseScheduledEvent o))
       <*> parseScheduledEventPagination o
+      <*> o .:? "get_rows_count" .!= DontIncludeRowsCount
     where
       parseEventId o =
         GIBEventId <$> o .: "event_id" <*> o .: "type"
@@ -433,8 +451,10 @@ instance ToJSON GetEventInvocations where
     object $
       case _geiInvocationsBy of
         GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]
-        GIBEvent event -> scheduledEventToPairs event
-        <> scheduledEventPaginationToPairs _geiPagination
+        GIBEvent event ->
+          scheduledEventToPairs event
+            <> scheduledEventPaginationToPairs _geiPagination
+            <> (bool mempty ["get_rows_count" .= True] $ _geiGetRowsCount == IncludeRowsCount)
 
 data ClearCronEvents
   = -- | Used to delete the cron events only of the specified cron trigger
