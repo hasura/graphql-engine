@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="VersionDev"><span class="annot"><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-var">VersionDev</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VersionRelease"><span class="annot"><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-var">VersionRelease</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Version</span></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VersionCE"><span class="annot"><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-var">VersionCE</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689736058"><span id="local-6989586621689736060"><span id="local-6989586621689736062"><span class="annot"><span class="annottext">Int -&gt; Version -&gt; ShowS
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689736065"><span id="local-6989586621689736067"><span id="local-6989586621689736069"><span class="annot"><span class="annottext">Int -&gt; Version -&gt; ShowS
 [Version] -&gt; ShowS
 Version -&gt; String
 (Int -&gt; Version -&gt; ShowS)
@@ -37,7 +37,7 @@ show :: Version -&gt; String
 $cshow :: Version -&gt; String
 showsPrec :: Int -&gt; Version -&gt; ShowS
 $cshowsPrec :: Int -&gt; Version -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689736053"><span id="local-6989586621689736055"><span class="annot"><span class="annottext">Version -&gt; Version -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689736060"><span id="local-6989586621689736062"><span class="annot"><span class="annottext">Version -&gt; Version -&gt; Bool
 (Version -&gt; Version -&gt; Bool)
 -&gt; (Version -&gt; Version -&gt; Bool) -&gt; Eq Version
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -48,38 +48,38 @@ $c== :: Version -&gt; Version -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToText</span></span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-30"></span><span>  </span><span id="local-6989586621689736049"><span class="annot"><span class="annottext">toText :: Version -&gt; Text
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621689736056"><span class="annot"><span class="annottext">toText :: Version -&gt; Text
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toText</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-31"></span><span>    </span><span class="annot"><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-type">VersionDev</span></a></span><span> </span><span id="local-6989586621689736047"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736047"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736047"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-type">VersionRelease</span></a></span><span> </span><span id="local-6989586621689736046"><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736046"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-31"></span><span>    </span><span class="annot"><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-type">VersionDev</span></a></span><span> </span><span id="local-6989586621689736054"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736054"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736054"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-type">VersionRelease</span></a></span><span> </span><span id="local-6989586621689736053"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689736053"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;v&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Text
 </span><span class="hs-identifier hs-var">V.toText</span></span><span> </span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736046"><span class="hs-identifier hs-var">version</span></a></span><span>
-</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-type">VersionCE</span></a></span><span> </span><span id="local-6989586621689736044"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736044"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736044"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621689736053"><span class="hs-identifier hs-var">version</span></a></span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-type">VersionCE</span></a></span><span> </span><span id="local-6989586621689736051"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736051"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736051"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromText</span></span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-comment">-- Ensure that a -ce suffix is *not* interpreted as the release type of a</span><span>
 </span><span id="line-37"></span><span>  </span><span class="hs-comment">-- Data.SemVer-style semantic version</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621689736041"><span class="annot"><span class="annottext">fromText :: Text -&gt; Version
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromText</span></span></span><span> </span><span id="local-6989586621689736039"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736039"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621689736048"><span class="annot"><span class="annottext">fromText :: Text -&gt; Version
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromText</span></span></span><span> </span><span id="local-6989586621689736046"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736046"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.takeEnd</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">3</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736039"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621689736046"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;-ce&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Version
 </span><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-var">VersionCE</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736039"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">fromText</span></span><span> </span><span id="local-6989586621689736037"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736037"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Version
+</span><a href="#local-6989586621689736046"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">fromText</span></span><span> </span><span id="local-6989586621689736044"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736044"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Version
 </span><span class="hs-identifier hs-var">V.fromText</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either String Version) -&gt; Text -&gt; Either String Version
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Text -&gt; Text
@@ -87,18 +87,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'v'</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736037"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689736044"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Version
 </span><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-var">VersionDev</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736037"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689736034"><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736034"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Version
+</span><a href="#local-6989586621689736044"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689736041"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689736041"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Version
 </span><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-var">VersionRelease</span></a></span><span> </span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736034"><span class="hs-identifier hs-var">version</span></a></span><span>
+</span><a href="#local-6989586621689736041"><span class="hs-identifier hs-var">version</span></a></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689736027"><span id="local-6989586621689736029"><span id="local-6989586621689736031"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621689736025"><span class="annot"><span class="annottext">toJSON :: Version -&gt; Value
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689736034"><span id="local-6989586621689736036"><span id="local-6989586621689736038"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621689736032"><span class="annot"><span class="annottext">toJSON :: Version -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (Version -&gt; Text) -&gt; Version -&gt; Value
@@ -107,8 +107,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a. ToText a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">toText</span></span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689736020"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621689736018"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Version
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689736027"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621689736025"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Version
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Version) -&gt; Parser Text -&gt; Parser Version
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Version
@@ -158,44 +158,44 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-70"></span><span class="annot"><a href="Hasura.Server.Version.html#versionToAssetsVersion"><span class="hs-identifier hs-type">versionToAssetsVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-71"></span><span id="versionToAssetsVersion"><span class="annot"><span class="annottext">versionToAssetsVersion :: Version -&gt; Text
 </span><a href="Hasura.Server.Version.html#versionToAssetsVersion"><span class="hs-identifier hs-var hs-var">versionToAssetsVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-type">VersionDev</span></a></span><span> </span><span id="local-6989586621689736014"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736014"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-type">VersionDev</span></a></span><span> </span><span id="local-6989586621689736021"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736021"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;versioned/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736014"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-type">VersionRelease</span></a></span><span> </span><span id="local-6989586621689736013"><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736013"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Maybe Text
-</span><a href="#local-6989586621689736012"><span class="hs-identifier hs-var">getReleaseChannel</span></a></span><span> </span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736013"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689736021"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-type">VersionRelease</span></a></span><span> </span><span id="local-6989586621689736020"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689736020"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Maybe Text
+</span><a href="#local-6989586621689736019"><span class="hs-identifier hs-var">getReleaseChannel</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689736020"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;versioned/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736011"><span class="hs-identifier hs-var">vMajMin</span></a></span><span>
-</span><span id="line-75"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689736010"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736010"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736018"><span class="hs-identifier hs-var">vMajMin</span></a></span><span>
+</span><span id="line-75"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689736017"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736017"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;channel/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736010"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689736017"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736011"><span class="hs-identifier hs-var">vMajMin</span></a></span><span>
+</span><a href="#local-6989586621689736018"><span class="hs-identifier hs-var">vMajMin</span></a></span><span>
 </span><span id="line-76"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-77"></span><span>      </span><span id="local-6989586621689736011"><span class="annot"><span class="annottext">vMajMin :: Text
-</span><a href="#local-6989586621689736011"><span class="hs-identifier hs-var hs-var">vMajMin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span id="line-77"></span><span>      </span><span id="local-6989586621689736018"><span class="annot"><span class="annottext">vMajMin :: Text
+</span><a href="#local-6989586621689736018"><span class="hs-identifier hs-var hs-var">vMajMin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;v&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736013"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Getting Int Version Int -&gt; Int
+</span><a href="#local-6989586621689736020"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Getting Int Version Int -&gt; Int
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Int Version Int
 forall (f :: * -&gt; *).
@@ -209,25 +209,25 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736013"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Getting Int Version Int -&gt; Int
+</span><a href="#local-6989586621689736020"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Getting Int Version Int -&gt; Int
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Int Version Int
 forall (f :: * -&gt; *).
 Functor f =&gt;
 (Int -&gt; f Int) -&gt; Version -&gt; f Version
 </span><span class="hs-identifier hs-var">V.minor</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-type">VersionCE</span></a></span><span> </span><span id="local-6989586621689736006"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736006"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-type">VersionCE</span></a></span><span> </span><span id="local-6989586621689736013"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736013"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;channel/versioned/&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736006"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621689736013"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>    </span><span class="annot"><a href="#local-6989586621689736012"><span class="hs-identifier hs-type">getReleaseChannel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Version</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-81"></span><span>    </span><span id="local-6989586621689736012"><span class="annot"><span class="annottext">getReleaseChannel :: Version -&gt; Maybe Text
-</span><a href="#local-6989586621689736012"><span class="hs-identifier hs-var hs-var">getReleaseChannel</span></a></span></span><span> </span><span id="local-6989586621689736005"><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736005"><span class="hs-identifier hs-var">sv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689736005"><span class="hs-identifier hs-var">sv</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><span id="line-80"></span><span>    </span><span class="annot"><a href="#local-6989586621689736019"><span class="hs-identifier hs-type">getReleaseChannel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Version</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621689736019"><span class="annot"><span class="annottext">getReleaseChannel :: Version -&gt; Maybe Text
+</span><a href="#local-6989586621689736019"><span class="hs-identifier hs-var hs-var">getReleaseChannel</span></a></span></span><span> </span><span id="local-6989586621689736012"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689736012"><span class="hs-identifier hs-var">sv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689736012"><span class="hs-identifier hs-var">sv</span></a></span><span> </span><span class="annot"><span class="annottext">Version
 -&gt; Getting [Identifier] Version [Identifier] -&gt; [Identifier]
 forall s a. s -&gt; Getting a s a -&gt; a
 </span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting [Identifier] Version [Identifier]
@@ -239,21 +239,21 @@ Functor f =&gt;
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;stable&quot;</span></span><span>
-</span><span id="line-83"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689736003"><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689736003"><span class="hs-identifier hs-var">mr</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[Identifier]
+</span><span id="line-83"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689736010"><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621689736010"><span class="hs-identifier hs-var">mr</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[Identifier]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Maybe Text
-</span><a href="#local-6989586621689736002"><span class="hs-identifier hs-var">getTextFromId</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689736003"><span class="hs-identifier hs-var">mr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689736009"><span class="hs-identifier hs-var">getTextFromId</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621689736010"><span class="hs-identifier hs-var">mr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-85"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689736001"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736001"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-85"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689736008"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689736008"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-86"></span><span>          </span><span class="hs-keyword">if</span><span>
 </span><span id="line-87"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><span class="hs-identifier hs-var">T.null</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736001"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689736008"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-88"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -261,15 +261,15 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Maybe String -&gt; Maybe Text
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String
-</span><a href="#local-6989586621689735998"><span class="hs-identifier hs-var">getChannelFromPreRelease</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="#local-6989586621689736005"><span class="hs-identifier hs-var">getChannelFromPreRelease</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689736001"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689736008"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621689735998"><span class="hs-identifier hs-type">getChannelFromPreRelease</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-91"></span><span>    </span><span id="local-6989586621689735998"><span class="annot"><span class="annottext">getChannelFromPreRelease :: String -&gt; Maybe String
-</span><a href="#local-6989586621689735998"><span class="hs-identifier hs-var hs-var">getChannelFromPreRelease</span></a></span></span><span> </span><span id="local-6989586621689735996"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689735996"><span class="hs-identifier hs-var">sv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689735996"><span class="hs-identifier hs-var">sv</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Maybe String
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621689736005"><span class="hs-identifier hs-type">getChannelFromPreRelease</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621689736005"><span class="annot"><span class="annottext">getChannelFromPreRelease :: String -&gt; Maybe String
+</span><a href="#local-6989586621689736005"><span class="hs-identifier hs-var hs-var">getChannelFromPreRelease</span></a></span></span><span> </span><span id="local-6989586621689736003"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689736003"><span class="hs-identifier hs-var">sv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689736003"><span class="hs-identifier hs-var">sv</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Maybe String
 forall source source1 target (m :: * -&gt; *).
 (RegexMaker Regex CompOption ExecOption source,
  RegexContext Regex source1 target, MonadFail m) =&gt;
@@ -277,13 +277,13 @@ source1 -&gt; source -&gt; m target
 </span><span class="hs-operator hs-var">=~~</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;^([a-z]+)&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span>    </span><span class="annot"><a href="#local-6989586621689736002"><span class="hs-identifier hs-type">getTextFromId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Identifier</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-94"></span><span>    </span><span id="local-6989586621689736002"><span class="annot"><span class="annottext">getTextFromId :: Identifier -&gt; Maybe Text
-</span><a href="#local-6989586621689736002"><span class="hs-identifier hs-var hs-var">getTextFromId</span></a></span></span><span> </span><span id="local-6989586621689735995"><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689735995"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Maybe Identifier
+</span><span id="line-93"></span><span>    </span><span class="annot"><a href="#local-6989586621689736009"><span class="hs-identifier hs-type">getTextFromId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Identifier</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621689736009"><span class="annot"><span class="annottext">getTextFromId :: Identifier -&gt; Maybe Text
+</span><a href="#local-6989586621689736009"><span class="hs-identifier hs-var hs-var">getTextFromId</span></a></span></span><span> </span><span id="local-6989586621689736002"><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621689736002"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Maybe Identifier
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689735995"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Identifier
+</span><a href="#local-6989586621689736002"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Identifier
 -&gt; Getting (First Text) (Maybe Identifier) Text -&gt; Maybe Text
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
 </span><span class="hs-operator hs-var">^?</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Identifier -&gt; Const (First Text) (Maybe Identifier))
@@ -291,7 +291,7 @@ forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
 forall (f :: * -&gt; *) t a.
 Applicative f =&gt;
 (t -&gt; f (Maybe a)) -&gt; Maybe t -&gt; f (Maybe a)
-</span><a href="#local-6989586621689735994"><span class="hs-identifier hs-var">toTextualM</span></a></span><span> </span><span class="annot"><span class="annottext">((Identifier -&gt; Const (First Text) (Maybe Identifier))
+</span><a href="#local-6989586621689736001"><span class="hs-identifier hs-var">toTextualM</span></a></span><span> </span><span class="annot"><span class="annottext">((Identifier -&gt; Const (First Text) (Maybe Identifier))
  -&gt; Maybe Identifier -&gt; Const (First Text) (Maybe Identifier))
 -&gt; ((Text -&gt; Const (First Text) Text)
     -&gt; Identifier -&gt; Const (First Text) (Maybe Identifier))
@@ -304,19 +304,19 @@ Applicative f =&gt;
 (Text -&gt; f Text) -&gt; Identifier -&gt; f (Maybe Identifier)
 </span><span class="hs-identifier hs-var">V._Textual</span></span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-96"></span><span>        </span><span id="local-6989586621689735994"><span class="annot"><span class="annottext">toTextualM :: (t -&gt; f (Maybe a)) -&gt; Maybe t -&gt; f (Maybe a)
-</span><a href="#local-6989586621689735994"><span class="hs-identifier hs-var hs-var">toTextualM</span></a></span></span><span> </span><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
+</span><span id="line-96"></span><span>        </span><span id="local-6989586621689736001"><span class="annot"><span class="annottext">toTextualM :: (t -&gt; f (Maybe a)) -&gt; Maybe t -&gt; f (Maybe a)
+</span><a href="#local-6989586621689736001"><span class="hs-identifier hs-var hs-var">toTextualM</span></a></span></span><span> </span><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe t
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; f (Maybe a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-97"></span><span>        </span><span class="annot"><a href="#local-6989586621689735994"><span class="hs-identifier hs-var">toTextualM</span></a></span><span> </span><span id="local-6989586621689735992"><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
-</span><a href="#local-6989586621689735992"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689735991"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689735991"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
-</span><a href="#local-6989586621689735992"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689735991"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-97"></span><span>        </span><span class="annot"><a href="#local-6989586621689736001"><span class="hs-identifier hs-var">toTextualM</span></a></span><span> </span><span id="local-6989586621689735999"><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
+</span><a href="#local-6989586621689735999"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689735998"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689735998"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
+</span><a href="#local-6989586621689735999"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689735998"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="hs-comment">-- | A version-based string used to form the CDN URL for fetching console assets.</span><span>
 </span><span id="line-100"></span><span class="annot"><a href="Hasura.Server.Version.html#consoleAssetsVersion"><span class="hs-identifier hs-type">consoleAssetsVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
