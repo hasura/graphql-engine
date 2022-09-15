@@ -58,6 +58,9 @@ services:
 
   postgres:
     image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
     ports:
       - 5432
     environment:
