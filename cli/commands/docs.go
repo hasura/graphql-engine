@@ -17,6 +17,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+var rootPath string = "/hasura-cli/commands/"
+var sidebarPositionMap = make(map[string]int)
+var sidebarPosition int = 0
+
 // NewDocsCmd returns the docs command
 func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	var docType, docDirectory string
@@ -38,9 +42,10 @@ func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 			case "man":
 				err = doc.GenManTree(rootCmd, &doc.GenManHeader{Title: "HASURA", Section: "3"}, docDirectory)
 			case "mdx":
+				generateSidebarPositions(rootCmd)
 				err = genMarkdownXTreeCustom(rootCmd, docDirectory,
 					func(s string) string { return "" },
-					func(s string) string { return strings.Replace(s, " ", "_", -1) },
+					func(s string) string { return fmt.Sprintf("%s%s", rootPath, strings.Replace(s, " ", "_", -1)) },
 				)
 			case "md":
 				err = doc.GenMarkdownTree(rootCmd, docDirectory)
@@ -239,7 +244,8 @@ func printOptionsMarkdownX(buf *bytes.Buffer, cmd *cobra.Command, name string) e
 	if flags.HasAvailableFlags() {
 		flags.PrintDefaults()
 		scanner := bufio.NewScanner(localBuf)
-		buf.WriteString("## Options\n\n```\n")
+		// sass highlighting seems to work for this section
+		buf.WriteString("## Options\n\n```sass\n")
 		for scanner.Scan() {
 			buf.WriteString(fmt.Sprintf("%s\n", strings.TrimPrefix(scanner.Text(), "  ")))
 		}
@@ -252,7 +258,8 @@ func printOptionsMarkdownX(buf *bytes.Buffer, cmd *cobra.Command, name string) e
 	if parentFlags.HasAvailableFlags() {
 		parentFlags.PrintDefaults()
 		scanner := bufio.NewScanner(localBuf)
-		buf.WriteString("## Options inherited from parent commands\n\n```\n")
+		// sass highlighting seems to work for this section
+		buf.WriteString("## Options inherited from parent commands\n\n```sass\n")
 		for scanner.Scan() {
 			buf.WriteString(fmt.Sprintf("%s\n", strings.TrimPrefix(scanner.Text(), "      ")))
 		}
@@ -261,8 +268,6 @@ func printOptionsMarkdownX(buf *bytes.Buffer, cmd *cobra.Command, name string) e
 
 	return nil
 }
-
-var sidebarPosition int = 0
 
 // genMarkdownXCustom creates custom markdown output.
 func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string) string) error {
@@ -280,8 +285,7 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 	info := short
 	buf.WriteString("---\n")
 	buf.WriteString(fmt.Sprintf("sidebar_label: %s\n", name))
-	buf.WriteString(fmt.Sprintf("sidebar_position: %d\n", sidebarPosition))
-	sidebarPosition = sidebarPosition + 1
+	buf.WriteString(fmt.Sprintf("sidebar_position: %d\n", getSidebarPositionForCmd(cmd.CommandPath())))
 	buf.WriteString(fmt.Sprintf("description: %s using the Hasura CLI\n", info))
 	buf.WriteString("keywords:\n  - hasura\n  - docs\n  - CLI\n")
 	if name != "hasura" {
@@ -301,17 +305,17 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 	}
 
 	if cmd.Runnable() {
-		buf.WriteString(fmt.Sprintf("```\n%s\n```\n\n", cmd.UseLine()))
+		buf.WriteString(fmt.Sprintf("```bash\n%s\n```\n\n", cmd.UseLine()))
 	}
 
 	if len(cmd.Aliases) > 0 {
-		buf.WriteString(fmt.Sprintf("Alias: %s\n\n", strings.Join(cmd.Aliases, ", ")))
+		buf.WriteString(fmt.Sprintf("**Alias:** %s\n\n", strings.Join(cmd.Aliases, ", ")))
 	}
 
 	if len(cmd.Example) > 0 {
 		buf.WriteString("## Examples\n\n")
 		scanner := bufio.NewScanner(strings.NewReader(cmd.Example))
-		buf.WriteString("```\n")
+		buf.WriteString("```bash\n")
 		for scanner.Scan() {
 			buf.WriteString(fmt.Sprintf("%s\n", strings.TrimPrefix(scanner.Text(), "  ")))
 		}
@@ -328,7 +332,7 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 			pname := parent.CommandPath()
 			link := pname + ".mdx"
 			link = strings.ReplaceAll(link, " ", "_")
-			buf.WriteString(fmt.Sprintf("- [%s](%s)\t - %s\n", pname, linkHandler(link), parent.Short))
+			buf.WriteString(fmt.Sprintf("* [%s](%s)\t - %s\n", pname, linkHandler(link), parent.Short))
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -416,6 +420,20 @@ func hasSeeAlso(cmd *cobra.Command) bool {
 		return true
 	}
 	return false
+}
+
+// Returns the sidebar position for a command
+func getSidebarPositionForCmd(commandPath string) int {
+	return sidebarPositionMap[commandPath]
+}
+
+// Allocates a sidebar position to commands using DFS
+func generateSidebarPositions(cmd *cobra.Command) {
+	sidebarPosition = sidebarPosition + 1
+	sidebarPositionMap[cmd.CommandPath()] = sidebarPosition
+	for _, c := range cmd.Commands() {
+		generateSidebarPositions(c)
+	}
 }
 
 // Temporary workaround for yaml lib generating incorrect yaml with long strings
