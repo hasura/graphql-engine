@@ -390,7 +390,8 @@ v1QueryHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   RQLQuery ->
   m (HttpResponse EncJSON)

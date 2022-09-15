@@ -24,7 +24,8 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     unlockEventsInSource,
     updateColumnInEventTrigger,
     checkIfTriggerExists,
-    addCleanupLog,
+    addCleanupSchedules,
+    deleteAllScheduledCleanups,
     getCleanupEventsForDeletion,
     updateCleanupEventStatusToDead,
     updateCleanupEventStatusToPaused,
@@ -49,7 +50,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Base.Error
-import Hasura.Eventing.Common (generateScheduleTimes)
+import Hasura.Eventing.Common
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, SourceConfig, TableName)
 import Hasura.RQL.Types.Column
@@ -828,26 +829,26 @@ mkAllTriggersQ triggerName table allCols fullspec = do
 --
 --   1. Get last scheduled cleanup event and count.
 --   2. If count is less than 5, then add add more cleanup logs, else do nothing
-addCleanupLog ::
+addCleanupSchedules ::
   (MonadIO m, MonadError QErr m) =>
   PGSourceConfig ->
   [(TriggerName, AutoTriggerLogCleanupConfig)] ->
   m ()
-addCleanupLog sourceConfig triggersWithcleanupConfig =
+addCleanupSchedules sourceConfig triggersWithcleanupConfig =
   unless (null triggersWithcleanupConfig) $ do
     let triggerNames = map fst triggersWithcleanupConfig
     countAndLastSchedules <- liftEitherM $ liftIO $ runPgSourceReadTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
     currTime <- liftIO $ Time.getCurrentTime
-    let triggerMap = Map.fromList $ map (\(tName, count, lastTime) -> (tName, (count, lastTime))) countAndLastSchedules
+    let triggerMap = Map.fromList $ map (\(triggerName, count, lastTime) -> (triggerName, (count, lastTime))) countAndLastSchedules
         scheduledTriggersAndTimestamps =
           mapMaybe
-            ( \(tName, cConfig) ->
-                let lastScheduledTime = case Map.lookup tName triggerMap of
+            ( \(triggerName, cleanupConfig) ->
+                let lastScheduledTime = case Map.lookup triggerName triggerMap of
                       Nothing -> Just currTime
                       Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
                  in fmap
                       ( \lastScheduledTimestamp ->
-                          (tName, generateScheduleTimes lastScheduledTimestamp 50 (_atlccSchedule cConfig))
+                          (triggerName, generateScheduleTimes lastScheduledTimestamp cleanupSchedulesToBeGenerated (_atlccSchedule cleanupConfig))
                       )
                       lastScheduledTime
             )
@@ -887,6 +888,26 @@ selectLastCleanupScheduledTimestamp triggerNames =
     |]
     (Identity $ PGTextArray $ map triggerNameToTxt triggerNames)
     True
+
+deleteAllScheduledCleanupsTx :: TriggerName -> Q.TxE QErr ()
+deleteAllScheduledCleanupsTx triggerName = do
+  Q.unitQE
+    defaultTxErrorHandler
+    [Q.sql|
+      DELETE from hdb_catalog.hdb_event_log_cleanups
+      WHERE (status = 'scheduled') AND (trigger_name = $1)
+    |]
+    (Identity (triggerNameToTxt triggerName))
+    True
+
+-- | @deleteAllScheduledCleanups@ deletes all scheduled cleanup logs for a given event trigger
+deleteAllScheduledCleanups ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  TriggerName ->
+  m ()
+deleteAllScheduledCleanups sourceConfig triggerName =
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteAllScheduledCleanupsTx triggerName
 
 getCleanupEventsForDeletionTx :: Q.TxE QErr ([(Text, TriggerName)])
 getCleanupEventsForDeletionTx =
@@ -1012,14 +1033,16 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
     map runIdentity
       <$> Q.listQE
         defaultTxErrorHandler
-        [Q.sql|
+        ( Q.fromText
+            [ST.st|
           SELECT id FROM hdb_catalog.event_log
           WHERE ((delivered = true OR error = true) AND trigger_name = $1)
-          AND created_at < now() - interval '$2'
+          AND created_at < now() - interval '#{qRetentionPeriod}'
           AND locked IS NULL
-          LIMIT $3
+          LIMIT $2
         |]
-        (qTriggerName, qRetentionPeriod, qBatchSize)
+        )
+        (qTriggerName, qBatchSize)
         True
   --  Lock the events in the database so that other HGE instances don't pick them up for deletion.
   Q.unitQE

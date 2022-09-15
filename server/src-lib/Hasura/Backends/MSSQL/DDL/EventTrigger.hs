@@ -18,7 +18,8 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     qualifyTableName,
     createMissingSQLTriggers,
     checkIfTriggerExists,
-    addCleanupLog,
+    addCleanupSchedules,
+    deleteAllScheduledCleanups,
     getCleanupEventsForDeletion,
     updateCleanupEventStatusToDead,
     updateCleanupEventStatusToPaused,
@@ -870,12 +871,12 @@ mkUpdateTriggerQuery
 --
 --   1. Get last scheduled cleanup event and count.
 --   2. If count is less than 5, then add add more cleanup logs, else do nothing
-addCleanupLog ::
+addCleanupSchedules ::
   (MonadIO m, MonadError QErr m) =>
   MSSQLSourceConfig ->
   [(TriggerName, AutoTriggerLogCleanupConfig)] ->
   m ()
-addCleanupLog sourceConfig triggersWithcleanupConfig =
+addCleanupSchedules sourceConfig triggersWithcleanupConfig =
   unless (null triggersWithcleanupConfig) $ do
     currTimeUTC <- liftIO getCurrentTime
     timeZone <- liftIO $ getTimeZone currTimeUTC
@@ -891,7 +892,7 @@ addCleanupLog sourceConfig triggersWithcleanupConfig =
                       Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
                  in fmap
                       ( \lastScheduledTimestamp ->
-                          (tName, map (Datetimeoffset . utcToZonedTime timeZone) $ generateScheduleTimes (zonedTimeToUTC lastScheduledTimestamp) 50 (_atlccSchedule cConfig))
+                          (tName, map (Datetimeoffset . utcToZonedTime timeZone) $ generateScheduleTimes (zonedTimeToUTC lastScheduledTimestamp) cleanupSchedulesToBeGenerated (_atlccSchedule cConfig))
                       )
                       lastScheduledTime
             )
@@ -943,6 +944,25 @@ selectLastCleanupScheduledTimestamp triggerNames =
       )
   where
     triggerNamesValues = generateSQLValuesFromList $ map triggerNameToTxt triggerNames
+
+deleteAllScheduledCleanupsTx :: TriggerName -> TxE QErr ()
+deleteAllScheduledCleanupsTx triggerName = do
+  let triggerNameText = triggerNameToTxt triggerName
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    [ODBC.sql|
+      DELETE from hdb_catalog.hdb_event_log_cleanups
+      WHERE status = 'scheduled' AND trigger_name = $triggerNameText
+    |]
+
+-- | @deleteAllScheduledCleanups@ deletes all scheduled cleanup logs for a given event trigger
+deleteAllScheduledCleanups ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  TriggerName ->
+  m ()
+deleteAllScheduledCleanups sourceConfig triggerName =
+  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ deleteAllScheduledCleanupsTx triggerName
 
 getCleanupEventsForDeletionTx :: TxE QErr ([(Text, TriggerName)])
 getCleanupEventsForDeletionTx = do

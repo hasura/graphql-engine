@@ -219,15 +219,22 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     HashSet Ops ->
     m Bool
 
-  -- | @addCleanupLog@ adds cleanup logs for given trigger names and cleanup configs.
+  -- | @addCleanupSchedules@ adds cleanup logs for given trigger names and cleanup configs.
   --   This will perform the following steps:
   --
   --   1. Get last scheduled cleanup event and count.
   --   2. If count is less than 5, then add add more cleanup logs, else do nothing
-  addCleanupLog ::
+  addCleanupSchedules ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
     [(TriggerName, AutoTriggerLogCleanupConfig)] ->
+    m ()
+
+  -- | @deleteAllScheduledCleanups@ deletes all scheduled cleanup logs for a given event trigger
+  deleteAllScheduledCleanups ::
+    (MonadIO m, MonadError QErr m) =>
+    SourceConfig b ->
+    TriggerName ->
     m ()
 
   -- | @getCleanupEventsForDeletion@ returns the cleanup logs that are to be deleted.
@@ -301,7 +308,8 @@ instance BackendEventTrigger ('Postgres 'Vanilla) where
   createTableEventTrigger = PG.createTableEventTrigger
   createMissingSQLTriggers = PG.createMissingSQLTriggers
   checkIfTriggerExists = PG.checkIfTriggerExists
-  addCleanupLog = PG.addCleanupLog
+  addCleanupSchedules = PG.addCleanupSchedules
+  deleteAllScheduledCleanups = PG.deleteAllScheduledCleanups
   getCleanupEventsForDeletion = PG.getCleanupEventsForDeletion
   updateCleanupEventStatusToDead = PG.updateCleanupEventStatusToDead
   updateCleanupEventStatusToPaused = PG.updateCleanupEventStatusToPaused
@@ -323,7 +331,8 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
-  addCleanupLog _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   getCleanupEventsForDeletion _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   updateCleanupEventStatusToDead _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
@@ -345,7 +354,8 @@ instance BackendEventTrigger ('Postgres 'Cockroach) where
   createTableEventTrigger = PG.createTableEventTrigger
   createMissingSQLTriggers = PG.createMissingSQLTriggers
   checkIfTriggerExists = PG.checkIfTriggerExists
-  addCleanupLog = PG.addCleanupLog
+  addCleanupSchedules = PG.addCleanupSchedules
+  deleteAllScheduledCleanups = PG.deleteAllScheduledCleanups
   getCleanupEventsForDeletion = PG.getCleanupEventsForDeletion
   updateCleanupEventStatusToDead = PG.updateCleanupEventStatusToDead
   updateCleanupEventStatusToPaused = PG.updateCleanupEventStatusToPaused
@@ -367,7 +377,8 @@ instance BackendEventTrigger 'MSSQL where
   createTableEventTrigger = MSSQL.createTableEventTrigger
   createMissingSQLTriggers = MSSQL.createMissingSQLTriggers
   checkIfTriggerExists = MSSQL.checkIfTriggerExists
-  addCleanupLog = MSSQL.addCleanupLog
+  addCleanupSchedules = MSSQL.addCleanupSchedules
+  deleteAllScheduledCleanups = MSSQL.deleteAllScheduledCleanups
   getCleanupEventsForDeletion = MSSQL.getCleanupEventsForDeletion
   updateCleanupEventStatusToDead = MSSQL.updateCleanupEventStatusToDead
   updateCleanupEventStatusToPaused = MSSQL.updateCleanupEventStatusToPaused
@@ -389,7 +400,8 @@ instance BackendEventTrigger 'BigQuery where
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
-  addCleanupLog _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
+  addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
+  deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   getCleanupEventsForDeletion _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   updateCleanupEventStatusToDead _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
@@ -411,7 +423,8 @@ instance BackendEventTrigger 'MySQL where
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  addCleanupLog _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
+  addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
+  deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   getCleanupEventsForDeletion _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   updateCleanupEventStatusToDead _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
@@ -451,7 +464,8 @@ instance BackendEventTrigger 'DataConnector where
     runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
-  addCleanupLog _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
+  addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
+  deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
   getCleanupEventsForDeletion _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"
   updateCleanupEventStatusToDead _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"

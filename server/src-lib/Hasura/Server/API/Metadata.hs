@@ -713,7 +713,8 @@ runMetadataQueryV2M ::
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   MetadataResourceVersion ->
   RQLMetadataV2 ->

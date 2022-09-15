@@ -462,3 +462,4 @@ data DeletedEventLogStats = DeletedEventLogStats
   { deletedEventLogs :: Int,
     deletedInvocationLogs :: Int
   }
+  deriving (Show, Eq)

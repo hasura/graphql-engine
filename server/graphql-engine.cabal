@@ -999,6 +999,7 @@ test-suite graphql-engine-tests
     , uuid
     , vector
     , yaml
+    , shakespeare
     -- mssql support
     , odbc
     , resource-pool
@@ -1064,6 +1065,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.Translate.UpdateSpec
     Hasura.EncJSONSpec
     Hasura.EventingSpec
+    Hasura.EventTriggerCleanupSuite
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec

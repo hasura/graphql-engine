@@ -17,6 +17,7 @@ import Hasura.EncJSON
 import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -64,6 +65,10 @@ instance MFunctor CacheRefT where
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRefT m) where
+  runLogCleaner conf = lift $ runLogCleaner conf
+  generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+
 instance
   ( MonadIO m,
     MonadBaseControl IO m,
@@ -100,7 +105,8 @@ suite ::
     HTTP.HasHttpManagerM m,
     HasServerConfigCtx m,
     MonadResolveSource m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorageQueryAPI m,
+    MonadEventLogCleanup m
   ) =>
   PostgresConnConfiguration ->
   PGExecCtx ->
