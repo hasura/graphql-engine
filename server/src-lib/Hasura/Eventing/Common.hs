@@ -3,6 +3,7 @@ module Hasura.Eventing.Common
     saveLockedEvents,
     removeEventFromLockedEvents,
     generateScheduleTimes,
+    cleanupSchedulesToBeGenerated,
   )
 where
 
@@ -52,3 +53,7 @@ generateScheduleTimes :: UTCTime -> Int -> CronSchedule -> [UTCTime]
 generateScheduleTimes from n cron = take n $ go from
   where
     go = unfoldr (fmap dup . nextMatch cron)
+
+-- | number of cleanup schedules to be generated in one iteration
+cleanupSchedulesToBeGenerated :: Int
+cleanupSchedulesToBeGenerated = 50

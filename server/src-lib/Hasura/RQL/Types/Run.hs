@@ -55,6 +55,7 @@ instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (RunT m) where
   runLogCleaner conf = RunT . lift . lift $ runLogCleaner conf
+  generateCleanupSchedules sInfo tName cConf = RunT . lift . lift $ generateCleanupSchedules sInfo tName cConf
 
 peelRun ::
   RunCtx ->

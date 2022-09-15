@@ -38,6 +38,7 @@ module Hasura.Eventing.EventTrigger
     -- Exported for testing
     saveLockedEventTriggerEvents,
     removeEventTriggerEventFromLockedEvents,
+    logQErr,
   )
 where
 

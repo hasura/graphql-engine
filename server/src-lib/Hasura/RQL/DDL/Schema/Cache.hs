@@ -179,6 +179,7 @@ newtype CacheRWT m a
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
+  generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
 
 runCacheRWT ::
   Functor m =>

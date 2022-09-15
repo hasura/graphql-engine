@@ -100,7 +100,7 @@ import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
-import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (runLogCleaner))
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Catalog
@@ -1093,6 +1093,7 @@ instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
 
 instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
   runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
+  generateCleanupSchedules _ _ _ = pure $ Right ()
 
 runInSeparateTx ::
   (MonadIO m) =>

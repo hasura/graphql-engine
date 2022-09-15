@@ -39,6 +39,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as HL
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (first)
@@ -75,6 +76,7 @@ import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source (SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend (BackendType (..))
@@ -90,7 +92,8 @@ runClearMetadata ::
     MonadMetadataStorageQueryAPI m,
     MonadBaseControl IO m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ClearMetadata ->
   m EncJSON
@@ -155,7 +158,8 @@ runReplaceMetadata ::
     MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ReplaceMetadata ->
   m EncJSON
@@ -171,7 +175,8 @@ runReplaceMetadataV1 ::
     MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ReplaceMetadataV1 ->
   m EncJSON
@@ -187,7 +192,8 @@ runReplaceMetadataV2 ::
     MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ReplaceMetadataV2 ->
   m EncJSON
@@ -270,6 +276,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
   -- See Note [Cleanup for dropped triggers]
   dropSourceSQLTriggers logger oldSchemaCache (_metaSources oldMetadata) (_metaSources metadata)
+
+  generateSQLTriggerCleanupSchedules (_metaSources oldMetadata) (_metaSources metadata)
 
   encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
@@ -391,6 +399,29 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           (forall b. BackendEventTrigger b => i b -> i b -> m ()) ->
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ SB.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
+
+    generateSQLTriggerCleanupSchedules ::
+      InsOrdHashMap SourceName BackendSourceMetadata ->
+      InsOrdHashMap SourceName BackendSourceMetadata ->
+      m ()
+    generateSQLTriggerCleanupSchedules oldSources newSources = do
+      -- If there are any event trigger cleanup configs with different cron then delete the older schedules
+      -- generate cleanup logs for new event trigger cleanup config
+      for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
+        onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
+          AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
+            dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
+              sourceInfo@(SourceInfo _ _ _ sourceConfig _ _) <- askSourceInfo @b source
+              let getEventMapWithCC sourceMeta = Map.fromList $ concatMap (getAllETWithCleanupConfigInTableMetadata . snd) $ OMap.toList $ _smTables sourceMeta
+                  oldEventTriggersWithCC = getEventMapWithCC oldSourceMetadata
+                  newEventTriggersWithCC = getEventMapWithCC newSourceMetadata
+                  -- event triggers with cleanup config that existed in old metadata but are missing in new metadata
+                  differenceMap = Map.difference oldEventTriggersWithCC newEventTriggersWithCC
+              for_ (Map.toList differenceMap) $ \(triggerName, cleanupConfig) -> do
+                deleteAllScheduledCleanups @b sourceConfig triggerName
+                pure cleanupConfig
+              for_ (Map.toList newEventTriggersWithCC) $ \(triggerName, cleanupConfig) -> do
+                (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
 
     dispatch (BackendSourceMetadata bs) = AB.dispatchAnyBackend @BackendEventTrigger bs
 
