@@ -81,14 +81,14 @@ PlaygroundWithTest.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
 
   // Click on the first card, and expect the onChange prop to be called with `1`
-  await userEvent.click(canvas.getByText('Card-1'));
+  await userEvent.click(canvas.getByText('Description of card-1'));
 
   await waitFor(() => expect(args.onCardClick).toHaveBeenCalledTimes(1));
 
   expect(args.onCardClick).toBeCalledWith('1');
 
   // Click on the fourth card, and expect the onChange prop to be called with `4`
-  await userEvent.click(canvas.getByText('Card-4'));
+  await userEvent.click(canvas.getByText('Description of card-4'));
 
   await waitFor(() => expect(args.onCardClick).toHaveBeenCalledTimes(2));
 

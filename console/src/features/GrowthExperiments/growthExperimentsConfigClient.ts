@@ -1,5 +1,5 @@
 import globals from '@/Globals';
-import { cloudDataServiceApiClient } from './cloudDataServiceApiClient';
+import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import { ExperimentConfig, ExperimentsResponseData } from './types';
 import { query } from './constants';
 import { transformFn } from './utils';
