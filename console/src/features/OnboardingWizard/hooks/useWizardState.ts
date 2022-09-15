@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import {
-  cloudDataServiceApiClient,
-  GrowthExperimentsClient,
-} from '@/features/GrowthExperiments';
+import { GrowthExperimentsClient } from '@/features/GrowthExperiments';
+import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import {
   experimentId,
   graphQlMutation,
@@ -81,5 +79,5 @@ export function useWizardState(
       });
   };
 
-  return { isWizardOpen, skipOnboarding, completeOnboarding, setIsWizardOpen };
+  return { isWizardOpen, skipOnboarding, completeOnboarding };
 }
