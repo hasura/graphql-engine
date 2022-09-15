@@ -104,6 +104,7 @@ module Hasura.Eventing.ScheduledTrigger
     -- SQLs for fetching data from metadata storage
     mkScheduledEventStatusFilter,
     scheduledTimeOrderBy,
+    executeWithOptionalTotalCount,
     mkPaginationSelectExp,
     withCount,
     invocationFieldExtractors,
@@ -855,11 +856,15 @@ scheduledTimeOrderBy =
 mkPaginationSelectExp ::
   S.Select ->
   ScheduledEventPagination ->
+  RowsCountOption ->
   S.Select
-mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} =
+mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeRowsCount =
   S.mkSelect
     { S.selCTEs = [(S.toTableAlias countCteAlias, allRowsSelect), (S.toTableAlias limitCteAlias, limitCteSelect)],
-      S.selExtr = [countExtractor, rowsExtractor]
+      S.selExtr =
+        case shouldIncludeRowsCount of
+          IncludeRowsCount -> [countExtractor, rowsExtractor]
+          DontIncludeRowsCount -> [rowsExtractor]
     }
   where
     countCteAlias = Identifier "count_cte"
@@ -890,14 +895,24 @@ mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} =
               }
        in S.Extractor (S.handleIfNull (S.SELit "[]") (S.SESelect selectExp)) Nothing
 
-withCount :: (Int, Q.AltJ a) -> WithTotalCount a
-withCount (count, Q.AltJ a) = WithTotalCount count a
+withCount :: (Int, Q.AltJ a) -> WithOptionalTotalCount a
+withCount (count, Q.AltJ a) = WithOptionalTotalCount (Just count) a
+
+withoutCount :: Q.AltJ a -> WithOptionalTotalCount a
+withoutCount (Q.AltJ a) = WithOptionalTotalCount Nothing a
+
+executeWithOptionalTotalCount :: J.FromJSON a => Q.Query -> RowsCountOption -> Q.TxE QErr (WithOptionalTotalCount a)
+executeWithOptionalTotalCount sql getRowsCount =
+  case getRowsCount of
+    IncludeRowsCount -> (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () False
+    DontIncludeRowsCount -> (withoutCount . runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () False
 
 getOneOffScheduledEventsTx ::
   ScheduledEventPagination ->
   [ScheduledEventStatus] ->
-  Q.TxE QErr (WithTotalCount [OneOffScheduledEvent])
-getOneOffScheduledEventsTx pagination statuses = do
+  RowsCountOption ->
+  Q.TxE QErr (WithOptionalTotalCount [OneOffScheduledEvent])
+getOneOffScheduledEventsTx pagination statuses getRowsCount = do
   let table = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_events"
       statusFilter = mkScheduledEventStatusFilter statuses
       select =
@@ -907,15 +922,16 @@ getOneOffScheduledEventsTx pagination statuses = do
             S.selWhere = Just $ S.WhereFrag statusFilter,
             S.selOrderBy = Just scheduledTimeOrderBy
           }
-      sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination
-  (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () False
+      sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination getRowsCount
+  executeWithOptionalTotalCount sql getRowsCount
 
 getCronEventsTx ::
   TriggerName ->
   ScheduledEventPagination ->
   [ScheduledEventStatus] ->
-  Q.TxE QErr (WithTotalCount [CronEvent])
-getCronEventsTx triggerName pagination status = do
+  RowsCountOption ->
+  Q.TxE QErr (WithOptionalTotalCount [CronEvent])
+getCronEventsTx triggerName pagination status getRowsCount = do
   let triggerNameFilter =
         S.BECompare S.SEQ (S.SEIdentifier $ Identifier "trigger_name") (S.SELit $ triggerNameToTxt triggerName)
       statusFilter = mkScheduledEventStatusFilter status
@@ -926,8 +942,8 @@ getCronEventsTx triggerName pagination status = do
             S.selWhere = Just $ S.WhereFrag $ S.BEBin S.AndOp triggerNameFilter statusFilter,
             S.selOrderBy = Just scheduledTimeOrderBy
           }
-      sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination
-  (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () False
+      sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination getRowsCount
+  executeWithOptionalTotalCount sql getRowsCount
 
 deleteScheduledEventTx ::
   ScheduledEventId -> ScheduledEventType -> Q.TxE QErr ()
@@ -972,13 +988,12 @@ mkEventIdBoolExp table eventId =
     (S.SELit $ unEventId eventId)
 
 getInvocationsTx ::
-  GetInvocationsBy ->
-  ScheduledEventPagination ->
-  Q.TxE QErr (WithTotalCount [ScheduledEventInvocation])
-getInvocationsTx invocationsBy pagination = do
+  GetEventInvocations ->
+  Q.TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
+getInvocationsTx getEventInvocations = do
   let eventsTables = EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable
-      sql = Q.fromBuilder $ toSQL $ getInvocationsQuery eventsTables invocationsBy pagination
-  (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () True
+      sql = Q.fromBuilder $ toSQL $ getInvocationsQuery eventsTables getEventInvocations
+  executeWithOptionalTotalCount sql (_geiGetRowsCount getEventInvocations)
   where
     oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
     cronInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_cron_event_invocation_logs"
@@ -1043,6 +1058,7 @@ getInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocati
                   S.selOrderBy = Just $ createdAtOrderBy invocationTable
                 }
 
-getInvocationsQuery :: EventTables -> GetInvocationsBy -> ScheduledEventPagination -> S.Select
-getInvocationsQuery ets invocationsBy pagination =
-  mkPaginationSelectExp (getInvocationsQueryNoPagination ets invocationsBy) pagination
+getInvocationsQuery :: EventTables -> GetEventInvocations -> S.Select
+getInvocationsQuery eventTables (GetEventInvocations invocationsBy pagination shouldIncludeRowsCount) =
+  let invocationsSelect = getInvocationsQueryNoPagination eventTables invocationsBy
+   in mkPaginationSelectExp invocationsSelect pagination shouldIncludeRowsCount
