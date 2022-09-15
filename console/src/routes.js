@@ -38,6 +38,7 @@ import {
 } from './helpers/versionUtils';
 import AuthContainer from './components/Services/Auth/AuthContainer';
 import { FeatureFlags } from './features/FeatureFlags';
+import { AllowListDetail } from './components/Services/AllowList';
 
 const routes = store => {
   // load hasuractl migration status
@@ -125,6 +126,13 @@ const routes = store => {
               <Route path="list" component={RestListView} />
               <Route path="details/:name" component={DetailsView} />
               <Route path="edit/:name" component={FormRestView} />
+            </Route>
+            <Route path="allow-list">
+              <IndexRedirect to="detail" />
+              <Route
+                path="detail(/:name)(/:section)"
+                component={AllowListDetail}
+              />
             </Route>
           </Route>
 

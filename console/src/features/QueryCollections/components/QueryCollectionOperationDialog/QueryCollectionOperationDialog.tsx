@@ -82,6 +82,7 @@ export const QueryCollectionOperationDialog = (
                             size="full"
                             id="name"
                             name="name"
+                            className="max-w-full"
                             label="Operation Name"
                           />
                           <CodeEditorField

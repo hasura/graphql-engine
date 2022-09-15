@@ -41,7 +41,7 @@ export default {
   },
   argTypes: {
     collectionName: {
-      defaultValue: 'allowed_queries',
+      defaultValue: 'allowed-queries',
       description: 'The name of the query collection to add to the allow list',
       control: {
         type: 'text',

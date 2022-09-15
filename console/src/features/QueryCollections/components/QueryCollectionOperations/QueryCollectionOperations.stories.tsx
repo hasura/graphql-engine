@@ -2,7 +2,6 @@ import React from 'react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta, Story } from '@storybook/react';
-import { action } from '@storybook/addon-actions';
 import { within, userEvent, screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { waitForElementToBeRemoved } from '@testing-library/react';
@@ -23,12 +22,7 @@ export default {
 } as ComponentMeta<typeof QueryCollectionsOperations>;
 
 export const Primary: Story = () => {
-  return (
-    <QueryCollectionsOperations
-      onEdit={action('onEdit')}
-      collectionName="allowed-queries"
-    />
-  );
+  return <QueryCollectionsOperations collectionName="allowed-queries" />;
 };
 
 Primary.play = async ({ canvasElement }) => {

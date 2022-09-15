@@ -32,7 +32,7 @@ describe('useCreateQueryCollections', () => {
       { wrapper }
     );
 
-    await result.current.createQueryCollection('allowed_queries');
+    await result.current.createQueryCollection('allowed-queries');
 
     await waitForValueToChange(() => result.current.error);
     expect(result.current.error).toBeDefined();

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { useMetadata, useMetadataMigration } from '@/features/MetadataAPI';
 import { QueryCollection } from '@/metadata/types';
+import { createAllowedQueriesIfNeeded } from '../useCreateQueryCollection';
 
 export const useMoveOperationsToQueryCollection = () => {
   const { mutate, ...rest } = useMetadataMigration();
@@ -35,6 +36,7 @@ export const useMoveOperationsToQueryCollection = () => {
             }),
             args: queries
               .map(query => [
+                ...createAllowedQueriesIfNeeded(toCollection, metadata),
                 {
                   type: 'drop_query_from_collection',
                   args: {

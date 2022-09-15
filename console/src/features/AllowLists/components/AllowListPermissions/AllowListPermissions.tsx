@@ -1,8 +1,16 @@
 import React from 'react';
+import { CgSpinner } from 'react-icons/cg';
+
+import { Button } from '@/new-components/Button';
 import { Switch } from '@/new-components/Switch';
-import { FaCheck } from 'react-icons/fa';
+import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
+import { useFireNotification } from '@/new-components/Notifications';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
+
+import { FaCheck, FaPlusCircle } from 'react-icons/fa';
 import { useSetRoleToAllowListPermission } from '../../hooks/AllowListPermissions/useSetRoleToAllowListPermissions';
 import { useEnabledRolesFromAllowListState } from '../../hooks/AllowListPermissions/useEnabledRolesFromAllowListState';
+import { useAddToAllowList } from '../../hooks/useAddToAllowList';
 
 export interface AllowListPermissionsTabProps {
   collectionName: string;
@@ -11,37 +19,53 @@ export interface AllowListPermissionsTabProps {
 export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
   collectionName,
 }) => {
-  const {
-    allAvailableRoles,
-    newRoles,
-    setNewRoles,
-    enabledRoles,
-    setEnabledRoles,
-  } = useEnabledRolesFromAllowListState(collectionName);
+  const { allAvailableRoles, newRoles, setNewRoles, enabledRoles } =
+    useEnabledRolesFromAllowListState(collectionName);
+
+  const { data: isCollectionInAllowlist } = useMetadata(
+    MetadataSelector.isCollectionInAllowlist(collectionName)
+  );
 
   const { setRoleToAllowListPermission } =
     useSetRoleToAllowListPermission(collectionName);
 
-  const handleToggle = (roleName: string, index: number) => {
-    let newEnabledRoles = [];
+  const { addToAllowList, isLoading: addToAllowListLoading } =
+    useAddToAllowList();
+
+  const { fireNotification } = useFireNotification();
+
+  const [updatingRoles, setUpdatingRoles] = React.useState<string[]>([]);
+
+  const handleToggle = (roleName: string) => {
+    setUpdatingRoles([...updatingRoles, roleName]);
+    let newEnabledRoles: string[] = [];
     // add roleName to enabledRoles, remove duplicates
     if (enabledRoles.includes(roleName)) {
       newEnabledRoles = Array.from(
         new Set(enabledRoles.filter(role => role !== roleName))
       );
-      setEnabledRoles(newEnabledRoles);
     } else {
       newEnabledRoles = Array.from(new Set([...enabledRoles, roleName]));
-      // remove enabled role from newRoles
-      setNewRoles(
-        newRoles.length > 1
-          ? newRoles.filter(role => role !== newRoles[index])
-          : newRoles
-      );
-      setEnabledRoles(newEnabledRoles);
     }
 
-    setRoleToAllowListPermission(newEnabledRoles);
+    setRoleToAllowListPermission(newEnabledRoles, {
+      onSuccess: () => {
+        fireNotification({
+          type: 'success',
+          message: 'Allow list permissions updated',
+          title: 'Success',
+        });
+        setUpdatingRoles(updatingRoles.filter(role => role !== roleName));
+      },
+      onError: e => {
+        fireNotification({
+          type: 'error',
+          message: `Error updating allow list permissions: ${e.message}`,
+          title: 'Error',
+        });
+        setUpdatingRoles(updatingRoles.filter(role => role !== roleName));
+      },
+    });
   };
 
   const handleNewRole = (value: string, index: number) => {
@@ -60,75 +84,128 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
     setNewRoles(newAddedRoles);
   };
 
+  if (!isCollectionInAllowlist) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="text-2xl font-bold text-gray-500">
+          This collection is not in the allowlist
+        </div>
+        <div className="text-gray-500">
+          Please add this collection to the allowlist to manage permissions
+        </div>
+        <Button
+          icon={<FaPlusCircle />}
+          mode="primary"
+          className="mt-4"
+          onClick={() => {
+            addToAllowList(collectionName, {
+              onSuccess: () => {
+                fireNotification({
+                  type: 'success',
+                  title: 'Collection added to allowlist',
+                  message: `Collection ${collectionName} has been added to the allowlist`,
+                });
+              },
+              onError: e => {
+                fireNotification({
+                  type: 'error',
+                  title: 'Collection not added to allowlist',
+                  message: `Collection ${collectionName} could not be added to the allowlist: ${e.message}`,
+                });
+              },
+            });
+          }}
+          isLoading={addToAllowListLoading}
+        >
+          Add to allowlist
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="p-md">
-        <div className="overflow-x-auto border border-gray-300 rounded mb-md">
-          <table className="min-w-full divide-y divide-gray-300 text-left">
-            <thead>
+      <div className="overflow-x-auto border border-gray-300 rounded mb-md">
+        <table className="min-w-full divide-y divide-gray-300 text-left">
+          <thead>
+            <tr className="divide-x divide-gray-300">
+              <th className="w-0 bg-gray-50 px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider">
+                Role
+              </th>
+              <th className="text-center bg-gray-50 px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider">
+                Access
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-300">
+            <tr className="group divide-x divide-gray-300">
+              <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
+                <div className="flex items-center">
+                  <label className="flex items-center">admin</label>
+                </div>
+              </td>
+              <td className="text-center p-sm whitespace-nowrap cursor-not-allowed">
+                <FaCheck className="text-green-600" />
+              </td>
+            </tr>
+            {allAvailableRoles.map(roleName => (
               <tr className="divide-x divide-gray-300">
-                <th className="w-0 bg-gray-50 px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="text-center bg-gray-50 px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider">
-                  Access
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-300">
-              <tr className="group divide-x divide-gray-300">
                 <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
                   <div className="flex items-center">
-                    <label className="flex items-center">admin</label>
+                    <label>{roleName}</label>
                   </div>
                 </td>
-                <td className="text-center p-sm whitespace-nowrap cursor-not-allowed">
-                  <FaCheck className="text-green-600" />
+                <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer">
+                  {updatingRoles.includes(roleName) ? (
+                    <CgSpinner className={`animate-spin ${'w-5 h-5'}`} />
+                  ) : (
+                    <Switch
+                      checked={enabledRoles.includes(roleName)}
+                      onCheckedChange={() => handleToggle(roleName)}
+                    />
+                  )}
                 </td>
               </tr>
-              {allAvailableRoles.map((roleName, index) => (
-                <tr className="divide-x divide-gray-300">
-                  <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
-                    <div className="flex items-center">
-                      <label>{roleName}</label>
-                    </div>
-                  </td>
-                  <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer">
-                    <Switch
-                      checked={enabledRoles?.includes(roleName)}
-                      onCheckedChange={() => handleToggle(roleName, index)}
-                    />
-                  </td>
-                </tr>
-              ))}
-              {newRoles.map((newRole, index) => (
-                <tr className="divide-x divide-gray-300">
-                  <td className="w-0 bg-gray-50 p-2 font-semibold text-muted">
-                    <input
-                      x-model="newRole"
-                      type="text"
-                      className="block w-full h-input min-w-max shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
-                      placeholder="Create New Role..."
-                      value={newRole}
-                      onChange={e => handleNewRole(e.target.value, index)}
-                    />
-                  </td>
-                  <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer">
+            ))}
+            {newRoles.map((newRole, index) => (
+              <tr className="divide-x divide-gray-300">
+                <td className="w-0 bg-gray-50 p-2 font-semibold text-muted">
+                  <input
+                    x-model="newRole"
+                    type="text"
+                    className="block w-full h-input min-w-max shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+                    placeholder="Create New Role..."
+                    value={newRole}
+                    onChange={e => handleNewRole(e.target.value, index)}
+                  />
+                </td>
+                <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer flex items-center justify-center">
+                  {updatingRoles.includes(newRole) ? (
+                    <CgSpinner className={`animate-spin ${'w-5 h-5'}`} />
+                  ) : (
                     <Switch
                       checked={enabledRoles.includes(newRole)}
                       onCheckedChange={
-                        newRole !== ''
-                          ? () => handleToggle(newRole, index)
-                          : () => {}
+                        newRole !== '' ? () => handleToggle(newRole) : () => {}
                       }
                     />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+      {enabledRoles.length === 0 && (
+        <IndicatorCard>
+          <p className="m-0">
+            The collection is in <span className="font-bold">global mode</span>:
+            all users are enabled. If you want to assign permissions in a more
+            granular way, enable specific roles. If you want to disable all
+            users, remove the collection from the allow list{' '}
+          </p>
+        </IndicatorCard>
+      )}
     </>
   );
 };

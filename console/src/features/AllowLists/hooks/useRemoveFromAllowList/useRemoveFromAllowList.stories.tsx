@@ -44,7 +44,7 @@ export default {
   },
   argTypes: {
     collectionName: {
-      defaultValue: 'allowed_queries',
+      defaultValue: 'allowed-queries',
       description:
         'The name of the query collection to remove from the allow list',
       control: {

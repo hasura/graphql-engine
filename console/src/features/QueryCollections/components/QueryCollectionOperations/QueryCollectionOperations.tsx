@@ -6,11 +6,14 @@ import { CardedTable } from '@/new-components/CardedTable';
 import { QueryCollection } from '@/metadata/types';
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { useFireNotification } from '@/new-components/Notifications';
 
 import { useOperationsFromQueryCollection } from '../../hooks/useOperationsFromQueryCollection';
 import { useRemoveOperationsFromQueryCollection } from '../../hooks';
 
 import { QueryCollectionsOperationsHeader } from './QueryCollectionOperationsHeader';
+import { QueryCollectionOperationsEmptyState } from './QueryCollectionOperationsEmptyState';
+import { QueryCollectionOperationEdit } from '../QueryCollectionOperationDialog/QueryCollectionOperationEdit';
 
 const Check: React.FC<React.ComponentProps<'input'>> = props => (
   <input
@@ -22,12 +25,11 @@ const Check: React.FC<React.ComponentProps<'input'>> = props => (
 
 interface QueryCollectionsOperationsProps {
   collectionName: string;
-  onEdit: (operation: string) => void;
 }
 
 export const QueryCollectionsOperations: React.FC<QueryCollectionsOperationsProps> =
   props => {
-    const { collectionName, onEdit } = props;
+    const { collectionName } = props;
 
     const {
       data: operations,
@@ -38,7 +40,12 @@ export const QueryCollectionsOperations: React.FC<QueryCollectionsOperationsProp
     const { removeOperationsFromQueryCollection, isLoading: deleteLoading } =
       useRemoveOperationsFromQueryCollection();
 
+    const { fireNotification } = useFireNotification();
+
     const [search, setSearch] = React.useState('');
+
+    const [editingOperation, setEditingOperation] =
+      React.useState<QueryCollection | null>(null);
 
     const [selectedOperations, setSelectedOperations] = React.useState<
       QueryCollection[]
@@ -60,8 +67,12 @@ export const QueryCollectionsOperations: React.FC<QueryCollectionsOperationsProp
       );
     }
 
+    if (!operations || operations.length === 0) {
+      return <QueryCollectionOperationsEmptyState />;
+    }
+
     const filteredOperations = (operations || []).filter(operation =>
-      operation.name.toLowerCase().includes(search)
+      operation.name?.toLowerCase().includes(search?.toLowerCase())
     );
 
     const data = filteredOperations?.map(operation => [
@@ -77,13 +88,15 @@ export const QueryCollectionsOperations: React.FC<QueryCollectionsOperationsProp
         }}
       />,
       operation.name,
-      operation.query.toLowerCase().includes('mutation') ? 'Mutation' : 'Query',
+      operation.query.toLowerCase().startsWith('mutation')
+        ? 'Mutation'
+        : 'Query',
 
       <div className="flex justify-end">
         <Button
           className="mr-1.5"
           size="sm"
-          onClick={() => onEdit(operation.name)}
+          onClick={() => setEditingOperation(operation)}
         >
           Edit
         </Button>
@@ -93,7 +106,22 @@ export const QueryCollectionsOperations: React.FC<QueryCollectionsOperationsProp
             const confirmMessage = `This will permanently delete the operation "${operation.name}"`;
             const isOk = getConfirmation(confirmMessage, true, operation.name);
             if (isOk) {
-              removeOperationsFromQueryCollection(collectionName, [operation]);
+              removeOperationsFromQueryCollection(collectionName, [operation], {
+                onSuccess: () => {
+                  fireNotification({
+                    type: 'success',
+                    title: 'Operation deleted',
+                    message: `Operation "${operation.name}" was deleted successfully`,
+                  });
+                },
+                onError: e => {
+                  fireNotification({
+                    type: 'error',
+                    title: 'Failed to delete operation',
+                    message: `Failed to delete operation "${operation.name}": ${e.message}`,
+                  });
+                },
+              });
             }
           }}
           className="mr-1.5"
@@ -108,34 +136,46 @@ export const QueryCollectionsOperations: React.FC<QueryCollectionsOperationsProp
 
     return (
       <div>
+        {editingOperation && (
+          <QueryCollectionOperationEdit
+            queryCollectionName={collectionName}
+            operation={editingOperation}
+            onClose={() => {
+              setEditingOperation(null);
+              setSelectedOperations([]);
+            }}
+          />
+        )}
         <QueryCollectionsOperationsHeader
           selectedOperations={selectedOperations}
-          onSearch={searchString => {
-            setSearch(searchString);
-            setSelectedOperations([]);
-          }}
+          onSearch={setSearch}
+          setSelectedOperations={setSelectedOperations}
           collectionName={collectionName}
         />
         <div>
-          <CardedTable
-            columns={[
-              <Check
-                data-testid="query-collections-select-all"
-                checked={
-                  selectedOperations.length === filteredOperations.length
-                }
-                onClick={() =>
-                  setSelectedOperations(
-                    selectedOperations.length === 0 ? filteredOperations : []
-                  )
-                }
-              />,
-              'Operation',
-              'Type',
-              '',
-            ]}
-            data={data}
-          />
+          {search && filteredOperations.length === 0 ? (
+            <div className="text-center text-gray-500">No operations found</div>
+          ) : (
+            <CardedTable
+              columns={[
+                <Check
+                  data-testid="query-collections-select-all"
+                  checked={filteredOperations.every(operation =>
+                    selectedOperations.includes(operation)
+                  )}
+                  onClick={() =>
+                    setSelectedOperations(
+                      selectedOperations.length === 0 ? filteredOperations : []
+                    )
+                  }
+                />,
+                'Operation',
+                'Type',
+                '',
+              ]}
+              data={data}
+            />
+          )}
         </div>
       </div>
     );

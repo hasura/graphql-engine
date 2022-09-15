@@ -20,7 +20,7 @@ describe('useDeleteQueryCollections', () => {
       { wrapper }
     );
 
-    await result.current.deleteQueryCollection('allowed_queries');
+    await result.current.deleteQueryCollection('allowed-queries');
 
     await waitForValueToChange(() => result.current.isSuccess);
     expect(result.current.isSuccess).toBe(true);

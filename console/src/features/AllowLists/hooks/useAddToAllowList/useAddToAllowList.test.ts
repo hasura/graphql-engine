@@ -20,7 +20,7 @@ describe('useAddToAllowList', () => {
       { wrapper }
     );
 
-    await result.current.addToAllowList('allowed_queries');
+    await result.current.addToAllowList('allowed-queries');
 
     await waitForValueToChange(() => result.current.isSuccess);
     expect(result.current.isSuccess).toBe(true);

@@ -20,7 +20,7 @@ describe('useRenameQueryCollection', () => {
       { wrapper }
     );
 
-    await result.current.renameQueryCollection('allowed_queries', 'new-name');
+    await result.current.renameQueryCollection('allowed-queries', 'new-name');
 
     await waitForValueToChange(() => result.current.isSuccess);
     expect(result.current.isSuccess).toBe(true);

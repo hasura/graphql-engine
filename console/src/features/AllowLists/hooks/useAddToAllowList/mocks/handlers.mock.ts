@@ -11,7 +11,7 @@ export const handlers = (delay = 0, url = baseUrl) => [
 
     if (
       body.type !== 'add_collection_to_allowlist' ||
-      body.args.collection !== 'allowed_queries'
+      body.args.collection !== 'allowed-queries'
     ) {
       return res(
         ctx.delay(delay),

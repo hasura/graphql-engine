@@ -8,7 +8,7 @@ import {
 import { handlers } from '../../hooks/AllowListPermissions/mock/handlers.mocks';
 
 export default {
-  title: 'Features/Allow List Permission/CardedTable',
+  title: 'Features/Allow List/Allow List Permissions',
   component: AllowListPermissions,
   decorators: [ReactQueryDecorator()],
   parameters: {
