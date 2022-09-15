@@ -3,6 +3,7 @@ import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
 
 import { AllowedRESTMethods, RestEndpointEntry } from '@/metadata/types';
+import { useIsUnmounted } from '@/components/utils';
 import { Dispatch, ReduxState } from '@/types';
 import { addRESTEndpoint, editRESTEndpoint } from '@/metadata/actions';
 import { allowedQueriesCollection } from '@/metadata/utils';
@@ -125,7 +126,7 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
   editEndpoint,
   routeParams,
 }) => {
-  let mounted = true;
+  const isUnMounted = useIsUnmounted();
   const [loading, setLoading] = React.useState(false);
   const mode = location.pathname === '/api/rest/create' ? 'create' : 'edit';
 
@@ -139,12 +140,6 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
     create: useRestEndpointFormStateForCreation,
     edit: useRestEndpointFormStateForEdition,
   }[mode](createEndpoint, editEndpoint, { metadataObject, routeParams });
-
-  React.useEffect(() => {
-    return () => {
-      mounted = false;
-    };
-  });
 
   const resetPageState = () => {
     routeToPage('/api/rest/list');
@@ -162,7 +157,7 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
     const [restEndpointObj, request] = forgeFormEndpointObject(state);
 
     await formSubmitHandler(restEndpointObj, request, resetPageState);
-    if (mounted) {
+    if (!isUnMounted()) {
       setLoading(false);
     }
   };
