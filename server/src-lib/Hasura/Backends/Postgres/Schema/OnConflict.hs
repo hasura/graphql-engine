@@ -61,7 +61,7 @@ onConflictFieldParser ::
   ) =>
   SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
-  m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
+  SchemaT r m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
 onConflictFieldParser sourceInfo tableInfo = do
   tCase <- asks getter
   roleName <- retrieve scRole
@@ -82,7 +82,7 @@ conflictObjectParser ::
   TableInfo ('Postgres pgKind) ->
   Maybe (UpdPermInfo ('Postgres pgKind)) ->
   NonEmpty (UniqueConstraint ('Postgres pgKind)) ->
-  m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
+  SchemaT r m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 conflictObjectParser sourceInfo tableInfo maybeUpdatePerms constraints = do
   tCase <- asks getter
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
@@ -139,7 +139,7 @@ conflictConstraint ::
   NonEmpty (UniqueConstraint ('Postgres pgKind)) ->
   SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
-  m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
+  SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 conflictConstraint constraints sourceInfo tableInfo =
   P.memoizeOn 'conflictConstraint (_siName sourceInfo, tableName) $ do
     tCase <- asks getter

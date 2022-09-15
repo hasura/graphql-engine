@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useReducer, useCallback, Dispatch } from 'react';
 import { FaPlay, FaPlusCircle } from 'react-icons/fa';
 
+import { Button } from '@/new-components/Button';
 import {
   composeEndpoint,
   getCurrentPageHost,
@@ -17,7 +18,6 @@ import {
   requestLoadingStateReducer,
   variableStateReducer,
 } from './reducer';
-import Button from '../../../../Common/Button';
 import { defaultLoadingState, HeaderState } from './state';
 import RequestHeadersContainer from './Headers';
 import RequestVariablesContainer from './Variables';
@@ -241,8 +241,13 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             updateValueText={updateHeaderValueText}
             toggleActiveState={updateActiveStateForHeader}
           />
-          <Button size="sm" onClick={onClickAddHeader} className="float-right">
-            <FaPlusCircle className="mr-xs" />
+          <Button
+            size="sm"
+            icon={<FaPlusCircle />}
+            iconPosition="start"
+            onClick={onClickAddHeader}
+            className="float-right"
+          >
             Add Header
           </Button>
         </CollapsibleToggle>
@@ -263,9 +268,9 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       <div className="mb-sm w-full">
         <hr className="my-md" />
         <Button
-          size="sm"
+          size="md"
+          mode="primary"
           onClick={runQuery}
-          color="yellow"
           className="float-right"
         >
           <FaPlay className="mr-xs" />

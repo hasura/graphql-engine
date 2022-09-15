@@ -5,6 +5,11 @@ export type BigQueryTable = { name: string; dataset: string };
 
 export const bigquery: Database = {
   introspection: {
+    getDriverInfo: async () => ({
+      name: 'bigquery',
+      displayName: 'Big Query',
+      release: 'Beta',
+    }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
@@ -13,5 +18,6 @@ export const bigquery: Database = {
       return ['dataset', 'name'];
     },
     getTableColumns,
+    getFKRelationships: async () => Feature.NotImplemented,
   },
 };

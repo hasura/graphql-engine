@@ -27,7 +27,7 @@ initialSourceCatalogVersion :: SourceCatalogVersion pgKind
 initialSourceCatalogVersion = Version.SourceCatalogVersion 0
 
 latestSourceCatalogVersion :: SourceCatalogVersion pgKind
-latestSourceCatalogVersion = Version.SourceCatalogVersion 2
+latestSourceCatalogVersion = Version.SourceCatalogVersion 3
 
 previousSourceCatalogVersions :: [SourceCatalogVersion pgKind]
 previousSourceCatalogVersions = [initialSourceCatalogVersion .. pred latestSourceCatalogVersion]

@@ -14,14 +14,17 @@ import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
 import Hasura.Base.Error
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.HealthCheck
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MSSQL where
   type BackendConfig 'MSSQL = ()
+  type BackendInfo 'MSSQL = ()
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type TableName 'MSSQL = MSSQL.TableName
@@ -59,9 +62,12 @@ instance Backend 'MSSQL where
   type XStreamingSubscription 'MSSQL = XDisable
 
   type HealthCheckTest 'MSSQL = HealthCheckTestSql
-
-  defaultHealthCheckTest :: HealthCheckTest 'MSSQL
-  defaultHealthCheckTest = defaultHealthCheckTestSql
+  healthCheckImplementation =
+    Just $
+      HealthCheckImplementation
+        { _hciDefaultTest = defaultHealthCheckTestSql,
+          _hciTestCodec = placeholderCodecViaJSON
+        }
 
   isComparableType :: ScalarType 'MSSQL -> Bool
   isComparableType = MSSQL.isComparableType

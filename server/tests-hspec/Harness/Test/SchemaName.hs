@@ -56,7 +56,9 @@ getSchemaName testEnv = case backendType testEnv of
             <> showUUID (uniqueTestId testEnv)
     Citus -> SchemaName $ T.pack Constants.citusDb
     Cockroach -> SchemaName $ T.pack Constants.cockroachDb
-    DataConnector -> SchemaName $ T.pack Constants.dataConnectorDb
+    DataConnectorMock -> SchemaName $ T.pack Constants.dataConnectorDb
+    DataConnectorReference -> SchemaName $ T.pack Constants.dataConnectorDb
+    DataConnectorSqlite -> SchemaName $ T.pack Constants.dataConnectorDb
 
 -- | Sanitise UUID for use in BigQuery dataset name
 -- must be alphanumeric (plus underscores)

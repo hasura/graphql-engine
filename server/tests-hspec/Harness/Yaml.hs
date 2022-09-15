@@ -4,6 +4,7 @@ module Harness.Yaml
     fromObject,
     combinationsObjectUsingValue,
     shouldReturnYaml,
+    shouldReturnYamlF,
     shouldReturnOneOfYaml,
     shouldBeYaml,
   )
@@ -63,14 +64,28 @@ combinationsObjectUsingValue fn variants = combinationsObject fn (map fromObject
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
 shouldReturnYaml :: HasCallStack => Fixture.Options -> IO Value -> Value -> IO ()
-shouldReturnYaml options actualIO rawExpected = do
-  actual <- actualIO
+shouldReturnYaml = shouldReturnYamlF pure
+
+-- | The function @transform@ converts the returned YAML
+-- prior to comparison. It exists in IO in order to be able
+-- to easily throw exceptions for hspec purposes.
+--
+-- The action @actualIO@ should produce the @expected@ YAML,
+-- represented (by the yaml package) as an aeson 'Value'.
+--
+-- We use 'Visual' internally to easily display the 'Value' as YAML
+-- when the test suite uses its 'Show' instance.
+shouldReturnYamlF :: HasCallStack => (Value -> IO Value) -> Fixture.Options -> IO Value -> Value -> IO ()
+shouldReturnYamlF transform options actualIO rawExpected = do
+  actual <- transform =<< actualIO
 
   let Fixture.Options {stringifyNumbers} = options
-      expected =
+      expected' =
         if stringifyNumbers
           then stringifyExpectedToActual rawExpected actual
           else rawExpected
+
+  expected <- transform expected'
 
   shouldBeYaml actual expected
 

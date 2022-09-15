@@ -25,7 +25,6 @@ import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
     Kind (..),
-    MonadMemoize,
     MonadParse,
     Parser,
   )
@@ -70,9 +69,11 @@ instance BackendSchema 'BigQuery where
 
   -- individual components
   columnParser = bqColumnParser
+  enumParser = bqEnumParser
+  possiblyNullable = bqPossiblyNullable
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = bqOrderByOperators
-  comparisonExps = bqComparisonExps
+  comparisonExps = const bqComparisonExps
   countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
@@ -87,52 +88,42 @@ instance BackendTableSelectSchema 'BigQuery where
 -- Individual components
 
 bqColumnParser ::
-  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  MonadBuildSchema 'BigQuery r m n =>
   ColumnType 'BigQuery ->
   G.Nullability ->
-  m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
-bqColumnParser columnType (G.Nullability isNullable) =
+  SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
+bqColumnParser columnType nullability =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
       -- we only accept string literals
-      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> stringBased _Bytes
+      BigQuery.BytesScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.StringValue <$> stringBased _Bytes
       -- text
-      BigQuery.StringScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> P.string
+      BigQuery.StringScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.StringValue <$> P.string
       -- floating point values
       -- TODO: we do not perform size checks here, meaning we would accept an
       -- out-of-bounds value as long as it can be represented by a GraphQL float; this
       -- will in all likelihood error on the BigQuery side. Do we want to handle those
       -- properly here?
-      BigQuery.FloatScalarType -> pure $ possiblyNullable scalarType $ BigQuery.FloatValue . BigQuery.doubleToFloat64 <$> P.float
-      BigQuery.IntegerScalarType -> pure $ possiblyNullable scalarType $ BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$> P.int
-      BigQuery.DecimalScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DecimalValue . BigQuery.Decimal . BigQuery.scientificToText <$> P.scientific
-      BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BigDecimalValue . BigQuery.BigDecimal . BigQuery.scientificToText <$> P.scientific
+      BigQuery.FloatScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.FloatValue . BigQuery.doubleToFloat64 <$> P.float
+      BigQuery.IntegerScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$> P.int
+      BigQuery.DecimalScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.DecimalValue . BigQuery.Decimal . BigQuery.scientificToText <$> P.scientific
+      BigQuery.BigDecimalScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.BigDecimalValue . BigQuery.BigDecimal . BigQuery.scientificToText <$> P.scientific
       -- boolean type
-      BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BoolValue <$> P.boolean
-      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> stringBased _Date
-      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> stringBased _Time
-      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased _Datetime
+      BigQuery.BoolScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.BoolValue <$> P.boolean
+      BigQuery.DateScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.DateValue . BigQuery.Date <$> stringBased _Date
+      BigQuery.TimeScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.TimeValue . BigQuery.Time <$> stringBased _Time
+      BigQuery.DatetimeScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased _Datetime
       BigQuery.GeographyScalarType ->
-        pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON _Geography
+        pure $ bqPossiblyNullable scalarType nullability $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON _Geography
       BigQuery.TimestampScalarType ->
-        pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
+        pure $ bqPossiblyNullable scalarType nullability $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
       ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
-    ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
+    ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
       case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> do
-          enumName <- mkEnumTypeName enumRef
-          pure $ possiblyNullable BigQuery.StringScalarType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
+        Just enumValuesList -> bqEnumParser tableName enumValuesList customTableName nullability
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    possiblyNullable _scalarType
-      | isNullable = fmap (fromMaybe BigQuery.NullValue) . P.nullable
-      | otherwise = id
-    mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
-    mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
-        BigQuery.StringValue $ G.unName value
-      )
     throughJSON scalarName =
       let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar
        in P.Parser
@@ -144,6 +135,33 @@ bqColumnParser columnType (G.Nullability isNullable) =
     stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
     stringBased scalarName =
       P.string {P.pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar}
+
+bqEnumParser ::
+  MonadBuildSchema 'BigQuery r m n =>
+  TableName 'BigQuery ->
+  NonEmpty (EnumValue, EnumValueInfo) ->
+  Maybe G.Name ->
+  G.Nullability ->
+  SchemaT r m (Parser 'Both n (ScalarValue 'BigQuery))
+bqEnumParser tableName enumValues customTableName nullability = do
+  enumName <- mkEnumTypeName @'BigQuery tableName customTableName
+  pure $ bqPossiblyNullable BigQuery.StringScalarType nullability $ P.enum enumName Nothing (mkEnumValue <$> enumValues)
+  where
+    mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
+    mkEnumValue (EnumValue value, EnumValueInfo description) =
+      ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
+        BigQuery.StringValue $ G.unName value
+      )
+
+bqPossiblyNullable ::
+  MonadParse m =>
+  ScalarType 'BigQuery ->
+  G.Nullability ->
+  Parser 'Both m (ScalarValue 'BigQuery) ->
+  Parser 'Both m (ScalarValue 'BigQuery)
+bqPossiblyNullable _scalarType (G.Nullability isNullable)
+  | isNullable = fmap (fromMaybe BigQuery.NullValue) . P.nullable
+  | otherwise = id
 
 bqOrderByOperators ::
   NamingCase ->
@@ -183,7 +201,7 @@ bqComparisonExps ::
   forall m n r.
   (MonadBuildSchema 'BigQuery r m n) =>
   ColumnType 'BigQuery ->
-  m (Parser 'Input n [ComparisonExp 'BigQuery])
+  SchemaT r m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
@@ -311,8 +329,8 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  (MonadMemoize m, MonadBuildSchema 'BigQuery r m n) =>
-  m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
+  MonadBuildSchema 'BigQuery r m n =>
+  SchemaT r m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
   -- practically BigQuery (as of 2021-11-19) doesn't support TRUE as use_spheroid parameter for ST_DWITHIN
@@ -332,7 +350,7 @@ bqComputedField ::
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
-  m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
+  SchemaT r m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
 bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   roleName <- retrieve scRole
@@ -391,7 +409,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
 
     selectArbitraryField ::
       (BigQuery.ColumnName, G.Name, BigQuery.ScalarType) ->
-      m (FieldParser n (AnnotatedField 'BigQuery))
+      SchemaT r m (FieldParser n (AnnotatedField 'BigQuery))
     selectArbitraryField (columnName, graphQLName, columnType) = do
       field <- columnParser @'BigQuery (ColumnScalar columnType) (G.Nullability True)
       pure $
@@ -400,7 +418,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
 
     computedFieldFunctionArgs ::
       ComputedFieldFunction 'BigQuery ->
-      m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
+      SchemaT r m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
     computedFieldFunctionArgs ComputedFieldFunction {..} = do
       let fieldName = Name._args
           fieldDesc =
@@ -425,7 +443,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
 
       pure $ P.field fieldName (Just fieldDesc) objectParser
 
-    parseArgument :: BigQuery.FunctionArgument -> m (InputFieldsParser n (Text, BigQuery.ArgumentExp (IR.UnpreparedValue 'BigQuery)))
+    parseArgument :: BigQuery.FunctionArgument -> SchemaT r m (InputFieldsParser n (Text, BigQuery.ArgumentExp (IR.UnpreparedValue 'BigQuery)))
     parseArgument arg = do
       typedParser <- columnParser (ColumnScalar $ BigQuery._faType arg) (G.Nullability False)
       let argumentName = getFuncArgNameTxt $ BigQuery._faName arg

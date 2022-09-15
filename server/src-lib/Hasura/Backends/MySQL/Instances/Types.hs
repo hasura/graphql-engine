@@ -15,6 +15,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MySQL where
   type BackendConfig 'MySQL = ()
+  type BackendInfo 'MySQL = ()
   type SourceConfig 'MySQL = MySQL.SourceConfig
   type SourceConnConfiguration 'MySQL = MySQL.ConnSourceConfig
   type TableName 'MySQL = MySQL.TableName
@@ -43,7 +44,6 @@ instance Backend 'MySQL where
   type XStreamingSubscription 'MySQL = XDisable
 
   type HealthCheckTest 'MySQL = Void
-  defaultHealthCheckTest = error "defaultHealthCheckTest"
 
   isComparableType :: ScalarType 'MySQL -> Bool
   isComparableType = isNumType @'MySQL -- TODO: For now we only allow comparisons for numeric types

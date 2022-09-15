@@ -33,6 +33,7 @@ import {
   X_HASURA_CONST,
   PERM_UPDATE_QUERY_ROOT_FIELDS,
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
+  permToggleSelectField,
 } from './Actions';
 import {
   RootFieldPermissions,
@@ -268,7 +269,7 @@ class Permissions extends Component {
 
     const addTooltip = (text, tooltip) => {
       return (
-        <span>
+        <span className="flex">
           <span className={styles.add_mar_right_small}>{text}</span>
           {tooltip}
         </span>
@@ -613,7 +614,7 @@ class Permissions extends Component {
         }
 
         return (
-          <div>
+          <div className="flex">
             {addTooltip(title, toolTip)} {knowMoreHtml} {sectionStatusHtml}
           </div>
         );
@@ -802,7 +803,7 @@ class Permissions extends Component {
               permissionsState.custom_checked[filterType] || isUniqueFilter;
 
             const customChecklabel = (
-              <span data-test="custom-check">
+              <span data-test="custom-check" className="flex">
                 <span>With custom check:</span>
                 <IconTooltip message="Create custom check using permissions builder" />
               </span>
@@ -960,6 +961,9 @@ class Permissions extends Component {
       const onColumnClick = fieldType => e => {
         const columnName = e.target.value;
         const isChecked = e.target.checked;
+        if (this.props.permissionsState.query !== 'select') {
+          return dispatch(permToggleField(fieldType, columnName));
+        }
 
         const allPrimaryKeysSelected = hasSelectedTablePrimaryKeyFromMetadata(
           this.props
@@ -989,7 +993,7 @@ class Permissions extends Component {
           });
           return;
         }
-        dispatch(permToggleField(fieldType, columnName));
+        dispatch(permToggleSelectField(fieldType, columnName));
       };
 
       const getAllFields = () => {

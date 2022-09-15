@@ -21,6 +21,7 @@ module Harness.Test.Fixture
   )
 where
 
+import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -29,7 +30,7 @@ import Harness.Test.CustomOptions
 import Harness.Test.Hspec.Extended
 import Harness.TestEnvironment (TestEnvironment (..), testLog)
 import Hasura.Prelude
-import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
+import Test.Hspec (ActionWith, SpecWith, aroundAllWith, aroundWith, describe, pendingWith)
 import Test.Hspec.Core.Spec (mapSpecItem)
 
 -- | Runs the given tests, for each provided 'Fixture'@ ()@.
@@ -87,7 +88,11 @@ runWithLocalTestEnvironment fixtures tests =
     let n = name context
         co = customOptions context
         options = fromMaybe defaultOptions co
-    describe (show n) $ aroundAllWith (fixtureBracket context) (tests options)
+    case skipTests options of
+      Just skipMsg ->
+        describe (show n) $ aroundWith (\_ _ -> pendingWith $ "Tests skipped: " <> T.unpack skipMsg) (tests options)
+      Nothing ->
+        describe (show n) $ aroundAllWith (fixtureBracket context) (tests options)
 
 -- We want to be able to report exceptions happening both during the tests
 -- and at teardown, which is why we use a custom re-implementation of

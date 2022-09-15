@@ -1,5 +1,5 @@
 import { FastifyRequest } from "fastify"
-import { ConfigSchemaResponse } from "./types"
+import { ConfigSchemaResponse } from "@hasura/dc-api-types"
 
 export type Config = {
   tables: string[] | null

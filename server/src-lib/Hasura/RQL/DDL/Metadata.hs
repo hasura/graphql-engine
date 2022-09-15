@@ -39,6 +39,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as HL
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (first)
@@ -75,6 +76,7 @@ import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source (SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend (BackendType (..))
@@ -90,7 +92,8 @@ runClearMetadata ::
     MonadMetadataStorageQueryAPI m,
     MonadBaseControl IO m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ClearMetadata ->
   m EncJSON
@@ -152,9 +155,11 @@ runReplaceMetadata ::
   ( CacheRWM m,
     MetadataM m,
     MonadIO m,
+    MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ReplaceMetadata ->
   m EncJSON
@@ -167,9 +172,11 @@ runReplaceMetadataV1 ::
     CacheRWM m,
     MetadataM m,
     MonadIO m,
+    MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ReplaceMetadataV1 ->
   m EncJSON
@@ -182,9 +189,11 @@ runReplaceMetadataV2 ::
     CacheRWM m,
     MetadataM m,
     MonadIO m,
+    MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (HL.Logger HL.Hasura) r
+    Has (HL.Logger HL.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   ReplaceMetadataV2 ->
   m EncJSON
@@ -233,9 +242,20 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           mempty
   putMetadata metadata
 
-  -- Check for duplicate trigger names in the new source metadata
   let oldSources = (_metaSources oldMetadata)
   let newSources = (_metaSources metadata)
+
+  -- Clean up the sources that are not present in the new metadata
+  for_ (OMap.toList oldSources) $ \(oldSource, oldSourceBackendMetadata) -> do
+    -- If the source present in old metadata is not present in the new metadata,
+    -- clean that source.
+    onNothing (OMap.lookup oldSource newSources) $ do
+      AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata oldSourceBackendMetadata) \(_oldSourceMetadata :: SourceMetadata b) -> do
+        sourceInfo <- askSourceInfo @b oldSource
+        runPostDropSourceHook oldSource sourceInfo
+        pure (BackendSourceMetadata (AB.mkAnyBackend _oldSourceMetadata))
+
+  -- Check for duplicate trigger names in the new source metadata
   for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
     onJust (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
       dispatch newBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
@@ -256,6 +276,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
   -- See Note [Cleanup for dropped triggers]
   dropSourceSQLTriggers logger oldSchemaCache (_metaSources oldMetadata) (_metaSources metadata)
+
+  generateSQLTriggerCleanupSchedules (_metaSources oldMetadata) (_metaSources metadata)
 
   encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
@@ -378,6 +400,29 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ SB.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
 
+    generateSQLTriggerCleanupSchedules ::
+      InsOrdHashMap SourceName BackendSourceMetadata ->
+      InsOrdHashMap SourceName BackendSourceMetadata ->
+      m ()
+    generateSQLTriggerCleanupSchedules oldSources newSources = do
+      -- If there are any event trigger cleanup configs with different cron then delete the older schedules
+      -- generate cleanup logs for new event trigger cleanup config
+      for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
+        onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
+          AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
+            dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
+              sourceInfo@(SourceInfo _ _ _ sourceConfig _ _) <- askSourceInfo @b source
+              let getEventMapWithCC sourceMeta = Map.fromList $ concatMap (getAllETWithCleanupConfigInTableMetadata . snd) $ OMap.toList $ _smTables sourceMeta
+                  oldEventTriggersWithCC = getEventMapWithCC oldSourceMetadata
+                  newEventTriggersWithCC = getEventMapWithCC newSourceMetadata
+                  -- event triggers with cleanup config that existed in old metadata but are missing in new metadata
+                  differenceMap = Map.difference oldEventTriggersWithCC newEventTriggersWithCC
+              for_ (Map.toList differenceMap) $ \(triggerName, cleanupConfig) -> do
+                deleteAllScheduledCleanups @b sourceConfig triggerName
+                pure cleanupConfig
+              for_ (Map.toList newEventTriggersWithCC) $ \(triggerName, cleanupConfig) -> do
+                (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
+
     dispatch (BackendSourceMetadata bs) = AB.dispatchAnyBackend @BackendEventTrigger bs
 
 -- | Only includes the cron triggers with `included_in_metadata` set to `True`
@@ -410,10 +455,13 @@ runExportMetadataV2 currentResourceVersion ExportMetadata {} = do
         ]
 
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecreateEventTriggers) = do
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecreateEventTriggers reloadDataConnectors) = do
   metadata <- getMetadata
   let allSources = HS.fromList $ OMap.keys $ _metaSources metadata
       allRemoteSchemas = HS.fromList $ OMap.keys $ _metaRemoteSchemas metadata
+      allDataConnectors =
+        maybe mempty (HS.fromList . OMap.keys . unBackendConfigWrapper) $
+          BackendMap.lookup @'DataConnector $ _metaBackendConfigs metadata
       checkRemoteSchema name =
         unless (HS.member name allRemoteSchemas) $
           throw400 NotExists $
@@ -422,6 +470,10 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
         unless (HS.member name allSources) $
           throw400 NotExists $
             "Source with name " <> name <<> " not found in metadata"
+      checkDataConnector name =
+        unless (HS.member name allDataConnectors) $
+          throw400 NotExists $
+            "Data connector with name " <> name <<> " not found in metadata"
 
   remoteSchemaInvalidations <- case reloadRemoteSchemas of
     RSReloadAll -> pure allRemoteSchemas
@@ -432,12 +484,16 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
   recreateEventTriggersSources <- case reloadRecreateEventTriggers of
     RSReloadAll -> pure allSources
     RSReloadList l -> mapM_ checkSource l *> pure l
+  dataConnectorInvalidations <- case reloadDataConnectors of
+    RSReloadAll -> pure allDataConnectors
+    RSReloadList l -> mapM_ checkDataConnector l *> pure l
 
   let cacheInvalidations =
         CacheInvalidations
           { ciMetadata = True,
             ciRemoteSchemas = remoteSchemaInvalidations,
-            ciSources = pgSourcesInvalidations
+            ciSources = pgSourcesInvalidations,
+            ciDataConnectors = dataConnectorInvalidations
           }
 
   buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata

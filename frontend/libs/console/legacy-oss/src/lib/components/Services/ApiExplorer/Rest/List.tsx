@@ -3,12 +3,12 @@ import { connect, ConnectedProps } from 'react-redux';
 import { Link } from 'react-router';
 import { FaEdit, FaTimes } from 'react-icons/fa';
 
+import { Button } from '@/new-components/Button';
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
 import URLPreview from './URLPreview';
 import { allowedQueriesCollection } from '../../../../metadata/utils';
-import Button from '../../../Common/Button';
 import { dropRESTEndpoint } from '../../../../metadata/actions';
 import _push from '../../Data/push';
 import Landing from './Landing';
@@ -140,18 +140,16 @@ const ListComponent: React.FC<Props> = ({
                         endpoint.name,
                         findQuery(endpoint.name)
                       )}
-                      color="white"
+                      icon={<FaTimes />}
                       className="mr-1"
                     >
-                      <FaTimes className="mr-1" />
                       Delete
                     </Button>
                     <Button
                       size="sm"
+                      icon={<FaEdit />}
                       onClick={onClickEdit(endpoint.name)}
-                      color="white"
                     >
-                      <FaEdit className="mr-1" />
                       Edit
                     </Button>
                   </td>

@@ -61,6 +61,7 @@ import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
 import Control.Retry qualified as Retry
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
+import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
@@ -99,6 +100,7 @@ import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Catalog
@@ -557,7 +559,8 @@ runHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -644,7 +647,8 @@ mkHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -1025,10 +1029,10 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
       mkHttpLog $
         mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
+  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
     unLogger logger $
       mkHttpLog $
-        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody compressedResponse qTime cType headers rb batchQueryOpLogs
+        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
@@ -1086,6 +1090,10 @@ instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
 
 instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
+
+instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
+  runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
+  generateCleanupSchedules _ _ _ = pure $ Right ()
 
 runInSeparateTx ::
   (MonadIO m) =>

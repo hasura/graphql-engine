@@ -1,20 +1,32 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.Adapter.Types
   ( ConnSourceConfig (..),
     SourceConfig (..),
     DataConnectorName (..),
     DataConnectorOptions (..),
+    DataConnectorInfo (..),
     CountType (..),
     SourceTimeout (),
     sourceTimeoutMicroseconds,
+    scCapabilities,
+    scConfig,
+    scDataConnectorName,
+    scEndpoint,
+    scManager,
+    scSchema,
+    scTemplate,
+    scTimeoutMicroseconds,
   )
 where
 
-import Autodocodec (HasCodec (codec), named)
+import Autodocodec
+import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
+import Data.Data (Typeable)
 import Data.Text.Extended (ToTxt)
 import Data.Text.NonEmpty (NonEmptyText)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -116,7 +128,7 @@ instance Cacheable SourceConfig where
   unchanged _ = (==)
 
 newtype DataConnectorName = DataConnectorName {unDataConnectorName :: NonEmptyText}
-  deriving stock (Eq, Ord, Show, Generic)
+  deriving stock (Eq, Ord, Show, Typeable, Generic)
   deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
   deriving anyclass (Cacheable, NFData)
 
@@ -133,8 +145,29 @@ instance FromJSON DataConnectorOptions where
 instance ToJSON DataConnectorOptions where
   toJSON = genericToJSON hasuraJSON
 
+data DataConnectorInfo = DataConnectorInfo
+  { _dciOptions :: DataConnectorOptions,
+    _dciCapabilities :: API.Capabilities,
+    _dciConfigSchemaResponse :: API.ConfigSchemaResponse
+  }
+  deriving stock (Eq, Show, Generic)
+
+instance FromJSON DataConnectorInfo where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DataConnectorInfo where
+  toJSON = genericToJSON hasuraJSON
+
+instance Cacheable DataConnectorInfo where
+  unchanged a dci0 dci1 =
+    unchanged a (_dciOptions dci0) (_dciOptions dci1)
+      && _dciCapabilities dci0 == _dciCapabilities dci1
+      && _dciConfigSchemaResponse dci0 == _dciConfigSchemaResponse dci1
+
 data CountType
   = StarCount
   | ColumnCount (NonEmpty IR.C.Name)
   | ColumnDistinctCount (NonEmpty IR.C.Name)
   deriving (Eq, Ord, Show, Generic, Data)
+
+$(makeLenses ''SourceConfig)

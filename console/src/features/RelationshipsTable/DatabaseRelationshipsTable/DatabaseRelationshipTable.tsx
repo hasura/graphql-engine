@@ -1,6 +1,5 @@
 import React from 'react';
-// eslint-disable-next-line import/first
-import { Table } from '@/features/DataSource';
+import { Table } from '@/features/MetadataAPI';
 import {
   FaArrowRight,
   FaColumns,

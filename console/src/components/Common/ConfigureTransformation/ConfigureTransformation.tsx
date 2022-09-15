@@ -100,6 +100,11 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
           onClick={() => {
             toggleContextArea(!isContextAreaActive);
           }}
+          data-trackid={
+            isContextAreaActive
+              ? 'actions-tab-hide-sample-context-button'
+              : 'actions-tab-show-sample-context-button'
+          }
         >
           {!isContextAreaActive ? <AddIcon /> : null}
           {contextAreaText}
@@ -132,6 +137,11 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestUrlTransformOnChange(!isRequestUrlTransform);
             resetSampleInput();
           }}
+          data-trackid={
+            isRequestUrlTransform
+              ? 'actions-tab-hide-request-transform-button'
+              : 'actions-tab-show-request-transform-button'
+          }
         >
           {requestUrlTransformText}
         </Button>
@@ -167,6 +177,11 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestPayloadTransformOnChange(!isRequestPayloadTransform);
             resetSampleInput();
           }}
+          data-trackid={
+            isRequestPayloadTransform
+              ? 'actions-tab-hide-payload-transform-button'
+              : 'actions-tab-show-payload-transform-button'
+          }
         >
           {!isRequestPayloadTransform ? <AddIcon /> : null}
           {requestPayloadTransformText}

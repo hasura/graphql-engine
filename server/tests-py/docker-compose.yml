@@ -1,0 +1,83 @@
+# These services are brought up in 'run.sh' (see that file)
+
+version: "3.6"
+
+services:
+  cabal-update:
+    image: hasura/graphql-engine-server-builder:${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
+    command:
+      - cabal
+      - update
+    volumes:
+      - .:/src
+      - hge-dist:/src/dist-newstyle
+      - cabal-cache:/root/.cabal
+    working_dir: /src
+
+  hge-build:
+    image: hasura/graphql-engine-server-builder:${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
+    command:
+      - cabal
+      - build
+      - graphql-engine:exe:graphql-engine
+    volumes:
+      - ../..:/src
+      - hge-dist:/src/dist-newstyle
+      - cabal-cache:/root/.cabal
+    working_dir: /src
+    depends_on:
+      cabal-update:
+        condition: service_completed_successfully
+
+  tests-py-on-postgres:
+    build:
+      context: ../..
+      dockerfile: ./.buildkite/dockerfiles/server-pytest-runner/Dockerfile
+    image: hasura/graphql-engine-server-pytest-runner:${HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA}
+    command:
+      - ./oss-.circleci/test-server.sh
+    environment:
+      - CIRCLE_NODE_INDEX=1
+      - CIRCLE_NODE_TOTAL=1
+      - GRAPHQL_ENGINE=/src/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/x/graphql-engine/noopt/build/graphql-engine/graphql-engine
+      - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@tests-py-postgres-1/postgres
+      - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
+      - HASURA_GRAPHQL_PG_SOURCE_URL_1=postgresql://postgres:hasura@tests-py-postgres-1/postgres
+      - HASURA_GRAPHQL_PG_SOURCE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
+      - OUTPUT_FOLDER=/output
+      - SERVER_TEST_TO_RUN
+    volumes:
+      - ../..:/src
+      - hge-dist:/src/dist-newstyle
+    working_dir: /src
+    depends_on:
+      hge-build:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
+    ports:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: "hasura"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U postgres < /dev/null && sleep 5 && psql -U postgres < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - /var/lib/postgresql/data
+    deploy:
+      replicas: 2
+
+volumes:
+  cabal-cache:
+  hge-dist:

@@ -375,6 +375,7 @@ export const bigquery: DataSourcesAPI = {
   },
   getAlterTableCommentSql: () => '',
   getAlterColumnCommentSql: () => '',
+  getAlterViewCommentSql: () => '',
   getAlterFunctionCommentSql: () => '',
   getSetColumnDefaultSql: () => {
     return '';

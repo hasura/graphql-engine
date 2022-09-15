@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Button } from '@/new-components/Button';
 import { getParentNodeByAttribute } from '../../../utils/domFunctions';
 import styles from './Dropdown.module.scss';
 
@@ -30,15 +31,14 @@ const DropdownList: React.VFC<DropdownListProps> = ({
       {options.map((option, i) => (
         <li key={i}>
           {option.onClick ? (
-            <button
-              className={styles.cursorPointer}
+            <Button
               onClick={() => {
                 option?.onClick?.();
                 dismiss();
               }}
             >
               {option.content}
-            </button>
+            </Button>
           ) : (
             option.content
           )}
@@ -111,7 +111,7 @@ const Dropdown: React.VFC<DropdownProps> = ({
           {typeof children === 'function' ? (
             children({ onClick: toggle })
           ) : (
-            <button onClick={toggle}>{children}</button>
+            <Button onClick={toggle}>{children}</Button>
           )}
         </div>
         {isOpen && (

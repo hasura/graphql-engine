@@ -50,6 +50,10 @@ type FieldWrapperProps = {
    * The field data test id for testing
    */
   dataTest?: string;
+  /**
+   * Removing styling only necessary for the error placeholder
+   */
+  noErrorPlaceholder?: boolean;
 };
 
 export type FieldWrapperPassThroughProps = Omit<
@@ -94,6 +98,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     description,
     tooltip,
     horizontal,
+    noErrorPlaceholder,
   } = props;
   return (
     <div
@@ -154,7 +159,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
           /* A &nbsp; character is displayed even if there is no error to
           book some space for the error message. It prevents other fields to
           be pushed down when an error is displayed. */
-          <ErrorComponentTemplate label={<>&nbsp;</>} />
+          noErrorPlaceholder ?? <ErrorComponentTemplate label={<>&nbsp;</>} />
         )}
       </div>
     </div>

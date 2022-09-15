@@ -36,20 +36,18 @@ module Hasura.GraphQL.Schema.Backend
   )
 where
 
-import Data.Has
 import Data.Text.Casing (GQLNameIdentifier)
-import Hasura.Base.Error
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (Type)
-import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column hiding (EnumValueInfo)
+import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
@@ -101,7 +99,9 @@ class
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
-    m
+    SchemaT
+      r
+      m
       ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
         [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
         Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
@@ -113,7 +113,7 @@ class
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
@@ -122,7 +122,7 @@ class
     TableInfo b ->
     GQLNameIdentifier ->
     NESeq (ColumnInfo b) ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
@@ -131,7 +131,7 @@ class
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
-    m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
   -- backed by @UPDATE@ statements on some table, as described in
@@ -151,7 +151,7 @@ class
     TableInfo b ->
     -- | field display name
     GQLNameIdentifier ->
-    m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
@@ -161,7 +161,7 @@ class
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
-    m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
@@ -170,7 +170,7 @@ class
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
@@ -180,7 +180,7 @@ class
     FunctionInfo b ->
     TableName b ->
     NESeq (ColumnInfo b) ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
@@ -189,7 +189,7 @@ class
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | Make a parser for relationships. Default implementaton elides
   -- relationships altogether.
@@ -197,7 +197,7 @@ class
     MonadBuildSchema b r m n =>
     SourceInfo b ->
     RelInfo b ->
-    m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
+    SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
   mkRelationshipParser _ _ = pure Nothing
 
   -- backend extensions
@@ -207,10 +207,23 @@ class
 
   -- individual components
   columnParser ::
-    (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+    MonadBuildSchema b r m n =>
     ColumnType b ->
     G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
-    m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+    SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+  enumParser ::
+    MonadBuildSchema b r m n =>
+    TableName b ->
+    NonEmpty (EnumValue, Column.EnumValueInfo) ->
+    Maybe G.Name ->
+    G.Nullability ->
+    SchemaT r m (Parser 'Both n (ScalarValue b))
+  possiblyNullable ::
+    MonadParse m =>
+    ScalarType b ->
+    G.Nullability ->
+    Parser 'Both m (ScalarValue b) ->
+    Parser 'Both m (ScalarValue b)
 
   -- | Parser for arguments on scalar fields in a selection set
   scalarSelectionArgumentsParser ::
@@ -225,8 +238,9 @@ class
 
   comparisonExps ::
     MonadBuildSchema b r m n =>
+    SourceInfo b ->
     ColumnType b ->
-    m (Parser 'Input n [ComparisonExp b])
+    SchemaT r m (Parser 'Input n [ComparisonExp b])
 
   -- | The input fields parser, for "count" aggregate field, yielding a function
   -- which generates @'CountType b' from optional "distinct" field value
@@ -244,7 +258,7 @@ class
     ComputedFieldInfo b ->
     TableName b ->
     TableInfo b ->
-    m (Maybe (FieldParser n (AnnotatedField b)))
+    SchemaT r m (Maybe (FieldParser n (AnnotatedField b)))
 
 -- | The public interface for the schema of table queries exposed by a backend.
 --
@@ -259,19 +273,19 @@ class
 -- 'Hasura.GraphQL.Schema.Select'.
 class Backend b => BackendTableSelectSchema (b :: BackendType) where
   tableArguments ::
-    MonadBuildSchemaBase r m n =>
+    MonadBuildSourceSchema r m n =>
     SourceInfo b ->
     TableInfo b ->
-    m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
+    SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   tableSelectionSet ::
-    MonadBuildSchemaBase r m n =>
+    MonadBuildSourceSchema r m n =>
     SourceInfo b ->
     TableInfo b ->
-    m (Maybe (Parser 'Output n (AnnotatedFields b)))
+    SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
   selectTable ::
-    MonadBuildSchemaBase r m n =>
+    MonadBuildSourceSchema r m n =>
     SourceInfo b ->
     -- | table info
     TableInfo b ->
@@ -279,10 +293,10 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
     G.Name ->
     -- | field description, if any
     Maybe G.Description ->
-    m (Maybe (FieldParser n (SelectExp b)))
+    SchemaT r m (Maybe (FieldParser n (SelectExp b)))
 
   selectTableAggregate ::
-    MonadBuildSchemaBase r m n =>
+    MonadBuildSourceSchema r m n =>
     SourceInfo b ->
     -- | table info
     TableInfo b ->
@@ -290,7 +304,7 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
     G.Name ->
     -- | field description, if any
     Maybe G.Description ->
-    m (Maybe (FieldParser n (AggSelectExp b)))
+    SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 

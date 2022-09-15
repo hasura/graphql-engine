@@ -10,3 +10,94 @@ slug: index
 ---
 
 # Commands
+
+## Overview
+
+The Hasura CLI utilizes a typical command / flag syntax enabling you to quickly manage your Hasura instance. A typical
+command structure will follow this pattern:
+
+```bash
+hasura <command_category> <specific_command> --<optional_flag> "<optional_flag_value>"
+```
+
+A real-world example following this structure would be:
+
+```bash
+hasura migrate apply --admin-secret "<admin-secret>"
+```
+
+## Getting help
+
+At any time, you may use the `--help` flag on either the CLI itself or specific to a certain command. Writing
+`hasura --help` will return information on available commands and flags:
+
+```
+
+    __
+   / /_   ____ _ _____ __  __ _____ ____ _
+  / __ \ / __ `// ___// / / // ___// __ `/
+ / / / // /_/ /(__  )/ /_/ // /   / /_/ /
+/_/ /_/ \__,_//____/ \__,_//_/    \__,_/
+
+Usage:
+  hasura [flags]
+  hasura [command]
+
+Available Commands:
+  actions     Manage Hasura actions
+  completion  Generate auto completion code
+  console     Open the console to manage the database and try out APIs
+  deploy      (PREVIEW) Utility command to apply metadata & database migrations to graphql-engine
+  help        Help about any command
+  init        Initialize a directory for Hasura GraphQL engine migrations
+  metadata    Manage Hasura GraphQL engine metadata saved in the database
+  migrate     Manage migrations on the database
+  plugins     Manage plugins for the CLI
+  scripts     Execute helper scripts to manage Hasura projects
+  seed        Manage seed data
+  update-cli  Update the CLI to latest or a specific version
+  version     Print the CLI version
+
+Flags:
+      --envfile string      .env filename to load ENV vars from (default ".env")
+  -h, --help                help for hasura
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   skip automatic update check on command execution
+
+Use "hasura [command] --help" for more information about a command.
+```
+
+Whereas writing `hasura actions --help` will return commands and flags specific to the `actions` category of commands:
+
+```
+Manage Hasura actions
+
+Usage:
+  hasura actions [command]
+
+Available Commands:
+  codegen     Generate code for actions
+  create      Create a Hasura action
+  use-codegen Use the codegen to generate code for Hasura actions
+
+Flags:
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
+  -h, --help                           help for actions
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
+
+Global Flags:
+      --envfile string      .env filename to load ENV vars from (default ".env")
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   skip automatic update check on command execution
+
+Use "hasura actions [command] --help" for more information about a command.
+```
+
+A complete list of all CLI commands, including details and examples, can be found in the side navigation to the left
+under the Commands heading.

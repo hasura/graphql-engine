@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { Button } from '@/new-components/Button';
 import globals from '../../../../Globals';
-import Button from '../../../Common/Button/Button';
 import { getAddSTRoute } from '../../../Common/utils/routesUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import { CRON_TRIGGER } from '../constants';
@@ -33,14 +33,15 @@ const Landing: React.FC<Props> = props => {
       <div className="pl-md">
         <div className="flex">
           <h2 className="text-xl font-bold mr-md">{CRON_TRIGGER}s</h2>
-          <Button
-            color="yellow"
-            size="sm"
-            className="ml-md"
-            onClick={() => dispatch(_push(getAddSTRoute()))}
-          >
-            Create
-          </Button>
+          <div className="ml-md">
+            <Button
+              mode="primary"
+              size="md"
+              onClick={() => dispatch(_push(getAddSTRoute()))}
+            >
+              Create
+            </Button>
+          </div>
         </div>
         <hr className="my-md" />
         <div>

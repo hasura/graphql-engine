@@ -21,6 +21,7 @@ import Hasura.App
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
+import Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging
 import Hasura.Metadata.Class
@@ -59,9 +60,10 @@ main = do
   parseArgs >>= \case
     AllSuites -> do
       streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
+      eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite
       postgresSpecs <- buildPostgresSpecs
       mssqlSpecs <- buildMSSQLSpecs
-      runHspec [] (Discover.spec *> postgresSpecs *> mssqlSpecs *> streamingSubscriptionSuite)
+      runHspec [] (Discover.spec *> postgresSpecs *> mssqlSpecs *> streamingSubscriptionSuite *> eventTriggerLogCleanupSuite)
     SingleSuite hspecArgs suite -> do
       runHspec hspecArgs =<< case suite of
         UnitSuite -> pure Discover.spec
@@ -156,12 +158,14 @@ buildPostgresSpecs = do
   -- We use "suite" to denote a set of tests that can't (yet) be detected and
   -- run by @hspec-discover@.
   streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
+  eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite
 
   pure $ do
     describe "Migrate suite" $
       beforeAll setupCacheRef $
         describe "Hasura.Server.Migrate" $ MigrateSuite.suite sourceConfig pgContext pgConnInfo
     describe "Streaming subscription suite" $ streamingSubscriptionSuite
+    describe "Event trigger log cleanup suite" $ eventTriggerLogCleanupSuite
 
 parseArgs :: IO TestSuites
 parseArgs =

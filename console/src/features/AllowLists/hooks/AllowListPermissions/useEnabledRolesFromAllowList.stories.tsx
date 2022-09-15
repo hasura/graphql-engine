@@ -31,7 +31,7 @@ Primary.args = {
 };
 
 export default {
-  title: 'hooks/Allow List Permission/useCreateNewRolePermission',
+  title: 'hooks/Allow List/useCreateNewRolePermission',
   decorators: [
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),

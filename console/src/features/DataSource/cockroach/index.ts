@@ -2,7 +2,11 @@ import { Database, Feature } from '..';
 import { runSQL } from '../api';
 import { adaptIntrospectedTables } from '../common/utils';
 import { GetTrackableTablesProps } from '../types';
-import { getTableColumns, getFKRelationships } from './introspection';
+import {
+  getTableColumns,
+  getFKRelationships,
+  getTablesListAsTree,
+} from './introspection';
 
 export type CockroachDBTable = { name: string; schema: string };
 
@@ -52,5 +56,6 @@ export const cockroach: Database = {
     },
     getTableColumns,
     getFKRelationships,
+    getTablesListAsTree,
   },
 };

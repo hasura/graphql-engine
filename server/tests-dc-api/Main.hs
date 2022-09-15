@@ -19,7 +19,7 @@ import Test.HealthSpec qualified
 import Test.Hspec (Spec)
 import Test.Hspec.Core.Runner (runSpec)
 import Test.Hspec.Core.Util (filterPredicate)
-import Test.Hspec.Runner (Config (..), defaultConfig, evaluateSummary)
+import Test.Hspec.Runner (Config (..), Path, defaultConfig, evaluateSummary)
 import Test.MetricsSpec qualified
 import Test.QuerySpec qualified
 import Test.SchemaSpec qualified
@@ -69,5 +69,10 @@ applyTestConfig config TestOptions {..} =
   config
     { configConcurrentJobs = _toParallelDegree,
       configFilterPredicate = filterPredicate <$> _toMatch,
-      configSkipPredicate = filterPredicate <$> _toSkip
+      configSkipPredicate = filterPredicates _toSkip,
+      configDryRun = _toDryRun
     }
+
+filterPredicates :: [String] -> Maybe (Path -> Bool)
+filterPredicates [] = Nothing
+filterPredicates xs = Just (\p -> any ($ p) (filterPredicate <$> xs))

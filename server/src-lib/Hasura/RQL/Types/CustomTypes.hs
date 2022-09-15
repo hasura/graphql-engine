@@ -61,7 +61,6 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
@@ -329,7 +328,6 @@ data AnnotatedTypeRelationship = AnnotatedTypeRelationship
     _atrType :: RelType,
     _atrSource :: SourceName,
     _atrSourceConfig :: SourceConfig ('Postgres 'Vanilla),
-    _atrSourceCustomization :: SourceTypeCustomization,
     -- TODO: see comment in 'TypeRelationship'
     _atrTableInfo :: TableInfo ('Postgres 'Vanilla),
     _atrFieldMapping :: HashMap ObjectFieldName (ColumnInfo ('Postgres 'Vanilla))

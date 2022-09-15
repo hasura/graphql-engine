@@ -34,7 +34,12 @@
 -- performed by "Hasura.GraphQL.Execute.Resolve", but for fragment definitions
 -- rather than variables.
 module Hasura.GraphQL.Execute.Inline
-  ( inlineSelectionSet,
+  ( InlineMT,
+    InlineM,
+    inlineSelectionSet,
+    inlineField,
+    runInlineMT,
+    runInlineM,
   )
 where
 
@@ -74,6 +79,34 @@ type MonadInline m =
     MonadState InlineState m
   )
 
+type InlineMT m a = MonadError QErr m => (StateT InlineState (ReaderT InlineEnv m)) a
+
+type InlineM a = InlineMT (Except QErr) a
+
+{-# INLINE runInlineMT #-}
+runInlineMT ::
+  forall m a.
+  (MonadError QErr m) =>
+  HashMap Name FragmentDefinition ->
+  InlineMT m a ->
+  m a
+runInlineMT uniqueFragmentDefinitions =
+  flip
+    runReaderT
+    InlineEnv
+      { _ieFragmentDefinitions = uniqueFragmentDefinitions,
+        _ieFragmentStack = []
+      }
+    . flip evalStateT InlineState {_isFragmentCache = mempty}
+
+{-# INLINE runInlineM #-}
+runInlineM ::
+  forall a.
+  HashMap Name FragmentDefinition ->
+  InlineM a ->
+  Either QErr a
+runInlineM fragments = runExcept . runInlineMT fragments
+
 -- | Inlines all fragment spreads in a 'SelectionSet'; see the module
 -- documentation for "Hasura.GraphQL.Execute.Inline" for details.
 inlineSelectionSet ::
@@ -106,6 +139,8 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
                 Set.toList $
                   Set.difference definedFragmentNames usedFragmentNames
           )
+  -- The below code is a manual inlining of 'runInlineMT', as appearently the
+  -- inlining optimization does not trigger, even with the INLINE pragma.
   traverse inlineSelection selectionSet
     & flip evalStateT InlineState {_isFragmentCache = mempty}
     & flip
@@ -128,17 +163,20 @@ inlineSelection ::
   MonadInline m =>
   Selection FragmentSpread Name ->
   m (Selection NoFragments Name)
-inlineSelection (SelectionField field@Field {_fSelectionSet}) =
-  withPathK "selectionSet" $
-    withPathK (unName $ _fName field) $ do
-      selectionSet <- traverse inlineSelection _fSelectionSet
-      pure $! SelectionField field {_fSelectionSet = selectionSet}
+inlineSelection (SelectionField field) =
+  withPathK "selectionSet" $ SelectionField <$> inlineField field
 inlineSelection (SelectionFragmentSpread spread) =
   withPathK "selectionSet" $
     SelectionInlineFragment <$> inlineFragmentSpread spread
 inlineSelection (SelectionInlineFragment fragment@InlineFragment {_ifSelectionSet}) = do
   selectionSet <- traverse inlineSelection _ifSelectionSet
   pure $! SelectionInlineFragment fragment {_ifSelectionSet = selectionSet}
+
+{-# INLINE inlineField #-}
+inlineField :: MonadInline m => Field FragmentSpread Name -> m (Field NoFragments Name)
+inlineField field@(Field {_fSelectionSet}) = withPathK (unName $ _fName field) $ do
+  selectionSet <- traverse inlineSelection _fSelectionSet
+  pure $! field {_fSelectionSet = selectionSet}
 
 inlineFragmentSpread ::
   MonadInline m =>

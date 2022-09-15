@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 
+import { Button } from '@/new-components/Button';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import Button from '../../../Common/Button/Button';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
@@ -67,7 +67,7 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
               <div className="mb-md">
                 <b>Query name:</b>
                 <Tooltip
-                  message="This is an identifier for the query in the collection. 
+                  message="This is an identifier for the query in the collection.
                 This should be unique in the collection and can be different from the operation name of the query."
                 />
               </div>
@@ -166,7 +166,8 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
         Allow List
         <span className="pl-md">
           <Button
-            size="xs"
+            size="sm"
+            mode="destructive"
             onClick={handleDeleteAll}
             disabled={allowedQueries.length === 0}
           >

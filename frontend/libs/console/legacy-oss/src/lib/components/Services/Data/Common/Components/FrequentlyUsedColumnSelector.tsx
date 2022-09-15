@@ -1,6 +1,6 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import Dropdown from '../../../../Common/Dropdown/Dropdown';
-import Button from '../../../../Common/Button/Button';
 import { Dispatch } from '../../../../../types';
 import {
   FrequentlyUsedColumn,
@@ -67,7 +67,7 @@ const FrequentlyUsedColumnSelector: React.VFC<FrequentlyUsedColumnSelectorProps>
         keyPrefix="frequently-used-columns"
       >
         {({ onClick }) => (
-          <Button color="white" size="xs" onClick={onClick}>
+          <Button size="sm" onClick={onClick}>
             + Frequently used columns
           </Button>
         )}

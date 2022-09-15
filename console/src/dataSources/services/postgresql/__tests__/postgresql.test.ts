@@ -62,6 +62,21 @@ describe('postgresql datasource tests', () => {
     });
   });
 
+  describe('getAlterViewCommentSql', () => {
+    const { getAlterViewCommentSql } = postgres;
+    it('should generate SQL for modifying view comment', () => {
+      const query = getAlterViewCommentSql({
+        viewName: 'view_users',
+        schemaName: 'public',
+        comment: "user's comment",
+      });
+      expect(query).toContain('comment on view');
+      expect(query).toContain('"public"."view_users"');
+      expect(query).toContain("E'user\\'s comment'");
+      expect(query).toMatchSnapshot();
+    });
+  });
+
   describe('getAlterFunctionCommentSql', () => {
     const { getAlterFunctionCommentSql } = postgres;
     it('should generate SQL for modifying function comment', () => {

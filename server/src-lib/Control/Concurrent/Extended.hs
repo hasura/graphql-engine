@@ -12,6 +12,7 @@ module Control.Concurrent.Extended
 
     -- * Concurrency in MonadError
     forConcurrentlyEIO,
+    concurrentlyEIO,
 
     -- * Deprecated
     ImmortalThreadLog (..),
@@ -34,14 +35,13 @@ import Control.Monad.Trans.Control qualified as MC
 import Control.Monad.Trans.Managed (ManagedT (..), allocate)
 import Data.Aeson
 import Data.List.Split
-import Data.Time.Clock.Units (DiffTime, Microseconds (..), seconds)
 import Data.Traversable
 import Data.Void
 -- For forkImmortal. We could also have it take a cumbersome continuation if we
 -- want to break this dependency. Probably best to move Hasura.Logging into a
 -- separate lib with this if we do the override thing.
 import Hasura.Logging
-import Prelude
+import Hasura.Prelude
 
 {-# HLINT ignore sleep #-}
 
@@ -266,3 +266,10 @@ forConcurrentlyEIO chunkSize xs f = do
   let fIO a = runExceptT (f a) >>= evaluate
   xs' <- liftIO $ fmap concat $ A.forConcurrently (chunksOf chunkSize xs) $ traverse fIO
   for xs' (either throwError pure)
+
+concurrentlyEIO :: (MonadIO m, MonadError e m) => ExceptT e IO a -> ExceptT e IO b -> m (a, b)
+concurrentlyEIO left right = do
+  (leftE, rightE) <- liftIO $ A.concurrently (runExceptT left >>= evaluate) (runExceptT right >>= evaluate)
+  x <- leftE `onLeft` throwError
+  y <- rightE `onLeft` throwError
+  pure (x, y)

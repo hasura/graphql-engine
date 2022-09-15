@@ -4,7 +4,7 @@ import { setupServer } from 'msw/node';
 import { useTables, UseTablesProps } from '../hooks/useTables';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 import { TrackableTable } from '../types';
-import { Metadata } from '../../../DataSource/types';
+import { Metadata } from '../../../MetadataAPI';
 
 const metadataStub: Metadata = {
   resource_version: 1,
@@ -15,10 +15,20 @@ const metadataStub: Metadata = {
         name: 'otherDataSource',
         kind: 'postgres',
         tables: [],
+        configuration: {
+          connection_info: {
+            database_url: '',
+          },
+        },
       },
       {
         name: 'default',
         kind: 'postgres',
+        configuration: {
+          connection_info: {
+            database_url: '',
+          },
+        },
         tables: [
           {
             table: {

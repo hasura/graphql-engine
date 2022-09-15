@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GraphQLSchema } from 'graphql';
+import { Button } from '@/new-components/Button';
 import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
-import Button from '../../../Common/Button/Button';
 import {
   RemoteSchemaFields,
   FieldType,
@@ -79,8 +79,6 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
 
   if (!isEditing) return null;
 
-  const buttonStyle = 'mr-sm';
-
   const closeEditor = () => {
     permCloseEdit();
   };
@@ -139,29 +137,29 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
           {/* <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
         </PermissionEditorContext.Provider>
       </div>
-      <Button
-        onClick={saveFunc}
-        color="yellow"
-        className={buttonStyle}
-        disabled={isSaveDisabled}
-        data-test="save-remote-schema-permissions"
-      >
-        Save Permissions
-      </Button>
-      {!(isNewRole || isNewPerm) && (
+      <div className="mr-sm">
         <Button
-          onClick={removeFunc}
-          color="red"
-          className={buttonStyle}
-          disabled={isFetching}
-          data-test="delete-remote-schema-permissions"
+          onClick={saveFunc}
+          mode="primary"
+          disabled={isSaveDisabled}
+          data-test="save-remote-schema-permissions"
         >
-          Remove Permissions
+          Save Permissions
         </Button>
+      </div>
+      {!(isNewRole || isNewPerm) && (
+        <div className="mr-sm">
+          <Button
+            onClick={removeFunc}
+            mode="destructive"
+            disabled={isFetching}
+            data-test="delete-remote-schema-permissions"
+          >
+            Remove Permissions
+          </Button>
+        </div>
       )}
-      <Button color="white" className={buttonStyle} onClick={closeEditor}>
-        Cancel
-      </Button>
+      <Button onClick={closeEditor}>Cancel</Button>
     </div>
   );
 };

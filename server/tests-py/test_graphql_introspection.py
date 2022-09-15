@@ -7,7 +7,7 @@ yaml=YAML(typ='safe', pure=True)
 
 @pytest.fixture(scope="module")
 def graphql_service():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"], port=4001)
     svc.start()
     yield svc
     svc.stop()
@@ -83,6 +83,8 @@ class TestGraphqlIntrospectionWithCustomTableName:
         hasAggregate = False
         hasSelectByPk = False
         hasQueryRoot = False
+        hasMultiInsert = False
+        hasUpdateByPk = False
         for t in resp['data']['__schema']['types']:
             if t['name'] == 'query_root':
                 hasQueryRoot = True

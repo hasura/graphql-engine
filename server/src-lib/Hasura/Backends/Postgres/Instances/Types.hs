@@ -25,10 +25,12 @@ import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Backends.Postgres.Types.Insert qualified as PG (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as PG
 import Hasura.Base.Error
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.HealthCheck
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 
@@ -73,6 +75,7 @@ instance
   Backend ('Postgres pgKind)
   where
   type BackendConfig ('Postgres pgKind) = ()
+  type BackendInfo ('Postgres pgKind) = ()
   type SourceConfig ('Postgres pgKind) = PG.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
   type TableName ('Postgres pgKind) = PG.QualifiedTable
@@ -109,7 +112,12 @@ instance
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
   type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
-  defaultHealthCheckTest = defaultHealthCheckTestSql
+  healthCheckImplementation =
+    Just $
+      HealthCheckImplementation
+        { _hciDefaultTest = defaultHealthCheckTestSql,
+          _hciTestCodec = placeholderCodecViaJSON
+        }
 
   isComparableType = PG.isComparableType
   isNumType = PG.isNumType

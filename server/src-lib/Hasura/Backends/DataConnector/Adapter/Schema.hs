@@ -5,11 +5,16 @@ module Hasura.Backends.DataConnector.Adapter.Schema () where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens ((^.))
+import Data.Aeson qualified as J
 import Data.Has
+import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
-import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty qualified as NET
+import Hasura.Backends.DataConnector.API.V0.Capabilities (lookupComparisonInputObjectDefinition)
+import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -23,12 +28,12 @@ import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.Name qualified as Name
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
@@ -62,6 +67,8 @@ instance BackendSchema 'DataConnector where
 
   -- individual components
   columnParser = columnParser'
+  enumParser = enumParser'
+  possiblyNullable = possiblyNullable'
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
@@ -87,7 +94,7 @@ experimentalBuildTableRelayQueryFields ::
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
   NESeq (RQL.ColumnInfo 'DataConnector) ->
-  m [P.FieldParser n a]
+  GS.C.SchemaT r m [P.FieldParser n a]
 experimentalBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
@@ -95,22 +102,42 @@ columnParser' ::
   (MonadParse n, MonadError QErr m) =>
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
-  m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
-columnParser' columnType (GQL.Nullability isNullable) = do
+  GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
+columnParser' columnType nullability = do
   parser <- case columnType of
-    RQL.ColumnScalar IR.S.T.String -> pure (IR.S.V.String <$> P.string)
-    RQL.ColumnScalar IR.S.T.Number -> pure (IR.S.V.Number <$> P.scientific)
-    RQL.ColumnScalar IR.S.T.Bool -> pure (IR.S.V.Boolean <$> P.boolean)
-    _ -> throw400 NotSupported "This column type is unsupported by the Data Connector backend"
-  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable $ parser
-  where
-    possiblyNullable ::
-      MonadParse m =>
-      P.Parser 'P.Both m IR.S.V.Value ->
-      P.Parser 'P.Both m IR.S.V.Value
-    possiblyNullable
-      | isNullable = fmap (fromMaybe IR.S.V.Null) . P.nullable
-      | otherwise = id
+    RQL.ColumnScalar scalarType@IR.S.T.String -> pure . possiblyNullable' scalarType nullability $ J.String <$> P.string
+    RQL.ColumnScalar scalarType@IR.S.T.Number -> pure . possiblyNullable' scalarType nullability $ J.Number <$> P.scientific
+    RQL.ColumnScalar scalarType@IR.S.T.Bool -> pure . possiblyNullable' scalarType nullability $ J.Bool <$> P.boolean
+    RQL.ColumnScalar scalarType@(IR.S.T.Custom name) -> do
+      gqlName <-
+        GQL.mkName name
+          `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
+      pure . possiblyNullable' scalarType nullability $ P.jsonScalar gqlName (Just "A custom scalar type")
+    RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
+      case nonEmpty (Map.toList enumValues) of
+        Just enumValuesList -> enumParser' tableName enumValuesList customTableName nullability
+        Nothing -> throw400 ValidationFailed "empty enum values"
+  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) $ parser
+
+enumParser' ::
+  MonadError QErr m =>
+  RQL.TableName 'DataConnector ->
+  NonEmpty (RQL.EnumValue, RQL.EnumValueInfo) ->
+  Maybe GQL.Name ->
+  GQL.Nullability ->
+  GS.C.SchemaT r m (P.Parser 'P.Both n (RQL.ScalarValue 'DataConnector))
+enumParser' _tableName _enumValues _customTableName _nullability =
+  throw400 NotSupported "This column type is unsupported by the Data Connector backend"
+
+possiblyNullable' ::
+  MonadParse m =>
+  RQL.ScalarType 'DataConnector ->
+  GQL.Nullability ->
+  P.Parser 'P.Both m J.Value ->
+  P.Parser 'P.Both m J.Value
+possiblyNullable' _scalarType (GQL.Nullability isNullable)
+  | isNullable = fmap (fromMaybe J.Null) . P.nullable
+  | otherwise = id
 
 orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector)))
 orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
@@ -131,17 +158,11 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
 
 comparisonExps' ::
   forall m n r.
-  ( BackendSchema 'DataConnector,
-    P.MonadMemoize m,
-    MonadParse n,
-    MonadError QErr m,
-    MonadReader r m,
-    Has SchemaOptions r,
-    Has NamingCase r
-  ) =>
+  MonadBuildSchema 'DataConnector r m n =>
+  RQL.SourceInfo 'DataConnector ->
   RQL.ColumnType 'DataConnector ->
-  m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
-comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
+  GS.C.SchemaT r m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
+comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnectorName, columnType) $ do
   tCase <- asks getter
   collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
 
@@ -153,6 +174,7 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
+  customOperators <- (fmap . fmap . fmap) IR.ABackendSpecific <$> mkCustomOperators tCase collapseIfNull (P.getName typedParser)
   pure $
     P.object name (Just desc) $
       fmap catMaybes $
@@ -166,19 +188,52 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
               GS.BE.comparisonOperators
                 tCase
                 collapseIfNull
-                (IR.mkParameter <$> typedParser)
+                (IR.mkParameter <$> typedParser),
+              customOperators
             ]
   where
+    dataConnectorName = sourceInfo ^. RQL.siConfiguration . Adapter.scDataConnectorName
+
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
       IR.UVLiteral . IR.S.V.ArrayLiteral $ RQL.cvValue <$> columnValues
+
+    mkCustomOperators ::
+      NamingCase ->
+      Options.DangerouslyCollapseBooleans ->
+      GQL.Name ->
+      GS.C.SchemaT r m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
+    mkCustomOperators tCase collapseIfNull typeName = do
+      let capabilities = sourceInfo ^. RQL.siConfiguration . Adapter.scCapabilities
+      case lookupComparisonInputObjectDefinition capabilities typeName of
+        Nothing -> pure []
+        Just GQL.InputObjectTypeDefinition {..} -> do
+          traverse (mkCustomOperator tCase collapseIfNull) _iotdValueDefinitions
+
+    mkCustomOperator ::
+      NamingCase ->
+      Options.DangerouslyCollapseBooleans ->
+      GQL.InputValueDefinition ->
+      GS.C.SchemaT r m (P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector))))
+    mkCustomOperator tCase collapseIfNull GQL.InputValueDefinition {..} = do
+      argParser <- mkArgParser _ivdType
+      pure $
+        GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName _ivdName) _ivdDescription $
+          CustomBooleanOperator (GQL.unName _ivdName) . Just . Right <$> argParser
+
+    mkArgParser :: GQL.GType -> GS.C.SchemaT r m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
+    mkArgParser argType =
+      fmap IR.mkParameter
+        <$> columnParser'
+          (RQL.ColumnScalar $ IR.S.T.fromGQLType $ GQL.getBaseType argType)
+          (GQL.Nullability $ GQL.isNotNull argType)
 
 tableArgs' ::
   forall r m n.
   MonadBuildSchema 'DataConnector r m n =>
   RQL.SourceInfo 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
-  m (P.InputFieldsParser n (IR.SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
+  GS.C.SchemaT r m (P.InputFieldsParser n (IR.SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
 tableArgs' sourceName tableInfo = do
   whereParser <- GS.S.tableWhereArg sourceName tableInfo
   orderByParser <- GS.S.tableOrderByArg sourceName tableInfo

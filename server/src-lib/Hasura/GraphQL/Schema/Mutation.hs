@@ -41,11 +41,13 @@ import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- insert
@@ -60,7 +62,7 @@ insertIntoTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   BackendTableSelectSchema b =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   SourceInfo b ->
   -- | qualified name of the table
@@ -69,7 +71,7 @@ insertIntoTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
+  SchemaT r m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -92,9 +94,12 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
           objects <- mkObjectsArg objectParser
           pure $ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms
     pure $
-      P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+        P.subselection fieldName description argsParser selectionParser
+          <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
   where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
     mkObjectsArg objectParser =
       P.field
         Name._objects
@@ -110,7 +115,7 @@ insertOneIntoTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   BackendTableSelectSchema b =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   -- | source of the table
   SourceInfo b ->
@@ -120,7 +125,7 @@ insertOneIntoTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
+  SchemaT r m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName description = runMaybeT do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -141,9 +146,12 @@ insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName d
           object <- mkObjectArg objectParser
           pure $ mkInsertObject [object] tableInfo backendInsert insertPerms updatePerms
     pure $
-      P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+        P.subselection fieldName description argsParser selectionParser
+          <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
   where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
     mkObjectArg objectParser =
       P.field
         Name._object
@@ -172,7 +180,7 @@ tableFieldsInput ::
   SourceInfo b ->
   -- | qualified name of the table
   TableInfo b ->
-  m (Parser 'Input n (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)))
+  SchemaT r m (Parser 'Input n (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)))
 tableFieldsInput sourceInfo tableInfo =
   P.memoizeOn 'tableFieldsInput (_siName sourceInfo, tableName) do
     tCase <- asks getter
@@ -197,7 +205,7 @@ tableFieldsInput sourceInfo tableInfo =
 
     mkFieldParser ::
       FieldInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
+      SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
     mkFieldParser = \case
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
@@ -209,7 +217,7 @@ tableFieldsInput sourceInfo tableInfo =
 
     mkColumnParser ::
       ColumnInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
+      SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
     mkColumnParser columnInfo = runMaybeT $ do
       roleName <- retrieve scRole
       insertPerms <- hoistMaybe $ _permIns $ getRolePermInfo roleName tableInfo
@@ -225,11 +233,11 @@ tableFieldsInput sourceInfo tableInfo =
 mkDefaultRelationshipParser ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   XNestedInserts b ->
   SourceInfo b ->
   RelInfo b ->
-  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
+  SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
 mkDefaultRelationshipParser backendInsertAction xNestedInserts sourceInfo relationshipInfo = runMaybeT do
   let otherTableName = riRTable relationshipInfo
       relName = riName relationshipInfo
@@ -260,10 +268,10 @@ mkDefaultRelationshipParser backendInsertAction xNestedInserts sourceInfo relati
 objectRelationshipInput ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   SourceInfo b ->
   TableInfo b ->
-  m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (IR.UnpreparedValue b))))
+  SchemaT r m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (IR.UnpreparedValue b))))
 objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
   tCase <- asks getter
   roleName <- retrieve scRole
@@ -295,10 +303,10 @@ objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ d
 arrayRelationshipInput ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   SourceInfo b ->
   TableInfo b ->
-  m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (IR.UnpreparedValue b))))
+  SchemaT r m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (IR.UnpreparedValue b))))
 arrayRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
   tCase <- asks getter
   roleName <- retrieve scRole
@@ -365,7 +373,7 @@ deleteFromTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
+  SchemaT r m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -382,8 +390,12 @@ deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT 
     selection <- mutationSelectionSet sourceInfo tableInfo
     let columns = tableColumns tableInfo
     pure $
-      P.subselection fieldName description whereArg selection
-        <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutMultirowFields
+      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+        P.subselection fieldName description whereArg selection
+          <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutMultirowFields
+  where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
 
 -- | Construct a root field, normally called delete_tablename_by_pk, that can be used to delete an
 -- individual rows from a DB table, specified by primary key. Select permissions are required, as
@@ -401,7 +413,7 @@ deleteFromTableByPk ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
+  SchemaT r m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 deleteFromTableByPk scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -415,8 +427,12 @@ deleteFromTableByPk scenario sourceInfo tableInfo fieldName description = runMay
   tCase <- asks getter
   let columns = tableColumns tableInfo
   pure $
-    P.subselection fieldName description pkArgs selection
-      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutSinglerowObject
+    P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+      P.subselection fieldName description pkArgs selection
+        <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutSinglerowObject
+  where
+    sourceName = _siName sourceInfo
+    tableName = tableInfoName tableInfo
 
 mkDeleteObject ::
   Backend b =>
@@ -447,7 +463,7 @@ mutationSelectionSet ::
   BackendTableSelectSchema b =>
   SourceInfo b ->
   TableInfo b ->
-  m (Parser 'Output n (IR.MutFldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
+  SchemaT r m (Parser 'Output n (IR.MutFldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
 mutationSelectionSet sourceInfo tableInfo =
   P.memoizeOn 'mutationSelectionSet (_siName sourceInfo, tableName) do
     roleName <- retrieve scRole
@@ -486,7 +502,7 @@ primaryKeysArguments ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   TableInfo b ->
-  m (Maybe (InputFieldsParser n (AnnBoolExp b (IR.UnpreparedValue b))))
+  SchemaT r m (Maybe (InputFieldsParser n (AnnBoolExp b (IR.UnpreparedValue b))))
 primaryKeysArguments tableInfo = runMaybeT $ do
   roleName <- retrieve scRole
   selectPerms <- hoistMaybe $ tableSelectPermissions roleName tableInfo

@@ -60,7 +60,7 @@ ifMatchedFieldParser ::
   ) =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
+  SchemaT r m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
 ifMatchedFieldParser sourceInfo tableInfo = do
   maybeObject <- ifMatchedObjectParser sourceInfo tableInfo
   return $ withJust maybeObject $ P.fieldOptional Name._if_matched (Just "upsert condition")
@@ -73,7 +73,7 @@ ifMatchedObjectParser ::
   ) =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
+  SchemaT r m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
 ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
   -- Short-circuit if we don't have sufficient permissions.
   roleName <- retrieve scRole
@@ -114,10 +114,10 @@ ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
 -- permissions for.
 tableInsertMatchColumnsEnum ::
   forall r m n.
-  MonadBuildSchemaBase r m n =>
+  MonadBuildSourceSchema r m n =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  m (Maybe (Parser 'Both n (Column 'MSSQL)))
+  SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
 tableInsertMatchColumnsEnum sourceInfo tableInfo = do
   tableGQLName <- getTableGQLName @'MSSQL tableInfo
   columns <- tableSelectColumns sourceInfo tableInfo

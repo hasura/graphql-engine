@@ -152,6 +152,7 @@ common lib-depends
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
+                     , dependent-sum-template
                      , either
                      , exceptions
                      , fast-logger
@@ -159,6 +160,7 @@ common lib-depends
                      , free
                      , hashable
                      , hasura-error-message
+                     , hasura-prelude
                      , hasura-schema-parsers
                      , http-client-tls
                      , http-conduit
@@ -356,6 +358,7 @@ library dc-api
                      , bytestring
                      , deepseq
                      , extra
+                     , graphql-parser
                      , hashable
                      , insert-ordered-containers
                      , lens
@@ -386,14 +389,14 @@ library dc-api
                      , Hasura.Backends.DataConnector.API.V0.Explain
                      , Hasura.Backends.DataConnector.API.V0.Relationships
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Type
-                     , Hasura.Backends.DataConnector.API.V0.Scalar.Value
                      , Hasura.Backends.DataConnector.API.V0.Schema
                      , Hasura.Backends.DataConnector.API.V0.Table
 
 library
   import: common-all, lib-depends
   hs-source-dirs:      src-lib
-  exposed-modules:     Control.Arrow.Extended
+  exposed-modules:     Autodocodec.Extended
+                     , Control.Arrow.Extended
                      , Control.Arrow.Interpret
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
@@ -420,7 +423,6 @@ library
                      , Data.Text.Casing
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
-                     , Data.Time.Clock.Units
                      , Data.Trie
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
@@ -634,7 +636,6 @@ library
                      , Hasura.Server.Types
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
-                     , Hasura.Prelude
 
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query
@@ -681,6 +682,7 @@ library
                      , Hasura.RQL.Types.Eventing
                      , Hasura.RQL.Types.Eventing.Backend
                      , Hasura.RQL.Types.HealthCheck
+                     , Hasura.RQL.Types.HealthCheckImplementation
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Instances
@@ -904,6 +906,7 @@ executable graphql-engine
                    , bytestring
                    , ekg-core
                    , ekg-prometheus
+                   , hasura-prelude
                    , kan-extensions
                    , pg-client
                    , text
@@ -936,6 +939,8 @@ test-suite graphql-engine-tests
   type: exitcode-stdio-1.0
   build-depends:
       aeson
+    , aeson-pretty
+    , aeson-qq
     , async
     , attoparsec
     , base
@@ -994,6 +999,7 @@ test-suite graphql-engine-tests
     , uuid
     , vector
     , yaml
+    , shakespeare
     -- mssql support
     , odbc
     , resource-pool
@@ -1009,6 +1015,9 @@ test-suite graphql-engine-tests
   other-modules:
     Control.Concurrent.ExtendedSpec
     Control.Monad.CircularSpec
+    Control.Monad.MemoizationSpecDefinition
+    Control.Monad.MemoizeSpec
+    Control.Monad.TimeLimit
     Data.HashMap.Strict.ExtendedSpec
     Data.NumericSpec
     Data.Parser.CacheControlSpec
@@ -1031,7 +1040,6 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.QuerySpec
     Hasura.Backends.DataConnector.API.V0.RelationshipsSpec
     Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec
-    Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
     Hasura.Backends.DataConnector.RQLGenerator
@@ -1055,10 +1063,14 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.Translate.DeleteSpec
     Hasura.Backends.Postgres.Translate.InsertSpec
     Hasura.Backends.Postgres.Translate.UpdateSpec
+    Hasura.EncJSONSpec
     Hasura.EventingSpec
+    Hasura.EventTriggerCleanupSuite
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
+    Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec
     Hasura.GraphQL.Schema.Build.UpdateSpec
+    Hasura.GraphQL.Schema.Introspection
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.Metadata.DTO.MetadataDTOSpec
@@ -1086,11 +1098,13 @@ test-suite graphql-engine-tests
     Hasura.SQL.WKTSpec
     Hasura.StreamingSubscriptionSuite
     Network.HTTP.Client.TransformableSpec
+    Test.Aeson.Expectation
     Test.Aeson.Utils
     Test.Backend.Postgres.Delete
     Test.Backend.Postgres.Insert
     Test.Backend.Postgres.Misc
     Test.Backend.Postgres.Update
+    Test.Hspec.Extended
     Test.Parser.Delete
     Test.Parser.Expectation
     Test.Parser.Field
@@ -1126,6 +1140,7 @@ test-suite tests-hspec
     , graphql-engine
     , graphql-parser
     , haskell-src-meta
+    , hasura-prelude
     , hedgehog
     , hspec
     , hspec >=2.8.3 && <3
@@ -1271,6 +1286,7 @@ test-suite tests-hspec
     Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
     Test.EventTrigger.PG.EventTriggersUniqueNameSpec
     Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
     Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
@@ -1282,6 +1298,7 @@ test-suite tests-hspec
     Test.Postgres.DefaultValuesSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
+    Test.Postgres.JsonbSpec
     Test.Queries.Directives.IncludeAndSkipSpec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
@@ -1291,6 +1308,7 @@ test-suite tests-hspec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Simple.NoQueriesAvailableSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec

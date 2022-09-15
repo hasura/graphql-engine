@@ -23,6 +23,7 @@ import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
@@ -89,6 +90,7 @@ class
     Ord (ScalarType b),
     Data (TableName b),
     FromJSON (BackendConfig b),
+    FromJSON (BackendInfo b),
     FromJSON (Column b),
     FromJSON (ConstraintName b),
     FromJSON (FunctionName b),
@@ -103,6 +105,7 @@ class
     HasCodec (BackendSourceKind b),
     HasCodec (SourceConnConfiguration b),
     ToJSON (BackendConfig b),
+    ToJSON (BackendInfo b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
     ToJSON (FunctionArgument b),
@@ -133,6 +136,7 @@ class
     ToErrorValue (ConstraintName b),
     Cacheable (SourceConfig b),
     Cacheable (BackendConfig b),
+    Cacheable (BackendInfo b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
     Typeable b,
@@ -145,6 +149,9 @@ class
     Eq (BackendConfig b),
     Show (BackendConfig b),
     Monoid (BackendConfig b),
+    Eq (BackendInfo b),
+    Show (BackendInfo b),
+    Monoid (BackendInfo b),
     Eq (CountType b),
     Show (CountType b),
     Eq (ScalarValue b),
@@ -171,7 +178,12 @@ class
   Backend (b :: BackendType)
   where
   -- types
+
+  -- | Backend configuration stored in metadata
   type BackendConfig b :: Type
+
+  -- | Runtime backend info derived from (possibly enriched) BackendConfig and stored in SchemaCache
+  type BackendInfo b :: Type
 
   -- | User facing connection configuration for a database.
   type SourceConnConfiguration b :: Type
@@ -237,8 +249,11 @@ class
   -- | A config type for health check tests
   type HealthCheckTest b :: Type
 
-  -- | Default health check test config
-  defaultHealthCheckTest :: HealthCheckTest b
+  -- | A backend type can opt into supporting health checks by providing an
+  -- implementation that includes a default health check test, and a health
+  -- check test codec.
+  healthCheckImplementation :: Maybe (HealthCheckImplementation (HealthCheckTest b))
+  healthCheckImplementation = Nothing
 
   -- Backend-specific IR types
 

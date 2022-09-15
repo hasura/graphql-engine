@@ -61,11 +61,10 @@ data SourceInfo b = SourceInfo
   { _siName :: SourceName,
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
-    _siConfiguration :: SourceConfig b,
+    _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
-    _siCustomization :: SourceCustomization
+    _siCustomization :: ResolvedSourceCustomization
   }
-  deriving (Generic)
 
 $(makeLenses ''SourceInfo)
 
@@ -79,7 +78,14 @@ instance
   ) =>
   ToJSON (SourceInfo b)
   where
-  toJSON = genericToJSON hasuraJSON
+  toJSON (SourceInfo {..}) =
+    object
+      [ "name" .= _siName,
+        "tables" .= _siTables,
+        "functions" .= _siFunctions,
+        "configuration" .= _siConfiguration,
+        "query_tags_config" .= _siQueryTagsConfig
+      ]
 
 type BackendSourceInfo = AB.AnyBackend SourceInfo
 

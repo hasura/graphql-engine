@@ -1,12 +1,17 @@
 import { Database, Feature } from '..';
 import { NetworkArgs, runSQL } from '../api';
 import { adaptIntrospectedTables } from '../common/utils';
-import { getTableColumns } from './introspection';
+import { getTableColumns, getFKRelationships } from './introspection';
 
 export type MssqlTable = { schema: string; name: string };
 
 export const mssql: Database = {
   introspection: {
+    getDriverInfo: async () => ({
+      name: 'mssql',
+      displayName: 'MS SQL Server',
+      release: 'GA',
+    }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
@@ -37,5 +42,6 @@ export const mssql: Database = {
       return ['schema', 'name'];
     },
     getTableColumns,
+    getFKRelationships,
   },
 };

@@ -403,6 +403,7 @@ export const Create = ({ onSuccess }: Props) => {
                 data-testid="submit"
                 mode="primary"
                 isLoading={mutation.isLoading}
+                data-trackid="remote-schema-tab-button-create-remote-schema"
               >
                 Add Remote Schema
               </Button>

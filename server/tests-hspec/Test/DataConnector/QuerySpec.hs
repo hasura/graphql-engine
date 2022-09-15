@@ -8,16 +8,16 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 --------------------------------------------------------------------------------
 -- Reference Agent Query Tests
@@ -25,16 +25,17 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+    ( ( \(DataConnector.TestSourceConfig backendType backendConfig _sourceConfig md) ->
+          (Fixture.fixture $ Fixture.Backend backendType)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ DataConnector.setupFixtureAction
-                    DataConnector.chinookStockMetadata
-                    DataConnector.defaultBackendConfig
+                    md
+                    backendConfig
                     testEnv
                 ]
             }
-        ]
+      )
+        <$> DataConnector.backendConfigs
     )
     tests
 
@@ -131,14 +132,15 @@ tests opts = describe "Queries" $ do
                 Name: "Balls to the Wall"
         |]
 
-    it "works with pagination" $ \(testEnvironment, _) ->
+    it "works with pagination" $ \(testEnvironment, _) -> do
+      -- NOTE: We order by in this pagination test to ensure that the rows are ordered correctly (which they are not in db.chinook.sqlite)
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
               query getAlbum {
-                albums (limit: 3, offset: 2) {
+                albums (limit: 3, offset: 2, order_by: {id: asc}) {
                   id
                 }
               }
@@ -181,8 +183,9 @@ tests opts = describe "Queries" $ do
                   - title: Let There Be Rock
           |]
 
-    describe "Foreign Key Constraint On" $ do
-      it "joins on PlaylistId" $ \(testEnvironment, _) ->
+    describe "Foreign Key Constraint On" do
+      it "joins on PlaylistId" $ \(testEnvironment, _) -> do
+        -- NOTE: Ordering is used for the query due to inconsistencies in data-set ordering.
         shouldReturnYaml
           opts
           ( GraphqlEngine.postGraphql
@@ -190,7 +193,7 @@ tests opts = describe "Queries" $ do
               [graphql|
                 query getPlaylist {
                     Playlist_by_pk(PlaylistId: 1) {
-                      Tracks (limit: 3) {
+                      Tracks (order_by: {TrackId: desc}, limit: 3) {
                         TrackId
                       }
                     }
@@ -201,13 +204,13 @@ tests opts = describe "Queries" $ do
             data:
               Playlist_by_pk:
                 Tracks:
-                - TrackId: 3402
-                - TrackId: 3389
-                - TrackId: 3390
+                  - TrackId: 3503
+                  - TrackId: 3502
+                  - TrackId: 3501
           |]
 
-  describe "Object Relationships" $ do
-    describe "Manual" $ do
+  describe "Object Relationships" do
+    describe "Manual" do
       it "joins on artist id" $ \(testEnvironment, _) ->
         shouldReturnYaml
           opts
@@ -489,7 +492,8 @@ tests opts = describe "Queries" $ do
                 title: 'Monteverdi: L''Orfeo'
         |]
 
-    it "can order by an aggregate" $ \(testEnvironment, _) ->
+    it "can order by an aggregate" $ \(testEnvironment, _) -> do
+      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
@@ -524,7 +528,8 @@ tests opts = describe "Queries" $ do
                     count: 11
         |]
 
-    it "can order by a related field" $ \(testEnvironment, _) ->
+    it "can order by a related field" $ \(testEnvironment, _) -> do
+      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
@@ -555,4 +560,27 @@ tests opts = describe "Queries" $ do
               - artist:
                   name: Aaron Goldberg
                 title: Worlds
+        |]
+  describe "Custom scalar types and operators" $ do
+    it "works with custom scalar types and comparison operators" $ \(testEnvironment, _) -> do
+      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) do
+        pendingWith "TODO: Test currently broken for SQLite DataConnector"
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query MyQuery {
+                employees(where: {birth_date: {in_year: 1965}}) {
+                  birth_date
+                  last_name
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            employees:
+            - birth_date: '1965-03-03T00:00:00-08:00'
+              last_name: Johnson
         |]

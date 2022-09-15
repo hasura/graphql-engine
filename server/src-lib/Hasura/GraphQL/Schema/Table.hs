@@ -85,10 +85,10 @@ getTableIdentifierName tableInfo =
 -- permissions for.
 tableSelectColumnsEnum ::
   forall b r m n.
-  (Backend b, MonadBuildSchemaBase r m n) =>
+  MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableInfo b ->
-  m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b)))
 tableSelectColumnsEnum sourceInfo tableInfo = do
   tCase <- asks getter
   tableGQLName <- getTableIdentifierName @b tableInfo
@@ -125,7 +125,7 @@ tableSelectColumnsPredEnum ::
   G.Name ->
   SourceInfo b ->
   TableInfo b ->
-  m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b)))
 tableSelectColumnsPredEnum columnPredicate predName sourceInfo tableInfo = do
   tableGQLName <- getTableGQLName @b tableInfo
   columns <- filter (columnPredicate . ciType) <$> tableSelectColumns sourceInfo tableInfo
@@ -155,7 +155,7 @@ tableUpdateColumnsEnum ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   TableInfo b ->
-  m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum tableInfo = do
   roleName <- retrieve scRole
   tCase <- asks getter
@@ -176,7 +176,7 @@ tableUpdateColumnsEnum tableInfo = do
 updateColumnsPlaceholderParser ::
   MonadBuildSchema backend r m n =>
   TableInfo backend ->
-  m (Parser 'Both n (Maybe (Column backend)))
+  SchemaT r m (Parser 'Both n (Maybe (Column backend)))
 updateColumnsPlaceholderParser tableInfo = do
   tCase <- asks getter
   maybeEnum <- tableUpdateColumnsEnum tableInfo

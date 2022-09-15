@@ -24,7 +24,7 @@ describe('useQueryCollections', () => {
     const queryCollections = result.current.data;
 
     expect(queryCollections).toHaveLength(2);
-    expect(queryCollections?.[0]?.name).toEqual('allowed_queries');
+    expect(queryCollections?.[0]?.name).toEqual('allowed-queries');
     expect(queryCollections?.[1]?.name).toEqual('other_queries');
   });
 });

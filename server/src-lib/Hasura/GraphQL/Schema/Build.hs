@@ -112,7 +112,9 @@ buildTableQueryAndSubscriptionFields ::
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
-  m
+  SchemaT
+    r
+    m
     ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
       [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
       Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
@@ -208,7 +210,7 @@ buildTableStreamingSubscriptionFields ::
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
-  m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+  SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo tableIdentifier = do
   tCase <- asks getter
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
@@ -226,14 +228,14 @@ buildTableInsertMutationFields ::
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b
   ) =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
   MkRootFieldName ->
   Scenario ->
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
-  m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+  SchemaT r m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableInsertMutationFields backendInsertAction mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
   let -- insert in table
@@ -283,7 +285,9 @@ buildTableUpdateMutationFields ::
   -- | an action that builds @BackendUpdate@ with the
   -- backend-specific data needed to perform an update mutation
   ( TableInfo b ->
-    m
+    SchemaT
+      r
+      m
       (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
   ) ->
   MkRootFieldName ->
@@ -296,7 +300,7 @@ buildTableUpdateMutationFields ::
   TableInfo b ->
   -- | field display name
   C.GQLNameIdentifier ->
-  m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+  SchemaT r m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableUpdateMutationFields mkBackendUpdate mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
   backendUpdate <- mkBackendUpdate tableInfo
@@ -330,7 +334,7 @@ buildTableDeleteMutationFields ::
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
-  m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+  SchemaT r m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableDeleteMutationFields mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
   let -- delete from table

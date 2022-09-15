@@ -52,6 +52,7 @@ import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
@@ -128,6 +129,9 @@ data RQLMetadataV1
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
+  | RMCleanupEventTriggerLog !TriggerLogCleanupConfig
+  | RMStartEventTriggerCleanup !TriggerLogCleanupToggleConfig
+  | RMPauseEventTriggerCleanup !TriggerLogCleanupToggleConfig
   | -- Remote schemas
     RMAddRemoteSchema !AddRemoteSchemaQuery
   | RMUpdateRemoteSchema !AddRemoteSchemaQuery
@@ -225,6 +229,9 @@ instance FromJSON RQLMetadataV1 where
       "create_remote_schema_remote_relationship" -> RMCreateRemoteSchemaRemoteRelationship <$> args
       "update_remote_schema_remote_relationship" -> RMUpdateRemoteSchemaRemoteRelationship <$> args
       "delete_remote_schema_remote_relationship" -> RMDeleteRemoteSchemaRemoteRelationship <$> args
+      "cleanup_event_trigger_logs" -> RMCleanupEventTriggerLog <$> args
+      "start_event_trigger_cleanups" -> RMStartEventTriggerCleanup <$> args
+      "pause_event_trigger_cleanups" -> RMPauseEventTriggerCleanup <$> args
       "create_cron_trigger" -> RMCreateCronTrigger <$> args
       "delete_cron_trigger" -> RMDeleteCronTrigger <$> args
       "create_scheduled_event" -> RMCreateScheduledEvent <$> args
@@ -350,7 +357,8 @@ runMetadataQuery ::
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -418,8 +426,94 @@ queryModifiesMetadata = \case
       RMCreateScheduledEvent _ -> False
       RMDeleteScheduledEvent _ -> False
       RMTestWebhookTransform _ -> False
+      RMGetSourceKindCapabilities _ -> False
+      RMListSourceKinds _ -> False
+      RMGetSourceTables _ -> False
+      RMGetTableInfo _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
-      _ -> True -- NOTE: Making the fall-through 'True' is defensive
+      -- We used to assume that the fallthrough was True,
+      -- but it is better to be explicit here to warn when new constructors are added.
+      RMAddSource _ -> True
+      RMDropSource _ -> True
+      RMRenameSource _ -> True
+      RMUpdateSource _ -> True
+      RMTrackTable _ -> True
+      RMUntrackTable _ -> True
+      RMSetTableCustomization _ -> True
+      RMSetApolloFederationConfig _ -> True
+      RMPgSetTableIsEnum _ -> True
+      RMCreateInsertPermission _ -> True
+      RMCreateSelectPermission _ -> True
+      RMCreateUpdatePermission _ -> True
+      RMCreateDeletePermission _ -> True
+      RMDropInsertPermission _ -> True
+      RMDropSelectPermission _ -> True
+      RMDropUpdatePermission _ -> True
+      RMDropDeletePermission _ -> True
+      RMSetPermissionComment _ -> True
+      RMCreateObjectRelationship _ -> True
+      RMCreateArrayRelationship _ -> True
+      RMDropRelationship _ -> True
+      RMSetRelationshipComment _ -> True
+      RMRenameRelationship _ -> True
+      RMCreateRemoteRelationship _ -> True
+      RMUpdateRemoteRelationship _ -> True
+      RMDeleteRemoteRelationship _ -> True
+      RMTrackFunction _ -> True
+      RMUntrackFunction _ -> True
+      RMSetFunctionCustomization _ -> True
+      RMCreateFunctionPermission _ -> True
+      RMDropFunctionPermission _ -> True
+      RMAddComputedField _ -> True
+      RMDropComputedField _ -> True
+      RMCreateEventTrigger _ -> True
+      RMDeleteEventTrigger _ -> True
+      RMCleanupEventTriggerLog _ -> True
+      RMStartEventTriggerCleanup _ -> True
+      RMPauseEventTriggerCleanup _ -> True
+      RMAddRemoteSchema _ -> True
+      RMUpdateRemoteSchema _ -> True
+      RMRemoveRemoteSchema _ -> True
+      RMReloadRemoteSchema _ -> True
+      RMAddRemoteSchemaPermissions _ -> True
+      RMDropRemoteSchemaPermissions _ -> True
+      RMCreateRemoteSchemaRemoteRelationship _ -> True
+      RMUpdateRemoteSchemaRemoteRelationship _ -> True
+      RMDeleteRemoteSchemaRemoteRelationship _ -> True
+      RMCreateCronTrigger _ -> True
+      RMDeleteCronTrigger _ -> True
+      RMCreateAction _ -> True
+      RMDropAction _ -> True
+      RMUpdateAction _ -> True
+      RMCreateActionPermission _ -> True
+      RMDropActionPermission _ -> True
+      RMCreateQueryCollection _ -> True
+      RMRenameQueryCollection _ -> True
+      RMDropQueryCollection _ -> True
+      RMAddQueryToCollection _ -> True
+      RMDropQueryFromCollection _ -> True
+      RMAddCollectionToAllowlist _ -> True
+      RMDropCollectionFromAllowlist _ -> True
+      RMUpdateScopeOfCollectionInAllowlist _ -> True
+      RMCreateRestEndpoint _ -> True
+      RMDropRestEndpoint _ -> True
+      RMDCAddAgent _ -> True
+      RMDCDeleteAgent _ -> True
+      RMSetCustomTypes _ -> True
+      RMSetApiLimits _ -> True
+      RMRemoveApiLimits -> True
+      RMSetMetricsConfig _ -> True
+      RMRemoveMetricsConfig -> True
+      RMAddInheritedRole _ -> True
+      RMDropInheritedRole _ -> True
+      RMReplaceMetadata _ -> True
+      RMClearMetadata _ -> True
+      RMReloadMetadata _ -> True
+      RMDropInconsistentMetadata _ -> True
+      RMSetGraphqlSchemaIntrospectionOptions _ -> True
+      RMAddHostToTLSAllowlist _ -> True
+      RMDropHostFromTLSAllowlist _ -> True
+      RMSetQueryTagsConfig _ -> True
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -436,7 +530,8 @@ runMetadataQueryM ::
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -465,7 +560,8 @@ runMetadataQueryV1M ::
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -519,6 +615,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDeleteEventTrigger q -> dispatchMetadataAndEventTrigger runDeleteEventTriggerQuery q
   RMRedeliverEvent q -> dispatchEventTrigger runRedeliverEvent q
   RMInvokeEventTrigger q -> dispatchEventTrigger runInvokeEventTrigger q
+  RMCleanupEventTriggerLog q -> runCleanupEventTriggerLog q
+  RMStartEventTriggerCleanup q -> runEventTriggerStartCleanup q
+  RMPauseEventTriggerCleanup q -> runEventTriggerPauseCleanup q
   RMAddRemoteSchema q -> runAddRemoteSchema env q
   RMUpdateRemoteSchema q -> runUpdateRemoteSchema env q
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q
@@ -610,10 +709,12 @@ runMetadataQueryV1M env currentResourceVersion = \case
 runMetadataQueryV2M ::
   ( MonadIO m,
     CacheRWM m,
+    MonadBaseControl IO m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   MetadataResourceVersion ->
   RQLMetadataV2 ->

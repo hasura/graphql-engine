@@ -7,6 +7,7 @@ import { getConfirmation } from '@/components/Common/utils/jsUtils';
 import { Driver } from '@/dataSources';
 import { FaPlusCircle } from 'react-icons/fa';
 import { NormalizedTable } from '@/dataSources/types';
+import { Table } from '@/features/MetadataAPI';
 import { DataSourceDriver, getDataSourcePrefix } from '@/metadata/queryUtils';
 import TableHeader from '../../components/Services/Data/TableCommon/TableHeader';
 import { FeatureFlagFloatingButton } from '../FeatureFlags/components/FeatureFlagFloatingButton';
@@ -14,7 +15,6 @@ import { DatabaseRelationshipsTable } from '../RelationshipsTable/DatabaseRelati
 import { allowedMetadataTypes, useMetadataMigration } from '../MetadataAPI';
 import { Form } from './components/Form/Form';
 import { Relationship } from '../RelationshipsTable/DatabaseRelationshipsTable/types';
-import { Table } from '../DataSource';
 
 const useFormState = (currentSource: string) => {
   const [isOpen, setIsOpen] = React.useState(false);

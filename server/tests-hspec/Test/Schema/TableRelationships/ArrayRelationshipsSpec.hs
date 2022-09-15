@@ -6,6 +6,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -36,6 +37,16 @@ spec = do
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Citus.setupTablesAction schema testEnv]
             },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Cockroach.setupTablesAction schema testEnv],
+              Fixture.customOptions =
+                Just $
+                  Fixture.defaultOptions
+                    { Fixture.stringifyNumbers = True,
+                      Fixture.skipTests = Just "Cockroach disabled pending prepared args fix https://github.com/cockroachdb/cockroach/issues/86375"
+                    }
+            },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Sqlserver.setupTablesAction schema testEnv]
@@ -45,8 +56,8 @@ spec = do
                 [BigQuery.setupTablesAction schema testEnv],
               Fixture.customOptions =
                 Just $
-                  Fixture.Options
-                    { stringifyNumbers = True
+                  Fixture.defaultOptions
+                    { Fixture.stringifyNumbers = True
                     }
             }
         ]

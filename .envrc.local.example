@@ -7,7 +7,7 @@
 # use flake
 
 # Enable providing NodeJS versions with `nvm`
-# use_nvm
+# use nvm
 
 # Enable providing GHC versions with `ghcup`
-# use_ghcup
+# use ghcup

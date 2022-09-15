@@ -1,5 +1,7 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
+import { DataNode } from 'antd/lib/tree';
+import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { postgres } from './postgres';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
@@ -10,14 +12,13 @@ import * as utils from './common/utils';
 import type {
   Property,
   IntrospectedTable,
-  Table,
-  SupportedDrivers,
   TableColumn,
   GetTrackableTablesProps,
   GetTableColumnsProps,
   TableFkRelationships,
   GetFKRelationshipProps,
   DriverInfoResponse,
+  GetTablesListAsTreeProps,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
@@ -42,6 +43,14 @@ export const nativeDrivers = [
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
 
+export const getDriver = (dataSource: Source) => {
+  if (nativeDrivers.includes(dataSource.kind)) {
+    return dataSource.kind;
+  }
+
+  return 'gdc';
+};
+
 export type Database = {
   introspection?: {
     getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
@@ -62,6 +71,9 @@ export type Database = {
     getFKRelationships: (
       props: GetFKRelationshipProps
     ) => Promise<TableFkRelationships[] | Feature.NotImplemented>;
+    getTablesListAsTree: (
+      props: GetTablesListAsTreeProps
+    ) => Promise<DataNode | Feature.NotImplemented>;
   };
   query?: {
     getTableData: () => void;
@@ -94,7 +106,9 @@ const getDatabaseMethods = async ({
     );
   }
 
-  return drivers[dataSource.kind];
+  if (nativeDrivers.includes(dataSource.kind)) return drivers[dataSource.kind];
+
+  return drivers.gdc;
 };
 
 export const DataSource = (httpClient: AxiosInstance) => ({
@@ -175,12 +189,12 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       );
     }
 
+    const kind = getDriver(dataSource);
     /* 
       NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
-    const getTrackableTables =
-      drivers[dataSource.kind].introspection?.getTrackableTables;
+    const getTrackableTables = drivers[kind].introspection?.getTrackableTables;
     if (getTrackableTables)
       return getTrackableTables({
         dataSourceName: dataSource.name,
@@ -220,7 +234,9 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   getTableColumns: async ({
     dataSourceName,
     table,
+    configuration,
   }: {
+    configuration?: any;
     dataSourceName: string;
     table: Table;
   }) => {
@@ -232,6 +248,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     const result = await introspection.getTableColumns({
       dataSourceName,
+      configuration,
       table,
       httpClient,
     });
@@ -261,6 +278,28 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (result === Feature.NotImplemented) return [];
 
     return result;
+  },
+  getTablesWithHierarchy: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) return null;
+
+    const introspection = database.introspection;
+
+    if (!introspection) return null;
+
+    const treeData = await introspection.getTablesListAsTree({
+      dataSourceName,
+      httpClient,
+    });
+
+    if (treeData === Feature.NotImplemented) return null;
+
+    return treeData;
   },
 });
 

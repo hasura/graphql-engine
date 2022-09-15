@@ -24,7 +24,7 @@ spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnector)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
             { Fixture.mkLocalTestEnvironment =
                 DataConnector.mkLocalTestEnvironmentMock,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
@@ -36,8 +36,8 @@ spec =
 
 sourceMetadata :: Aeson.Value
 sourceMetadata =
-  let source = defaultSource DataConnector
-      backendType = defaultBackendTypeString DataConnector
+  let source = defaultSource DataConnectorMock
+      backendType = defaultBackendTypeString DataConnectorMock
    in [yaml|
         name : *source
         kind: *backendType
@@ -196,23 +196,23 @@ tests opts = describe "Aggregate Query Tests" $ do
             DataConnector.TestCaseRequired
               { _givenRequired =
                   let aggregates =
-                        [ ("counts_count", API.Number 2),
-                          ("counts_uniqueBillingCountries", API.Number 2),
-                          ("ids_minimum_Id", API.Number 1),
-                          ("ids_max_InvoiceId", API.Number 2)
+                        [ ("counts_count", Aeson.Number 2),
+                          ("counts_uniqueBillingCountries", Aeson.Number 2),
+                          ("ids_minimum_Id", Aeson.Number 1),
+                          ("ids_max_InvoiceId", Aeson.Number 2)
                         ]
                       rows =
                         [ [ ( "nodes_Lines",
                               API.mkRelationshipFieldValue $
                                 aggregatesResponse
-                                  [ ("aggregate_count", API.Number 2)
+                                  [ ("aggregate_count", Aeson.Number 2)
                                   ]
                             )
                           ],
                           [ ( "nodes_Lines",
                               API.mkRelationshipFieldValue $
                                 aggregatesResponse
-                                  [ ("aggregate_count", API.Number 4)
+                                  [ ("aggregate_count", Aeson.Number 4)
                                   ]
                             )
                           ]
@@ -328,8 +328,8 @@ tests opts = describe "Aggregate Query Tests" $ do
 rowsResponse :: [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
 rowsResponse rows = API.QueryResponse (Just $ KM.fromList <$> rows) Nothing
 
-aggregatesResponse :: [(Aeson.Key, API.Value)] -> API.QueryResponse
+aggregatesResponse :: [(Aeson.Key, Aeson.Value)] -> API.QueryResponse
 aggregatesResponse aggregates = API.QueryResponse Nothing (Just $ KM.fromList aggregates)
 
-aggregatesAndRowsResponse :: [(Aeson.Key, API.Value)] -> [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
+aggregatesAndRowsResponse :: [(Aeson.Key, Aeson.Value)] -> [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
 aggregatesAndRowsResponse aggregates rows = API.QueryResponse (Just $ KM.fromList <$> rows) (Just $ KM.fromList aggregates)

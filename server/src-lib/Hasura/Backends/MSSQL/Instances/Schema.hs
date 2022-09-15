@@ -27,19 +27,16 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
     Kind (..),
-    MonadMemoize,
     MonadParse,
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
-import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -90,9 +87,11 @@ instance BackendSchema 'MSSQL where
 
   -- individual components
   columnParser = msColumnParser
+  enumParser = msEnumParser
+  possiblyNullable = msPossiblyNullable
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = msOrderByOperators
-  comparisonExps = msComparisonExps
+  comparisonExps = const msComparisonExps
   countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField _ _ _ _ = pure Nothing
@@ -112,7 +111,7 @@ backendInsertParser ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
+  SchemaT r m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
 backendInsertParser sourceName tableInfo = do
   ifMatched <- ifMatchedFieldParser sourceName tableInfo
   let _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
@@ -128,7 +127,7 @@ msBuildTableUpdateMutationFields ::
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   C.GQLNameIdentifier ->
-  m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
+  SchemaT r m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msBuildTableUpdateMutationFields mkRootFieldName scenario sourceName tableName tableInfo gqlName = do
   roleName <- retrieve scRole
   fieldParsers <- runMaybeT do
@@ -161,7 +160,7 @@ msTableArgs ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
-  m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
+  SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
 msTableArgs sourceName tableInfo = do
   whereParser <- tableWhereArg sourceName tableInfo
   orderByParser <- tableOrderByArg sourceName tableInfo
@@ -185,17 +184,17 @@ msTableArgs sourceName tableInfo = do
 -- * Individual components
 
 msColumnParser ::
-  (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  MonadBuildSchema 'MSSQL r m n =>
   ColumnType 'MSSQL ->
   G.Nullability ->
-  m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
-msColumnParser columnType (G.Nullability isNullable) =
+  SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
+msColumnParser columnType nullability =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
     -- example, exposing all the float types as a GraphQL Float type is
     -- incorrect, similarly exposing all the integer types as a GraphQL Int
     ColumnScalar scalarType ->
-      possiblyNullable scalarType <$> case scalarType of
+      msPossiblyNullable scalarType nullability <$> case scalarType of
         -- text
         MSSQL.CharType -> pure $ mkCharValue <$> P.string
         MSSQL.VarcharType -> pure $ mkCharValue <$> P.string
@@ -225,23 +224,11 @@ msColumnParser columnType (G.Nullability isNullable) =
                   P.valueToJSON (P.toGraphQLType schemaType)
                     >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
               }
-    ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
+    ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
       case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> do
-          enumName <- mkEnumTypeName enumRef
-          pure $ possiblyNullable MSSQL.VarcharType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
+        Just enumValuesList -> msEnumParser tableName enumValuesList customTableName nullability
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    possiblyNullable _scalarType
-      | isNullable = fmap (fromMaybe ODBC.NullValue) . P.nullable
-      | otherwise = id
-
-    mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
-    mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
-        ODBC.TextValue $ G.unName value
-      )
-
     -- CHAR/VARCHAR in MSSQL _can_ represent the full UCS (Universal Coded Character Set),
     -- but might not always if the collation used is not UTF-8 enabled
     -- https://docs.microsoft.com/en-us/sql/t-sql/data-types/char-and-varchar-transact-sql?view=sql-server-ver16
@@ -264,6 +251,33 @@ msColumnParser columnType (G.Nullability isNullable) =
       if T.all Char.isAscii txt
         then ODBC.ByteStringValue (TE.encodeUtf8 txt) -- an ODBC.ByteStringValue becomes a VARCHAR
         else ODBC.TextValue txt -- an ODBC.TextValue becomes an NVARCHAR
+
+msEnumParser ::
+  MonadBuildSchema 'MSSQL r m n =>
+  TableName 'MSSQL ->
+  NonEmpty (EnumValue, EnumValueInfo) ->
+  Maybe G.Name ->
+  G.Nullability ->
+  SchemaT r m (Parser 'Both n (ScalarValue 'MSSQL))
+msEnumParser tableName enumValues customTableName nullability = do
+  enumName <- mkEnumTypeName @'MSSQL tableName customTableName
+  pure $ msPossiblyNullable MSSQL.VarcharType nullability $ P.enum enumName Nothing (mkEnumValue <$> enumValues)
+  where
+    mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
+    mkEnumValue (EnumValue value, EnumValueInfo description) =
+      ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
+        ODBC.TextValue $ G.unName value
+      )
+
+msPossiblyNullable ::
+  (MonadParse m) =>
+  ScalarType 'MSSQL ->
+  G.Nullability ->
+  Parser 'Both m (ScalarValue 'MSSQL) ->
+  Parser 'Both m (ScalarValue 'MSSQL)
+msPossiblyNullable _scalarType (G.Nullability isNullable)
+  | isNullable = fmap (fromMaybe ODBC.NullValue) . P.nullable
+  | otherwise = id
 
 msOrderByOperators ::
   NamingCase ->
@@ -301,17 +315,9 @@ msOrderByOperators _tCase =
 
 msComparisonExps ::
   forall m n r.
-  ( BackendSchema 'MSSQL,
-    MonadMemoize m,
-    MonadParse n,
-    MonadError QErr m,
-    MonadReader r m,
-    Has SchemaOptions r,
-    Has MkTypename r,
-    Has NamingCase r
-  ) =>
+  MonadBuildSchema 'MSSQL r m n =>
   ColumnType 'MSSQL ->
-  m (Parser 'Input n [ComparisonExp 'MSSQL])
+  SchemaT r m (Parser 'Input n [ComparisonExp 'MSSQL])
 msComparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   collapseIfNull <- retrieve Options.soDangerousBooleanCollapse

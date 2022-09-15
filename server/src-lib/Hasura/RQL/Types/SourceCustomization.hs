@@ -6,10 +6,11 @@ module Hasura.RQL.Types.SourceCustomization
     RootFieldsCustomization (..),
     mkCustomizedTypename,
     emptySourceCustomization,
+    emptySourceTypeCustomization,
     getSourceTypeCustomization,
-    getRootFieldsCustomization,
-    getRootFieldsCustomizer,
     SourceCustomization (..),
+    ResolvedSourceCustomization (..),
+    mkResolvedSourceCustomization,
     withSourceCustomization,
     MkRootFieldName (..),
     CustomizeRemoteFieldName (..),
@@ -22,6 +23,7 @@ module Hasura.RQL.Types.SourceCustomization
     applyFieldNameCaseIdentifier,
     applyTypeNameCaseIdentifier,
     getNamingConvention,
+    getNamingCase,
     getTextFieldName,
     getTextTypeName,
 
@@ -193,6 +195,7 @@ concatPrefixSuffix (GraphqlCase) isTypeName neList =
   where
     prefixSuffixGQLIdent = C.fromNonEmptyList neList
 
+-- | Source customization information as it appears in the metadata.
 data SourceCustomization = SourceCustomization
   { _scRootFields :: Maybe RootFieldsCustomization,
     _scTypeNames :: Maybe SourceTypeCustomization,
@@ -215,45 +218,44 @@ instance HasCodec SourceCustomization where
 emptySourceCustomization :: SourceCustomization
 emptySourceCustomization = SourceCustomization Nothing Nothing Nothing
 
-getRootFieldsCustomization :: SourceCustomization -> RootFieldsCustomization
-getRootFieldsCustomization = fromMaybe emptyRootFieldsCustomization . _scRootFields
-
 getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
 
 getNamingConvention :: SourceCustomization -> Maybe NamingCase -> NamingCase
 getNamingConvention sc defaultNC = fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
 
+-- | Source customization as it appears in the SchemaCache.
+data ResolvedSourceCustomization = ResolvedSourceCustomization
+  { _rscRootFields :: MkRootFieldName,
+    _rscTypeNames :: MkTypename,
+    _rscNamingConvention :: NamingCase,
+    _rscRootNamespace :: Maybe G.Name
+  }
+
+mkResolvedSourceCustomization :: SourceCustomization -> NamingCase -> ResolvedSourceCustomization
+mkResolvedSourceCustomization sourceCustomization namingConv =
+  ResolvedSourceCustomization
+    { _rscRootFields = mkCustomizedFieldName (_scRootFields sourceCustomization) namingConv,
+      _rscTypeNames = mkCustomizedTypename (_scTypeNames sourceCustomization) namingConv,
+      _rscNamingConvention = namingConv,
+      _rscRootNamespace = _rootfcNamespace =<< _scRootFields sourceCustomization
+    }
+
 -- | Function to apply root field name customizations.
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
   deriving (Semigroup, Monoid) via (Endo G.Name)
-
-getRootFieldsCustomizer ::
-  forall m.
-  (MonadError QErr m) =>
-  SourceCustomization ->
-  SupportedNamingCase ->
-  Maybe NamingCase ->
-  m MkRootFieldName
-getRootFieldsCustomizer sc@SourceCustomization {..} namingConventionSupport defaultNC = do
-  tCase <- getNamingCase sc namingConventionSupport defaultNC
-  pure $ mkCustomizedFieldName _scRootFields tCase
 
 -- | Inject NamingCase, typename and root field name customizations from @SourceCustomization@ into
 -- the environment.
 withSourceCustomization ::
   forall m r a.
-  (MonadReader r m, Has MkTypename r, Has NamingCase r, MonadError QErr m) =>
-  SourceCustomization ->
-  SupportedNamingCase ->
-  Maybe NamingCase ->
+  (MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  ResolvedSourceCustomization ->
   m a ->
   m a
-withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defaultNC m = do
-  tCase <- getNamingCase sc namingConventionSupport defaultNC
-  withTypenameCustomization (mkCustomizedTypename _scTypeNames tCase)
-    . withNamingCaseCustomization tCase
-    $ m
+withSourceCustomization ResolvedSourceCustomization {..} = do
+  withTypenameCustomization _rscTypeNames
+    . withNamingCaseCustomization _rscNamingConvention
 
 getNamingCase ::
   forall m.

@@ -1,5 +1,9 @@
 import { Database, Feature } from '..';
-import { getTrackableTables, getTableColumns } from './introspection';
+import {
+  getTrackableTables,
+  getTableColumns,
+  getTablesListAsTree,
+} from './introspection';
 
 export type BigQueryTable = { name: string; dataset: string };
 
@@ -8,7 +12,7 @@ export const bigquery: Database = {
     getDriverInfo: async () => ({
       name: 'bigquery',
       displayName: 'Big Query',
-      release: 'Beta',
+      release: 'GA',
     }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
@@ -19,5 +23,6 @@ export const bigquery: Database = {
     },
     getTableColumns,
     getFKRelationships: async () => Feature.NotImplemented,
+    getTablesListAsTree,
   },
 };

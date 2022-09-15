@@ -62,7 +62,7 @@ selectFunction ::
   FunctionInfo ('Postgres pgKind) ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
+  SchemaT r m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
 selectFunction mkRootFieldName sourceInfo fi@FunctionInfo {..} description = runMaybeT do
   tCase <- asks getter
   roleName <- retrieve scRole
@@ -104,7 +104,7 @@ selectFunctionAggregate ::
   FunctionInfo ('Postgres pgKind) ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
+  SchemaT r m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
 selectFunctionAggregate mkRootFieldName sourceInfo fi@FunctionInfo {..} description = runMaybeT do
   tCase <- asks getter
   roleName <- retrieve scRole
@@ -159,7 +159,7 @@ selectFunctionConnection ::
   Maybe G.Description ->
   -- | primary key columns of the target table
   PrimaryKeyColumns ('Postgres pgKind) ->
-  m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
+  SchemaT r m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
 selectFunctionConnection mkRootFieldName sourceInfo fi@FunctionInfo {..} description pkeyColumns = runMaybeT do
   tCase <- asks getter
   roleName <- retrieve scRole
@@ -203,7 +203,7 @@ computedFieldPG ::
   ComputedFieldInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
-  m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
+  SchemaT r m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
 computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
   tCase <- asks getter
   roleName <- retrieve scRole
@@ -261,7 +261,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
 
     computedFieldFunctionArgs ::
       ComputedFieldFunction ('Postgres pgKind) ->
-      m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
+      SchemaT r m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
     computedFieldFunctionArgs ComputedFieldFunction {..} =
       functionArgs sourceInfo (FTAComputedField _cfiName (_siName sourceInfo) parentTable) (IAUserProvided <$> _cffInputArgs)
         <&> fmap addTableAndSessionArgument
@@ -284,7 +284,7 @@ customSQLFunctionArgs ::
   FunctionInfo ('Postgres pgKind) ->
   G.Name ->
   G.Name ->
-  m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
+  SchemaT r m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 customSQLFunctionArgs sourceInfo FunctionInfo {..} functionName functionArgsName =
   functionArgs
     sourceInfo
@@ -313,7 +313,7 @@ functionArgs ::
   SourceInfo ('Postgres pgKind) ->
   FunctionTrackedAs ('Postgres pgKind) ->
   Seq.Seq (FunctionInputArgument ('Postgres pgKind)) ->
-  m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
+  SchemaT r m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
   tCase <- asks getter
   -- First, we iterate through the original sql arguments in order, to find the
@@ -390,8 +390,8 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
       ( Int,
         ( [Text], -- graphql names, in order
           [(Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))], -- session argument
-          [m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))], -- optional argument
-          [m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))] -- mandatory argument
+          [SchemaT r m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))], -- optional argument
+          [SchemaT r m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))] -- mandatory argument
         )
       )
     splitArguments positionalIndex (IASessionVariables name) =
@@ -405,7 +405,7 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
             then (newIndex, ([argName], [], [parseArgument arg argName], []))
             else (newIndex, ([argName], [], [], [parseArgument arg argName]))
 
-    parseArgument :: FunctionArgument ('Postgres pgKind) -> Text -> m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))
+    parseArgument :: FunctionArgument ('Postgres pgKind) -> Text -> SchemaT r m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))
     parseArgument arg name = do
       typedParser <- columnParser (ColumnScalar $ PG.mkFunctionArgScalarType $ PG.faType arg) (G.Nullability True)
       fieldName <- textToName name
@@ -448,7 +448,7 @@ buildFunctionQueryFieldsPG ::
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
-  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+  SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 buildFunctionQueryFieldsPG mkRootFieldName sourceInfo functionName functionInfo tableName = do
   let -- select function
       funcDesc =
@@ -479,7 +479,7 @@ buildFunctionMutationFieldsPG ::
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
-  m [FieldParser n (MutationDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+  SchemaT r m [FieldParser n (MutationDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 buildFunctionMutationFieldsPG mkRootFieldName sourceInfo functionName functionInfo tableName = do
   let funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
       jsonAggSelect = _fiJsonAggSelect functionInfo

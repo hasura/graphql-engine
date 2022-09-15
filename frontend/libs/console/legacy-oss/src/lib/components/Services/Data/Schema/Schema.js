@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router';
 
+import { Button } from '@/new-components/Button';
 import _push from '../push';
-import Button from '../../../Common/Button/Button';
 import {
   setTableName,
   addExistingTableSql,
@@ -65,11 +65,10 @@ const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   return (
     migrationMode && (
       <Button
-        color="white"
-        size="xs"
-        onClick={handleDelete}
+        size="sm"
         title="Delete current schema"
-        style={{ marginRight: '20px', maxHeight: '22px' }}
+        onClick={handleDelete}
+        style={{ marginRight: '20px' }}
       >
         Delete Schema
       </Button>
@@ -91,16 +90,14 @@ const OpenCreateSection = React.forwardRef(
         />
       </div>
       <Button
-        color="white"
-        size="xs"
+        size="sm"
         onClick={handleCreate}
         className={styles.add_mar_left_mid}
       >
         Create New Schema
       </Button>
       <Button
-        color="white"
-        size="xs"
+        size="sm"
         onClick={handleCancelCreate}
         className={styles.add_mar_left_mid}
       >
@@ -111,7 +108,7 @@ const OpenCreateSection = React.forwardRef(
 );
 
 const ClosedCreateSection = ({ onClick }) => (
-  <Button color="white" size="xs" onClick={onClick} title="Create new schema">
+  <Button size="sm" onClick={onClick} title="Create new schema">
     Create New Schema
   </Button>
 );
@@ -156,9 +153,7 @@ const SchemaPermissionsButton = ({ schema, source }) => (
     to={getSchemaPermissionsRoute(schema, source)}
     style={{ marginLeft: '20px' }}
   >
-    <Button color="white" size="xs">
-      Show Permissions Summary
-    </Button>
+    <Button size="sm">Show Permissions Summary</Button>
   </Link>
 );
 
@@ -279,11 +274,11 @@ class Schema extends Component {
 
         createBtn = (
           <Button
-            data-test="data-create-table"
-            color="yellow"
-            size="sm"
+            mode="primary"
             className={styles.add_mar_left}
+            data-test="data-create-table"
             onClick={handleClick}
+            data-trackid="data-tab-create-table-button"
           >
             Create Table
           </Button>
@@ -354,10 +349,10 @@ class Schema extends Component {
         if (allUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
+              size="sm"
               className={`${styles.display_inline}`}
-              color="white"
-              size="xs"
               onClick={trackAllTables}
+              data-trackid="data-tab-track-all-button"
             >
               Track All
             </Button>
@@ -401,23 +396,22 @@ class Schema extends Component {
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
                   <Button
-                    data-test={`add-track-table-${tableName}`}
+                    size="sm"
                     className={`${styles.display_inline}`}
-                    color="white"
-                    size="xs"
+                    data-test={`add-track-table-${tableName}`}
                     onClick={handleTrackTable}
+                    data-trackid="data-tab-track-table-button"
                   >
                     Track
                   </Button>
 
                   <Button
                     title="customize table before tracking"
-                    size="xs"
+                    size="sm"
+                    icon={<FaCog />}
                     className="ml-2"
                     onClick={onCustomizeTableButtonClick}
-                  >
-                    <FaCog />
-                  </Button>
+                  />
                 </div>
               );
             };
@@ -484,11 +478,10 @@ class Schema extends Component {
         if (untrackedRelations.length > 0) {
           trackAllBtn = (
             <Button
-              onClick={trackAllRelations}
+              size="sm"
               className={`${styles.display_inline}`}
-              color="white"
-              size="xs"
               data-test="track-all-relationships"
+              onClick={trackAllRelations}
             >
               Track All
             </Button>
@@ -525,9 +518,8 @@ class Schema extends Component {
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
                   <Button
+                    size="sm"
                     className={styles.display_inline}
-                    color="white"
-                    size="xs"
                     onClick={handleTrackRel}
                   >
                     Track

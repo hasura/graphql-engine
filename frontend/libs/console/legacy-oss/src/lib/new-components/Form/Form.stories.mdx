@@ -89,7 +89,7 @@ const BasicFormTemplate = () => (
           Submit
         </Button>
         {/* Debug form state */}
-        {/*<DevTool control={control} />*/}
+        <DevTool control={control} />
       </div>
     )}
   </Form>
@@ -116,7 +116,7 @@ export const BasicFormTemplate = () => (
           Submit
         </Button>
         {/* Debug form state */}
-        {/*<DevTool control={control} />*/}
+        <DevTool control={control} />
       </div>
     )}
   </Form>
@@ -133,7 +133,7 @@ For this demo, we reuse the `basicFormValidationSchema` from [💠 Basic usage](
 In this example, the form is automatically filled with the `Hello world !` value for the `inputFieldName` input:
 
 ```tsx
-const TemplateFormInputDefaultValue = (args) => (
+const TemplateFormInputDefaultValue = args => (
   <Form
     schema={basicFormValidationSchema}
     options={{
@@ -154,14 +154,14 @@ const TemplateFormInputDefaultValue = (args) => (
         <Button type={'submit'} mode={'primary'}>
           Submit
         </Button>
-        {/*<DevTool control={control} />*/}
+        <DevTool control={control} />
       </div>
     )}
   </Form>
 );
 ```
 
-export const TemplateFormInputDefaultValue = (args) => (
+export const TemplateFormInputDefaultValue = args => (
   <Form
     schema={basicFormValidationSchema}
     options={{
@@ -182,7 +182,7 @@ export const TemplateFormInputDefaultValue = (args) => (
         <Button type={'submit'} mode={'primary'}>
           Submit
         </Button>
-        {/*<DevTool control={control} />*/}
+        <DevTool control={control} />
       </div>
     )}
   </Form>
@@ -202,7 +202,7 @@ In this example, the form is automatically validated when `args.triggerValidatio
 `useImperativeHandle` hook:
 
 ```tsx
-const TemplateManuallyTriggerFormValidation = (args) => {
+const TemplateManuallyTriggerFormValidation = args => {
   const formRef = useRef();
   useEffect(() => {
     if (args && args.triggerValidation) {
@@ -231,7 +231,7 @@ const TemplateManuallyTriggerFormValidation = (args) => {
             Submit
           </Button>
           {/* Debug form state */}
-          {/*<DevTool control={control} />*/}
+          <DevTool control={control} />
         </div>
       )}
     </Form>
@@ -239,7 +239,7 @@ const TemplateManuallyTriggerFormValidation = (args) => {
 };
 ```
 
-export const TemplateManuallyTriggerFormValidation = (args) => {
+export const TemplateManuallyTriggerFormValidation = args => {
   const formRef = useRef();
   useEffect(() => {
     if (args && args.triggerValidation) {
@@ -268,7 +268,7 @@ export const TemplateManuallyTriggerFormValidation = (args) => {
             Submit
           </Button>
           {/* Debug form state */}
-          {/*<DevTool control={control} />*/}
+          <DevTool control={control} />
         </div>
       )}
     </Form>
@@ -290,7 +290,7 @@ In this example, the form `codeEditorFieldName` field is automatically focused w
 `useImperativeHandle` hook:
 
 ```tsx
-const TemplateManuallyFocusField = (args) => {
+const TemplateManuallyFocusField = args => {
   const formRef = useRef<UseFormReturn>(null);
   useEffect(() => {
     if (args && args.focus) {
@@ -317,7 +317,7 @@ const TemplateManuallyFocusField = (args) => {
             Submit
           </Button>
           {/* Debug form state */}
-          {/*<DevTool control={control} />*/}
+          <DevTool control={control} />
         </div>
       )}
     </Form>
@@ -325,7 +325,7 @@ const TemplateManuallyFocusField = (args) => {
 };
 ```
 
-export const TemplateManuallyFocusField = (args) => {
+export const TemplateManuallyFocusField = args => {
   const formRef = useRef();
   useEffect(() => {
     if (args && args.focus) {
@@ -352,7 +352,7 @@ export const TemplateManuallyFocusField = (args) => {
             Submit
           </Button>
           {/* Debug form state */}
-          {/*<DevTool control={control} />*/}
+          <DevTool control={control} />
         </div>
       )}
     </Form>
@@ -378,14 +378,14 @@ const allInputsValidationSchema = z.object({
     // When nothing is selected, the value is a false boolean
     .union([z.string().array(), z.boolean()])
     .refine(
-      (value) => Array.isArray(value) && value.length > 0,
+      value => Array.isArray(value) && value.length > 0,
       'Choose at least one option'
     ),
   radioName: z
     // When nothing is selected, the value is null
     .union([z.string(), z.null()])
     .refine(
-      (value) => typeof value === 'string' && value.length > 0,
+      value => typeof value === 'string' && value.length > 0,
       'Choose one option'
     ),
   codeEditorFieldName: z.string().min(1, { message: 'Mandatory field' }),
@@ -400,20 +400,20 @@ export const allInputsValidationSchema = z.object({
     // When nothing is selected, the value is a false boolean
     .union([z.string().array(), z.boolean()])
     .refine(
-      (value) => Array.isArray(value) && value.length > 0,
+      value => Array.isArray(value) && value.length > 0,
       'Choose at least one option'
     ),
   radioName: z
     // When nothing is selected, the value is null
     .union([z.string(), z.null()])
     .refine(
-      (value) => typeof value === 'string' && value.length > 0,
+      value => typeof value === 'string' && value.length > 0,
       'Choose one option'
     ),
   codeEditorFieldName: z.string().min(1, { message: 'Mandatory field' }),
 });
 
-export const TemplateAllInputs = (horizontalFields) => (args) => {
+export const TemplateAllInputs = horizontalFields => args => {
   const formRef = useRef();
   useEffect(() => {
     if (args && args.triggerValidation) {
@@ -519,7 +519,7 @@ export const TemplateAllInputs = (horizontalFields) => (args) => {
               Submit
             </Button>
           </div>
-          {/*<DevTool control={control} />*/}
+          <DevTool control={control} />
         </div>
       )}
     </Form>
@@ -537,7 +537,7 @@ For this demo, we reuse the `basicFormValidationSchema` from [💠 Basic usage](
 In this example, the form is automatically filled with the `Hello world !` value for the `inputFieldName` input:
 
 ```tsx
-const TemplateFormInputDefaultValue = (args) => (
+const TemplateFormInputDefaultValue = args => (
   <Form
     schema={basicFormValidationSchema}
     options={{
@@ -558,7 +558,7 @@ const TemplateFormInputDefaultValue = (args) => (
         <Button type={'submit'} mode={'primary'}>
           Submit
         </Button>
-        {/*<DevTool control={control} />*/}
+        <DevTool control={control} />
       </div>
     )}
   </Form>

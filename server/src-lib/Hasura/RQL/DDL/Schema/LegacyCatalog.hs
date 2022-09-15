@@ -201,7 +201,7 @@ addEventTriggerToCatalog qt etc = liftTx do
     False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ _ _ _) = etc
 
 addComputedFieldToCatalog ::
   MonadTx m =>

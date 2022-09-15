@@ -6,16 +6,21 @@ module Hasura.RQL.Types.HealthCheck
     HealthCheckRetryInterval (..),
     HealthCheckTimeout (..),
     defaultHealthCheckTestSql,
+    healthCheckConfigCodec,
   )
 where
 
 import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
 import Data.Aeson.Extended
+import Data.Aeson.Types (parseFail)
+import Data.Text qualified as T
+import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (HealthCheckImplementation, _hciDefaultTest, _hciTestCodec))
+import Hasura.SQL.Tag (HasTag (backendTag), reify)
 
 newtype HealthCheckTestSql = HealthCheckTestSql
   { _hctSql :: Text
@@ -45,7 +50,7 @@ newtype HealthCheckRetries = HealthCheckRetries {unHealthCheckRetries :: Int}
   deriving (Eq, Generic, Show, Cacheable, FromJSON, ToJSON)
 
 instance HasCodec HealthCheckRetries where
-  codec = AC.codecViaAeson "HealthCheckRetries"
+  codec = dimapCodec HealthCheckRetries unHealthCheckRetries codec
 
 newtype HealthCheckRetryInterval = HealthCheckRetryInterval {unHealthCheckRetryInterval :: Seconds}
   deriving (Eq, Generic, Show, Cacheable, ToJSON, FromJSON)
@@ -78,23 +83,32 @@ instance (Backend b) => ToJSON (HealthCheckConfig b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 instance (Backend b) => FromJSON (HealthCheckConfig b) where
-  parseJSON = withObject "Object" $ \o ->
-    HealthCheckConfig
-      <$> o .:? "test" .!= defaultHealthCheckTest @b
-      <*> o .: "interval"
-      <*> o .:? "retries" .!= defaultRetries
-      <*> o .:? "retry_interval" .!= defaultRetryInterval
-      <*> o .:? "timeout" .!= defaultTimeout
+  parseJSON = case healthCheckImplementation @b of
+    Just (HealthCheckImplementation {..}) ->
+      withObject "Object" $ \o ->
+        HealthCheckConfig
+          <$> o .:? "test" .!= _hciDefaultTest
+          <*> o .: "interval"
+          <*> o .:? "retries" .!= defaultRetries
+          <*> o .:? "retry_interval" .!= defaultRetryInterval
+          <*> o .:? "timeout" .!= defaultTimeout
+    Nothing -> \_ ->
+      parseFail
+        "cannot deserialize health check config because backend does not implement health checks"
 
-instance (Backend b) => HasCodec (HealthCheckConfig b) where
-  codec =
-    AC.object "HealthCheckConfig" $
-      HealthCheckConfig
-        <$> optionalFieldWithOmittedDefaultWith' "test" placeholderCodecViaJSON (defaultHealthCheckTest @b) AC..= _hccTest
-        <*> requiredField' "interval" AC..= _hccInterval
-        <*> optionalFieldWithOmittedDefault' "retries" defaultRetries AC..= _hccRetries
-        <*> optionalFieldWithOmittedDefault' "retry_interval" defaultRetryInterval AC..= _hccRetryInterval
-        <*> optionalFieldWithOmittedDefault' "timeout" defaultTimeout AC..= _hccTimeout
+healthCheckConfigCodec ::
+  forall b.
+  (Backend b) =>
+  HealthCheckImplementation (HealthCheckTest b) ->
+  JSONCodec (HealthCheckConfig b)
+healthCheckConfigCodec (HealthCheckImplementation {..}) =
+  AC.object (codecNamePrefix @b <> "HealthCheckConfig") $
+    HealthCheckConfig
+      <$> optionalFieldWithOmittedDefaultWith' "test" _hciTestCodec _hciDefaultTest AC..= _hccTest
+      <*> requiredField' "interval" AC..= _hccInterval
+      <*> optionalFieldWithOmittedDefault' "retries" defaultRetries AC..= _hccRetries
+      <*> optionalFieldWithOmittedDefault' "retry_interval" defaultRetryInterval AC..= _hccRetryInterval
+      <*> optionalFieldWithOmittedDefault' "timeout" defaultTimeout AC..= _hccTimeout
 
 defaultRetries :: HealthCheckRetries
 defaultRetries = HealthCheckRetries 3
@@ -104,3 +118,6 @@ defaultRetryInterval = HealthCheckRetryInterval 10
 
 defaultTimeout :: HealthCheckTimeout
 defaultTimeout = HealthCheckTimeout 10
+
+codecNamePrefix :: forall b. (HasTag b) => Text
+codecNamePrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b

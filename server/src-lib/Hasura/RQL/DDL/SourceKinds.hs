@@ -29,7 +29,6 @@ import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.EncJSON qualified as EncJSON
 import Hasura.Prelude
-import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.SQL.Backend qualified as Backend
@@ -121,12 +120,12 @@ runGetSourceKindCapabilities GetSourceKindCapabilities {..} = do
     -- NOTE: A succesful parse here implies a native backend
     Just backend -> Error.throw400 Error.DataConnectorError (Text.E.toTxt backend <> " does not support Capabilities.")
     Nothing -> do
-      capabilitiesMap <- fmap SchemaCache.scDataConnectorCapabilities $ SchemaCache.askSchemaCache
+      backendCache <- fmap SchemaCache.scBackendCache $ SchemaCache.askSchemaCache
+      let capabilitiesMap = maybe mempty SchemaCache.unBackendInfoWrapper $ BackendMap.lookup @'Backend.DataConnector backendCache
       let dataConnectorName = DC.Types.DataConnectorName _gskcKind
 
       capabilities <-
-        fmap Common.ciCapabilities $
-          HashMap.lookup dataConnectorName (Common.unDataConnectorCapabilities capabilitiesMap)
-            `onNothing` Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt dataConnectorName <> " was not found.")
+        HashMap.lookup dataConnectorName capabilitiesMap
+          `onNothing` Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt dataConnectorName <> " was not found.")
 
       pure $ EncJSON.encJFromJValue capabilities

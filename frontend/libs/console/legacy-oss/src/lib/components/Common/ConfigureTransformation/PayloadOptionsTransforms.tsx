@@ -2,16 +2,15 @@ import React, { useRef } from 'react';
 import { RequestTransformBodyActions } from '@/metadata/types';
 import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
 import { FaExclamationCircle } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 import CrossIcon from '../Icons/Cross';
 import TemplateEditor from './CustomEditors/TemplateEditor';
 import JsonEditor from './CustomEditors/JsonEditor';
 import AceEditor from '../AceEditor/BaseEditor';
 import ResetIcon from '../Icons/Reset';
 import {
-  buttonShadow,
   capitaliseFirstLetter,
   editorDebounceTime,
-  focusYellowRing,
   inputStyles,
 } from './utils';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';
@@ -96,16 +95,17 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
           )} Defintion.`}
           number="1"
         >
-          <button
+          <Button
             type="button"
-            className={`ml-auto inline-flex items-center text-sm font-medium h-btnsm px-sm mr-sm ${buttonShadow} ${focusYellowRing}`}
+            size="sm"
+            icon={<ResetIcon />}
+            className="ml-sm"
             onClick={() => {
               resetSampleInput();
             }}
           >
-            <ResetIcon />
             Reset
-          </button>
+          </Button>
         </NumberedSidebar>
         <JsonEditor
           value={requestSampleInput}

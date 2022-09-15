@@ -1,8 +1,10 @@
-﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName, OrderByElement, OrderByRelation } from "./types";
+﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName, OrderByElement, OrderByRelation } from "@hasura/dc-api-types";
 import { coerceUndefinedToNull, crossProduct, tableNameEquals, unreachable, zip } from "./util";
 import * as math from "mathjs";
 
 type RelationshipName = string
+
+type ScalarValue = (string | number | boolean | null)
 
 // This is a more constrained type for response rows that knows that the reference
 // agent never returns custom scalars that are JSON objects
@@ -23,7 +25,8 @@ const prettyPrintBinaryComparisonOperator = (operator: BinaryComparisonOperator)
     case "less_than": return "<";
     case "less_than_or_equal": return "<=";
     case "equal": return "==";
-    case "not_equal": return "!="; // Custom operator
+    case "same_day_as": return "same_day_as";
+    case "in_year": return "in_year";
     default: return unknownOperator(operator);
   };
 };
@@ -31,7 +34,6 @@ const prettyPrintBinaryComparisonOperator = (operator: BinaryComparisonOperator)
 const prettyPrintBinaryArrayComparisonOperator = (operator: BinaryArrayComparisonOperator): string => {
   switch (operator) {
     case "in": return "IN";
-    case "not_in": return "NOT IN"; // Custom operator
     default: return unknownOperator(operator);
   };
 };
@@ -39,10 +41,30 @@ const prettyPrintBinaryArrayComparisonOperator = (operator: BinaryArrayCompariso
 const prettyPrintUnaryComparisonOperator = (operator: UnaryComparisonOperator): string => {
   switch (operator) {
     case "is_null": return "IS NULL";
-    case "is_not_null": return "IS NOT NULL"; // Custom operator
     default: return unknownOperator(operator);
   };
 };
+
+const dateTimeSameDayAs = (a: ScalarValue, b: ScalarValue): boolean => {
+  if (typeof a !== "string")
+    return expectedString(typeof a);
+
+  if (typeof b !== "string")
+    return expectedString(typeof b);
+
+  return a.substring(0, 10) === b.substring(0, 10);
+}
+
+const dateTimeInYear = (a: ScalarValue, b: ScalarValue): boolean => {
+  if (typeof a !== "string")
+    return expectedString(typeof a);
+
+  if (typeof b !== "number")
+    return expectedNumber(typeof b);
+
+  const bString = b.toString();
+  return bString.length === 4 && a.startsWith(bString);
+}
 
 const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator): ((left: ScalarValue, right: ScalarValue) => boolean) => {
   switch (operator) {
@@ -51,7 +73,8 @@ const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator
     case "less_than": return (a, b) => a !== null && b !== null && a < b;
     case "less_than_or_equal": return (a, b) => a !== null && b !== null && a <= b;
     case "equal": return (a, b) => a !== null && b !== null && a === b;
-    case "not_equal": return (a, b) => a === null || b === null || a !== b; // Custom operator
+    case "same_day_as": return dateTimeSameDayAs;
+    case "in_year": return dateTimeInYear;
     default: return unknownOperator(operator);
   };
 };
@@ -59,7 +82,6 @@ const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator
 const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparisonOperator): ((left: ScalarValue, right: ScalarValue[]) => boolean) => {
   switch (operator) {
     case "in": return (a, bs) => a !== null && bs.includes(a);
-    case "not_in": return (a, bs) => a === null || !bs.includes(a); // Custom operator
     default: return unknownOperator(operator);
   };
 };
@@ -68,7 +90,6 @@ const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparis
 const getUnaryComparisonOperatorEvaluator = (operator: UnaryComparisonOperator): ((value: ScalarValue) => boolean) => {
   switch (operator) {
     case "is_null": return (v) => v === null;
-    case "is_not_null": return (v) => v !== null; // Custom operator
     default: return unknownOperator(operator);
   };
 };
@@ -522,3 +543,7 @@ export const queryData = (getTable: (tableName: TableName) => Record<string, Sca
 };
 
 const unknownOperator = (x: string): never => { throw new Error(`Unknown operator: ${x}`) };
+
+const expectedString = (x: string): never => { throw new Error(`Expected string value but got ${x}`) };
+
+const expectedNumber = (x: string): never => { throw new Error(`Expected number value but got ${x}`) };

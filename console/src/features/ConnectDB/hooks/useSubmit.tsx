@@ -1,11 +1,13 @@
+import { useQueryClient } from 'react-query';
 import { push } from 'react-router-redux';
 import {
   allowedMetadataTypes,
+  SupportedDrivers,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
 import { APIError } from '@/hooks/error';
 import { useFireNotification } from '@/new-components/Notifications';
-import { SupportedDrivers, getDriverPrefix } from '@/features/DataSource';
+import { getDriverPrefix } from '@/features/DataSource';
 import { useAppDispatch } from '@/store';
 import { exportMetadata } from '@/metadata/actions';
 import { useAvailableDrivers } from './useAvailableDrivers';
@@ -32,6 +34,7 @@ export const useSubmit = () => {
   const drivers = useAvailableDrivers();
   const { fireNotification } = useFireNotification();
   const redirect = useRedirect();
+  const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({
     onError: (error: APIError) => {
@@ -42,6 +45,8 @@ export const useSubmit = () => {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries('treeview');
+
       fireNotification({
         type: 'success',
         title: 'Success',

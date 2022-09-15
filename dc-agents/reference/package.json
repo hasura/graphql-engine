@@ -1,6 +1,6 @@
 {
-  "name": "dc-agent-reference",
-  "version": "1.0.0",
+  "name": "@hasura/dc-agent-reference",
+  "version": "0.1.0",
   "description": "Reference implementation of a Data Connector Agent for Hasura GraphQL Engine",
   "author": "Hasura (https://github.com/hasura/graphql-engine)",
   "license": "Apache-2.0",
@@ -18,22 +18,21 @@
     "typecheck": "tsc --noEmit",
     "start": "ts-node ./src/index.ts",
     "start-no-typecheck": "ts-node --transpileOnly ./src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "generate-types": "./scripts/generate-types.sh"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@fastify/cors": "^7.0.0",
+    "@hasura/dc-api-types": "0.4.0",
     "fastify": "^3.29.0",
     "mathjs": "^11.0.0",
     "pino-pretty": "^8.0.0",
     "xml2js": "github:Leonidas-from-XIV/node-xml2js"
   },
   "devDependencies": {
-    "@tsconfig/node16": "^1.0.2",
-    "@types/node": "^16.11.38",
+    "@tsconfig/node16": "^1.0.3",
+    "@types/node": "^16.11.49",
     "@types/xml2js": "^0.4.11",
-    "openapi-typescript-codegen": "^0.23.0",
-    "ts-node": "^10.8.1",
-    "typescript": "^4.7.3"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
   }
 }

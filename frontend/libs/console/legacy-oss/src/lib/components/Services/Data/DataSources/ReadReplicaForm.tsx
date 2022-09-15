@@ -1,6 +1,8 @@
 import React, { useState, Dispatch, ChangeEvent } from 'react';
 import { FaEye, FaTimes } from 'react-icons/fa';
 
+import { Button } from '@/new-components/Button';
+import { Tooltip } from '@/new-components/Tooltip';
 import {
   ReadReplicaState,
   ReadReplicaActions,
@@ -10,8 +12,6 @@ import {
   connectionTypes,
 } from './state';
 import ConnectDatabaseForm from './ConnectDBForm';
-import Button from '../../../Common/Button';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   makeConnectionStringFromConnectionParams,
   parseURI,
@@ -92,16 +92,16 @@ const Form: React.FC<FormProps> = ({
         connectionDBStateDispatch={connectDBStateDispatch}
         updateConnectionTypeRadio={updateReadReplicaConnectionType}
         connectionTypeState={readReplicaConnectionType}
-        isreadreplica
+        isReadReplica
         title="Connect Read Replica via"
       />
       <div className={styles.read_replica_action_bar}>
-        <Button size="sm" color="white" onClick={onClickCancel}>
+        <Button size="md" mode="default" onClick={onClickCancel}>
           Cancel
         </Button>
         <Button
-          size="sm"
-          color="yellow"
+          mode="primary"
+          size="md"
           onClick={onClickSave}
           disabled={areFieldsEmpty}
         >
@@ -143,8 +143,8 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
     >
       <span>
         <Button
-          color="white"
-          size="xs"
+          mode="destructive"
+          size="sm"
           onClick={onClickRemove}
           className={styles.remove_replica_btn}
         >
@@ -168,18 +168,16 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
             </span>
           )}
           {showUrl && (
-            <ToolTip
-              id="connection-string-hide"
-              placement="right"
-              message="Hide connection string"
+            <Tooltip
+              side="right"
+              tooltipContentChildren="Hide connection string"
             >
               <FaTimes
                 className={`${styles.closeHeader}`}
                 aria-hidden="true"
                 onClick={() => setShowUrl(false)}
-                style={{ paddingLeft: 10 }}
               />
-            </ToolTip>
+            </Tooltip>
           )}
         </span>
       )}
@@ -255,7 +253,7 @@ const ReadReplicaForm: React.FC<ReadReplicaProps> = ({
         {!isReadReplicaButtonClicked ? (
           <span className="py-1.5">
             <Button
-              size="xs"
+              size="sm"
               onClick={onClickAddReadReplica}
               className={styles.add_button_styles}
             >

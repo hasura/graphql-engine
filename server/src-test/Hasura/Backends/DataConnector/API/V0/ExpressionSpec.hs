@@ -11,16 +11,16 @@ module Hasura.Backends.DataConnector.API.V0.ExpressionSpec
   )
 where
 
+import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
-import Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec (genValue)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Hedgehog.Internal.Range
-import Test.Aeson.Utils (jsonOpenApiProperties, testToFromJSONToSchema)
+import Test.Aeson.Utils (genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
 spec :: Spec
@@ -175,27 +175,27 @@ genBinaryComparisonOperator :: MonadGen m => m BinaryComparisonOperator
 genBinaryComparisonOperator =
   Gen.choice
     [ Gen.element [LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, Equal],
-      CustomBinaryComparisonOperator <$> Gen.text (linear 0 5) Gen.unicode
+      CustomBinaryComparisonOperator <$> genArbitraryAlphaNumText defaultRange
     ]
 
 genBinaryArrayComparisonOperator :: MonadGen m => m BinaryArrayComparisonOperator
 genBinaryArrayComparisonOperator =
   Gen.choice
     [ pure In,
-      CustomBinaryArrayComparisonOperator <$> Gen.text (linear 0 5) Gen.unicode
+      CustomBinaryArrayComparisonOperator <$> genArbitraryAlphaNumText defaultRange
     ]
 
 genUnaryComparisonOperator :: MonadGen m => m UnaryComparisonOperator
 genUnaryComparisonOperator =
   Gen.choice
     [ pure IsNull,
-      CustomUnaryComparisonOperator <$> Gen.text (linear 0 5) Gen.unicode
+      CustomUnaryComparisonOperator <$> genArbitraryAlphaNumText defaultRange
     ]
 
 genComparisonColumn :: MonadGen m => m ComparisonColumn
 genComparisonColumn =
   ComparisonColumn
-    <$> Gen.list (linear 0 5) genRelationshipName
+    <$> Gen.list defaultRange genRelationshipName
     <*> genColumnName
 
 genComparisonValue :: MonadGen m => m ComparisonValue
@@ -210,7 +210,7 @@ genExpression =
   Gen.recursive
     Gen.choice
     [ ApplyBinaryComparisonOperator <$> genBinaryComparisonOperator <*> genComparisonColumn <*> genComparisonValue,
-      ApplyBinaryArrayComparisonOperator <$> genBinaryArrayComparisonOperator <*> genComparisonColumn <*> (Gen.list (linear 0 1) genValue),
+      ApplyBinaryArrayComparisonOperator <$> genBinaryArrayComparisonOperator <*> genComparisonColumn <*> (Gen.list defaultRange genValue),
       ApplyUnaryComparisonOperator <$> genUnaryComparisonOperator <*> genComparisonColumn
     ]
     [ And <$> genExpressions,
@@ -218,4 +218,4 @@ genExpression =
       Not <$> genExpression
     ]
   where
-    genExpressions = Gen.list (linear 0 1) genExpression
+    genExpressions = Gen.list defaultRange genExpression

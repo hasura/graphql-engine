@@ -127,7 +127,11 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```json
 {
   "capabilities": {
-    "relationships": {}
+    "relationships": {},
+    "graphqlSchema": "scalar DateTime\n\ninput DateTimeComparisons {\n  in_year: Number\n}",
+    "scalarTypes": {
+      "DateTime": {"comparisonType": "DateTimeComparisons"}
+    }
   },
   "configSchemas": {
     "configSchema": {
@@ -153,13 +157,60 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 }
 ```
 
-The `capabilities` section describes the _capabilities_ of the service. Specifically, the service is capable of serving queries which involve relationships.
+The `capabilities` section describes the _capabilities_ of the service. This includes
+- `relationships`: whether or not the agent supports relationships
+- `scalarTypes`: custom scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
+- `graphqlSchema`: a GraphQL schema document containing type definitions referenced by the `scalarTypes` capabilities.
 
 The `configSchema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `otherSchemas` object by name.
 
 `graphql-engine` will use the `configSchema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
 
-### Schema and capabilities
+#### Scalar type capabilities
+
+The agent is expected to support a default set of scalar types (`Number`, `String`, `Bool`) and a default set of [comparison operators](#filters) on these types.
+Agents may optionally declare support for their own custom scalar types and custom comparison operators on those types.
+Hasura GraphQL Engine does not validate the JSON format for values of custom scalar types.
+It passes them through transparently to the agent when they are used as GraphQL input values and returns them transparently when they are produced by the agent.
+It is the agent's responsibility to validate the values provided as GraphQL inputs.
+
+Custom scalar types are declared by adding a property to the `scalarTypes` section of the [capabilities](#capabilities-and-configuration-schema) and
+by adding scalar type declaration with the same name in the `graphqlSchema` capabilities property.
+Custom comparison types can be defined by adding a `comparisonType` property to the scalar type capabilities object.
+The `comparisonType` property gives the name of a GraphQL input object type, which must be defined in the `graphqlSchema` capabilities property.
+The input object type will be spliced into the `where` argument for any columns of the scalar type in the GraphQL schema.
+
+Example:
+
+```yaml
+capabilities:
+  graphqlSchema: |
+    scalar DateTime
+
+    input DateTimeComparisons {
+      in_year: Number
+    }
+  scalarTypes:
+    DateTime:
+      comparisonType: DateTimeComparisons
+```
+
+This example declares a custom scalar type `DateTime`, with comparison operators defined by the GraphQL input object type `DateTimeComparisons`.
+The input type `DateTimeComparisons` defines one comparison operator `in_year` which takes a `Number` argument
+
+An example GraphQL query using this custom operator might look like below:
+```graphql
+query MyQuery {
+  Employee(where: {BirthDate: {in_year: 1962}}) {
+    Name
+    BirthDate
+  }
+}
+```
+In this query we have an `Employee` field with a `BirthDate` property of type `DateTime`.
+The `in_year` custom comparison operator is being used to request all employees with a birth date in the year 1962.
+
+### Schema
 
 The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `graphql-engine`. It returns the following JSON object:
 

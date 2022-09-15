@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button } from '../../../Common';
+import { Button } from '@/new-components/Button';
 import { TableFormProps } from '../../../Common/Table';
 import { RoleLimits, RoleState } from './utils';
 import styles from './Security.module.scss';
@@ -155,7 +155,7 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
   return (
     <section className={styles.form_section}>
       <div className={styles.top}>
-        <Button size="xs" onClick={() => collapseForm()}>
+        <Button size="sm" onClick={() => collapseForm()}>
           Close
         </Button>
         <h5>
@@ -190,8 +190,8 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
         <div className={styles.form_footer}>
           <div className="submit_btn">
             <Button
-              size="xs"
-              color="yellow"
+              size="md"
+              mode="primary"
               type="submit"
               disabled={isDisabled(currentRowKey)}
             >
@@ -200,8 +200,8 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
           </div>
           <div className={styles.padding_left_sm}>
             <Button
-              size="sm"
-              color="red"
+              size="md"
+              mode="destructive"
               disabled={isDisabled(currentRowKey)}
               onClick={() => removeBtnClickHandler(currentRowKey)}
             >

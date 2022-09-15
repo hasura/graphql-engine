@@ -1,24 +1,16 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useRoles } from '@/features/MetadataAPI';
 import { useEnabledRolesFromAllowList } from './useEnabledRolesFromAllowList';
 
 export const useEnabledRolesFromAllowListState = (collectionName: string) => {
   const { data: allAvailableRoles } = useRoles();
-  const { data: allowListRoles } = useEnabledRolesFromAllowList(collectionName);
-  const [enabledRoles, setEnabledRoles] = React.useState<string[]>([]);
+  const { data: enabledRoles } = useEnabledRolesFromAllowList(collectionName);
   const [newRoles, setNewRoles] = React.useState<string[]>(['']);
-
-  useEffect(() => {
-    if (allowListRoles && allowListRoles !== enabledRoles) {
-      setEnabledRoles(allowListRoles);
-    }
-  }, [allowListRoles]);
 
   return {
     allAvailableRoles,
-    newRoles,
+    enabledRoles: enabledRoles || [],
+    newRoles: newRoles.filter(role => !allAvailableRoles.includes(role)),
     setNewRoles,
-    enabledRoles,
-    setEnabledRoles,
   };
 };

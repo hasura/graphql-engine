@@ -13,7 +13,7 @@ instance BackendMetadata 'BigQuery where
   prepareCatalog _ = pure RETDoNothing
   buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
-  resolveSourceConfig = const BigQuery.resolveSourceConfig
+  resolveSourceConfig = BigQuery.resolveSourceConfig
   resolveDatabaseMetadata _ = BigQuery.resolveSource
   parseBoolExpOperations = BigQuery.parseBoolExpOperations
   buildFunctionInfo = BigQuery.buildFunctionInfo

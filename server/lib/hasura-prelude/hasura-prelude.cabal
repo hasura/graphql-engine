@@ -1,0 +1,30 @@
+cabal-version: 3.0
+name: hasura-prelude
+version: 0.1.0.0
+
+library
+    hs-source-dirs: src
+    build-depends:
+      aeson,
+      aeson-casing,
+      base,
+      base64-bytestring,
+      bytestring,
+      containers,
+      deepseq,
+      hashable,
+      insert-ordered-containers,
+      lens,
+      mtl,
+      nonempty-containers,
+      pretty-simple,
+      text,
+      time,
+      transformers,
+      transformers-base,
+      unordered-containers,
+      witherable
+    default-language: Haskell2010
+    exposed-modules:
+      Data.Time.Clock.Units
+      Hasura.Prelude

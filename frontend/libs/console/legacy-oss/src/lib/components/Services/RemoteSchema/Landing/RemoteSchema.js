@@ -4,7 +4,7 @@ import { push } from 'react-router-redux';
 
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
 
@@ -23,15 +23,15 @@ class RemoteSchema extends React.Component {
       };
 
       return (
-        <Button
-          data-test="data-create-remote-schemas"
-          color="yellow"
-          size="sm"
-          className="ml-sm"
-          onClick={handleClick}
-        >
-          Add
-        </Button>
+        <div className="ml-sm">
+          <Button
+            data-test="data-create-remote-schemas"
+            mode="primary"
+            onClick={handleClick}
+          >
+            Add
+          </Button>
+        </div>
       );
     };
 

@@ -3,6 +3,7 @@ module Test.QuerySpec.OrderBySpec (spec) where
 import Control.Arrow ((>>>))
 import Control.Lens (ix, (&), (.~), (?~), (^.), (^?), _1, _2, _3, _Just)
 import Control.Monad (when)
+import Data.Aeson (Value (..))
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.HashMap.Strict qualified as HashMap

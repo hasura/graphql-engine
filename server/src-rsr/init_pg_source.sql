@@ -56,13 +56,12 @@ CREATE INDEX event_log_fetch_events
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
   id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  trigger_name TEXT,
   event_id TEXT,
   status INTEGER,
   request JSON,
   response JSON,
-  created_at TIMESTAMP DEFAULT NOW(),
-
-  FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 /* This index improves the performance of deletes by event_id, so that if somebody
@@ -110,3 +109,16 @@ CREATE OR REPLACE FUNCTION
     RETURN id;
   END;
 $$ LANGUAGE plpgsql;
+
+CREATE TABLE hdb_catalog.hdb_event_log_cleanups
+(
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  trigger_name TEXT NOT NULL,
+  scheduled_at TIMESTAMP NOT NULL,
+  deleted_event_logs INTEGER,
+  deleted_event_invocation_logs INTEGER,
+  status TEXT NOT NULL,
+  CHECK (status IN ('scheduled', 'paused', 'completed', 'dead')),
+
+  UNIQUE (trigger_name, scheduled_at)
+);

@@ -1,4 +1,5 @@
-import { Metadata, RunSQLResponse } from '@/features/DataSource';
+import { RunSQLResponse } from '@/features/DataSource';
+import { Metadata } from '@/features/MetadataAPI';
 import { rest } from 'msw';
 
 const metadata: Metadata = {
@@ -41,6 +42,11 @@ const metadata: Metadata = {
             },
           },
         ],
+        configuration: {
+          connection_info: {
+            database_url: 'http://localhost:80/postgres',
+          },
+        },
       },
     ],
   },

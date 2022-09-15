@@ -1,18 +1,20 @@
 import React from 'react';
 
 import { Button } from '@/new-components/Button';
-import { Form } from '@/new-components/Form';
+import { Form, InputField } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 
 import { Configuration } from './components/Configuration';
 import { useLoadSchema, useSubmit } from './hooks';
+import { Driver } from './components/Driver';
 
 interface Props {
   name: string;
   driver: string;
+  onDriverChange: (driver: string, name: string) => void;
 }
 
-export const Connect = ({ name, driver }: Props) => {
+export const Connect = ({ name, driver, onDriverChange }: Props) => {
   const {
     data: { schemas, drivers, defaultValues },
     isLoading,
@@ -50,16 +52,21 @@ export const Connect = ({ name, driver }: Props) => {
 
   return (
     <Form
-      key={defaultValues.name || 'new-connection'}
+      key={`${defaultValues.name}-${defaultValues.driver}` || 'new-connection'}
       schema={schemas}
       onSubmit={submit}
       options={{
         defaultValues,
       }}
+      className="p-0 pl-sm"
     >
       {options => {
         return (
           <div>
+            <InputField type="text" name="name" label="Database Display Name" />
+
+            <Driver onDriverChange={onDriverChange} />
+
             <div className="max-w-xl">
               <p className="flex items-center font-semibold text-gray-600 mb-xs">
                 Configuration

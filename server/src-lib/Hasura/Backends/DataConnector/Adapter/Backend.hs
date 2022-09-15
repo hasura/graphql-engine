@@ -37,6 +37,7 @@ type Unimplemented = ()
 
 instance Backend 'DataConnector where
   type BackendConfig 'DataConnector = InsOrdHashMap Adapter.DataConnectorName Adapter.DataConnectorOptions
+  type BackendInfo 'DataConnector = HashMap Adapter.DataConnectorName Adapter.DataConnectorInfo
   type SourceConfig 'DataConnector = Adapter.SourceConfig
   type SourceConnConfiguration 'DataConnector = Adapter.ConnSourceConfig
 
@@ -49,7 +50,7 @@ instance Backend 'DataConnector where
   type NullsOrderType 'DataConnector = Unimplemented
   type CountType 'DataConnector = IR.A.CountAggregate
   type Column 'DataConnector = IR.C.Name
-  type ScalarValue 'DataConnector = IR.S.V.Value
+  type ScalarValue 'DataConnector = J.Value
   type ScalarType 'DataConnector = IR.S.T.Type
 
   -- This does not actually have to be the full IR Expression, in fact it is only
@@ -71,13 +72,13 @@ instance Backend 'DataConnector where
   type XStreamingSubscription 'DataConnector = XDisable
 
   type HealthCheckTest 'DataConnector = Void
-  defaultHealthCheckTest = error "defaultHealthCheckTest: not implemented for Data Connector backend"
 
   isComparableType :: ScalarType 'DataConnector -> Bool
   isComparableType = \case
     IR.S.T.Number -> True
     IR.S.T.String -> True
     IR.S.T.Bool -> False
+    IR.S.T.Custom _ -> False -- TODO: extend Capabilities for custom types
 
   isNumType :: ScalarType 'DataConnector -> Bool
   isNumType IR.S.T.Number = True

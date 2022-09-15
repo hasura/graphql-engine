@@ -1,7 +1,7 @@
 {
-  "name": "dc-agent-reference",
-  "version": "1.0.0",
-  "description": "Reference implementation of a Data Connector Agent for Hasura GraphQL Engine",
+  "name": "@hasura/dc-agent-sqlite",
+  "version": "0.1.0",
+  "description": "SQLite Data Connector Agent for Hasura GraphQL Engine",
   "author": "Hasura (https://github.com/hasura/graphql-engine)",
   "license": "Apache-2.0",
   "repository": {
@@ -22,23 +22,23 @@
   },
   "dependencies": {
     "@fastify/cors": "^8.1.0",
-    "fastify": "^4.4.0",
+    "@hasura/dc-api-types": "0.4.0",
     "fastify-metrics": "^9.2.1",
+    "fastify": "^4.4.0",
     "openapi3-ts": "^2.0.2",
+    "pino-pretty": "^8.1.0",
     "sequelize": "^6.21.2",
-    "sqlite": "^4.1.1",
     "sqlite-parser": "^1.0.1",
+    "sqlite": "^4.1.1",
     "sqlite3": "^5.0.8",
-    "sqlstring-sqlite": "^0.1.1",
-    "xml2js": "^0.4.23",
-    "pino-pretty": "^8.1.0"
+    "sqlstring-sqlite": "^0.1.1"
   },
   "devDependencies": {
-    "@tsconfig/node16": "^1.0.2",
-    "@types/node": "^16.11.38",
+    "@tsconfig/node16": "^1.0.3",
+    "@types/node": "^16.11.49",
     "@types/sqlite3": "^3.1.8",
     "@types/xml2js": "^0.4.11",
-    "ts-node": "^10.8.1",
+    "ts-node": "^10.9.1",
     "typescript": "^4.7.4"
   }
 }

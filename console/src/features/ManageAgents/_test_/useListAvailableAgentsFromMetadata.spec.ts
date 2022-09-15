@@ -3,7 +3,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { wrapper } from '../../../hooks/__tests__/common/decorator';
 import { useListAvailableAgentsFromMetadata } from '../hooks';
-import { Metadata } from '../../DataSource';
+import { Metadata } from '../../MetadataAPI';
 import { DcAgent } from '../types';
 
 const metadata: Metadata = {
@@ -50,8 +50,6 @@ describe('useListAvailableAgentsFromMetadata tests: ', () => {
     ];
 
     await waitFor(() => result.current.isSuccess);
-
-    console.log(result.current);
 
     expect(result.current.data).toEqual(expectedResult);
   });

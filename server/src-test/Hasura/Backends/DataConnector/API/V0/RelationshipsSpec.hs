@@ -13,10 +13,10 @@ import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Hedgehog.Range
 import Test.Aeson.Utils
 import Test.Hspec
 
@@ -96,7 +96,7 @@ spec = do
 
 genRelationshipName :: MonadGen m => m RelationshipName
 genRelationshipName =
-  RelationshipName <$> Gen.text (linear 0 10) Gen.unicode
+  RelationshipName <$> genArbitraryAlphaNumText defaultRange
 
 genRelationshipType :: MonadGen m => m RelationshipType
 genRelationshipType = Gen.enumBounded
@@ -106,10 +106,10 @@ genRelationship =
   Relationship
     <$> genTableName
     <*> genRelationshipType
-    <*> (HashMap.fromList <$> Gen.list (linear 0 5) ((,) <$> genColumnName <*> genColumnName))
+    <*> (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genColumnName <*> genColumnName))
 
 genTableRelationships :: MonadGen m => m TableRelationships
 genTableRelationships =
   TableRelationships
     <$> genTableName
-    <*> fmap HashMap.fromList (Gen.list (linear 0 5) ((,) <$> genRelationshipName <*> genRelationship))
+    <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))

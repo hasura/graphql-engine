@@ -1,7 +1,11 @@
 import { Database, Feature } from '..';
 import { NetworkArgs, runSQL } from '../api';
 import { adaptIntrospectedTables } from '../common/utils';
-import { getTableColumns, getFKRelationships } from './introspection';
+import {
+  getTableColumns,
+  getFKRelationships,
+  getTablesListAsTree,
+} from './introspection';
 
 export type MssqlTable = { schema: string; name: string };
 
@@ -43,5 +47,6 @@ export const mssql: Database = {
     },
     getTableColumns,
     getFKRelationships,
+    getTablesListAsTree,
   },
 };

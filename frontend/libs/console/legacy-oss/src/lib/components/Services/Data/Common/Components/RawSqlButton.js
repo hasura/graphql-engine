@@ -1,7 +1,7 @@
 import React from 'react';
 import _push from '../../push';
 import { SET_SQL } from '../../RawSQL/Actions';
-import Button from '../../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
 const RawSqlButton = props => {
   const { dataTestId, sql, customStyles, dispatch, children } = props;

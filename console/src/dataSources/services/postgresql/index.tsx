@@ -13,7 +13,7 @@ import {
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
-import { DataSourcesAPI, ColumnsInfoResult } from '../..';
+import { DataSourcesAPI, ColumnsInfoResult, currentDriver } from '../..';
 import {
   generateTableRowRequest,
   generateInsertRequest,
@@ -73,6 +73,7 @@ import {
   schemaListQuery,
   getAlterTableCommentSql,
   getAlterColumnCommentSql,
+  getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
   getDataTriggerLogsCountQuery,
@@ -316,13 +317,27 @@ const getAdditionalColumnsInfoQuerySql = (
 ) => `SELECT column_name, table_name, is_generated, is_identity, identity_generation
   FROM information_schema.columns where table_schema = '${schemaName}';`;
 
+type PostgresIsGenerated = 'ALWAYS' | 'NEVER';
+type CockroachDBIsGenerated = 'YES' | 'NO';
+
 type ColumnsInfoPayload = {
   column_name: string;
   table_name: string;
-  is_generated: string;
-  is_identity: string;
+  is_generated: PostgresIsGenerated | CockroachDBIsGenerated;
+  is_identity: 'YES' | 'NO';
   identity_generation: 'ALWAYS' | 'BY DEFAULT' | null;
 };
+
+const isColumnGenerated = (isGenerated: ColumnsInfoPayload['is_generated']) => {
+  if (currentDriver === 'cockroach') {
+    return isGenerated === 'YES';
+  }
+
+  return isGenerated === 'ALWAYS';
+};
+
+const isColumnIdentity = (isIdentity: ColumnsInfoPayload['is_identity']) =>
+  isIdentity === 'YES';
 
 const parseColumnsInfoResult = (data: string[][]) => {
   const formattedData: ColumnsInfoPayload[] = data.slice(1).map(
@@ -340,7 +355,8 @@ const parseColumnsInfoResult = (data: string[][]) => {
   formattedData
     .filter(
       (info: ColumnsInfoPayload) =>
-        info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
+        isColumnGenerated(info.is_generated) ||
+        !isColumnIdentity(info.is_identity)
     )
     .forEach(
       ({
@@ -355,8 +371,8 @@ const parseColumnsInfoResult = (data: string[][]) => {
           [table_name]: {
             ...columnsInfo[table_name],
             [column_name]: {
-              is_generated: is_generated !== 'NEVER',
-              is_identity: is_identity !== 'NO',
+              is_generated: isColumnGenerated(is_generated),
+              is_identity: isColumnIdentity(is_identity),
               identity_generation,
             },
           },
@@ -869,6 +885,7 @@ export const postgres: DataSourcesAPI = {
   schemaListQuery,
   getAlterTableCommentSql,
   getAlterColumnCommentSql,
+  getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
   getDataTriggerLogsCountQuery,

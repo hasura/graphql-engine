@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import { TableMachine } from '../hooks';
 import { PermissionsIcon } from './PermissionsIcons';
 
@@ -89,7 +90,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
   return (
     <td>
-      <button
+      <Button
         type="submit"
         className={`cursor-pointer h-20 border-none w-full whitespace-nowrap text-center ${
           isCurrentEdit ? 'bg-secondary' : 'hover:bg-indigo-50'
@@ -97,7 +98,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         {...rest}
       >
         <PermissionsIcon type={access} selected={isCurrentEdit} />
-      </button>
+      </Button>
     </td>
   );
 };

@@ -7,6 +7,7 @@
 module Hasura.RQL.DDL.Schema.Cache.Common
   ( ApolloFederationConfig (..),
     ApolloFederationVersion (..),
+    BackendInvalidationKeysWrapper (..),
     BuildOutputs (..),
     CacheBuild,
     CacheBuildParams (CacheBuildParams),
@@ -14,6 +15,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     ikMetadata,
     ikRemoteSchemas,
     ikSources,
+    ikBackends,
     NonColumnTableInputs (..),
     RebuildableSchemaCache (RebuildableSchemaCache, lastBuiltSchemaCache),
     TableBuildInput (TableBuildInput, _tbiName),
@@ -27,7 +29,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     boActions,
     boCronTriggers,
     boCustomTypes,
-    boDataConnectorCapabilities,
+    boBackendCache,
     boEndpoints,
     boQueryCollections,
     boRemoteSchemas,
@@ -64,6 +66,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
@@ -77,16 +80,37 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
+import Hasura.SQL.BackendMap (BackendMap)
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Types
 import Hasura.Session
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
+newtype BackendInvalidationKeysWrapper (b :: BackendType) = BackendInvalidationKeysWrapper
+  { unBackendInvalidationKeysWrapper :: BackendInvalidationKeys b
+  }
+
+deriving newtype instance Eq (BackendInvalidationKeys b) => Eq (BackendInvalidationKeysWrapper b)
+
+deriving newtype instance Ord (BackendInvalidationKeys b) => Ord (BackendInvalidationKeysWrapper b)
+
+deriving newtype instance Inc.Cacheable (BackendInvalidationKeys b) => Inc.Cacheable (BackendInvalidationKeysWrapper b)
+
+deriving newtype instance Show (BackendInvalidationKeys b) => Show (BackendInvalidationKeysWrapper b)
+
+deriving newtype instance Semigroup (BackendInvalidationKeys b) => Semigroup (BackendInvalidationKeysWrapper b)
+
+deriving newtype instance Monoid (BackendInvalidationKeys b) => Monoid (BackendInvalidationKeysWrapper b)
+
+instance Inc.Select (BackendInvalidationKeysWrapper b)
+
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
   { _ikMetadata :: Inc.InvalidationKey,
     _ikRemoteSchemas :: HashMap RemoteSchemaName Inc.InvalidationKey,
-    _ikSources :: HashMap SourceName Inc.InvalidationKey
+    _ikSources :: HashMap SourceName Inc.InvalidationKey,
+    _ikBackends :: BackendMap BackendInvalidationKeysWrapper
   }
   deriving (Show, Eq, Generic)
 
@@ -97,14 +121,15 @@ instance Inc.Select InvalidationKeys
 $(makeLenses ''InvalidationKeys)
 
 initialInvalidationKeys :: InvalidationKeys
-initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty mempty
+initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty mempty mempty
 
 invalidateKeys :: CacheInvalidations -> InvalidationKeys -> InvalidationKeys
 invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
   InvalidationKeys
     { _ikMetadata = if ciMetadata then Inc.invalidate _ikMetadata else _ikMetadata,
       _ikRemoteSchemas = foldl' (flip invalidate) _ikRemoteSchemas ciRemoteSchemas,
-      _ikSources = foldl' (flip invalidate) _ikSources ciSources
+      _ikSources = foldl' (flip invalidate) _ikSources ciSources,
+      _ikBackends = BackendMap.modify @'DataConnector invalidateDataConnectors _ikBackends
     }
   where
     invalidate ::
@@ -113,6 +138,10 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
       HashMap a Inc.InvalidationKey ->
       HashMap a Inc.InvalidationKey
     invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+
+    invalidateDataConnectors :: BackendInvalidationKeysWrapper 'DataConnector -> BackendInvalidationKeysWrapper 'DataConnector
+    invalidateDataConnectors (BackendInvalidationKeysWrapper invalidationKeys) =
+      BackendInvalidationKeysWrapper $ foldl' (flip invalidate) invalidationKeys ciDataConnectors
 
 data TableBuildInput b = TableBuildInput
   { _tbiName :: TableName b,
@@ -190,7 +219,7 @@ data BuildOutputs = BuildOutputs
     _boRoles :: HashMap RoleName Role,
     _boTlsAllowlist :: [TlsAllow],
     _boQueryCollections :: QueryCollections,
-    _boDataConnectorCapabilities :: DataConnectorCapabilities
+    _boBackendCache :: BackendCache
   }
 
 $(makeLenses ''BuildOutputs)

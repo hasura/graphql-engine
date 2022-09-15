@@ -31,6 +31,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.Text (pack, unpack)
+import Data.Time (localTimeToUTC)
 import Database.MSSQL.Pool qualified as MSPool
 import Database.MSSQL.Transaction qualified as MSTx
 import Database.ODBC.SQLServer qualified as ODBC
@@ -252,6 +253,7 @@ odbcValueToJValue = \case
   ODBC.TimeOfDayValue td -> J.toJSON td
   ODBC.LocalTimeValue l -> J.toJSON l
   ODBC.NullValue -> J.Null
+  ODBC.ZonedTimeValue lt tz -> J.toJSON (localTimeToUTC tz lt)
 
 runMSSQLSourceReadTx ::
   (MonadIO m, MonadBaseControl IO m) =>

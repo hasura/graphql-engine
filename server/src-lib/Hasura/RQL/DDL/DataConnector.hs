@@ -60,14 +60,12 @@ runAddDataConnectorAgent DCAddAgent {..} = do
   let kind = DC.Types.DataConnectorName _gdcaName
       agent = DC.Types.DataConnectorOptions _gdcaUrl
 
-  oldMetadata <- Metadata.getMetadata
+  let modifier =
+        Metadata.MetadataModifier $
+          Metadata.metaBackendConfigs %~ BackendMap.modify @'Backend.DataConnector \oldMap ->
+            Metadata.BackendConfigWrapper $ InsOrdHashMap.insert kind agent (coerce oldMap)
 
-  let modifiedMetadata =
-        oldMetadata & Metadata.metaBackendConfigs %~ BackendMap.modify @'Backend.DataConnector \oldMap ->
-          Metadata.BackendConfigWrapper $ InsOrdHashMap.insert kind agent (coerce oldMap)
-
-  SC.Build.withNewInconsistentObjsCheck $
-    SC.Build.buildSchemaCache $ Metadata.MetadataModifier $ const modifiedMetadata
+  SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier
 
   pure Common.successMsg
 
@@ -103,11 +101,11 @@ runDeleteDataConnectorAgent DCDeleteAgent {..} = do
   case kindExists of
     Nothing -> Error.throw400 Error.NotFound $ "DC Agent '" <> Text.NE.unNonEmptyText _dcdaName <> "' not found"
     Just _ -> do
-      let modifiedMetadata =
-            oldMetadata & Metadata.metaBackendConfigs
-              %~ BackendMap.alter @'Backend.DataConnector
-                (fmap (coerce . InsOrdHashMap.delete kind . Metadata.unBackendConfigWrapper))
+      let modifier =
+            Metadata.MetadataModifier $
+              Metadata.metaBackendConfigs
+                %~ BackendMap.alter @'Backend.DataConnector
+                  (fmap (coerce . InsOrdHashMap.delete kind . Metadata.unBackendConfigWrapper))
 
-      SC.Build.withNewInconsistentObjsCheck $
-        SC.Build.buildSchemaCache $ Metadata.MetadataModifier $ const modifiedMetadata
+      SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier
       pure Common.successMsg

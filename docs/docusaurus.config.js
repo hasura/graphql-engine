@@ -154,6 +154,11 @@ const config = {
             position: 'left',
           },
           {
+            to: 'https://hasura.io/changelog',
+            label: "What's New",
+            position: 'left',
+          },
+          {
             type: 'docsVersionDropdown',
             position: 'right',
             dropdownActiveClassDisabled: true,
