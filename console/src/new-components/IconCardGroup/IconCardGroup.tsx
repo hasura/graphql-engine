@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import React from 'react';
 import { FaAngleRight } from 'react-icons/fa';
 
-interface IconCardGroupItem<T> {
+export interface IconCardGroupItem<T> {
   value: T;
   icon: React.ReactNode;
   title: string;
@@ -34,21 +34,20 @@ export const IconCardGroup = <T extends string = string>(
             )}
             key={iValue}
             onClick={() => !disabled && onChange(iValue)}
+            data-trackid={`hasura-familiarity-survey-${title}-option`}
           >
-            <div className="mt-2">{item.icon}</div>
+            <div className="flex items-center">{item.icon}</div>
             <div className="w-9/12 ml-md">
-              <label
-                htmlFor={`card-select-${iValue}`}
+              <div
                 className={clsx(
-                  'mb-sm font-semibold mt-0.5',
+                  'mt-0.5',
                   disabled ? 'cursor-not-allowed' : 'cursor-pointer'
                 )}
               >
-                {title}
-              </label>
-              <p className="text-muted">{body}</p>
+                {body}
+              </div>
             </div>
-            <div className="mt-2 ml-auto">
+            <div className="flex items-center ml-auto">
               <FaAngleRight className="text-gray-500" />
             </div>
           </div>

@@ -1,1 +1,1 @@
-export { IconCardGroup } from './IconCardGroup';
+export { IconCardGroup, IconCardGroupItem } from './IconCardGroup';
