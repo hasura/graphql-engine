@@ -7,6 +7,8 @@ services:
     image: "hasura/dc-reference-agent:${HASURA_VERSION}"
     # build: ./reference
     ## NOTE: If you want to modify the reference-agent you can use the build config for Docker Compose
+    ports:
+      - 8100:8100
 
   postgres:
     image: "postgres:13"
@@ -33,6 +35,16 @@ services:
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: "startup, http-log, webhook-log, websocket-log, query-log"
+
+  ### socat can provide a proxied local native hge for testing
+  # engine:
+  #   image: alpine/socat
+  #   depends_on:
+  #     - postgres
+  #     - reference-agent
+  #   ports:
+  #     - 8080:8080
+  #   command: tcp-listen:8080,fork,reuseaddr tcp-connect:host.docker.internal:8888
 
   replace-metadata:
     depends_on:
