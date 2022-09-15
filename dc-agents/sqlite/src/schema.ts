@@ -26,13 +26,14 @@ function columnCast(ColumnInfoInternalype: string): ScalarType {
   switch(ColumnInfoInternalype) {
     case "string":
     case "number":
-    case "bool":    return ColumnInfoInternalype as ScalarType;
-    case "boolean": return "bool";
-    case "numeric": return "number";
-    case "integer": return "number";
-    case "double":  return "number";
-    case "float":   return "number";
-    case "text":    return "string";
+    case "bool":     return ColumnInfoInternalype as ScalarType;
+    case "boolean":  return "bool";
+    case "numeric":  return "number";
+    case "integer":  return "number";
+    case "double":   return "number";
+    case "float":    return "number";
+    case "text":     return "string";
+    case "datetime": return "DateTime"; // NOTE: Tests are currently case-sensitive for this value
     default:
       console.log(`Unknown SQLite column type: ${ColumnInfoInternalype}. Interpreting as string.`)
       return "string";
@@ -52,7 +53,7 @@ function getColumns(ast : Array<any>) : Array<ColumnInfo> {
 // Interpret the sqlite-parser datatype as a schema column response type.
 function datatypeCast(d: any): any {
   switch(d.variant) {
-    case "datetime": return 'string';
+    case "datetime": return d.variant;
     default: return d.affinity;
   }
 }

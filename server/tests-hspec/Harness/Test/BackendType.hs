@@ -53,6 +53,7 @@ defaultBackendCapabilities = \case
       [yaml|
       relationships: {}
       explain: {}
+      metrics: {}
       queries:
         supportsPrimaryKeys: true
     |]

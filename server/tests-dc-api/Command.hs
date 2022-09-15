@@ -36,7 +36,7 @@ data TestOptions = TestOptions
     _toAgentCapabilities :: AgentCapabilities,
     _toParallelDegree :: Maybe Int,
     _toMatch :: Maybe String,
-    _toSkip :: Maybe String,
+    _toSkip :: [String],
     _toDryRun :: Bool
   }
 
@@ -127,9 +127,8 @@ testOptionsParser =
               <> help "Only run tests that match given PATTERN"
           )
       )
-    <*> optional
-      ( option
-          auto
+    <*> many
+      ( strOption
           ( long "skip"
               <> short 's'
               <> metavar "PATTERN"
