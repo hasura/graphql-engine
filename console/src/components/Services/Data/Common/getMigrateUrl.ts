@@ -12,6 +12,7 @@ const rqlQueryTypes = [
   'run_sql',
   'mssql_run_sql',
   'citus_run_sql',
+  'cockroach_run_sql',
 ];
 
 type Query = {
