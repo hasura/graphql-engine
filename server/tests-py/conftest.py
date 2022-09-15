@@ -7,11 +7,18 @@ import sys
 import threading
 import time
 
-from context import HGECtx, HGECtxError, HGECtxGQLServer, ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, PytestConf, GraphQLWSClient
+from context import HGECtx, HGECtxGQLServer, ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, PytestConf, GraphQLWSClient
+import fixtures.hge
 import graphql_server
 import ports
 
 def pytest_addoption(parser):
+    parser.addoption(
+        "--hge-bin",
+        metavar="HGE_BIN",
+        required=False,
+        help="Hasura GraphQL Engine binary executable",
+    )
     parser.addoption(
         "--hge-urls",
         metavar="HGE_URLS",
@@ -229,13 +236,13 @@ This option may result in test failures if the schema has to change between the 
 
 
 #By default,
-#1) Set default parallelism to one
-#2) Set test grouping to by filename (--dist=loadfile)
+#1) Set test grouping to by class (--dist=loadfile)
+#2) Set default parallelism to one
 def pytest_cmdline_preparse(config, args):
     worker = os.environ.get('PYTEST_XDIST_WORKER')
     if 'xdist' in sys.modules and not worker:  # pytest-xdist plugin
         num = 1
-        args[:] = ["-n" + str(num),"--dist=loadfile"] + args
+        args[:] = ['--dist=loadfile', f'-n{num}'] + args
 
 def pytest_configure(config):
     # Pytest has removed the global pytest.config
@@ -244,15 +251,18 @@ def pytest_configure(config):
     if is_help_option_present(config):
         return
     if is_master(config):
-        if not config.getoption('--hge-urls'):
-            print("hge-urls should be specified")
+        assert not config.getoption('--exitfirst'), 'The "--exitfirst"/"-x" option does not work with xdist.\nSee: https://github.com/pytest-dev/pytest-xdist/issues/54'
+        if not (config.getoption('--hge-bin') or config.getoption('--hge-urls')):
+            print("either --hge-bin or --hge-urls should be specified")
+        if config.getoption('--hge-bin') and config.getoption('--hge-urls'):
+            print("only one of --hge-bin or --hge-urls should be specified")
         if not config.getoption('--pg-urls'):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list = config.getoption('--pg-urls')
         if config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')
-            assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
+            assert config.getoption('--hge-bin') or xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
             assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
 
 @pytest.hookimpl()
@@ -295,8 +305,8 @@ def pytest_report_collectionfinish(config, startdir, items):
 def pytest_configure_node(node):
     if is_help_option_present(node.config):
         return
-    # Pytest has removed the global pytest.config
-    node.workerinput["hge-url"] = node.config.hge_url_list.pop()
+    if not node.config.getoption('--hge-bin'):
+        node.workerinput["hge-url"] = node.config.hge_url_list.pop()
     node.workerinput["pg-url"] = node.config.pg_url_list.pop()
 
 def run_on_current_backend(request: pytest.FixtureRequest):
@@ -324,40 +334,48 @@ def per_backend_test_function(request: pytest.FixtureRequest):
     return per_backend_tests_fixture(request)
 
 @pytest.fixture(scope='class')
-def postgis(hge_ctx):
-    with sqlalchemy.create_engine(hge_ctx.pg_url).connect() as connection:
+def pg_url(request) -> str:
+    return request.config.workerinput["pg-url"]
+
+@pytest.fixture(scope='class')
+def hge_url(request, hge_server) -> str:
+    if hge_server:
+        return hge_server
+    else:
+        return request.config.workerinput["hge-url"]
+
+@pytest.fixture(scope='class')
+def postgis(pg_url):
+    with sqlalchemy.create_engine(pg_url).connect() as connection:
         connection.execute('CREATE EXTENSION IF NOT EXISTS postgis')
         connection.execute('CREATE EXTENSION IF NOT EXISTS postgis_topology')
-        postgis_version = connection.execute('SELECT PostGIS_lib_version() as postgis_version').fetchone()['postgis_version']
+        result = connection.execute('SELECT PostGIS_lib_version() as postgis_version').fetchone()
+        if not result:
+            raise Exception('Could not detect the PostGIS version.')
+        postgis_version: str = result['postgis_version']
         if re.match('^3\\.', postgis_version):
             connection.execute('CREATE EXTENSION IF NOT EXISTS postgis_raster')
 
 @pytest.fixture(scope='class')
-def hge_ctx(request):
-    config = request.config
-    print("create hge_ctx")
-    if is_master(config):
-        hge_url = config.hge_url_list[0]
-    else:
-        hge_url = config.workerinput["hge-url"]
+def hge_port():
+    return fixtures.hge.hge_port()
 
-    if is_master(config):
-        pg_url = config.pg_url_list[0]
-    else:
-        pg_url = config.workerinput["pg-url"]
+@pytest.fixture(scope='class')
+def hge_server(
+    request: pytest.FixtureRequest,
+    hge_port: int,
+    pg_url: str,
+):
+    return fixtures.hge.hge_server(request, hge_port, pg_url)
 
-    try:
-        hge_ctx = HGECtx(hge_url, pg_url, config)
-    except HGECtxError as e:
-        assert False, "Error from hge_ctx: " + str(e)
-        # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
-        #      so at least make sure the real error gets printed (above)
-        pytest.exit(str(e))
-    yield hge_ctx  # provide the fixture value
-    print("teardown hge_ctx")
+@pytest.fixture(scope='class')
+def hge_ctx(request, hge_url, pg_url):
+    hge_ctx = HGECtx(hge_url, pg_url, request.config)
+
+    yield hge_ctx
+
     hge_ctx.teardown()
-    # TODO why do we sleep here?
-    time.sleep(1)
+    time.sleep(1)  # TODO why do we sleep here?
 
 @pytest.fixture(scope='class')
 def evts_webhook(request):
