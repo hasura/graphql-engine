@@ -293,7 +293,7 @@ cleanLoggerCtx =
 -- See Note [Existentially Quantified Types]
 newtype Logger impl = Logger {unLogger :: forall a m. (ToEngineLog a impl, MonadIO m) => a -> m ()}
 
-mkLogger :: LoggerCtx Hasura -> Logger Hasura
+mkLogger :: (J.ToJSON (EngineLogType impl)) => LoggerCtx impl -> Logger impl
 mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logger $ \l -> do
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
