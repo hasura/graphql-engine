@@ -44,7 +44,7 @@
 </span><span id="line-44"></span><span class="hs-comment">-- | Metadata representation of a relationship to a remote schema.</span><span>
 </span><span id="line-45"></span><span class="hs-comment">--</span><span>
 </span><span id="line-46"></span><span class="hs-comment">-- FIXME: move this to Hasura/Metadata</span><span>
-</span><span id="line-47"></span><span id="local-6989586621689810986"><span id="local-6989586621689810987"></span></span><span class="hs-keyword">data</span><span> </span><span id="ToSchemaRelationshipDef"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-var">ToSchemaRelationshipDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ToSchemaRelationshipDef"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-var">ToSchemaRelationshipDef</span></a></span></span><span>
+</span><span id="line-47"></span><span id="local-6989586621689811295"><span id="local-6989586621689811296"></span></span><span class="hs-keyword">data</span><span> </span><span id="ToSchemaRelationshipDef"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-var">ToSchemaRelationshipDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ToSchemaRelationshipDef"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-var">ToSchemaRelationshipDef</span></a></span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Identifier for this mapping.</span><span>
 </span><span id="line-49"></span><span>    </span><span id="_trrdRemoteSchema"><span class="annot"><span class="annottext">ToSchemaRelationshipDef -&gt; RemoteSchemaName
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#_trrdRemoteSchema"><span class="hs-identifier hs-var hs-var">_trrdRemoteSchema</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span>
@@ -54,7 +54,7 @@
 </span><span id="line-52"></span><span>    </span><span id="_trrdRemoteField"><span class="annot"><span class="annottext">ToSchemaRelationshipDef -&gt; RemoteFields
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#_trrdRemoteField"><span class="hs-identifier hs-var hs-var">_trrdRemoteField</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689810976"><span id="local-6989586621689810978"><span id="local-6989586621689810980"><span class="annot"><span class="annottext">Int -&gt; ToSchemaRelationshipDef -&gt; ShowS
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689811285"><span id="local-6989586621689811287"><span id="local-6989586621689811289"><span class="annot"><span class="annottext">Int -&gt; ToSchemaRelationshipDef -&gt; ShowS
 [ToSchemaRelationshipDef] -&gt; ShowS
 ToSchemaRelationshipDef -&gt; String
 (Int -&gt; ToSchemaRelationshipDef -&gt; ShowS)
@@ -69,7 +69,7 @@ show :: ToSchemaRelationshipDef -&gt; String
 $cshow :: ToSchemaRelationshipDef -&gt; String
 showsPrec :: Int -&gt; ToSchemaRelationshipDef -&gt; ShowS
 $cshowsPrec :: Int -&gt; ToSchemaRelationshipDef -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810971"><span id="local-6989586621689810973"><span class="annot"><span class="annottext">ToSchemaRelationshipDef -&gt; ToSchemaRelationshipDef -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811280"><span id="local-6989586621689811282"><span class="annot"><span class="annottext">ToSchemaRelationshipDef -&gt; ToSchemaRelationshipDef -&gt; Bool
 (ToSchemaRelationshipDef -&gt; ToSchemaRelationshipDef -&gt; Bool)
 -&gt; (ToSchemaRelationshipDef -&gt; ToSchemaRelationshipDef -&gt; Bool)
 -&gt; Eq ToSchemaRelationshipDef
@@ -91,15 +91,15 @@ $cto :: forall x. Rep ToSchemaRelationshipDef x -&gt; ToSchemaRelationshipDef
 $cfrom :: forall x. ToSchemaRelationshipDef -&gt; Rep ToSchemaRelationshipDef x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>
-</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810965"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-type">ToSchemaRelationshipDef</span></a></span></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811274"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-type">ToSchemaRelationshipDef</span></a></span></span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810961"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-type">ToSchemaRelationshipDef</span></a></span></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811270"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-type">ToSchemaRelationshipDef</span></a></span></span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-comment">-- | Targeted field in a remote schema relationship.</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- TODO: explain about subfields and why this is a container</span><span>
-</span><span id="line-62"></span><span id="local-6989586621689810958"><span id="local-6989586621689810959"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteFields"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-var">RemoteFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteFields"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-var">RemoteFields</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unRemoteFields"><span class="annot"><span class="annottext">RemoteFields -&gt; NonEmpty FieldCall
+</span><span id="line-62"></span><span id="local-6989586621689811267"><span id="local-6989586621689811268"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteFields"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-var">RemoteFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteFields"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-var">RemoteFields</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unRemoteFields"><span class="annot"><span class="annottext">RemoteFields -&gt; NonEmpty FieldCall
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#unRemoteFields"><span class="hs-identifier hs-var hs-var">unRemoteFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689810950"><span id="local-6989586621689810952"><span id="local-6989586621689810954"><span class="annot"><span class="annottext">Int -&gt; RemoteFields -&gt; ShowS
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689811259"><span id="local-6989586621689811261"><span id="local-6989586621689811263"><span class="annot"><span class="annottext">Int -&gt; RemoteFields -&gt; ShowS
 [RemoteFields] -&gt; ShowS
 RemoteFields -&gt; String
 (Int -&gt; RemoteFields -&gt; ShowS)
@@ -114,7 +114,7 @@ show :: RemoteFields -&gt; String
 $cshow :: RemoteFields -&gt; String
 showsPrec :: Int -&gt; RemoteFields -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteFields -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810946"><span id="local-6989586621689810948"><span class="annot"><span class="annottext">RemoteFields -&gt; RemoteFields -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811255"><span id="local-6989586621689811257"><span class="annot"><span class="annottext">RemoteFields -&gt; RemoteFields -&gt; Bool
 (RemoteFields -&gt; RemoteFields -&gt; Bool)
 -&gt; (RemoteFields -&gt; RemoteFields -&gt; Bool) -&gt; Eq RemoteFields
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -133,16 +133,16 @@ $cto :: forall x. Rep RemoteFields x -&gt; RemoteFields
 $cfrom :: forall x. RemoteFields -&gt; Rep RemoteFields x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810942"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811251"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810939"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811248"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810936"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621689810934"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteFields
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811245"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621689811243"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteFields
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser RemoteFields -&gt; Parser RemoteFields
 forall a. String -&gt; Parser a -&gt; Parser a
 </span><span class="hs-identifier hs-var">prependFailure</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689810932"><span class="hs-identifier hs-var">details</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser RemoteFields -&gt; Parser RemoteFields)
+</span><a href="#local-6989586621689811241"><span class="hs-identifier hs-var">details</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser RemoteFields -&gt; Parser RemoteFields)
 -&gt; (Value -&gt; Parser RemoteFields) -&gt; Value -&gt; Parser RemoteFields
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty FieldCall -&gt; RemoteFields)
@@ -155,28 +155,28 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; Parser RemoteFields
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (NonEmpty FieldCall)
-</span><a href="#local-6989586621689810930"><span class="hs-identifier hs-var">parseRemoteFields</span></a></span><span>
+</span><a href="#local-6989586621689811239"><span class="hs-identifier hs-var">parseRemoteFields</span></a></span><span>
 </span><span id="line-71"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-72"></span><span>      </span><span id="local-6989586621689810932"><span class="annot"><span class="annottext">details :: String
-</span><a href="#local-6989586621689810932"><span class="hs-identifier hs-var hs-var">details</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-72"></span><span>      </span><span id="local-6989586621689811241"><span class="annot"><span class="annottext">details :: String
+</span><a href="#local-6989586621689811241"><span class="hs-identifier hs-var hs-var">details</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Remote fields are represented by an object that maps each field name to its arguments.&quot;</span></span><span>
-</span><span id="line-73"></span><span>      </span><span id="local-6989586621689810930"><span class="annot"><span class="annottext">parseRemoteFields :: Value -&gt; Parser (NonEmpty FieldCall)
-</span><a href="#local-6989586621689810930"><span class="hs-identifier hs-var hs-var">parseRemoteFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-73"></span><span>      </span><span id="local-6989586621689811239"><span class="annot"><span class="annottext">parseRemoteFields :: Value -&gt; Parser (NonEmpty FieldCall)
+</span><a href="#local-6989586621689811239"><span class="hs-identifier hs-var hs-var">parseRemoteFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (NonEmpty FieldCall))
 -&gt; Value
 -&gt; Parser (NonEmpty FieldCall)
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;RemoteFields&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689810928"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810928"><span class="hs-identifier hs-var">hashmap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
+</span><span class="hs-string">&quot;RemoteFields&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689811237"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689811237"><span class="hs-identifier hs-var">hashmap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><span class="hs-identifier hs-var">KM.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810928"><span class="hs-identifier hs-var">hashmap</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-74"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">(</span><span id="local-6989586621689810926"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621689810926"><span class="hs-identifier hs-var">fieldNameKey</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810925"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689810925"><span class="hs-identifier hs-var">callValue</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-75"></span><span>          </span><span id="local-6989586621689810924"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810924"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Name
+</span><a href="#local-6989586621689811237"><span class="hs-identifier hs-var">hashmap</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-74"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">(</span><span id="local-6989586621689811235"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621689811235"><span class="hs-identifier hs-var">fieldNameKey</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811234"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689811234"><span class="hs-identifier hs-var">callValue</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-75"></span><span>          </span><span id="local-6989586621689811233"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689811233"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Name
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser Name) -&gt; Value -&gt; Parser Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -185,26 +185,26 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text
 </span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621689810926"><span class="hs-identifier hs-var">fieldNameKey</span></a></span><span>
-</span><span id="line-76"></span><span>          </span><span id="local-6989586621689810921"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810921"><span class="hs-identifier hs-var">callObject</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Object
+</span><a href="#local-6989586621689811235"><span class="hs-identifier hs-var">fieldNameKey</span></a></span><span>
+</span><span id="line-76"></span><span>          </span><span id="local-6989586621689811230"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689811230"><span class="hs-identifier hs-var">callObject</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Object
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689810925"><span class="hs-identifier hs-var">callValue</span></a></span><span>
-</span><span id="line-77"></span><span>          </span><span id="local-6989586621689810920"><span class="annot"><span class="annottext">RemoteArguments
-</span><a href="#local-6989586621689810920"><span class="hs-identifier hs-var">arguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810921"><span class="hs-identifier hs-var">callObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RemoteArguments
+</span><a href="#local-6989586621689811234"><span class="hs-identifier hs-var">callValue</span></a></span><span>
+</span><span id="line-77"></span><span>          </span><span id="local-6989586621689811229"><span class="annot"><span class="annottext">RemoteArguments
+</span><a href="#local-6989586621689811229"><span class="hs-identifier hs-var">arguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689811230"><span class="hs-identifier hs-var">callObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RemoteArguments
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;arguments&quot;</span></span><span>
-</span><span id="line-78"></span><span>          </span><span id="local-6989586621689810918"><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621689810918"><span class="hs-identifier hs-var">maybeSubField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810921"><span class="hs-identifier hs-var">callObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Value)
+</span><span id="line-78"></span><span>          </span><span id="local-6989586621689811227"><span class="annot"><span class="annottext">Maybe Value
+</span><a href="#local-6989586621689811227"><span class="hs-identifier hs-var">maybeSubField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689811230"><span class="hs-identifier hs-var">callObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Value)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;field&quot;</span></span><span>
-</span><span id="line-79"></span><span>          </span><span id="local-6989586621689810916"><span class="annot"><span class="annottext">[FieldCall]
-</span><a href="#local-6989586621689810916"><span class="hs-identifier hs-var">subFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-79"></span><span>          </span><span id="local-6989586621689811225"><span class="annot"><span class="annottext">[FieldCall]
+</span><a href="#local-6989586621689811225"><span class="hs-identifier hs-var">subFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-80"></span><span>            </span><span class="annot"><span class="annottext">[FieldCall] -&gt; Maybe [FieldCall] -&gt; [FieldCall]
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(Maybe [FieldCall] -&gt; [FieldCall])
@@ -216,18 +216,18 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621689810918"><span class="hs-identifier hs-var">maybeSubField</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689810912"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689810912"><span class="hs-identifier hs-var">fieldValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-81"></span><span>              </span><span id="local-6989586621689810911"><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621689810911"><span class="hs-identifier hs-var">remoteFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (NonEmpty FieldCall)
-</span><a href="#local-6989586621689810930"><span class="hs-identifier hs-var">parseRemoteFields</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689810912"><span class="hs-identifier hs-var">fieldValue</span></a></span><span>
+</span><a href="#local-6989586621689811227"><span class="hs-identifier hs-var">maybeSubField</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689811221"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689811221"><span class="hs-identifier hs-var">fieldValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>              </span><span id="local-6989586621689811220"><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621689811220"><span class="hs-identifier hs-var">remoteFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (NonEmpty FieldCall)
+</span><a href="#local-6989586621689811239"><span class="hs-identifier hs-var">parseRemoteFields</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689811221"><span class="hs-identifier hs-var">fieldValue</span></a></span><span>
 </span><span id="line-82"></span><span>              </span><span class="annot"><span class="annottext">[FieldCall] -&gt; Parser [FieldCall]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; [FieldCall]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621689810911"><span class="hs-identifier hs-var">remoteFields</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689811220"><span class="hs-identifier hs-var">remoteFields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-83"></span><span>          </span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; Parser (NonEmpty FieldCall)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty FieldCall -&gt; Parser (NonEmpty FieldCall))
@@ -236,12 +236,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FieldCall :: Name -&gt; RemoteArguments -&gt; FieldCall
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">fcName :: Name
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcName"><span class="hs-identifier hs-var">fcName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810924"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">fcArguments :: RemoteArguments
+</span><a href="#local-6989586621689811233"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">fcArguments :: RemoteArguments
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcArguments"><span class="hs-identifier hs-var">fcArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteArguments
-</span><a href="#local-6989586621689810920"><span class="hs-identifier hs-var">arguments</span></a></span><span class="hs-special">}</span><span> </span><span class="annot"><span class="annottext">FieldCall -&gt; [FieldCall] -&gt; NonEmpty FieldCall
+</span><a href="#local-6989586621689811229"><span class="hs-identifier hs-var">arguments</span></a></span><span class="hs-special">}</span><span> </span><span class="annot"><span class="annottext">FieldCall -&gt; [FieldCall] -&gt; NonEmpty FieldCall
 forall a. a -&gt; [a] -&gt; NonEmpty a
 </span><span class="hs-operator hs-var">:|</span></span><span> </span><span class="annot"><span class="annottext">[FieldCall]
-</span><a href="#local-6989586621689810916"><span class="hs-identifier hs-var">subFields</span></a></span><span>
+</span><a href="#local-6989586621689811225"><span class="hs-identifier hs-var">subFields</span></a></span><span>
 </span><span id="line-84"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (NonEmpty FieldCall)
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -252,24 +252,24 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Expecting one single mapping, received too many.&quot;</span></span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810899"><span id="local-6989586621689810901"><span id="local-6989586621689810903"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-88"></span><span>  </span><span id="local-6989586621689810897"><span class="annot"><span class="annottext">toJSON :: RemoteFields -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span><span> </span><span id="local-6989586621689810895"><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621689810895"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; Value
-</span><a href="#local-6989586621689810894"><span class="hs-identifier hs-var">remoteFieldsJson</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621689810895"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811208"><span id="local-6989586621689811210"><span id="local-6989586621689811212"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621689811206"><span class="annot"><span class="annottext">toJSON :: RemoteFields -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span><span> </span><span id="local-6989586621689811204"><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621689811204"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; Value
+</span><a href="#local-6989586621689811203"><span class="hs-identifier hs-var">remoteFieldsJson</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621689811204"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-89"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>      </span><span id="local-6989586621689810894"><span class="annot"><span class="annottext">remoteFieldsJson :: NonEmpty FieldCall -&gt; Value
-</span><a href="#local-6989586621689810894"><span class="hs-identifier hs-var hs-var">remoteFieldsJson</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689810893"><span class="annot"><span class="annottext">FieldCall
-</span><a href="#local-6989586621689810893"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span id="local-6989586621689810892"><span class="annot"><span class="annottext">[FieldCall]
-</span><a href="#local-6989586621689810892"><span class="hs-identifier hs-var">subfields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621689811203"><span class="annot"><span class="annottext">remoteFieldsJson :: NonEmpty FieldCall -&gt; Value
+</span><a href="#local-6989586621689811203"><span class="hs-identifier hs-var hs-var">remoteFieldsJson</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689811202"><span class="annot"><span class="annottext">FieldCall
+</span><a href="#local-6989586621689811202"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span id="local-6989586621689811201"><span class="annot"><span class="annottext">[FieldCall]
+</span><a href="#local-6989586621689811201"><span class="hs-identifier hs-var">subfields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-91"></span><span>        </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
 </span><span id="line-92"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldCall -&gt; Name
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcName"><span class="hs-identifier hs-var hs-var">fcName</span></a></span><span> </span><span class="annot"><span class="annottext">FieldCall
-</span><a href="#local-6989586621689810893"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689811202"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>              </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
@@ -287,20 +287,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">FieldCall -&gt; RemoteArguments
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcArguments"><span class="hs-identifier hs-var hs-var">fcArguments</span></a></span><span> </span><span class="annot"><span class="annottext">FieldCall
-</span><a href="#local-6989586621689810893"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689811202"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-96"></span><span>                      </span><span class="annot"><span class="annottext">[FieldCall] -&gt; Maybe (NonEmpty FieldCall)
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[FieldCall]
-</span><a href="#local-6989586621689810892"><span class="hs-identifier hs-var">subfields</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty FieldCall)
+</span><a href="#local-6989586621689811201"><span class="hs-identifier hs-var">subfields</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty FieldCall)
 -&gt; (NonEmpty FieldCall -&gt; (Key, Value)) -&gt; Maybe (Key, Value)
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689810884"><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621689810884"><span class="hs-identifier hs-var">sf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689811193"><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621689811193"><span class="hs-identifier hs-var">sf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;field&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; Value
-</span><a href="#local-6989586621689810894"><span class="hs-identifier hs-var">remoteFieldsJson</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621689810884"><span class="hs-identifier hs-var">sf</span></a></span><span>
+</span><a href="#local-6989586621689811203"><span class="hs-identifier hs-var">remoteFieldsJson</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621689811193"><span class="hs-identifier hs-var">sf</span></a></span><span>
 </span><span id="line-97"></span><span>                    </span><span class="hs-special">]</span><span>
 </span><span id="line-98"></span><span>                </span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>          </span><span class="hs-special">]</span><span>
@@ -308,13 +308,13 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span id="line-101"></span><span class="hs-comment">-- | Associates a field name with the arguments it will be passed in the query.</span><span>
 </span><span id="line-102"></span><span class="hs-comment">--</span><span>
 </span><span id="line-103"></span><span class="hs-comment">-- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments</span><span>
-</span><span id="line-104"></span><span id="local-6989586621689810882"><span id="local-6989586621689810883"></span></span><span class="hs-keyword">data</span><span> </span><span id="FieldCall"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-var">FieldCall</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FieldCall"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-var">FieldCall</span></a></span></span><span>
+</span><span id="line-104"></span><span id="local-6989586621689811191"><span id="local-6989586621689811192"></span></span><span class="hs-keyword">data</span><span> </span><span id="FieldCall"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-var">FieldCall</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FieldCall"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-var">FieldCall</span></a></span></span><span>
 </span><span id="line-105"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="fcName"><span class="annot"><span class="annottext">FieldCall -&gt; Name
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcName"><span class="hs-identifier hs-var hs-var">fcName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
 </span><span id="line-106"></span><span>    </span><span id="fcArguments"><span class="annot"><span class="annottext">FieldCall -&gt; RemoteArguments
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcArguments"><span class="hs-identifier hs-var hs-var">fcArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span><span>
 </span><span id="line-107"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689810876"><span id="local-6989586621689810878"><span id="local-6989586621689810880"><span class="annot"><span class="annottext">Int -&gt; FieldCall -&gt; ShowS
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689811185"><span id="local-6989586621689811187"><span id="local-6989586621689811189"><span class="annot"><span class="annottext">Int -&gt; FieldCall -&gt; ShowS
 [FieldCall] -&gt; ShowS
 FieldCall -&gt; String
 (Int -&gt; FieldCall -&gt; ShowS)
@@ -329,7 +329,7 @@ show :: FieldCall -&gt; String
 $cshow :: FieldCall -&gt; String
 showsPrec :: Int -&gt; FieldCall -&gt; ShowS
 $cshowsPrec :: Int -&gt; FieldCall -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810872"><span id="local-6989586621689810874"><span class="annot"><span class="annottext">FieldCall -&gt; FieldCall -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811181"><span id="local-6989586621689811183"><span class="annot"><span class="annottext">FieldCall -&gt; FieldCall -&gt; Bool
 (FieldCall -&gt; FieldCall -&gt; Bool)
 -&gt; (FieldCall -&gt; FieldCall -&gt; Bool) -&gt; Eq FieldCall
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -347,21 +347,21 @@ $cto :: forall x. Rep FieldCall x -&gt; FieldCall
 $cfrom :: forall x. FieldCall -&gt; Rep FieldCall x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-109"></span><span>
-</span><span id="line-110"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810868"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811177"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span></span><span>
 </span><span id="line-111"></span><span>
-</span><span id="line-112"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810865"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span></span><span>
+</span><span id="line-112"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811174"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span></span><span>
 </span><span id="line-113"></span><span>
-</span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810861"><span id="local-6989586621689810863"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span></span></span><span>
+</span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811170"><span id="local-6989586621689811172"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span></span></span><span>
 </span><span id="line-115"></span><span>
 </span><span id="line-116"></span><span class="hs-comment">-- | Arguments to a remote GraphQL fields, represented as a mapping from name to</span><span>
 </span><span id="line-117"></span><span class="hs-comment">-- GraphQL Value. Said values can be variable names, in which case they'll be</span><span>
 </span><span id="line-118"></span><span class="hs-comment">-- referring to values we're closed over.</span><span>
 </span><span id="line-119"></span><span class="hs-comment">-- TODO: expand on this</span><span>
-</span><span id="line-120"></span><span id="local-6989586621689810858"><span id="local-6989586621689810859"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteArguments"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-var">RemoteArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteArguments"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-var">RemoteArguments</span></a></span></span><span>
+</span><span id="line-120"></span><span id="local-6989586621689811167"><span id="local-6989586621689811168"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteArguments"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-var">RemoteArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteArguments"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-var">RemoteArguments</span></a></span></span><span>
 </span><span id="line-121"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="getRemoteArguments"><span class="annot"><span class="annottext">RemoteArguments -&gt; HashMap Name (Value Name)
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#getRemoteArguments"><span class="hs-identifier hs-var hs-var">getRemoteArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689810850"><span id="local-6989586621689810852"><span id="local-6989586621689810854"><span class="annot"><span class="annottext">Int -&gt; RemoteArguments -&gt; ShowS
+</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689811159"><span id="local-6989586621689811161"><span id="local-6989586621689811163"><span class="annot"><span class="annottext">Int -&gt; RemoteArguments -&gt; ShowS
 [RemoteArguments] -&gt; ShowS
 RemoteArguments -&gt; String
 (Int -&gt; RemoteArguments -&gt; ShowS)
@@ -376,7 +376,7 @@ show :: RemoteArguments -&gt; String
 $cshow :: RemoteArguments -&gt; String
 showsPrec :: Int -&gt; RemoteArguments -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteArguments -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810846"><span id="local-6989586621689810848"><span class="annot"><span class="annottext">RemoteArguments -&gt; RemoteArguments -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811155"><span id="local-6989586621689811157"><span class="annot"><span class="annottext">RemoteArguments -&gt; RemoteArguments -&gt; Bool
 (RemoteArguments -&gt; RemoteArguments -&gt; Bool)
 -&gt; (RemoteArguments -&gt; RemoteArguments -&gt; Bool)
 -&gt; Eq RemoteArguments
@@ -394,7 +394,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RemoteArguments x -&gt; RemoteArguments
 $cfrom :: forall x. RemoteArguments -&gt; Rep RemoteArguments x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810841"><span class="annot"><span class="annottext">Eq RemoteArguments
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811150"><span class="annot"><span class="annottext">Eq RemoteArguments
 Eq RemoteArguments
 -&gt; (Accesses -&gt; RemoteArguments -&gt; RemoteArguments -&gt; Bool)
 -&gt; Cacheable RemoteArguments
@@ -403,21 +403,21 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; RemoteArguments -&gt; RemoteArguments -&gt; Bool
 $cunchanged :: Accesses -&gt; RemoteArguments -&gt; RemoteArguments -&gt; Bool
 $cp1Cacheable :: Eq RemoteArguments
-</span><a href="#local-6989586621689810841"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810839"><span class="annot"><span class="annottext">RemoteArguments -&gt; ()
+</span><a href="#local-6989586621689811150"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811148"><span class="annot"><span class="annottext">RemoteArguments -&gt; ()
 (RemoteArguments -&gt; ()) -&gt; NFData RemoteArguments
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: RemoteArguments -&gt; ()
 $crnf :: RemoteArguments -&gt; ()
-</span><a href="#local-6989586621689810839"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689811148"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810835"><span id="local-6989586621689810837"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span></span></span><span>
+</span><span id="line-125"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811144"><span id="local-6989586621689811146"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span></span></span><span>
 </span><span id="line-126"></span><span>
-</span><span id="line-127"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810832"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621689810831"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteArguments
-</span><a href="#local-6989586621689810831"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser RemoteArguments -&gt; Parser RemoteArguments
+</span><span id="line-127"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811141"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621689811140"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteArguments
+</span><a href="#local-6989586621689811140"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser RemoteArguments -&gt; Parser RemoteArguments
 forall a. String -&gt; Parser a -&gt; Parser a
 </span><span class="hs-identifier hs-var">prependFailure</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689810830"><span class="hs-identifier hs-var">details</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser RemoteArguments -&gt; Parser RemoteArguments)
+</span><a href="#local-6989586621689811139"><span class="hs-identifier hs-var">details</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser RemoteArguments -&gt; Parser RemoteArguments)
 -&gt; (Value -&gt; Parser RemoteArguments)
 -&gt; Value
 -&gt; Parser RemoteArguments
@@ -438,15 +438,15 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;RemoteArguments&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser (HashMap Name (Value Name))
-</span><a href="#local-6989586621689810829"><span class="hs-identifier hs-var">parseObjectFieldsToGValue</span></a></span><span>
+</span><a href="#local-6989586621689811138"><span class="hs-identifier hs-var">parseObjectFieldsToGValue</span></a></span><span>
 </span><span id="line-129"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-130"></span><span>      </span><span id="local-6989586621689810830"><span class="annot"><span class="annottext">details :: String
-</span><a href="#local-6989586621689810830"><span class="hs-identifier hs-var hs-var">details</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-130"></span><span>      </span><span id="local-6989586621689811139"><span class="annot"><span class="annottext">details :: String
+</span><a href="#local-6989586621689811139"><span class="hs-identifier hs-var hs-var">details</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Remote arguments are represented by an object that maps each argument name to its value.&quot;</span></span><span>
 </span><span id="line-131"></span><span>
-</span><span id="line-132"></span><span>      </span><span id="local-6989586621689810829"><span class="annot"><span class="annottext">parseObjectFieldsToGValue :: Object -&gt; Parser (HashMap Name (Value Name))
-</span><a href="#local-6989586621689810829"><span class="hs-identifier hs-var hs-var">parseObjectFieldsToGValue</span></a></span></span><span> </span><span id="local-6989586621689810828"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810828"><span class="hs-identifier hs-var">keyMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-132"></span><span>      </span><span id="local-6989586621689811138"><span class="annot"><span class="annottext">parseObjectFieldsToGValue :: Object -&gt; Parser (HashMap Name (Value Name))
+</span><a href="#local-6989586621689811138"><span class="hs-identifier hs-var hs-var">parseObjectFieldsToGValue</span></a></span></span><span> </span><span id="local-6989586621689811137"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689811137"><span class="hs-identifier hs-var">keyMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">[(Name, Value Name)] -&gt; HashMap Name (Value Name)
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HM.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Name, Value Name)] -&gt; HashMap Name (Value Name))
@@ -462,47 +462,47 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><span class="hs-identifier hs-var">KM.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810828"><span class="hs-identifier hs-var">keyMap</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Text
-</span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span id="local-6989586621689810826"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810826"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810825"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689810825"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-134"></span><span>          </span><span id="local-6989586621689810824"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810824"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="#local-6989586621689811137"><span class="hs-identifier hs-var">keyMap</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Text
+</span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span id="local-6989586621689811135"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689811135"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811134"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689811134"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-134"></span><span>          </span><span id="local-6989586621689811133"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689811133"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810826"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Parser Name -&gt; Parser Name
+</span><a href="#local-6989586621689811135"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Parser Name -&gt; Parser Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser Name
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810826"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621689811135"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; is an invalid key name&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-135"></span><span>          </span><span id="local-6989586621689810820"><span class="annot"><span class="annottext">Value Name
-</span><a href="#local-6989586621689810820"><span class="hs-identifier hs-var">parsedValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (Value Name)
-</span><a href="#local-6989586621689810819"><span class="hs-identifier hs-var">parseValueAsGValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689810825"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-135"></span><span>          </span><span id="local-6989586621689811129"><span class="annot"><span class="annottext">Value Name
+</span><a href="#local-6989586621689811129"><span class="hs-identifier hs-var">parsedValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (Value Name)
+</span><a href="#local-6989586621689811128"><span class="hs-identifier hs-var">parseValueAsGValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689811134"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-136"></span><span>          </span><span class="annot"><span class="annottext">(Name, Value Name) -&gt; Parser (Name, Value Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810824"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value Name
-</span><a href="#local-6989586621689810820"><span class="hs-identifier hs-var">parsedValue</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689811133"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value Name
+</span><a href="#local-6989586621689811129"><span class="hs-identifier hs-var">parsedValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span>      </span><span id="local-6989586621689810819"><span class="annot"><span class="annottext">parseValueAsGValue :: Value -&gt; Parser (Value Name)
-</span><a href="#local-6989586621689810819"><span class="hs-identifier hs-var hs-var">parseValueAsGValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-139"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621689810817"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810817"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>      </span><span id="local-6989586621689811128"><span class="annot"><span class="annottext">parseValueAsGValue :: Value -&gt; Parser (Value Name)
+</span><a href="#local-6989586621689811128"><span class="hs-identifier hs-var hs-var">parseValueAsGValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-139"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621689811126"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689811126"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-140"></span><span>          </span><span class="annot"><span class="annottext">HashMap Name (Value Name) -&gt; Value Name
 forall var. HashMap Name (Value var) -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VObject</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (Value Name) -&gt; Value Name)
 -&gt; Parser (HashMap Name (Value Name)) -&gt; Parser (Value Name)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser (HashMap Name (Value Name))
-</span><a href="#local-6989586621689810829"><span class="hs-identifier hs-var">parseObjectFieldsToGValue</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689810817"><span class="hs-identifier hs-var">obj</span></a></span><span>
-</span><span id="line-141"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span id="local-6989586621689810814"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689810814"><span class="hs-identifier hs-var">array</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689811138"><span class="hs-identifier hs-var">parseObjectFieldsToGValue</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689811126"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><span id="line-141"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span id="local-6989586621689811123"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689811123"><span class="hs-identifier hs-var">array</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-142"></span><span>          </span><span class="annot"><span class="annottext">[Value Name] -&gt; Value Name
 forall var. [Value var] -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VList</span></span><span> </span><span class="annot"><span class="annottext">([Value Name] -&gt; Value Name)
@@ -521,19 +521,19 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (Value Name)
-</span><a href="#local-6989586621689810819"><span class="hs-identifier hs-var">parseValueAsGValue</span></a></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689810814"><span class="hs-identifier hs-var">array</span></a></span><span>
-</span><span id="line-143"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621689810811"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810811"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689811128"><span class="hs-identifier hs-var">parseValueAsGValue</span></a></span><span> </span><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689811123"><span class="hs-identifier hs-var">array</span></a></span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621689811120"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689811120"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-144"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe (Char, Text)
 </span><span class="hs-identifier hs-var">T.uncons</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810811"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689811120"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-145"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char
-</span><span class="hs-char">'$'</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810809"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810809"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-char">'$'</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811118"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689811118"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><span class="hs-identifier hs-var">T.null</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810809"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Value Name)
+</span><a href="#local-6989586621689811118"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Value Name)
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser (Value Name)) -&gt; String -&gt; Parser (Value Name)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -542,7 +542,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-147"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810809"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689811118"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-148"></span><span>                </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Value Name)
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -553,12 +553,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810809"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621689811118"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;'&quot;</span></span><span>
-</span><span id="line-149"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689810807"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810807"><span class="hs-identifier hs-var">name'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Name -&gt; Parser (Value Name)
+</span><span id="line-149"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689811116"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689811116"><span class="hs-identifier hs-var">name'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Name -&gt; Parser (Value Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Value Name -&gt; Parser (Value Name))
 -&gt; Value Name -&gt; Parser (Value Name)
@@ -566,16 +566,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value Name
 forall var. var -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VVariable</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810807"><span class="hs-identifier hs-var">name'</span></a></span><span>
+</span><a href="#local-6989586621689811116"><span class="hs-identifier hs-var">name'</span></a></span><span>
 </span><span id="line-150"></span><span>            </span><span class="annot"><span class="annottext">Maybe (Char, Text)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Name -&gt; Parser (Value Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value Name
 forall var. Text -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VString</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810811"><span class="hs-identifier hs-var">text</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-151"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Number</span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689810803"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689810803"><span class="hs-identifier hs-var">scientificNum</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689811120"><span class="hs-identifier hs-var">text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Number</span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689811112"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689811112"><span class="hs-identifier hs-var">scientificNum</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-152"></span><span>          </span><span class="annot"><span class="annottext">Value Name -&gt; Parser (Value Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Value Name -&gt; Parser (Value Name))
@@ -584,21 +584,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Either Float Integer
 forall r i. (RealFloat r, Integral i) =&gt; Scientific -&gt; Either r i
 </span><span class="hs-identifier hs-var">floatingOrInteger</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689810803"><span class="hs-identifier hs-var">scientificNum</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689811112"><span class="hs-identifier hs-var">scientificNum</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-153"></span><span>            </span><span class="hs-comment">-- this number couldn't be interpreted as an integer</span><span>
 </span><span id="line-154"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Float
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value Name
 forall var. Scientific -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VFloat</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689810803"><span class="hs-identifier hs-var">scientificNum</span></a></span><span>
+</span><a href="#local-6989586621689811112"><span class="hs-identifier hs-var">scientificNum</span></a></span><span>
 </span><span id="line-155"></span><span>            </span><span class="hs-comment">-- this number was successfully interpreted as an integer</span><span>
-</span><span id="line-156"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689810800"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689810800"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value Name
+</span><span id="line-156"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689811109"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689811109"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value Name
 forall var. Integer -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VInt</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689810800"><span class="hs-identifier hs-var">n</span></a></span><span>
-</span><span id="line-157"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689810797"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689810797"><span class="hs-identifier hs-var">boolean</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689811109"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-157"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689811106"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689811106"><span class="hs-identifier hs-var">boolean</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-158"></span><span>          </span><span class="annot"><span class="annottext">Value Name -&gt; Parser (Value Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Value Name -&gt; Parser (Value Name))
@@ -607,7 +607,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value Name
 forall var. Bool -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VBoolean</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689810797"><span class="hs-identifier hs-var">boolean</span></a></span><span>
+</span><a href="#local-6989586621689811106"><span class="hs-identifier hs-var">boolean</span></a></span><span>
 </span><span id="line-159"></span><span>        </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">Null</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-160"></span><span>          </span><span class="annot"><span class="annottext">Value Name -&gt; Parser (Value Name)
@@ -616,15 +616,15 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall var. Value var
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span>
 </span><span id="line-161"></span><span>
-</span><span id="line-162"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810787"><span id="local-6989586621689810789"><span id="local-6989586621689810791"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-163"></span><span>  </span><span id="local-6989586621689810786"><span class="annot"><span class="annottext">toJSON :: RemoteArguments -&gt; Value
-</span><a href="#local-6989586621689810786"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span><span> </span><span id="local-6989586621689810785"><span class="annot"><span class="annottext">HashMap Name (Value Name)
-</span><a href="#local-6989586621689810785"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name) -&gt; Value
-</span><a href="#local-6989586621689810784"><span class="hs-identifier hs-var">fieldsToObject</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name)
-</span><a href="#local-6989586621689810785"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><span id="line-162"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811096"><span id="local-6989586621689811098"><span id="local-6989586621689811100"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-163"></span><span>  </span><span id="local-6989586621689811095"><span class="annot"><span class="annottext">toJSON :: RemoteArguments -&gt; Value
+</span><a href="#local-6989586621689811095"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteArguments"><span class="hs-identifier hs-type">RemoteArguments</span></a></span><span> </span><span id="local-6989586621689811094"><span class="annot"><span class="annottext">HashMap Name (Value Name)
+</span><a href="#local-6989586621689811094"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name) -&gt; Value
+</span><a href="#local-6989586621689811093"><span class="hs-identifier hs-var">fieldsToObject</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name)
+</span><a href="#local-6989586621689811094"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-164"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-165"></span><span>      </span><span id="local-6989586621689810784"><span class="annot"><span class="annottext">fieldsToObject :: HashMap Name (Value Name) -&gt; Value
-</span><a href="#local-6989586621689810784"><span class="hs-identifier hs-var hs-var">fieldsToObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-165"></span><span>      </span><span id="local-6989586621689811093"><span class="annot"><span class="annottext">fieldsToObject :: HashMap Name (Value Name) -&gt; Value
+</span><a href="#local-6989586621689811093"><span class="hs-identifier hs-var hs-var">fieldsToObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-166"></span><span>        </span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">Object</span></span><span> </span><span class="annot"><span class="annottext">(Object -&gt; Value)
 -&gt; (HashMap Name (Value Name) -&gt; Object)
@@ -651,7 +651,7 @@ Bifunctor p =&gt;
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value Name -&gt; Value
-</span><a href="#local-6989586621689810782"><span class="hs-identifier hs-var">gValueToValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Name, Value Name)] -&gt; [(Key, Value)])
+</span><a href="#local-6989586621689811091"><span class="hs-identifier hs-var">gValueToValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Name, Value Name)] -&gt; [(Key, Value)])
 -&gt; (HashMap Name (Value Name) -&gt; [(Name, Value Name)])
 -&gt; HashMap Name (Value Name)
 -&gt; [(Key, Value)]
@@ -660,58 +660,58 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">HM.toList</span></span><span>
 </span><span id="line-167"></span><span>
-</span><span id="line-168"></span><span>      </span><span id="local-6989586621689810782"><span class="annot"><span class="annottext">gValueToValue :: Value Name -&gt; Value
-</span><a href="#local-6989586621689810782"><span class="hs-identifier hs-var hs-var">gValueToValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-168"></span><span>      </span><span id="local-6989586621689811091"><span class="annot"><span class="annottext">gValueToValue :: Value Name -&gt; Value
+</span><a href="#local-6989586621689811091"><span class="hs-identifier hs-var hs-var">gValueToValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-169"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-170"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VVariable</span></span><span> </span><span id="local-6989586621689810780"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810780"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-170"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VVariable</span></span><span> </span><span id="local-6989586621689811089"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689811089"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810780"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-171"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VInt</span></span><span> </span><span id="local-6989586621689810779"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689810779"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value
+</span><a href="#local-6989586621689811089"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-171"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VInt</span></span><span> </span><span id="local-6989586621689811088"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689811088"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689810779"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-172"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VFloat</span></span><span> </span><span id="local-6989586621689810778"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689810778"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="#local-6989586621689811088"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-172"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VFloat</span></span><span> </span><span id="local-6989586621689811087"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689811087"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689810778"><span class="hs-identifier hs-var">f</span></a></span><span>
-</span><span id="line-173"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VString</span></span><span> </span><span id="local-6989586621689810777"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810777"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621689811087"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-173"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VString</span></span><span> </span><span id="local-6989586621689811086"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689811086"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810777"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-174"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VBoolean</span></span><span> </span><span id="local-6989586621689810776"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689810776"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621689811086"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-174"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VBoolean</span></span><span> </span><span id="local-6989586621689811085"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689811085"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689810776"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621689811085"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-175"></span><span>          </span><span class="annot"><span class="annottext">Value Name
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">Null</span></span><span>
-</span><span id="line-176"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VEnum</span></span><span> </span><span id="local-6989586621689810774"><span class="annot"><span class="annottext">EnumValue
-</span><a href="#local-6989586621689810774"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; Value
+</span><span id="line-176"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VEnum</span></span><span> </span><span id="local-6989586621689811083"><span class="annot"><span class="annottext">EnumValue
+</span><a href="#local-6989586621689811083"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">EnumValue
-</span><a href="#local-6989586621689810774"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-177"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621689810773"><span class="annot"><span class="annottext">[Value Name]
-</span><a href="#local-6989586621689810773"><span class="hs-identifier hs-var">list</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Value
+</span><a href="#local-6989586621689811083"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-177"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621689811082"><span class="annot"><span class="annottext">[Value Name]
+</span><a href="#local-6989586621689811082"><span class="hs-identifier hs-var">list</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value Name -&gt; Value) -&gt; [Value Name] -&gt; [Value]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Value Name -&gt; Value
-</span><a href="#local-6989586621689810782"><span class="hs-identifier hs-var">gValueToValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value Name]
-</span><a href="#local-6989586621689810773"><span class="hs-identifier hs-var">list</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-178"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621689810772"><span class="annot"><span class="annottext">HashMap Name (Value Name)
-</span><a href="#local-6989586621689810772"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name) -&gt; Value
-</span><a href="#local-6989586621689810784"><span class="hs-identifier hs-var">fieldsToObject</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name)
-</span><a href="#local-6989586621689810772"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621689811091"><span class="hs-identifier hs-var">gValueToValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value Name]
+</span><a href="#local-6989586621689811082"><span class="hs-identifier hs-var">list</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-178"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621689811081"><span class="annot"><span class="annottext">HashMap Name (Value Name)
+</span><a href="#local-6989586621689811081"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name) -&gt; Value
+</span><a href="#local-6989586621689811093"><span class="hs-identifier hs-var">fieldsToObject</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Name)
+</span><a href="#local-6989586621689811081"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-179"></span><span>
 </span><span id="line-180"></span><span class="hs-comment">-- schema cache representation</span><span>
 </span><span id="line-181"></span><span>
@@ -719,9 +719,9 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span id="line-183"></span><span class="hs-comment">-- defined. This is used in error messages and type name generation for</span><span>
 </span><span id="line-184"></span><span class="hs-comment">-- arguments in remote relationship fields to remote schemas (See</span><span>
 </span><span id="line-185"></span><span class="hs-comment">-- RemoteRelationship.Validate)</span><span>
-</span><span id="line-186"></span><span id="local-6989586621689810770"><span id="local-6989586621689810771"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="LHSIdentifier"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-var">LHSIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LHSIdentifier"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-var">LHSIdentifier</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getLHSIdentifier"><span class="annot"><span class="annottext">LHSIdentifier -&gt; Text
+</span><span id="line-186"></span><span id="local-6989586621689811079"><span id="local-6989586621689811080"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="LHSIdentifier"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-var">LHSIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LHSIdentifier"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-var">LHSIdentifier</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getLHSIdentifier"><span class="annot"><span class="annottext">LHSIdentifier -&gt; Text
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#getLHSIdentifier"><span class="hs-identifier hs-var hs-var">getLHSIdentifier</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-187"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689810762"><span id="local-6989586621689810764"><span id="local-6989586621689810766"><span class="annot"><span class="annottext">Int -&gt; LHSIdentifier -&gt; ShowS
+</span><span id="line-187"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689811071"><span id="local-6989586621689811073"><span id="local-6989586621689811075"><span class="annot"><span class="annottext">Int -&gt; LHSIdentifier -&gt; ShowS
 [LHSIdentifier] -&gt; ShowS
 LHSIdentifier -&gt; String
 (Int -&gt; LHSIdentifier -&gt; ShowS)
@@ -736,7 +736,7 @@ show :: LHSIdentifier -&gt; String
 $cshow :: LHSIdentifier -&gt; String
 showsPrec :: Int -&gt; LHSIdentifier -&gt; ShowS
 $cshowsPrec :: Int -&gt; LHSIdentifier -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810758"><span id="local-6989586621689810760"><span class="annot"><span class="annottext">LHSIdentifier -&gt; LHSIdentifier -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811067"><span id="local-6989586621689811069"><span class="annot"><span class="annottext">LHSIdentifier -&gt; LHSIdentifier -&gt; Bool
 (LHSIdentifier -&gt; LHSIdentifier -&gt; Bool)
 -&gt; (LHSIdentifier -&gt; LHSIdentifier -&gt; Bool) -&gt; Eq LHSIdentifier
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -755,9 +755,9 @@ $cto :: forall x. Rep LHSIdentifier x -&gt; LHSIdentifier
 $cfrom :: forall x. LHSIdentifier -&gt; Rep LHSIdentifier x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-188"></span><span>
-</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810753"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-type">LHSIdentifier</span></a></span></span><span>
+</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811062"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-type">LHSIdentifier</span></a></span></span><span>
 </span><span id="line-190"></span><span>
-</span><span id="line-191"></span><span id="local-6989586621689810752"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#tableNameToLHSIdentifier"><span class="hs-identifier hs-type">tableNameToLHSIdentifier</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689810752"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689810752"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-type">LHSIdentifier</span></a></span></span><span>
+</span><span id="line-191"></span><span id="local-6989586621689811061"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#tableNameToLHSIdentifier"><span class="hs-identifier hs-type">tableNameToLHSIdentifier</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689811061"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689811061"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-type">LHSIdentifier</span></a></span></span><span>
 </span><span id="line-192"></span><span id="tableNameToLHSIdentifier"><span class="annot"><span class="annottext">tableNameToLHSIdentifier :: TableName b -&gt; LHSIdentifier
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#tableNameToLHSIdentifier"><span class="hs-identifier hs-var hs-var">tableNameToLHSIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; LHSIdentifier
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-var">LHSIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; LHSIdentifier)
@@ -783,34 +783,34 @@ forall a. ToTxt a =&gt; a -&gt; Text
 </span><span id="line-200"></span><span class="hs-comment">-- the raw text (such as the case of empty identifiers).</span><span>
 </span><span id="line-201"></span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#lhsIdentifierToGraphQLName"><span class="hs-identifier hs-type">lhsIdentifierToGraphQLName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-type">LHSIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-202"></span><span id="lhsIdentifierToGraphQLName"><span class="annot"><span class="annottext">lhsIdentifierToGraphQLName :: LHSIdentifier -&gt; Maybe Name
-</span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#lhsIdentifierToGraphQLName"><span class="hs-identifier hs-var hs-var">lhsIdentifierToGraphQLName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-type">LHSIdentifier</span></a></span><span> </span><span id="local-6989586621689810750"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810750"><span class="hs-identifier hs-var">rawText</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#lhsIdentifierToGraphQLName"><span class="hs-identifier hs-var hs-var">lhsIdentifierToGraphQLName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#LHSIdentifier"><span class="hs-identifier hs-type">LHSIdentifier</span></a></span><span> </span><span id="local-6989586621689811059"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689811059"><span class="hs-identifier hs-var">rawText</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Name) -&gt; Text -&gt; Maybe Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.map</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
-</span><a href="#local-6989586621689810748"><span class="hs-identifier hs-var">adjust</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810750"><span class="hs-identifier hs-var">rawText</span></a></span><span>
+</span><a href="#local-6989586621689811057"><span class="hs-identifier hs-var">adjust</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689811059"><span class="hs-identifier hs-var">rawText</span></a></span><span>
 </span><span id="line-203"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-204"></span><span>    </span><span id="local-6989586621689810748"><span class="annot"><span class="annottext">adjust :: Char -&gt; Char
-</span><a href="#local-6989586621689810748"><span class="hs-identifier hs-var hs-var">adjust</span></a></span></span><span> </span><span id="local-6989586621689810747"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689810747"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-204"></span><span>    </span><span id="local-6989586621689811057"><span class="annot"><span class="annottext">adjust :: Char -&gt; Char
+</span><a href="#local-6989586621689811057"><span class="hs-identifier hs-var hs-var">adjust</span></a></span></span><span> </span><span id="local-6989586621689811056"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621689811056"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-205"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">C.isAsciiUpper</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689810747"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689811056"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">C.isAsciiLower</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689810747"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689811056"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">C.isDigit</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689810747"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><a href="#local-6989586621689811056"><span class="hs-identifier hs-var">c</span></a></span><span>
 </span><span id="line-206"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689810747"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><a href="#local-6989586621689811056"><span class="hs-identifier hs-var">c</span></a></span><span>
 </span><span id="line-207"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'_'</span></span><span>
 </span><span id="line-208"></span><span>
 </span><span id="line-209"></span><span class="hs-comment">-- | Schema cache information for a table field targeting a remote schema.</span><span>
-</span><span id="line-210"></span><span id="local-6989586621689810741"><span id="local-6989586621689810742"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaFieldInfo"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-var">RemoteSchemaFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaFieldInfo"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-var">RemoteSchemaFieldInfo</span></a></span></span><span>
+</span><span id="line-210"></span><span id="local-6989586621689811050"><span id="local-6989586621689811051"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaFieldInfo"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-var">RemoteSchemaFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaFieldInfo"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-var">RemoteSchemaFieldInfo</span></a></span></span><span>
 </span><span id="line-211"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Field name to which we'll map the remote in hasura; this becomes part</span><span>
 </span><span id="line-212"></span><span>    </span><span class="hs-comment">--   of the hasura schema.</span><span>
 </span><span id="line-213"></span><span>    </span><span id="_rrfiName"><span class="annot"><span class="annottext">RemoteSchemaFieldInfo -&gt; RelName
@@ -847,7 +847,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RemoteSchemaFieldInfo x -&gt; RemoteSchemaFieldInfo
 $cfrom :: forall x. RemoteSchemaFieldInfo -&gt; Rep RemoteSchemaFieldInfo x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810727"><span id="local-6989586621689810729"><span class="annot"><span class="annottext">RemoteSchemaFieldInfo -&gt; RemoteSchemaFieldInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811036"><span id="local-6989586621689811038"><span class="annot"><span class="annottext">RemoteSchemaFieldInfo -&gt; RemoteSchemaFieldInfo -&gt; Bool
 (RemoteSchemaFieldInfo -&gt; RemoteSchemaFieldInfo -&gt; Bool)
 -&gt; (RemoteSchemaFieldInfo -&gt; RemoteSchemaFieldInfo -&gt; Bool)
 -&gt; Eq RemoteSchemaFieldInfo
@@ -856,7 +856,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RemoteSchemaFieldInfo -&gt; RemoteSchemaFieldInfo -&gt; Bool
 == :: RemoteSchemaFieldInfo -&gt; RemoteSchemaFieldInfo -&gt; Bool
 $c== :: RemoteSchemaFieldInfo -&gt; RemoteSchemaFieldInfo -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689810721"><span id="local-6989586621689810723"><span id="local-6989586621689810725"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaFieldInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689811030"><span id="local-6989586621689811032"><span id="local-6989586621689811034"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaFieldInfo -&gt; ShowS
 [RemoteSchemaFieldInfo] -&gt; ShowS
 RemoteSchemaFieldInfo -&gt; String
 (Int -&gt; RemoteSchemaFieldInfo -&gt; ShowS)
@@ -873,11 +873,11 @@ showsPrec :: Int -&gt; RemoteSchemaFieldInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteSchemaFieldInfo -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-230"></span><span>
-</span><span id="line-231"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810718"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span></span><span>
+</span><span id="line-231"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811027"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span></span><span>
 </span><span id="line-232"></span><span>
-</span><span id="line-233"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689810711"><span id="local-6989586621689810713"><span id="local-6989586621689810715"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-234"></span><span>  </span><span id="local-6989586621689810710"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaFieldInfo -&gt; Value
-</span><a href="#local-6989586621689810710"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689810703"><span id="local-6989586621689810704"><span id="local-6989586621689810705"><span id="local-6989586621689810706"><span id="local-6989586621689810707"><span id="local-6989586621689810708"><span id="local-6989586621689810709"><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
+</span><span id="line-233"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689811020"><span id="local-6989586621689811022"><span id="local-6989586621689811024"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-234"></span><span>  </span><span id="local-6989586621689811019"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaFieldInfo -&gt; Value
+</span><a href="#local-6989586621689811019"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689811012"><span id="local-6989586621689811013"><span id="local-6989586621689811014"><span id="local-6989586621689811015"><span id="local-6989586621689811016"><span id="local-6989586621689811017"><span id="local-6989586621689811018"><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
 HashMap Name RemoteSchemaInputValueDefinition
 RelName
 RemoteSchemaName
@@ -900,14 +900,14 @@ _rrfiRemoteFields :: RemoteSchemaFieldInfo -&gt; RemoteFields
 _rrfiParamMap :: RemoteSchemaFieldInfo
 -&gt; HashMap Name RemoteSchemaInputValueDefinition
 _rrfiName :: RemoteSchemaFieldInfo -&gt; RelName
-</span><a href="#local-6989586621689810703"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689811012"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-235"></span><span>    </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
 </span><span id="line-236"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RelName -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689810709"><span class="hs-identifier hs-var">_rrfiName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689811018"><span class="hs-identifier hs-var">_rrfiName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-237"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;param_map&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; HashMap Name Value -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -916,40 +916,40 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 -&gt; HashMap Name Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInputValueDefinition -&gt; Value
-</span><a href="#local-6989586621689810702"><span class="hs-identifier hs-var">toJsonInpValInfo</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name RemoteSchemaInputValueDefinition
-</span><a href="#local-6989586621689810708"><span class="hs-identifier hs-var">_rrfiParamMap</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689811011"><span class="hs-identifier hs-var">toJsonInpValInfo</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name RemoteSchemaInputValueDefinition
+</span><a href="#local-6989586621689811017"><span class="hs-identifier hs-var">_rrfiParamMap</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-238"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;remote_fields&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RemoteFields -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteFields
-</span><a href="#local-6989586621689810707"><span class="hs-identifier hs-var">_rrfiRemoteFields</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689811016"><span class="hs-identifier hs-var">_rrfiRemoteFields</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-239"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;remote_schema&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RemoteSchemaInfo -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621689810706"><span class="hs-identifier hs-var">_rrfiRemoteSchema</span></a></span><span>
+</span><a href="#local-6989586621689811015"><span class="hs-identifier hs-var">_rrfiRemoteSchema</span></a></span><span>
 </span><span id="line-240"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-241"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-242"></span><span>      </span><span id="local-6989586621689810702"><span class="annot"><span class="annottext">toJsonInpValInfo :: RemoteSchemaInputValueDefinition -&gt; Value
-</span><a href="#local-6989586621689810702"><span class="hs-identifier hs-var hs-var">toJsonInpValInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaInputValueDefinition"><span class="hs-identifier hs-type">RemoteSchemaInputValueDefinition</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span> </span><span id="local-6989586621689810699"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689810699"><span class="hs-identifier hs-var">desc</span></a></span></span><span> </span><span id="local-6989586621689810698"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810698"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689810697"><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689810697"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span id="local-6989586621689810696"><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621689810696"><span class="hs-identifier hs-var">defVal</span></a></span></span><span> </span><span id="local-6989586621689810695"><span class="annot"><span class="annottext">[Directive Void]
-</span><a href="#local-6989586621689810695"><span class="hs-identifier hs-var">_directives</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689810694"><span class="annot"><span class="annottext">Maybe (Value RemoteSchemaVariable)
-</span><a href="#local-6989586621689810694"><span class="hs-identifier hs-var">_preset</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-242"></span><span>      </span><span id="local-6989586621689811011"><span class="annot"><span class="annottext">toJsonInpValInfo :: RemoteSchemaInputValueDefinition -&gt; Value
+</span><a href="#local-6989586621689811011"><span class="hs-identifier hs-var hs-var">toJsonInpValInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaInputValueDefinition"><span class="hs-identifier hs-type">RemoteSchemaInputValueDefinition</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span> </span><span id="local-6989586621689811008"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689811008"><span class="hs-identifier hs-var">desc</span></a></span></span><span> </span><span id="local-6989586621689811007"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689811007"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689811006"><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621689811006"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span id="local-6989586621689811005"><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621689811005"><span class="hs-identifier hs-var">defVal</span></a></span></span><span> </span><span id="local-6989586621689811004"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="#local-6989586621689811004"><span class="hs-identifier hs-var">_directives</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689811003"><span class="annot"><span class="annottext">Maybe (Value RemoteSchemaVariable)
+</span><a href="#local-6989586621689811003"><span class="hs-identifier hs-var">_preset</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-243"></span><span>        </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
 </span><span id="line-244"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;desc&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Description -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689810699"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689811008"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-245"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Name -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810698"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689811007"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-246"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;def_val&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Value -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -957,12 +957,12 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#graphQLValueToJSON"><span class="hs-identifier hs-var">graphQLValueToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621689810696"><span class="hs-identifier hs-var">defVal</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689811005"><span class="hs-identifier hs-var">defVal</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-247"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; GType -&gt; (Key, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689810697"><span class="hs-identifier hs-var">type'</span></a></span><span>
+</span><a href="#local-6989586621689811006"><span class="hs-identifier hs-var">type'</span></a></span><span>
 </span><span id="line-248"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-249"></span><span>
 </span><span id="line-250"></span><span class="hs-comment">-- FIXME: deduplicate this</span><span>
@@ -972,33 +972,33 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span id="line-253"></span><span>  </span><span class="annot"><span class="annottext">Value Void
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">Null</span></span><span>
-</span><span id="line-254"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VInt</span></span><span> </span><span id="local-6989586621689810693"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689810693"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value
+</span><span id="line-254"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VInt</span></span><span> </span><span id="local-6989586621689811002"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689811002"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689810693"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-255"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VFloat</span></span><span> </span><span id="local-6989586621689810692"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689810692"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="#local-6989586621689811002"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-255"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VFloat</span></span><span> </span><span id="local-6989586621689811001"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689811001"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689810692"><span class="hs-identifier hs-var">f</span></a></span><span>
-</span><span id="line-256"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VString</span></span><span> </span><span id="local-6989586621689810691"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810691"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621689811001"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-256"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VString</span></span><span> </span><span id="local-6989586621689811000"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689811000"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689810691"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-257"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VBoolean</span></span><span> </span><span id="local-6989586621689810690"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689810690"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621689811000"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-257"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VBoolean</span></span><span> </span><span id="local-6989586621689810999"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689810999"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689810690"><span class="hs-identifier hs-var">b</span></a></span><span>
-</span><span id="line-258"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.EnumValue</span></span><span> </span><span id="local-6989586621689810688"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810688"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value
+</span><a href="#local-6989586621689810999"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-258"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.EnumValue</span></span><span> </span><span id="local-6989586621689810997"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689810997"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689810688"><span class="hs-identifier hs-var">n</span></a></span><span>
-</span><span id="line-259"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621689810687"><span class="annot"><span class="annottext">[Value Void]
-</span><a href="#local-6989586621689810687"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Value
+</span><a href="#local-6989586621689810997"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-259"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621689810996"><span class="annot"><span class="annottext">[Value Void]
+</span><a href="#local-6989586621689810996"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; Value) -&gt; [Value] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1006,9 +1006,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#graphQLValueToJSON"><span class="hs-identifier hs-var">graphQLValueToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; Value) -&gt; [Value Void] -&gt; [Value]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Value Void]
-</span><a href="#local-6989586621689810687"><span class="hs-identifier hs-var">values</span></a></span><span>
-</span><span id="line-260"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621689810686"><span class="annot"><span class="annottext">HashMap Name (Value Void)
-</span><a href="#local-6989586621689810686"><span class="hs-identifier hs-var">objects</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name Value -&gt; Value
+</span><a href="#local-6989586621689810996"><span class="hs-identifier hs-var">values</span></a></span><span>
+</span><span id="line-260"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621689810995"><span class="annot"><span class="annottext">HashMap Name (Value Void)
+</span><a href="#local-6989586621689810995"><span class="hs-identifier hs-var">objects</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name Value -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name Value -&gt; Value) -&gt; HashMap Name Value -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1017,11 +1017,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap Name (Value Void) -&gt; HashMap Name Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void)
-</span><a href="#local-6989586621689810686"><span class="hs-identifier hs-var">objects</span></a></span><span>
+</span><a href="#local-6989586621689810995"><span class="hs-identifier hs-var">objects</span></a></span><span>
 </span><span id="line-261"></span><span>
 </span><span id="line-262"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-263"></span><span class="hs-comment">-- template haskell generation</span><span>
 </span><span id="line-264"></span><span>
 </span><span id="line-265"></span><span class="hs-special">$(</span><span id="trrdRemoteSchema"><span id="trrdLhsFields"><span id="trrdRemoteField"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ToSchemaRelationshipDef</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-266"></span><span class="hs-special">$(</span><span id="local-6989586621689810674"><span id="local-6989586621689810676"><span id="local-6989586621689810678"><span id="local-6989586621689810680"><span id="local-6989586621689810682"><span id="local-6989586621689810684"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ToSchemaRelationshipDef</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-266"></span><span class="hs-special">$(</span><span id="local-6989586621689810983"><span id="local-6989586621689810985"><span id="local-6989586621689810987"><span id="local-6989586621689810989"><span id="local-6989586621689810991"><span id="local-6989586621689810993"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ToSchemaRelationshipDef</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-267"></span></pre></body></html>
