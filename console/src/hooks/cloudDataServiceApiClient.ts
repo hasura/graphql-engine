@@ -12,7 +12,7 @@ export function cloudDataServiceApiClient<
   TransformedData = ResponseData
 >(
   query: string,
-  variables: Record<string, string>,
+  variables: Record<string, unknown>,
   headers: Record<string, string>,
   transformFn?: (data: ResponseData) => TransformedData
 ): Promise<TransformedData> {
