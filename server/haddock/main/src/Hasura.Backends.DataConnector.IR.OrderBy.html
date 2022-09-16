@@ -26,13 +26,13 @@
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span id="local-6989586621689770570"><span id="local-6989586621689770571"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span>
+</span><span id="line-29"></span><span id="local-6989586621689774258"><span id="local-6989586621689774259"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_obRelations"><span class="annot"><span class="annottext">OrderBy -&gt; HashMap RelationshipName OrderByRelation
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#_obRelations"><span class="hs-identifier hs-var hs-var">_obRelations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipName"><span class="hs-identifier hs-type">IR.R.RelationshipName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-type">OrderByRelation</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span id="_obElements"><span class="annot"><span class="annottext">OrderBy -&gt; NonEmpty OrderByElement
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#_obElements"><span class="hs-identifier hs-var hs-var">_obElements</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-type">OrderByElement</span></a></span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderBy"><span id="%24tOrderBy"><span id="local-6989586621689770538"><span id="local-6989586621689770540"><span id="local-6989586621689770542"><span id="local-6989586621689770544"><span id="local-6989586621689770546"><span id="local-6989586621689770548"><span id="local-6989586621689770550"><span id="local-6989586621689770552"><span id="local-6989586621689770554"><span id="local-6989586621689770556"><span id="local-6989586621689770558"><span id="local-6989586621689770560"><span id="local-6989586621689770562"><span id="local-6989586621689770564"><span class="annot"><span class="annottext">Typeable OrderBy
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderBy"><span id="%24tOrderBy"><span id="local-6989586621689774226"><span id="local-6989586621689774228"><span id="local-6989586621689774230"><span id="local-6989586621689774232"><span id="local-6989586621689774234"><span id="local-6989586621689774236"><span id="local-6989586621689774238"><span id="local-6989586621689774240"><span id="local-6989586621689774242"><span id="local-6989586621689774244"><span id="local-6989586621689774246"><span id="local-6989586621689774248"><span id="local-6989586621689774250"><span id="local-6989586621689774252"><span class="annot"><span class="annottext">Typeable OrderBy
 DataType
 Constr
 Typeable OrderBy
@@ -188,7 +188,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; OrderBy -&gt; c OrderBy
 $cp1Data :: Typeable OrderBy
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770531"><span id="local-6989586621689770533"><span class="annot"><span class="annottext">OrderBy -&gt; OrderBy -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774219"><span id="local-6989586621689774221"><span class="annot"><span class="annottext">OrderBy -&gt; OrderBy -&gt; Bool
 (OrderBy -&gt; OrderBy -&gt; Bool)
 -&gt; (OrderBy -&gt; OrderBy -&gt; Bool) -&gt; Eq OrderBy
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -204,7 +204,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep OrderBy x -&gt; OrderBy
 $cfrom :: forall x. OrderBy -&gt; Rep OrderBy x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770512"><span id="local-6989586621689770514"><span id="local-6989586621689770516"><span id="local-6989586621689770518"><span id="local-6989586621689770520"><span id="local-6989586621689770522"><span id="local-6989586621689770524"><span class="annot"><span class="annottext">Eq OrderBy
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774200"><span id="local-6989586621689774202"><span id="local-6989586621689774204"><span id="local-6989586621689774206"><span id="local-6989586621689774208"><span id="local-6989586621689774210"><span id="local-6989586621689774212"><span class="annot"><span class="annottext">Eq OrderBy
 Eq OrderBy
 -&gt; (OrderBy -&gt; OrderBy -&gt; Ordering)
 -&gt; (OrderBy -&gt; OrderBy -&gt; Bool)
@@ -242,7 +242,7 @@ $c&lt; :: OrderBy -&gt; OrderBy -&gt; Bool
 compare :: OrderBy -&gt; OrderBy -&gt; Ordering
 $ccompare :: OrderBy -&gt; OrderBy -&gt; Ordering
 $cp1Ord :: Eq OrderBy
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770505"><span id="local-6989586621689770507"><span id="local-6989586621689770509"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774193"><span id="local-6989586621689774195"><span id="local-6989586621689774197"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; ShowS
 [OrderBy] -&gt; ShowS
 OrderBy -&gt; String
 (Int -&gt; OrderBy -&gt; ShowS)
@@ -256,7 +256,7 @@ $cshow :: OrderBy -&gt; String
 showsPrec :: Int -&gt; OrderBy -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderBy -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689770501"><span class="annot"><span class="annottext">Eq OrderBy
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689774189"><span class="annot"><span class="annottext">Eq OrderBy
 Eq OrderBy
 -&gt; (Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool) -&gt; Cacheable OrderBy
 Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool
@@ -264,7 +264,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool
 $cunchanged :: Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool
 $cp1Cacheable :: Eq OrderBy
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770496"><span id="local-6989586621689770498"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; Int
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774184"><span id="local-6989586621689774186"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; Int
 OrderBy -&gt; Int
 (Int -&gt; OrderBy -&gt; Int) -&gt; (OrderBy -&gt; Int) -&gt; Hashable OrderBy
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -272,15 +272,15 @@ hash :: OrderBy -&gt; Int
 $chash :: OrderBy -&gt; Int
 hashWithSalt :: Int -&gt; OrderBy -&gt; Int
 $chashWithSalt :: Int -&gt; OrderBy -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770493"><span class="annot"><span class="annottext">OrderBy -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774181"><span class="annot"><span class="annottext">OrderBy -&gt; ()
 (OrderBy -&gt; ()) -&gt; NFData OrderBy
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: OrderBy -&gt; ()
 $crnf :: OrderBy -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689770485"><span id="local-6989586621689770487"><span id="local-6989586621689770489"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-37"></span><span>  </span><span id="local-6989586621689770483"><span class="annot"><span class="annottext">toJSON :: OrderBy -&gt; Value
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689774173"><span id="local-6989586621689774175"><span id="local-6989586621689774177"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621689774171"><span class="annot"><span class="annottext">toJSON :: OrderBy -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderBy -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
@@ -289,19 +289,19 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-38"></span><span>
 </span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderBy</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-40"></span><span>  </span><span id="local-6989586621689770477"><span class="annot"><span class="annottext">from :: OrderBy -&gt; OrderBy
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689770474"><span id="local-6989586621689770475"><span class="annot"><span class="annottext">NonEmpty OrderByElement
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621689774165"><span class="annot"><span class="annottext">from :: OrderBy -&gt; OrderBy
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689774162"><span id="local-6989586621689774163"><span class="annot"><span class="annottext">NonEmpty OrderByElement
 HashMap RelationshipName OrderByRelation
 _obElements :: NonEmpty OrderByElement
 _obRelations :: HashMap RelationshipName OrderByRelation
 _obElements :: OrderBy -&gt; NonEmpty OrderByElement
 _obRelations :: OrderBy -&gt; HashMap RelationshipName OrderByRelation
-</span><a href="#local-6989586621689770474"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689774162"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">OrderBy :: HashMap RelationshipName OrderByRelation
 -&gt; NonEmpty OrderByElement -&gt; OrderBy
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderBy</span></a></span><span>
 </span><span id="line-42"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_obRelations :: HashMap RelationshipName OrderByRelation
-</span><a href="#local-6989586621689770472"><span class="hs-identifier hs-var">_obRelations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(RelationshipName, OrderByRelation)]
+</span><a href="#local-6989586621689774160"><span class="hs-identifier hs-var">_obRelations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(RelationshipName, OrderByRelation)]
 -&gt; HashMap RelationshipName OrderByRelation
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(RelationshipName, OrderByRelation)]
@@ -329,24 +329,24 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; [(RelationshipName, OrderByRelation)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap RelationshipName OrderByRelation
-</span><a href="#local-6989586621689770475"><span class="hs-identifier hs-var">_obRelations</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689774163"><span class="hs-identifier hs-var">_obRelations</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">_obElements :: NonEmpty OrderByElement
-</span><a href="#local-6989586621689770468"><span class="hs-identifier hs-var">_obElements</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderByElement -&gt; OrderByElement
+</span><a href="#local-6989586621689774156"><span class="hs-identifier hs-var">_obElements</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderByElement -&gt; OrderByElement
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(OrderByElement -&gt; OrderByElement)
 -&gt; NonEmpty OrderByElement -&gt; NonEmpty OrderByElement
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty OrderByElement
-</span><a href="#local-6989586621689770474"><span class="hs-identifier hs-var">_obElements</span></a></span><span>
+</span><a href="#local-6989586621689774162"><span class="hs-identifier hs-var">_obElements</span></a></span><span>
 </span><span id="line-44"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span id="local-6989586621689770466"><span id="local-6989586621689770467"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderByRelation"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-var">OrderByRelation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderByRelation"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-var">OrderByRelation</span></a></span></span><span>
+</span><span id="line-46"></span><span id="local-6989586621689774154"><span id="local-6989586621689774155"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderByRelation"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-var">OrderByRelation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderByRelation"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-var">OrderByRelation</span></a></span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_obrWhere"><span class="annot"><span class="annottext">OrderByRelation -&gt; Maybe Expression
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#_obrWhere"><span class="hs-identifier hs-var hs-var">_obrWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Expression"><span class="hs-identifier hs-type">IR.E.Expression</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-48"></span><span>    </span><span id="_obrSubrelations"><span class="annot"><span class="annottext">OrderByRelation -&gt; HashMap RelationshipName OrderByRelation
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#_obrSubrelations"><span class="hs-identifier hs-var hs-var">_obrSubrelations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipName"><span class="hs-identifier hs-type">IR.R.RelationshipName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-type">OrderByRelation</span></a></span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderByRelation"><span id="%24tOrderByRelation"><span id="local-6989586621689770434"><span id="local-6989586621689770436"><span id="local-6989586621689770438"><span id="local-6989586621689770440"><span id="local-6989586621689770442"><span id="local-6989586621689770444"><span id="local-6989586621689770446"><span id="local-6989586621689770448"><span id="local-6989586621689770450"><span id="local-6989586621689770452"><span id="local-6989586621689770454"><span id="local-6989586621689770456"><span id="local-6989586621689770458"><span id="local-6989586621689770460"><span class="annot"><span class="annottext">Typeable OrderByRelation
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderByRelation"><span id="%24tOrderByRelation"><span id="local-6989586621689774122"><span id="local-6989586621689774124"><span id="local-6989586621689774126"><span id="local-6989586621689774128"><span id="local-6989586621689774130"><span id="local-6989586621689774132"><span id="local-6989586621689774134"><span id="local-6989586621689774136"><span id="local-6989586621689774138"><span id="local-6989586621689774140"><span id="local-6989586621689774142"><span id="local-6989586621689774144"><span id="local-6989586621689774146"><span id="local-6989586621689774148"><span class="annot"><span class="annottext">Typeable OrderByRelation
 DataType
 Constr
 Typeable OrderByRelation
@@ -522,7 +522,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; OrderByRelation -&gt; c OrderByRelation
 $cp1Data :: Typeable OrderByRelation
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770428"><span id="local-6989586621689770430"><span class="annot"><span class="annottext">OrderByRelation -&gt; OrderByRelation -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774116"><span id="local-6989586621689774118"><span class="annot"><span class="annottext">OrderByRelation -&gt; OrderByRelation -&gt; Bool
 (OrderByRelation -&gt; OrderByRelation -&gt; Bool)
 -&gt; (OrderByRelation -&gt; OrderByRelation -&gt; Bool)
 -&gt; Eq OrderByRelation
@@ -540,7 +540,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep OrderByRelation x -&gt; OrderByRelation
 $cfrom :: forall x. OrderByRelation -&gt; Rep OrderByRelation x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770411"><span id="local-6989586621689770413"><span id="local-6989586621689770415"><span id="local-6989586621689770417"><span id="local-6989586621689770419"><span id="local-6989586621689770421"><span id="local-6989586621689770423"><span class="annot"><span class="annottext">Eq OrderByRelation
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774099"><span id="local-6989586621689774101"><span id="local-6989586621689774103"><span id="local-6989586621689774105"><span id="local-6989586621689774107"><span id="local-6989586621689774109"><span id="local-6989586621689774111"><span class="annot"><span class="annottext">Eq OrderByRelation
 Eq OrderByRelation
 -&gt; (OrderByRelation -&gt; OrderByRelation -&gt; Ordering)
 -&gt; (OrderByRelation -&gt; OrderByRelation -&gt; Bool)
@@ -578,7 +578,7 @@ $c&lt; :: OrderByRelation -&gt; OrderByRelation -&gt; Bool
 compare :: OrderByRelation -&gt; OrderByRelation -&gt; Ordering
 $ccompare :: OrderByRelation -&gt; OrderByRelation -&gt; Ordering
 $cp1Ord :: Eq OrderByRelation
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770405"><span id="local-6989586621689770407"><span id="local-6989586621689770409"><span class="annot"><span class="annottext">Int -&gt; OrderByRelation -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774093"><span id="local-6989586621689774095"><span id="local-6989586621689774097"><span class="annot"><span class="annottext">Int -&gt; OrderByRelation -&gt; ShowS
 [OrderByRelation] -&gt; ShowS
 OrderByRelation -&gt; String
 (Int -&gt; OrderByRelation -&gt; ShowS)
@@ -594,7 +594,7 @@ $cshow :: OrderByRelation -&gt; String
 showsPrec :: Int -&gt; OrderByRelation -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderByRelation -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689770402"><span class="annot"><span class="annottext">Eq OrderByRelation
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689774090"><span class="annot"><span class="annottext">Eq OrderByRelation
 Eq OrderByRelation
 -&gt; (Accesses -&gt; OrderByRelation -&gt; OrderByRelation -&gt; Bool)
 -&gt; Cacheable OrderByRelation
@@ -603,7 +603,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; OrderByRelation -&gt; OrderByRelation -&gt; Bool
 $cunchanged :: Accesses -&gt; OrderByRelation -&gt; OrderByRelation -&gt; Bool
 $cp1Cacheable :: Eq OrderByRelation
-</span><a href="#local-6989586621689770402"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770398"><span id="local-6989586621689770400"><span class="annot"><span class="annottext">Int -&gt; OrderByRelation -&gt; Int
+</span><a href="#local-6989586621689774090"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774086"><span id="local-6989586621689774088"><span class="annot"><span class="annottext">Int -&gt; OrderByRelation -&gt; Int
 OrderByRelation -&gt; Int
 (Int -&gt; OrderByRelation -&gt; Int)
 -&gt; (OrderByRelation -&gt; Int) -&gt; Hashable OrderByRelation
@@ -612,16 +612,16 @@ hash :: OrderByRelation -&gt; Int
 $chash :: OrderByRelation -&gt; Int
 hashWithSalt :: Int -&gt; OrderByRelation -&gt; Int
 $chashWithSalt :: Int -&gt; OrderByRelation -&gt; Int
-</span><a href="#local-6989586621689770398"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770396"><span class="annot"><span class="annottext">OrderByRelation -&gt; ()
+</span><a href="#local-6989586621689774086"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774084"><span class="annot"><span class="annottext">OrderByRelation -&gt; ()
 (OrderByRelation -&gt; ()) -&gt; NFData OrderByRelation
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: OrderByRelation -&gt; ()
 $crnf :: OrderByRelation -&gt; ()
-</span><a href="#local-6989586621689770396"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689774084"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689770389"><span id="local-6989586621689770391"><span id="local-6989586621689770393"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-type">OrderByRelation</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621689770388"><span class="annot"><span class="annottext">toJSON :: OrderByRelation -&gt; Value
-</span><a href="#local-6989586621689770388"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderByRelation -&gt; Value
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689774077"><span id="local-6989586621689774079"><span id="local-6989586621689774081"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-type">OrderByRelation</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621689774076"><span class="annot"><span class="annottext">toJSON :: OrderByRelation -&gt; Value
+</span><a href="#local-6989586621689774076"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderByRelation -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -629,26 +629,26 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-type">OrderByRelation</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderByRelation</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621689770386"><span class="annot"><span class="annottext">from :: OrderByRelation -&gt; OrderByRelation
-</span><a href="#local-6989586621689770386"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-type">OrderByRelation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689770384"><span id="local-6989586621689770385"><span class="annot"><span class="annottext">Maybe Expression
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621689774074"><span class="annot"><span class="annottext">from :: OrderByRelation -&gt; OrderByRelation
+</span><a href="#local-6989586621689774074"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByRelation"><span class="hs-identifier hs-type">OrderByRelation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689774072"><span id="local-6989586621689774073"><span class="annot"><span class="annottext">Maybe Expression
 HashMap RelationshipName OrderByRelation
 _obrSubrelations :: HashMap RelationshipName OrderByRelation
 _obrWhere :: Maybe Expression
 _obrSubrelations :: OrderByRelation -&gt; HashMap RelationshipName OrderByRelation
 _obrWhere :: OrderByRelation -&gt; Maybe Expression
-</span><a href="#local-6989586621689770384"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689774072"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">OrderByRelation :: Maybe Expression
 -&gt; HashMap RelationshipName OrderByRelation -&gt; OrderByRelation
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderByRelation</span></a></span><span>
 </span><span id="line-59"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_obrWhere :: Maybe Expression
-</span><a href="#local-6989586621689770382"><span class="hs-identifier hs-var">_obrWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621689774070"><span class="hs-identifier hs-var">_obrWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; Maybe Expression -&gt; Maybe Expression
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Expression
-</span><a href="#local-6989586621689770385"><span class="hs-identifier hs-var">_obrWhere</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689774073"><span class="hs-identifier hs-var">_obrWhere</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">_obrSubrelations :: HashMap RelationshipName OrderByRelation
-</span><a href="#local-6989586621689770381"><span class="hs-identifier hs-var">_obrSubrelations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(RelationshipName, OrderByRelation)]
+</span><a href="#local-6989586621689774069"><span class="hs-identifier hs-var">_obrSubrelations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(RelationshipName, OrderByRelation)]
 -&gt; HashMap RelationshipName OrderByRelation
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(RelationshipName, OrderByRelation)]
@@ -676,10 +676,10 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; [(RelationshipName, OrderByRelation)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap RelationshipName OrderByRelation
-</span><a href="#local-6989586621689770384"><span class="hs-identifier hs-var">_obrSubrelations</span></a></span><span>
+</span><a href="#local-6989586621689774072"><span class="hs-identifier hs-var">_obrSubrelations</span></a></span><span>
 </span><span id="line-61"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span id="local-6989586621689770379"><span id="local-6989586621689770380"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderByElement"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-var">OrderByElement</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderByElement"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-var">OrderByElement</span></a></span></span><span>
+</span><span id="line-63"></span><span id="local-6989586621689774067"><span id="local-6989586621689774068"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderByElement"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-var">OrderByElement</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderByElement"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-var">OrderByElement</span></a></span></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_obeTargetPath"><span class="annot"><span class="annottext">OrderByElement -&gt; [RelationshipName]
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#_obeTargetPath"><span class="hs-identifier hs-var hs-var">_obeTargetPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Relationships.html#RelationshipName"><span class="hs-identifier hs-type">IR.R.RelationshipName</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-65"></span><span>    </span><span id="_obeTarget"><span class="annot"><span class="annottext">OrderByElement -&gt; OrderByTarget
@@ -687,7 +687,7 @@ forall k v. HashMap k v -&gt; [(k, v)]
 </span><span id="line-66"></span><span>    </span><span id="_obeOrderDirection"><span class="annot"><span class="annottext">OrderByElement -&gt; OrderDirection
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#_obeOrderDirection"><span class="hs-identifier hs-var hs-var">_obeOrderDirection</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderDirection"><span class="hs-identifier hs-type">OrderDirection</span></a></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderByElement"><span id="%24tOrderByElement"><span id="local-6989586621689770346"><span id="local-6989586621689770348"><span id="local-6989586621689770350"><span id="local-6989586621689770352"><span id="local-6989586621689770354"><span id="local-6989586621689770356"><span id="local-6989586621689770358"><span id="local-6989586621689770360"><span id="local-6989586621689770362"><span id="local-6989586621689770364"><span id="local-6989586621689770366"><span id="local-6989586621689770368"><span id="local-6989586621689770370"><span id="local-6989586621689770372"><span class="annot"><span class="annottext">Typeable OrderByElement
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderByElement"><span id="%24tOrderByElement"><span id="local-6989586621689774034"><span id="local-6989586621689774036"><span id="local-6989586621689774038"><span id="local-6989586621689774040"><span id="local-6989586621689774042"><span id="local-6989586621689774044"><span id="local-6989586621689774046"><span id="local-6989586621689774048"><span id="local-6989586621689774050"><span id="local-6989586621689774052"><span id="local-6989586621689774054"><span id="local-6989586621689774056"><span id="local-6989586621689774058"><span id="local-6989586621689774060"><span class="annot"><span class="annottext">Typeable OrderByElement
 DataType
 Constr
 Typeable OrderByElement
@@ -863,7 +863,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; OrderByElement -&gt; c OrderByElement
 $cp1Data :: Typeable OrderByElement
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770340"><span id="local-6989586621689770342"><span class="annot"><span class="annottext">OrderByElement -&gt; OrderByElement -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774028"><span id="local-6989586621689774030"><span class="annot"><span class="annottext">OrderByElement -&gt; OrderByElement -&gt; Bool
 (OrderByElement -&gt; OrderByElement -&gt; Bool)
 -&gt; (OrderByElement -&gt; OrderByElement -&gt; Bool) -&gt; Eq OrderByElement
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -880,7 +880,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep OrderByElement x -&gt; OrderByElement
 $cfrom :: forall x. OrderByElement -&gt; Rep OrderByElement x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770323"><span id="local-6989586621689770325"><span id="local-6989586621689770327"><span id="local-6989586621689770329"><span id="local-6989586621689770331"><span id="local-6989586621689770333"><span id="local-6989586621689770335"><span class="annot"><span class="annottext">Eq OrderByElement
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774011"><span id="local-6989586621689774013"><span id="local-6989586621689774015"><span id="local-6989586621689774017"><span id="local-6989586621689774019"><span id="local-6989586621689774021"><span id="local-6989586621689774023"><span class="annot"><span class="annottext">Eq OrderByElement
 Eq OrderByElement
 -&gt; (OrderByElement -&gt; OrderByElement -&gt; Ordering)
 -&gt; (OrderByElement -&gt; OrderByElement -&gt; Bool)
@@ -918,7 +918,7 @@ $c&lt; :: OrderByElement -&gt; OrderByElement -&gt; Bool
 compare :: OrderByElement -&gt; OrderByElement -&gt; Ordering
 $ccompare :: OrderByElement -&gt; OrderByElement -&gt; Ordering
 $cp1Ord :: Eq OrderByElement
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770317"><span id="local-6989586621689770319"><span id="local-6989586621689770321"><span class="annot"><span class="annottext">Int -&gt; OrderByElement -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689774005"><span id="local-6989586621689774007"><span id="local-6989586621689774009"><span class="annot"><span class="annottext">Int -&gt; OrderByElement -&gt; ShowS
 [OrderByElement] -&gt; ShowS
 OrderByElement -&gt; String
 (Int -&gt; OrderByElement -&gt; ShowS)
@@ -934,7 +934,7 @@ $cshow :: OrderByElement -&gt; String
 showsPrec :: Int -&gt; OrderByElement -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderByElement -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689770314"><span class="annot"><span class="annottext">Eq OrderByElement
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689774002"><span class="annot"><span class="annottext">Eq OrderByElement
 Eq OrderByElement
 -&gt; (Accesses -&gt; OrderByElement -&gt; OrderByElement -&gt; Bool)
 -&gt; Cacheable OrderByElement
@@ -943,7 +943,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; OrderByElement -&gt; OrderByElement -&gt; Bool
 $cunchanged :: Accesses -&gt; OrderByElement -&gt; OrderByElement -&gt; Bool
 $cp1Cacheable :: Eq OrderByElement
-</span><a href="#local-6989586621689770314"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770310"><span id="local-6989586621689770312"><span class="annot"><span class="annottext">Int -&gt; OrderByElement -&gt; Int
+</span><a href="#local-6989586621689774002"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773998"><span id="local-6989586621689774000"><span class="annot"><span class="annottext">Int -&gt; OrderByElement -&gt; Int
 OrderByElement -&gt; Int
 (Int -&gt; OrderByElement -&gt; Int)
 -&gt; (OrderByElement -&gt; Int) -&gt; Hashable OrderByElement
@@ -952,16 +952,16 @@ hash :: OrderByElement -&gt; Int
 $chash :: OrderByElement -&gt; Int
 hashWithSalt :: Int -&gt; OrderByElement -&gt; Int
 $chashWithSalt :: Int -&gt; OrderByElement -&gt; Int
-</span><a href="#local-6989586621689770310"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770308"><span class="annot"><span class="annottext">OrderByElement -&gt; ()
+</span><a href="#local-6989586621689773998"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773996"><span class="annot"><span class="annottext">OrderByElement -&gt; ()
 (OrderByElement -&gt; ()) -&gt; NFData OrderByElement
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: OrderByElement -&gt; ()
 $crnf :: OrderByElement -&gt; ()
-</span><a href="#local-6989586621689770308"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689773996"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689770301"><span id="local-6989586621689770303"><span id="local-6989586621689770305"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-type">OrderByElement</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-72"></span><span>  </span><span id="local-6989586621689770300"><span class="annot"><span class="annottext">toJSON :: OrderByElement -&gt; Value
-</span><a href="#local-6989586621689770300"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderByElement -&gt; Value
+</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689773989"><span id="local-6989586621689773991"><span id="local-6989586621689773993"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-type">OrderByElement</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621689773988"><span class="annot"><span class="annottext">toJSON :: OrderByElement -&gt; Value
+</span><a href="#local-6989586621689773988"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderByElement -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -969,8 +969,8 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-type">OrderByElement</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderByElement</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-75"></span><span>  </span><span id="local-6989586621689770298"><span class="annot"><span class="annottext">from :: OrderByElement -&gt; OrderByElement
-</span><a href="#local-6989586621689770298"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-type">OrderByElement</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689770295"><span id="local-6989586621689770296"><span id="local-6989586621689770297"><span class="annot"><span class="annottext">[RelationshipName]
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621689773986"><span class="annot"><span class="annottext">from :: OrderByElement -&gt; OrderByElement
+</span><a href="#local-6989586621689773986"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByElement"><span class="hs-identifier hs-type">OrderByElement</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689773983"><span id="local-6989586621689773984"><span id="local-6989586621689773985"><span class="annot"><span class="annottext">[RelationshipName]
 OrderDirection
 OrderByTarget
 _obeOrderDirection :: OrderDirection
@@ -979,35 +979,35 @@ _obeTargetPath :: [RelationshipName]
 _obeOrderDirection :: OrderByElement -&gt; OrderDirection
 _obeTarget :: OrderByElement -&gt; OrderByTarget
 _obeTargetPath :: OrderByElement -&gt; [RelationshipName]
-</span><a href="#local-6989586621689770295"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689773983"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">OrderByElement :: [RelationshipName]
 -&gt; OrderByTarget -&gt; OrderDirection -&gt; OrderByElement
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderByElement</span></a></span><span>
 </span><span id="line-77"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_obeTargetPath :: [RelationshipName]
-</span><a href="#local-6989586621689770293"><span class="hs-identifier hs-var">_obeTargetPath</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelationshipName -&gt; RelationshipName
+</span><a href="#local-6989586621689773981"><span class="hs-identifier hs-var">_obeTargetPath</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelationshipName -&gt; RelationshipName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(RelationshipName -&gt; RelationshipName)
 -&gt; [RelationshipName] -&gt; [RelationshipName]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[RelationshipName]
-</span><a href="#local-6989586621689770297"><span class="hs-identifier hs-var">_obeTargetPath</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689773985"><span class="hs-identifier hs-var">_obeTargetPath</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">_obeTarget :: OrderByTarget
-</span><a href="#local-6989586621689770292"><span class="hs-identifier hs-var">_obeTarget</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderByTarget -&gt; OrderByTarget
+</span><a href="#local-6989586621689773980"><span class="hs-identifier hs-var">_obeTarget</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderByTarget -&gt; OrderByTarget
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">OrderByTarget
-</span><a href="#local-6989586621689770296"><span class="hs-identifier hs-var">_obeTarget</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689773984"><span class="hs-identifier hs-var">_obeTarget</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">_obeOrderDirection :: OrderDirection
-</span><a href="#local-6989586621689770291"><span class="hs-identifier hs-var">_obeOrderDirection</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderDirection -&gt; OrderDirection
+</span><a href="#local-6989586621689773979"><span class="hs-identifier hs-var">_obeOrderDirection</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderDirection -&gt; OrderDirection
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">OrderDirection
-</span><a href="#local-6989586621689770295"><span class="hs-identifier hs-var">_obeOrderDirection</span></a></span><span>
+</span><a href="#local-6989586621689773983"><span class="hs-identifier hs-var">_obeOrderDirection</span></a></span><span>
 </span><span id="line-80"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span id="local-6989586621689770289"><span id="local-6989586621689770290"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderByTarget"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByTarget"><span class="hs-identifier hs-var">OrderByTarget</span></a></span></span><span>
+</span><span id="line-82"></span><span id="local-6989586621689773977"><span id="local-6989586621689773978"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderByTarget"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByTarget"><span class="hs-identifier hs-var">OrderByTarget</span></a></span></span><span>
 </span><span id="line-83"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OrderByColumn"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByColumn"><span class="hs-identifier hs-var">OrderByColumn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
 </span><span id="line-84"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OrderByStarCountAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByStarCountAggregate"><span class="hs-identifier hs-var">OrderByStarCountAggregate</span></a></span></span><span>
 </span><span id="line-85"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OrderBySingleColumnAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBySingleColumnAggregate"><span class="hs-identifier hs-var">OrderBySingleColumnAggregate</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-type">IR.A.SingleColumnAggregate</span></a></span><span>
-</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderBySingleColumnAggregate"><span id="%24cOrderByStarCountAggregate"><span id="%24cOrderByColumn"><span id="%24tOrderByTarget"><span id="local-6989586621689770257"><span id="local-6989586621689770259"><span id="local-6989586621689770261"><span id="local-6989586621689770263"><span id="local-6989586621689770265"><span id="local-6989586621689770267"><span id="local-6989586621689770269"><span id="local-6989586621689770271"><span id="local-6989586621689770273"><span id="local-6989586621689770275"><span id="local-6989586621689770277"><span id="local-6989586621689770279"><span id="local-6989586621689770281"><span id="local-6989586621689770283"><span class="annot"><span class="annottext">Typeable OrderByTarget
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderBySingleColumnAggregate"><span id="%24cOrderByStarCountAggregate"><span id="%24cOrderByColumn"><span id="%24tOrderByTarget"><span id="local-6989586621689773945"><span id="local-6989586621689773947"><span id="local-6989586621689773949"><span id="local-6989586621689773951"><span id="local-6989586621689773953"><span id="local-6989586621689773955"><span id="local-6989586621689773957"><span id="local-6989586621689773959"><span id="local-6989586621689773961"><span id="local-6989586621689773963"><span id="local-6989586621689773965"><span id="local-6989586621689773967"><span id="local-6989586621689773969"><span id="local-6989586621689773971"><span class="annot"><span class="annottext">Typeable OrderByTarget
 DataType
 Constr
 Typeable OrderByTarget
@@ -1170,7 +1170,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; OrderByTarget -&gt; c OrderByTarget
 $cp1Data :: Typeable OrderByTarget
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770249"><span id="local-6989586621689770251"><span class="annot"><span class="annottext">OrderByTarget -&gt; OrderByTarget -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773937"><span id="local-6989586621689773939"><span class="annot"><span class="annottext">OrderByTarget -&gt; OrderByTarget -&gt; Bool
 (OrderByTarget -&gt; OrderByTarget -&gt; Bool)
 -&gt; (OrderByTarget -&gt; OrderByTarget -&gt; Bool) -&gt; Eq OrderByTarget
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1187,7 +1187,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep OrderByTarget x -&gt; OrderByTarget
 $cfrom :: forall x. OrderByTarget -&gt; Rep OrderByTarget x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770232"><span id="local-6989586621689770234"><span id="local-6989586621689770236"><span id="local-6989586621689770238"><span id="local-6989586621689770240"><span id="local-6989586621689770242"><span id="local-6989586621689770244"><span class="annot"><span class="annottext">Eq OrderByTarget
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773920"><span id="local-6989586621689773922"><span id="local-6989586621689773924"><span id="local-6989586621689773926"><span id="local-6989586621689773928"><span id="local-6989586621689773930"><span id="local-6989586621689773932"><span class="annot"><span class="annottext">Eq OrderByTarget
 Eq OrderByTarget
 -&gt; (OrderByTarget -&gt; OrderByTarget -&gt; Ordering)
 -&gt; (OrderByTarget -&gt; OrderByTarget -&gt; Bool)
@@ -1225,7 +1225,7 @@ $c&lt; :: OrderByTarget -&gt; OrderByTarget -&gt; Bool
 compare :: OrderByTarget -&gt; OrderByTarget -&gt; Ordering
 $ccompare :: OrderByTarget -&gt; OrderByTarget -&gt; Ordering
 $cp1Ord :: Eq OrderByTarget
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770226"><span id="local-6989586621689770228"><span id="local-6989586621689770230"><span class="annot"><span class="annottext">Int -&gt; OrderByTarget -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773914"><span id="local-6989586621689773916"><span id="local-6989586621689773918"><span class="annot"><span class="annottext">Int -&gt; OrderByTarget -&gt; ShowS
 [OrderByTarget] -&gt; ShowS
 OrderByTarget -&gt; String
 (Int -&gt; OrderByTarget -&gt; ShowS)
@@ -1241,7 +1241,7 @@ $cshow :: OrderByTarget -&gt; String
 showsPrec :: Int -&gt; OrderByTarget -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderByTarget -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689770223"><span class="annot"><span class="annottext">Eq OrderByTarget
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689773911"><span class="annot"><span class="annottext">Eq OrderByTarget
 Eq OrderByTarget
 -&gt; (Accesses -&gt; OrderByTarget -&gt; OrderByTarget -&gt; Bool)
 -&gt; Cacheable OrderByTarget
@@ -1250,7 +1250,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; OrderByTarget -&gt; OrderByTarget -&gt; Bool
 $cunchanged :: Accesses -&gt; OrderByTarget -&gt; OrderByTarget -&gt; Bool
 $cp1Cacheable :: Eq OrderByTarget
-</span><a href="#local-6989586621689770223"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770219"><span id="local-6989586621689770221"><span class="annot"><span class="annottext">Int -&gt; OrderByTarget -&gt; Int
+</span><a href="#local-6989586621689773911"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773907"><span id="local-6989586621689773909"><span class="annot"><span class="annottext">Int -&gt; OrderByTarget -&gt; Int
 OrderByTarget -&gt; Int
 (Int -&gt; OrderByTarget -&gt; Int)
 -&gt; (OrderByTarget -&gt; Int) -&gt; Hashable OrderByTarget
@@ -1259,16 +1259,16 @@ hash :: OrderByTarget -&gt; Int
 $chash :: OrderByTarget -&gt; Int
 hashWithSalt :: Int -&gt; OrderByTarget -&gt; Int
 $chashWithSalt :: Int -&gt; OrderByTarget -&gt; Int
-</span><a href="#local-6989586621689770219"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770217"><span class="annot"><span class="annottext">OrderByTarget -&gt; ()
+</span><a href="#local-6989586621689773907"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773905"><span class="annot"><span class="annottext">OrderByTarget -&gt; ()
 (OrderByTarget -&gt; ()) -&gt; NFData OrderByTarget
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: OrderByTarget -&gt; ()
 $crnf :: OrderByTarget -&gt; ()
-</span><a href="#local-6989586621689770217"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689773905"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689770210"><span id="local-6989586621689770212"><span id="local-6989586621689770214"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByTarget"><span class="hs-identifier hs-type">OrderByTarget</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621689770209"><span class="annot"><span class="annottext">toJSON :: OrderByTarget -&gt; Value
-</span><a href="#local-6989586621689770209"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderByTarget -&gt; Value
+</span><span id="line-89"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689773898"><span id="local-6989586621689773900"><span id="local-6989586621689773902"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByTarget"><span class="hs-identifier hs-type">OrderByTarget</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621689773897"><span class="annot"><span class="annottext">toJSON :: OrderByTarget -&gt; Value
+</span><a href="#local-6989586621689773897"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderByTarget -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -1276,33 +1276,33 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByTarget"><span class="hs-identifier hs-type">OrderByTarget</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderByTarget</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621689770207"><span class="annot"><span class="annottext">from :: OrderByTarget -&gt; OrderByTarget
-</span><a href="#local-6989586621689770207"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-94"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByColumn"><span class="hs-identifier hs-type">OrderByColumn</span></a></span><span> </span><span id="local-6989586621689770206"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689770206"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; OrderByTarget
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621689773895"><span class="annot"><span class="annottext">from :: OrderByTarget -&gt; OrderByTarget
+</span><a href="#local-6989586621689773895"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByColumn"><span class="hs-identifier hs-type">OrderByColumn</span></a></span><span> </span><span id="local-6989586621689773894"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689773894"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; OrderByTarget
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.OrderByColumn</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnName -&gt; OrderByTarget) -&gt; ColumnName -&gt; OrderByTarget
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689770206"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689773894"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">OrderByTarget
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderByStarCountAggregate"><span class="hs-identifier hs-var">OrderByStarCountAggregate</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OrderByTarget
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.OrderByStarCountAggregate</span></a></span><span>
-</span><span id="line-96"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBySingleColumnAggregate"><span class="hs-identifier hs-type">OrderBySingleColumnAggregate</span></a></span><span> </span><span id="local-6989586621689770203"><span class="annot"><span class="annottext">SingleColumnAggregate
-</span><a href="#local-6989586621689770203"><span class="hs-identifier hs-var">aggregate</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; OrderByTarget
+</span><span id="line-96"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderBySingleColumnAggregate"><span class="hs-identifier hs-type">OrderBySingleColumnAggregate</span></a></span><span> </span><span id="local-6989586621689773891"><span class="annot"><span class="annottext">SingleColumnAggregate
+</span><a href="#local-6989586621689773891"><span class="hs-identifier hs-var">aggregate</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; OrderByTarget
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.OrderBySingleColumnAggregate</span></a></span><span> </span><span class="annot"><span class="annottext">(SingleColumnAggregate -&gt; OrderByTarget)
 -&gt; SingleColumnAggregate -&gt; OrderByTarget
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; SingleColumnAggregate
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregate
-</span><a href="#local-6989586621689770203"><span class="hs-identifier hs-var">aggregate</span></a></span><span>
+</span><a href="#local-6989586621689773891"><span class="hs-identifier hs-var">aggregate</span></a></span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span id="local-6989586621689770200"><span id="local-6989586621689770201"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderDirection"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderDirection"><span class="hs-identifier hs-var">OrderDirection</span></a></span></span><span>
+</span><span id="line-98"></span><span id="local-6989586621689773888"><span id="local-6989586621689773889"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderDirection"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderDirection"><span class="hs-identifier hs-var">OrderDirection</span></a></span></span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Ascending"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">Ascending</span></a></span></span><span>
 </span><span id="line-100"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Descending"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#Descending"><span class="hs-identifier hs-var">Descending</span></a></span></span><span>
-</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cDescending"><span id="%24cAscending"><span id="%24tOrderDirection"><span id="local-6989586621689770169"><span id="local-6989586621689770171"><span id="local-6989586621689770173"><span id="local-6989586621689770175"><span id="local-6989586621689770177"><span id="local-6989586621689770179"><span id="local-6989586621689770181"><span id="local-6989586621689770183"><span id="local-6989586621689770185"><span id="local-6989586621689770187"><span id="local-6989586621689770189"><span id="local-6989586621689770191"><span id="local-6989586621689770193"><span id="local-6989586621689770195"><span class="annot"><span class="annottext">Typeable OrderDirection
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cDescending"><span id="%24cAscending"><span id="%24tOrderDirection"><span id="local-6989586621689773857"><span id="local-6989586621689773859"><span id="local-6989586621689773861"><span id="local-6989586621689773863"><span id="local-6989586621689773865"><span id="local-6989586621689773867"><span id="local-6989586621689773869"><span id="local-6989586621689773871"><span id="local-6989586621689773873"><span id="local-6989586621689773875"><span id="local-6989586621689773877"><span id="local-6989586621689773879"><span id="local-6989586621689773881"><span id="local-6989586621689773883"><span class="annot"><span class="annottext">Typeable OrderDirection
 DataType
 Constr
 Typeable OrderDirection
@@ -1479,7 +1479,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; OrderDirection -&gt; c OrderDirection
 $cp1Data :: Typeable OrderDirection
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770162"><span id="local-6989586621689770164"><span class="annot"><span class="annottext">OrderDirection -&gt; OrderDirection -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773850"><span id="local-6989586621689773852"><span class="annot"><span class="annottext">OrderDirection -&gt; OrderDirection -&gt; Bool
 (OrderDirection -&gt; OrderDirection -&gt; Bool)
 -&gt; (OrderDirection -&gt; OrderDirection -&gt; Bool) -&gt; Eq OrderDirection
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1496,7 +1496,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep OrderDirection x -&gt; OrderDirection
 $cfrom :: forall x. OrderDirection -&gt; Rep OrderDirection x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770145"><span id="local-6989586621689770147"><span id="local-6989586621689770149"><span id="local-6989586621689770151"><span id="local-6989586621689770153"><span id="local-6989586621689770155"><span id="local-6989586621689770157"><span class="annot"><span class="annottext">Eq OrderDirection
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773833"><span id="local-6989586621689773835"><span id="local-6989586621689773837"><span id="local-6989586621689773839"><span id="local-6989586621689773841"><span id="local-6989586621689773843"><span id="local-6989586621689773845"><span class="annot"><span class="annottext">Eq OrderDirection
 Eq OrderDirection
 -&gt; (OrderDirection -&gt; OrderDirection -&gt; Ordering)
 -&gt; (OrderDirection -&gt; OrderDirection -&gt; Bool)
@@ -1534,7 +1534,7 @@ $c&lt; :: OrderDirection -&gt; OrderDirection -&gt; Bool
 compare :: OrderDirection -&gt; OrderDirection -&gt; Ordering
 $ccompare :: OrderDirection -&gt; OrderDirection -&gt; Ordering
 $cp1Ord :: Eq OrderDirection
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770139"><span id="local-6989586621689770141"><span id="local-6989586621689770143"><span class="annot"><span class="annottext">Int -&gt; OrderDirection -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773827"><span id="local-6989586621689773829"><span id="local-6989586621689773831"><span class="annot"><span class="annottext">Int -&gt; OrderDirection -&gt; ShowS
 [OrderDirection] -&gt; ShowS
 OrderDirection -&gt; String
 (Int -&gt; OrderDirection -&gt; ShowS)
@@ -1550,7 +1550,7 @@ $cshow :: OrderDirection -&gt; String
 showsPrec :: Int -&gt; OrderDirection -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderDirection -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-102"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689770136"><span class="annot"><span class="annottext">Eq OrderDirection
+</span><span id="line-102"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689773824"><span class="annot"><span class="annottext">Eq OrderDirection
 Eq OrderDirection
 -&gt; (Accesses -&gt; OrderDirection -&gt; OrderDirection -&gt; Bool)
 -&gt; Cacheable OrderDirection
@@ -1559,7 +1559,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; OrderDirection -&gt; OrderDirection -&gt; Bool
 $cunchanged :: Accesses -&gt; OrderDirection -&gt; OrderDirection -&gt; Bool
 $cp1Cacheable :: Eq OrderDirection
-</span><a href="#local-6989586621689770136"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770132"><span id="local-6989586621689770134"><span class="annot"><span class="annottext">Int -&gt; OrderDirection -&gt; Int
+</span><a href="#local-6989586621689773824"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773820"><span id="local-6989586621689773822"><span class="annot"><span class="annottext">Int -&gt; OrderDirection -&gt; Int
 OrderDirection -&gt; Int
 (Int -&gt; OrderDirection -&gt; Int)
 -&gt; (OrderDirection -&gt; Int) -&gt; Hashable OrderDirection
@@ -1568,16 +1568,16 @@ hash :: OrderDirection -&gt; Int
 $chash :: OrderDirection -&gt; Int
 hashWithSalt :: Int -&gt; OrderDirection -&gt; Int
 $chashWithSalt :: Int -&gt; OrderDirection -&gt; Int
-</span><a href="#local-6989586621689770132"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689770130"><span class="annot"><span class="annottext">OrderDirection -&gt; ()
+</span><a href="#local-6989586621689773820"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689773818"><span class="annot"><span class="annottext">OrderDirection -&gt; ()
 (OrderDirection -&gt; ()) -&gt; NFData OrderDirection
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: OrderDirection -&gt; ()
 $crnf :: OrderDirection -&gt; ()
-</span><a href="#local-6989586621689770130"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689773818"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689770123"><span id="local-6989586621689770125"><span id="local-6989586621689770127"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderDirection"><span class="hs-identifier hs-type">OrderDirection</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621689770122"><span class="annot"><span class="annottext">toJSON :: OrderDirection -&gt; Value
-</span><a href="#local-6989586621689770122"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderDirection -&gt; Value
+</span><span id="line-104"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689773811"><span id="local-6989586621689773813"><span id="local-6989586621689773815"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderDirection"><span class="hs-identifier hs-type">OrderDirection</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621689773810"><span class="annot"><span class="annottext">toJSON :: OrderDirection -&gt; Value
+</span><a href="#local-6989586621689773810"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderDirection -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -1585,8 +1585,8 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderDirection</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderDirection"><span class="hs-identifier hs-type">OrderDirection</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-108"></span><span>  </span><span id="local-6989586621689770120"><span class="annot"><span class="annottext">from :: OrderDirection -&gt; OrderDirection
-</span><a href="#local-6989586621689770120"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderDirection
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621689773808"><span class="annot"><span class="annottext">from :: OrderDirection -&gt; OrderDirection
+</span><a href="#local-6989586621689773808"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderDirection
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Ascending</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderDirection
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">Ascending</span></a></span><span>
 </span><span id="line-109"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">OrderDirection
@@ -1594,8 +1594,8 @@ Options -&gt; a -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#Descending"><span class="hs-identifier hs-var">Descending</span></a></span><span>
 </span><span id="line-110"></span><span>
 </span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#OrderDirection"><span class="hs-identifier hs-type">OrderDirection</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderDirection</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-112"></span><span>  </span><span id="local-6989586621689770116"><span class="annot"><span class="annottext">from :: OrderDirection -&gt; OrderDirection
-</span><a href="#local-6989586621689770116"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderDirection
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621689773804"><span class="annot"><span class="annottext">from :: OrderDirection -&gt; OrderDirection
+</span><a href="#local-6989586621689773804"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderDirection
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">Ascending</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderDirection
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Ascending</span></a></span><span>
 </span><span id="line-113"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">OrderDirection
