@@ -1,49 +1,55 @@
 import React, { ReactElement } from 'react';
 import clsx from 'clsx';
 import get from 'lodash.get';
-import { FieldError, useFormContext } from 'react-hook-form';
+import { FieldError, FieldPath, useFormContext } from 'react-hook-form';
+import { z, ZodTypeDef, ZodType } from 'zod';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
-export type InputFieldProps = FieldWrapperPassThroughProps & {
-  /**
-   * The input field name
-   */
-  name: string;
-  /**
-   * The input field type
-   */
-  type?: 'text' | 'email' | 'password' | 'number';
-  /**
-   * The input field classes
-   */
-  className?: string;
-  /**
-   * The input field icon
-   */
-  icon?: ReactElement;
-  /**
-   * The input field icon position
-   */
-  iconPosition?: 'start' | 'end';
-  /**
-   * The input field placeholder
-   */
-  placeholder?: string;
-  /**
-   * Flag to indicate if the field is disabled
-   */
-  disabled?: boolean;
-  /**
-   * The input field prepend label
-   */
-  prependLabel?: string;
-  /**
-   * The input field append label
-   */
-  appendLabel?: string;
-};
+type TFormValues = Record<string, unknown>;
 
-export const InputField: React.FC<InputFieldProps> = ({
+type Schema = ZodType<TFormValues, ZodTypeDef, TFormValues>;
+
+export type InputFieldProps<T extends z.infer<Schema>> =
+  FieldWrapperPassThroughProps & {
+    /**
+     * The input field name
+     */
+    name: FieldPath<T>;
+    /**
+     * The input field type
+     */
+    type?: 'text' | 'email' | 'password' | 'number';
+    /**
+     * The input field classes
+     */
+    className?: string;
+    /**
+     * The input field icon
+     */
+    icon?: ReactElement;
+    /**
+     * The input field icon position
+     */
+    iconPosition?: 'start' | 'end';
+    /**
+     * The input field placeholder
+     */
+    placeholder?: string;
+    /**
+     * Flag to indicate if the field is disabled
+     */
+    disabled?: boolean;
+    /**
+     * The input field prepend label
+     */
+    prependLabel?: string;
+    /**
+     * The input field append label
+     */
+    appendLabel?: string;
+  };
+
+export const InputField = <T extends z.infer<Schema>>({
   type = 'text',
   name,
   icon,
@@ -54,11 +60,11 @@ export const InputField: React.FC<InputFieldProps> = ({
   appendLabel = '',
   dataTest,
   ...wrapperProps
-}: InputFieldProps) => {
+}: InputFieldProps<T>) => {
   const {
     register,
     formState: { errors },
-  } = useFormContext();
+  } = useFormContext<T>();
 
   const maybeError = get(errors, name) as FieldError | undefined;
   return (

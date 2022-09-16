@@ -1,11 +1,11 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { z } from 'zod';
-import { Form, InputField, InputFieldProps } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { Form, InputField, InputFieldProps } from '..';
+import { Button } from '../../Button';
 
 const renderInputField = (
-  props: Omit<InputFieldProps, 'name'>,
+  props: Omit<InputFieldProps<any>, 'name'>,
   schema: any = z.object({ title: z.string() })
 ) => {
   const onSubmit = jest.fn();
