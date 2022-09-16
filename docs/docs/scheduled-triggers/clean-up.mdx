@@ -110,7 +110,7 @@ If you wish to keep recent data and only clear data before a particular time per
 
 ```sql
 -- units can be 'minutes', 'hours', 'days', 'months', 'years'
-created_at < now() - interval '<x> <units>'
+scheduled_time < now() - interval '<x> <units>'
 ```
 
 For example: to delete all processed events and HTTP logs older than 3 months:
@@ -120,7 +120,7 @@ For example: to delete all processed events and HTTP logs older than 3 months:
 ```sql
 DELETE FROM hdb_catalog.hdb_cron_events
 WHERE status IN ('delivered', 'error', 'dead')
-  AND created_at < now() - interval '3 months';
+  AND scheduled_time < now() - interval '3 months';
 ```
 
 2. Scheduled events
@@ -128,7 +128,7 @@ WHERE status IN ('delivered', 'error', 'dead')
 ```sql
 DELETE FROM hdb_catalog.hdb_scheduled_events
 WHERE status IN ('delivered', 'error', 'dead')
- AND created_at < now() - interval '3 months';
+ AND scheduled_time < now() - interval '3 months';
 ```
 
 See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html) for more details.
