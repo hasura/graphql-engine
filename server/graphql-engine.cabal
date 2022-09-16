@@ -1303,6 +1303,7 @@ test-suite tests-hspec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
     Test.Queries.DirectivesSpec
+    Test.Queries.AggregationPredicatesSpec
     Test.Queries.FilterSearchSpec
     Test.Queries.MultiColumnObjectRelationshipsSpec
     Test.Queries.NestedObjectSpec

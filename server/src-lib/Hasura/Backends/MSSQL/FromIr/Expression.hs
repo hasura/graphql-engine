@@ -180,15 +180,14 @@ fromOpExpG columnInfo op = do
       ASTTouches val -> pure $ TSQL.STOpExpression TSQL.STTouches column val
       ASTWithin val -> pure $ TSQL.STOpExpression TSQL.STWithin column val
     -- As of March 2021, only geometry/geography casts are supported
-    IR.ACast _casts -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-
+    IR.ACast _casts -> refute (pure (UnsupportedOpExpG op))
     -- We do not yet support column names in permissions
-    IR.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    IR.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    IR.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    IR.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    IR.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    IR.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    IR.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    IR.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    IR.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    IR.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    IR.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    IR.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

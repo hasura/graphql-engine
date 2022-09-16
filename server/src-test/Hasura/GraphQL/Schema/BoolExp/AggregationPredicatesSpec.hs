@@ -201,26 +201,25 @@ spec = do
               expected =
                 [ AggregationPredicatesImplementation
                     { aggRelation = tracksRel,
-                      aggPredicates =
-                        [ AggregationPredicate
-                            { aggPredFunctionName = "count",
-                              aggPredArguments = AggregationPredicateArgumentsStar,
-                              aggPredDistinct = True,
-                              aggPredFilter = Nothing,
-                              aggPredPredicate =
-                                [ AEQ
-                                    True
-                                    ( UVParameter
-                                        Nothing
-                                        ( ColumnValue
-                                            { cvType = ColumnScalar PGInteger,
-                                              cvValue = PGValInteger 42
-                                            }
-                                        )
-                                    )
-                                ]
-                            }
-                        ]
+                      aggPredicate =
+                        AggregationPredicate
+                          { aggPredFunctionName = "count",
+                            aggPredArguments = AggregationPredicateArgumentsStar,
+                            aggPredDistinct = True,
+                            aggPredFilter = Nothing,
+                            aggPredPredicate =
+                              [ AEQ
+                                  True
+                                  ( UVParameter
+                                      Nothing
+                                      ( ColumnValue
+                                          { cvType = ColumnScalar PGInteger,
+                                            cvValue = PGValInteger 42
+                                          }
+                                      )
+                                  )
+                              ]
+                          }
                     }
                 ]
 
