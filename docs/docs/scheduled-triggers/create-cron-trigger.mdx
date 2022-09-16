@@ -182,3 +182,14 @@ Once you've created your cron trigger, you can see `Pending events`, `Processed 
 respective tabs.
 
 <Thumbnail src='/img/event-triggers/pending-cron.png' alt='Schedule and logs for cron triggers' width='1200px' />
+
+## Rest Connectors
+
+REST Connectors i.e. request and response transformations, for cron triggers are used to invoke existing or third-party
+webhooks without needing any middleware or modifications to the upstream code.
+
+REST Connectors modify the cron trigger's HTTP request to adapt to your webhook's expected format by adding suitable
+transforms.
+
+Currently, rest connectors for cron triggers can only be configured through the CLI and the
+[metadata API](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger).
