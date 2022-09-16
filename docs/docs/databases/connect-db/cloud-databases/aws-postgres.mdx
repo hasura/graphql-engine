@@ -8,7 +8,7 @@ keywords:
   - guide
   - aws rds postgres
 sidebar_label: AWS RDS Postgres
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
@@ -22,12 +22,12 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 This guide explains how to connect a new or existing AWS RDS Postgres database to a Hasura Cloud project.
 
-## Step 0: Sign up or log in to Hasura Cloud
+## Step 1: Sign up or log in to Hasura Cloud
 
 Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 1: Create a Hasura Cloud project {#create-hasura-project-aws-rds-postgres}
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-aws-rds-postgres}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -41,7 +41,7 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 2: Create a Postgres DB on AWS (skip if you have an existing DB) {#create-aws-rds-postgres-db}
+## Step 3: Create a Postgres DB on AWS (skip if you have an existing DB) {#create-aws-rds-postgres-db}
 
 Log into the [AWS console](https://console.aws.amazon.com//).
 
@@ -85,10 +85,10 @@ If you're using a database user other than the default one, make sure to give it
 
 :::
 
-## Step 3: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura Cloud
 
 On the database dashboard, click on `Connectivity & security`. On the right, click on the security group that you
-selected or added in [step 2](/databases/connect-db/cloud-databases/aws-postgres.mdx#create-aws-rds-postgres-db).
+selected or added in [step 3](/databases/connect-db/cloud-databases/aws-postgres.mdx#create-aws-rds-postgres-db).
 
 <Thumbnail
   src='/img/cloud-dbs/aws/postgres/find-security-group.png'
@@ -122,7 +122,7 @@ Add the Hasura IP address that you copied:
 
 Then click `Save rules`.
 
-## Step 4: Construct the database connection URL {#construct-db-url-aws-postgres}
+## Step 5: Construct the database connection URL {#construct-db-url-aws-postgres}
 
 The structure of the database connection URL looks as follows:
 
@@ -146,10 +146,10 @@ On the database dashboard, click on `Connectivity & security`:
 - `postgres-port`: On the screenshot above you can find it under `Port`. The default port for Postgres is `5432`.
 - `db`: The DB is `postgres` by default unless otherwise specified.
 
-## Step 5: Finish connecting the database
+## Step 6: Finish connecting the database
 
 Back on Hasura Console, enter the database URL that we retrieved in
-[step 4](/databases/connect-db/cloud-databases/aws-postgres.mdx#construct-db-url-aws-postgres):
+[step 5](/databases/connect-db/cloud-databases/aws-postgres.mdx#construct-db-url-aws-postgres):
 
 <Thumbnail src='/img/getting-started/connect-db-cloud.png' alt='Database setup' width='600px' />
 

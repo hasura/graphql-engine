@@ -10,6 +10,21 @@ slug: index
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import VersionedLink from '@site/src/components/VersionedLink';
+import ArrowRight from '@site/static/icons/arrow_right.svg';
+import Aiven from '@site/static/img/cloud-dbs/logos/aiven.png';
+import Aurora from '@site/static/img/cloud-dbs/logos/aws-aurora.png';
+import RDS from '@site/static/img/cloud-dbs/logos/aws.png';
+import Azure from '@site/static/img/cloud-dbs/logos/azure.png';
+import RollTide from '@site/static/img/cloud-dbs/logos/crunchy.png';
+import DO from '@site/static/img/cloud-dbs/logos/DO.png';
+import Elephant from '@site/static/img/cloud-dbs/logos/elephant.png';
+import GCP from '@site/static/img/cloud-dbs/logos/gcp.png';
+import Railway from '@site/static/img/cloud-dbs/logos/railway.png';
+import Render from '@site/static/img/cloud-dbs/logos/render.png';
+import Timescale from '@site/static/img/cloud-dbs/logos/timescaledb.png';
+import Yugabyte from '@site/static/img/cloud-dbs/logos/yugabyte.png';
 
 # Guides for connecting Hasura Cloud with different cloud databases
 
@@ -20,11 +35,65 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 Check out the following guides for tutorials on how to use Hasura Cloud with a new or existing database provided by
 specific cloud vendors.
 
-- [Aiven Postgres](/databases/connect-db/cloud-databases/aiven.mdx)
-- [AWS RDS Aurora Postgres](/databases/connect-db/cloud-databases/aws-aurora.mdx)
-- [AWS RDS Postgres](/databases/connect-db/cloud-databases/aws-postgres.mdx)
-- [Azure Postgres](/databases/connect-db/cloud-databases/azure.mdx)
-- [Digital Ocean Postgres](/databases/connect-db/cloud-databases/digital-ocean.mdx)
-- [GCP Postgres](/databases/connect-db/cloud-databases/gcp.mdx)
-- [TimescaleDB Cloud](/databases/connect-db/cloud-databases/timescale-cloud.mdx)
-- [YugabyteDB](/databases/connect-db/cloud-databases/yugabyte.mdx)
+<div className='vendor-table'>
+  <VersionedLink to='/databases/connect-db/cloud-databases/aiven'>
+    <div className='card'>
+      <img src={Aiven} title='Aiven Postgres' alt='Connect Postgres DB to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/aws-aurora'>
+    <div className='card'>
+      <img src={Aurora} title='AWS Aurora Postgres' alt='Connect AWS Aurora Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/aws-postgres'>
+    <div className='card'>
+      <img src={RDS} title='AWS RDS Postgres' alt='Connect AWS RDS Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/azure'>
+    <div className='card'>
+      <img src={Azure} title='Azure Postgres' alt='Connect Azure Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/crunchy'>
+    <div className='card'>
+      <img src={RollTide} title='Crunchy Postgres' alt='Connect Crunchy Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/digital-ocean'>
+    <div className='card'>
+      <img src={DO} title='Digital Ocean Postgres' alt='Connect DO Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/elephant'>
+    <div className='card'>
+      <img src={Elephant} title='ElephantSQL Postgres' alt='Connect ElephantSQL Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/gcp'>
+    <div className='card'>
+      <img src={GCP} title='GCP Postgres' alt='Connect GCP Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/railway'>
+    <div className='card'>
+      <img src={Railway} title='Railway Postgres' alt='Connect Railway Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/render'>
+    <div className='card'>
+      <img src={Render} title='Render Postgres' alt='Connect Render Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/timescale-cloud'>
+    <div className='card'>
+      <img src={Timescale} title='TimescaleDB Postgres' alt='Connect TimescaleDB Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/yugabyte'>
+    <div className='card'>
+      <img src={Yugabyte} title='YugabyteDB Postgres' alt='Connect YugabyteDB Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+</div>

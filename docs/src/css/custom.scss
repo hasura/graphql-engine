@@ -915,3 +915,27 @@ div[class*='codeBlockTitle_'] {
 tbody {
   word-break: break-word;
 }
+
+// Gallery for cloud db guides' vendor logos
+.vendor-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-gap: 20px;
+
+  .card {
+    display: grid;
+    place-items: center center;
+    height: 200px;
+    background: #fff;
+
+    img {
+      width: 150px;
+      height: auto;
+    }
+
+    &:hover {
+      box-shadow: var(--ifm-global-shadow-md);
+      cursor: pointer;
+    }
+  }
+}

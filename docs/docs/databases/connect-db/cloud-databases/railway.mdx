@@ -1,0 +1,118 @@
+---
+description: Using Hasura with a Railway Postgres database
+title: 'Cloud: Using Hasura Cloud with a Railway Postgres database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - railway
+sidebar_label: Railway Postgres
+sidebar_position: 10
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Using Hasura Cloud with a Railway Postgres database
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+
+## Introduction
+
+This guide explains how to connect a new or existing Railway Postgres database to a Hasura Cloud project.
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+
+You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+
+<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+
+## Step 3: Create a Postgres DB on Railway ([skip if you have an existing DB](#get-db-url))
+
+Log into [Railway](https://railway.app/dashboard).
+
+From your dashboard, click `New Project`:
+
+<Thumbnail src='/img/cloud-dbs/railway/railway-new-project.png' alt='Create a new project with Railway' width='700px' />
+
+Select `Provision PostgreSQL`:
+
+<Thumbnail src='/img/cloud-dbs/railway/railway-new-pg.png' alt='Create a new PG db with Railway' width='700px' />
+
+Railway will redirect you to the project's dashboard. After a few seconds, you should see the `Activity` card update
+with information about your new instance. Congratulations! You've now created a Postgres instance on Railway which you
+can use with Hasura GraphQL Engine. Follow the steps below to connect it to Hasura.
+
+## Step 4: Get the database connection URL {#get-db-url}
+
+The structure of the database connection URL looks as follows:
+
+```bash
+postgresql://<user-name>:<password>@<host-server>:<port>/<database-name>
+```
+
+Click on the `PostgreSQL` card to see details related to this instance.
+
+<Thumbnail
+  src='/img/cloud-dbs/railway/railway-choose-pg.png'
+  alt='Access your the details of the db from the card'
+  width='700px'
+/>
+
+Choose the `Connect` tab and copy the `Postgres Connection URL`:
+
+<Thumbnail
+  src='/img/cloud-dbs/railway/railway-connection-string.png'
+  alt='Go to the connect tab and grab the connection string'
+  width='700px'
+/>
+
+## Step 5: Finish connecting the database
+
+Back on the Hasura Console, enter the database URL that we retrieved in the previous step:
+
+<Thumbnail
+  src='/img/cloud-dbs/render/render-connect-db.png'
+  alt='Connect the database on Hasura Console'
+  width='700px'
+/>
+
+Then click `Connect Database`.
+
+:::info Note
+
+For security reasons, it is recommended to set database URLs as
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
+of the raw database URLs.
+
+:::
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+
+## Next steps
+
+You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+[custom domains](/projects/domains.mdx#manage-project-domains)).
+
+<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
