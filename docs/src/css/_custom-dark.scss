@@ -104,6 +104,14 @@ html[data-theme='dark'] {
         }
       }
     }
+    .theme-doc-sidebar-item-link.cloud-and-enterprise-icon {
+      .menu__link {
+        position: relative;
+        &:after {
+          background: url('/icons/ce_ee_light.svg') no-repeat;
+        }
+      }
+    }
     .theme-doc-sidebar-item-category.cloud-and-enterprise-icon {
       .menu__list-item-collapsible {
         .menu__link {
