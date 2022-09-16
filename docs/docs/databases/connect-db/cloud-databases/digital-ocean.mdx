@@ -8,7 +8,7 @@ keywords:
   - guide
   - digital ocean
 sidebar_label: Digital Ocean Postgres
-sidebar_position: 5
+sidebar_position: 7
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
@@ -22,12 +22,12 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 This guide explains how to connect a new or existing Digital Ocean Postgres database to a Hasura Cloud project.
 
-## Step 0: Sign up or log in to Hasura Cloud
+## Step 1: Sign up or log in to Hasura Cloud
 
 Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 1: Create a Hasura Cloud project {#create-hasura-project-do}
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-do}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -41,7 +41,7 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 2: Create a Postgres DB on Digital Ocean (skip if you have an existing DB)
+## Step 3: Create a Postgres DB on Digital Ocean (skip if you have an existing DB)
 
 Log into [Digital Ocean](https://cloud.digitalocean.com/).
 
@@ -58,7 +58,7 @@ associated with.
 
 Then click `Create a Database Cluster`.
 
-## Step 3: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura Cloud
 
 Navigate to the database cluster's `Overview` page:
 
@@ -85,7 +85,7 @@ If you're using a database user other than the default one, make sure to give it
 
 :::
 
-## Step 4: Get the database connection URL {#get-db-url-do}
+## Step 5: Get the database connection URL {#get-db-url-do}
 
 The structure of the database connection URL looks as follows:
 
@@ -107,9 +107,9 @@ Scroll down to `Connection details`. Select `Public network` on the left and `Co
 
 Then click the `Copy` button for the next step.
 
-## Step 5: Finish connecting the database
+## Step 6: Finish connecting the database
 
-Back on Hasura Console, enter the database URL that we retrieved in [step 4](#get-db-url-do):
+Back on Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-do):
 
 <Thumbnail src='/img/cloud-dbs/do/DO-complete.png' alt='Database setup' width='600px' />
 

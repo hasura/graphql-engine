@@ -1,0 +1,139 @@
+---
+description: Using Hasura with an ElephantSQL database
+title: 'Cloud: Using Hasura Cloud with an ElephantSQL database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - elephant
+  - elephantsql
+sidebar_label: ElephantSQL Postgres
+sidebar_position: 8
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Using Hasura Cloud with an ElephantSQL Postgres database
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+
+## Introduction
+
+This guide explains how to connect a new or existing ElephantSQL Postgres database to a Hasura Cloud project.
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-do}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+
+You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+
+<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+
+## Step 3: Create a Postgres DB on ElephantSQL ([skip if you have an existing DB](#get-db-url))
+
+Log into [ElephantSQL](https://customer.elephantsql.com/login).
+
+If this is your first time logging into ElephantSQL, you'll need to create a team. Complete the form and click
+`Create team`.
+
+<Thumbnail src='/img/cloud-dbs/elephant/elephant-create-team.png' alt='Create Elephant team' width='700px' />
+
+From here, you'll need to create a new instance:
+
+<Thumbnail
+  src='/img/cloud-dbs/elephant/elephant-create-instance.png'
+  alt='Create new Elephant instance'
+  width='700px'
+/>
+
+Choose a name, plan, and - if necessary - tags for this instance. Click `Select Region` when complete:
+
+<Thumbnail
+  src='/img/cloud-dbs/elephant/elephant-instance-details.png'
+  alt='Add details to Elephant instance'
+  width='700px'
+/>
+
+Choose a region and click `Review`:
+
+<Thumbnail
+  src='/img/cloud-dbs/elephant/elephant-select-region.png'
+  alt='Choose region for Elephant instance'
+  width='700px'
+/>
+
+Confirm your selections and click `Create instance`:
+
+<Thumbnail src='/img/cloud-dbs/elephant/elephant-confirm-instance.png' alt='Create Elephant instance' width='700px' />
+
+Congratulations! You've now created an ElephantSQL Postgres instance you can use with Hasura GraphQL Engine. Follow the
+steps below to connect it to Hasura.
+
+## Step 4: Get the database connection URL {#get-db-url}
+
+From your dashboard, click on the name of your instance:
+
+<Thumbnail src='/img/cloud-dbs/elephant/elephant-choose-instance.png' alt='Choose Elephant instance' width='700px' />
+
+The structure of the database connection URL looks as follows:
+
+```bash
+postgres://<user-name>:<password>@<host-server>
+```
+
+From the `Details` view, copy the URL string to your clipboard:
+
+<Thumbnail
+  src='/img/cloud-dbs/elephant/elephant-connection-string.png'
+  alt='Get the connection string for the database'
+  width='700px'
+/>
+
+## Step 5: Finish connecting the database
+
+Back on Hasura Console, enter the database URL that we retrieved in the previous step:
+
+<Thumbnail
+  src='/img/cloud-dbs/elephant/elephant-connect-db.png'
+  alt='Add the connection string to your Hasura Console'
+  width='700px'
+/>
+
+Then click `Connect Database`.
+
+:::info Note
+
+For security reasons, it is recommended to set database URLs as
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
+of the raw database URLs.
+
+:::
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+
+## Next steps
+
+You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+[custom domains](/projects/domains.mdx#manage-project-domains)).
+
+<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
