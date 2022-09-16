@@ -74,9 +74,11 @@ module Hasura.Backends.Postgres.SQL.DML
     mkIdenFromExp,
     mkLateralFromItem,
     mkQIdenExp,
+    mkQIdentifier,
     mkQIdentifierTable,
     mkQual,
     mkRowExp,
+    mkIdentifierSQLExp,
     mkSIdenExp,
     mkSQLOpExp,
     mkSelFromExp,
@@ -345,6 +347,9 @@ mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (
 
 mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
 mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
+
+mkIdentifierSQLExp :: forall a. IsIdentifier a => Qual -> a -> SQLExp
+mkIdentifierSQLExp q = SEQIdentifier . QIdentifier q . toIdentifier
 
 data QIdentifier
   = QIdentifier Qual Identifier

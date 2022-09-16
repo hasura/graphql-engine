@@ -106,6 +106,11 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
       P.fieldOptional (relGqlName <> Name.__ <> Name._aggregate) Nothing
         . P.object typeGqlName Nothing
         . fmap (AggregationPredicatesImplementation rel)
+        . ( `P.bindFields`
+              \case
+                [predicate] -> pure predicate
+                _ -> P.parseError "exactly one predicate should be specified"
+          )
 
     -- Input field for a single aggregation predicate.
     aggPredicateField ::

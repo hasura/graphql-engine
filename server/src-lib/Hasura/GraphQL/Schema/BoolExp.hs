@@ -54,7 +54,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 class AggregationPredicatesSchema (b :: BackendType) where
   aggregationPredicatesParser ::
     forall r m n.
-    MonadBuildSchemaBase r m n =>
+    MonadBuildSourceSchema r m n =>
     SourceInfo b ->
     TableInfo b ->
     SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
