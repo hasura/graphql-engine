@@ -130,12 +130,35 @@ setupFunctions testEnv =
               BigQuery.runSql_ $
                 T.unpack $
                   "DROP TABLE FUNCTION " <> fetch_articles schemaName <> ";"
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              BigQuery.runSql_ $
+                T.unpack $
+                  T.unwords $
+                    [ "CREATE TABLE FUNCTION ",
+                      fetch_articles_no_user_args_returns_table schemaName,
+                      "(a_id INT64)",
+                      "AS (",
+                      "SELECT t.* FROM",
+                      articleTableSQL,
+                      "AS t WHERE t.author_id = a_id",
+                      ");"
+                    ],
+            Fixture.teardownAction = \_ ->
+              BigQuery.runSql_ $
+                T.unpack $
+                  "DROP TABLE FUNCTION " <> fetch_articles_no_user_args_returns_table schemaName <> ";"
           }
       ]
 
 fetch_articles_returns_table :: SchemaName -> T.Text
 fetch_articles_returns_table schemaName =
   unSchemaName schemaName <> ".fetch_articles_returns_table"
+
+fetch_articles_no_user_args_returns_table :: SchemaName -> T.Text
+fetch_articles_no_user_args_returns_table schemaName =
+  unSchemaName schemaName <> ".fetch_articles_no_user_args_returns_table"
 
 fetch_articles :: SchemaName -> T.Text
 fetch_articles schemaName =
@@ -207,6 +230,41 @@ setupMetadata testEnv =
                 args:
                   source: bigquery
                   name: search_articles_2
+                  table:
+                    dataset: *schemaName
+                    name: author
+                |]
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              GraphqlEngine.postMetadata_
+                testEnv
+                [yaml|
+                type: bigquery_add_computed_field
+                args:
+                  source: bigquery
+                  name: articles_no_search
+                  table:
+                    dataset: *schemaName
+                    name: author
+                  definition:
+                    function:
+                      dataset: *schemaName
+                      name: fetch_articles_no_user_args_returns_table
+                    argument_mapping:
+                      a_id: id
+                    return_table:
+                      name: article
+                      dataset: *schemaName
+                |],
+            Fixture.teardownAction = \_ ->
+              GraphqlEngine.postMetadata_
+                testEnv
+                [yaml|
+                type: bigquery_drop_computed_field
+                args:
+                  source: bigquery
+                  name: articles_no_search
                   table:
                     dataset: *schemaName
                     name: author
@@ -508,4 +566,34 @@ errors:
     code: validation-failed
   message: |-
     field 'search_articles_2' not found in type: '#{schemaName}_author'
+|]
+
+  it "Query articles_no_search without user arguments" $ \testEnv -> do
+    let schemaName = Schema.getSchemaName testEnv
+
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnv
+          [graphql|
+query {
+  #{schemaName}_author(order_by: {id: asc}){
+    id
+    articles_no_search(order_by: {id: asc}){
+      id
+    }
+  }
+}
+|]
+      )
+      [interpolateYaml|
+data:
+  #{schemaName}_author:
+  - id: '1'
+    articles_no_search:
+    - id: '1'
+  - id: '2'
+    articles_no_search:
+    - id: '2'
+    - id: '3'
 |]
