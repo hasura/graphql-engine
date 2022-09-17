@@ -1360,6 +1360,7 @@ test-suite tests-dc-api
     , base
     , bytestring
     , case-insensitive
+    , data-fix
     , deepseq
     , dc-api
     , file-embed

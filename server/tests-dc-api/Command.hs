@@ -37,7 +37,8 @@ data TestOptions = TestOptions
     _toParallelDegree :: Maybe Int,
     _toMatch :: Maybe String,
     _toSkip :: [String],
-    _toDryRun :: Bool
+    _toDryRun :: Bool,
+    _toExportMatchStrings :: Bool
   }
 
 data AgentCapabilities
@@ -138,6 +139,10 @@ testOptionsParser =
     <*> switch
       ( long "dry-run"
           <> help "Skip execution of test bodies"
+      )
+    <*> switch
+      ( long "export-match-strings"
+          <> help "Exports the hspec match strings without running the tests"
       )
 
 testCommandParser :: Parser Command
