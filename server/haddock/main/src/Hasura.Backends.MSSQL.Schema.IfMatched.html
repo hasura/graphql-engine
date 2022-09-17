@@ -54,24 +54,24 @@
 </span><span id="line-54"></span><span class="hs-comment">-- the active role has /both/ select and update permissions to the table</span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- @tablename@ defined /and/ these grant non-empty column permissions.</span><span>
 </span><span id="line-56"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#ifMatchedFieldParser"><span class="hs-identifier hs-type">ifMatchedFieldParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-57"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689876149"><span class="annot"><a href="#local-6989586621689876149"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689876148"><span class="annot"><a href="#local-6989586621689876148"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689876147"><span class="annot"><a href="#local-6989586621689876147"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876149"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876148"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876147"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689875888"><span class="annot"><a href="#local-6989586621689875888"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689875887"><span class="annot"><a href="#local-6989586621689875887"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689875886"><span class="annot"><a href="#local-6989586621689875886"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875888"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875887"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875886"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-59"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span>
 </span><span id="line-60"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-61"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876149"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876148"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876147"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#IfMatched"><span class="hs-identifier hs-type">IfMatched</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875888"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875887"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875886"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#IfMatched"><span class="hs-identifier hs-type">IfMatched</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span id="ifMatchedFieldParser"><span class="annot"><span class="annottext">ifMatchedFieldParser :: SourceInfo 'MSSQL
 -&gt; TableInfo 'MSSQL
 -&gt; SchemaT
      r
      m
      (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
-</span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#ifMatchedFieldParser"><span class="hs-identifier hs-var hs-var">ifMatchedFieldParser</span></a></span></span><span> </span><span id="local-6989586621689876146"><span class="annot"><span class="annottext">SourceInfo 'MSSQL
-</span><a href="#local-6989586621689876146"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689876145"><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876145"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621689876144"><span class="annot"><span class="annottext">Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL)))
-</span><a href="#local-6989586621689876144"><span class="hs-identifier hs-var">maybeObject</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
+</span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#ifMatchedFieldParser"><span class="hs-identifier hs-var hs-var">ifMatchedFieldParser</span></a></span></span><span> </span><span id="local-6989586621689875885"><span class="annot"><span class="annottext">SourceInfo 'MSSQL
+</span><a href="#local-6989586621689875885"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689875884"><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875884"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621689875883"><span class="annot"><span class="annottext">Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL)))
+</span><a href="#local-6989586621689875883"><span class="hs-identifier hs-var">maybeObject</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
 -&gt; TableInfo 'MSSQL
 -&gt; SchemaT
      r m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
@@ -83,8 +83,8 @@ SourceInfo 'MSSQL
 -&gt; SchemaT
      r m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
 </span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#ifMatchedObjectParser"><span class="hs-identifier hs-var">ifMatchedObjectParser</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
-</span><a href="#local-6989586621689876146"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876145"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689875885"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875884"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-identifier">return</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL)))
 -&gt; (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))
     -&gt; InputFieldsParser
@@ -94,7 +94,7 @@ forall (m :: * -&gt; *) a b.
 Applicative m =&gt;
 Maybe a -&gt; (a -&gt; m (Maybe b)) -&gt; m (Maybe b)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">withJust</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL)))
-</span><a href="#local-6989586621689876144"><span class="hs-identifier hs-var">maybeObject</span></a></span><span> </span><span class="annot"><span class="annottext">((Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))
+</span><a href="#local-6989586621689875883"><span class="hs-identifier hs-var">maybeObject</span></a></span><span> </span><span class="annot"><span class="annottext">((Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))
   -&gt; InputFieldsParser
        n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
  -&gt; InputFieldsParser
@@ -122,20 +122,20 @@ forall a. a -&gt; Maybe a
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="hs-comment">-- | Parse a @tablename_if_matched@ object.</span><span>
 </span><span id="line-69"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#ifMatchedObjectParser"><span class="hs-identifier hs-type">ifMatchedObjectParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-70"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689876301"><span class="annot"><a href="#local-6989586621689876301"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689876300"><span class="annot"><a href="#local-6989586621689876300"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689876299"><span class="annot"><a href="#local-6989586621689876299"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876301"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876300"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876299"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689876040"><span class="annot"><a href="#local-6989586621689876040"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689876039"><span class="annot"><a href="#local-6989586621689876039"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689876038"><span class="annot"><a href="#local-6989586621689876038"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876040"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876039"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876038"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876301"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876300"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876299"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#IfMatched"><span class="hs-identifier hs-type">IfMatched</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876040"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876039"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876038"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#IfMatched"><span class="hs-identifier hs-type">IfMatched</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-77"></span><span id="ifMatchedObjectParser"><span class="annot"><span class="annottext">ifMatchedObjectParser :: SourceInfo 'MSSQL
 -&gt; TableInfo 'MSSQL
 -&gt; SchemaT
      r m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
-</span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#ifMatchedObjectParser"><span class="hs-identifier hs-var hs-var">ifMatchedObjectParser</span></a></span></span><span> </span><span id="local-6989586621689876139"><span class="annot"><span class="annottext">SourceInfo 'MSSQL
-</span><a href="#local-6989586621689876139"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689876138"><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876138"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT
+</span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#ifMatchedObjectParser"><span class="hs-identifier hs-var hs-var">ifMatchedObjectParser</span></a></span></span><span> </span><span id="local-6989586621689875878"><span class="annot"><span class="annottext">SourceInfo 'MSSQL
+</span><a href="#local-6989586621689875878"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689875877"><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875877"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT
   (SchemaT r m)
   (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL)))
 -&gt; SchemaT
@@ -143,15 +143,15 @@ forall a. a -&gt; Maybe a
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-78"></span><span>  </span><span class="hs-comment">-- Short-circuit if we don't have sufficient permissions.</span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621689876136"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689876136"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaContext -&gt; RoleName) -&gt; MaybeT (SchemaT r m) RoleName
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621689875875"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689875875"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaContext -&gt; RoleName) -&gt; MaybeT (SchemaT r m) RoleName
 forall r (m :: * -&gt; *) a b.
 (MonadReader r m, Has a r) =&gt;
 (a -&gt; b) -&gt; m b
 </span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaContext -&gt; RoleName
 </span><a href="Hasura.GraphQL.Schema.Common.html#scRole"><span class="hs-identifier hs-var hs-var">scRole</span></a></span><span>
-</span><span id="line-80"></span><span>  </span><span id="local-6989586621689876133"><span class="annot"><span class="annottext">UpdPermInfo 'MSSQL
-</span><a href="#local-6989586621689876133"><span class="hs-identifier hs-var">updatePerms</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo 'MSSQL)
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621689875872"><span class="annot"><span class="annottext">UpdPermInfo 'MSSQL
+</span><a href="#local-6989586621689875872"><span class="hs-identifier hs-var">updatePerms</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo 'MSSQL)
 -&gt; MaybeT (SchemaT r m) (UpdPermInfo 'MSSQL)
 forall (m :: * -&gt; *) b. Applicative m =&gt; Maybe b -&gt; MaybeT m b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hoistMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (UpdPermInfo 'MSSQL)
@@ -168,10 +168,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType).
 RoleName -&gt; TableInfo b -&gt; RolePermInfo b
 </span><a href="Hasura.RQL.Types.Table.html#getRolePermInfo"><span class="hs-identifier hs-var">getRolePermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689876136"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876138"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621689876129"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Column 'MSSQL)
-</span><a href="#local-6989586621689876129"><span class="hs-identifier hs-var">matchColumnsEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaT r m (Maybe (Parser MetadataObjId 'Both n (Column 'MSSQL)))
+</span><a href="#local-6989586621689875875"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875877"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621689875868"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Column 'MSSQL)
+</span><a href="#local-6989586621689875868"><span class="hs-identifier hs-var">matchColumnsEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaT r m (Maybe (Parser MetadataObjId 'Both n (Column 'MSSQL)))
 -&gt; MaybeT
      (SchemaT r m) (Parser MetadataObjId 'Both n (Column 'MSSQL))
 forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
@@ -192,8 +192,8 @@ SourceInfo 'MSSQL
 -&gt; TableInfo 'MSSQL
 -&gt; SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
 </span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#tableInsertMatchColumnsEnum"><span class="hs-identifier hs-var">tableInsertMatchColumnsEnum</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
-</span><a href="#local-6989586621689876139"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876138"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689875878"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875877"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-82"></span><span>  </span><span class="annot"><span class="annottext">SchemaT r m (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL)))
 -&gt; MaybeT
      (SchemaT r m)
@@ -202,36 +202,36 @@ forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
 </span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-83"></span><span>    </span><span id="local-6989586621689876125"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Maybe (Column 'MSSQL))
-</span><a href="#local-6989586621689876125"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621689875864"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Maybe (Column 'MSSQL))
+</span><a href="#local-6989586621689875864"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
 -&gt; SchemaT r m (Parser 'Both n (Maybe (Column 'MSSQL)))
 forall (backend :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema backend r m n =&gt;
 TableInfo backend
 -&gt; SchemaT r m (Parser 'Both n (Maybe (Column backend)))
 </span><a href="Hasura.GraphQL.Schema.Table.html#updateColumnsPlaceholderParser"><span class="hs-identifier hs-var">updateColumnsPlaceholderParser</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876138"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-84"></span><span>    </span><span id="local-6989586621689876123"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876123"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL -&gt; SchemaT r m Name
+</span><a href="#local-6989586621689875877"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-84"></span><span>    </span><span id="local-6989586621689875862"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689875862"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL -&gt; SchemaT r m Name
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876138"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-85"></span><span>    </span><span id="local-6989586621689876121"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876121"><span class="hs-identifier hs-var">objectName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
+</span><a href="#local-6989586621689875877"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-85"></span><span>    </span><span id="local-6989586621689875860"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689875860"><span class="hs-identifier hs-var">objectName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
 forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Typename.html#mkTypename"><span class="hs-identifier hs-var">mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; SchemaT r m Name) -&gt; Name -&gt; SchemaT r m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876123"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689875862"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__if_matched"><span class="hs-identifier hs-var">Name.__if_matched</span></a></span><span>
-</span><span id="line-86"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689876119"><span class="annot"><span class="annottext">_imColumnPresets :: HashMap (Column 'MSSQL) (UnpreparedValue 'MSSQL)
-</span><a href="#local-6989586621689876119"><span class="hs-identifier hs-var hs-var">_imColumnPresets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PartialSQLExp 'MSSQL -&gt; UnpreparedValue 'MSSQL
+</span><span id="line-86"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689875858"><span class="annot"><span class="annottext">_imColumnPresets :: HashMap (Column 'MSSQL) (UnpreparedValue 'MSSQL)
+</span><a href="#local-6989586621689875858"><span class="hs-identifier hs-var hs-var">_imColumnPresets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PartialSQLExp 'MSSQL -&gt; UnpreparedValue 'MSSQL
 forall (b :: BackendType). PartialSQLExp b -&gt; UnpreparedValue b
 </span><a href="Hasura.GraphQL.Schema.Common.html#partialSQLExpToUnpreparedValue"><span class="hs-identifier hs-var">partialSQLExpToUnpreparedValue</span></a></span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp 'MSSQL -&gt; UnpreparedValue 'MSSQL)
 -&gt; HashMap (Column 'MSSQL) (PartialSQLExp 'MSSQL)
@@ -240,9 +240,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo 'MSSQL -&gt; PreSetColsPartial 'MSSQL
 forall (b :: BackendType). UpdPermInfo b -&gt; PreSetColsPartial b
 </span><a href="Hasura.RQL.Types.Table.html#upiSet"><span class="hs-identifier hs-var hs-var">upiSet</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo 'MSSQL
-</span><a href="#local-6989586621689876133"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
-</span><span id="line-87"></span><span>        </span><span id="local-6989586621689876115"><span class="annot"><span class="annottext">updateFilter :: GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
-</span><a href="#local-6989586621689876115"><span class="hs-identifier hs-var hs-var">updateFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp 'MSSQL -&gt; UnpreparedValue 'MSSQL)
+</span><a href="#local-6989586621689875872"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
+</span><span id="line-87"></span><span>        </span><span id="local-6989586621689875854"><span class="annot"><span class="annottext">updateFilter :: GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
+</span><a href="#local-6989586621689875854"><span class="hs-identifier hs-var hs-var">updateFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp 'MSSQL -&gt; UnpreparedValue 'MSSQL)
 -&gt; AnnBoolExpFld 'MSSQL (PartialSQLExp 'MSSQL)
 -&gt; AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -257,9 +257,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (PartialSQLExp 'MSSQL))
 forall (b :: BackendType). UpdPermInfo b -&gt; AnnBoolExpPartialSQL b
 </span><a href="Hasura.RQL.Types.Table.html#upiFilter"><span class="hs-identifier hs-var hs-var">upiFilter</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo 'MSSQL
-</span><a href="#local-6989586621689876133"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
-</span><span id="line-88"></span><span>        </span><span id="local-6989586621689876113"><span class="annot"><span class="annottext">objectDesc :: Description
-</span><a href="#local-6989586621689876113"><span class="hs-identifier hs-var hs-var">objectDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><a href="#local-6989586621689875872"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
+</span><span id="line-88"></span><span>        </span><span id="local-6989586621689875852"><span class="annot"><span class="annottext">objectDesc :: Description
+</span><a href="#local-6989586621689875852"><span class="hs-identifier hs-var hs-var">objectDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -268,21 +268,21 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL -&gt; TableName 'MSSQL
 forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876138"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-89"></span><span>        </span><span id="local-6989586621689876109"><span class="annot"><span class="annottext">matchColumnsName :: Name
-</span><a href="#local-6989586621689876109"><span class="hs-identifier hs-var hs-var">matchColumnsName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689875877"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-89"></span><span>        </span><span id="local-6989586621689875848"><span class="annot"><span class="annottext">matchColumnsName :: Name
+</span><a href="#local-6989586621689875848"><span class="hs-identifier hs-var hs-var">matchColumnsName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_match_columns"><span class="hs-identifier hs-var">Name._match_columns</span></a></span><span>
-</span><span id="line-90"></span><span>        </span><span id="local-6989586621689876107"><span class="annot"><span class="annottext">updateColumnsName :: Name
-</span><a href="#local-6989586621689876107"><span class="hs-identifier hs-var hs-var">updateColumnsName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-90"></span><span>        </span><span id="local-6989586621689875846"><span class="annot"><span class="annottext">updateColumnsName :: Name
+</span><a href="#local-6989586621689875846"><span class="hs-identifier hs-var hs-var">updateColumnsName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_update_columns"><span class="hs-identifier hs-var">Name._update_columns</span></a></span><span>
-</span><span id="line-91"></span><span>        </span><span id="local-6989586621689876105"><span class="annot"><span class="annottext">whereName :: Name
-</span><a href="#local-6989586621689876105"><span class="hs-identifier hs-var hs-var">whereName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-91"></span><span>        </span><span id="local-6989586621689875844"><span class="annot"><span class="annottext">whereName :: Name
+</span><a href="#local-6989586621689875844"><span class="hs-identifier hs-var hs-var">whereName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_where"><span class="hs-identifier hs-var">Name._where</span></a></span><span>
-</span><span id="line-92"></span><span>    </span><span id="local-6989586621689876103"><span class="annot"><span class="annottext">Parser
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621689875842"><span class="annot"><span class="annottext">Parser
   'Input
   n
   (GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL)))
-</span><a href="#local-6989586621689876103"><span class="hs-identifier hs-var">whereExpParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
+</span><a href="#local-6989586621689875842"><span class="hs-identifier hs-var">whereExpParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
 -&gt; TableInfo 'MSSQL
 -&gt; SchemaT
      r
@@ -297,8 +297,8 @@ SourceInfo b
 -&gt; TableInfo b
 -&gt; SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 </span><a href="Hasura.GraphQL.Schema.BoolExp.html#boolExp"><span class="hs-identifier hs-var">boolExp</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
-</span><a href="#local-6989586621689876139"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876138"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689875878"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875877"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-93"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
 </span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
@@ -312,15 +312,15 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Input m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.object</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876121"><span class="hs-identifier hs-var">objectName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689875860"><span class="hs-identifier hs-var">objectName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621689876113"><span class="hs-identifier hs-var">objectDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-95"></span><span>        </span><span id="local-6989586621689876100"><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
-</span><a href="#local-6989586621689876100"><span class="hs-identifier hs-var">_imConditions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-96"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689876099"><span class="annot"><span class="annottext">Maybe
+</span><a href="#local-6989586621689875852"><span class="hs-identifier hs-var">objectDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-95"></span><span>        </span><span id="local-6989586621689875839"><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
+</span><a href="#local-6989586621689875839"><span class="hs-identifier hs-var">_imConditions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-96"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689875838"><span class="annot"><span class="annottext">Maybe
   (GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL)))
-</span><a href="#local-6989586621689876099"><span class="hs-identifier hs-var">whereExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))]
+</span><a href="#local-6989586621689875838"><span class="hs-identifier hs-var">whereExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))]
 -&gt; GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
 forall (backend :: BackendType) field.
 [GBoolExp backend field] -&gt; GBoolExp backend field
@@ -331,7 +331,7 @@ forall (backend :: BackendType) field.
 -&gt; GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
-</span><a href="#local-6989586621689876115"><span class="hs-identifier hs-var">updateFilter</span></a></span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
+</span><a href="#local-6989586621689875854"><span class="hs-identifier hs-var">updateFilter</span></a></span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
 -&gt; [GBoolExp
       'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))]
 -&gt; [GBoolExp
@@ -344,7 +344,7 @@ forall a. a -&gt; [a] -&gt; [a]
 forall a. Maybe a -&gt; [a]
 </span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">Maybe
   (GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL)))
-</span><a href="#local-6989586621689876099"><span class="hs-identifier hs-var">whereExp</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689875838"><span class="hs-identifier hs-var">whereExp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>            </span><span class="annot"><span class="annottext">(Maybe
    (GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL)))
  -&gt; GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL)))
@@ -376,15 +376,15 @@ Name
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876105"><span class="hs-identifier hs-var">whereName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689875844"><span class="hs-identifier hs-var">whereName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Parser
   'Input
   n
   (GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL)))
-</span><a href="#local-6989586621689876103"><span class="hs-identifier hs-var">whereExpParser</span></a></span><span>
-</span><span id="line-98"></span><span>        </span><span id="local-6989586621689876096"><span class="annot"><span class="annottext">[Column 'MSSQL]
-</span><a href="#local-6989586621689876096"><span class="hs-identifier hs-var">_imMatchColumns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689875842"><span class="hs-identifier hs-var">whereExpParser</span></a></span><span>
+</span><span id="line-98"></span><span>        </span><span id="local-6989586621689875835"><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621689875835"><span class="hs-identifier hs-var">_imMatchColumns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-99"></span><span>          </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Value Void
@@ -398,7 +398,7 @@ Name
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876109"><span class="hs-identifier hs-var">matchColumnsName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689875848"><span class="hs-identifier hs-var">matchColumnsName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
 forall var. [Value var] -&gt; Value var
@@ -408,9 +408,9 @@ forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m [a]
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Column 'MSSQL)
-</span><a href="#local-6989586621689876129"><span class="hs-identifier hs-var">matchColumnsEnum</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-100"></span><span>        </span><span id="local-6989586621689876092"><span class="annot"><span class="annottext">[Column 'MSSQL]
-</span><a href="#local-6989586621689876092"><span class="hs-identifier hs-var">_imUpdateColumns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689875868"><span class="hs-identifier hs-var">matchColumnsEnum</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>        </span><span id="local-6989586621689875831"><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621689875831"><span class="hs-identifier hs-var">_imUpdateColumns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Value Void
@@ -424,7 +424,7 @@ Name
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876107"><span class="hs-identifier hs-var">updateColumnsName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689875846"><span class="hs-identifier hs-var">updateColumnsName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
 forall var. [Value var] -&gt; Value var
@@ -434,22 +434,22 @@ forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m [a]
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Maybe (Column 'MSSQL))
-</span><a href="#local-6989586621689876125"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId n [Maybe (Column 'MSSQL)]
+</span><a href="#local-6989586621689875864"><span class="hs-identifier hs-var">updateColumnsEnum</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId n [Maybe (Column 'MSSQL)]
 -&gt; ([Maybe (Column 'MSSQL)] -&gt; n [Column 'MSSQL])
 -&gt; InputFieldsParser MetadataObjId n [Column 'MSSQL]
 forall (m :: * -&gt; *) origin a b.
 Monad m =&gt;
 InputFieldsParser origin m a
 -&gt; (a -&gt; m b) -&gt; InputFieldsParser origin m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689876090"><span class="annot"><span class="annottext">[Maybe (Column 'MSSQL)]
-</span><a href="#local-6989586621689876090"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689875829"><span class="annot"><span class="annottext">[Maybe (Column 'MSSQL)]
+</span><a href="#local-6989586621689875829"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-102"></span><span>            </span><span class="hs-comment">-- this can only happen if the placeholder was used</span><span>
 </span><span id="line-103"></span><span>            </span><span class="annot"><span class="annottext">[Maybe (Column 'MSSQL)] -&gt; Maybe [Column 'MSSQL]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a.
 (Traversable t, Applicative f) =&gt;
 t (f a) -&gt; f (t a)
 </span><span class="hs-identifier hs-var">sequenceA</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (Column 'MSSQL)]
-</span><a href="#local-6989586621689876090"><span class="hs-identifier hs-var">cs</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [Column 'MSSQL] -&gt; n [Column 'MSSQL] -&gt; n [Column 'MSSQL]
+</span><a href="#local-6989586621689875829"><span class="hs-identifier hs-var">cs</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [Column 'MSSQL] -&gt; n [Column 'MSSQL] -&gt; n [Column 'MSSQL]
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; n [Column 'MSSQL]
 forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
@@ -473,7 +473,7 @@ _imUpdateColumns :: [Column 'MSSQL]
 _imMatchColumns :: [Column 'MSSQL]
 _imConditions :: GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL (UnpreparedValue 'MSSQL))
 _imColumnPresets :: HashMap (Column 'MSSQL) (UnpreparedValue 'MSSQL)
-</span><a href="#local-6989586621689876082"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689875821"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="hs-comment">-- | Table insert_match_columns enum</span><span>
 </span><span id="line-108"></span><span class="hs-comment">--</span><span>
@@ -484,48 +484,48 @@ _imColumnPresets :: HashMap (Column 'MSSQL) (UnpreparedValue 'MSSQL)
 </span><span id="line-113"></span><span class="hs-comment">-- Return Nothing if there's no column the current user has &quot;select&quot;</span><span>
 </span><span id="line-114"></span><span class="hs-comment">-- permissions for.</span><span>
 </span><span id="line-115"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#tableInsertMatchColumnsEnum"><span class="hs-identifier hs-type">tableInsertMatchColumnsEnum</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689876251"><span class="annot"><a href="#local-6989586621689876251"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689876250"><span class="annot"><a href="#local-6989586621689876250"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689876249"><span class="annot"><a href="#local-6989586621689876249"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-117"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSourceSchema"><span class="hs-identifier hs-type">MonadBuildSourceSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876251"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876250"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876249"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689875990"><span class="annot"><a href="#local-6989586621689875990"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689875989"><span class="annot"><a href="#local-6989586621689875989"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689875988"><span class="annot"><a href="#local-6989586621689875988"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSourceSchema"><span class="hs-identifier hs-type">MonadBuildSourceSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875990"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875989"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875988"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-118"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-119"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-120"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876251"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876250"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689876249"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875990"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875989"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689875988"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span id="tableInsertMatchColumnsEnum"><span class="annot"><span class="annottext">tableInsertMatchColumnsEnum :: SourceInfo 'MSSQL
 -&gt; TableInfo 'MSSQL
 -&gt; SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
-</span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#tableInsertMatchColumnsEnum"><span class="hs-identifier hs-var hs-var">tableInsertMatchColumnsEnum</span></a></span></span><span> </span><span id="local-6989586621689876081"><span class="annot"><span class="annottext">SourceInfo 'MSSQL
-</span><a href="#local-6989586621689876081"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689876080"><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876080"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621689876079"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876079"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL -&gt; SchemaT r m Name
+</span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#tableInsertMatchColumnsEnum"><span class="hs-identifier hs-var hs-var">tableInsertMatchColumnsEnum</span></a></span></span><span> </span><span id="local-6989586621689875820"><span class="annot"><span class="annottext">SourceInfo 'MSSQL
+</span><a href="#local-6989586621689875820"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689875819"><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875819"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621689875818"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689875818"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL -&gt; SchemaT r m Name
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876080"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-123"></span><span>  </span><span id="local-6989586621689876078"><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621689876078"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
+</span><a href="#local-6989586621689875819"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-123"></span><span>  </span><span id="local-6989586621689875817"><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621689875817"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
 -&gt; TableInfo 'MSSQL -&gt; SchemaT r m [ColumnInfo 'MSSQL]
 forall (b :: BackendType) r (m :: * -&gt; *).
 (Backend b, MonadError QErr m, MonadReader r m,
  Has SchemaContext r) =&gt;
 SourceInfo b -&gt; TableInfo b -&gt; m [ColumnInfo b]
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumns"><span class="hs-identifier hs-var">tableSelectColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL
-</span><a href="#local-6989586621689876081"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876080"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-124"></span><span>  </span><span id="local-6989586621689876076"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876076"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
+</span><a href="#local-6989586621689875820"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
+</span><a href="#local-6989586621689875819"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621689875815"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689875815"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SchemaT r m Name
 forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Typename.html#mkTypename"><span class="hs-identifier hs-var">mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; SchemaT r m Name) -&gt; Name -&gt; SchemaT r m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876079"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689875818"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__insert_match_column"><span class="hs-identifier hs-var">Name.__insert_match_column</span></a></span><span>
-</span><span id="line-125"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689876074"><span class="annot"><span class="annottext">description :: Maybe Description
-</span><a href="#local-6989586621689876074"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689875813"><span class="annot"><span class="annottext">description :: Maybe Description
+</span><a href="#local-6989586621689875813"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-126"></span><span>        </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
@@ -542,7 +542,7 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL -&gt; TableName 'MSSQL
 forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
-</span><a href="#local-6989586621689876080"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689875819"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-129"></span><span>  </span><span class="annot"><span class="annottext">Maybe (Parser MetadataObjId 'Both n (Column 'MSSQL))
 -&gt; SchemaT
      r m (Maybe (Parser MetadataObjId 'Both n (Column 'MSSQL)))
@@ -566,8 +566,8 @@ Name
 -&gt; NonEmpty (Definition origin EnumValueInfo, a)
 -&gt; Parser origin 'Both m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876076"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689876074"><span class="hs-identifier hs-var">description</span></a></span><span>
+</span><a href="#local-6989586621689875815"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689875813"><span class="hs-identifier hs-var">description</span></a></span><span>
 </span><span id="line-131"></span><span>      </span><span class="annot"><span class="annottext">(NonEmpty (Definition MetadataObjId EnumValueInfo, Column 'MSSQL)
  -&gt; Parser MetadataObjId 'Both n (Column 'MSSQL))
 -&gt; Maybe
@@ -581,29 +581,29 @@ forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">nonEmpty</span></span><span>
 </span><span id="line-132"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Definition MetadataObjId EnumValueInfo
 forall origin. Name -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621689876071"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Definition MetadataObjId EnumValueInfo)
+</span><a href="#local-6989586621689875810"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Definition MetadataObjId EnumValueInfo)
 -&gt; Name -&gt; Definition MetadataObjId EnumValueInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Name
 forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621689876069"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689875808"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-133"></span><span>            </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621689876069"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><a href="#local-6989586621689875808"><span class="hs-identifier hs-var">column</span></a></span><span>
 </span><span id="line-134"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-135"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689876069"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621689876069"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621689876078"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689875808"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
+</span><a href="#local-6989586621689875808"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621689875817"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-136"></span><span>            </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#isMatchColumnValid"><span class="hs-identifier hs-var">isMatchColumnValid</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621689876069"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><a href="#local-6989586621689875808"><span class="hs-identifier hs-var">column</span></a></span><span>
 </span><span id="line-137"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-139"></span><span>    </span><span id="local-6989586621689876071"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621689876071"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621689876066"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876066"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-139"></span><span>    </span><span id="local-6989586621689875810"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
+</span><a href="#local-6989586621689875810"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621689875805"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689875805"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Maybe origin
@@ -618,7 +618,7 @@ Name
 -&gt; a
 -&gt; Definition origin a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689876066"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689875805"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
 -&gt; Description -&gt; Maybe Description

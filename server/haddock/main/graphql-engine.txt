@@ -31682,7 +31682,6 @@ onConn :: (MonadIO m, MonadReader WSServerEnv m) => OnConnH m WSConnData
 onStart :: forall m. (MonadIO m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadTrace m, MonadExecuteQuery m, MonadBaseControl IO m, MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m, HasResourceLimits m) => Environment -> HashSet (EngineLogType Hasura) -> WSServerEnv -> WSConn -> StartMsg -> WSActions WSConnData -> m ()
 onMessage :: (MonadIO m, UserAuthentication (TraceT m), MonadGQLExecutionCheck m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadBaseControl IO m, MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m, HasResourceLimits m) => Environment -> HashSet (EngineLogType Hasura) -> AuthMode -> WSServerEnv -> WSConn -> ByteString -> WSActions WSConnData -> m ()
 onPing :: MonadIO m => WSConn -> Maybe PingPongPayload -> m ()
-onPong :: MonadIO m => WSConn -> Maybe PingPongPayload -> m ()
 onStop :: MonadIO m => WSServerEnv -> WSConn -> StopMsg -> m ()
 stopOperation :: WSServerEnv -> WSConn -> OperationId -> IO () -> IO ()
 onConnInit :: (MonadIO m, UserAuthentication (TraceT m)) => Logger Hasura -> Manager -> WSConn -> AuthMode -> Maybe ConnParams -> WSOnErrorMessageAction WSConnData -> WSKeepAliveMessageAction WSConnData -> TraceT m ()
