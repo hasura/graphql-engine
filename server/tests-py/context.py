@@ -280,6 +280,9 @@ class GraphQLWSClient():
         if json_msg['type'] == 'ping':
             new_msg = json_msg
             new_msg['type'] = 'pong'
+            # Decline to reflect the payload of the ping, because the
+            # graphql-ws specification does not require it
+            new_msg.pop('payload')
             self.send(json.dumps(new_msg))
             return
 

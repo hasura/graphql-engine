@@ -1004,7 +1004,7 @@ onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions 
       CMStop stopMsg -> onStop serverEnv wsConn stopMsg
       -- specfic to graphql-ws
       CMPing mPayload -> onPing wsConn mPayload
-      CMPong mPayload -> onPong wsConn mPayload
+      CMPong _mPayload -> pure ()
       -- specific to apollo clients
       CMConnTerm -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
@@ -1015,14 +1015,6 @@ onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions 
 onPing :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
 onPing wsConn mPayload =
   liftIO $ sendMsg wsConn (SMPong mPayload)
-
-onPong :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
-onPong wsConn mPayload = liftIO $ case mPayload of
-  Just message ->
-    when (message /= keepAliveMessage) $
-      sendMsg wsConn (SMPing mPayload)
-  -- NOTE: this is done to avoid sending Ping for every "keepalive" that the server sends
-  Nothing -> sendMsg wsConn $ SMPing Nothing
 
 onStop :: (MonadIO m) => WSServerEnv -> WSConn -> StopMsg -> m ()
 onStop serverEnv wsConn (StopMsg opId) = liftIO $ do
