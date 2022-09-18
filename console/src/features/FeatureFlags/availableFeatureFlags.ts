@@ -22,16 +22,6 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     discussionUrl: '',
   },
   {
-    id: allowListId,
-    title: 'New Allow List Manager',
-    description:
-      'Try out the new UI for the Allow List management in the API section.',
-    section: 'api',
-    status: 'alpha',
-    defaultValue: false,
-    discussionUrl: '',
-  },
-  {
     id: gdcId,
     title: 'Experimental features for GDC',
     description:

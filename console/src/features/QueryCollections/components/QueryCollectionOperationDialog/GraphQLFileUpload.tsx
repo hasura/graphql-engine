@@ -6,10 +6,7 @@ import {
   FieldWrapper,
   FieldWrapperPassThroughProps,
 } from '@/new-components/Form';
-import {
-  parseQueryString,
-  readFile,
-} from '@/components/Services/Settings/AllowedQueries/utils';
+import { parseQueryString, readFile } from './utils';
 
 export type GraphQLFileUploadProps = FieldWrapperPassThroughProps & {
   /**

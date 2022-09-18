@@ -1,9 +1,5 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
 import { Link, RouteComponentProps } from 'react-router';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
@@ -48,10 +44,6 @@ interface SectionData {
 const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   const sectionsData: SectionData[] = [];
 
-  const { enabled: newAllowListEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.allowListId
-  );
-
   sectionsData.push({
     key: 'actions',
     link: '/settings/metadata-actions',
@@ -81,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'allow-list',
-    link: newAllowListEnabled ? '/api/allow-list' : '/settings/allow-list',
+    link: '/api/allow-list',
     dataTestVal: 'allow-list-link',
     title: 'Allow List',
   });

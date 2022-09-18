@@ -19,7 +19,6 @@ import settingsContainer from './components/Services/Settings/Container';
 import ApiContainer from './components/Services/ApiExplorer/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';
-import allowedQueriesConnector from './components/Services/Settings/AllowedQueries/AllowedQueries';
 import inheritedRolesConnector from './components/Services/Settings/InheritedRoles/InheritedRoles';
 import logoutConnector from './components/Services/Settings/Logout/Logout';
 import aboutConnector from './components/Services/Settings/About/About';
@@ -149,10 +148,6 @@ const routes = store => {
             <Route
               path="metadata-status"
               component={metadataStatusConnector(connect)}
-            />
-            <Route
-              path="allow-list"
-              component={allowedQueriesConnector(connect)}
             />
             <Route path="logout" component={logoutConnector(connect)} />
             <Route path="about" component={aboutConnector(connect)} />
