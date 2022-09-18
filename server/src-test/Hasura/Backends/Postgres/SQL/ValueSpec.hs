@@ -17,13 +17,14 @@ spec = do
   txtEncoderSpec
   jsonValueSpec
 
-singleElement, multiElement, edgeCaseStrings, nestedArray, nestedArray', malformedArray :: PGScalarValue
+singleElement, multiElement, edgeCaseStrings, nestedArray, nestedArray', malformedArray, nonLatinArray :: PGScalarValue
 singleElement = PGValArray [PGValInteger 1]
 multiElement = PGValArray [PGValVarchar "a", PGValVarchar "b"]
 edgeCaseStrings = PGValArray $ map PGValVarchar ["a", "", [raw|"|], [raw|\|], [raw|,|], [raw|}|]]
 nestedArray = PGValArray [multiElement, multiElement]
 nestedArray' = PGValArray [nestedArray]
 malformedArray = PGValArray [PGValInteger 1]
+nonLatinArray = PGValArray [PGValVarchar "שלום"]
 
 txtEncoderSpec :: Spec
 txtEncoderSpec =
@@ -38,6 +39,8 @@ txtEncoderSpec =
       txtEncoder nestedArray' `shouldBe` SELit [raw|{{{"a","b"},{"a","b"}}}|]
     it "edge case strings" $ do
       txtEncoder edgeCaseStrings `shouldBe` SELit [raw|{"a","","\"","\\",",","}"}|]
+    it "non-latin characters" $ do
+      txtEncoder nonLatinArray `shouldBe` SELit [raw|{"שלום"}|]
 
 pgArrayRoundtrip :: PGScalarValue -> PGScalarType -> Expectation
 pgArrayRoundtrip v t = do
