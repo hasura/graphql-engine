@@ -1,6 +1,6 @@
 import { allowedQueriesCollection } from '../../../../metadata/utils';
-import { renameDuplicates, parseQueryString } from '../AllowedQueries/utils';
-import { uploadedFileData } from './fixtures/allow-list';
+import { renameDuplicates, parseQueryString } from './utils';
+import { uploadedFileData } from './fixtures';
 
 describe('AllowedQueries_Utils.ts', () => {
   describe('renameDuplicates', () => {
