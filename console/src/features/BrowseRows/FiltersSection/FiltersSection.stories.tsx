@@ -2,6 +2,8 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
 import { action } from '@storybook/addon-actions';
+import { userEvent, within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
 import { FiltersSection } from './FiltersSection';
 import { OperatorItem } from './FilterRow';
 import { SortItem } from './SortRow';
@@ -75,9 +77,6 @@ export const Primary: ComponentStory<typeof FiltersSection> = () => (
     onSubmit={action('onSubmit')}
   />
 );
-
-// NOTE: Chromatic raises an error when this interaction tests are in place
-/* 
 Primary.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
@@ -158,4 +157,4 @@ Primary.play = async ({ canvasElement }) => {
 
   // select asc order on the second row
   userEvent.selectOptions(await canvas.findByDisplayValue('--'), 'asc');
-}; */
+};
