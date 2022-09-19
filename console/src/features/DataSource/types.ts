@@ -129,4 +129,43 @@ export type DriverInfoResponse = {
   release: ReleaseType;
 };
 
+export type GetTableRowsProps = {
+  table: Table;
+  dataSourceName: string;
+  columns: string[];
+  options?: {
+    where?: WhereClause;
+    offset?: number;
+    limit?: number;
+    order_by?: OrderBy[];
+  };
+} & NetworkArgs;
+export type TableRow = Record<string, unknown>;
+
+export type validOperators =
+  | '$eq'
+  | '$ne'
+  | '$in'
+  | '$nin'
+  | '$gt'
+  | '$lt'
+  | '$gte'
+  | '$lte';
+
+export type AndExp = Record<'$and', BoolExp[]>;
+export type OrExp = Record<'$or', BoolExp[]>;
+export type NotExp = Record<'$not', BoolExp[]>;
+export type ColumnExpValue = Record<validOperators | string, any>;
+export type ColumnExp = Record<string, ColumnExpValue>;
+export type BoolExp = AndExp | OrExp | NotExp | ColumnExp;
+export type SelectColumn = string | { name: string; columns: SelectColumn[] };
+export type WhereClause = BoolExp | Record<string, any>;
+export type OrderByType = 'asc' | 'desc';
+export type OrderByNulls = 'first' | 'last';
+export type OrderBy = {
+  column: string;
+  type: OrderByType;
+  nulls?: OrderByNulls;
+};
+
 export { NetworkArgs };
