@@ -12,8 +12,9 @@ module Harness.Backend.Postgres
     defaultSourceConfiguration,
     createTable,
     insertTable,
-    trackTable,
     dropTable,
+    dropTableIfExists,
+    trackTable,
     untrackTable,
     setup,
     teardown,
@@ -72,8 +73,8 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
             loop (attempts - 1)
         )
 
--- | Run a plain SQL query. On error, print something useful for
--- debugging.
+-- | Run a plain SQL query.
+-- On error, print something useful for debugging.
 run_ :: HasCallStack => String -> IO ()
 run_ q =
   catch
@@ -240,6 +241,16 @@ dropTable Schema.Table {tableName} = do
           T.pack Constants.postgresDb <> "." <> tableName,
           -- "CASCADE",
           ";"
+        ]
+
+dropTableIfExists :: Schema.Table -> IO ()
+dropTableIfExists Schema.Table {tableName} = do
+  run_ $
+    T.unpack $
+      T.unwords
+        [ "SET client_min_messages TO WARNING;", -- suppress a NOTICE if the table isn't there
+          "DROP TABLE IF EXISTS",
+          T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName
         ]
 
 -- | Post an http request to start tracking the table

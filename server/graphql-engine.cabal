@@ -1292,6 +1292,7 @@ test-suite tests-hspec
     Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
+    Test.Metadata.InconsistentSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Postgres.DataValidation.PermissionSpec
     Test.Postgres.BackendOnlyPermissionsSpec
