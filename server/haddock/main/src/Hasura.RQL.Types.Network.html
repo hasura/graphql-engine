@@ -13,11 +13,11 @@
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Test.QuickCheck.Arbitrary</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
 </span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span id="local-6989586621689748657"><span id="local-6989586621689748658"></span></span><span class="hs-keyword">data</span><span> </span><span id="Network"><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-var">Network</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Network"><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-var">Network</span></a></span></span><span>
+</span><span id="line-16"></span><span id="local-6989586621689748846"><span id="local-6989586621689748847"></span></span><span class="hs-keyword">data</span><span> </span><span id="Network"><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-var">Network</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Network"><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-var">Network</span></a></span></span><span>
 </span><span id="line-17"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="networkTlsAllowlist"><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
 </span><a href="Hasura.RQL.Types.Network.html#networkTlsAllowlist"><span class="hs-identifier hs-var hs-var">networkTlsAllowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-18"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748649"><span id="local-6989586621689748651"><span id="local-6989586621689748653"><span class="annot"><span class="annottext">Int -&gt; Network -&gt; ShowS
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748838"><span id="local-6989586621689748840"><span id="local-6989586621689748842"><span class="annot"><span class="annottext">Int -&gt; Network -&gt; ShowS
 [Network] -&gt; ShowS
 Network -&gt; String
 (Int -&gt; Network -&gt; ShowS)
@@ -30,7 +30,7 @@ show :: Network -&gt; String
 $cshow :: Network -&gt; String
 showsPrec :: Int -&gt; Network -&gt; ShowS
 $cshowsPrec :: Int -&gt; Network -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748644"><span id="local-6989586621689748646"><span class="annot"><span class="annottext">Network -&gt; Network -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748833"><span id="local-6989586621689748835"><span class="annot"><span class="annottext">Network -&gt; Network -&gt; Bool
 (Network -&gt; Network -&gt; Bool)
 -&gt; (Network -&gt; Network -&gt; Bool) -&gt; Eq Network
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -48,52 +48,52 @@ $cto :: forall x. Rep Network x -&gt; Network
 $cfrom :: forall x. Network -&gt; Rep Network x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748637"><span class="annot"><span class="hs-identifier hs-type">Q.Arbitrary</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748826"><span class="annot"><span class="hs-identifier hs-type">Q.Arbitrary</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-22"></span><span>  </span><span class="hs-comment">-- TODO: Decide if the arbitrary instance should be extended to actual arbitrary networks</span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-comment">-- This could prove complicated for testing purposes since the implications</span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-comment">-- Are difficult to test.</span><span>
-</span><span id="line-25"></span><span>  </span><span id="local-6989586621689748635"><span class="annot"><span class="annottext">arbitrary :: Gen Network
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621689748824"><span class="annot"><span class="annottext">arbitrary :: Gen Network
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Network -&gt; Gen Network
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TlsAllow] -&gt; Network
 </span><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-var">Network</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748631"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621689748629"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Network
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748820"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621689748818"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Network
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser Network) -&gt; Value -&gt; Parser Network
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Network&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser Network) -&gt; Value -&gt; Parser Network)
 -&gt; (Object -&gt; Parser Network) -&gt; Value -&gt; Parser Network
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748626"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748626"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; Network
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748815"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689748815"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; Network
 </span><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-var">Network</span></a></span><span> </span><span class="annot"><span class="annottext">([TlsAllow] -&gt; Network) -&gt; Parser [TlsAllow] -&gt; Parser Network
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748626"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [TlsAllow])
+</span><a href="#local-6989586621689748815"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [TlsAllow])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;tls_allowlist&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [TlsAllow]) -&gt; [TlsAllow] -&gt; Parser [TlsAllow]
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748616"><span id="local-6989586621689748618"><span id="local-6989586621689748620"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621689748614"><span class="annot"><span class="annottext">toJSON :: Network -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span><span> </span><span id="local-6989586621689748612"><span class="annot"><span class="annottext">[TlsAllow]
-</span><a href="#local-6989586621689748612"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748805"><span id="local-6989586621689748807"><span id="local-6989586621689748809"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621689748803"><span class="annot"><span class="annottext">toJSON :: Network -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span><span> </span><span id="local-6989586621689748801"><span class="annot"><span class="annottext">[TlsAllow]
+</span><a href="#local-6989586621689748801"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;tls_allowlist&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [TlsAllow] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">[TlsAllow]
-</span><a href="#local-6989586621689748612"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689748801"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-32"></span><span>
 </span><span id="line-33"></span><span class="annot"><a href="Hasura.RQL.Types.Network.html#emptyNetwork"><span class="hs-identifier hs-type">emptyNetwork</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-type">Network</span></a></span><span>
 </span><span id="line-34"></span><span id="emptyNetwork"><span class="annot"><span class="annottext">emptyNetwork :: Network
 </span><a href="Hasura.RQL.Types.Network.html#emptyNetwork"><span class="hs-identifier hs-var hs-var">emptyNetwork</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; Network
 </span><a href="Hasura.RQL.Types.Network.html#Network"><span class="hs-identifier hs-var">Network</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span id="local-6989586621689748608"><span id="local-6989586621689748609"></span></span><span class="hs-keyword">data</span><span> </span><span id="TlsAllow"><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-var">TlsAllow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TlsAllow"><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-var">TlsAllow</span></a></span></span><span>
+</span><span id="line-36"></span><span id="local-6989586621689748797"><span id="local-6989586621689748798"></span></span><span class="hs-keyword">data</span><span> </span><span id="TlsAllow"><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-var">TlsAllow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TlsAllow"><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-var">TlsAllow</span></a></span></span><span>
 </span><span id="line-37"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="taHost"><span class="annot"><span class="annottext">TlsAllow -&gt; String
 </span><a href="Hasura.RQL.Types.Network.html#taHost"><span class="hs-identifier hs-var hs-var">taHost</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span>
 </span><span id="line-38"></span><span>    </span><span id="taSuffix"><span class="annot"><span class="annottext">TlsAllow -&gt; Maybe String
@@ -101,7 +101,7 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span id="line-39"></span><span>    </span><span id="taPermit"><span class="annot"><span class="annottext">TlsAllow -&gt; Maybe [TlsPermission]
 </span><a href="Hasura.RQL.Types.Network.html#taPermit"><span class="hs-identifier hs-var hs-var">taPermit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsPermission"><span class="hs-identifier hs-type">TlsPermission</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748598"><span id="local-6989586621689748600"><span id="local-6989586621689748602"><span class="annot"><span class="annottext">Int -&gt; TlsAllow -&gt; ShowS
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748787"><span id="local-6989586621689748789"><span id="local-6989586621689748791"><span class="annot"><span class="annottext">Int -&gt; TlsAllow -&gt; ShowS
 [TlsAllow] -&gt; ShowS
 TlsAllow -&gt; String
 (Int -&gt; TlsAllow -&gt; ShowS)
@@ -114,7 +114,7 @@ show :: TlsAllow -&gt; String
 $cshow :: TlsAllow -&gt; String
 showsPrec :: Int -&gt; TlsAllow -&gt; ShowS
 $cshowsPrec :: Int -&gt; TlsAllow -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748590"><span id="local-6989586621689748592"><span id="local-6989586621689748594"><span id="local-6989586621689748596"><span class="annot"><span class="annottext">ReadPrec [TlsAllow]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748779"><span id="local-6989586621689748781"><span id="local-6989586621689748783"><span id="local-6989586621689748785"><span class="annot"><span class="annottext">ReadPrec [TlsAllow]
 ReadPrec TlsAllow
 Int -&gt; ReadS TlsAllow
 ReadS [TlsAllow]
@@ -134,7 +134,7 @@ readList :: ReadS [TlsAllow]
 $creadList :: ReadS [TlsAllow]
 readsPrec :: Int -&gt; ReadS TlsAllow
 $creadsPrec :: Int -&gt; ReadS TlsAllow
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748585"><span id="local-6989586621689748587"><span class="annot"><span class="annottext">TlsAllow -&gt; TlsAllow -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748774"><span id="local-6989586621689748776"><span class="annot"><span class="annottext">TlsAllow -&gt; TlsAllow -&gt; Bool
 (TlsAllow -&gt; TlsAllow -&gt; Bool)
 -&gt; (TlsAllow -&gt; TlsAllow -&gt; Bool) -&gt; Eq TlsAllow
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -152,29 +152,29 @@ $cto :: forall x. Rep TlsAllow x -&gt; TlsAllow
 $cfrom :: forall x. TlsAllow -&gt; Rep TlsAllow x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748580"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621689748579"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TlsAllow
-</span><a href="#local-6989586621689748579"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689748578"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689748578"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser TlsAllow
-</span><a href="#local-6989586621689748577"><span class="hs-identifier hs-var">aString</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689748578"><span class="hs-identifier hs-var">j</span></a></span><span> </span><span class="annot"><span class="annottext">Parser TlsAllow -&gt; Parser TlsAllow -&gt; Parser TlsAllow
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748769"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621689748768"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TlsAllow
+</span><a href="#local-6989586621689748768"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621689748767"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689748767"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser TlsAllow
+</span><a href="#local-6989586621689748766"><span class="hs-identifier hs-var">aString</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689748767"><span class="hs-identifier hs-var">j</span></a></span><span> </span><span class="annot"><span class="annottext">Parser TlsAllow -&gt; Parser TlsAllow -&gt; Parser TlsAllow
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser TlsAllow
-</span><a href="#local-6989586621689748575"><span class="hs-identifier hs-var">anObject</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689748578"><span class="hs-identifier hs-var">j</span></a></span><span>
+</span><a href="#local-6989586621689748764"><span class="hs-identifier hs-var">anObject</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689748767"><span class="hs-identifier hs-var">j</span></a></span><span>
 </span><span id="line-45"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>      </span><span id="local-6989586621689748577"><span class="annot"><span class="annottext">aString :: Value -&gt; Parser TlsAllow
-</span><a href="#local-6989586621689748577"><span class="hs-identifier hs-var hs-var">aString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621689748766"><span class="annot"><span class="annottext">aString :: Value -&gt; Parser TlsAllow
+</span><a href="#local-6989586621689748766"><span class="hs-identifier hs-var hs-var">aString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;TlsAllow&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow)
 -&gt; (Text -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748573"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689748573"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748762"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689748762"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-47"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><span class="hs-identifier hs-var">T.null</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689748573"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689748762"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-48"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser TlsAllow
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -186,21 +186,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; Maybe [TlsPermission] -&gt; TlsAllow
 </span><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-var">TlsAllow</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689748573"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689748762"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe String
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe [TlsPermission]
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span>      </span><span id="local-6989586621689748575"><span class="annot"><span class="annottext">anObject :: Value -&gt; Parser TlsAllow
-</span><a href="#local-6989586621689748575"><span class="hs-identifier hs-var hs-var">anObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow
+</span><span id="line-51"></span><span>      </span><span id="local-6989586621689748764"><span class="annot"><span class="annottext">anObject :: Value -&gt; Parser TlsAllow
+</span><a href="#local-6989586621689748764"><span class="hs-identifier hs-var hs-var">anObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;TlsAllow&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow)
 -&gt; (Object -&gt; Parser TlsAllow) -&gt; Value -&gt; Parser TlsAllow
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748570"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748570"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748759"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689748759"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; Maybe [TlsPermission] -&gt; TlsAllow
 </span><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-var">TlsAllow</span></a></span><span>
 </span><span id="line-53"></span><span>          </span><span class="annot"><span class="annottext">(String -&gt; Maybe String -&gt; Maybe [TlsPermission] -&gt; TlsAllow)
@@ -208,7 +208,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Parser (Maybe String -&gt; Maybe [TlsPermission] -&gt; TlsAllow)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748570"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
+</span><a href="#local-6989586621689748759"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;host&quot;</span></span><span>
@@ -217,7 +217,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 -&gt; Parser (Maybe [TlsPermission] -&gt; TlsAllow)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748570"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe String)
+</span><a href="#local-6989586621689748759"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe String)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;suffix&quot;</span></span><span>
@@ -225,39 +225,39 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 -&gt; Parser (Maybe [TlsPermission]) -&gt; Parser TlsAllow
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748570"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [TlsPermission])
+</span><a href="#local-6989586621689748759"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [TlsPermission])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;permissions&quot;</span></span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748562"><span id="local-6989586621689748564"><span id="local-6989586621689748566"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621689748561"><span class="annot"><span class="annottext">toJSON :: TlsAllow -&gt; Value
-</span><a href="#local-6989586621689748561"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span id="local-6989586621689748560"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689748560"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span id="local-6989586621689748559"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689748559"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621689748558"><span class="annot"><span class="annottext">Maybe [TlsPermission]
-</span><a href="#local-6989586621689748558"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748751"><span id="local-6989586621689748753"><span id="local-6989586621689748755"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621689748750"><span class="annot"><span class="annottext">toJSON :: TlsAllow -&gt; Value
+</span><a href="#local-6989586621689748750"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span id="local-6989586621689748749"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689748749"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span id="local-6989586621689748748"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689748748"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621689748747"><span class="annot"><span class="annottext">Maybe [TlsPermission]
+</span><a href="#local-6989586621689748747"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
 </span><span id="line-60"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;host&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689748560"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689748749"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;suffix&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689748559"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689748748"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;permissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe [TlsPermission] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe [TlsPermission]
-</span><a href="#local-6989586621689748558"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621689748747"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-63"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span id="local-6989586621689748556"><span id="local-6989586621689748557"></span></span><span class="hs-keyword">data</span><span> </span><span id="TlsPermission"><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsPermission"><span class="hs-identifier hs-var">TlsPermission</span></a></span></span><span>
+</span><span id="line-65"></span><span id="local-6989586621689748745"><span id="local-6989586621689748746"></span></span><span class="hs-keyword">data</span><span> </span><span id="TlsPermission"><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsPermission"><span class="hs-identifier hs-var">TlsPermission</span></a></span></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SelfSigned"><span class="annot"><a href="Hasura.RQL.Types.Network.html#SelfSigned"><span class="hs-identifier hs-var">SelfSigned</span></a></span></span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748549"><span id="local-6989586621689748551"><span id="local-6989586621689748553"><span class="annot"><span class="annottext">Int -&gt; TlsPermission -&gt; ShowS
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748738"><span id="local-6989586621689748740"><span id="local-6989586621689748742"><span class="annot"><span class="annottext">Int -&gt; TlsPermission -&gt; ShowS
 [TlsPermission] -&gt; ShowS
 TlsPermission -&gt; String
 (Int -&gt; TlsPermission -&gt; ShowS)
@@ -272,7 +272,7 @@ show :: TlsPermission -&gt; String
 $cshow :: TlsPermission -&gt; String
 showsPrec :: Int -&gt; TlsPermission -&gt; ShowS
 $cshowsPrec :: Int -&gt; TlsPermission -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748541"><span id="local-6989586621689748543"><span id="local-6989586621689748545"><span id="local-6989586621689748547"><span class="annot"><span class="annottext">ReadPrec [TlsPermission]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748730"><span id="local-6989586621689748732"><span id="local-6989586621689748734"><span id="local-6989586621689748736"><span class="annot"><span class="annottext">ReadPrec [TlsPermission]
 ReadPrec TlsPermission
 Int -&gt; ReadS TlsPermission
 ReadS [TlsPermission]
@@ -292,7 +292,7 @@ readList :: ReadS [TlsPermission]
 $creadList :: ReadS [TlsPermission]
 readsPrec :: Int -&gt; ReadS TlsPermission
 $creadsPrec :: Int -&gt; ReadS TlsPermission
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748537"><span id="local-6989586621689748539"><span class="annot"><span class="annottext">TlsPermission -&gt; TlsPermission -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748726"><span id="local-6989586621689748728"><span class="annot"><span class="annottext">TlsPermission -&gt; TlsPermission -&gt; Bool
 (TlsPermission -&gt; TlsPermission -&gt; Bool)
 -&gt; (TlsPermission -&gt; TlsPermission -&gt; Bool) -&gt; Eq TlsPermission
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -309,7 +309,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep TlsPermission x -&gt; TlsPermission
 $cfrom :: forall x. TlsPermission -&gt; Rep TlsPermission x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748519"><span id="local-6989586621689748521"><span id="local-6989586621689748523"><span id="local-6989586621689748525"><span id="local-6989586621689748527"><span id="local-6989586621689748529"><span id="local-6989586621689748531"><span id="local-6989586621689748533"><span class="annot"><span class="annottext">Int -&gt; TlsPermission
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748708"><span id="local-6989586621689748710"><span id="local-6989586621689748712"><span id="local-6989586621689748714"><span id="local-6989586621689748716"><span id="local-6989586621689748718"><span id="local-6989586621689748720"><span id="local-6989586621689748722"><span class="annot"><span class="annottext">Int -&gt; TlsPermission
 TlsPermission -&gt; Int
 TlsPermission -&gt; [TlsPermission]
 TlsPermission -&gt; TlsPermission
@@ -351,7 +351,7 @@ pred :: TlsPermission -&gt; TlsPermission
 $cpred :: TlsPermission -&gt; TlsPermission
 succ :: TlsPermission -&gt; TlsPermission
 $csucc :: TlsPermission -&gt; TlsPermission
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748514"><span id="local-6989586621689748516"><span class="annot"><span class="annottext">TlsPermission
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748703"><span id="local-6989586621689748705"><span class="annot"><span class="annottext">TlsPermission
 TlsPermission -&gt; TlsPermission -&gt; Bounded TlsPermission
 forall a. a -&gt; a -&gt; Bounded a
 maxBound :: TlsPermission
@@ -360,9 +360,9 @@ minBound :: TlsPermission
 $cminBound :: TlsPermission
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748510"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsPermission"><span class="hs-identifier hs-type">TlsPermission</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621689748509"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TlsPermission
-</span><a href="#local-6989586621689748509"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748699"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsPermission"><span class="hs-identifier hs-type">TlsPermission</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621689748698"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TlsPermission
+</span><a href="#local-6989586621689748698"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;self-signed&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TlsPermission -&gt; Parser TlsPermission
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">TlsPermission
@@ -390,9 +390,9 @@ forall a. Bounded a =&gt; a
 forall a. Bounded a =&gt; a
 </span><span class="hs-identifier hs-var">maxBound</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748497"><span id="local-6989586621689748499"><span id="local-6989586621689748501"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsPermission"><span class="hs-identifier hs-type">TlsPermission</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-76"></span><span>  </span><span id="local-6989586621689748496"><span class="annot"><span class="annottext">toJSON :: TlsPermission -&gt; Value
-</span><a href="#local-6989586621689748496"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">TlsPermission
+</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748686"><span id="local-6989586621689748688"><span id="local-6989586621689748690"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsPermission"><span class="hs-identifier hs-type">TlsPermission</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621689748685"><span class="annot"><span class="annottext">toJSON :: TlsPermission -&gt; Value
+</span><a href="#local-6989586621689748685"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">TlsPermission
 </span><a href="Hasura.RQL.Types.Network.html#SelfSigned"><span class="hs-identifier hs-var">SelfSigned</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;self-signed&quot;</span></span><span>
@@ -401,7 +401,7 @@ forall a. Bounded a =&gt; a
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-keyword">data</span><span> </span><span id="DropHostFromTLSAllowlist"><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-var">DropHostFromTLSAllowlist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropHostFromTLSAllowlist"><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-var">DropHostFromTLSAllowlist</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_dhftaHost"><span class="annot"><span class="annottext">DropHostFromTLSAllowlist -&gt; String
 </span><a href="Hasura.RQL.Types.Network.html#_dhftaHost"><span class="hs-identifier hs-var hs-var">_dhftaHost</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">}</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748488"><span id="local-6989586621689748490"><span id="local-6989586621689748492"><span class="annot"><span class="annottext">Int -&gt; DropHostFromTLSAllowlist -&gt; ShowS
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689748677"><span id="local-6989586621689748679"><span id="local-6989586621689748681"><span class="annot"><span class="annottext">Int -&gt; DropHostFromTLSAllowlist -&gt; ShowS
 [DropHostFromTLSAllowlist] -&gt; ShowS
 DropHostFromTLSAllowlist -&gt; String
 (Int -&gt; DropHostFromTLSAllowlist -&gt; ShowS)
@@ -416,7 +416,7 @@ show :: DropHostFromTLSAllowlist -&gt; String
 $cshow :: DropHostFromTLSAllowlist -&gt; String
 showsPrec :: Int -&gt; DropHostFromTLSAllowlist -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropHostFromTLSAllowlist -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748484"><span id="local-6989586621689748486"><span class="annot"><span class="annottext">DropHostFromTLSAllowlist -&gt; DropHostFromTLSAllowlist -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748673"><span id="local-6989586621689748675"><span class="annot"><span class="annottext">DropHostFromTLSAllowlist -&gt; DropHostFromTLSAllowlist -&gt; Bool
 (DropHostFromTLSAllowlist -&gt; DropHostFromTLSAllowlist -&gt; Bool)
 -&gt; (DropHostFromTLSAllowlist -&gt; DropHostFromTLSAllowlist -&gt; Bool)
 -&gt; Eq DropHostFromTLSAllowlist
@@ -427,9 +427,9 @@ $c/= :: DropHostFromTLSAllowlist -&gt; DropHostFromTLSAllowlist -&gt; Bool
 $c== :: DropHostFromTLSAllowlist -&gt; DropHostFromTLSAllowlist -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748481"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621689748480"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropHostFromTLSAllowlist
-</span><a href="#local-6989586621689748480"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748670"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621689748669"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropHostFromTLSAllowlist
+</span><a href="#local-6989586621689748669"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser DropHostFromTLSAllowlist)
 -&gt; Value
 -&gt; Parser DropHostFromTLSAllowlist
@@ -441,25 +441,25 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser DropHostFromTLSAllowlist
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748479"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748479"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689748668"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689748668"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">String -&gt; DropHostFromTLSAllowlist
 </span><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-var">DropHostFromTLSAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; DropHostFromTLSAllowlist)
 -&gt; Parser String -&gt; Parser DropHostFromTLSAllowlist
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689748479"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
+</span><a href="#local-6989586621689748668"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;host&quot;</span></span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748472"><span id="local-6989586621689748474"><span id="local-6989586621689748476"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-88"></span><span>  </span><span id="local-6989586621689748471"><span class="annot"><span class="annottext">toJSON :: DropHostFromTLSAllowlist -&gt; Value
-</span><a href="#local-6989586621689748471"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span><span> </span><span id="local-6989586621689748470"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689748470"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689748661"><span id="local-6989586621689748663"><span id="local-6989586621689748665"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621689748660"><span class="annot"><span class="annottext">toJSON :: DropHostFromTLSAllowlist -&gt; Value
+</span><a href="#local-6989586621689748660"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span><span> </span><span id="local-6989586621689748659"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689748659"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;host&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689748470"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689748659"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-89"></span></pre></body></html>
