@@ -420,12 +420,6 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       ComputedFieldFunction 'BigQuery ->
       SchemaT r m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
     computedFieldFunctionArgs ComputedFieldFunction {..} = do
-      let fieldName = Name._args
-          fieldDesc =
-            G.Description $
-              "input parameters for computed field "
-                <> _cfiName <<> " defined on table " <>> tableName
-
       objectName <-
         mkTypename =<< do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
@@ -436,12 +430,21 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
 
       argumentParsers <- sequenceA <$> forM userInputArgs parseArgument
 
-      let objectParser =
-            P.object objectName Nothing argumentParsers `P.bind` \inputArguments -> do
-              let tableColumnInputs = Map.map BigQuery.AETableColumn $ Map.mapKeys getFuncArgNameTxt _cffComputedFieldImplicitArgs
-              pure $ FunctionArgsExp mempty $ Map.fromList inputArguments <> tableColumnInputs
+      let userArgsParser = P.object objectName Nothing argumentParsers
 
-      pure $ P.field fieldName (Just fieldDesc) objectParser
+      let fieldDesc =
+            G.Description $
+              "input parameters for computed field "
+                <> _cfiName <<> " defined on table " <>> tableName
+
+          argsField
+            | null userInputArgs = P.fieldOptional Name._args (Just fieldDesc) userArgsParser
+            | otherwise = Just <$> P.field Name._args (Just fieldDesc) userArgsParser
+
+      pure $
+        argsField `P.bindFields` \maybeInputArguments -> do
+          let tableColumnInputs = Map.map BigQuery.AETableColumn $ Map.mapKeys getFuncArgNameTxt _cffComputedFieldImplicitArgs
+          pure $ FunctionArgsExp mempty $ maybe mempty Map.fromList maybeInputArguments <> tableColumnInputs
 
     parseArgument :: BigQuery.FunctionArgument -> SchemaT r m (InputFieldsParser n (Text, BigQuery.ArgumentExp (IR.UnpreparedValue 'BigQuery)))
     parseArgument arg = do

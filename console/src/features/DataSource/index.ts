@@ -19,6 +19,10 @@ import type {
   GetFKRelationshipProps,
   DriverInfoResponse,
   GetTablesListAsTreeProps,
+  TableRow,
+  GetTableRowsProps,
+  WhereClause,
+  OrderBy,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
@@ -55,7 +59,7 @@ export type Database = {
   introspection?: {
     getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
     getDatabaseConfiguration: (
-      fetch: AxiosInstance,
+      httpClient: AxiosInstance,
       driver?: string
     ) => Promise<
       | { configSchema: Property; otherSchemas: Record<string, Property> }
@@ -76,7 +80,9 @@ export type Database = {
     ) => Promise<DataNode | Feature.NotImplemented>;
   };
   query?: {
-    getTableData: () => void;
+    getTableRows: (
+      props: GetTableRowsProps
+    ) => Promise<TableRow[] | Feature.NotImplemented>;
   };
   modify?: null;
 };
@@ -198,7 +204,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (getTrackableTables)
       return getTrackableTables({
         dataSourceName: dataSource.name,
-        configuration: (dataSource as any).configuration,
+        configuration: dataSource.configuration,
         httpClient,
       });
     return Feature.NotImplemented;
@@ -253,7 +259,6 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       httpClient,
     });
     if (result === Feature.NotImplemented) return [];
-
     return result;
   },
   getTableFkRelationships: async ({
@@ -300,6 +305,40 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (treeData === Feature.NotImplemented) return null;
 
     return treeData;
+  },
+  getTableRows: async ({
+    dataSourceName,
+    table,
+    columns,
+    options,
+  }: {
+    dataSourceName: string;
+    table: Table;
+    columns: string[];
+    options?: {
+      where?: WhereClause;
+      offset?: number;
+      limit?: number;
+      order_by?: OrderBy[];
+    };
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) throw Error('Database not found!');
+
+    const query = database.query;
+
+    if (!query) return Feature.NotImplemented;
+
+    const tableRows = await query.getTableRows({
+      dataSourceName,
+      table,
+      columns,
+      httpClient,
+      options,
+    });
+
+    return tableRows;
   },
 });
 

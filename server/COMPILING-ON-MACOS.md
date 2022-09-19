@@ -18,6 +18,7 @@
     brew install llvm@11
     brew install microsoft/mssql-release/mssql-tools
     brew install direnv
+    brew install coreutils
     ```
 
      And add them to your environment:

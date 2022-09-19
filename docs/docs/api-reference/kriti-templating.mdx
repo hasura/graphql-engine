@@ -12,19 +12,12 @@ sidebar_position: 13
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import Thumbnail from "@site/src/components/Thumbnail";
-import TOCInline from '@theme/TOCInline';
 
 # Kriti Templating in Hasura
 
 ## Introduction
 
-Kriti allows transoformation of JSON via templating during the Hasura GraphQL Engine lifecycle.
-
-:::info Note
-
-See [Kriti's README.md on Github](https://github.com/hasura/kriti-lang#kriti-lang) for additional details.
-
-:::
+Kriti allows transformation of JSON via templating during the Hasura GraphQL Engine lifecycle.
 
 Kriti has a JSON-like syntax that allows for the creation of JSON values via direct-construction, reference and branching structures.
 
@@ -35,11 +28,94 @@ There are two main ways that Kriti templates are used:
 
 String interpolation can also be used inside Kriti payload transformations, so only payload examples will be used here. But note that when a field provides Kriti interpolation capabilities you can't use the full capabilities of Kriti templates, just the interpolation capabilities.
 
+:::info Note
+
+See [Kriti's README.md on GitHub](https://github.com/hasura/kriti-lang#kriti-lang) for additional details.
+
+:::
+
+## Usage in Hasura
+
 At present, Kriti templating is available for:
 
 * [Action REST Connectors](/actions/rest-connectors.mdx)
-* [Scheduled Triggers](/scheduled-triggers/index.mdx)
-* [Event Triggers](/event-triggers/index.mdx)
+* [Event Triggers REST Connectors](/event-triggers/rest-connectors.mdx)
+* [Cron Triggers REST Connectors](/scheduled-triggers/create-cron-trigger.mdx#rest-connectors)
+
+### Example
+
+The following is an example of using Kriti templates for an Action REST Connector:
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Open the Hasura Console, head to the `Actions` tab, and click the `Create` button to open the page.
+
+Add a REST connector payload and configure and test the associated template.
+
+<Thumbnail
+src="/img/graphql/core/templates/create-action-configure-rest-connectors.png"
+alt="Create an event trigger"
+/>
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+An API call to create an action can include an associated template to process the action handler's response:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "create_action",
+  "args": {
+    "name": "actionName",
+    "definition": {
+      "arguments": [
+        {
+          "name": "arg1",
+          "type": "SampleInput!"
+        }
+      ],
+      "kind": "synchronous",
+      "output_type": "SampleOutput",
+      "handler": "http://httpbin.org",
+      "type": "mutation",
+      "headers": [],
+      "timeout": null,
+      "request_transform": {
+        "version": 2,
+        "template_engine": "Kriti",
+        "method": null,
+        "query_params": {},
+        "body": {
+          "action": "transform",
+          "template": "{\n \"users\": {\n \"name\": {{$body.input.arg1.username}},\n \"password\": {{$body.input.arg1.password}}\n }\n}"
+        },
+        "content_type": "application/json"
+      }
+    }
+  }
+}
+```
+
+The template field is a string that represents a template in the language reflected in the template_engine field.
+In this case:
+
+```json
+{
+  "users": {
+    "name": {{.input.arg1.username}},
+    "password": {{.input.arg1.password}}
+  }
+}
+```
+</TabItem>
+</Tabs>
+
 
 ## Capabilities and behavior
 
@@ -59,7 +135,7 @@ Most Kriti-specific functionality is introduced through the use of a `{{ ... }}`
 
 To construct JSON values in a Kriti template, you write JSON as usual.
 
-For exampe, the following is a valid Kriti template and JSON document:
+For example, the following is a valid Kriti template and JSON document:
 
 ```json
 {
@@ -153,79 +229,6 @@ These use the `foo(...)` syntax:
 
 The [Function Reference](#kriti-function-reference) section details the functions available by default. Note that there can be additional functions and values in the scope depending on the template context. These will be documented in the relevant documentation section.
 
-## Example
-
-One Hasura feature that utilizes Kriti templates is REST Connectors.
-
-<Tabs className="api-tabs">
-<TabItem value="console" label="Console">
-
-Open the Hasura Console, head to the `Actions` tab, and click the `Create` button to open the page.
-
-Add a REST connector payload and configure and test the associated template.
-
-<Thumbnail
-src="/img/graphql/core/templates/create-action-configure-rest-connectors.png"
-alt="Create an event trigger"
-/>
-
-</TabItem>
-
-<TabItem value="api" label="API">
-
-An API call to create an action can include an associated template to process the action handler's response:
-
-```http
-POST /v1/metadata HTTP/1.1
-Content-Type: application/json
-X-Hasura-Role: admin
-
-{
-  "type": "create_action",
-  "args": {
-    "name": "actionName",
-    "definition": {
-      "arguments": [
-        {
-          "name": "arg1",
-          "type": "SampleInput!"
-        }
-      ],
-      "kind": "synchronous",
-      "output_type": "SampleOutput",
-      "handler": "http://httpbin.org",
-      "type": "mutation",
-      "headers": [],
-      "timeout": null,
-      "request_transform": {
-        "version": 2,
-        "template_engine": "Kriti",
-        "method": null,
-        "query_params": {},
-        "body": {
-          "action": "transform",
-          "template": "{\n \"users\": {\n \"name\": {{$body.input.arg1.username}},\n \"password\": {{$body.input.arg1.password}}\n }\n}"
-        },
-        "content_type": "application/json"
-      }
-    }
-  }
-}
-```
-
-The template field is a string that represents a template in the language reflected in the template_engine field.
-In this case:
-
-```json
-{
-  "users": {
-    "name": {{.input.arg1.username}},
-    "password": {{.input.arg1.password}}
-  }
-}
-```
-</TabItem>
-</Tabs>
 
 ## Function reference {#kriti-function-reference}
 
@@ -290,7 +293,7 @@ Input:
 
 - Reverses an array or string
 - Leaves an object or `null` as-is
-- Takes the reciprical of a number
+- Takes the reciprocal of a number
 - Negates a boolean
 
 Input:
@@ -572,7 +575,7 @@ Output:
 
 :::info Note
 
-All of the above functions are also listed on the [Kriti Github README.md](https://github.com/hasura/kriti-lang/blob/main/README.md#basic-functions-collection).
+All of the above functions are also listed on the [Kriti GitHub README.md](https://github.com/hasura/kriti-lang/blob/main/README.md#basic-functions-collection).
 
 :::
 

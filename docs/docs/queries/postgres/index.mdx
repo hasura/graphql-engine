@@ -20,6 +20,12 @@ a range of possible queries and operators that also work with relationships defi
 All tables of the database tracked by the GraphQL engine can be queried over the GraphQL endpoint. If you have a tracked
 table in your database, its query field is added as a nested field under the `query_root` root level type.
 
+:::info Postgres Compatibility
+
+Hasura works with most [Postgres compatible flavours](/databases/postgres/index.mdx#postgres-compatible-flavors).
+
+:::
+
 ## Auto-generated query field schema
 
 **For example**, the auto-generated schema for the query field for a table `author` looks like the following:

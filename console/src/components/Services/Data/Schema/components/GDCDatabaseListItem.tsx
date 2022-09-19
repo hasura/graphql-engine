@@ -5,6 +5,7 @@ import { Tooltip } from '@/new-components/Tooltip';
 import { Dispatch } from '@/types';
 import React from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
+import { useQueryClient } from 'react-query';
 import _push from '../../push';
 import { isInconsistentSource } from '../../utils';
 import { useDropSource } from '../hooks/useDropSource';
@@ -21,9 +22,11 @@ export const GDCDatabaseListItem: React.FC<GDCDatabaseListItemItemProps> = ({
   inconsistentObjects,
   dispatch,
 }) => {
+  const queryClient = useQueryClient();
   const { dropSource, isLoading: isDropSourceInProgress } = useDropSource({
     customOnSuccess: () => {
       dispatch(exportMetadata());
+      queryClient.invalidateQueries('treeview');
     },
   });
 

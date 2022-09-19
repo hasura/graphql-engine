@@ -4,18 +4,21 @@ import { useQuery } from 'react-query';
 
 export const useMetadataSource = (dataSourceName: string) => {
   const httpClient = useHttpClient();
-  return useQuery(['trackTables', 'metadataSource'], async () => {
-    const result = await exportMetadata({ httpClient });
+  return useQuery(
+    ['export_metadata', 'trackTables', 'metadataSource'],
+    async () => {
+      const result = await exportMetadata({ httpClient });
 
-    if (!result) throw Error('useMetadataSource: cannot export metadata');
+      if (!result) throw Error('useMetadataSource: cannot export metadata');
 
-    const driver = result.metadata.sources.find(
-      source => source.name === dataSourceName
-    )?.kind;
+      const driver = result.metadata.sources.find(
+        source => source.name === dataSourceName
+      )?.kind;
 
-    if (!driver)
-      throw Error('useMetadataSource: cannot find source in metadata');
+      if (!driver)
+        throw Error('useMetadataSource: cannot find source in metadata');
 
-    return { metadata: result, driver };
-  });
+      return { metadata: result, driver };
+    }
+  );
 };

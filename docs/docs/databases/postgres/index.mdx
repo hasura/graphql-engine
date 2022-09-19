@@ -12,7 +12,8 @@ slug: index
 
 ## Introduction
 
-Hasura allows connecting to a Postgres database and build an GraphQL API based on the database schema.
+Hasura enables connecting to a Postgres and Postgres compatible databases to automatically build an rich GraphQL API
+based on the schema.
 
 :::tip Supported Postgres versions
 
@@ -20,9 +21,17 @@ Hasura GraphQL engine supports **Postgres 9.5 and above**
 
 :::
 
-## Postgres flavours
+## Postgres compatibility & flavors {#postgres-compatible-flavors}
 
-Hasura also supports databases with full Postgres compatibility like Yugabyte, Timescale, Citus, Aurora, RDS.
+Hasura supports most databases with full Postgres compatibility such as:
+- [Yugabyte](https://www.yugabyte.com/)
+- [Timescale](https://www.timescale.com/)
+- [Citus](https://www.citusdata.com/)
+- [Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.AuroraPostgreSQL.html)
+- [RDS](https://aws.amazon.com/rds/postgresql/)
+- [Crunchy](https://www.crunchydata.com/)
+- [AlloyDB](https://cloud.google.com/alloydb)
+- [Neon](https://neon.tech/)
 
 We have more distributed flavours like CockroachDB coming soon. See
 [GitHub issue](https://github.com/hasura/graphql-engine/issues/678).

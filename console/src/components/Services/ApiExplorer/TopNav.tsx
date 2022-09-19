@@ -1,20 +1,12 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import { canAccessSecuritySettings } from '@/utils/permissions';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
 
 type TopNavProps = {
   location: RouteComponentProps<unknown, unknown>['location'];
 };
 
 const TopNav: React.FC<TopNavProps> = ({ location }) => {
-  const { enabled: allowListEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.allowListId
-  );
-
   const sectionsData = [
     [
       {
@@ -31,16 +23,12 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
       },
     ],
     [
-      ...(allowListEnabled
-        ? [
-            {
-              key: 'allow-list',
-              link: '/api/allow-list',
-              dataTestVal: 'allow-list',
-              title: 'Allow List',
-            },
-          ]
-        : []),
+      {
+        key: 'allow-list',
+        link: '/api/allow-list',
+        dataTestVal: 'allow-list',
+        title: 'Allow List',
+      },
     ],
   ];
 

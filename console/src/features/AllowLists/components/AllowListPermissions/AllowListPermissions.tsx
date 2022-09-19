@@ -156,7 +156,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                   </div>
                 </td>
                 <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer">
-                  {updatingRoles.includes(roleName) ? (
+                  {updatingRoles.length > 0 ? (
                     <CgSpinner className={`animate-spin ${'w-5 h-5'}`} />
                   ) : (
                     <Switch
@@ -180,7 +180,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                   />
                 </td>
                 <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer flex items-center justify-center">
-                  {updatingRoles.includes(newRole) ? (
+                  {updatingRoles.length > 0 ? (
                     <CgSpinner className={`animate-spin ${'w-5 h-5'}`} />
                   ) : (
                     <Switch

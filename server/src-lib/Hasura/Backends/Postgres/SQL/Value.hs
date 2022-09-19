@@ -318,15 +318,16 @@ buildArrayLiteral :: [PGScalarValue] -> Text
 buildArrayLiteral ts =
   T.concat ["{", T.intercalate "," (map (inner . encodeElement) ts), "}"]
   where
-    -- Make sure to wrap text values in quotes, and escape unique characters
+    -- present text elements as json strings
+    escape = TL.toStrict . AE.encodeToLazyText
     encodeElement = \case
-      PGValChar t -> TELit $ tshow $ T.singleton t
-      PGValVarchar t -> TELit $ tshow t
-      PGValText t -> TELit $ tshow t
-      PGValCitext t -> TELit $ tshow t
-      PGValLquery t -> TELit $ tshow t
-      PGValLtxtquery t -> TELit $ tshow t
-      PGValUnknown t -> TELit $ tshow t
+      PGValChar t -> TELit $ escape $ T.singleton t
+      PGValVarchar t -> TELit $ escape t
+      PGValText t -> TELit $ escape t
+      PGValCitext t -> TELit $ escape t
+      PGValLquery t -> TELit $ escape t
+      PGValLtxtquery t -> TELit $ escape t
+      PGValUnknown t -> TELit $ escape t
       other -> txtEncodedVal other
     inner = \case
       TENull -> "null"

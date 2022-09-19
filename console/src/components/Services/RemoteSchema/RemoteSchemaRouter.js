@@ -7,13 +7,13 @@ import {
   landingConnector,
   addConnector,
   editConnector,
-  viewConnector,
   permissionsConnector,
 } from '.';
 import { FILTER_REMOTE_SCHEMAS } from './Actions';
 
 import { appPrefix } from './constants';
 import RelationshipsConnector from './Relationships';
+import { RemoteSchemaDetails } from '@/features/RemoteSchema/components/Details/RemoteSchemaDetails';
 
 const filterItem = dispatch => {
   return (dataList, searchVal) => {
@@ -71,7 +71,7 @@ const getRemoteSchemaRouter = connect => {
         <Route path="add" component={addConnector(connect)} />
         <Route
           path=":remoteSchemaName/details"
-          component={viewConnector(connect)}
+          component={RemoteSchemaDetails}
         />
         <Route
           path=":remoteSchemaName/modify"

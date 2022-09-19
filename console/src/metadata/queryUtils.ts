@@ -840,6 +840,7 @@ export const getEventInvocationsLogByID = (
   args: {
     type,
     event_id,
+    get_rows_count: false,
   },
 });
 
@@ -871,6 +872,7 @@ export const getEventInvocations = (
       ...query.args,
       limit,
       offset,
+      get_rows_count: false,
     },
   };
 };
@@ -918,6 +920,7 @@ export const getScheduledEvents = (
       ...query.args,
       limit,
       offset,
+      get_rows_count: false,
     },
   };
 };

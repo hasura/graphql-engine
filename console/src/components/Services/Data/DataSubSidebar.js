@@ -22,7 +22,7 @@ import _push from './push';
 import { Button } from '@/new-components/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
-import { useGDCTreeItemClick } from './useGDCTreeItemClick';
+import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 

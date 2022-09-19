@@ -25,4 +25,7 @@ export const bigquery: Database = {
     getFKRelationships: async () => Feature.NotImplemented,
     getTablesListAsTree,
   },
+  query: {
+    getTableRows: async () => Feature.NotImplemented,
+  },
 };
