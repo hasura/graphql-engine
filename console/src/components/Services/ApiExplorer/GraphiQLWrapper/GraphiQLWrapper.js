@@ -13,7 +13,7 @@ import {
 } from '../OneGraphExplorer/utils';
 
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
-import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/Heroku/utils';
+import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
 import deriveAction from '../../../../shared/utils/deriveAction';

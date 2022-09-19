@@ -12,10 +12,13 @@ const serverEnvVars = `
   assetsVersion: '${process.env.ASSETS_VERSION}',
   cdnAssets: ${process.env.CDN_ASSETS},
   herokuOAuthClientId: '${process.env.HEROKU_OAUTH_CLIENT_ID || ''}',
+  neonOAuthClientId: '${process.env.NEON_OAUTH_CLIENT_ID}',
+  neonRootDomain: '${process.env.NEON_ROOT_DOMAIN}',
   tenantID: '${process.env.HASURA_CLOUD_TENANT_ID || ''}',
   projectID: '${process.env.HASURA_CLOUD_PROJECT_ID || ''}',
   cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}',
   consoleType: '${process.env.HASURA_CONSOLE_TYPE}',
+  allowedLuxFeatures: ${process.env.ALLOWED_LUX_FEATURES},
   consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}'
 `;
 
@@ -31,7 +34,6 @@ const cliEnvVars = `
   assetsVersion: '${process.env.ASSETS_VERSION}',
   serverVersion: '${process.env.SERVER_VERSION}',
   cdnAssets: ${process.env.CDN_ASSETS},
-  herokuOAuthClientId: '${process.env.HEROKU_OAUTH_CLIENT_ID || ''}',
   tenantID: '${process.env.HASURA_CLOUD_TENANT_ID || ''}',
   projectID: '${process.env.HASURA_CLOUD_PROJECT_ID || ''}',
   cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}',
