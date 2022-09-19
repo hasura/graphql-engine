@@ -1,7 +1,7 @@
 package remoteschemas
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	goyaml "github.com/goccy/go-yaml"
@@ -81,9 +81,9 @@ func TestRemoteSchemaConfig_Build(t *testing.T) {
 				assert.NoError(t, err)
 
 				// uncomment following lines to update golden file
-				// assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				// assert.NoError(t, os.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
 
-				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				wantbs, err := os.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
 				assert.Equal(t, string(wantbs), string(jsonbs))
 			}
@@ -116,7 +116,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/t1/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/t1/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -127,7 +127,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/remote_schemas.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/export_test/t1/want.remote_schemas.yaml")
+					bs, err := os.ReadFile("testdata/export_test/t1/want.remote_schemas.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -144,7 +144,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/t2/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/t2/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -155,7 +155,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/remote_schemas.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/export_test/t2/want.remote_schemas.yaml")
+					bs, err := os.ReadFile("testdata/export_test/t2/want.remote_schemas.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -172,7 +172,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/t3/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/t3/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -183,7 +183,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/remote_schemas.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/export_test/t3/want.remote_schemas.yaml")
+					bs, err := os.ReadFile("testdata/export_test/t3/want.remote_schemas.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -199,7 +199,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/t4/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/t4/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -210,7 +210,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/remote_schemas.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/export_test/t4/want.remote_schemas.yaml")
+					bs, err := os.ReadFile("testdata/export_test/t4/want.remote_schemas.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -226,7 +226,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			args{
 				metadata: func() map[string]yaml.Node {
-					bs, err := ioutil.ReadFile("testdata/export_test/t5/metadata.json")
+					bs, err := os.ReadFile("testdata/export_test/t5/metadata.json")
 					assert.NoError(t, err)
 					yamlbs, err := metadatautil.JSONToYAML(bs)
 					assert.NoError(t, err)
@@ -237,7 +237,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/remote_schemas.yaml": func() []byte {
-					bs, err := ioutil.ReadFile("testdata/export_test/t5/want.remote_schemas.yaml")
+					bs, err := os.ReadFile("testdata/export_test/t5/want.remote_schemas.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
@@ -259,7 +259,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files
-					// assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					// assert.NoError(t, os.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
 					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}
 			}
