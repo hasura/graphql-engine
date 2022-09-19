@@ -1,9 +1,8 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
-
 import { AllowedRESTMethods, RestEndpointEntry } from '@/metadata/types';
-import { useIsUnmounted } from '@/components/utils';
+import { useIsUnmounted } from '@/components/Services/Data';
 import { Dispatch, ReduxState } from '@/types';
 import { addRESTEndpoint, editRESTEndpoint } from '@/metadata/actions';
 import { allowedQueriesCollection } from '@/metadata/utils';

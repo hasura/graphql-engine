@@ -1,8 +1,9 @@
-import { Database, Feature, Property } from '../index';
+import { Database, Feature } from '../index';
 import {
   getTablesListAsTree,
   getTrackableTables,
   getTableColumns,
+  getDatabaseConfiguration,
 } from './introspection';
 
 /**
@@ -15,25 +16,7 @@ export type GDCTable = string[];
 export const gdc: Database = {
   introspection: {
     getDriverInfo: async () => Feature.NotImplemented,
-    getDatabaseConfiguration: async () => {
-      /**
-       * Once we have the API for fetching capabilities via HGE, we can make the correct call
-       */
-      const res = await fetch('http://localhost:8100/capabilities', {
-        headers: {
-          'x-hasura-dataConnector-config': JSON.stringify('./chinook.db'),
-        },
-      });
-
-      const data: {
-        configSchemas: {
-          configSchema: Property;
-          otherSchemas: Record<string, any>;
-        };
-      } = await res.json();
-
-      return data.configSchemas;
-    },
+    getDatabaseConfiguration,
     getTrackableTables,
     getDatabaseHierarchy: async () => {
       /**

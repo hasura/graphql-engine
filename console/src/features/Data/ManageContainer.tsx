@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTableDefinition } from './hooks';
 import { ManageDatabase } from './ManageDatabase/ManageDatabase';
+import { ManageTable } from './ManageTable/ManageTable';
 
 export const ManageContainer = () => {
   const urlData = useTableDefinition(window.location);
@@ -15,5 +16,5 @@ export const ManageContainer = () => {
    */
   if (database && !table) return <ManageDatabase dataSourceName={database} />;
 
-  return <>Feature not implemented</>;
+  return <ManageTable table={table} dataSourceName={database} />;
 };

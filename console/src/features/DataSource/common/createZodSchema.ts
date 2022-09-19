@@ -105,7 +105,17 @@ export function createZodSchema(
 
     case 'object':
       if (isFreeFormObjectField(property)) {
-        return z.any(); // any valid json
+        return z.string().transform((x, ctx) => {
+          try {
+            const result = JSON.parse(x);
+            return result;
+          } catch {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Not a valid JSON',
+            });
+          }
+        });
       }
 
       const propertiesArray = Object.entries(property.properties);

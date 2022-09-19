@@ -55,7 +55,7 @@ export type Database = {
   introspection?: {
     getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
     getDatabaseConfiguration: (
-      fetch: AxiosInstance,
+      httpClient: AxiosInstance,
       driver?: string
     ) => Promise<
       | { configSchema: Property; otherSchemas: Record<string, Property> }
