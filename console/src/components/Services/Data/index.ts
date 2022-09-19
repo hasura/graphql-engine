@@ -28,6 +28,7 @@ import ModifyCustomFunction from './Function/Modify/ModifyCustomFunction';
 import FunctionPermissions from './Function/Permission/Permission';
 import ConnectedDatabaseManagePage from './Schema/ManageDatabase';
 import ConnectedCreateDataSourcePage from './DataSources/CreateDataSource';
+import { useIsUnmounted } from './Common/tsUtils';
 
 export {
   dataPageConnector,
@@ -53,4 +54,5 @@ export {
   FunctionPermissions,
   ConnectedDatabaseManagePage,
   ConnectedCreateDataSourcePage,
+  useIsUnmounted,
 };

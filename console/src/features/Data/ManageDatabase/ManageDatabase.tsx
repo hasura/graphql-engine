@@ -15,7 +15,7 @@ export const ManageDatabase = (props: ManageDatabaseProps) => {
         <div className="flex items-center space-x-xs mb-1">
           <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
             <FaDatabase className="mr-1.5" />
-            <span className="text-sm">default</span>
+            <span className="text-sm">{props.dataSourceName}</span>
           </div>
           <FaAngleRight className="text-muted" />
           <div className="cursor-pointer flex items-center">

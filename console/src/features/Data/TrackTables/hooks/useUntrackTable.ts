@@ -65,9 +65,11 @@ export const useUntrackTable = (dataSourceName: string) => {
             });
           },
           onSettled() {
-            queryClient.invalidateQueries([dataSourceName, 'tables']);
             queryClient.invalidateQueries('treeview');
-            queryClient.invalidateQueries(['trackTables', 'metadataSource']);
+            queryClient.invalidateQueries([
+              'introspected-tables',
+              dataSourceName,
+            ]);
           },
         }
       );
