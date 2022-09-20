@@ -1,9 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec (spec, genType) where
+module Hasura.Backends.DataConnector.API.V0.ScalarSpec (spec, genType) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
-import Hasura.Backends.DataConnector.API.V0.Scalar.Type
+import Hasura.Backends.DataConnector.API.V0.Scalar
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
@@ -24,6 +24,6 @@ spec = do
       testToFromJSONToSchema (CustomTy "foo") [aesonQQ|"foo"|]
     jsonOpenApiProperties genType
 
-genType :: MonadGen m => m Type
+genType :: MonadGen m => m ScalarType
 genType =
   Gen.choice [pure StringTy, pure NumberTy, pure BoolTy, CustomTy <$> genArbitraryAlphaNumText defaultRange]

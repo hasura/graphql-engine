@@ -71,11 +71,17 @@ instance HasCodec QueryRequest where
 
 -- | The details of a query against a table
 data Query = Query
-  { _qFields :: Maybe (KM.KeyMap Field),
+  { -- | Map of field name to Field definition.
+    _qFields :: Maybe (KM.KeyMap Field),
+    -- | Map of aggregate field name to Aggregate definition
     _qAggregates :: Maybe (KM.KeyMap API.V0.Aggregate),
+    -- | Optionally limit to N results.
     _qLimit :: Maybe Int,
+    -- | Optionally offset from the Nth result.
     _qOffset :: Maybe Int,
+    -- | Optionally constrain the results to satisfy some predicate.
     _qWhere :: Maybe API.V0.Expression,
+    -- | Optionally order the results by the value of one or more fields.
     _qOrderBy :: Maybe API.V0.OrderBy
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -92,6 +98,12 @@ instance HasCodec Query where
         <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate" .= _qWhere
         <*> optionalFieldOrNull "order_by" "Optionally order the results by the value of one or more fields" .= _qOrderBy
 
+-- | A relationship consists of the following components:
+--   - a sub-query, from the perspective that a relationship field will occur
+--     within a broader 'Query'
+--   - a join condition relating the data returned by the sub-query with that
+--     of the broader 'Query'. This join condition is represented by the
+--     name of the relationship that defines the joining criteria.
 data RelationshipField = RelationshipField
   { _rfRelationship :: API.V0.RelationshipName,
     _rfQuery :: Query
@@ -104,7 +116,12 @@ relationshipFieldObjectCodec =
     <$> requiredField "relationship" "The name of the relationship to follow for the subquery" .= _rfRelationship
     <*> requiredField "query" "Relationship query" .= _rfQuery
 
--- | A serializable field targeted by a 'Query'.
+-- | The specific fields that are targeted by a 'Query'.
+--
+-- A field conceptually falls under one of the two following categories:
+--   1. a "column" within the data store that the query is being issued against
+--   2. a "relationship", which indicates that the field is the result of
+--      a subquery
 data Field
   = ColumnField API.V0.ColumnName
   | RelField RelationshipField

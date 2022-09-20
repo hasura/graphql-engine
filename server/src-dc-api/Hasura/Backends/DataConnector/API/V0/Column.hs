@@ -18,7 +18,7 @@ import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Hasura.Backends.DataConnector.API.V0.Scalar.Type qualified as API.V0.Scalar
+import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0.Scalar
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ instance HasCodec ColumnName where
 
 data ColumnInfo = ColumnInfo
   { dciName :: ColumnName,
-    dciType :: API.V0.Scalar.Type,
+    dciType :: API.V0.Scalar.ScalarType,
     dciNullable :: Bool,
     dciDescription :: Maybe Text
   }

@@ -5,7 +5,7 @@ module Hasura.Backends.DataConnector.API.V0.ColumnSpec (spec, genColumnName, gen
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
-import Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec (genType)
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genType)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog

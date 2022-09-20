@@ -2,8 +2,8 @@
 {-# LANGUAGE OverloadedLists #-}
 
 --
-module Hasura.Backends.DataConnector.API.V0.Scalar.Type
-  ( Type (..),
+module Hasura.Backends.DataConnector.API.V0.Scalar
+  ( ScalarType (..),
   )
 where
 
@@ -12,7 +12,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
@@ -22,16 +22,16 @@ import Prelude
 
 --------------------------------------------------------------------------------
 
-data Type
+data ScalarType
   = StringTy
   | NumberTy
   | BoolTy
   | CustomTy {getCustomTy :: Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Hashable, NFData)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Type
+  deriving anyclass (Hashable, NFData, ToJSONKey)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ScalarType
 
-instance HasCodec Type where
+instance HasCodec ScalarType where
   codec =
     named "ScalarType" $
       matchChoiceCodec

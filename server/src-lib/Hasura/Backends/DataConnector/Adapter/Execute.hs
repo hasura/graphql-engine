@@ -8,15 +8,12 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as J
-import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
-import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientT)
-import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.Plan qualified as DC
 import Hasura.Base.Error (Code (..), QErr, throw400, throw500)
 import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
@@ -36,7 +33,7 @@ import Witch qualified
 --------------------------------------------------------------------------------
 
 instance BackendExecute 'DataConnector where
-  type PreparedQuery 'DataConnector = IR.Q.QueryRequest
+  type PreparedQuery 'DataConnector = API.QueryRequest
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = AgentClientT (Tracing.TraceT (ExceptT QErr IO))
 
@@ -98,6 +95,6 @@ buildExplainAction fieldName sourceName SourceConfig {..} DC.QueryPlan {..} =
           (Just (API._erQuery explainResponse))
           (Just (API._erLines explainResponse))
 
-toExplainPlan :: GQL.RootFieldAlias -> IR.Q.QueryRequest -> ExplainPlan
+toExplainPlan :: GQL.RootFieldAlias -> API.QueryRequest -> ExplainPlan
 toExplainPlan fieldName queryRequest =
-  ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ queryRequest])
+  ExplainPlan fieldName (Just "") (Just [DC.renderQuery $ queryRequest])

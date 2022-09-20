@@ -7,10 +7,10 @@ module Hasura.Backends.DataConnector.Adapter.Transport () where
 import Control.Exception.Safe (throwIO)
 import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Execute ()
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, runAgentClientT)
-import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.Plan qualified as DC
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.EncJSON (EncJSON)
@@ -51,7 +51,7 @@ runDBQuery' ::
   Logger Hasura ->
   SourceConfig ->
   AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
-  Maybe IR.Q.QueryRequest ->
+  Maybe API.QueryRequest ->
   m (DiffTime, a)
 runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
@@ -64,7 +64,7 @@ runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action 
 mkQueryLog ::
   GQLReqUnparsed ->
   RootFieldAlias ->
-  Maybe IR.Q.QueryRequest ->
+  Maybe API.QueryRequest ->
   RequestId ->
   HGL.QueryLog
 mkQueryLog gqlQuery fieldName maybeQuery requestId =
