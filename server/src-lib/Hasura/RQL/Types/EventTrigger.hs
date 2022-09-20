@@ -228,7 +228,7 @@ data AutoTriggerLogCleanupConfig = AutoTriggerLogCleanupConfig
     -- | retention period (in hours) for the event trigger logs
     _atlccRetentionPeriod :: Int,
     -- | SQL query timeout (in seconds)
-    _atlccQueryTimeout :: Int,
+    _atlccTimeout :: Int,
     -- | should we clean the invocation logs as well
     _atlccCleanInvocationLogs :: Bool,
     -- | is the cleanup action paused
@@ -246,7 +246,7 @@ instance FromJSON AutoTriggerLogCleanupConfig where
       _atlccSchedule <- o .: "schedule"
       _atlccBatchSize <- o .:? "batch_size" .!= 10000
       _atlccRetentionPeriod <- o .:? "retention_period" .!= 168 -- 7 Days = 168 hours
-      _atlccQueryTimeout <- o .:? "timeout" .!= 60
+      _atlccTimeout <- o .:? "timeout" .!= 60
       _atlccCleanInvocationLogs <- o .:? "clean_invocation_logs" .!= False
       _atlccPaused <- o .:? "paused" .!= ETCSUnpaused
       pure AutoTriggerLogCleanupConfig {..}
