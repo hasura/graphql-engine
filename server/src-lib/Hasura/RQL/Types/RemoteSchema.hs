@@ -51,7 +51,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.URL.Template (printURLTemplate)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Typename
@@ -84,8 +84,8 @@ newtype RemoteSchemaName = RemoteSchemaName
       J.ToJSON,
       J.ToJSONKey,
       J.FromJSON,
-      Q.ToPrepArg,
-      Q.FromCol,
+      PG.ToPrepArg,
+      PG.FromCol,
       ToTxt,
       NFData,
       Generic,

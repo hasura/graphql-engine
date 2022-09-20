@@ -59,7 +59,7 @@ import Data.Parser.JSONPath (encodeJSONPath)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TL
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Prelude
 import Network.HTTP.Types qualified as HTTP
 
@@ -243,16 +243,16 @@ encodeQErr True = toJSON
 encodeQErr _ = noInternalQErrEnc
 
 -- Postgres Connection Errors
-instance Q.FromPGConnErr QErr where
+instance PG.FromPGConnErr QErr where
   fromPGConnErr c
-    | "too many clients" `T.isInfixOf` (Q.getConnErr c) =
+    | "too many clients" `T.isInfixOf` (PG.getConnErr c) =
       let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
        in e {qeInternal = Just $ ExtraInternal $ toJSON c}
-    | "root certificate file" `T.isInfixOf` (Q.getConnErr c) =
+    | "root certificate file" `T.isInfixOf` (PG.getConnErr c) =
       err500 PostgresError "root certificate error"
-    | "certificate file" `T.isInfixOf` (Q.getConnErr c) =
+    | "certificate file" `T.isInfixOf` (PG.getConnErr c) =
       err500 PostgresError "certificate error"
-    | "private key file" `T.isInfixOf` (Q.getConnErr c) =
+    | "private key file" `T.isInfixOf` (PG.getConnErr c) =
       err500 PostgresError "private-key error"
   fromPGConnErr c =
     (err500 PostgresError "connection error")
@@ -260,7 +260,7 @@ instance Q.FromPGConnErr QErr where
       }
 
 -- Postgres Transaction error
-instance Q.FromPGTxErr QErr where
+instance PG.FromPGTxErr QErr where
   fromPGTxErr txe =
     (err500 PostgresError "postgres tx error")
       { qeInternal = Just $ ExtraInternal $ toJSON txe

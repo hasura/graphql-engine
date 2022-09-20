@@ -24,7 +24,7 @@ import Data.Aeson
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (NonEmptyText (..))
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -34,7 +34,7 @@ import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax (Name)
 
 newtype ComputedFieldName = ComputedFieldName {unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Cacheable)
+  deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey, PG.ToPrepArg, ToTxt, Hashable, PG.FromCol, Generic, Cacheable)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName

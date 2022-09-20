@@ -43,7 +43,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
@@ -65,11 +65,11 @@ newtype TriggerName = TriggerName {unTriggerName :: NonEmptyText}
       FromJSON,
       ToJSON,
       ToJSONKey,
-      Q.ToPrepArg,
+      PG.ToPrepArg,
       Generic,
       NFData,
       Cacheable,
-      Q.FromCol
+      PG.FromCol
     )
 
 triggerNameToTxt :: TriggerName -> Text

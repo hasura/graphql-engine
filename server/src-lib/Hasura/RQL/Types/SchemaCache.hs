@@ -128,7 +128,7 @@ import Data.HashSet qualified as HS
 import Data.Int (Int64)
 import Data.Text.Extended
 import Database.MSSQL.Transaction qualified as MSSQL
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
@@ -671,7 +671,7 @@ instance (Monoid w, CacheRM m) => CacheRM (WriterT w m) where
 instance (CacheRM m) => CacheRM (TraceT m) where
   askSchemaCache = lift askSchemaCache
 
-instance (CacheRM m) => CacheRM (Q.TxET QErr m) where
+instance (CacheRM m) => CacheRM (PG.TxET QErr m) where
   askSchemaCache = lift askSchemaCache
 
 instance (CacheRM m) => CacheRM (MSSQL.TxET e m) where

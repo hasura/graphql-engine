@@ -15,7 +15,7 @@ import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.SQL.DML qualified as PG
@@ -55,7 +55,7 @@ convertToSQLTransaction ::
   ) =>
   IR.AnnotatedInsert ('Postgres pgKind) Void PG.SQLExp ->
   UserInfo ->
-  Seq.Seq Q.PrepArg ->
+  Seq.Seq PG.PrepArg ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   m EncJSON
@@ -82,7 +82,7 @@ insertMultipleObjects ::
   Map.HashMap PGCol PG.SQLExp ->
   UserInfo ->
   IR.MutationOutput ('Postgres pgKind) ->
-  Seq.Seq Q.PrepArg ->
+  Seq.Seq PG.PrepArg ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   m EncJSON
@@ -142,7 +142,7 @@ insertObject ::
   IR.SingleObjectInsert ('Postgres pgKind) PG.SQLExp ->
   HashMap PGCol PG.SQLExp ->
   UserInfo ->
-  Seq.Seq Q.PrepArg ->
+  Seq.Seq PG.PrepArg ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
@@ -225,7 +225,7 @@ insertObjRel ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  Seq.Seq Q.PrepArg ->
+  Seq.Seq PG.PrepArg ->
   UserInfo ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
@@ -263,7 +263,7 @@ insertArrRel ::
   ) =>
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
-  Seq.Seq Q.PrepArg ->
+  Seq.Seq PG.PrepArg ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   IR.ArrayRelationInsert ('Postgres pgKind) PG.SQLExp ->

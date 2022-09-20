@@ -11,7 +11,7 @@ import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
 import Data.URL.Template qualified as UT
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax qualified as TH
 import System.Cron.Parser qualified as C
@@ -103,12 +103,12 @@ instance J.ToJSONKey Void
 --------------------------------------------------------------------------------
 -- Postgres
 
-instance Q.ToPrepArg C.CronSchedule where
-  toPrepVal = Q.toPrepVal . C.serializeCronSchedule
+instance PG.ToPrepArg C.CronSchedule where
+  toPrepVal = PG.toPrepVal . C.serializeCronSchedule
 
-instance Q.FromCol C.CronSchedule where
+instance PG.FromCol C.CronSchedule where
   fromCol bs =
-    case Q.fromCol bs of
+    case PG.fromCol bs of
       Left err -> Left err
       Right dbCron ->
         case C.parseCronSchedule dbCron of

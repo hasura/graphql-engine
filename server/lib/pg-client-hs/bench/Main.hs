@@ -16,7 +16,7 @@ import Data.Int (Int64)
 import Data.Kind (Type)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasql.Decoders qualified as HD
 import Hasql.Encoders qualified as HE
 import Hasql.Pool qualified as HP
@@ -33,22 +33,22 @@ withEx :: (Show e) => IO (Either e a) -> IO a
 withEx action =
   action >>= either (E.throwIO . E.userError . show) return
 
-runCTx :: Q.PGPool -> Q.TxE Q.PGExecErr a -> IO a
+runCTx :: PG.PGPool -> PG.TxE PG.PGExecErr a -> IO a
 runCTx pool tx =
-  withEx $ runExceptT $ Q.runTx pool (Q.Serializable, Just Q.ReadWrite) tx
+  withEx $ runExceptT $ PG.runTx pool (PG.Serializable, Just PG.ReadWrite) tx
 
 runHTx :: HP.Pool -> HT.Transaction a -> IO a
 runHTx pool tx =
   withEx $ HP.use pool $ HT.transaction HT.Serializable HT.Write tx
 
 type CTx :: Type -> Type
-type CTx a = Q.TxE Q.PGExecErr a
+type CTx a = PG.TxE PG.PGExecErr a
 
 type HTx :: Type -> Type
 type HTx = HT.Transaction
 
 benchQ ::
-  (Q.PGPool, HP.Pool) ->
+  (PG.PGPool, HP.Pool) ->
   String ->
   (Bool -> CTx B.ByteString, Bool -> HTx B.ByteString) ->
   IO C.Benchmark
@@ -74,32 +74,32 @@ benchQ (poolC, poolH) n (txC, txH) = do
         C.bench "hasql-prepared" $ C.whnfIO $ runHTx poolH $ txH True
       ]
 
-getPoolC :: IO Q.PGPool
+getPoolC :: IO PG.PGPool
 getPoolC = do
   let connDetails =
-        Q.CDOptions
-          Q.ConnOptions
-            { Q.connHost = "127.0.0.1",
-              Q.connPort = 7432,
-              Q.connUser = "admin",
-              Q.connPassword = "",
-              Q.connDatabase = "chinook",
-              Q.connOptions = Nothing
+        PG.CDOptions
+          PG.ConnOptions
+            { PG.connHost = "127.0.0.1",
+              PG.connPort = 7432,
+              PG.connUser = "admin",
+              PG.connPassword = "",
+              PG.connDatabase = "chinook",
+              PG.connOptions = Nothing
             }
-      connInfo = Q.ConnInfo 0 connDetails
-      connParams = Q.ConnParams 1 1 180 False Nothing Nothing False
+      connInfo = PG.ConnInfo 0 connDetails
+      connParams = PG.ConnParams 1 1 180 False Nothing Nothing False
       logger = const (return ())
-  Q.initPGPool connInfo connParams logger
+  PG.initPGPool connInfo connParams logger
 
 q1 :: T.Text
 q1 = $(FE.embedStringFile "bench/queries/artistByArtistId.sql")
 
 mkTx1C :: Bool -> CTx B.ByteString
 mkTx1C isPrepared =
-  runIdentity . Q.getRow
-    <$> Q.withQE
-      Q.PGExecErrTx
-      (Q.fromText q1)
+  runIdentity . PG.getRow
+    <$> PG.withQE
+      PG.PGExecErrTx
+      (PG.fromText q1)
       (Identity (3 :: Int64))
       isPrepared
 
@@ -115,10 +115,10 @@ q2 = $(FE.embedStringFile "bench/queries/allArtists.sql")
 
 mkTx2C :: Bool -> CTx B.ByteString
 mkTx2C isPrepared =
-  runIdentity . Q.getRow
-    <$> Q.withQE
-      Q.PGExecErrTx
-      (Q.fromText q2)
+  runIdentity . PG.getRow
+    <$> PG.withQE
+      PG.PGExecErrTx
+      (PG.fromText q2)
       ()
       isPrepared
 
@@ -142,5 +142,5 @@ main = do
 
   C.defaultMain benchmarks
 
-  Q.destroyPGPool poolC
+  PG.destroyPGPool poolC
   HP.release poolH

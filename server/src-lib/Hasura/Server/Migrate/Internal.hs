@@ -10,7 +10,7 @@ where
 import Data.Aeson qualified as A
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
@@ -22,13 +22,13 @@ import Hasura.Server.Migrate.Version
 
 -- | The old 0.8 catalog version is non-integral, so the version has always been
 -- stored as a string.
-getCatalogVersion :: Q.TxE QErr MetadataCatalogVersion
+getCatalogVersion :: PG.TxE QErr MetadataCatalogVersion
 getCatalogVersion = do
   versionText <-
-    runIdentity . Q.getRow
-      <$> Q.withQE
+    runIdentity . PG.getRow
+      <$> PG.withQE
         defaultTxErrorHandler
-        [Q.sql| SELECT version FROM hdb_catalog.hdb_version |]
+        [PG.sql| SELECT version FROM hdb_catalog.hdb_version |]
         ()
         False
   onLeft (readEither $ T.unpack versionText) $
@@ -36,24 +36,24 @@ getCatalogVersion = do
 
 from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
 from3To4 = liftTx $
-  Q.catchE defaultTxErrorHandler $ do
-    Q.unitQ
-      [Q.sql|
+  PG.catchE defaultTxErrorHandler $ do
+    PG.unitQ
+      [PG.sql|
       ALTER TABLE hdb_catalog.event_triggers
       ADD COLUMN configuration JSON |]
       ()
       False
     eventTriggers <-
       map uncurryEventTrigger
-        <$> Q.listQ
-          [Q.sql|
+        <$> PG.listQ
+          [PG.sql|
       SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
       FROM hdb_catalog.event_triggers e |]
           ()
           False
     forM_ eventTriggers updateEventTrigger3To4
-    Q.unitQ
-      [Q.sql|
+    PG.unitQ
+      [PG.sql|
       ALTER TABLE hdb_catalog.event_triggers
       DROP COLUMN definition,
       DROP COLUMN query,
@@ -67,32 +67,32 @@ from3To4 = liftTx $
   where
     uncurryEventTrigger ::
       ( TriggerName,
-        Q.AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
+        PG.AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
         InputWebhook,
         Int,
         Int,
-        Q.AltJ (Maybe [HeaderConf])
+        PG.AltJ (Maybe [HeaderConf])
       ) ->
       EventTriggerConf ('Postgres 'Vanilla)
-    uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
+    uncurryEventTrigger (trn, PG.AltJ tDef, w, nr, rint, PG.AltJ headers) =
       EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers Nothing Nothing Nothing
     updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _ _ _) =
-      Q.unitQ
-        [Q.sql|
+      PG.unitQ
+        [PG.sql|
                                             UPDATE hdb_catalog.event_triggers
                                             SET
                                             configuration = $1
                                             WHERE name = $2
                                             |]
-        (Q.AltJ $ A.toJSON etc, name)
+        (PG.AltJ $ A.toJSON etc, name)
         True
 
 setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
 setCatalogVersion ver time =
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
     ON CONFLICT ((version IS NOT NULL))
     DO UPDATE SET version = $1, upgraded_on = $2

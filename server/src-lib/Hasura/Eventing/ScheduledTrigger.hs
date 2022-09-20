@@ -126,7 +126,7 @@ import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
 import Data.Time.Clock
 import Data.URL.Template (printURLTemplate)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -530,12 +530,12 @@ mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson =
 -- The point here is to maintain a certain number of future events so the user
 -- can kind of see what's coming up, and obviously to give 'processCronEvents'
 -- something to do.
-getDeprivedCronTriggerStatsTx :: [TriggerName] -> Q.TxE QErr [CronTriggerStats]
+getDeprivedCronTriggerStatsTx :: [TriggerName] -> PG.TxE QErr [CronTriggerStats]
 getDeprivedCronTriggerStatsTx cronTriggerNames =
   map (\(n, count, maxTx) -> CronTriggerStats n count maxTx)
-    <$> Q.listQE
+    <$> PG.listQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       SELECT t.trigger_name, coalesce(q.upcoming_events_count, 0), coalesce(q.max_scheduled_time, now())
       FROM (SELECT UNNEST ($1::text[]) as trigger_name) as t
       LEFT JOIN
@@ -559,16 +559,16 @@ getDeprivedCronTriggerStatsTx cronTriggerNames =
 --  - if we decide to fetch cron events less frequently we should wake up that
 --    thread at second 0 of every minute, and then pass hasura's now time into
 --    the query (since the DB may disagree about the time)
-getScheduledEventsForDeliveryTx :: Q.TxE QErr ([CronEvent], [OneOffScheduledEvent])
+getScheduledEventsForDeliveryTx :: PG.TxE QErr ([CronEvent], [OneOffScheduledEvent])
 getScheduledEventsForDeliveryTx =
   (,) <$> getCronEventsForDelivery <*> getOneOffEventsForDelivery
   where
-    getCronEventsForDelivery :: Q.TxE QErr [CronEvent]
+    getCronEventsForDelivery :: PG.TxE QErr [CronEvent]
     getCronEventsForDelivery =
-      map (Q.getAltJ . runIdentity)
-        <$> Q.listQE
+      map (PG.getAltJ . runIdentity)
+        <$> PG.listQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
         WITH cte AS
           ( UPDATE hdb_catalog.hdb_cron_events
             SET status = 'locked'
@@ -589,12 +589,12 @@ getScheduledEventsForDeliveryTx =
           ()
           True
 
-    getOneOffEventsForDelivery :: Q.TxE QErr [OneOffScheduledEvent]
+    getOneOffEventsForDelivery :: PG.TxE QErr [OneOffScheduledEvent]
     getOneOffEventsForDelivery = do
-      map (Q.getAltJ . runIdentity)
-        <$> Q.listQE
+      map (PG.getAltJ . runIdentity)
+        <$> PG.listQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
          WITH cte AS (
             UPDATE hdb_catalog.hdb_scheduled_events
             SET status = 'locked'
@@ -615,26 +615,26 @@ getScheduledEventsForDeliveryTx =
           ()
           False
 
-insertInvocationTx :: Invocation 'ScheduledType -> ScheduledEventType -> Q.TxE QErr ()
+insertInvocationTx :: Invocation 'ScheduledType -> ScheduledEventType -> PG.TxE QErr ()
 insertInvocationTx invo type' = do
   case type' of
     Cron -> do
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
          INSERT INTO hdb_catalog.hdb_cron_event_invocation_logs
          (event_id, status, request, response)
          VALUES ($1, $2, $3, $4)
         |]
         ( iEventId invo,
           fromIntegral <$> iStatus invo :: Maybe Int64,
-          Q.AltJ $ J.toJSON $ iRequest invo,
-          Q.AltJ $ J.toJSON $ iResponse invo
+          PG.AltJ $ J.toJSON $ iRequest invo,
+          PG.AltJ $ J.toJSON $ iResponse invo
         )
         True
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
           UPDATE hdb_catalog.hdb_cron_events
           SET tries = tries + 1
           WHERE id = $1
@@ -642,22 +642,22 @@ insertInvocationTx invo type' = do
         (Identity $ iEventId invo)
         True
     OneOff -> do
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
          INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs
          (event_id, status, request, response)
          VALUES ($1, $2, $3, $4)
         |]
         ( iEventId invo,
           fromIntegral <$> iStatus invo :: Maybe Int64,
-          Q.AltJ $ J.toJSON $ iRequest invo,
-          Q.AltJ $ J.toJSON $ iResponse invo
+          PG.AltJ $ J.toJSON $ iRequest invo,
+          PG.AltJ $ J.toJSON $ iResponse invo
         )
         True
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
           UPDATE hdb_catalog.hdb_scheduled_events
           SET tries = tries + 1
           WHERE id = $1
@@ -666,7 +666,7 @@ insertInvocationTx invo type' = do
         True
 
 setScheduledEventOpTx ::
-  ScheduledEventId -> ScheduledEventOp -> ScheduledEventType -> Q.TxE QErr ()
+  ScheduledEventId -> ScheduledEventOp -> ScheduledEventType -> PG.TxE QErr ()
 setScheduledEventOpTx eventId op type' = case op of
   SEOpRetry time -> setRetry time
   SEOpStatus status -> setStatus status
@@ -674,9 +674,9 @@ setScheduledEventOpTx eventId op type' = case op of
     setRetry time =
       case type' of
         Cron ->
-          Q.unitQE
+          PG.unitQE
             defaultTxErrorHandler
-            [Q.sql|
+            [PG.sql|
             UPDATE hdb_catalog.hdb_cron_events
             SET next_retry_at = $1,
             STATUS = 'scheduled'
@@ -685,9 +685,9 @@ setScheduledEventOpTx eventId op type' = case op of
             (time, eventId)
             True
         OneOff ->
-          Q.unitQE
+          PG.unitQE
             defaultTxErrorHandler
-            [Q.sql|
+            [PG.sql|
             UPDATE hdb_catalog.hdb_scheduled_events
             SET next_retry_at = $1,
             STATUS = 'scheduled'
@@ -698,9 +698,9 @@ setScheduledEventOpTx eventId op type' = case op of
     setStatus status =
       case type' of
         Cron -> do
-          Q.unitQE
+          PG.unitQE
             defaultTxErrorHandler
-            [Q.sql|
+            [PG.sql|
             UPDATE hdb_catalog.hdb_cron_events
             SET status = $2
             WHERE id = $1
@@ -708,9 +708,9 @@ setScheduledEventOpTx eventId op type' = case op of
             (eventId, status)
             True
         OneOff -> do
-          Q.unitQE
+          PG.unitQE
             defaultTxErrorHandler
-            [Q.sql|
+            [PG.sql|
             UPDATE hdb_catalog.hdb_scheduled_events
             SET status = $2
             WHERE id = $1
@@ -718,15 +718,15 @@ setScheduledEventOpTx eventId op type' = case op of
             (eventId, status)
             True
 
-unlockScheduledEventsTx :: ScheduledEventType -> [ScheduledEventId] -> Q.TxE QErr Int
+unlockScheduledEventsTx :: ScheduledEventType -> [ScheduledEventId] -> PG.TxE QErr Int
 unlockScheduledEventsTx type' eventIds =
   let eventIdsTextArray = map unEventId eventIds
    in case type' of
         Cron ->
-          (runIdentity . Q.getRow)
-            <$> Q.withQE
+          (runIdentity . PG.getRow)
+            <$> PG.withQE
               defaultTxErrorHandler
-              [Q.sql|
+              [PG.sql|
         WITH "cte" AS
         (UPDATE hdb_catalog.hdb_cron_events
         SET status = 'scheduled'
@@ -737,10 +737,10 @@ unlockScheduledEventsTx type' eventIds =
               (Identity $ PGTextArray eventIdsTextArray)
               True
         OneOff ->
-          (runIdentity . Q.getRow)
-            <$> Q.withQE
+          (runIdentity . PG.getRow)
+            <$> PG.withQE
               defaultTxErrorHandler
-              [Q.sql|
+              [PG.sql|
         WITH "cte" AS
         (UPDATE hdb_catalog.hdb_scheduled_events
         SET status = 'scheduled'
@@ -751,20 +751,20 @@ unlockScheduledEventsTx type' eventIds =
               (Identity $ PGTextArray eventIdsTextArray)
               True
 
-unlockAllLockedScheduledEventsTx :: Q.TxE QErr ()
+unlockAllLockedScheduledEventsTx :: PG.TxE QErr ()
 unlockAllLockedScheduledEventsTx = do
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
           UPDATE hdb_catalog.hdb_cron_events
           SET status = 'scheduled'
           WHERE status = 'locked'
           |]
     ()
     True
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
           UPDATE hdb_catalog.hdb_scheduled_events
           SET status = 'scheduled'
           WHERE status = 'locked'
@@ -772,7 +772,7 @@ unlockAllLockedScheduledEventsTx = do
     ()
     True
 
-insertCronEventsTx :: [CronEventSeed] -> Q.TxE QErr ()
+insertCronEventsTx :: [CronEventSeed] -> PG.TxE QErr ()
 insertCronEventsTx cronSeeds = do
   let insertCronEventsSql =
         TB.run $
@@ -784,46 +784,46 @@ insertCronEventsTx cronSeeds = do
                 siConflict = Just $ S.DoNothing Nothing,
                 siRet = Nothing
               }
-  Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
+  PG.unitQE defaultTxErrorHandler (PG.fromText insertCronEventsSql) () False
   where
     toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
     toTupleExp = S.TupleExp . map S.SELit
 
-insertOneOffScheduledEventTx :: OneOffEvent -> Q.TxE QErr EventId
+insertOneOffScheduledEventTx :: OneOffEvent -> PG.TxE QErr EventId
 insertOneOffScheduledEventTx CreateScheduledEvent {..} =
-  runIdentity . Q.getRow
-    <$> Q.withQE
+  runIdentity . PG.getRow
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT INTO hdb_catalog.hdb_scheduled_events
     (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
     VALUES
     ($1, $2, $3, $4, $5, $6) RETURNING id
     |]
-      ( Q.AltJ cseWebhook,
+      ( PG.AltJ cseWebhook,
         cseScheduleAt,
-        Q.AltJ csePayload,
-        Q.AltJ cseRetryConf,
-        Q.AltJ cseHeaders,
+        PG.AltJ csePayload,
+        PG.AltJ cseRetryConf,
+        PG.AltJ cseHeaders,
         cseComment
       )
       False
 
-dropFutureCronEventsTx :: ClearCronEvents -> Q.TxE QErr ()
+dropFutureCronEventsTx :: ClearCronEvents -> PG.TxE QErr ()
 dropFutureCronEventsTx = \case
   SingleCronTrigger triggerName ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
      DELETE FROM hdb_catalog.hdb_cron_events
      WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
     |]
       (Identity triggerName)
       True
   MetadataCronTriggers triggerNames ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
      DELETE FROM hdb_catalog.hdb_cron_events
      WHERE scheduled_time > now() AND tries = 0 AND trigger_name = ANY($1::text[])
     |]
@@ -895,23 +895,23 @@ mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeR
               }
        in S.Extractor (S.handleIfNull (S.SELit "[]") (S.SESelect selectExp)) Nothing
 
-withCount :: (Int, Q.AltJ a) -> WithOptionalTotalCount a
-withCount (count, Q.AltJ a) = WithOptionalTotalCount (Just count) a
+withCount :: (Int, PG.AltJ a) -> WithOptionalTotalCount a
+withCount (count, PG.AltJ a) = WithOptionalTotalCount (Just count) a
 
-withoutCount :: Q.AltJ a -> WithOptionalTotalCount a
-withoutCount (Q.AltJ a) = WithOptionalTotalCount Nothing a
+withoutCount :: PG.AltJ a -> WithOptionalTotalCount a
+withoutCount (PG.AltJ a) = WithOptionalTotalCount Nothing a
 
-executeWithOptionalTotalCount :: J.FromJSON a => Q.Query -> RowsCountOption -> Q.TxE QErr (WithOptionalTotalCount a)
+executeWithOptionalTotalCount :: J.FromJSON a => PG.Query -> RowsCountOption -> PG.TxE QErr (WithOptionalTotalCount a)
 executeWithOptionalTotalCount sql getRowsCount =
   case getRowsCount of
-    IncludeRowsCount -> (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () False
-    DontIncludeRowsCount -> (withoutCount . runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () False
+    IncludeRowsCount -> (withCount . PG.getRow) <$> PG.withQE defaultTxErrorHandler sql () False
+    DontIncludeRowsCount -> (withoutCount . runIdentity . PG.getRow) <$> PG.withQE defaultTxErrorHandler sql () False
 
 getOneOffScheduledEventsTx ::
   ScheduledEventPagination ->
   [ScheduledEventStatus] ->
   RowsCountOption ->
-  Q.TxE QErr (WithOptionalTotalCount [OneOffScheduledEvent])
+  PG.TxE QErr (WithOptionalTotalCount [OneOffScheduledEvent])
 getOneOffScheduledEventsTx pagination statuses getRowsCount = do
   let table = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_events"
       statusFilter = mkScheduledEventStatusFilter statuses
@@ -922,7 +922,7 @@ getOneOffScheduledEventsTx pagination statuses getRowsCount = do
             S.selWhere = Just $ S.WhereFrag statusFilter,
             S.selOrderBy = Just scheduledTimeOrderBy
           }
-      sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination getRowsCount
+      sql = PG.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination getRowsCount
   executeWithOptionalTotalCount sql getRowsCount
 
 getCronEventsTx ::
@@ -930,7 +930,7 @@ getCronEventsTx ::
   ScheduledEventPagination ->
   [ScheduledEventStatus] ->
   RowsCountOption ->
-  Q.TxE QErr (WithOptionalTotalCount [CronEvent])
+  PG.TxE QErr (WithOptionalTotalCount [CronEvent])
 getCronEventsTx triggerName pagination status getRowsCount = do
   let triggerNameFilter =
         S.BECompare S.SEQ (S.SEIdentifier $ Identifier "trigger_name") (S.SELit $ triggerNameToTxt triggerName)
@@ -942,25 +942,25 @@ getCronEventsTx triggerName pagination status getRowsCount = do
             S.selWhere = Just $ S.WhereFrag $ S.BEBin S.AndOp triggerNameFilter statusFilter,
             S.selOrderBy = Just scheduledTimeOrderBy
           }
-      sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination getRowsCount
+      sql = PG.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination getRowsCount
   executeWithOptionalTotalCount sql getRowsCount
 
 deleteScheduledEventTx ::
-  ScheduledEventId -> ScheduledEventType -> Q.TxE QErr ()
+  ScheduledEventId -> ScheduledEventType -> PG.TxE QErr ()
 deleteScheduledEventTx eventId = \case
   OneOff ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       DELETE FROM hdb_catalog.hdb_scheduled_events
        WHERE id = $1
     |]
       (Identity eventId)
       False
   Cron ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       DELETE FROM hdb_catalog.hdb_cron_events
        WHERE id = $1
     |]
@@ -989,10 +989,10 @@ mkEventIdBoolExp table eventId =
 
 getInvocationsTx ::
   GetEventInvocations ->
-  Q.TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
+  PG.TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
 getInvocationsTx getEventInvocations = do
   let eventsTables = EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable
-      sql = Q.fromBuilder $ toSQL $ getInvocationsQuery eventsTables getEventInvocations
+      sql = PG.fromBuilder $ toSQL $ getInvocationsQuery eventsTables getEventInvocations
   executeWithOptionalTotalCount sql (_geiGetRowsCount getEventInvocations)
   where
     oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"

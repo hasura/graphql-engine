@@ -11,7 +11,7 @@ import Data.Environment qualified as Env
 import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.MSSQL.TransactionSuite qualified as TransactionSuite
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Discover qualified
 import Hasura.App
   ( PGMetadataStorageAppT (..),
@@ -103,14 +103,14 @@ buildPostgresSpecs = do
       onNothing maybeV $
         throwError $ "Expected: " <> envVar
 
-  let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
+  let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
-        PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True Q.ReadCommitted Nothing
+        PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True PG.ReadCommitted Nothing
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
 
-  pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams {Q.cpConns = 1} print
-  let pgContext = mkPGExecCtx Q.Serializable pgPool
+  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
+  let pgContext = mkPGExecCtx PG.Serializable pgPool
 
       logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
@@ -147,7 +147,7 @@ buildPostgresSpecs = do
         (metadata, schemaCache) <- run do
           metadata <-
             snd
-              <$> (liftEitherM . runExceptT . runTx pgContext Q.ReadWrite)
+              <$> (liftEitherM . runExceptT . runTx pgContext PG.ReadWrite)
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)

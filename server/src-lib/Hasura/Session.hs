@@ -37,7 +37,7 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -56,8 +56,8 @@ newtype RoleName = RoleName {getRoleTxt :: NonEmptyText}
       ToJSONKey,
       FromJSON,
       ToJSON,
-      Q.FromCol,
-      Q.ToPrepArg,
+      PG.FromCol,
+      PG.ToPrepArg,
       Generic,
       NFData,
       Cacheable

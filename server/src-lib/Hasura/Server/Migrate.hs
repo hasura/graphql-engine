@@ -34,7 +34,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.IO qualified as TIO
 import Data.Time.Clock (UTCTime)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.Types
@@ -138,10 +138,10 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
     initialize :: Bool -> m MigrationResult
     initialize createSchema = do
       liftTx $
-        Q.catchE defaultTxErrorHandler $
-          when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
+        PG.catchE defaultTxErrorHandler $
+          when createSchema $ PG.unitQ "CREATE SCHEMA hdb_catalog" () False
       enablePgcryptoExtension extensionsSchema
-      multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= Q.sqlFromFile)
+      multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= PG.sqlFromFile)
       updateCatalogVersion
 
       let emptyMetadata' = case maybeDefaultSourceConfig of
@@ -273,12 +273,12 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
   -- compile-time), but putting a `let` inside the splice itself is allowed.
   $( let migrationFromFile from to =
            let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
-            in [|runTxOrPrint $(makeRelativeToProject path >>= Q.sqlFromFile)|]
+            in [|runTxOrPrint $(makeRelativeToProject path >>= PG.sqlFromFile)|]
          migrationFromFileMaybe from to = do
            path <- makeRelativeToProject $ "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
            exists <- TH.runIO (doesFileExist path)
            if exists
-             then [|Just (runTxOrPrint $(Q.sqlFromFile path))|]
+             then [|Just (runTxOrPrint $(PG.sqlFromFile path))|]
              else [|Nothing|]
 
          migrationsFromFile = map $ \(to :: MetadataCatalogVersion) ->
@@ -305,18 +305,18 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
            migrationsFromFile [MetadataCatalogVersion 44 .. latestCatalogVersion]
    )
   where
-    runTxOrPrint :: Q.Query -> m ()
+    runTxOrPrint :: PG.Query -> m ()
     runTxOrPrint
       | dryRun =
-        liftIO . TIO.putStrLn . Q.getQueryText
+        liftIO . TIO.putStrLn . PG.getQueryText
       | otherwise = multiQ
 
     from42To43 = do
       when (maintenanceMode == MaintenanceModeEnabled ()) $
         throw500 "cannot migrate to catalog version 43 in maintenance mode"
-      let query = $(makeRelativeToProject "src-rsr/migrations/42_to_43.sql" >>= Q.sqlFromFile)
+      let query = $(makeRelativeToProject "src-rsr/migrations/42_to_43.sql" >>= PG.sqlFromFile)
       if dryRun
-        then (liftIO . TIO.putStrLn . Q.getQueryText) query
+        then (liftIO . TIO.putStrLn . PG.getQueryText) query
         else do
           metadataV2 <- fetchMetadataFromHdbTables
           multiQ query
@@ -348,9 +348,9 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
           liftTx $ insertMetadataInCatalog metadataV3
 
     from43To42 = do
-      let query = $(makeRelativeToProject "src-rsr/migrations/43_to_42.sql" >>= Q.sqlFromFile)
+      let query = $(makeRelativeToProject "src-rsr/migrations/43_to_42.sql" >>= PG.sqlFromFile)
       if dryRun
-        then (liftIO . TIO.putStrLn . Q.getQueryText) query
+        then (liftIO . TIO.putStrLn . PG.getQueryText) query
         else do
           Metadata {..} <- liftTx fetchMetadataFromCatalog
           multiQ query
@@ -382,5 +382,5 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
             addCronTriggerForeignKeyConstraint
           recreateSystemMetadata
 
-multiQ :: (MonadTx m) => Q.Query -> m ()
-multiQ = liftTx . Q.multiQE defaultTxErrorHandler
+multiQ :: (MonadTx m) => PG.Query -> m ()
+multiQ = liftTx . PG.multiQE defaultTxErrorHandler

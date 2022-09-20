@@ -40,7 +40,7 @@ import Data.Hashable
 import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
@@ -65,8 +65,8 @@ instance NFData PermType
 
 instance Cacheable PermType
 
-instance Q.FromCol PermType where
-  fromCol bs = flip Q.fromColHelper bs $
+instance PG.FromCol PermType where
+  fromCol bs = flip PG.fromColHelper bs $
     PD.enum $ \case
       "insert" -> Just PTInsert
       "update" -> Just PTUpdate

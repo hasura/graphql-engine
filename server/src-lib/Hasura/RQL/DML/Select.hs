@@ -8,7 +8,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as DS
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -317,17 +317,17 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
-selectP2 :: JsonAggSelect -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+selectP2 :: JsonAggSelect -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> PG.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
-  runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
+  runIdentity . PG.getRow
+    <$> PG.rawQE dmlTxErrorHandler (PG.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
 phaseOne ::
   (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m) =>
   SelectQuery ->
-  m (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg)
 phaseOne query = do
   let sourceName = getSourceDMLQuery query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache sourceName
@@ -335,7 +335,7 @@ phaseOne query = do
     runDMLP1T $
       convSelectQuery sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
-phaseTwo :: (MonadTx m) => (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq Q.PrepArg) -> m EncJSON
+phaseTwo :: (MonadTx m) => (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> m EncJSON
 phaseTwo =
   liftTx . selectP2 JASMultipleRows
 
@@ -353,4 +353,4 @@ runSelect ::
   m EncJSON
 runSelect q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (getSourceDMLQuery q)
-  phaseOne q >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadOnly . phaseTwo
+  phaseOne q >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadOnly . phaseTwo

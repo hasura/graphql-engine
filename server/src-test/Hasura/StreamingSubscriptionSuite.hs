@@ -16,7 +16,7 @@ import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Subscription (MultiplexedQuery (MultiplexedQuery))
 import Hasura.Backends.Postgres.Instances.Transport ()
@@ -61,11 +61,11 @@ buildStreamingSubscriptionSuite = do
       onNothing maybeV $
         throwError $ "Expected: " <> envVar
 
-  let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
+  let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
-  pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams print
+  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
-  let pgContext = mkPGExecCtx Q.ReadCommitted pgPool
+  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $
@@ -93,27 +93,27 @@ getStaticCohortSnapshot (Cohort cohortId _respRef existingSubsTV newSubsTV _) = 
 streamingSubscriptionPollingSpec :: SourceConfig ('Postgres 'Vanilla) -> Spec
 streamingSubscriptionPollingSpec srcConfig = do
   let setupDDLTx =
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
             CREATE TABLE "public"."numbers" (id int primary key);
           |]
           ()
           False
 
       setupValueTx =
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
             INSERT INTO "public"."numbers" values (1),(2),(3),(4),(5);
           |]
           ()
           False
 
       teardownDDLTx =
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
               DROP TABLE "public"."numbers";
          |]
           ()
@@ -135,7 +135,7 @@ streamingSubscriptionPollingSpec srcConfig = do
       --
       -- { subscription { numbers_stream(cursor: {initial_value: {id: 1}}, batch_size: 1) { id }} }
       multiplexedQuery =
-        [Q.sql|
+        [PG.sql|
            SELECT  "_subs"."result_id" , "_fld_resp"."root" AS "result", "_fld_resp"."cursor" AS "cursor" FROM UNNEST(($1)::uuid[], ($2)::json[]) AS "_subs"("result_id", "result_vars")
            LEFT OUTER JOIN LATERAL
            (SELECT  json_build_object('numbers_stream', "numbers_stream"."root" ) AS "root", to_json("numbers_stream"."cursor" ) AS "cursor"

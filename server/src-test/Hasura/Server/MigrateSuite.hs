@@ -10,7 +10,7 @@ import Data.Aeson (encode)
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
 import Data.Time.Clock (getCurrentTime)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -110,7 +110,7 @@ suite ::
   ) =>
   PostgresConnConfiguration ->
   PGExecCtx ->
-  Q.ConnInfo ->
+  PG.ConnInfo ->
   SpecWithCache m
 suite srcConfig pgExecCtx pgConnInfo = do
   let logger :: Logger Hasura = Logger $ \l -> do
@@ -198,6 +198,6 @@ suite srcConfig pgExecCtx pgConnInfo = do
 runTx' ::
   (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
   PGExecCtx ->
-  Q.TxET QErr m a ->
+  PG.TxET QErr m a ->
   m a
-runTx' pgExecCtx = liftEitherM . runExceptT . runTx pgExecCtx Q.ReadWrite
+runTx' pgExecCtx = liftEitherM . runExceptT . runTx pgExecCtx PG.ReadWrite

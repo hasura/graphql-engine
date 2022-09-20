@@ -21,7 +21,7 @@ import Data.Aeson
 import Data.Aeson.TH
 import Data.SerializableBlob qualified as SB
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -29,7 +29,7 @@ import Hasura.RQL.DDL.Headers
 import PostgreSQL.Binary.Encoding qualified as PE
 
 newtype EventId = EventId {unEventId :: Text}
-  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, PG.FromCol, PG.ToPrepArg, Generic, NFData, Cacheable)
 
 -- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)
 data TriggerTypes = EventType | ScheduledType
@@ -105,9 +105,9 @@ data Invocation (a :: TriggerTypes) = Invocation
 newtype PGTextArray = PGTextArray {unPGTextArray :: [Text]}
   deriving (Show, Eq)
 
-instance Q.ToPrepArg PGTextArray where
+instance PG.ToPrepArg PGTextArray where
   toPrepVal (PGTextArray l) =
-    Q.toPrepValHelper PTI.unknown encoder l
+    PG.toPrepValHelper PTI.unknown encoder l
     where
       -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
       encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)

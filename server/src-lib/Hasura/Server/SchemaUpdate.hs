@@ -20,7 +20,7 @@ import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Logging
 import Hasura.Metadata.Class
@@ -149,7 +149,7 @@ if listen started after schema cache init start time.
 startSchemaSyncListenerThread ::
   C.ForkableMonadIO m =>
   Logger Hasura ->
-  Q.PGPool ->
+  PG.PGPool ->
   InstanceId ->
   NonNegative Milliseconds ->
   STM.TMVar MetadataResourceVersion ->
@@ -197,10 +197,10 @@ forcePut :: STM.TMVar a -> a -> IO ()
 forcePut v a = STM.atomically $ STM.tryTakeTMVar v >> STM.putTMVar v a
 
 schemaVersionCheckHandler ::
-  Q.PGPool -> STM.TMVar MetadataResourceVersion -> IO (Either QErr ())
+  PG.PGPool -> STM.TMVar MetadataResourceVersion -> IO (Either QErr ())
 schemaVersionCheckHandler pool metaVersionRef =
   runExceptT
-    ( Q.runTx pool (Q.RepeatableRead, Nothing) $
+    ( PG.runTx pool (PG.RepeatableRead, Nothing) $
         fetchMetadataResourceVersionFromCatalog
     )
     >>= \case
@@ -248,7 +248,7 @@ toLogError es qerr mrv = not $ isQErrLastSeen || isMetadataResourceVersionLastSe
 listener ::
   MonadIO m =>
   Logger Hasura ->
-  Q.PGPool ->
+  PG.PGPool ->
   STM.TMVar MetadataResourceVersion ->
   Milliseconds ->
   m void

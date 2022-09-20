@@ -22,7 +22,7 @@ import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.IntMap qualified as IntMap
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Value
@@ -49,9 +49,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 type PlanVariables = Map.HashMap G.Name Int
 
--- | The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
+-- | The value is (PG.PrepArg, PGScalarValue) because we want to log the human-readable value of the
 -- prepared argument and not the binary encoding in PG format
-type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
+type PrepArgMap = IntMap.IntMap (PG.PrepArg, PGScalarValue)
 
 data PlanningSt = PlanningSt
   { _psArgNumber :: Int,
@@ -126,8 +126,8 @@ prepareWithoutPlan userInfo = \case
 -- variable (1).
 withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 withUserVars usrVars list =
-  let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
-      prepArg = Q.toPrepVal (Q.AltJ usrVars)
+  let usrVarsAsPgScalar = PGValJSON $ PG.JSON $ J.toJSON usrVars
+      prepArg = PG.toPrepVal (PG.AltJ usrVars)
    in IntMap.insert 1 (prepArg, usrVarsAsPgScalar) list
 
 -- | In prepared statements, we refer to variables by a number, not their name.
@@ -146,7 +146,7 @@ getVarArgNum var = do
 addPrepArg ::
   (MonadState PlanningSt m) =>
   Int ->
-  (Q.PrepArg, PGScalarValue) ->
+  (PG.PrepArg, PGScalarValue) ->
   m ()
 addPrepArg argNum arg = modify \s ->
   s {_psPrepped = IntMap.insert argNum arg (_psPrepped s)}

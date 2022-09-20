@@ -54,7 +54,7 @@ import Data.Text qualified as T
 import Data.Time.Clock
 import Data.Time.Clock.Units
 import Data.Time.Format.ISO8601
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -305,12 +305,12 @@ textToScheduledEventStatus = \case
   "dead" -> Just SESDead
   _ -> Nothing
 
-instance Q.ToPrepArg ScheduledEventStatus where
-  toPrepVal = Q.toPrepVal . scheduledEventStatusToText
+instance PG.ToPrepArg ScheduledEventStatus where
+  toPrepVal = PG.toPrepVal . scheduledEventStatusToText
 
-instance Q.FromCol ScheduledEventStatus where
+instance PG.FromCol ScheduledEventStatus where
   fromCol bs =
-    flip Q.fromColHelper bs $ PD.enum textToScheduledEventStatus
+    flip PG.fromColHelper bs $ PD.enum textToScheduledEventStatus
 
 instance ToJSON ScheduledEventStatus where
   toJSON = String . scheduledEventStatusToText

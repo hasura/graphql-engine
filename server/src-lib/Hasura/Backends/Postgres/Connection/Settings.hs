@@ -45,7 +45,7 @@ import Data.Text (unpack)
 import Data.Text qualified as T
 import Data.Time
 import Data.Time.Clock.Compat ()
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
@@ -281,38 +281,38 @@ instance (NFData p, NFData a) => NFData (PGClientCerts p a)
 instance ToJSON SSLMode where
   toJSON = String . tshow
 
-deriving instance Generic Q.TxIsolation
+deriving instance Generic PG.TxIsolation
 
-instance Cacheable Q.TxIsolation
+instance Cacheable PG.TxIsolation
 
-instance NFData Q.TxIsolation
+instance NFData PG.TxIsolation
 
-instance Hashable Q.TxIsolation
+instance Hashable PG.TxIsolation
 
-instance HasCodec Q.TxIsolation where
+instance HasCodec PG.TxIsolation where
   codec =
     named "TxIsolation" $
       stringConstCodec $
         NonEmpty.fromList $
-          [ (Q.ReadCommitted, "read-committed"),
-            (Q.RepeatableRead, "repeatable-read"),
-            (Q.Serializable, "serializable")
+          [ (PG.ReadCommitted, "read-committed"),
+            (PG.RepeatableRead, "repeatable-read"),
+            (PG.Serializable, "serializable")
           ]
 
-instance FromJSON Q.TxIsolation where
+instance FromJSON PG.TxIsolation where
   parseJSON = withText "Q.TxIsolation" $ \t ->
     onLeft (readIsoLevel $ T.unpack t) fail
 
-instance ToJSON Q.TxIsolation where
-  toJSON Q.ReadCommitted = "read-committed"
-  toJSON Q.RepeatableRead = "repeatable-read"
-  toJSON Q.Serializable = "serializable"
+instance ToJSON PG.TxIsolation where
+  toJSON PG.ReadCommitted = "read-committed"
+  toJSON PG.RepeatableRead = "repeatable-read"
+  toJSON PG.Serializable = "serializable"
 
 data PostgresSourceConnInfo = PostgresSourceConnInfo
   { _psciDatabaseUrl :: UrlConf,
     _psciPoolSettings :: Maybe PostgresPoolSettings,
     _psciUsePreparedStatements :: Bool,
-    _psciIsolationLevel :: Q.TxIsolation,
+    _psciIsolationLevel :: PG.TxIsolation,
     _psciSslConfiguration :: Maybe (PGClientCerts CertVar CertVar)
   }
   deriving (Show, Eq, Generic)
@@ -331,7 +331,7 @@ instance HasCodec PostgresSourceConnInfo where
           <$> requiredFieldWith "database_url" placeholderCodecViaJSON databaseUrlDoc .== _psciDatabaseUrl
           <*> optionalFieldOrNull "pool_settings" poolSettingsDoc .== _psciPoolSettings
           <*> optionalFieldWithOmittedDefault "use_prepared_statements" False usePreparedStatementsDoc .== _psciUsePreparedStatements
-          <*> optionalFieldWithOmittedDefault "isolation_level" Q.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
+          <*> optionalFieldWithOmittedDefault "isolation_level" PG.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
           <*> optionalFieldOrNull "ssl_configuration" sslConfigurationDoc .== _psciSslConfiguration
     where
       databaseUrlDoc = "The database connection URL as a string, as an environment variable, or as connection parameters."
@@ -359,7 +359,7 @@ instance FromJSON PostgresSourceConnInfo where
       <$> o .: "database_url"
       <*> o .:? "pool_settings"
       <*> o .:? "use_prepared_statements" .!= False -- By default, preparing statements is OFF for postgres source
-      <*> o .:? "isolation_level" .!= Q.ReadCommitted
+      <*> o .:? "isolation_level" .!= PG.ReadCommitted
       <*> o .:? "ssl_configuration"
 
 defaultPostgresExtensionsSchema :: ExtensionsSchema

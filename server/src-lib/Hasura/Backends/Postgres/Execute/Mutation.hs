@@ -18,7 +18,7 @@ where
 
 import Data.Aeson
 import Data.Sequence qualified as DS
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -66,7 +66,7 @@ instance (Backend b, FromJSON a) => FromJSON (MutateResp b a) where
 
 data Mutation (b :: BackendType) = Mutation
   { _mTable :: QualifiedTable,
-    _mQuery :: (MutationCTE, DS.Seq Q.PrepArg),
+    _mQuery :: (MutationCTE, DS.Seq PG.PrepArg),
     _mOutput :: MutationOutput b,
     _mCols :: [ColumnInfo b],
     _mStrfyNum :: Options.StringifyNumbers,
@@ -76,7 +76,7 @@ data Mutation (b :: BackendType) = Mutation
 mkMutation ::
   UserInfo ->
   QualifiedTable ->
-  (MutationCTE, DS.Seq Q.PrepArg) ->
+  (MutationCTE, DS.Seq PG.PrepArg) ->
   MutationOutput ('Postgres pgKind) ->
   [ColumnInfo ('Postgres pgKind)] ->
   Options.StringifyNumbers ->
@@ -118,7 +118,7 @@ execUpdateQuery ::
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   UserInfo ->
-  (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
+  (AnnotatedUpdate ('Postgres pgKind), DS.Seq PG.PrepArg) ->
   m EncJSON
 execUpdateQuery strfyNum tCase userInfo (u, p) =
   case updateCTE of
@@ -143,7 +143,7 @@ execDeleteQuery ::
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   UserInfo ->
-  (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg) ->
+  (AnnDel ('Postgres pgKind), DS.Seq PG.PrepArg) ->
   m EncJSON
 execDeleteQuery strfyNum tCase userInfo (u, p) =
   runMutation
@@ -160,7 +160,7 @@ execInsertQuery ::
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   UserInfo ->
-  (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg) ->
+  (InsertQueryP1 ('Postgres pgKind), DS.Seq PG.PrepArg) ->
   m EncJSON
 execInsertQuery strfyNum tCase userInfo (u, p) =
   runMutation
@@ -229,40 +229,40 @@ executeMutationOutputQuery ::
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   -- | Prepared params
-  [Q.PrepArg] ->
+  [PG.PrepArg] ->
   m EncJSON
 executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase prepArgs = do
   queryTags <- ask
-  let queryTx :: Q.FromRes a => m a
+  let queryTx :: PG.FromRes a => m a
       queryTx = do
         let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
-            query = Q.fromBuilder $ toSQL selectWith
-            queryWithQueryTags = query {Q.getQueryText = (Q.getQueryText query) <> (_unQueryTagsComment queryTags)}
+            query = PG.fromBuilder $ toSQL selectWith
+            queryWithQueryTags = query {PG.getQueryText = (PG.getQueryText query) <> (_unQueryTagsComment queryTags)}
         -- See Note [Prepared statements in Mutations]
-        liftTx (Q.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
+        liftTx (PG.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
 
   if checkPermissionRequired cte
-    then withCheckPermission $ Q.getRow <$> queryTx
-    else runIdentity . Q.getRow <$> queryTx
+    then withCheckPermission $ PG.getRow <$> queryTx
+    else runIdentity . PG.getRow <$> queryTx
 
 mutateAndFetchCols ::
   forall pgKind.
   (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
-  (MutationCTE, DS.Seq Q.PrepArg) ->
+  (MutationCTE, DS.Seq PG.PrepArg) ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
-  Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
+  PG.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
-  let mutationTx :: Q.FromRes a => Q.TxE QErr a
+  let mutationTx :: PG.FromRes a => PG.TxE QErr a
       mutationTx =
         -- See Note [Prepared statements in Mutations]
-        Q.rawQE dmlTxErrorHandler sqlText (toList p) False
+        PG.rawQE dmlTxErrorHandler sqlText (toList p) False
 
   if checkPermissionRequired cte
-    then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
-    else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
+    then withCheckPermission $ (first PG.getAltJ . PG.getRow) <$> mutationTx
+    else (PG.getAltJ . runIdentity . PG.getRow) <$> mutationTx
   where
     rawAliasIdentifier = "mutres__" <> qualifiedObjectToText qt
     aliasIdentifier = Identifier rawAliasIdentifier
@@ -271,7 +271,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     selFlds = flip map cols $
       \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
-    sqlText = Q.fromBuilder $ toSQL selectWith
+    sqlText = PG.fromBuilder $ toSQL selectWith
     selectWith = S.SelectWith [(S.toTableAlias aliasIdentifier, getMutationCTE cte)] select
     select =
       S.mkSelect

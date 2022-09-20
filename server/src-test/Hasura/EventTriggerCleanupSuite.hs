@@ -7,7 +7,7 @@ module Hasura.EventTriggerCleanupSuite (buildEventTriggerCleanupSuite) where
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.EventTrigger
 import Hasura.Backends.Postgres.Instances.Transport ()
@@ -36,11 +36,11 @@ buildEventTriggerCleanupSuite = do
       onNothing maybeV $
         throwError $ "Expected: " <> envVar
 
-  let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
+  let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
-  pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams print
+  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
-  let pgContext = mkPGExecCtx Q.ReadCommitted pgPool
+  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $ do
@@ -50,17 +50,17 @@ eventTriggerLogCleanupSpec :: SourceConfig ('Postgres 'Vanilla) -> Spec
 eventTriggerLogCleanupSpec sourceConfig = do
   let setupDDLTx = do
         -- create schema hdb_catalog
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
             CREATE SCHEMA hdb_catalog;
           |]
           ()
           False
         -- create event_log table
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
           CREATE TABLE hdb_catalog.event_log
           (
             id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -74,9 +74,9 @@ eventTriggerLogCleanupSpec sourceConfig = do
           ()
           False
         -- create event_invocation_logs table
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
           CREATE TABLE hdb_catalog.event_invocation_logs
           (
             id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -87,9 +87,9 @@ eventTriggerLogCleanupSpec sourceConfig = do
           ()
           False
         -- create event_log_cleanups table
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
           CREATE TABLE hdb_catalog.hdb_event_log_cleanups
             (
               id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -108,9 +108,9 @@ eventTriggerLogCleanupSpec sourceConfig = do
       setupValues =
         -- insert few event logs and corresponding invocation logs
         -- We are inserting 5 logs which are past the retention time and 4 which are not
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
           WITH addedEventLogs AS (
             INSERT INTO hdb_catalog.event_log (trigger_name, delivered, created_at)
             VALUES
@@ -133,9 +133,9 @@ eventTriggerLogCleanupSpec sourceConfig = do
 
       teardownDDLTx =
         -- drop the schema
-        Q.unitQE
+        PG.unitQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
               DROP SCHEMA IF EXISTS hdb_catalog CASCADE;
          |]
           ()
@@ -151,7 +151,7 @@ eventTriggerLogCleanupSpec sourceConfig = do
       teardown =
         runPgSourceWriteTx sourceConfig teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
 
-      runSQLQuery :: Q.TxET QErr IO a -> IO a
+      runSQLQuery :: PG.TxET QErr IO a -> IO a
       runSQLQuery = runExceptQErr . liftEitherM . liftIO . runPgSourceWriteTx sourceConfig
 
   describe "testing generator thread core logic: add cleanup schedules" $ do
@@ -290,12 +290,12 @@ printErrExit :: Text -> IO a
 printErrExit = (*> exitFailure) . T.putStrLn
 
 -- | Returns a count of cleanup schedules based on status
-getCleanupStatusCount :: TriggerName -> Text -> Q.TxE QErr Int
+getCleanupStatusCount :: TriggerName -> Text -> PG.TxE QErr Int
 getCleanupStatusCount triggername status =
-  runIdentity . Q.getRow
-    <$> Q.withQE
+  runIdentity . PG.getRow
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
         SELECT count(*) FROM hdb_catalog.hdb_event_log_cleanups
         WHERE trigger_name = $1 AND status = $2;
       |]
@@ -303,11 +303,11 @@ getCleanupStatusCount triggername status =
       True
 
 -- | Decreases some minutes from the cleanup schedules
-reduceScheduledAtBy :: TriggerName -> Int -> Q.TxE QErr ()
+reduceScheduledAtBy :: TriggerName -> Int -> PG.TxE QErr ()
 reduceScheduledAtBy triggername interval =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    ( Q.fromText
+    ( PG.fromText
         [ST.st|
         UPDATE  hdb_catalog.hdb_event_log_cleanups
         SET scheduled_at=(scheduled_at - INTERVAL '#{interval} minutes')

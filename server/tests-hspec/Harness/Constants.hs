@@ -42,7 +42,7 @@ where
 import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -240,8 +240,8 @@ serveOptions =
     -- a random port, so this isn't particularly
     -- important.
       soHost = "0.0.0.0",
-      soConnParams = Q.defaultConnParams,
-      soTxIso = Q.Serializable,
+      soConnParams = PG.defaultConnParams,
+      soTxIso = PG.Serializable,
       soAdminSecret = mempty,
       soAuthHook = Nothing,
       soJwtSecret = mempty,

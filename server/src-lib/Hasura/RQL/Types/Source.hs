@@ -36,7 +36,7 @@ where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -172,7 +172,7 @@ instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
-instance (MonadResolveSource m) => MonadResolveSource (Q.TxET QErr m) where
+instance (MonadResolveSource m) => MonadResolveSource (PG.TxET QErr m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 

@@ -15,14 +15,14 @@ import Autodocodec (HasCodec (codec), JSONCodec, bimapCodec, textCodec)
 import Data.Aeson
 import Data.Text qualified as T
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Prelude hiding (lift)
 import Language.Haskell.TH.Quote (QuasiQuoter (..))
 import Language.Haskell.TH.Syntax (Lift, Q, TExp, lift)
 import Test.QuickCheck qualified as QC
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: Text}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, PG.ToPrepArg, ToTxt, Generic, NFData)
 
 instance QC.Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
@@ -64,9 +64,9 @@ instance FromJSON NonEmptyText where
 instance FromJSONKey NonEmptyText where
   fromJSONKey = FromJSONKeyTextParser parseNonEmptyText
 
-instance Q.FromCol NonEmptyText where
+instance PG.FromCol NonEmptyText where
   fromCol bs =
-    mkNonEmptyText <$> Q.fromCol bs
+    mkNonEmptyText <$> PG.fromCol bs
       >>= maybe (Left "empty string not allowed") Right
 
 instance HasCodec NonEmptyText where
