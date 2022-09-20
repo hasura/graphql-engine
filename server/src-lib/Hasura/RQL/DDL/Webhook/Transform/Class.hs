@@ -44,8 +44,8 @@ import Control.Lens (bimap, view)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.Aeson.Kriti.Functions as KFunc
-import Data.Binary.Builder (toLazyByteString)
 import Data.ByteString (ByteString)
+import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Builder.Scientific (scientificBuilder)
 import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict qualified as M
