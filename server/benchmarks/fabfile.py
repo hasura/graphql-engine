@@ -424,6 +424,14 @@ def generate_regression_report():
             # this_bench['requests']['count'] # TODO use this to normalize allocations
             name = this_bench['name']
 
+            # Skip if: this is a "low load" variation with few samples since these are 
+            #          likely redundant / less useful for the purpose of finding regressions
+            #          (see mono #5942)
+            if "low_load" in name:
+                warn(f"Skipping '{name}' which has 'low_load' in name")
+                continue
+
+            # Skip if: no result in merge base report to compare to:
             try:
                 merge_base_bench = merge_base_report_dict[name]
             except KeyError:
@@ -455,7 +463,11 @@ def generate_regression_report():
                 pass
             # NOTE: we decided to omit higher-percentile latencies here since
             # they are noisy (which might lead to people ignoring benchmarks)
-            for m in ['min', 'p50']:
+            # NOTE: we originally had `min` here, thinking it should be an
+            # asymptote (we can only get so fast doing a particular workload),
+            # but this hasn't turned out to be a useful summary statistic (we
+            # might need several times more samples for it to stabilize)
+            for m in ['p50']:
                 try:
                     this_hist = this_bench['histogram']['json']
                     merge_base_hist = merge_base_bench['histogram']['json']
