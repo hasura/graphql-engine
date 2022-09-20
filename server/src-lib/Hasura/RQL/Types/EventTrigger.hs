@@ -226,7 +226,7 @@ data AutoTriggerLogCleanupConfig = AutoTriggerLogCleanupConfig
     -- | maximum number of events to be deleted in a single cleanup action
     _atlccBatchSize :: Int,
     -- | retention period (in hours) for the event trigger logs
-    _atlccRetentionPeriod :: Int,
+    _atlccClearOlderThan :: Int,
     -- | SQL query timeout (in seconds)
     _atlccTimeout :: Int,
     -- | should we clean the invocation logs as well
@@ -245,7 +245,7 @@ instance FromJSON AutoTriggerLogCleanupConfig where
     withObject "AutoTriggerLogCleanupConfig" $ \o -> do
       _atlccSchedule <- o .: "schedule"
       _atlccBatchSize <- o .:? "batch_size" .!= 10000
-      _atlccRetentionPeriod <- o .:? "retention_period" .!= 168 -- 7 Days = 168 hours
+      _atlccClearOlderThan <- o .:? "clear_older_than" .!= 168 -- 7 Days = 168 hours
       _atlccTimeout <- o .:? "timeout" .!= 60
       _atlccCleanInvocationLogs <- o .:? "clean_invocation_logs" .!= False
       _atlccPaused <- o .:? "paused" .!= ETCSUnpaused
@@ -263,9 +263,9 @@ data TriggerLogCleanupConfig = TriggerLogCleanupConfig
     -- | batch size of for the cleanup action
     tlccBatchSize :: Int,
     -- | retention period (in hours) for the event trigger logs
-    tlccRetentionPeriod :: Int,
+    tlccClearOlderThan :: Int,
     -- | SQL query timeout (in seconds)
-    tlccQueryTimeout :: Int,
+    tlccTimeout :: Int,
     -- | should we clean the invocation logs as well
     tlccCleanInvocationLogs :: Bool
   }
@@ -281,8 +281,8 @@ instance FromJSON TriggerLogCleanupConfig where
       tlccEventTriggerName <- o .: "event_trigger_name"
       tlccSourceName <- o .:? "source" .!= SNDefault
       tlccBatchSize <- o .:? "batch_size" .!= 10000
-      tlccRetentionPeriod <- o .:? "retention_period" .!= 168 -- 7 Days = 168 hours
-      tlccQueryTimeout <- o .:? "timeout" .!= 60
+      tlccClearOlderThan <- o .:? "clear_older_than" .!= 168 -- 7 Days = 168 hours
+      tlccTimeout <- o .:? "timeout" .!= 60
       tlccCleanInvocationLogs <- o .:? "clean_invocation_logs" .!= False
       pure TriggerLogCleanupConfig {..}
 

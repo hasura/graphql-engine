@@ -1109,9 +1109,9 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
     False
   pure DeletedEventLogStats {..}
   where
-    qTimeout = (fromIntegral $ tlccQueryTimeout * 1000) :: Int64
+    qTimeout = (fromIntegral $ tlccTimeout * 1000) :: Int64
     qTriggerName = triggerNameToTxt tlccEventTriggerName
-    qRetentionPeriod = tshow tlccRetentionPeriod <> " hours"
+    qRetentionPeriod = tshow tlccClearOlderThan <> " hours"
     qBatchSize = (fromIntegral tlccBatchSize) :: Int64
 
 -- | @deleteEventTriggerLogs@ deletes the event logs (and event invocation logs) based on the cleanup configuration given
