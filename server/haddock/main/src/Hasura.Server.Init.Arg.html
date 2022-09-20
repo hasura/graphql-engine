@@ -36,7 +36,7 @@
 </span><span id="line-36"></span><span class="hs-comment">-- 1. '(Config.PostgresConnInfo (Maybe PostgresConnInfoRaw))' - The DB connection.</span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- 2: 'Maybe String' - Representing the metadata connection.</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- 3: 'Config.HGECommand' @a@ - The result of the supplied Subcommand.</span><span>
-</span><span id="line-39"></span><span id="local-6989586621689940623"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-type">parseHgeOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689940623"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689940623"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-39"></span><span id="local-6989586621689734886"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-type">parseHgeOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689734886"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689734886"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-40"></span><span id="parseHgeOpts"><span class="annot"><span class="annottext">parseHgeOpts :: Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-var hs-var">parseHgeOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresConnInfoRaw)
@@ -79,7 +79,7 @@ EnabledLogTypes impl =&gt;
 Parser (HGECommand (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-var">parseHGECommand</span></a></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span id="local-6989586621689940688"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-type">parseHGECommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689940688"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689940688"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-43"></span><span id="local-6989586621689734951"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-type">parseHGECommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689734951"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689734951"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-44"></span><span id="parseHGECommand"><span class="annot"><span class="annottext">parseHGECommand :: Parser (HGECommand (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-var hs-var">parseHGECommand</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
@@ -250,11 +250,11 @@ forall a. String -&gt; InfoMod a
 </span><span id="line-82"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-type">parsePostgresConnInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfoRaw"><span class="hs-identifier hs-type">PostgresConnInfoRaw</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-83"></span><span id="parsePostgresConnInfo"><span class="annot"><span class="annottext">parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 </span><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-var hs-var">parsePostgresConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621689940605"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689940605"><span class="hs-identifier hs-var">retries'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
-</span><a href="#local-6989586621689940604"><span class="hs-identifier hs-var">retries</span></a></span><span>
-</span><span id="line-85"></span><span>  </span><span id="local-6989586621689940603"><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
-</span><a href="#local-6989586621689940603"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621689734868"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689734868"><span class="hs-identifier hs-var">retries'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
+</span><a href="#local-6989586621689734867"><span class="hs-identifier hs-var">retries</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621689734866"><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
+</span><a href="#local-6989586621689734866"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-86"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(URLTemplate -&gt; PostgresConnInfoRaw)
 -&gt; Maybe URLTemplate -&gt; Maybe PostgresConnInfoRaw
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -282,11 +282,11 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; Maybe Int -&gt; PostgresConnInfo (Maybe PostgresConnInfoRaw)
 forall a. a -&gt; Maybe Int -&gt; PostgresConnInfo a
 </span><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">Config.PostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
-</span><a href="#local-6989586621689940603"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689940605"><span class="hs-identifier hs-var">retries'</span></a></span><span>
+</span><a href="#local-6989586621689734866"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689734868"><span class="hs-identifier hs-var">retries'</span></a></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>    </span><span id="local-6989586621689940604"><span class="annot"><span class="annottext">retries :: Parser (Maybe Int)
-</span><a href="#local-6989586621689940604"><span class="hs-identifier hs-var hs-var">retries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>    </span><span id="local-6989586621689734867"><span class="annot"><span class="annottext">retries :: Parser (Maybe Int)
+</span><a href="#local-6989586621689734867"><span class="hs-identifier hs-var hs-var">retries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">Parser Int -&gt; Parser (Maybe Int)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Int -&gt; Parser (Maybe Int))
@@ -394,24 +394,24 @@ forall def. Option def -&gt; String
 </span><span id="line-125"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-type">parseRawConnDetails</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnDetailsRaw"><span class="hs-identifier hs-type">PostgresConnDetailsRaw</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span id="parseRawConnDetails"><span class="annot"><span class="annottext">parseRawConnDetails :: Parser (Maybe PostgresConnDetailsRaw)
 </span><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-var hs-var">parseRawConnDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-127"></span><span>  </span><span id="local-6989586621689940584"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940584"><span class="hs-identifier hs-var">host'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
-</span><a href="#local-6989586621689940583"><span class="hs-identifier hs-var">host</span></a></span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621689940582"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689940582"><span class="hs-identifier hs-var">port'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
-</span><a href="#local-6989586621689940581"><span class="hs-identifier hs-var">port</span></a></span><span>
-</span><span id="line-129"></span><span>  </span><span id="local-6989586621689940580"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940580"><span class="hs-identifier hs-var">user'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
-</span><a href="#local-6989586621689940579"><span class="hs-identifier hs-var">user</span></a></span><span>
-</span><span id="line-130"></span><span>  </span><span id="local-6989586621689940578"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689940578"><span class="hs-identifier hs-var">password'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser String
-</span><a href="#local-6989586621689940577"><span class="hs-identifier hs-var">password</span></a></span><span>
-</span><span id="line-131"></span><span>  </span><span id="local-6989586621689940576"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940576"><span class="hs-identifier hs-var">dbName'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
-</span><a href="#local-6989586621689940575"><span class="hs-identifier hs-var">dbName</span></a></span><span>
-</span><span id="line-132"></span><span>  </span><span id="local-6989586621689940574"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940574"><span class="hs-identifier hs-var">options'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
-</span><a href="#local-6989586621689940573"><span class="hs-identifier hs-var">options</span></a></span><span>
+</span><span id="line-127"></span><span>  </span><span id="local-6989586621689734847"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689734847"><span class="hs-identifier hs-var">host'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689734846"><span class="hs-identifier hs-var">host</span></a></span><span>
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621689734845"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689734845"><span class="hs-identifier hs-var">port'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
+</span><a href="#local-6989586621689734844"><span class="hs-identifier hs-var">port</span></a></span><span>
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621689734843"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689734843"><span class="hs-identifier hs-var">user'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689734842"><span class="hs-identifier hs-var">user</span></a></span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621689734841"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689734841"><span class="hs-identifier hs-var">password'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser String
+</span><a href="#local-6989586621689734840"><span class="hs-identifier hs-var">password</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621689734839"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689734839"><span class="hs-identifier hs-var">dbName'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689734838"><span class="hs-identifier hs-var">dbName</span></a></span><span>
+</span><span id="line-132"></span><span>  </span><span id="local-6989586621689734837"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689734837"><span class="hs-identifier hs-var">options'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
+</span><a href="#local-6989586621689734836"><span class="hs-identifier hs-var">options</span></a></span><span>
 </span><span id="line-133"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
 </span><span id="line-134"></span><span>    </span><span class="annot"><span class="annottext">String
 -&gt; Int
@@ -438,7 +438,7 @@ forall def. Option def -&gt; String
       -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940584"><span class="hs-identifier hs-var">host'</span></a></span><span>
+</span><a href="#local-6989586621689734847"><span class="hs-identifier hs-var">host'</span></a></span><span>
 </span><span id="line-136"></span><span>      </span><span class="annot"><span class="annottext">Maybe
   (Int
    -&gt; String
@@ -452,7 +452,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
       -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689940582"><span class="hs-identifier hs-var">port'</span></a></span><span>
+</span><a href="#local-6989586621689734845"><span class="hs-identifier hs-var">port'</span></a></span><span>
 </span><span id="line-137"></span><span>      </span><span class="annot"><span class="annottext">Maybe
   (String
    -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
@@ -461,7 +461,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
      (String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940580"><span class="hs-identifier hs-var">user'</span></a></span><span>
+</span><a href="#local-6989586621689734843"><span class="hs-identifier hs-var">user'</span></a></span><span>
 </span><span id="line-138"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 -&gt; Maybe String
 -&gt; Maybe (String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
@@ -469,22 +469,22 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689940578"><span class="hs-identifier hs-var">password'</span></a></span><span>
+</span><a href="#local-6989586621689734841"><span class="hs-identifier hs-var">password'</span></a></span><span>
 </span><span id="line-139"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 -&gt; Maybe String -&gt; Maybe (Maybe String -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940576"><span class="hs-identifier hs-var">dbName'</span></a></span><span>
+</span><a href="#local-6989586621689734839"><span class="hs-identifier hs-var">dbName'</span></a></span><span>
 </span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Maybe String -&gt; PostgresConnDetailsRaw)
 -&gt; Maybe (Maybe String) -&gt; Maybe PostgresConnDetailsRaw
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; Maybe (Maybe String)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689940574"><span class="hs-identifier hs-var">options'</span></a></span><span>
+</span><a href="#local-6989586621689734837"><span class="hs-identifier hs-var">options'</span></a></span><span>
 </span><span id="line-141"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-142"></span><span>    </span><span id="local-6989586621689940583"><span class="annot"><span class="annottext">host :: Parser (Maybe String)
-</span><a href="#local-6989586621689940583"><span class="hs-identifier hs-var hs-var">host</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621689734846"><span class="annot"><span class="annottext">host :: Parser (Maybe String)
+</span><a href="#local-6989586621689734846"><span class="hs-identifier hs-var hs-var">host</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-143"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
@@ -514,8 +514,8 @@ forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-string">&quot;Postgres server host&quot;</span></span><span>
 </span><span id="line-148"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>
-</span><span id="line-150"></span><span>    </span><span id="local-6989586621689940581"><span class="annot"><span class="annottext">port :: Parser (Maybe Int)
-</span><a href="#local-6989586621689940581"><span class="hs-identifier hs-var hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621689734844"><span class="annot"><span class="annottext">port :: Parser (Maybe Int)
+</span><a href="#local-6989586621689734844"><span class="hs-identifier hs-var hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-151"></span><span>      </span><span class="annot"><span class="annottext">Parser Int -&gt; Parser (Maybe Int)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Int -&gt; Parser (Maybe Int))
@@ -555,8 +555,8 @@ forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-string">&quot;Postgres server port&quot;</span></span><span>
 </span><span id="line-158"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>
-</span><span id="line-160"></span><span>    </span><span id="local-6989586621689940579"><span class="annot"><span class="annottext">user :: Parser (Maybe String)
-</span><a href="#local-6989586621689940579"><span class="hs-identifier hs-var hs-var">user</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-160"></span><span>    </span><span id="local-6989586621689734842"><span class="annot"><span class="annottext">user :: Parser (Maybe String)
+</span><a href="#local-6989586621689734842"><span class="hs-identifier hs-var hs-var">user</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-161"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
@@ -593,8 +593,8 @@ forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-string">&quot;Database user name&quot;</span></span><span>
 </span><span id="line-167"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span>
-</span><span id="line-169"></span><span>    </span><span id="local-6989586621689940577"><span class="annot"><span class="annottext">password :: Parser String
-</span><a href="#local-6989586621689940577"><span class="hs-identifier hs-var hs-var">password</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621689734840"><span class="annot"><span class="annottext">password :: Parser String
+</span><a href="#local-6989586621689734840"><span class="hs-identifier hs-var hs-var">password</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-170"></span><span>      </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
 forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
 </span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
@@ -625,8 +625,8 @@ forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-string">&quot;Password of the user&quot;</span></span><span>
 </span><span id="line-175"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span>    </span><span id="local-6989586621689940575"><span class="annot"><span class="annottext">dbName :: Parser (Maybe String)
-</span><a href="#local-6989586621689940575"><span class="hs-identifier hs-var hs-var">dbName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-177"></span><span>    </span><span id="local-6989586621689734838"><span class="annot"><span class="annottext">dbName :: Parser (Maybe String)
+</span><a href="#local-6989586621689734838"><span class="hs-identifier hs-var hs-var">dbName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-178"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
@@ -663,8 +663,8 @@ forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-string">&quot;Database name to connect to&quot;</span></span><span>
 </span><span id="line-184"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-185"></span><span>
-</span><span id="line-186"></span><span>    </span><span id="local-6989586621689940573"><span class="annot"><span class="annottext">options :: Parser (Maybe String)
-</span><a href="#local-6989586621689940573"><span class="hs-identifier hs-var hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-186"></span><span>    </span><span id="local-6989586621689734836"><span class="annot"><span class="annottext">options :: Parser (Maybe String)
+</span><a href="#local-6989586621689734836"><span class="hs-identifier hs-var hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-187"></span><span>      </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser String -&gt; Parser (Maybe String))
@@ -758,19 +758,19 @@ forall def. Option def -&gt; String
 </span><span id="line-217"></span><span id="mainCmdFooter"><span class="annot"><span class="annottext">mainCmdFooter :: Doc
 </span><a href="Hasura.Server.Init.Arg.html#mainCmdFooter"><span class="hs-identifier hs-var hs-var">mainCmdFooter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-218"></span><span>  </span><span class="annot"><span class="annottext">Doc
-</span><a href="#local-6989586621689940568"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+</span><a href="#local-6989586621689734831"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 </span><span class="hs-operator hs-var">PP.&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.text</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 </span><span class="hs-operator hs-var">PP.&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc
-</span><a href="#local-6989586621689940565"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
+</span><a href="#local-6989586621689734828"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
 </span><span id="line-219"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-220"></span><span>    </span><span id="local-6989586621689940568"><span class="annot"><span class="annottext">examplesDoc :: Doc
-</span><a href="#local-6989586621689940568"><span class="hs-identifier hs-var hs-var">examplesDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[String]] -&gt; Doc
+</span><span id="line-220"></span><span>    </span><span id="local-6989586621689734831"><span class="annot"><span class="annottext">examplesDoc :: Doc
+</span><a href="#local-6989586621689734831"><span class="hs-identifier hs-var hs-var">examplesDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[String]] -&gt; Doc
 </span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkExamplesDoc"><span class="hs-identifier hs-var">PP.mkExamplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">[[String]]
-</span><a href="#local-6989586621689940563"><span class="hs-identifier hs-var">examples</span></a></span><span>
-</span><span id="line-221"></span><span>    </span><span id="local-6989586621689940563"><span class="annot"><span class="annottext">examples :: [[String]]
-</span><a href="#local-6989586621689940563"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689734826"><span class="hs-identifier hs-var">examples</span></a></span><span>
+</span><span id="line-221"></span><span>    </span><span id="local-6989586621689734826"><span class="annot"><span class="annottext">examples :: [[String]]
+</span><a href="#local-6989586621689734826"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-222"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;# Serve GraphQL Engine on default port (8080) with console disabled&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-223"></span><span>          </span><span class="annot"><span class="annottext">String
@@ -783,8 +783,8 @@ forall def. Option def -&gt; String
 </span><span id="line-227"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-228"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-229"></span><span>
-</span><span id="line-230"></span><span>    </span><span id="local-6989586621689940565"><span class="annot"><span class="annottext">envVarDoc :: Doc
-</span><a href="#local-6989586621689940565"><span class="hs-identifier hs-var hs-var">envVarDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-230"></span><span>    </span><span id="local-6989586621689734828"><span class="annot"><span class="annottext">envVarDoc :: Doc
+</span><a href="#local-6989586621689734828"><span class="hs-identifier hs-var hs-var">envVarDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-231"></span><span>      </span><span class="annot"><span class="annottext">[(String, String)] -&gt; Doc
 </span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkEnvVarDoc"><span class="hs-identifier hs-var">PP.mkEnvVarDoc</span></a></span><span>
 </span><span id="line-232"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Option () -&gt; (String, String)
