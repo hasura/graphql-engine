@@ -260,7 +260,7 @@ autoTriggerCleanupConfig :: AutoTriggerLogCleanupConfig
 autoTriggerCleanupConfig =
   AutoTriggerLogCleanupConfig
     { _atlccBatchSize = 2,
-      _atlccRetentionPeriod = 4,
+      _atlccClearOlderThan = 4,
       _atlccTimeout = 60,
       _atlccCleanInvocationLogs = True,
       _atlccPaused = ETCSUnpaused,
@@ -272,8 +272,8 @@ triggerLogCleanupConfig :: Bool -> TriggerLogCleanupConfig
 triggerLogCleanupConfig shouldDelInv =
   TriggerLogCleanupConfig
     { tlccBatchSize = 2,
-      tlccRetentionPeriod = 4,
-      tlccQueryTimeout = 60,
+      tlccClearOlderThan = 4,
+      tlccTimeout = 60,
       tlccCleanInvocationLogs = shouldDelInv,
       tlccEventTriggerName = triggerName,
       tlccSourceName = defaultSource
