@@ -305,11 +305,13 @@ export const getManualEventsTriggers = createSelector(
   getEventTriggers,
   getCurrentSchema,
   getCurrentTable,
-  (triggers, schema, table) => {
+  getCurrentSource,
+  (triggers, schema, table, source) => {
     return triggers.filter(
       t =>
         t.table_name === table &&
         t.schema_name === schema &&
+        t.source === source &&
         t.configuration.definition.enable_manual
     );
   }
