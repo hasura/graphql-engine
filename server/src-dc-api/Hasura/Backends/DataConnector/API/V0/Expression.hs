@@ -102,15 +102,30 @@ instance HasCodec UnaryComparisonOperator where
           op@CustomUnaryComparisonOperator {} -> Right op
           op -> Left op
 
--- | A serializable representation of query expressions.
+-- | A serializable representation of query filter expressions.
 data Expression
-  = And [Expression]
-  | Or [Expression]
-  | Not Expression
-  | Exists ExistsInTable Expression
-  | ApplyBinaryComparisonOperator BinaryComparisonOperator ComparisonColumn ComparisonValue
-  | ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [Value]
-  | ApplyUnaryComparisonOperator UnaryComparisonOperator ComparisonColumn
+  = -- | A logical AND fold
+    And [Expression]
+  | -- | A logical OR fold
+    Or [Expression]
+  | -- | A logical NOT function
+    Not Expression
+  | -- | There must exist a row in the table specified by 'ExistsInTable' that
+    -- satisfies the 'Expression'
+    Exists ExistsInTable Expression
+  | -- | Apply a 'BinaryComparisonOperator' that compares a column to a 'ComparisonValue';
+    -- the result of this application will return "true" or "false" depending on the
+    -- 'BinaryComparisonOperator' that's being applied.
+    ApplyBinaryComparisonOperator BinaryComparisonOperator ComparisonColumn ComparisonValue
+  | -- | Apply a 'BinaryArrayComparisonOperator' that evaluates a column with the
+    -- 'BinaryArrayComparisonOperator' against an array of 'ComparisonValue's.
+    -- The result of this application will return "true" or "false" depending
+    -- on the 'BinaryArrayComparisonOperator' that's being applied.
+    ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [Value]
+  | -- | Apply a 'UnaryComparisonOperator' that evaluates a column with the
+    -- 'UnaryComparisonOperator'; the result of this application will return "true" or
+    -- "false" depending on the 'UnaryComparisonOperator' that's being applied.
+    ApplyUnaryComparisonOperator UnaryComparisonOperator ComparisonColumn
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Expression

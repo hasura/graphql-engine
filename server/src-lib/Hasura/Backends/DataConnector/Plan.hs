@@ -14,6 +14,7 @@ import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KM
+import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
@@ -21,20 +22,10 @@ import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Min (..))
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
-import Data.Text.Extended ((<<>), (<>>))
+import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
-import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
-import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
-import Hasura.Backends.DataConnector.IR.Expression (UnaryComparisonOperator (CustomUnaryComparisonOperator))
-import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
-import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
-import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
-import Hasura.Backends.DataConnector.IR.Relationships qualified as IR.R
-import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S
-import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S
-import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -53,13 +44,13 @@ import Witch qualified
 --------------------------------------------------------------------------------
 
 data QueryPlan = QueryPlan
-  { _qpRequest :: IR.Q.QueryRequest,
+  { _qpRequest :: API.QueryRequest,
     _qpResponseReshaper :: forall m. (MonadError QErr m) => API.QueryResponse -> m J.Encoding
   }
 
 data FieldsAndAggregates = FieldsAndAggregates
-  { _faaFields :: HashMap FieldName IR.Q.Field,
-    _faaAggregates :: HashMap FieldName IR.A.Aggregate
+  { _faaFields :: HashMap FieldName API.Field,
+    _faaAggregates :: HashMap FieldName API.Aggregate
   }
   deriving stock (Show, Eq)
 
@@ -92,12 +83,22 @@ prefixWith = FieldPrefix . Just
 applyPrefix :: FieldPrefix -> FieldName -> FieldName
 applyPrefix (FieldPrefix fieldNamePrefix) fieldName = maybe fieldName (\prefix -> prefix <> "_" <> fieldName) fieldNamePrefix
 
--- | Extract the 'IR.Q' from a 'Plan' and render it as 'Text'.
+newtype TableRelationships = TableRelationships
+  {unTableRelationships :: HashMap API.TableName (HashMap API.RelationshipName API.Relationship)}
+  deriving stock (Eq, Show)
+
+instance Semigroup TableRelationships where
+  (TableRelationships l) <> (TableRelationships r) = TableRelationships $ HashMap.unionWith HashMap.union l r
+
+instance Monoid TableRelationships where
+  mempty = TableRelationships mempty
+
+-- | Render a 'API.QueryRequest' as 'Text'.
 --
 -- NOTE: This is for logging and debug purposes only.
-renderQuery :: IR.Q.QueryRequest -> Text
+renderQuery :: API.QueryRequest -> Text
 renderQuery =
-  TE.decodeUtf8 . BL.toStrict . J.encode . Witch.into @API.QueryRequest
+  TE.decodeUtf8 . BL.toStrict . J.encode
 
 -- | Map a 'QueryDB 'DataConnector' term into a 'Plan'
 mkPlan ::
@@ -113,7 +114,7 @@ mkPlan session (SourceConfig {}) ir = do
   where
     translateQueryDB ::
       QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      m IR.Q.QueryRequest
+      m API.QueryRequest
     translateQueryDB =
       \case
         QDBMultipleRows annSelect -> translateAnnSelectToQueryRequest (translateAnnFields noPrefix) annSelect
@@ -121,35 +122,36 @@ mkPlan session (SourceConfig {}) ir = do
         QDBAggregation annSelect -> translateAnnSelectToQueryRequest translateTableAggregateFields annSelect
 
     translateAnnSelectToQueryRequest ::
-      (IR.T.Name -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates) ->
+      (API.TableName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT TableRelationships m FieldsAndAggregates) ->
       AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
-      m IR.Q.QueryRequest
+      m API.QueryRequest
     translateAnnSelectToQueryRequest translateFieldsAndAggregates selectG = do
       tableName <- extractTableName selectG
-      (query, tableRelationships) <- CPS.runWriterT (translateAnnSelect translateFieldsAndAggregates tableName selectG)
+      (query, (TableRelationships tableRelationships)) <- CPS.runWriterT (translateAnnSelect translateFieldsAndAggregates tableName selectG)
+      let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList tableRelationships
       pure $
-        IR.Q.QueryRequest
+        API.QueryRequest
           { _qrTable = tableName,
-            _qrTableRelationships = tableRelationships,
+            _qrTableRelationships = apiTableRelationships,
             _qrQuery = query
           }
 
-    extractTableName :: AnnSelectG 'DataConnector fieldsType valueType -> m IR.T.Name
+    extractTableName :: AnnSelectG 'DataConnector fieldsType valueType -> m API.TableName
     extractTableName selectG =
       case _asnFrom selectG of
-        FromTable tn -> pure tn
+        FromTable tn -> pure $ Witch.from tn
         FromIdentifier _ -> throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
         FromFunction {} -> throw400 NotSupported "AnnSelectG: FromFunction not supported"
 
-    recordTableRelationship :: IR.T.Name -> IR.R.RelationshipName -> IR.R.Relationship -> CPS.WriterT IR.R.TableRelationships m ()
+    recordTableRelationship :: API.TableName -> API.RelationshipName -> API.Relationship -> CPS.WriterT TableRelationships m ()
     recordTableRelationship sourceTableName relationshipName relationship =
-      CPS.tell . IR.R.TableRelationships $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
+      CPS.tell . TableRelationships $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
 
     translateAnnSelect ::
-      (IR.T.Name -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates) ->
-      IR.T.Name ->
+      (API.TableName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT TableRelationships m FieldsAndAggregates) ->
+      API.TableName ->
       AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m IR.Q.Query
+      CPS.WriterT TableRelationships m API.Query
     translateAnnSelect translateFieldsAndAggregates tableName selectG = do
       FieldsAndAggregates {..} <- translateFieldsAndAggregates tableName (_asnFields selectG)
       let whereClauseWithPermissions =
@@ -159,9 +161,9 @@ mkPlan session (SourceConfig {}) ir = do
       whereClause <- translateBoolExpToExpression tableName whereClauseWithPermissions
       orderBy <- traverse (translateOrderBy tableName) (_saOrderBy $ _asnArgs selectG)
       pure
-        IR.Q.Query
-          { _qFields = _faaFields,
-            _qAggregates = _faaAggregates,
+        API.Query
+          { _qFields = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaFields,
+            _qAggregates = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaAggregates,
             _qLimit =
               fmap getMin $
                 foldMap
@@ -175,96 +177,96 @@ mkPlan session (SourceConfig {}) ir = do
           }
 
     translateOrderBy ::
-      IR.T.Name ->
+      API.TableName ->
       NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector)) ->
-      CPS.WriterT IR.R.TableRelationships m IR.O.OrderBy
+      CPS.WriterT TableRelationships m API.OrderBy
     translateOrderBy sourceTableName orderByItems = do
       orderByElementsAndRelations <- for orderByItems \OrderByItemG {..} -> do
-        let orderDirection = fromMaybe IR.O.Ascending obiType
+        let orderDirection = maybe API.Ascending Witch.from obiType
         translateOrderByElement sourceTableName orderDirection [] obiColumn
       relations <- lift . mergeOrderByRelations $ snd <$> orderByElementsAndRelations
       pure
-        IR.O.OrderBy
+        API.OrderBy
           { _obRelations = relations,
             _obElements = fst <$> orderByElementsAndRelations
           }
 
     translateOrderByElement ::
-      IR.T.Name ->
-      IR.O.OrderDirection ->
-      [IR.R.RelationshipName] ->
+      API.TableName ->
+      API.OrderDirection ->
+      [API.RelationshipName] ->
       AnnotatedOrderByElement 'DataConnector (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m (IR.O.OrderByElement, HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+      CPS.WriterT TableRelationships m (API.OrderByElement, HashMap API.RelationshipName API.OrderByRelation)
     translateOrderByElement sourceTableName orderDirection targetReversePath = \case
       AOCColumn (ColumnInfo {..}) ->
         pure
-          ( IR.O.OrderByElement
+          ( API.OrderByElement
               { _obeTargetPath = reverse targetReversePath,
-                _obeTarget = IR.O.OrderByColumn ciColumn,
+                _obeTarget = API.OrderByColumn $ Witch.from ciColumn,
                 _obeOrderDirection = orderDirection
               },
             mempty
           )
       AOCObjectRelation relationshipInfo filterExp orderByElement -> do
-        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
         (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement _rTargetTable orderDirection (relationshipName : targetReversePath) orderByElement
 
         targetTableWhereExp <- translateBoolExpToExpression _rTargetTable filterExp
-        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp subOrderByRelations)]
+        let orderByRelations = HashMap.fromList [(relationshipName, API.OrderByRelation targetTableWhereExp subOrderByRelations)]
 
         pure (translatedOrderByElement, orderByRelations)
       AOCArrayAggregation relationshipInfo filterExp aggregateOrderByElement -> do
-        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
         orderByTarget <- case aggregateOrderByElement of
           AAOCount ->
-            pure IR.O.OrderByStarCountAggregate
+            pure API.OrderByStarCountAggregate
           AAOOp aggFunctionTxt ColumnInfo {..} -> do
             aggFunction <- lift $ translateSingleColumnAggregateFunction aggFunctionTxt
-            pure . IR.O.OrderBySingleColumnAggregate $ IR.A.SingleColumnAggregate aggFunction ciColumn
+            pure . API.OrderBySingleColumnAggregate $ API.SingleColumnAggregate aggFunction $ Witch.from ciColumn
 
         let translatedOrderByElement =
-              IR.O.OrderByElement
+              API.OrderByElement
                 { _obeTargetPath = reverse (relationshipName : targetReversePath),
                   _obeTarget = orderByTarget,
                   _obeOrderDirection = orderDirection
                 }
 
         targetTableWhereExp <- translateBoolExpToExpression _rTargetTable filterExp
-        let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp mempty)]
+        let orderByRelations = HashMap.fromList [(relationshipName, API.OrderByRelation targetTableWhereExp mempty)]
         pure (translatedOrderByElement, orderByRelations)
 
     mergeOrderByRelations ::
       Foldable f =>
-      f (HashMap IR.R.RelationshipName IR.O.OrderByRelation) ->
-      m (HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+      f (HashMap API.RelationshipName API.OrderByRelation) ->
+      m (HashMap API.RelationshipName API.OrderByRelation)
     mergeOrderByRelations orderByRelationsList =
       foldM mergeMap mempty orderByRelationsList
       where
-        mergeMap :: HashMap IR.R.RelationshipName IR.O.OrderByRelation -> HashMap IR.R.RelationshipName IR.O.OrderByRelation -> m (HashMap IR.R.RelationshipName IR.O.OrderByRelation)
+        mergeMap :: HashMap API.RelationshipName API.OrderByRelation -> HashMap API.RelationshipName API.OrderByRelation -> m (HashMap API.RelationshipName API.OrderByRelation)
         mergeMap left right = foldM (\targetMap (relName, orderByRel) -> HashMap.alterF (maybe (pure $ Just orderByRel) (fmap Just . mergeOrderByRelation orderByRel)) relName targetMap) left $ HashMap.toList right
 
-        mergeOrderByRelation :: IR.O.OrderByRelation -> IR.O.OrderByRelation -> m IR.O.OrderByRelation
+        mergeOrderByRelation :: API.OrderByRelation -> API.OrderByRelation -> m API.OrderByRelation
         mergeOrderByRelation right left =
-          if IR.O._obrWhere left == IR.O._obrWhere right
+          if API._obrWhere left == API._obrWhere right
             then do
-              mergedSubrelations <- mergeMap (IR.O._obrSubrelations left) (IR.O._obrSubrelations right)
-              pure $ IR.O.OrderByRelation (IR.O._obrWhere left) mergedSubrelations
+              mergedSubrelations <- mergeMap (API._obrSubrelations left) (API._obrSubrelations right)
+              pure $ API.OrderByRelation (API._obrWhere left) mergedSubrelations
             else throw500 "mergeOrderByRelations: Differing filter expressions found for the same table"
 
     recordTableRelationshipFromRelInfo ::
-      IR.T.Name ->
+      API.TableName ->
       RelInfo 'DataConnector ->
-      CPS.WriterT IR.R.TableRelationships m (IR.R.RelationshipName, IR.R.Relationship)
+      CPS.WriterT TableRelationships m (API.RelationshipName, API.Relationship)
     recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
-      let relationshipName = IR.R.mkRelationshipName riName
+      let relationshipName = mkRelationshipName riName
       let relationshipType = case riType of
-            ObjRel -> IR.R.ObjectRelationship
-            ArrRel -> IR.R.ArrayRelationship
+            ObjRel -> API.ObjectRelationship
+            ArrRel -> API.ArrayRelationship
       let relationship =
-            IR.R.Relationship
-              { _rTargetTable = riRTable,
+            API.Relationship
+              { _rTargetTable = Witch.from riRTable,
                 _rRelationshipType = relationshipType,
-                _rColumnMapping = riMapping
+                _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList riMapping
               }
       recordTableRelationship
         sourceTableName
@@ -274,9 +276,9 @@ mkPlan session (SourceConfig {}) ir = do
 
     translateAnnFields ::
       FieldPrefix ->
-      IR.T.Name ->
+      API.TableName ->
       AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates
+      CPS.WriterT TableRelationships m FieldsAndAggregates
     translateAnnFields fieldNamePrefix sourceTableName fields = do
       translatedFields <- traverse (traverse (translateAnnField sourceTableName)) fields
       let translatedFields' = HashMap.fromList . catMaybes $ (\(fieldName, field) -> (applyPrefix fieldNamePrefix fieldName,) <$> field) <$> translatedFields
@@ -286,35 +288,35 @@ mkPlan session (SourceConfig {}) ir = do
           mempty
 
     translateAnnField ::
-      IR.T.Name ->
+      API.TableName ->
       AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m (Maybe IR.Q.Field)
+      CPS.WriterT TableRelationships m (Maybe API.Field)
     translateAnnField sourceTableName = \case
       AFColumn colField ->
         -- TODO: make sure certain fields in colField are not in use, since we don't
         -- support them
-        pure . Just . IR.Q.ColumnField $ _acfColumn colField
+        pure . Just . API.ColumnField . Witch.from $ _acfColumn colField
       AFObjectRelation objRel -> do
-        let targetTable = _aosTableFrom (_aarAnnSelect objRel)
-        let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName objRel
+        let targetTable = Witch.from $ _aosTableFrom (_aarAnnSelect objRel)
+        let relationshipName = mkRelationshipName $ _aarRelationshipName objRel
         FieldsAndAggregates {..} <- translateAnnFields noPrefix targetTable (_aosFields (_aarAnnSelect objRel))
         whereClause <- translateBoolExpToExpression targetTable (_aosTableFilter (_aarAnnSelect objRel))
 
         recordTableRelationship
           sourceTableName
           relationshipName
-          IR.R.Relationship
+          API.Relationship
             { _rTargetTable = targetTable,
-              _rRelationshipType = IR.R.ObjectRelationship,
-              _rColumnMapping = _aarColumnMapping objRel
+              _rRelationshipType = API.ObjectRelationship,
+              _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping objRel)
             }
 
-        pure . Just . IR.Q.RelField $
-          IR.Q.RelationshipField
+        pure . Just . API.RelField $
+          API.RelationshipField
             relationshipName
-            ( IR.Q.Query
-                { _qFields = _faaFields,
-                  _qAggregates = _faaAggregates,
+            ( API.Query
+                { _qFields = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaFields,
+                  _qAggregates = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaAggregates,
                   _qWhere = whereClause,
                   _qLimit = Nothing,
                   _qOffset = Nothing,
@@ -332,41 +334,41 @@ mkPlan session (SourceConfig {}) ir = do
         pure Nothing
 
     translateArrayRelationSelect ::
-      IR.T.Name ->
-      (IR.T.Name -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates) ->
+      API.TableName ->
+      (API.TableName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT TableRelationships m FieldsAndAggregates) ->
       AnnRelationSelectG 'DataConnector (AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector)) ->
-      CPS.WriterT IR.R.TableRelationships m IR.Q.Field
+      CPS.WriterT TableRelationships m API.Field
     translateArrayRelationSelect sourceTableName translateFieldsAndAggregates arrRel = do
       targetTable <- lift $ extractTableName (_aarAnnSelect arrRel)
       query <- translateAnnSelect translateFieldsAndAggregates targetTable (_aarAnnSelect arrRel)
-      let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName arrRel
+      let relationshipName = mkRelationshipName $ _aarRelationshipName arrRel
 
       recordTableRelationship
         sourceTableName
         relationshipName
-        IR.R.Relationship
+        API.Relationship
           { _rTargetTable = targetTable,
-            _rRelationshipType = IR.R.ArrayRelationship,
-            _rColumnMapping = _aarColumnMapping arrRel
+            _rRelationshipType = API.ArrayRelationship,
+            _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping arrRel)
           }
 
-      pure . IR.Q.RelField $
-        IR.Q.RelationshipField
+      pure . API.RelField $
+        API.RelationshipField
           relationshipName
           query
 
     translateTableAggregateFields ::
-      IR.T.Name ->
+      API.TableName ->
       TableAggregateFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates
+      CPS.WriterT TableRelationships m FieldsAndAggregates
     translateTableAggregateFields sourceTableName fields = do
       mconcat <$> traverse (uncurry (translateTableAggregateField sourceTableName)) fields
 
     translateTableAggregateField ::
-      IR.T.Name ->
+      API.TableName ->
       FieldName ->
       TableAggregateFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates
+      CPS.WriterT TableRelationships m FieldsAndAggregates
     translateTableAggregateField sourceTableName fieldName = \case
       TAFAgg aggregateFields -> do
         let fieldNamePrefix = prefixWith fieldName
@@ -387,9 +389,15 @@ mkPlan session (SourceConfig {}) ir = do
       FieldPrefix ->
       FieldName ->
       AggregateField 'DataConnector ->
-      m (HashMap FieldName IR.A.Aggregate)
+      m (HashMap FieldName API.Aggregate)
     translateAggregateField fieldPrefix fieldName = \case
-      AFCount countAggregate -> pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) (IR.A.Count countAggregate)
+      AFCount countAggregate ->
+        let aggregate =
+              case countAggregate of
+                StarCount -> API.StarCount
+                ColumnCount column -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = False}
+                ColumnDistinctCount column -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = True}
+         in pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) aggregate
       AFOp AggregateOp {..} -> do
         let fieldPrefix' = fieldPrefix <> prefixWith fieldName
         aggFunction <- translateSingleColumnAggregateFunction _aoOp
@@ -397,7 +405,7 @@ mkPlan session (SourceConfig {}) ir = do
         fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
           case columnField of
             CFCol column _columnType ->
-              pure . Just $ (applyPrefix fieldPrefix' columnFieldName, IR.A.SingleColumn $ IR.A.SingleColumnAggregate aggFunction column)
+              pure . Just $ (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn . API.SingleColumnAggregate aggFunction $ Witch.from column)
             CFExp _txt ->
               -- We ignore literal text fields (we don't send them to the data connector agent)
               -- and add them back to the response JSON when we reshape what the agent returns
@@ -409,25 +417,25 @@ mkPlan session (SourceConfig {}) ir = do
         -- to us
         pure mempty
 
-    translateSingleColumnAggregateFunction :: Text -> m IR.A.SingleColumnAggregateFunction
+    translateSingleColumnAggregateFunction :: Text -> m API.SingleColumnAggregateFunction
     translateSingleColumnAggregateFunction = \case
-      "avg" -> pure IR.A.Average
-      "max" -> pure IR.A.Max
-      "min" -> pure IR.A.Min
-      "stddev_pop" -> pure IR.A.StandardDeviationPopulation
-      "stddev_samp" -> pure IR.A.StandardDeviationSample
-      "stddev" -> pure IR.A.StandardDeviationSample
-      "sum" -> pure IR.A.Sum
-      "var_pop" -> pure IR.A.VariancePopulation
-      "var_samp" -> pure IR.A.VarianceSample
-      "variance" -> pure IR.A.VarianceSample
+      "avg" -> pure API.Average
+      "max" -> pure API.Max
+      "min" -> pure API.Min
+      "stddev_pop" -> pure API.StandardDeviationPopulation
+      "stddev_samp" -> pure API.StandardDeviationSample
+      "stddev" -> pure API.StandardDeviationSample
+      "sum" -> pure API.Sum
+      "var_pop" -> pure API.VariancePopulation
+      "var_samp" -> pure API.VarianceSample
+      "variance" -> pure API.VarianceSample
       unknownFunc -> throw500 $ "translateSingleColumnAggregateFunction: Unknown aggregate function encountered: " <> unknownFunc
 
     prepareLiterals ::
       UnpreparedValue 'DataConnector ->
-      m IR.S.Literal
+      m Literal
     prepareLiterals (UVLiteral literal) = pure $ literal
-    prepareLiterals (UVParameter _ e) = pure (IR.S.ValueLiteral (cvValue e))
+    prepareLiterals (UVParameter _ e) = pure (ValueLiteral (cvValue e))
     prepareLiterals UVSession = throw400 NotSupported "prepareLiterals: UVSession"
     prepareLiterals (UVSessionVar sessionVarType sessionVar) = do
       textValue <-
@@ -435,23 +443,23 @@ mkPlan session (SourceConfig {}) ir = do
           `onNothing` throw400 NotSupported ("prepareLiterals: session var not found: " <>> sessionVar)
       parseSessionVariable sessionVar sessionVarType textValue
 
-    parseSessionVariable :: SessionVariable -> SessionVarType 'DataConnector -> Text -> m IR.S.Literal
+    parseSessionVariable :: SessionVariable -> SessionVarType 'DataConnector -> Text -> m Literal
     parseSessionVariable varName varType varValue = do
       case varType of
         CollectableTypeScalar scalarType ->
           case scalarType of
-            IR.S.String -> pure . IR.S.ValueLiteral $ J.String varValue
-            IR.S.Number -> parseValue (IR.S.ValueLiteral . J.Number) "number value"
-            IR.S.Bool -> parseValue (IR.S.ValueLiteral . J.Bool) "boolean value"
-            IR.S.Custom customTypeName -> parseValue IR.S.ValueLiteral (customTypeName <> " JSON value")
+            StringTy -> pure . ValueLiteral $ J.String varValue
+            NumberTy -> parseValue (ValueLiteral . J.Number) "number value"
+            BoolTy -> parseValue (ValueLiteral . J.Bool) "boolean value"
+            CustomTy customTypeName -> parseValue ValueLiteral (customTypeName <> " JSON value")
         CollectableTypeArray scalarType ->
           case scalarType of
-            IR.S.String -> parseValue (IR.S.ArrayLiteral . fmap J.String) "JSON array of strings"
-            IR.S.Number -> parseValue (IR.S.ArrayLiteral . fmap J.Number) "JSON array of numbers"
-            IR.S.Bool -> parseValue (IR.S.ArrayLiteral . fmap J.Bool) "JSON array of booleans"
-            IR.S.Custom customTypeName -> parseValue IR.S.ArrayLiteral ("JSON array of " <> customTypeName <> " JSON values")
+            StringTy -> parseValue (ArrayLiteral . fmap J.String) "JSON array of strings"
+            NumberTy -> parseValue (ArrayLiteral . fmap J.Number) "JSON array of numbers"
+            BoolTy -> parseValue (ArrayLiteral . fmap J.Bool) "JSON array of booleans"
+            CustomTy customTypeName -> parseValue ArrayLiteral ("JSON array of " <> customTypeName <> " JSON values")
       where
-        parseValue :: J.FromJSON a => (a -> IR.S.Literal) -> Text -> m IR.S.Literal
+        parseValue :: J.FromJSON a => (a -> Literal) -> Text -> m Literal
         parseValue toLiteral description =
           toLiteral <$> J.eitherDecodeStrict' valValueBS
             `onLeft` (\err -> throw400 ParseFailed ("Expected " <> description <> " for session variable " <> varName <<> ". " <> T.pack err))
@@ -460,99 +468,100 @@ mkPlan session (SourceConfig {}) ir = do
         valValueBS = TE.encodeUtf8 varValue
 
     translateBoolExpToExpression ::
-      IR.T.Name ->
+      API.TableName ->
       AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m (Maybe IR.E.Expression)
+      CPS.WriterT TableRelationships m (Maybe API.Expression)
     translateBoolExpToExpression sourceTableName boolExp = do
       removeAlwaysTrueExpression <$> translateBoolExp sourceTableName boolExp
 
     translateBoolExp ::
-      IR.T.Name ->
+      API.TableName ->
       AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
-      CPS.WriterT IR.R.TableRelationships m IR.E.Expression
+      CPS.WriterT TableRelationships m API.Expression
     translateBoolExp sourceTableName = \case
       BoolAnd xs ->
-        mkIfZeroOrMany IR.E.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp sourceTableName) xs
+        mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp sourceTableName) xs
       BoolOr xs ->
-        mkIfZeroOrMany IR.E.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp sourceTableName) xs
+        mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp sourceTableName) xs
       BoolNot x ->
-        IR.E.Not <$> (translateBoolExp sourceTableName) x
+        API.Not <$> (translateBoolExp sourceTableName) x
       BoolField (AVColumn c xs) ->
-        lift $ mkIfZeroOrMany IR.E.And <$> traverse (translateOp (ciColumn c)) xs
+        lift $ mkIfZeroOrMany API.And <$> traverse (translateOp (Witch.from $ ciColumn c)) xs
       BoolField (AVRelationship relationshipInfo boolExp) -> do
-        (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
-        IR.E.Exists (IR.E.RelatedTable relationshipName) <$> translateBoolExp _rTargetTable boolExp
+        (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+        API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp _rTargetTable boolExp
       BoolExists GExists {..} ->
-        IR.E.Exists (IR.E.UnrelatedTable _geTable) <$> translateBoolExp _geTable _geWhere
+        let tableName = Witch.from _geTable
+         in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp tableName _geWhere
       where
-        -- Makes an 'IR.E.Expression' like 'IR.E.And' if there is zero or many input expressions otherwise
-        -- just returns the singleton expression. This helps remove redundant 'IR.E.And' etcs from the expression.
-        mkIfZeroOrMany :: ([IR.E.Expression] -> IR.E.Expression) -> [IR.E.Expression] -> IR.E.Expression
+        -- Makes an 'API.Expression' like 'API.And' if there is zero or many input expressions otherwise
+        -- just returns the singleton expression. This helps remove redundant 'API.And' etcs from the expression.
+        mkIfZeroOrMany :: ([API.Expression] -> API.Expression) -> [API.Expression] -> API.Expression
         mkIfZeroOrMany mk = \case
           [singleExp] -> singleExp
           zeroOrManyExps -> mk zeroOrManyExps
 
-    removeAlwaysTrueExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysTrueExpression :: API.Expression -> Maybe API.Expression
     removeAlwaysTrueExpression = \case
-      IR.E.And [] -> Nothing
-      IR.E.Not (IR.E.Or []) -> Nothing
+      API.And [] -> Nothing
+      API.Not (API.Or []) -> Nothing
       other -> Just other
 
-    removeAlwaysFalseExpression :: IR.E.Expression -> Maybe IR.E.Expression
+    removeAlwaysFalseExpression :: API.Expression -> Maybe API.Expression
     removeAlwaysFalseExpression = \case
-      IR.E.Or [] -> Nothing
-      IR.E.Not (IR.E.And []) -> Nothing
+      API.Or [] -> Nothing
+      API.Not (API.And []) -> Nothing
       other -> Just other
 
     translateOp ::
-      IR.C.Name ->
+      API.ColumnName ->
       OpExpG 'DataConnector (UnpreparedValue 'DataConnector) ->
-      m IR.E.Expression
+      m API.Expression
     translateOp columnName opExp = do
       preparedOpExp <- traverse prepareLiterals $ opExp
       case preparedOpExp of
-        AEQ _ (IR.S.ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.Equal value
-        AEQ _ (IR.S.ArrayLiteral _array) ->
+        AEQ _ (ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.Equal value
+        AEQ _ (ArrayLiteral _array) ->
           throw400 NotSupported "Array literals not supported for AEQ operator"
-        ANE _ (IR.S.ValueLiteral value) ->
-          pure . IR.E.Not $ mkApplyBinaryComparisonOperatorToScalar IR.E.Equal value
-        ANE _ (IR.S.ArrayLiteral _array) ->
+        ANE _ (ValueLiteral value) ->
+          pure . API.Not $ mkApplyBinaryComparisonOperatorToScalar API.Equal value
+        ANE _ (ArrayLiteral _array) ->
           throw400 NotSupported "Array literals not supported for ANE operator"
-        AGT (IR.S.ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.GreaterThan value
-        AGT (IR.S.ArrayLiteral _array) ->
+        AGT (ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.GreaterThan value
+        AGT (ArrayLiteral _array) ->
           throw400 NotSupported "Array literals not supported for AGT operator"
-        ALT (IR.S.ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.LessThan value
-        ALT (IR.S.ArrayLiteral _array) ->
+        ALT (ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.LessThan value
+        ALT (ArrayLiteral _array) ->
           throw400 NotSupported "Array literals not supported for ALT operator"
-        AGTE (IR.S.ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.GreaterThanOrEqual value
-        AGTE (IR.S.ArrayLiteral _array) ->
+        AGTE (ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.GreaterThanOrEqual value
+        AGTE (ArrayLiteral _array) ->
           throw400 NotSupported "Array literals not supported for AGTE operator"
-        ALTE (IR.S.ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.LessThanOrEqual value
-        ALTE (IR.S.ArrayLiteral _array) ->
+        ALTE (ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.LessThanOrEqual value
+        ALTE (ArrayLiteral _array) ->
           throw400 NotSupported "Array literals not supported for ALTE operator"
         ANISNULL ->
-          pure $ IR.E.ApplyUnaryComparisonOperator IR.E.IsNull currentComparisonColumn
+          pure $ API.ApplyUnaryComparisonOperator API.IsNull currentComparisonColumn
         ANISNOTNULL ->
-          pure $ IR.E.Not (IR.E.ApplyUnaryComparisonOperator IR.E.IsNull currentComparisonColumn)
+          pure $ API.Not (API.ApplyUnaryComparisonOperator API.IsNull currentComparisonColumn)
         AIN literal -> pure $ inOperator literal
-        ANIN literal -> pure . IR.E.Not $ inOperator literal
+        ANIN literal -> pure . API.Not $ inOperator literal
         CEQ rootOrCurrentColumn ->
-          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn API.Equal rootOrCurrentColumn
         CNE rootOrCurrentColumn ->
-          pure $ IR.E.Not $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
+          pure $ API.Not $ mkApplyBinaryComparisonOperatorToAnotherColumn API.Equal rootOrCurrentColumn
         CGT rootOrCurrentColumn ->
-          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThan rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn API.GreaterThan rootOrCurrentColumn
         CLT rootOrCurrentColumn ->
-          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThan rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn API.LessThan rootOrCurrentColumn
         CGTE rootOrCurrentColumn ->
-          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThanOrEqual rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn API.GreaterThanOrEqual rootOrCurrentColumn
         CLTE rootOrCurrentColumn ->
-          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThanOrEqual rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn API.LessThanOrEqual rootOrCurrentColumn
         ALIKE _literal ->
           throw400 NotSupported "The ALIKE operator is not supported by the Data Connector backend"
         ANLIKE _literal ->
@@ -560,38 +569,38 @@ mkPlan session (SourceConfig {}) ir = do
         ACast _literal ->
           throw400 NotSupported "The ACast operator is not supported by the Data Connector backend"
         ABackendSpecific CustomBooleanOperator {..} -> case _cboRHS of
-          Nothing -> pure $ IR.E.ApplyUnaryComparisonOperator (CustomUnaryComparisonOperator _cboName) currentComparisonColumn
+          Nothing -> pure $ API.ApplyUnaryComparisonOperator (API.CustomUnaryComparisonOperator _cboName) currentComparisonColumn
           Just (Left rootOrCurrentColumn) ->
-            pure $ mkApplyBinaryComparisonOperatorToAnotherColumn (IR.E.CustomBinaryComparisonOperator _cboName) rootOrCurrentColumn
-          Just (Right (IR.S.ValueLiteral value)) ->
-            pure $ mkApplyBinaryComparisonOperatorToScalar (IR.E.CustomBinaryComparisonOperator _cboName) value
-          Just (Right (IR.S.ArrayLiteral array)) ->
-            pure $ IR.E.ApplyBinaryArrayComparisonOperator (IR.E.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array
+            pure $ mkApplyBinaryComparisonOperatorToAnotherColumn (API.CustomBinaryComparisonOperator _cboName) rootOrCurrentColumn
+          Just (Right (ValueLiteral value)) ->
+            pure $ mkApplyBinaryComparisonOperatorToScalar (API.CustomBinaryComparisonOperator _cboName) value
+          Just (Right (ArrayLiteral array)) ->
+            pure $ API.ApplyBinaryArrayComparisonOperator (API.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array
       where
-        currentComparisonColumn :: IR.E.ComparisonColumn
-        currentComparisonColumn = IR.E.ComparisonColumn IR.E.CurrentTable columnName
+        currentComparisonColumn :: API.ComparisonColumn
+        currentComparisonColumn = API.ComparisonColumn API.CurrentTable columnName
 
-        mkApplyBinaryComparisonOperatorToAnotherColumn :: IR.E.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> IR.E.Expression
+        mkApplyBinaryComparisonOperatorToAnotherColumn :: API.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> API.Expression
         mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) =
           let columnPath = case rootOrCurrent of
-                IsRoot -> IR.E.QueryTable
-                IsCurrent -> IR.E.CurrentTable
-           in IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.AnotherColumn $ IR.E.ComparisonColumn columnPath otherColumnName)
+                IsRoot -> API.QueryTable
+                IsCurrent -> API.CurrentTable
+           in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumn . API.ComparisonColumn columnPath $ Witch.from otherColumnName)
 
-        inOperator :: IR.S.Literal -> IR.E.Expression
+        inOperator :: Literal -> API.Expression
         inOperator literal =
           let values = case literal of
-                IR.S.ArrayLiteral array -> array
-                IR.S.ValueLiteral value -> [value]
-           in IR.E.ApplyBinaryArrayComparisonOperator IR.E.In currentComparisonColumn values
+                ArrayLiteral array -> array
+                ValueLiteral value -> [value]
+           in API.ApplyBinaryArrayComparisonOperator API.In currentComparisonColumn values
 
-        mkApplyBinaryComparisonOperatorToScalar :: IR.E.BinaryComparisonOperator -> J.Value -> IR.E.Expression
+        mkApplyBinaryComparisonOperatorToScalar :: API.BinaryComparisonOperator -> J.Value -> API.Expression
         mkApplyBinaryComparisonOperatorToScalar operator value =
-          IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.ScalarValue value)
+          API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.ScalarValue value)
 
--- | Validate if a 'IR.Q' contains any relationships.
-queryHasRelations :: IR.Q.QueryRequest -> Bool
-queryHasRelations IR.Q.QueryRequest {..} = _qrTableRelationships /= mempty
+-- | Validate if a 'API.QueryRequest' contains any relationships.
+queryHasRelations :: API.QueryRequest -> Bool
+queryHasRelations API.QueryRequest {..} = _qrTableRelationships /= mempty
 
 data Cardinality
   = Single
@@ -740,3 +749,9 @@ reshapeAnnRelationSelect reshapeFields annRelationSelect fieldValue =
     Right subqueryResponse ->
       let annSimpleSelect = _aarAnnSelect annRelationSelect
        in reshapeFields (_asnFields annSimpleSelect) subqueryResponse
+
+memptyToNothing :: (Monoid m, Eq m) => m -> Maybe m
+memptyToNothing m = if m == mempty then Nothing else Just m
+
+mkRelationshipName :: RelName -> API.RelationshipName
+mkRelationshipName relName = API.RelationshipName $ toTxt relName

@@ -28,6 +28,9 @@ import Prelude
 
 --------------------------------------------------------------------------------
 
+-- | The fully qualified name of a table. The last element in the list is the table name
+-- and all other elements represent namespacing of the table name.
+-- For example, for a database that has schemas, the name would be '[<schema>,<table name>]'
 newtype TableName = TableName {unTableName :: NonEmpty Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
