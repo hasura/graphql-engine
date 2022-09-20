@@ -8522,7 +8522,7 @@ AutoTriggerLogCleanupConfig :: CronSchedule -> Int -> Int -> Int -> Bool -> Even
 [_atlccRetentionPeriod] :: AutoTriggerLogCleanupConfig -> Int
 
 -- | SQL query timeout (in seconds)
-[_atlccQueryTimeout] :: AutoTriggerLogCleanupConfig -> Int
+[_atlccTimeout] :: AutoTriggerLogCleanupConfig -> Int
 
 -- | should we clean the invocation logs as well
 [_atlccCleanInvocationLogs] :: AutoTriggerLogCleanupConfig -> Bool

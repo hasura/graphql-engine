@@ -875,8 +875,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-229"></span><span>    </span><span id="_atlccRetentionPeriod"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Int
 </span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccRetentionPeriod"><span class="hs-identifier hs-var hs-var">_atlccRetentionPeriod</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-230"></span><span>    </span><span class="hs-comment">-- | SQL query timeout (in seconds)</span><span>
-</span><span id="line-231"></span><span>    </span><span id="_atlccQueryTimeout"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Int
-</span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccQueryTimeout"><span class="hs-identifier hs-var hs-var">_atlccQueryTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-231"></span><span>    </span><span id="_atlccTimeout"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccTimeout"><span class="hs-identifier hs-var hs-var">_atlccTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-232"></span><span>    </span><span class="hs-comment">-- | should we clean the invocation logs as well</span><span>
 </span><span id="line-233"></span><span>    </span><span id="_atlccCleanInvocationLogs"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Bool
 </span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccCleanInvocationLogs"><span class="hs-identifier hs-var hs-var">_atlccCleanInvocationLogs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
@@ -973,7 +973,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">168</span></span><span> </span><span class="hs-comment">-- 7 Days = 168 hours</span><span>
 </span><span id="line-249"></span><span>      </span><span id="local-6989586621689597970"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689597970"><span class="hs-identifier hs-var">_atlccQueryTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689597970"><span class="hs-identifier hs-var">_atlccTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621689597976"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
@@ -1015,13 +1015,13 @@ CronSchedule
 EventTriggerCleanupStatus
 _atlccPaused :: EventTriggerCleanupStatus
 _atlccCleanInvocationLogs :: Bool
-_atlccQueryTimeout :: Int
+_atlccTimeout :: Int
 _atlccRetentionPeriod :: Int
 _atlccBatchSize :: Int
 _atlccSchedule :: CronSchedule
 _atlccPaused :: EventTriggerCleanupStatus
 _atlccCleanInvocationLogs :: Bool
-_atlccQueryTimeout :: Int
+_atlccTimeout :: Int
 _atlccRetentionPeriod :: Int
 _atlccBatchSize :: Int
 _atlccSchedule :: CronSchedule
