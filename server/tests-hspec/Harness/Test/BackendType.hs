@@ -52,6 +52,9 @@ defaultBackendCapabilities = \case
     Just
       [yaml|
       relationships: {}
+      comparisons:
+        cross_table:
+          supports_relations: true
       explain: {}
       metrics: {}
       queries:
@@ -67,6 +70,9 @@ defaultBackendCapabilities = \case
           same_day_as: DateTime
         }
       relationships: {}
+      comparisons:
+        cross_table:
+          supports_relations: true
       scalarTypes:
         DateTime:
           comparisonType: DateTimeComparisons

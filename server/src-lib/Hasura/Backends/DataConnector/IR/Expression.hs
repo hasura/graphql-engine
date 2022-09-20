@@ -2,10 +2,12 @@
 
 module Hasura.Backends.DataConnector.IR.Expression
   ( Expression (..),
+    ExistsInTable (..),
     BinaryComparisonOperator (..),
     BinaryArrayComparisonOperator (..),
     UnaryComparisonOperator (..),
     ComparisonColumn (..),
+    ColumnPath (..),
     ComparisonValue (..),
   )
 where
@@ -17,6 +19,7 @@ import Data.Aeson (FromJSON, ToJSON, Value)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Relationships qualified as IR.R
+import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Witch qualified
@@ -49,6 +52,9 @@ data Expression
     --
     -- cf. https://www.postgresql.org/docs/13/functions-logical.html
     Not Expression
+  | -- | There must exist a row in the table specified by 'ExistsInTable' that
+    -- satisfies the 'Expression'
+    Exists ExistsInTable Expression
   | -- | Apply a 'BinaryComparisonOperator' that compares a column to a 'ComparisonValue';
     -- the result of this application will return "true" or "false" depending on the
     -- 'BinaryComparisonOperator' that's being applied.
@@ -70,6 +76,8 @@ instance Witch.From Expression API.Expression where
     And exprs -> API.And $ Witch.from <$> exprs
     Or exprs -> API.Or $ Witch.from <$> exprs
     Not expr -> API.Not $ Witch.from expr
+    Exists inTable expr ->
+      API.Exists (Witch.from inTable) (Witch.from expr)
     ApplyBinaryComparisonOperator op column value ->
       API.ApplyBinaryComparisonOperator (Witch.from op) (Witch.from column) (Witch.from value)
     ApplyUnaryComparisonOperator op column ->
@@ -82,12 +90,36 @@ instance Witch.From API.Expression Expression where
     API.And exprs -> And $ Witch.from <$> exprs
     API.Or exprs -> Or $ Witch.from <$> exprs
     API.Not expr -> Not $ Witch.from expr
+    API.Exists inTable expr ->
+      Exists (Witch.from inTable) (Witch.from expr)
     API.ApplyBinaryComparisonOperator op column value ->
       ApplyBinaryComparisonOperator (Witch.from op) (Witch.from column) (Witch.from value)
     API.ApplyBinaryArrayComparisonOperator op column values ->
       ApplyBinaryArrayComparisonOperator (Witch.from op) (Witch.from column) (Witch.from <$> values)
     API.ApplyUnaryComparisonOperator op column ->
       ApplyUnaryComparisonOperator (Witch.from op) (Witch.from column)
+
+-- | Which table should be subqueried to satisfy the 'Exists' expression
+data ExistsInTable
+  = -- | The table is the one found by navigating the specified relationship
+    -- from the current table
+    RelatedTable IR.R.RelationshipName
+  | -- | The table is completely unrelated to the current table (ie no join
+    -- between the current table and the specified table should be performed
+    -- and the whole of the specified table would be subqueried)
+    UnrelatedTable IR.T.Name
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance Witch.From ExistsInTable API.ExistsInTable where
+  from = \case
+    RelatedTable relationshipName -> API.RelatedTable (Witch.from relationshipName)
+    UnrelatedTable tableName -> API.UnrelatedTable (Witch.from tableName)
+
+instance Witch.From API.ExistsInTable ExistsInTable where
+  from = \case
+    API.RelatedTable relationshipName -> RelatedTable (Witch.from relationshipName)
+    API.UnrelatedTable tableName -> UnrelatedTable (Witch.from tableName)
 
 --------------------------------------------------------------------------------
 
@@ -155,7 +187,7 @@ instance Witch.From BinaryArrayComparisonOperator API.BinaryArrayComparisonOpera
   from (CustomBinaryArrayComparisonOperator name) = API.CustomBinaryArrayComparisonOperator name
 
 data ComparisonColumn = ComparisonColumn
-  { _ccPath :: [IR.R.RelationshipName],
+  { _ccPath :: ColumnPath,
     _ccName :: IR.C.Name
   }
   deriving stock (Data, Eq, Generic, Ord, Show)
@@ -164,16 +196,30 @@ data ComparisonColumn = ComparisonColumn
 instance Witch.From ComparisonColumn API.ComparisonColumn where
   from ComparisonColumn {..} =
     API.ComparisonColumn
-      { _ccPath = Witch.from <$> _ccPath,
+      { _ccPath = Witch.from _ccPath,
         _ccName = Witch.from _ccName
       }
 
 instance Witch.From API.ComparisonColumn ComparisonColumn where
   from API.ComparisonColumn {..} =
     ComparisonColumn
-      { _ccPath = Witch.from <$> _ccPath,
+      { _ccPath = Witch.from _ccPath,
         _ccName = Witch.from _ccName
       }
+
+data ColumnPath
+  = CurrentTable
+  | QueryTable
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance Witch.From ColumnPath API.ColumnPath where
+  from CurrentTable = API.CurrentTable
+  from QueryTable = API.QueryTable
+
+instance Witch.From API.ColumnPath ColumnPath where
+  from API.CurrentTable = CurrentTable
+  from API.QueryTable = QueryTable
 
 data ComparisonValue
   = AnotherColumn ComparisonColumn

@@ -39,6 +39,11 @@ capabilities =
             API.cScalarTypes = Nothing,
             API.cGraphQLTypeDefinitions = Nothing,
             API.cRelationships = Just API.RelationshipCapabilities {},
+            API.cComparisons =
+              Just
+                API.ComparisonCapabilities
+                  { API._ccCrossTableComparisonCapabilities = Just API.CrossTableComparisonCapabilities {API._ctccSupportsRelations = True}
+                  },
             API.cMetrics = Just API.MetricsCapabilities {},
             API.cExplain = Just API.ExplainCapabilities {}
           },

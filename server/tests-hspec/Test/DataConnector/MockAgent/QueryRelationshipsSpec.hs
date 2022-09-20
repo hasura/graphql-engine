@@ -476,10 +476,11 @@ tests opts = do
                                 _qOffset = Nothing,
                                 _qWhere =
                                   Just $
-                                    API.ApplyBinaryComparisonOperator
-                                      API.Equal
-                                      (API.ComparisonColumn [API.RelationshipName "SupportRepForCustomers"] (API.ColumnName "Country"))
-                                      (API.AnotherColumn (API.ComparisonColumn [] (API.ColumnName "Country"))),
+                                    API.Exists (API.RelatedTable $ API.RelationshipName "SupportRepForCustomers") $
+                                      API.ApplyBinaryComparisonOperator
+                                        API.Equal
+                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country"))
+                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country"))),
                                 _qOrderBy =
                                   Just $
                                     API.OrderBy
@@ -487,10 +488,11 @@ tests opts = do
                                           [ ( API.RelationshipName "SupportRepForCustomers",
                                               API.OrderByRelation
                                                 ( Just $
-                                                    API.ApplyBinaryComparisonOperator
-                                                      API.Equal
-                                                      (API.ComparisonColumn [API.RelationshipName "SupportRep"] (API.ColumnName "Country"))
-                                                      (API.AnotherColumn (API.ComparisonColumn [] (API.ColumnName "Country")))
+                                                    API.Exists (API.RelatedTable $ API.RelationshipName "SupportRep") $
+                                                      API.ApplyBinaryComparisonOperator
+                                                        API.Equal
+                                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country"))
+                                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country")))
                                                 )
                                                 mempty
                                             )

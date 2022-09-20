@@ -8,8 +8,8 @@ export type ComparisonColumn = {
    */
   name: string;
   /**
-   * The relationship path from the current query table to the table that contains the specified column. Empty array means the current query table.
+   * The path to the table that contains the specified column. Missing or empty array means the current table. ["$"] means the query table. No other values are supported at this time.
    */
-  path: Array<string>;
+  path?: Array<string>;
 };
 

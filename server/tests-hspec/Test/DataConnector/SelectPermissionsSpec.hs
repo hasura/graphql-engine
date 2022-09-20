@@ -88,6 +88,20 @@ sourceMetadata backendType config =
                     SupportRep:
                       Country:
                         _ceq: [ "$", "Country" ]
+          - table: [Album]
+            select_permissions:
+              - role: *testRoleName
+                permission:
+                  columns:
+                    - AlbumId
+                    - Title
+                    - ArtistId
+                  filter:
+                    _exists:
+                      _table: [Customer]
+                      _where:
+                        CustomerId:
+                          _eq: X-Hasura-CustomerId
         configuration: *config
 |]
 
@@ -317,4 +331,49 @@ tests opts = describe "SelectPermissionsSpec" $ do
               SupportRepForCustomers:
                 - Country: Canada
                   CustomerId: 32
+      |]
+
+  it "Query that allows access to a table using an exists-based permissions filter" $ \(testEnvironment, _) -> do
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithHeaders
+          testEnvironment
+          [ ("X-Hasura-Role", testRoleName),
+            ("X-Hasura-CustomerId", "1")
+          ]
+          [graphql|
+            query getAlbums {
+              Album(order_by: {AlbumId: asc}, limit: 3) {
+                AlbumId
+              }
+            }
+          |]
+      )
+      [yaml|
+        data:
+          Album:
+            - AlbumId: 1
+            - AlbumId: 2
+            - AlbumId: 3
+      |]
+
+  it "Query that disallows access to a table using an exists-based permissions filter" $ \(testEnvironment, _) -> do
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithHeaders
+          testEnvironment
+          [ ("X-Hasura-Role", testRoleName),
+            ("X-Hasura-CustomerId", "0")
+          ]
+          [graphql|
+            query getAlbums {
+              Album(order_by: {AlbumId: asc}, limit: 3) {
+                AlbumId
+              }
+            }
+          |]
+      )
+      [yaml|
+        data:
+          Album: []
       |]

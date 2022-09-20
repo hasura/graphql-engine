@@ -369,9 +369,19 @@ Each node of this recursive expression structure is tagged with a `type` propert
 | `and`           | `expressions`                  | A conjunction of several subexpressions |
 | `or`            | `expressions`                  | A disjunction of several subexpressions |
 | `not`           | `expression`                   | The negation of a single subexpression |
+| `exists`        | `in_table`, `where`            | Test if a row exists that matches the `where` subexpression in the specified table (`in_table`) |
 | `binary_op`     | `operator`, `column`, `value`  | Test the specified `column` against a single `value` using a particular binary comparison `operator` |
 | `binary_arr_op` | `operator`, `column`, `values` | Test the specified `column` against an array of `values` using a particular binary comparison `operator` |
 | `unary_op`      | `operator`, `column`           | Test the specified `column` against a particular unary comparison `operator` |
+
+The value of the `in_table` property of the `exists` expression is an object that describes which table to look for rows in. The object is tagged with a `type` property:
+
+| type        | Additional fields | Description |
+|-------------|---------------------------------|
+| `related`   | `relationship`    | The table is related to the current table via the relationship name specified in `relationship` (this means it should be joined to the current table via the relationship) |
+| `unrelated` | `table`           | The table specified by `table` is unrelated to the current table and therefore is not explicitly joined to the current table |
+
+The "current table" during expression evaluation is the table specified by the closest ancestor `exists` expression, or if there is no `exists` ancestor, it is the table involved in the Query that the whole `where` Expression is from.
 
 The available binary comparison operators that can be used against a single value in `binary_op` are:
 
@@ -402,7 +412,7 @@ Values (as used in `value` in `binary_op` and the `values` array in `binary_arr_
 | `scalar` | `value`           | A scalar `value` to compare against |
 | `column` | `column`          | A `column` in the current table being queried to compare against |
 
-Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, as well as a `path` to the table that contains the column. This path is an array of relationship names that starts from the table being queried (ie the table being queried by the query that this where expression is being specified in). An empty array means the column would be on the table being queried itself.
+Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, as well as optionally a `path` to the table that contains the column. If the `path` property is missing/null or an empty array, then the column is on the current table. However, if the path is `["$"]`, then the column is on the table involved in the Query that the whole `where` expression is from. At this point in time, these are the only valid values of `path`.
 
 Here is a simple example, which correponds to the predicate "`first_name` is John and `last_name` is Smith":
 
@@ -414,7 +424,6 @@ Here is a simple example, which correponds to the predicate "`first_name` is Joh
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "path": [],
         "name": "first_name"
       },
       "value": {
@@ -426,7 +435,6 @@ Here is a simple example, which correponds to the predicate "`first_name` is Joh
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "path": [],
         "name": "last_name"
       },
       "value": {
@@ -442,24 +450,122 @@ Here's another example, which corresponds to the predicate "`first_name` is the 
 
 ```json
 {
-  "type": "and",
-  "expressions": [
-    {
+  "type": "binary_op",
+  "operator": "equal",
+  "column": {
+    "name": "first_name"
+  },
+  "value": {
+    "type": "column",
+    "column": {
+      "name": "last_name"
+    }
+  }
+}
+```
+
+In this example, a person table is filtered by whether or not that person has any children 18 years of age or older:
+
+```json
+{
+  "type": "exists",
+  "in_table": {
+    "type": "related",
+    "relationship": "children"
+  },
+  "where": {
+    "type": "binary_op",
+    "operator": "greater_than_or_equal",
+    "column": {
+      "name": "age"
+    },
+    "value": {
+      "type": "scalar",
+      "value": 18
+    }
+  }
+}
+```
+
+In this example, a person table is filtered by whether or not that person has any children that have the same first name as them:
+
+```jsonc
+{
+  "type": "exists",
+  "in_table": {
+    "type": "related",
+    "relationship": "children"
+  },
+  "where": {
+    "type": "binary_op",
+    "operator": "equal",
+    "column": {
+      "name": "first_name" // This column refers to the child's name
+    },
+    "value": {
+      "type": "column",
+      "column": {
+        "path": ["$"],
+        "name": "first_name" // This column refers to the parent's name
+      }
+    }
+  }
+}
+```
+
+Exists expressions can be nested, but the `["$"]` path always refers to the query table. So in this example, a person table is filtered by whether or not that person has any children that have any friends that have the same first name as the parent:
+
+```jsonc
+{
+  "type": "exists",
+  "in_table": {
+    "type": "related",
+    "relationship": "children"
+  },
+  "where": {
+    "type": "exists",
+    "in_table": {
+      "type": "related",
+      "relationship": "friends"
+    },
+    "where": {
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "path": [],
-        "name": "first_name"
+        "name": "first_name" // This column refers to the children's friend's name
       },
       "value": {
         "type": "column",
         "column": {
-          "path": [],
-          "name": "last_name"
+          "path": ["$"],
+          "name": "first_name" // This column refers to the parent's name
         }
       }
     }
-  ]
+  }
+}
+```
+
+In this example, a table is filtered by whether or not an unrelated administrators table contains an admin called "superuser". Note that this means if the administrators table contains the "superuser" admin, then all rows of the table are returned, but if not, no rows are returned.
+
+```json
+{
+  "type": "exists",
+  "in_table": {
+    "type": "unrelated",
+    "table": ["administrators"]
+  },
+  "where": {
+    "type": "binary_op",
+    "operator": "equal",
+    "column": {
+      "name": "username"
+    },
+    "value": {
+      "type": "scalar",
+      "value": "superuser"
+    }
+  }
 }
 ```
 
@@ -682,7 +788,7 @@ POST /v1/metadata
 }
 ```
 
-Given this GraphQL query (where the `X-Hasura-Role` header is set to `user`):
+Given this GraphQL query (where the `X-Hasura-Role` session variable is set to `user`):
 
 ```graphql
 query getCustomer {
@@ -742,17 +848,23 @@ We would get the following query request JSON:
       "type": "and",
       "expressions": [
         {
-          "type": "binary_op",
-          "operator": "equal",
-          "column": {
-            "path": ["SupportRep"],
-            "name": "Country"
+          "type": "exists",
+          "in_table": {
+            "type": "related",
+            "relationship": "SupportRep"
           },
-          "value": {
-            "type": "column",
+          "where": {
+            "type": "binary_op",
+            "operator": "equal",
             "column": {
-              "path": [],
               "name": "Country"
+            },
+            "value": {
+              "type": "column",
+              "column": {
+                "path": ["$"],
+                "name": "Country"
+              }
             }
           }
         }
@@ -762,7 +874,155 @@ We would get the following query request JSON:
 }
 ```
 
-The key point of interest here is in the `where` field where we are comparing between columns. The first column's `path` is `["SupportRep"]` indicating that the `Country` column specified there is on the other side of the `Customer` table's `SupportRep` relationship (ie. to the `Employee` table). The related `Employee`'s `Country` column is being compared with `equal` to `Customer`'s `Country` column (as indicated by the `[]` path). So, in order to evaluate this condition, we'd need to join the `Employee` table using the `column_mapping` specified in the `SupportRep` relationship and if any of the related rows (in this case, only one because it is an `object` relation) contain a `Country` that is equal to Employee row's `Country`, then the `binary_op` evaluates to True and we don't filter out the row.
+The key point of interest here is in the `where` field where we are comparing between columns. Our first expression is an `exists` expression that specifies a row must exist in the table related to the `Customer` table by the `SupportRep` relationship (ie. the `Employee` table). These rows must match a subexpression that compares the related `Employee`'s `Country` column with `equal` to `Customer`'s `Country` column (as indicated by the `["$"]` path). So, in order to evaluate this condition, we'd need to join the `Employee` table using the `column_mapping` specified in the `SupportRep` relationship. Then if any of the related rows (in this case, only one because it is an `object` relation) contain a `Country` that is equal to Customer row's `Country` the `binary_op` would evaluate to True. This would mean a row exists, so the `exists` evaluates to true, and we don't filter out the Customer row.
+
+#### Filtering by Unrelated Tables
+It is possible to filter a table by a predicate evaluated against a completely unrelated table. This can happen in Hasura GraphQL Engine when configuring permissions on a table.
+
+In the following example, we are configuring HGE's metadata such that when the Customer table is queried by the employee role, the employee currently doing the query (as specified by the `X-Hasura-EmployeeId` session variable) must be an employee from the city of Calgary, otherwise no rows are returned.
+
+```json
+POST /v1/metadata
+
+{
+  "type": "replace_metadata",
+  "args": {
+    "metadata": {
+      "version": 3,
+      "backend_configs": {
+        "dataconnector": {
+          "reference": {
+            "uri": "http://localhost:8100/"
+          }
+        }
+      },
+      "sources": [
+        {
+          "name": "chinook",
+          "kind": "reference",
+          "tables": [
+            {
+              "table": ["Customer"],
+              "select_permissions": [
+                {
+                  "role": "employee",
+                  "permission": {
+                    "columns": [
+                      "CustomerId",
+                      "FirstName",
+                      "LastName",
+                      "Country",
+                      "SupportRepId"
+                    ],
+                    "filter": {
+                      "_exists": {
+                        "_table": ["Employee"],
+                        "_where": {
+                          "_and": [
+                            { "EmployeeId": { "_eq": "X-Hasura-EmployeeId" } },
+                            { "City": { "_eq": "Calgary" } }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": ["Employee"]
+            }
+          ],
+          "configuration": {}
+        }
+      ]
+    }
+  }
+}
+```
+
+Given this GraphQL query (where the `X-Hasura-Role` session variable is set to `employee`, and the `X-Hasura-EmployeeId` session variable is set to `2`):
+
+```graphql
+query getCustomer {
+  Customer {
+    CustomerId
+    FirstName
+    LastName
+    Country
+    SupportRepId
+  }
+}
+```
+
+We would get the following query request JSON:
+
+```json
+{
+  "table": ["Customer"],
+  "table_relationships": [],
+  "query": {
+    "fields": {
+      "Country": {
+        "type": "column",
+        "column": "Country"
+      },
+      "CustomerId": {
+        "type": "column",
+        "column": "CustomerId"
+      },
+      "FirstName": {
+        "type": "column",
+        "column": "FirstName"
+      },
+      "LastName": {
+        "type": "column",
+        "column": "LastName"
+      },
+      "SupportRepId": {
+        "type": "column",
+        "column": "SupportRepId"
+      }
+    },
+    "where": {
+      "type": "exists",
+      "in_table": {
+        "type": "unrelated",
+        "table": ["Employee"]
+      },
+      "where": {
+        "type": "and",
+        "expressions": [
+          {
+            "type": "binary_op",
+            "operator": "equal",
+            "column": {
+              "name": "EmployeeId"
+            },
+            "value": {
+              "type": "scalar",
+              "value": 2
+            }
+          },
+          {
+            "type": "binary_op",
+            "operator": "equal",
+            "column": {
+              "name": "City"
+            },
+            "value": {
+              "type": "scalar",
+              "value": "Calgary"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+The key part in this query is the `where` expression. The root expression in the where is an `exists` expression which specifies that at least one row must exist in the unrelated `["Employee"]` table that satisfies a subexpression. This subexpression asserts that the rows from the Employee table have both `EmployeeId` as `2` and `City` as `Calgary`. The columns referenced inside this subexpression don't have `path` properties, which means they refer the columns on the Employee table because that is the closest ancestor `exists` table.
 
 #### Aggregates
 HGE supports forming GraphQL queries that allow clients to aggregate over the data in their data sources. This type of query can be passed through to Data Connector agents as a part of the Query structure sent to `/query`.
@@ -902,7 +1162,6 @@ The `nodes` part of the query ends up as standard `fields` in the `Query`, and t
       "type": "binary_op",
       "operator": "greater_than",
       "column": {
-        "path": [],
         "name": "Name"
       },
       "value": {
@@ -1158,7 +1417,6 @@ For example, here's a query that retrieves artists ordered descending by the cou
             "type": "binary_op",
             "operator": "greater_than",
             "column": {
-              "path": [],
               "name": "Title"
             },
             "value": {

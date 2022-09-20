@@ -77,7 +77,7 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can order results by a column in a related table where the related table is filtered" $ do
-    let artistTableFilter = ApplyBinaryComparisonOperator GreaterThan (Data.localComparisonColumn "Name") (ScalarValue $ String "N")
+    let artistTableFilter = ApplyBinaryComparisonOperator GreaterThan (Data.currentComparisonColumn "Name") (ScalarValue $ String "N")
     let orderByRelations = HashMap.fromList [(Data.artistRelationshipName, OrderByRelation (Just artistTableFilter) mempty)]
     let orderBy = OrderBy orderByRelations $ Data.orderByColumn [Data.artistRelationshipName] "Name" Ascending :| []
     let query =
@@ -171,7 +171,7 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
     _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
   it "can order results by an aggregate of a related table where the related table is filtered" $ do
-    let albumTableFilter = ApplyBinaryComparisonOperator GreaterThan (Data.localComparisonColumn "Title") (ScalarValue $ String "N")
+    let albumTableFilter = ApplyBinaryComparisonOperator GreaterThan (Data.currentComparisonColumn "Title") (ScalarValue $ String "N")
     let orderByRelations = HashMap.fromList [(Data.albumsRelationshipName, OrderByRelation (Just albumTableFilter) mempty)]
     let orderBy = OrderBy orderByRelations $ OrderByElement [Data.albumsRelationshipName] OrderByStarCountAggregate Descending :| []
     let query =

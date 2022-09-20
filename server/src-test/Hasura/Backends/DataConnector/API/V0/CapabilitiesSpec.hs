@@ -117,6 +117,16 @@ genGraphQLTypeDefinitions =
 genRelationshipCapabilities :: MonadGen m => m RelationshipCapabilities
 genRelationshipCapabilities = pure RelationshipCapabilities {}
 
+genComparisonCapabilities :: MonadGen m => m ComparisonCapabilities
+genComparisonCapabilities =
+  ComparisonCapabilities
+    <$> Gen.maybe genCrossTableComparisonCapabilities
+
+genCrossTableComparisonCapabilities :: MonadGen m => m CrossTableComparisonCapabilities
+genCrossTableComparisonCapabilities =
+  CrossTableComparisonCapabilities
+    <$> Gen.bool
+
 genMetricsCapabilities :: MonadGen m => m MetricsCapabilities
 genMetricsCapabilities = pure MetricsCapabilities {}
 
@@ -132,6 +142,7 @@ genCapabilities =
     <*> Gen.maybe genScalarTypesCapabilities
     <*> Gen.maybe genGraphQLTypeDefinitions
     <*> Gen.maybe genRelationshipCapabilities
+    <*> Gen.maybe genComparisonCapabilities
     <*> Gen.maybe genMetricsCapabilities
     <*> Gen.maybe genExplainCapabilities
 

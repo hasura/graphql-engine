@@ -10,6 +10,7 @@ where
 
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
+import Data.ByteString (ByteString)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
@@ -36,6 +37,9 @@ spec =
         ]
     )
     tests
+
+testRoleName :: ByteString
+testRoleName = "test-role"
 
 sourceMetadata :: Aeson.Value
 sourceMetadata =
@@ -81,6 +85,19 @@ sourceMetadata =
                     remote_table: [Album]
                     column_mapping:
                       ArtistId: ArtistId
+          - table: [Employee]
+          - table: [Customer]
+            select_permissions:
+              - role: *testRoleName
+                permission:
+                  columns:
+                    - CustomerId
+                  filter:
+                    _exists:
+                      _table: [Employee]
+                      _where:
+                        EmployeeId:
+                          _eq: X-Hasura-EmployeeId
         configuration: {}
       |]
 
@@ -198,6 +215,70 @@ tests opts = do
                                 _qOffset = Nothing,
                                 _qWhere = Nothing,
                                 _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
+                              }
+                        }
+                    )
+              }
+
+    it "works with an exists-based permissions filter" $
+      DataConnector.runMockedTest opts $
+        let required =
+              DataConnector.TestCaseRequired
+                { _givenRequired =
+                    let albums =
+                          [ [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
+                            ],
+                            [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
+                            ],
+                            [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
+                            ]
+                          ]
+                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
+                  _whenRequestRequired =
+                    [graphql|
+                      query getCustomers {
+                        Customer {
+                          CustomerId
+                        }
+                      }
+                    |],
+                  _thenRequired =
+                    [yaml|
+                      data:
+                        Customer:
+                          - CustomerId: 1
+                          - CustomerId: 2
+                          - CustomerId: 3
+                    |]
+                }
+         in (DataConnector.defaultTestCase required)
+              { _whenRequestHeaders =
+                  [ ("X-Hasura-Role", testRoleName),
+                    ("X-Hasura-EmployeeId", "1")
+                  ],
+                _whenQuery =
+                  Just
+                    ( API.QueryRequest
+                        { _qrTable = API.TableName ("Customer" :| []),
+                          _qrTableRelationships = [],
+                          _qrQuery =
+                            API.Query
+                              { _qFields =
+                                  Just $
+                                    KM.fromList
+                                      [ ("CustomerId", API.ColumnField (API.ColumnName "CustomerId"))
+                                      ],
+                                _qAggregates = Nothing,
+                                _qLimit = Nothing,
+                                _qOffset = Nothing,
+                                _qWhere =
+                                  Just $
+                                    API.Exists (API.UnrelatedTable $ API.TableName ("Employee" :| [])) $
+                                      API.ApplyBinaryComparisonOperator
+                                        API.Equal
+                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId"))
+                                        (API.ScalarValue (Aeson.Number 1)),
+                                _qOrderBy = Nothing
                               }
                         }
                     )

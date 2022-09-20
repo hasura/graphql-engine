@@ -225,6 +225,9 @@
       },
       "Capabilities": {
         "properties": {
+          "comparisons": {
+            "$ref": "#/components/schemas/ComparisonCapabilities"
+          },
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
           },
@@ -291,6 +294,27 @@
         "type": "string"
       },
       "RelationshipCapabilities": {},
+      "CrossTableComparisonCapabilities": {
+        "nullable": true,
+        "properties": {
+          "supports_relations": {
+            "description": "Does the agent support comparisons that involve related tables (ie. joins)?",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "supports_relations"
+        ],
+        "type": "object"
+      },
+      "ComparisonCapabilities": {
+        "properties": {
+          "cross_table": {
+            "$ref": "#/components/schemas/CrossTableComparisonCapabilities"
+          }
+        },
+        "type": "object"
+      },
       "MetricsCapabilities": {},
       "ExplainCapabilities": {},
       "ConfigSchemaResponse": {
@@ -1021,6 +1045,118 @@
           }
         ]
       },
+      "UnrelatedTable": {
+        "properties": {
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "unrelated"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "type"
+        ],
+        "type": "object"
+      },
+      "RelatedTable": {
+        "properties": {
+          "relationship": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "related"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "relationship",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ExistsInTable": {
+        "discriminator": {
+          "mapping": {
+            "related": "RelatedTable",
+            "unrelated": "UnrelatedTable"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/UnrelatedTable"
+          },
+          {
+            "$ref": "#/components/schemas/RelatedTable"
+          }
+        ]
+      },
+      "Expression": {
+        "discriminator": {
+          "mapping": {
+            "and": "AndExpression",
+            "binary_arr_op": "ApplyBinaryArrayComparisonOperator",
+            "binary_op": "ApplyBinaryComparisonOperator",
+            "exists": "ExistsExpression",
+            "not": "NotExpression",
+            "or": "OrExpression",
+            "unary_op": "ApplyUnaryComparisonOperator"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ExistsExpression"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyBinaryArrayComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/OrExpression"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyUnaryComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyBinaryComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/NotExpression"
+          },
+          {
+            "$ref": "#/components/schemas/AndExpression"
+          }
+        ]
+      },
+      "ExistsExpression": {
+        "properties": {
+          "in_table": {
+            "$ref": "#/components/schemas/ExistsInTable"
+          },
+          "type": {
+            "enum": [
+              "exists"
+            ],
+            "type": "string"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "required": [
+          "in_table",
+          "where",
+          "type"
+        ],
+        "type": "object"
+      },
       "BinaryArrayComparisonOperator": {
         "additionalProperties": true,
         "anyOf": [
@@ -1042,7 +1178,8 @@
             "type": "string"
           },
           "path": {
-            "description": "The relationship path from the current query table to the table that contains the specified column. Empty array means the current query table.",
+            "default": [],
+            "description": "The path to the table that contains the specified column. Missing or empty array means the current table. [\"$\"] means the query table. No other values are supported at this time.",
             "items": {
               "type": "string"
             },
@@ -1050,7 +1187,6 @@
           }
         },
         "required": [
-          "path",
           "name"
         ],
         "type": "object"
@@ -1083,39 +1219,6 @@
           "type"
         ],
         "type": "object"
-      },
-      "Expression": {
-        "discriminator": {
-          "mapping": {
-            "and": "AndExpression",
-            "binary_arr_op": "ApplyBinaryArrayComparisonOperator",
-            "binary_op": "ApplyBinaryComparisonOperator",
-            "not": "NotExpression",
-            "or": "OrExpression",
-            "unary_op": "ApplyUnaryComparisonOperator"
-          },
-          "propertyName": "type"
-        },
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/ApplyBinaryArrayComparisonOperator"
-          },
-          {
-            "$ref": "#/components/schemas/OrExpression"
-          },
-          {
-            "$ref": "#/components/schemas/ApplyUnaryComparisonOperator"
-          },
-          {
-            "$ref": "#/components/schemas/ApplyBinaryComparisonOperator"
-          },
-          {
-            "$ref": "#/components/schemas/NotExpression"
-          },
-          {
-            "$ref": "#/components/schemas/AndExpression"
-          }
-        ]
       },
       "OrExpression": {
         "properties": {

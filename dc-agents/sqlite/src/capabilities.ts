@@ -9,6 +9,11 @@ export const capabilitiesResponse: CapabilitiesResponse = {
       supportsPrimaryKeys: true
     },
     relationships: {},
+    comparisons: {
+      cross_table: {
+        supports_relations: true
+      }
+    },
     explain: {},
     ... ( envToBool('METRICS') ?  { metrics: {} } : {} )
   },
