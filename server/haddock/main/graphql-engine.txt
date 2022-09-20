@@ -8519,7 +8519,7 @@ AutoTriggerLogCleanupConfig :: CronSchedule -> Int -> Int -> Int -> Bool -> Even
 [_atlccBatchSize] :: AutoTriggerLogCleanupConfig -> Int
 
 -- | retention period (in hours) for the event trigger logs
-[_atlccRetentionPeriod] :: AutoTriggerLogCleanupConfig -> Int
+[_atlccClearOlderThan] :: AutoTriggerLogCleanupConfig -> Int
 
 -- | SQL query timeout (in seconds)
 [_atlccTimeout] :: AutoTriggerLogCleanupConfig -> Int
@@ -8544,10 +8544,10 @@ TriggerLogCleanupConfig :: TriggerName -> SourceName -> Int -> Int -> Int -> Boo
 [tlccBatchSize] :: TriggerLogCleanupConfig -> Int
 
 -- | retention period (in hours) for the event trigger logs
-[tlccRetentionPeriod] :: TriggerLogCleanupConfig -> Int
+[tlccClearOlderThan] :: TriggerLogCleanupConfig -> Int
 
 -- | SQL query timeout (in seconds)
-[tlccQueryTimeout] :: TriggerLogCleanupConfig -> Int
+[tlccTimeout] :: TriggerLogCleanupConfig -> Int
 
 -- | should we clean the invocation logs as well
 [tlccCleanInvocationLogs] :: TriggerLogCleanupConfig -> Bool

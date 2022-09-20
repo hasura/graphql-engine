@@ -3395,14 +3395,14 @@ Int
 SourceName
 TriggerName
 tlccCleanInvocationLogs :: TriggerLogCleanupConfig -&gt; Bool
-tlccQueryTimeout :: TriggerLogCleanupConfig -&gt; Int
-tlccRetentionPeriod :: TriggerLogCleanupConfig -&gt; Int
+tlccTimeout :: TriggerLogCleanupConfig -&gt; Int
+tlccClearOlderThan :: TriggerLogCleanupConfig -&gt; Int
 tlccBatchSize :: TriggerLogCleanupConfig -&gt; Int
 tlccSourceName :: TriggerLogCleanupConfig -&gt; SourceName
 tlccEventTriggerName :: TriggerLogCleanupConfig -&gt; TriggerName
 tlccCleanInvocationLogs :: Bool
-tlccQueryTimeout :: Int
-tlccRetentionPeriod :: Int
+tlccTimeout :: Int
+tlccClearOlderThan :: Int
 tlccBatchSize :: Int
 tlccSourceName :: SourceName
 tlccEventTriggerName :: TriggerName
@@ -3557,7 +3557,7 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span id="line-1143"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-1144"></span><span>    </span><span id="local-6989586621689647538"><span class="annot"><span class="annottext">qTimeout :: Int
 </span><a href="#local-6989586621689647538"><span class="hs-identifier hs-var hs-var">qTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689647546"><span class="hs-identifier hs-var">tlccQueryTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621689647546"><span class="hs-identifier hs-var">tlccTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1000</span></span><span>
@@ -3567,7 +3567,7 @@ forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="#local-6989586621689647550"><span class="hs-identifier hs-var">tlccEventTriggerName</span></a></span><span>
 </span><span id="line-1146"></span><span>    </span><span id="local-6989586621689647535"><span class="annot"><span class="annottext">qRetentionPeriod :: Int
 </span><a href="#local-6989586621689647535"><span class="hs-identifier hs-var hs-var">qRetentionPeriod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689647547"><span class="hs-identifier hs-var">tlccRetentionPeriod</span></a></span><span>
+</span><a href="#local-6989586621689647547"><span class="hs-identifier hs-var">tlccClearOlderThan</span></a></span><span>
 </span><span id="line-1147"></span><span>    </span><span id="local-6989586621689647534"><span class="annot"><span class="annottext">qBatchSize :: Int
 </span><a href="#local-6989586621689647534"><span class="hs-identifier hs-var hs-var">qBatchSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621689647548"><span class="hs-identifier hs-var">tlccBatchSize</span></a></span><span>

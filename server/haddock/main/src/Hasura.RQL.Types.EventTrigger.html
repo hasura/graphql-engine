@@ -872,8 +872,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-227"></span><span>    </span><span id="_atlccBatchSize"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Int
 </span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccBatchSize"><span class="hs-identifier hs-var hs-var">_atlccBatchSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-228"></span><span>    </span><span class="hs-comment">-- | retention period (in hours) for the event trigger logs</span><span>
-</span><span id="line-229"></span><span>    </span><span id="_atlccRetentionPeriod"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Int
-</span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccRetentionPeriod"><span class="hs-identifier hs-var hs-var">_atlccRetentionPeriod</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-229"></span><span>    </span><span id="_atlccClearOlderThan"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccClearOlderThan"><span class="hs-identifier hs-var hs-var">_atlccClearOlderThan</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-230"></span><span>    </span><span class="hs-comment">-- | SQL query timeout (in seconds)</span><span>
 </span><span id="line-231"></span><span>    </span><span id="_atlccTimeout"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig -&gt; Int
 </span><a href="Hasura.RQL.Types.EventTrigger.html#_atlccTimeout"><span class="hs-identifier hs-var hs-var">_atlccTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
@@ -964,11 +964,11 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">10000</span></span><span>
 </span><span id="line-248"></span><span>      </span><span id="local-6989586621689597971"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689597971"><span class="hs-identifier hs-var">_atlccRetentionPeriod</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689597971"><span class="hs-identifier hs-var">_atlccClearOlderThan</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621689597976"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;retention_period&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int) -&gt; Int -&gt; Parser Int
+</span><span class="hs-string">&quot;clear_older_than&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int) -&gt; Int -&gt; Parser Int
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">168</span></span><span> </span><span class="hs-comment">-- 7 Days = 168 hours</span><span>
@@ -1016,13 +1016,13 @@ EventTriggerCleanupStatus
 _atlccPaused :: EventTriggerCleanupStatus
 _atlccCleanInvocationLogs :: Bool
 _atlccTimeout :: Int
-_atlccRetentionPeriod :: Int
+_atlccClearOlderThan :: Int
 _atlccBatchSize :: Int
 _atlccSchedule :: CronSchedule
 _atlccPaused :: EventTriggerCleanupStatus
 _atlccCleanInvocationLogs :: Bool
 _atlccTimeout :: Int
-_atlccRetentionPeriod :: Int
+_atlccClearOlderThan :: Int
 _atlccBatchSize :: Int
 _atlccSchedule :: CronSchedule
 </span><a href="#local-6989586621689597968"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
@@ -1048,11 +1048,11 @@ Options -&gt; a -&gt; Value
 </span><span id="line-264"></span><span>    </span><span id="tlccBatchSize"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; Int
 </span><a href="Hasura.RQL.Types.EventTrigger.html#tlccBatchSize"><span class="hs-identifier hs-var hs-var">tlccBatchSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-265"></span><span>    </span><span class="hs-comment">-- | retention period (in hours) for the event trigger logs</span><span>
-</span><span id="line-266"></span><span>    </span><span id="tlccRetentionPeriod"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; Int
-</span><a href="Hasura.RQL.Types.EventTrigger.html#tlccRetentionPeriod"><span class="hs-identifier hs-var hs-var">tlccRetentionPeriod</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-266"></span><span>    </span><span id="tlccClearOlderThan"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#tlccClearOlderThan"><span class="hs-identifier hs-var hs-var">tlccClearOlderThan</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-267"></span><span>    </span><span class="hs-comment">-- | SQL query timeout (in seconds)</span><span>
-</span><span id="line-268"></span><span>    </span><span id="tlccQueryTimeout"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; Int
-</span><a href="Hasura.RQL.Types.EventTrigger.html#tlccQueryTimeout"><span class="hs-identifier hs-var hs-var">tlccQueryTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-268"></span><span>    </span><span id="tlccTimeout"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#tlccTimeout"><span class="hs-identifier hs-var hs-var">tlccTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-269"></span><span>    </span><span class="hs-comment">-- | should we clean the invocation logs as well</span><span>
 </span><span id="line-270"></span><span>    </span><span id="tlccCleanInvocationLogs"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; Bool
 </span><a href="Hasura.RQL.Types.EventTrigger.html#tlccCleanInvocationLogs"><span class="hs-identifier hs-var hs-var">tlccCleanInvocationLogs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
@@ -1140,16 +1140,16 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">10000</span></span><span>
 </span><span id="line-284"></span><span>      </span><span id="local-6989586621689597924"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689597924"><span class="hs-identifier hs-var">tlccRetentionPeriod</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689597924"><span class="hs-identifier hs-var">tlccClearOlderThan</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621689597929"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;retention_period&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int) -&gt; Int -&gt; Parser Int
+</span><span class="hs-string">&quot;clear_older_than&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int) -&gt; Int -&gt; Parser Int
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">168</span></span><span> </span><span class="hs-comment">-- 7 Days = 168 hours</span><span>
 </span><span id="line-285"></span><span>      </span><span id="local-6989586621689597923"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689597923"><span class="hs-identifier hs-var">tlccQueryTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689597923"><span class="hs-identifier hs-var">tlccTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621689597929"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
@@ -1180,14 +1180,14 @@ Int
 SourceName
 TriggerName
 tlccCleanInvocationLogs :: Bool
-tlccQueryTimeout :: Int
-tlccRetentionPeriod :: Int
+tlccTimeout :: Int
+tlccClearOlderThan :: Int
 tlccBatchSize :: Int
 tlccSourceName :: SourceName
 tlccEventTriggerName :: TriggerName
 tlccCleanInvocationLogs :: Bool
-tlccQueryTimeout :: Int
-tlccRetentionPeriod :: Int
+tlccTimeout :: Int
+tlccClearOlderThan :: Int
 tlccBatchSize :: Int
 tlccSourceName :: SourceName
 tlccEventTriggerName :: TriggerName
