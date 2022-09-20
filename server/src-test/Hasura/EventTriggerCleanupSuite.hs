@@ -261,7 +261,7 @@ autoTriggerCleanupConfig =
   AutoTriggerLogCleanupConfig
     { _atlccBatchSize = 2,
       _atlccRetentionPeriod = 4,
-      _atlccQueryTimeout = 60,
+      _atlccTimeout = 60,
       _atlccCleanInvocationLogs = True,
       _atlccPaused = ETCSUnpaused,
       _atlccSchedule = everyMinute
