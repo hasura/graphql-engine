@@ -14,7 +14,7 @@
   }
 }</pre><p>No matter what the client provides for <code>$post_id</code>, we will always generate the same SQL:</p><pre>SELECT votes FROM vote_count WHERE post_id = $1</pre><p>If multiple clients subscribe to <code>vote_count</code>, we can certainly reuse the same prepared query. For
  example, imagine we had 10 concurrent subscribers, each listening on a distinct <code>$post_id</code>:</p><pre>let postIds = [3, 11, 32, 56, 13, 97, 24, 43, 109, 48]</pre><p>We could iterate over <code>postIds</code> in Haskell, executing the same prepared query 10 times:</p><pre>for postIds $ \postId -&gt;
-  Q.listQE defaultTxErrorHandler preparedQuery (Identity postId) True</pre><p>Sadly, that on its own isn&#8217;t good enough. The overhead of running each query is large enough that
+  PG.listQE defaultTxErrorHandler preparedQuery (Identity postId) True</pre><p>Sadly, that on its own isn&#8217;t good enough. The overhead of running each query is large enough that
  Postgres becomes overwhelmed if we have to serve lots of concurrent subscribers. Therefore, what we
  want to be able to do is somehow make one query instead of ten.</p><h3>Multiplexing</h3><p>This is where multiplexing comes in. By taking advantage of Postgres
  <a href="https://www.postgresql.org/docs/11/queries-table-expressions.html#QUERIES-LATERAL">lateral joins</a>,
