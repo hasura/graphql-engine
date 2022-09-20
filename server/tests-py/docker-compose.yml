@@ -39,16 +39,19 @@ services:
     environment:
       - CIRCLE_NODE_INDEX=1
       - CIRCLE_NODE_TOTAL=1
+      - OUTPUT_FOLDER=/output
       - GRAPHQL_ENGINE=/src/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/x/graphql-engine/noopt/build/graphql-engine/graphql-engine
       - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
       - HASURA_GRAPHQL_PG_SOURCE_URL_1=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_PG_SOURCE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
-      - OUTPUT_FOLDER=/output
+      - HASURA_BIGQUERY_PROJECT_ID
+      - HASURA_BIGQUERY_SERVICE_KEY
       - SERVER_TEST_TO_RUN
     volumes:
       - ../..:/src
       - hge-dist:/src/dist-newstyle
+      - output:/output
     working_dir: /src
     depends_on:
       hge-build:
@@ -81,3 +84,4 @@ services:
 volumes:
   cabal-cache:
   hge-dist:
+  output:

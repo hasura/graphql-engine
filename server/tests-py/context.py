@@ -775,7 +775,7 @@ class HGECtx:
 
         self.http = requests.Session()
         self.hge_key = config.getoption('--hge-key')
-        self.timeout = 60
+        self.timeout = 120  # BigQuery can take a while
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')
