@@ -15,7 +15,7 @@ services:
     volumes:
       - mssql_data:/var/lib/mysql
   graphql-engine:
-    image: hasura/graphql-engine:v2.8.4
+    image: hasura/graphql-engine:v2.12.0
     ports:
       - '8080:8080'
     depends_on:
