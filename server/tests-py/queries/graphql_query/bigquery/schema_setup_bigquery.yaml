@@ -18,12 +18,32 @@ args:
         `time` TIME,
         `datetime` DATETIME,
         `geography` GEOGRAPHY
-      );
+      ) AS SELECT * FROM UNNEST([
+        STRUCT(
+          "STRING" AS `string`,
+          CODE_POINTS_TO_BYTES([0,1,2,3,4,5]) AS `bytes`,
+          1 AS `integer`,
+          1 AS `float`,
+          -- IEEE_DIVIDE(x, 0) returns Infinity and Infinity/Infinity is NaN
+          [1.23e23, IEEE_DIVIDE(-1, 0), IEEE_DIVIDE(1, 0)/IEEE_DIVIDE(1, 0)] AS `special_floats`,
+          1 AS `numeric`,
+          1 AS `bignumeric`,
+          true AS `boolean`,
+          PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008") AS `timestamp`,
+          PARSE_DATE("%F", "2000-12-30") AS `date`,
+          PARSE_TIME("%T", "07:30:00") AS `time`,
+          PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '1998-10-18 13:45:55') AS `datetime`,
+          ST_GEOGPOINT(1, 1) AS `geography`
+        )
+      ]);
       CREATE TABLE `hasura.author` (
         `id` INT64,
         `name` STRING,
         `created_at` TIMESTAMP
-      );
+      ) AS SELECT * FROM UNNEST([
+        STRUCT(1 AS `id`, "Author 1" AS `name`, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008") AS `created_at`),
+        STRUCT(2 AS `id`, "Author 2" AS `name`, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008") AS `created_at`)
+      ]);
       CREATE TABLE `hasura.article` (
         `id` INT64,
         `title` STRING,
@@ -32,41 +52,12 @@ args:
         `is_published` BOOL,
         `published_on` DATETIME,
         `created_at` TIMESTAMP
-      );
-      INSERT INTO `hasura.all_types` VALUES (
-        "STRING",
-        CODE_POINTS_TO_BYTES([0,1,2,3,4,5]),
-        1,
-        1,
-        -- IEEE_DIVIDE(x, 0) returns Infinity and Infinity/Infinity is NaN
-        [1.23e23, IEEE_DIVIDE(-1, 0), IEEE_DIVIDE(1, 0)/IEEE_DIVIDE(1, 0)],
-        1,
-        1,
-        true,
-        PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008"),
-        PARSE_DATE("%F", "2000-12-30"),
-        PARSE_TIME("%T", "07:30:00"),
-        PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '1998-10-18 13:45:55'),
-        ST_GEOGPOINT(1, 1)
-      );
-      INSERT INTO `hasura.author` VALUES (
-        1, "Author 1", PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008")
-      );
-      INSERT INTO `hasura.author` VALUES (
-        2, "Author 2", PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008")
-      );
-      INSERT INTO `hasura.article` VALUES (
-        1, "Title 1", "Content 1", 1, FALSE, NULL, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:01 2008")
-      );
-      INSERT INTO `hasura.article` VALUES (
-        2, "Title 2", "Content 2", 1, TRUE, PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '1998-10-18 13:45:55'), PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:02 2008")
-      );
-      INSERT INTO `hasura.article` VALUES (
-        3, "Title 3", "Content 3", 2, FALSE, NULL, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:03 2008")
-      );
-      INSERT INTO `hasura.article` VALUES (
-        4, "Title 4", "Content 4", 2, FALSE, NULL, PARSE_TIMESTAMP("%c", "Thu Dec 26 07:31:04 2008")
-      );
+      ) AS SELECT * FROM UNNEST([
+        STRUCT(1 AS `id`, "Title 1" AS `title`, "Content 1" AS `content`, 1 AS `author_id`, FALSE AS `is_published`, NULL AS `published_on`, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:01 2008") AS `created_at`),
+        STRUCT(2 AS `id`, "Title 2" AS `title`, "Content 2" AS `content`, 1 AS `author_id`, TRUE AS `is_published`, PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '1998-10-18 13:45:55') AS `published_on`, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:02 2008") AS `created_at`),
+        STRUCT(3 AS `id`, "Title 3" AS `title`, "Content 3" AS `content`, 2 AS `author_id`, FALSE AS `is_published`, NULL AS `published_on`, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:03 2008") AS `created_at`),
+        STRUCT(4 AS `id`, "Title 4" AS `title`, "Content 4" AS `content`, 2 AS `author_id`, FALSE AS `is_published`, NULL AS `published_on`, PARSE_TIMESTAMP("%c", "Thu Dec 26 07:31:04 2008") AS `created_at`)
+      ]);
 
       -- a copy for remote joins as we can't have the same table tracked in two sources
       CREATE TABLE `hasura.article2`
@@ -75,98 +66,49 @@ args:
       -- These are helpful for join/aggregate testing.
 
       CREATE TABLE hasura.Artist (
-      artist_self_id int64,
-      name string);
+        artist_self_id int64,
+        name string
+      ) AS SELECT * FROM UNNEST([
+        STRUCT(1002 AS artist_self_id, "tool" AS name),
+        STRUCT(1000 AS artist_self_id, "alice in chains" AS name),
+        STRUCT(1001 AS artist_self_id, "nirvana" AS name)
+      ]);
 
       CREATE TABLE hasura.Album (
         album_self_id int64,
         artist_other_id int64,
-        title string);
-
-      INSERT INTO hasura.Artist
-      VALUES      (1002,
-                  "tool" ),
-                  (1000,
-                  "alice in chains" ),
-                  (1001,
-                  "nirvana" );
-
-      INSERT INTO hasura.Album
-                  (album_self_id,
-                  title,
-                  artist_other_id)
-      VALUES      ( 2002,
-                    "dirt",
-                    1000 ),
-                  ( 2005,
-                    "facelift",
-                    1000 ),
-                  ( 2001,
-                    "in utero",
-                    1001 ),
-                  ( 2000,
-                    "nevermind",
-                    1001 ),
-                  ( 2003,
-                    "lateralus",
-                    1002 ),
-                  ( 2004,
-                    "fear innoculum",
-                    1002 );
+        title string
+      ) AS SELECT * FROM UNNEST([
+        STRUCT(2002 AS album_self_id, 1000 AS artist_other_id, "dirt" AS title),
+        STRUCT(2005 AS album_self_id, 1000 AS artist_other_id, "facelift" AS title),
+        STRUCT(2001 AS album_self_id, 1001 AS artist_other_id, "in utero" AS title),
+        STRUCT(2000 AS album_self_id, 1001 AS artist_other_id, "nevermind" AS title),
+        STRUCT(2003 AS album_self_id, 1002 AS artist_other_id, "lateralus" AS title),
+        STRUCT(2004 AS album_self_id, 1002 AS artist_other_id, "fear innoculum" AS title)
+      ]);
 
       -- These are for testing global limits.
 
       CREATE TABLE hasura.LimitedArtist (
-      artist_self_id int64,
-      name string);
+        artist_self_id int64,
+        name string
+      ) AS SELECT * FROM hasura.Artist;
 
       CREATE TABLE hasura.LimitedAlbum (
         album_self_id int64,
         artist_other_id int64,
-        title string);
-
-      INSERT INTO hasura.LimitedArtist
-      VALUES      (1002,
-                  "tool" ),
-                  (1000,
-                  "alice in chains" ),
-                  (1001,
-                  "nirvana" );
-
-      INSERT INTO hasura.LimitedAlbum
-                  (album_self_id,
-                  title,
-                  artist_other_id)
-      VALUES      ( 2002,
-                    "dirt",
-                    1000 ),
-                  ( 2005,
-                    "facelift",
-                    1000 ),
-                  ( 2001,
-                    "in utero",
-                    1001 ),
-                  ( 2000,
-                    "nevermind",
-                    1001 ),
-                  ( 2003,
-                    "lateralus",
-                    1002 ),
-                  ( 2004,
-                    "fear innoculum",
-                    1002 );
-      SELECT * from hasura.Album;
+        title string
+      ) AS SELECT * FROM hasura.Album;
 
       CREATE TABLE `hasura.article_citation` (
         `article_id` INT64,
         `cited_article_id` INT64,
         `description` STRING,
-      );
-      INSERT INTO hasura.article_citation
-                  (article_id, cited_article_id, description)
-      VALUES      (1, 2, 'citing the 2nd'),
-                  (1, 3, 'citing the third as well'),
-                  (2, 3, 'the second also cites the third');
+      ) AS SELECT * FROM UNNEST([
+          STRUCT(1 AS `article_id`, 2 AS `cited_article_id`, 'citing the 2nd' AS `description`),
+          STRUCT(1 AS `article_id`, 3 AS `cited_article_id`, 'citing the third as well' AS `description`),
+          STRUCT(2 AS `article_id`, 3 AS `cited_article_id`, 'the second also cites the third' AS `description`)
+      ]);
 
       -- a copy for remote joins as we can't have the same table tracked in two sources
       CREATE TABLE `hasura.article_citation2`

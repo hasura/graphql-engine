@@ -7,11 +7,9 @@ args:
       CREATE TABLE `hasura.city` (
         `name` STRING,
         `country` STRING
-      );
-
-      INSERT INTO `hasura.city` (`name`, `country`)
-      VALUES
-      ('Durham', 'USA'),
-      ('New York', 'USA'),
-      ('Framlingham', 'UK'),
-      ('New Orleans', 'USA');
+      ) AS SELECT * FROM UNNEST([
+        STRUCT('Durham' AS `name`, 'USA' AS `country`),
+        STRUCT('New York' AS `name`, 'USA' AS `country`),
+        STRUCT('Framlingham' AS `name`, 'UK' AS `country`),
+        STRUCT('New Orleans' AS `name`, 'USA' AS `country`)
+      ]);
